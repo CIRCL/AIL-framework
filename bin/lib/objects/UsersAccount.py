@@ -139,10 +139,11 @@ class UserAccount(AbstractSubtypeObject):
 
     def get_messages(self):
         messages = []
-        for mess in self.get_correlation('message'):
-            messages.append(f'message:{mess}')
+        correl = self.get_correlation('message')
+        if 'message' in correl:
+            for mess_id in correl['message']:
+                messages.append(f'message:{mess_id}')
         return messages
-
 
     def get_messages_by_chat_obj(self, chat_obj):
         messages = []

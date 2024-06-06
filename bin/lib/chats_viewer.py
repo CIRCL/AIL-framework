@@ -490,6 +490,35 @@ def get_user_account_chats_chord(subtype, user_id):
         chord['data'].append({'source': user_account_gid, 'target': chat_g_id, 'value': nb[chat_g_id]})
     return chord
 
+def get_user_account_mentions_chord(subtype, user_id):
+    chord = {'meta': {}, 'data': []}
+    nb = {}
+    user_account = UsersAccount.UserAccount(user_id, subtype)
+    user_account_gid = user_account.get_global_id()
+    label = get_chat_user_account_label(user_account_gid)
+    if label:
+        chord['meta'][user_account_gid] = label
+    else:
+        chord['meta'][user_account_gid] = user_account_gid
+
+    for mess in user_account.get_messages():
+        m = Messages.Message(mess[9:])
+        for rel in m.get_obj_relationships(relationships={'mention'}, filter_types={'chat', 'user_account'}):
+            if rel:
+                if not rel['target'] in nb:
+                    nb[rel['target']] = 0
+                nb[rel['target']] += 1
+
+    for g_id in nb:
+        label = get_chat_user_account_label(g_id)
+        if label:
+            chord['meta'][g_id] = label
+        else:
+            chord['meta'][g_id] = g_id
+        chord['data'].append({'source': user_account_gid, 'target': g_id, 'value': nb[g_id]})
+    return chord
+
+
 def _get_chat_card_meta_options():
     return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 

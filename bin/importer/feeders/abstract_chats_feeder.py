@@ -483,4 +483,41 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                             obj.add_relationship(chat_obj.get_global_id(), 'in')
         # -FORWARD- #
 
+        ## MENTION ##
+        if self.get_json_meta().get('mentions'):
+            for mention in self.get_json_meta()['mentions'].get('chats', []):
+                m_obj = self._process_chat(mention, date, new_objs=new_objs)
+                if m_obj:
+                    for chat_obj in chats_objs:
+                        if chat_obj.type == 'chat':
+                            chat_obj.add_relationship(m_obj.get_global_id(), 'mention')
+
+                    # TODO PERF
+                    # TODO Keep message obj + chat obj in global var
+                    for obj in objs:
+                        if obj.type == 'message':
+                            obj.add_relationship(m_obj.get_global_id(), 'mention')
+                            for chat_obj in chats_objs:
+                                if chat_obj.type == 'chat':
+                                    obj.add_relationship(chat_obj.get_global_id(), 'in')
+
+            for mention in self.get_json_meta()['mentions'].get('users', []):
+                m_obj = self._process_user(mention, date, timestamp, new_objs=new_objs)  # TODO date, timestamp ???
+                if m_obj:
+                    for chat_obj in chats_objs:
+                        if chat_obj.type == 'chat':
+                            chat_obj.add_relationship(m_obj.get_global_id(), 'mention')
+
+                    # TODO PERF
+                    # TODO Keep message obj + chat obj in global var
+                    for obj in objs:
+                        if obj.type == 'message':
+                            obj.add_relationship(m_obj.get_global_id(), 'mention')
+                            for chat_obj in chats_objs:
+                                if chat_obj.type == 'chat':
+                                    obj.add_relationship(chat_obj.get_global_id(), 'in')
+
+
+         # -MENTION- #
+
         return new_objs | objs

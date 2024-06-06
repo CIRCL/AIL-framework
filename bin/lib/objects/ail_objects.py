@@ -594,6 +594,13 @@ def get_chat_relationships_cord_graph(obj_type, subtype, obj_id):
         return data
     return []
 
+def get_chat_relationships_mentions_cord_graph(obj_type, subtype, obj_id):
+    if obj_type == 'chat':
+        obj_global_id = get_obj_global_id(obj_type, subtype, obj_id)
+        data = relationships_engine.get_chat_mentions_stats(obj_global_id)
+        return data
+    return []
+
 # --- RELATIONSHIPS --- #
 
 

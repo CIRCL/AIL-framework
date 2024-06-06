@@ -248,6 +248,10 @@
                                                     <input class="form-check-input" type="checkbox" value="True" id="message_Check" name="message_Check" {%if "message" in dict_object["filter"]%}checked{%endif%}>
                                                     <label class="form-check-label" for="message_Check">Message</label>
                                                 </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="user-account_Check" name="user-account_Check" {%if "user-account" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="user-account_Check">User-Account</label>
+                                                </div>
                                             </li>
 
 {#                                        <li class="list-group-item text-left">#}
@@ -351,7 +355,11 @@
                         </div>
                     </div>
 
+                    <h3>Forwards</h3>
                     <div id="chart_test" style="max-width: 900px"></div>
+
+                    <h3>Mentions</h3>
+                    <div id="chart_mentions" style="max-width: 900px"></div>
 
 
                     <table id="table_graph_node_objects">
@@ -379,6 +387,11 @@ $(document).ready(function(){
         let url = "{{ url_for('correlation.relationships_chord_graph_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}"
         d3.json(url).then(function(data) {
             create_directed_chord_diagram('#chart_test', data, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+        });
+
+        let url2 = "{{ url_for('correlation.relationships_chord_mentions_graph_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}"
+        d3.json(url2).then(function(data) {
+            create_directed_chord_diagram('#chart_mentions', data, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
         });
 
 
@@ -806,6 +819,10 @@ window.all_graph = all_graph;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+*/
 
 
 

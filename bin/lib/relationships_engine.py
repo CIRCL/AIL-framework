@@ -22,7 +22,7 @@ RELATIONSHIPS = {
     "mention"
 }
 
-RELATIONSHIPS_OBJS = {
+RELATIONSHIPS_OBJS = { # TODO forward user-account
     "forwarded_from": {
         'chat': {'message'},
         'message': {'chat', 'user-account'}
@@ -35,7 +35,11 @@ RELATIONSHIPS_OBJS = {
         'chat': {'message'},
         'message': {'chat'}
     },
-    "mention": {}
+    "mention": {
+        'chat': {'chat', 'user-account', 'message'},
+        'message': {'chat', 'user-account'},
+        'user-account': {'chat', 'message'},
+    },
 }
 
 def get_relationships():
@@ -221,3 +225,55 @@ def get_chat_forward_stats(obj_global_id): # objs_hidden
 
     return data
 
+##################################################################
+
+def get_chat_mention_stats_in(obj_global_id):
+    nb = {}
+    for rel in get_obj_relationships(obj_global_id, relationships={'mention'}, filter_types={'message'}):
+        chat_mess = rel['source'].split('/')
+        chat_source = f'chat:{chat_mess[0][9:]}:{chat_mess[2]}'
+        if chat_source not in nb:
+            nb[chat_source] = 0
+        nb[chat_source] += 1
+    return nb
+
+def get_chat_mention_stats_out(obj_global_id):
+    nb = {}
+    for rel in get_obj_relationships(obj_global_id, relationships={'in'}, filter_types={'message'}):
+        r = get_obj_relationships(rel['source'], relationships={'mention'}, filter_types={'chat', 'user-account'})
+        if r:
+            if not r[0]['target'] in nb:
+                nb[r[0]['target']] = 0
+            nb[r[0]['target']] += 1
+    #     chat_mess = rel['source'].split('/')
+    #
+    #     chat_target = f'chat:{chat_mess[0][9:]}:{chat_mess[2]}'
+    #     print(chat_target, chat, chat_target == chat)
+    #     if chat is None or chat_target == chat:
+    #         if chat_target not in nb:
+    #             nb[chat_target] = 0
+    #         nb[chat_target] += 1
+    #
+    # print(json.dumps(nb, indent=4))
+    return nb
+
+def get_chat_mentions_stats(obj_global_id): # objs_hidden
+    data = []
+
+    # print(get_obj_relationships(obj_global_id, relationships=['forwarded_from'], filter_types=['message']))
+
+    out_mess = get_chat_mention_stats_in(obj_global_id)
+    in_mess = get_chat_mention_stats_out(obj_global_id)
+    #
+    for target in in_mess:
+        data.append({'source': obj_global_id, 'target': target, 'value': in_mess[target]})
+
+    for source in out_mess:
+        data.append({'source': source, 'target': obj_global_id, 'value': out_mess[source]})
+
+    # print()
+    # print(in_mess)
+    # print()
+    # print(out_mess)
+
+    return data

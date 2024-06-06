@@ -24,7 +24,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
-from lib.relationships_engine import get_obj_nb_relationships, add_obj_relationship
+from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
 from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
@@ -298,6 +298,9 @@ class AbstractObject(ABC):
 
     def get_nb_relationships(self, filter=[]):
         return get_obj_nb_relationships(self.get_global_id())
+
+    def get_obj_relationships(self, relationships=set(), filter_types=set()):
+        return get_obj_relationships(self.get_global_id(), relationships=relationships, filter_types=filter_types)
 
     def add_relationship(self, obj2_global_id, relationship, source=True):
         # is source
