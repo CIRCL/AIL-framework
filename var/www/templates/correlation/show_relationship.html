@@ -648,7 +648,7 @@ function zoomed(event, d) {
 	container_graph.attr("transform", event.transform);
 }
 
-function doubleclick (d) {
+function doubleclick (event, d) {
 	window.open(d.url, '_blank');
 }
 
