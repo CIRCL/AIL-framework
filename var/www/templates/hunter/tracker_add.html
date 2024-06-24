@@ -75,7 +75,7 @@
 {#                                                        <label class="custom-control-label" for="crypto_obj"><i class="fas fa-coins"></i>&nbsp;Cryptocurrency</label>#}
 {#                                                    </div>#}
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if not dict_tracker['filters'] or 'decoded' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Content that has been decoded from an encoded format, such as base64"></i></label>
                                                     </div>
 {#                                                    <div class="custom-control custom-switch mt-1">#}
@@ -83,7 +83,7 @@
 {#                                                        <label class="custom-control-label" for="domain_obj"><i class="fas fa-spider"></i>&nbsp;Domain</label>#}
 {#                                                    </div>#}
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if not dict_tracker['filters'] or 'item' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text that has been processed by AIL. It can include various types of extracted information"></i></label>
                                                     </div>
                                                     <div class="card border-dark mb-4" id="sources_item_div">
@@ -100,14 +100,14 @@
 
 
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" {% if not dict_tracker['filters'] or 'pgp' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="PGP key/block metadata"></i></label>
                                                     </div>
                                                     <div class="card border-dark mb-4" id="sources_pgp_div">
                                                         <div class="card-body">
                                                             <h6>Filter PGP by subtype:</h6>
                                                             <div class="custom-control custom-switch mt-1">
-                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" checked="">
+                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'name' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
                                                                 <label class="custom-control-label" for="filter_pgp_name">
                                                                     <svg height="26" width="26">
                                                                         <g class="nodes">
@@ -119,7 +119,7 @@
                                                                 </label>
                                                             </div>
                                                             <div class="custom-control custom-switch mt-1">
-                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" checked="">
+                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'mail' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
                                                                 <label class="custom-control-label" for="filter_pgp_mail">
                                                                     <svg height="26" width="26">
                                                                         <g class="nodes">
@@ -133,15 +133,15 @@
                                                         </div>
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="title_obj" id="title_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="title_obj" id="title_obj" {% if not dict_tracker['filters'] or 'title' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="title_obj"><i class="fas fa-heading"></i>&nbsp;Title <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Title that has been extracted from a HTML page"></i></label>
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if not dict_tracker['filters'] or 'message' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Message <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Messages from Chats"></i></label>
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" checked="">
+                                                        <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if not dict_tracker['filters'] or 'ocr' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="ocr_obj"><i class="fas fa-comment-dots"></i>&nbsp;OCR <i class="fas fa-expand text-info" data-toggle="tooltip" data-placement="right" title="Text extracted from Images"></i></label>
                                                     </div>
 
@@ -309,6 +309,9 @@ $(document).ready(function(){
 		name: 'sources_item',
 		emptyText: 'Item Sources to track (ALL IF EMPTY)',
 		});
+
+    item_source_input_controller();
+    pgp_source_input_controller();
 
 	$('#tracker_type').on('change', function() {
 		var tracker_type = this.value;

@@ -145,7 +145,7 @@ def tracked_menu_admin():
 def show_tracker():
     user_id = current_user.get_id()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
+    res = Tracker.api_is_allowed_to_access_tracker(tracker_uuid, user_id)
     if res[1] != 200:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -159,7 +159,7 @@ def show_tracker():
 
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'sparkline', 'tags',
-                                     'user', 'webhook', 'nb_objs'})
+                                     'user', 'webhooks', 'nb_objs'})
 
     if meta['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
@@ -300,6 +300,7 @@ def add_tracked_menu():
             return create_json_response(res[0], res[1])
     else:
         return render_template("tracker_add.html",
+                               dict_tracker={},
                                all_sources=item_basic.get_all_items_sources(r_list=True),
                                tags_selector_data=Tag.get_tags_selector_data(),
                                all_yara_files=Tracker.get_all_default_yara_files())
@@ -314,6 +315,8 @@ def tracker_edit():
         res = Tracker.api_edit_tracker(input_dict, user_id)
         if res[1] == 200:
             return redirect(url_for('hunters.show_tracker', uuid=res[0].get('uuid')))
+        else:
+            return create_json_response(res[0], res[1])
     else:
         user_id = current_user.get_id()
         tracker_uuid = request.args.get('uuid', None)
@@ -322,10 +325,16 @@ def tracker_edit():
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
         tracker = Tracker.Tracker(tracker_uuid)
-        dict_tracker = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'tags', 'webhook'})
+        dict_tracker = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'tags', 'webhooks'})
         if dict_tracker['type'] == 'yara':
             if not Tracker.is_default_yara_rule(dict_tracker['tracked']):
                 dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
+        elif dict_tracker['type'] == 'set':
+            tracked, nb_words = dict_tracker['tracked'].rsplit(';', 1)
+            tracked = tracked.replace(',', ' ')
+            dict_tracker['tracked'] = tracked
+            dict_tracker['nb_words'] = nb_words
+
         taxonomies_tags, galaxies_tags, custom_tags = Tag.sort_tags_taxonomies_galaxies_customs(dict_tracker['tags'])
         tags_selector_data = Tag.get_tags_selector_data()
         tags_selector_data['taxonomies_tags'] = taxonomies_tags
