@@ -811,7 +811,7 @@ def crawler_cookiejar_cookie_edit_post():
 @login_required
 @login_read_only
 def crawler_cookiejar_cookie_add():
-    cookiejar_uuid = request.args.get('cookiejar_uuid')
+    cookiejar_uuid = request.args.get('uuid')
     return render_template("add_cookie.html", cookiejar_uuid=cookiejar_uuid)
 
 
@@ -842,7 +842,7 @@ def crawler_cookiejar_cookie_manual_add_post():
     if res[1] != 200:
         return create_json_response(res[0], res[1])
 
-    return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
 
 
 @crawler_splash.route('/crawler/cookiejar/cookie/json_add_post', methods=['POST'])
