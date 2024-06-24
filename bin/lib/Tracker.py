@@ -763,7 +763,7 @@ def delete_obj_trackers(obj_type, subtype, obj_id):
 
 ## LEVEL ##
 def is_tracker_global_level(tracker_uuid):
-    return r_tracker.hget(f'tracker:{tracker_uuid}', 'level') == 1
+    return int(r_tracker.hget(f'tracker:{tracker_uuid}', 'level')) == 1
 
 def is_tracked_in_global_level(tracked, tracker_type):
     for tracker_uuid in get_trackers_by_tracked(tracker_type, tracked):
