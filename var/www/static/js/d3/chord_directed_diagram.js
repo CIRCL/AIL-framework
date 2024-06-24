@@ -6,7 +6,20 @@
 
 // TODO: - Mouseover object
 
-const create_directed_chord_diagram = (container_id, data, fct_mouseover, fct_mouseout, options) => {
+const create_directed_chord_diagram = (container_id, data, min_value= 0, max_value = -1, fct_mouseover, fct_mouseout, options) => {
+
+    // Filter data by value between target and source
+    if (min_value > 0) {
+        data.data = data.data.filter(function(value) {
+            return data.value >= min_value;
+        });
+    }
+    if (max_value > 0) {
+        data.data = data.data.filter(function(value) {
+            return data.value <= max_value;
+        });
+    }
+
 
     function getMaxCharsToShow(angle, radius) {
         const approximateCharWidth = 7; // Approximate width of a character in pixels
