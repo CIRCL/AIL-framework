@@ -145,7 +145,7 @@ def tracked_menu_admin():
 def show_tracker():
     user_id = current_user.get_id()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
+    res = Tracker.api_is_allowed_to_access_tracker(tracker_uuid, user_id)
     if res[1] != 200:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
