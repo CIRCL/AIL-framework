@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects import ail_objects
+from lib import chats_viewer
 from lib import Tag
 
 bootstrap_label = Flask_config.bootstrap_label
@@ -263,9 +264,37 @@ def relationships_graph_node_json():
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
     level = sanitise_level(request.args.get('level'))
 
-    json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, max_nodes=max_nodes, level=level, flask_context=True)
+    filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
+    relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
+
+    json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, relationships=relationships, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
     return jsonify(json_graph)
 
+@correlation.route('/relationships/chord_graph_json')
+@login_required
+@login_read_only
+def relationships_chord_graph_json():
+    obj_id = request.args.get('id')
+    subtype = request.args.get('subtype')
+    obj_type = request.args.get('type')
+
+    chat_json_graph = ail_objects.get_chat_relationships_cord_graph(obj_type, subtype, obj_id)
+    meta = chats_viewer.enrich_chat_relationships_labels(chat_json_graph)
+
+    return jsonify({'meta': meta, 'data': chat_json_graph})
+
+@correlation.route('/relationships/chord_mentions_graph_json')
+@login_required
+@login_read_only
+def relationships_chord_mentions_graph_json():
+    obj_id = request.args.get('id')
+    subtype = request.args.get('subtype')
+    obj_type = request.args.get('type')
+
+    chat_json_graph = ail_objects.get_chat_relationships_mentions_cord_graph(obj_type, subtype, obj_id)
+    meta = chats_viewer.enrich_chat_relationships_labels(chat_json_graph)
+
+    return jsonify({'meta': meta, 'data': chat_json_graph})
 
 @correlation.route('/relationship/show', methods=['GET', 'POST'])
 @login_required
@@ -278,8 +307,28 @@ def show_relationship():
         max_nodes = request.form.get('max_nb_nodes_in')
         level = sanitise_level(request.form.get('level'))
 
+        ## get all selected relationships
+        relationships = []
+        for relationship in ail_objects.get_relationships():
+            rel_option = request.form.get(f'relationship_{relationship}_Check')
+            if rel_option:
+                relationships.append(relationship)
+
+        relationships = ",".join(relationships)
+
+        ## get all selected objects types
+        filter_types = []
+        for ob_type in ail_objects.get_all_objects():
+            correl_option = request.form.get(f'{ob_type}_Check')
+            if correl_option:
+                filter_types.append(ob_type)
+
+        # list as params
+        filter_types = ",".join(filter_types)
+
         # redirect to keep history and bookmark
         return redirect(url_for('correlation.show_relationship', type=object_type, subtype=subtype, id=obj_id,
+                                filter=filter_types, relationships=relationships,
                                 max_nodes=max_nodes, level=level))
 
     # request.method == 'GET'
@@ -289,6 +338,9 @@ def show_relationship():
         obj_id = request.args.get('id')
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         level = sanitise_level(request.args.get('level'))
+
+        filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','), default=True)
+        relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
 
         # check if obj_id exist
         if not ail_objects.exists_obj(obj_type, subtype, obj_id):
@@ -300,6 +352,8 @@ def show_relationship():
                            "object_type": obj_type,
                            "max_nodes": max_nodes, "level": level,
                            "correlation_id": obj_id,
+                           "relationships": relationships, "relationships_str": ",".join(relationships),
+                           "filter": filter_types, "filter_str": ",".join(filter_types),
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'info', 'icon', 'username'}, flask_context=True),
                            "nb_relation": ail_objects.get_obj_nb_relationships(obj_type, subtype, obj_id)
                            }

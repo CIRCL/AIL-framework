@@ -16,7 +16,8 @@
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
 
 		<style>
 		.icon_legend {
@@ -71,6 +72,7 @@
 
         .blured {
             filter: blur(5px);
+            max-width: 200px;
         }
 
 		.graph_panel {
@@ -126,6 +128,10 @@
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
 					{% endif %}
+
+                    <div class="my-2">
+                        {% include 'objects/image/block_blur_img_slider.html' %}
+                    </div>
 
 					<div class="row">
 						<div class="col-xl-10">
@@ -205,12 +211,48 @@
 								<div class="card-body text-center px-0 py-0">
 
 									<ul class="list-group">
-                                        <li class="list-group-item list-group-item-info">Relationship</li>
+                                        <li class="list-group-item list-group-item-info">Relationships</li>
                                         <form action="{{ url_for('correlation.show_relationship') }}" method="post">
+
+                                            <li class="list-group-item text-left">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forwarded_from_Check" name="relationship_forwarded_from_Check" {%if "forwarded_from" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_forwarded_from_Check">Forwarded From</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_forwarded_to_Check" name="relationship_forwarded_to_Check" {%if "forwarded_to" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_forwarded_to_Check">Forwarded To</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_in_Check" name="relationship_in_Check" {%if "in" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_in_Check">In</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_mention_Check" name="relationship_mention_Check" {%if "mention" in dict_object["relationships"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="relationship_mention_Check">Mention</label>
+                                                </div>
+                                            </li>
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">
                                             <input type="hidden" id="subtype" name="subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
+
+                                            <li class="list-group-item list-group-item-info">Objects Types</li>
+
+                                            <li class="list-group-item text-left">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="chat_Check" name="chat_Check" {%if "chat" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="chat_Check">Chat</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="message_Check" name="message_Check" {%if "message" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="message_Check">Message</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="user-account_Check" name="user-account_Check" {%if "user-account" in dict_object["filter"]%}checked{%endif%}>
+                                                    <label class="form-check-label" for="user-account_Check">User-Account</label>
+                                                </div>
+                                            </li>
 
 {#                                        <li class="list-group-item text-left">#}
 {#                                                <div class="form-check">#}
@@ -313,10 +355,25 @@
                         </div>
                     </div>
 
+                    <h3>Forwards</h3>
+                    <div id="chart_test" style="max-width: 900px"></div>
+
+                    <h3>Mentions</h3>
+                    <div id="chart_mentions" style="max-width: 900px"></div>
+
+
+                    <table id="table_graph_node_objects">
+                    </table>
+
+                    <div id="timeline"></div>
+
 				</div>
 			</div>
 		</div>
 
+
+
+{% include 'objects/tooltip_ail_objects.html' %}
 <script>
 
 var all_graph = {};
@@ -324,8 +381,20 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
+		all_graph.node_graph = create_graph("{{ url_for('correlation.relationships_graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&level={{ dict_object["level"] }}&relationships={{ dict_object["relationships_str"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		all_graph.onResize();
+
+        let url = "{{ url_for('correlation.relationships_chord_graph_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}"
+        d3.json(url).then(function(data) {
+            create_directed_chord_diagram('#chart_test', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+        });
+
+        let url2 = "{{ url_for('correlation.relationships_chord_mentions_graph_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}"
+        d3.json(url2).then(function(data) {
+            create_directed_chord_diagram('#chart_mentions', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+        });
+
+
 });
 
 const blur_slider_correlation = $('#blur-slider-correlation');
@@ -553,30 +622,41 @@ d3.json(url)
 
     d3.select("body").on("keypress", keypressed)
 
+    let table_obj = document.getElementById("table_graph_node_objects")
+    for (let i=0; i<data.nodes.length; i++) {
+        let newRow = table_obj.insertRow();
+        let newCell = newRow.insertCell();
+        let newText = document.createTextNode(data.nodes[i].id);
+        newCell.appendChild(newText);
 
+        //console.log(data.nodes[i])
+
+    }
+
+    //// --------------------------------------------------------------------------------------------------------
 
 })
 .catch(function(error) {
 				$("#graph_loading").remove()
 				svg_node.remove();
 				d3.select("#graph").append("div")
-													 .text(error);
+                    .text(error);
 		});
 }
 
-function zoomed() {
-	container_graph.attr("transform", d3.event.transform);
+function zoomed(event, d) {
+	container_graph.attr("transform", event.transform);
 }
 
-function doubleclick (d) {
+function doubleclick (event, d) {
 	window.open(d.url, '_blank');
 }
 
-function keypressed () {
-    //console.log(d3.event.keyCode)
+function keypressed (event, d) {
+    //console.log(event.keyCode)
     //console.log(currentObject.id)
     // hide node, H or h key
-    if ((d3.event.keyCode === 72 || d3.event.keyCode === 104) && currentObject) {
+    if ((event.keyCode === 72 || event.keyCode === 104) && currentObject) {
         window.location.href = correl_link + "&hide=" + currentObject.id
     }
 
@@ -586,29 +666,29 @@ function click (d) {
 console.log('clicked')
 }
 
-function drag_start(d) {
-if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+function drag_start(event, d) {
+if (!event.active) simulation.alphaTarget(0.3).restart();
 d.fx = d.x;
 d.fy = d.y;
 }
 
-function dragged(d) {
-d.fx = d3.event.x;
-d.fy = d3.event.y;
+function dragged(event, d) {
+d.fx = event.x;
+d.fy = event.y;
 }
 
-function drag_end(d) {
-if (!d3.event.active) simulation.alphaTarget(0);
+function drag_end(event, d) {
+if (!event.active) simulation.alphaTarget(0);
 d.fx = d.x;
 d.fy = d.y;
 }
 
-function mouseovered(d) {
+function mouseovered(event, d, obj_gid, obj_label, additional_text) {
 
 currentObject = d;
 
-var d3_pageX = d3.event.pageX;
-var d3_pageY = d3.event.pageY;
+var d3_pageX = event.pageX;
+var d3_pageY = event.pageY;
 
 if (d.popover) {
 	div.html(d.popover)
@@ -621,8 +701,16 @@ if (d.popover) {
     blur_tooltip();
 } else {
 
-		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
-		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
+		let pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"
+        if (obj_label) {
+            pop_header = pop_header + sanitize_text(obj_label)
+        } else if (obj_gid) {
+            pop_header = pop_header + sanitize_text(obj_gid)
+        } else {
+            pop_header = pop_header + sanitize_text(d.text)
+        }
+        pop_header = pop_header + "</h6></div>"
+		let spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
 
 		div.html(pop_header + spinner)
 			.style("left", (d3_pageX) + "px")
@@ -632,9 +720,16 @@ if (d.popover) {
 			.duration(200)
 			.style("opacity", 1);
 
-		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
+        let description_url = "{{ url_for('correlation.get_description') }}?object_id="
+        if (obj_gid) {
+            description_url = description_url + obj_gid
+        } else {
+            description_url = description_url + d.id
+        }
+
+		$.getJSON(description_url,
 				function(data){
-					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
+					let desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
 					Object.keys(data).forEach(function(key) {
 						if (key=="status") {
 							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
@@ -650,9 +745,16 @@ if (d.popover) {
 								desc = desc + "fa-times-circle\"></i>DOWN"
 							}
 							desc = desc + "</div></dd>"
-						} else if (key!="tags" && key!="id" && key!="img" && key!="icon" && key!="link" && key!="type") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
-						}
+						} else if (key!=="tags" && key!=="id" && key!="img" && key!=="icon" && key!=="svg_icon" && key!=="link" && key!=="type" && key!=="tags_safe") {
+							if (data[key]) {
+                                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
+                                    let date = sanitize_text(data[key])
+                                    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
+                                } else {
+							        desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
+                                }
+                            }
+                        }
 					});
 					desc = desc + "</dl>"
 
@@ -674,6 +776,9 @@ if (d.popover) {
                             desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
                         }
 					}
+                    if (additional_text) {
+                        desc = desc + "<hr><div>" + sanitize_text(additional_text) + "</div>"
+                    }
 
 					desc = desc + "</div></div>"
 					div.html(desc)
@@ -697,7 +802,6 @@ if (d.popover) {
 
 function mouseouted() {
     currentObject = null;
-
 	div.transition()
 		.duration(500)
 		.style("opacity", 0);
@@ -712,8 +816,18 @@ all_graph.onResize = function () {
 }
 
 window.all_graph = all_graph;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/*
+*/
+
+
+
 </script>
 
-        </body>
+</body>
 
 </html>

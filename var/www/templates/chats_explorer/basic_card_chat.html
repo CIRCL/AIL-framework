@@ -85,7 +85,7 @@
                                 <i class="fas fa-user-circle"></i>
                                 <i class="far fa-comment-dots"></i>
                             </span>
-                            {{ meta["nb_messages"] }}&nbsp;&nbsp;
+                            <a class="badge-primary px-1 py-0" href="{{ url_for('chats_explorer.objects_user_account_chat') }}?subtype={{ meta['subtype'] }}&id={{ main_obj_id }}&chat_id={{ meta['id'] }}">{{ meta["nb_messages"] }}&nbsp;&nbsp;</a>
                         </span>
                     {% endif %}
                 </div>

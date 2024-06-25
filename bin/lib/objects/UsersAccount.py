@@ -63,6 +63,16 @@ class UserAccount(AbstractSubtypeObject):
     def get_last_name(self):
         return self._get_field('lastname')
 
+    def get_name(self):
+        first_name = self.get_first_name()
+        last_name = self.get_last_name()
+        if first_name and last_name:
+            return f'{first_name} {last_name}'
+        elif first_name:
+            return first_name
+        elif last_name:
+            return last_name
+
     def get_phone(self):
         return self._get_field('phone')
 
@@ -129,10 +139,11 @@ class UserAccount(AbstractSubtypeObject):
 
     def get_messages(self):
         messages = []
-        for mess in self.get_correlation('message'):
-            messages.append(f'message:{mess}')
+        correl = self.get_correlation('message')
+        if 'message' in correl:
+            for mess_id in correl['message']:
+                messages.append(f'message:{mess_id}')
         return messages
-
 
     def get_messages_by_chat_obj(self, chat_obj):
         messages = []
@@ -157,6 +168,7 @@ class UserAccount(AbstractSubtypeObject):
             meta['usernames'] = self.get_usernames()
         if 'icon' in options:
             meta['icon'] = self.get_icon()
+            meta['svg_icon'] = meta['icon']
         if 'info' in options:
             meta['info'] = self.get_info()
             if 'translation' in options and translation_target:

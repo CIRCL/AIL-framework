@@ -762,6 +762,9 @@ def delete_obj_trackers(obj_type, subtype, obj_id):
 #### TRACKERS ACL ####
 
 ## LEVEL ##
+def is_tracker_global_level(tracker_uuid):
+    return int(r_tracker.hget(f'tracker:{tracker_uuid}', 'level')) == 1
+
 def is_tracked_in_global_level(tracked, tracker_type):
     for tracker_uuid in get_trackers_by_tracked(tracker_type, tracked):
         tracker = Tracker(tracker_uuid)
@@ -803,6 +806,19 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     user = User(user_id)
     if not user.is_in_role('admin') and user_id != tracker_creator:
         return {"status": "error", "reason": "Access Denied"}, 403
+    return {"uuid": tracker_uuid}, 200
+
+
+def api_is_allowed_to_access_tracker(tracker_uuid, user_id):
+    if not is_valid_uuid_v4(tracker_uuid):
+        return {"status": "error", "reason": "Invalid uuid"}, 400
+    tracker_creator = r_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
+    if not tracker_creator:
+        return {"status": "error", "reason": "Unknown uuid"}, 404
+    user = User(user_id)
+    if not is_tracker_global_level(tracker_uuid):
+        if not user.is_in_role('admin') and user_id != tracker_creator:
+            return {"status": "error", "reason": "Access Denied"}, 403
     return {"uuid": tracker_uuid}, 200
 
 ##-- ACL --##

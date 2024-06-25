@@ -297,6 +297,44 @@ def objects_user_account():
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                translation_languages=languages, translation_target=target)
 
+@chats_explorer.route("/objects/user-account_chats_chord_json", methods=['GET']) # TODO API
+@login_required
+@login_read_only
+def objects_user_account_chats_chord_json():
+    subtype = request.args.get('subtype')
+    user_id = request.args.get('id')
+    json_graph = chats_viewer.get_user_account_chats_chord(subtype, user_id)
+    return jsonify(json_graph)
+
+@chats_explorer.route("/objects/user-account_mentions_chord_json", methods=['GET']) # TODO API
+@login_required
+@login_read_only
+def objects_user_account_mentions_chord_json():
+    subtype = request.args.get('subtype')
+    user_id = request.args.get('id')
+    json_graph = chats_viewer.get_user_account_mentions_chord(subtype, user_id)
+    return jsonify(json_graph)
+
+@chats_explorer.route("/objects/user-account/chat", methods=['GET'])
+@login_required
+@login_read_only
+def objects_user_account_chat():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    chat_id = request.args.get('chat_id')
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    meta = chats_viewer.api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translation_target=target)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    else:
+        meta = meta[0]
+        languages = Language.get_translation_languages()
+        return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
+                               translation_languages=languages, translation_target=target)
+
 @chats_explorer.route("objects/user-account/messages/stats/week/all", methods=['GET'])
 @login_required
 @login_read_only
