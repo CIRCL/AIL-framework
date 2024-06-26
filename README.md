@@ -116,7 +116,7 @@ Requirement:
 
 ## Installation Notes
 
-For Lacus Crawler installation instructions, refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
+For Lacus Crawler and LibreTranslate installation instructions (if you want to use those features), refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
 
 ## Starting AIL
 
@@ -126,7 +126,6 @@ To start AIL, use the following commands:
 cd bin/
 ./LAUNCH.sh -l
 ```
-
 You can access the AIL framework web interface at the following URL: 
 
 ```
@@ -170,7 +169,6 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ~~~~
 
 ## Screenshots
-
 
 ### Websites, Forums and Tor Hidden-Services
 
@@ -222,11 +220,11 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ```
     Copyright (C) 2014 Jules Debra
     Copyright (c) 2021 Olivier Sagit
-    Copyright (C) 2014-2023 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
-    Copyright (c) 2014-2023 Raphaël Vinot
-    Copyright (c) 2014-2023 Alexandre Dulaunoy
-    Copyright (c) 2016-2023 Sami Mokaddem
-    Copyright (c) 2018-2023 Thirion Aurélien
+    Copyright (C) 2014-2024 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (c) 2014-2024 Raphaël Vinot
+    Copyright (c) 2014-2024 Alexandre Dulaunoy
+    Copyright (c) 2016-2024 Sami Mokaddem
+    Copyright (c) 2018-2024 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
