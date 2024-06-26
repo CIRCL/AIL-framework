@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body class="text-center">
+    <img class="mb-4" src="{{ url_for('static', filename='image/ail-project.png')}}" width="200">
+    <h1 class="text-secondary">2FA: OTP Setup</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <h3 class="text-secondary">TOTP</h3>
+            <img src="data:image/png;base64, {{ qr_code }}">
+            <div style="font-size: 20px;"> - Install an <b>authenticator application</b> on your mobile.</div>
+            <div style="font-size: 20px;"> - <b>Scan</b> the QRCode</div>
+        </div>
+        <div class="col-lg-6">
+            <h3 class="text-secondary">HOTP</h3>
+                {% for code in hotp_codes %}
+                    <div><i>{{ code[:-6] }}</i> <b>{{ code[-6:] }}</b></div>
+                {% endfor %}
+        </div>
+
+    </div>
+
+    <form class="form-signin" action="{{ url_for('root.setup_2fa')}}"  method="post">
+{#        <h1 class="h3 mb-3 text-secondary">2FA: Please Enter your TOTP or HOTP</h1>#}
+        <div class="mx-4">
+            <input type="text" id="otp" name="otp" class="form-control {% if error %}is-invalid{% endif %}" placeholder="OTP Code" autocomplete="off" required autofocus>
+            {% if error %}
+                <div class="invalid-feedback">
+                    {{error}}
+                </div>
+            {% endif %}
+            <button class="btn btn-lg btn-primary btn-block mb-4" type="submit">Once you have scanned the QRCode or copied the HOTP codes, Please Enter your TOTP or HOTP</button>
+        </div>
+    </form>
+
+
+</body>

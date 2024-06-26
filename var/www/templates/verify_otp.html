@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+	<style>
+	html,
+	body {
+	height: 100%;
+	}
+
+	body {
+	display: -ms-flexbox;
+	display: flex;
+	-ms-flex-align: center;
+	align-items: center;
+	padding-top: 40px;
+	padding-bottom: 40px;
+	background-color: #f5f5f5;
+	}
+
+	.form-signin {
+	width: 100%;
+	max-width: 330px;
+	padding: 15px;
+	margin: auto;
+	}
+	.form-signin .checkbox {
+	font-weight: 400;
+	}
+	.form-signin .form-control {
+	position: relative;
+	box-sizing: border-box;
+	height: auto;
+	padding: 10px;
+	font-size: 16px;
+	}
+	.form-signin .form-control:focus {
+	z-index: 2;
+	}
+	.form-signin input[type="email"] {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+	}
+	.form-signin input[type="password"] {
+	margin-bottom: 10px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0; 102025
+	}
+	</style>
+
+</head>
+
+<body class="text-center">
+
+
+    <form class="form-signin" action="{{ url_for('root.verify_2fa')}}"  method="post">
+        <img class="mb-4" src="{{ url_for('static', filename='image/ail-project.png')}}" width="300">
+        <h1 class="h3 mb-3 text-secondary">2FA: Please Enter your TOTP or HOTP</h1>
+{#        <label for="inputEmail" class="sr-only">Email address</label>#}
+        <input type="text" id="otp" name="otp" class="form-control {% if error %}is-invalid{% endif %}" placeholder="OTP Code" autocomplete="off" required autofocus>
+{#        <input type="text" id="next_page" name="next_page" value="{{next_page}}" hidden>#}
+        {% if error %}
+            <div class="invalid-feedback">
+                {{error}}
+            </div>
+        {% endif %}
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+
+
+</body>

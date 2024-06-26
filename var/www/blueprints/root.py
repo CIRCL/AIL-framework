@@ -7,8 +7,10 @@
 
 import os
 import sys
+import time
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import session
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
@@ -62,7 +64,6 @@ def login():
 
         if username is not None:
             user = AILUser.get(username)  # TODO ANONYMOUS USER
-            print(user.is_anonymous)
 
             # brute force by user_id
             login_failed_user_id = r_cache.get(f'failed_login_user_id:{username}')
@@ -78,20 +79,32 @@ def login():
                     logging_error = 'Incorrect User ACL, Please contact your administrator'
                     return render_template("login.html", error=logging_error)
 
-                # Login User
-                user.rotate_session()
-                login_user(user)
+                if user.is_2fa_enabled():
 
-                if user.request_password_change():
-                    return redirect(url_for('root.change_password'))
-                else:
-                    # update note
-                    # next page
-                    if next_page and next_page != 'None' and next_page != '/':
-                        return redirect(next_page)
-                    # dashboard
+                    session['user_id'] = user.get_user_id()
+                    session['otp_expire'] = int(time.time()) + 10800
+
+                    if not user.is_2fa_setup():
+                        return redirect(url_for('root.setup_2fa'))
                     else:
-                        return redirect(url_for('dashboard.index'))
+                        htop_counter = user.get_htop_counter()
+                        return redirect(url_for('root.verify_2fa', htop_counter=htop_counter))
+
+                else:
+                    # Login User
+                    user.rotate_session()
+                    login_user(user)
+
+                    if user.request_password_change():
+                        return redirect(url_for('root.change_password'))
+                    else:
+                        # update note
+                        # next page
+                        if next_page and next_page != 'None' and next_page != '/':
+                            return redirect(next_page)
+                        # dashboard
+                        else:
+                            return redirect(url_for('dashboard.index'))
 
             # LOGIN FAILED
             else:
@@ -116,6 +129,103 @@ def login():
             next_page = request.args.get('next')
             error = request.args.get('error')
             return render_template("login.html", next_page=next_page, error=error)
+
+@root.route('/2fa', methods=['POST', 'GET'])  # TODO CHECK IF user_id exists
+def verify_2fa():
+    user_id = session.get('user_id', None)
+    otp_expire = session.get('otp_expire', None)
+
+    if not user_id or not otp_expire:  # TODO LOG
+        return redirect(url_for('root.login'))
+
+    # Check if Login is expired
+    if otp_expire < int(time.time()):  # TODO LOG
+        session.pop('user_id', None)
+        session.pop('otp_expire', None)
+        error = "First Login Expired"
+        return redirect(url_for('root.login', error=error))
+
+    user = AILUser.get(user_id)
+    if not user.is_2fa_setup():
+        return redirect(url_for('root.setup_2fa'))
+
+    if request.method == 'POST':
+
+        code = request.form.get('otp')
+
+        if user.is_valid_otp(code):
+            session.pop('user_id', None)
+            session.pop('otp_expire', None)
+
+            # Login User
+            user.rotate_session()
+            login_user(user)
+
+            if user.request_password_change():
+                return redirect(url_for('root.change_password'))
+            else:
+                # # next page
+                # if next_page and next_page != 'None' and next_page != '/':
+                #     return redirect(next_page)
+                # dashboard
+                # else:
+                return redirect(url_for('dashboard.index'))
+        else:
+            htop_counter = user.get_htop_counter()
+            error = "The OTP is incorrect or has expired"
+            return render_template("verify_otp.html", htop_counter=htop_counter, error=error)
+
+    else:
+        htop_counter = user.get_htop_counter()
+        return render_template("verify_otp.html", htop_counter=htop_counter)
+
+@root.route('/2fa/setup', methods=['POST', 'GET'])
+def setup_2fa():
+    user_id = session.get('user_id', None)
+    otp_expire = session.get('otp_expire', None)
+
+    if not user_id or not otp_expire:  # TODO LOG
+        return redirect(url_for('root.login'))
+
+    # Check if Login is expired
+    if otp_expire < int(time.time()):  # TODO LOG
+        session.pop('user_id', None)
+        session.pop('otp_expire', None)
+        error = "First Login Expired"
+        return redirect(url_for('root.login', error=error))
+
+    user = AILUser.get(user_id)
+
+    if user.is_2fa_setup():
+        return redirect(url_for('root.verify_2fa'))
+
+    if request.method == 'POST':
+        code = request.form.get('otp')
+
+        if user.is_valid_otp(code):
+            user.setup_2fa()
+
+            session.pop('user_id', None)
+            session.pop('otp_expire', None)
+
+            # Login User
+            user.rotate_session()
+            login_user(user)
+
+            if user.request_password_change():
+                return redirect(url_for('root.change_password'))
+            else:
+                return redirect(url_for('dashboard.index'))
+        else:
+            error = "The OTP is incorrect or has expired"
+            return redirect(url_for('root.setup_2fa', error=error))
+    else:
+        error = request.args.get('error')
+        if error:
+            qr_code, hotp_codes = user.init_setup_2fa(create=False)
+        else:
+            qr_code, hotp_codes = user.init_setup_2fa()
+        return render_template("setup_otp.html", qr_code=qr_code, hotp_codes=hotp_codes, error=error)
 
 @root.route('/change_password', methods=['POST', 'GET'])
 @login_required

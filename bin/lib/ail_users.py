@@ -8,7 +8,11 @@ import re
 import secrets
 import sys
 
+import segno
+
+from base64 import b64encode
 from flask_login import UserMixin
+from io import BytesIO
 from uuid import uuid4
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -21,6 +25,11 @@ from lib.ConfigLoader import ConfigLoader
 config_loader = ConfigLoader()
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+
+if config_loader.get_config_boolean('Users', 'force_2fa'):
+    r_serv_db.hset('ail:2fa', '2fa', 1)
+else:
+    r_serv_db.hset('ail:2fa', '2fa', 0)
 config_loader = None
 
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
@@ -83,6 +92,9 @@ def hashing_password(password):
     password = password.encode()
     return bcrypt.hashpw(password, bcrypt.gensalt())
 
+def get_user_passwd_hash(user_id):
+    return r_serv_db.hget('ail:users:all', user_id)
+
 ## --PASSWORDS-- ##
 
 def check_email(email):
@@ -94,6 +106,15 @@ def check_email(email):
         return False
 
 #### TOKENS ####
+
+def get_user_token(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')
+
+def get_token_user(token):
+    return r_serv_db.hget('ail:users:tokens', token)
+
+def exists_token(token):
+    return r_serv_db.hexists('ail:users:tokens', token)
 
 def gen_token():
     return secrets.token_urlsafe(41)
@@ -136,7 +157,92 @@ def _get_hotp(secret):
 def _verify_hotp(hotp, counter, code):
     return hotp.verify(code, counter)
 
+def get_user_otp_secret(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'otp_secret')
+
+def get_user_hotp_counter(user_id):
+    return int(r_serv_db.hget(f'ail:user:metadata:{user_id}', 'otp_counter'))
+
+def verify_user_totp(user_id, code):
+    totp = _get_totp(get_user_otp_secret(user_id))
+    return _verify_totp(totp, code)
+
+def verify_user_hotp(user_id, code):  # TODO IF valid increase counter
+    hotp = _get_hotp(get_user_otp_secret(user_id))
+    counter = get_user_hotp_counter(user_id)
+    return _verify_hotp(hotp, counter, code)
+
+def verify_user_otp(user_id, code):
+    if verify_user_totp(user_id, code):
+        return True
+    elif verify_user_hotp(user_id, code):
+        return True
+    return False
+
+def create_user_otp(user_id):
+    secret = pyotp.random_base32()
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'otp_secret', secret)
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'otp_counter', 0)
+    enable_user_2fa(user_id)
+
+def delete_user_otp(user_id):
+    r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'otp_secret')
+    r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'otp_counter')
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'otp_setup', 0)
+    disable_user_2fa(user_id)
+
+def get_user_otp_uri(user_id, instance_name):
+    return pyotp.totp.TOTP(get_user_otp_secret(user_id)).provisioning_uri(name=user_id, issuer_name=instance_name)
+
+def get_user_otp_qr_code(user_id, instance_name):
+    uri = get_user_otp_uri(user_id, instance_name)
+    qrcode = segno.make_qr(uri)
+    buff = BytesIO()
+    qrcode.save(buff, kind='png', scale=10)
+    return b64encode(buff.getvalue()).decode()
+    # qrcode.save('qrcode.png', scale=10)
+
+def get_user_hotp_code(user_id):
+    hotp = _get_hotp(get_user_otp_secret(user_id))
+    counter = get_user_hotp_counter(user_id)
+    codes = []
+    for i in range(counter, counter + 20):
+        codes.append(f'{i}: {hotp.at(i)}')
+    return codes
+
+# TODO GET USER HOTP LISTS
+# TODO RESET OTP
+
+def is_user_otp_setup(user_id):
+    otp_setup = r_serv_db.hget(f'ail:user:metadata:{user_id}', 'otp_setup')
+    if otp_setup:
+        return int(otp_setup) == 1
+    return False
+
 ## --OTP-- ##
+
+#### 2FA ####
+
+# Global 2fa option
+def is_2fa_enabled():
+    fa2 = r_serv_db.hget('ail:2fa', '2fa')
+    if fa2:
+        return int(fa2) == 1
+    return False
+
+def is_user_2fa_enabled(user_id):
+    fa2 = r_serv_db.hget(f'ail:user:metadata:{user_id}', '2fa')
+    if fa2:
+        return int(fa2) == 1
+    return False
+
+def enable_user_2fa(user_id):
+    return r_serv_db.hset(f'ail:user:metadata:{user_id}', '2fa', 1)
+
+def disable_user_2fa(user_id):
+    return r_serv_db.hset(f'ail:user:metadata:{user_id}', '2fa', 0)
+
+## --2FA-- ##
 
 #### USERS ####
 
@@ -146,35 +252,6 @@ def get_users():
 def get_user_role(user_id):
     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role')
 
-def get_user_passwd_hash(user_id):
-    return r_serv_db.hget('ail:users:all', user_id)
-
-def get_user_token(user_id):
-    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')
-
-def get_token_user(token):
-    return r_serv_db.hget('ail:users:tokens', token)
-
-def exists_token(token):
-    return r_serv_db.hexists('ail:users:tokens', token)
-
-# def _get_user_otp(user_id):
-#
-#
-# def get_user_hotps(user_id):
-#
-#
-# def _get_user_hotp(user_id):
-#
-#
-# def verify_user_otp(user_id, code):
-#
-#
-# def get_user_hotp_counter(user_id):
-#     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'hotp:counter')
-#
-# def verify_user_hotp(user_id, code):
-#     counter
 
 ########################################################################################################################
 ########################################################################################################################
@@ -283,6 +360,31 @@ class AILUser(UserMixin):
         new_api_key = gen_token()
         _set_user_token(self.user_id, new_api_key)
         return new_api_key
+
+    ## OTP ##
+
+    def is_2fa_setup(self):
+        return is_user_otp_setup(self.user_id)
+
+    def is_2fa_enabled(self):
+        if is_2fa_enabled():
+            return True
+        else:
+            return is_user_2fa_enabled(self.user_id)
+
+    def get_htop_counter(self):
+        return get_user_hotp_counter(self.user_id)
+
+    def is_valid_otp(self, code):
+        return verify_user_otp(self.user_id, code)
+
+    def init_setup_2fa(self, create=True):
+        if create:
+            create_user_otp(self.user_id)
+        return get_user_otp_qr_code(self.user_id, 'AIL TEST'), get_user_hotp_code(self.user_id)
+
+    def setup_2fa(self):
+        r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'otp_setup', 1)
 
     ## ROLE ##
 
@@ -501,3 +603,10 @@ def check_user_role_integrity(user_id):
     return res
 
 ## --ROLES-- ##
+
+if __name__ == '__main__':
+    user_id = 'admin@admin.test'
+    instance_name = 'AIL TEST'
+    delete_user_otp(user_id)
+    # q = get_user_otp_qr_code(user_id, instance_name)
+    # print(q)
