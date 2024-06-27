@@ -167,10 +167,13 @@ def verify_user_totp(user_id, code):
     totp = _get_totp(get_user_otp_secret(user_id))
     return _verify_totp(totp, code)
 
-def verify_user_hotp(user_id, code):  # TODO IF valid increase counter
+def verify_user_hotp(user_id, code):
     hotp = _get_hotp(get_user_otp_secret(user_id))
     counter = get_user_hotp_counter(user_id)
-    return _verify_hotp(hotp, counter, code)
+    valid = _verify_hotp(hotp, counter, code)
+    if valid:
+        r_serv_db.hincrby(f'ail:user:metadata:{user_id}', 'otp_counter', 1)
+    return valid
 
 def verify_user_otp(user_id, code):
     if verify_user_totp(user_id, code):
@@ -298,6 +301,10 @@ class AILUser(UserMixin):
             meta['api_key'] = self.get_api_key()
         if 'role' in options:
             meta['role'] = get_user_role(self.user_id)
+        if '2fa' in options:
+            meta['2fa'] = self.is_2fa_enabled()
+        if 'otp_setup' in options:
+            meta['otp_setup'] = self.is_2fa_setup()
         return meta
 
     ## SESSION ##
@@ -381,7 +388,8 @@ class AILUser(UserMixin):
     def init_setup_2fa(self, create=True):
         if create:
             create_user_otp(self.user_id)
-        return get_user_otp_qr_code(self.user_id, 'AIL TEST'), get_user_hotp_code(self.user_id)
+        instance_name = 'AIL TEST'
+        return get_user_otp_qr_code(self.user_id, instance_name), get_user_otp_uri(self.user_id, instance_name), get_user_hotp_code(self.user_id)
 
     def setup_2fa(self):
         r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'otp_setup', 1)
@@ -418,19 +426,61 @@ class AILUser(UserMixin):
 
 def api_get_users_meta():
     meta = {'users': []}
-    options = {'api_key', 'role'}
+    options = {'api_key', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))
     return meta
 
 def api_get_user_profile(user_id):
-    options = {'api_key', 'role'}
+    options = {'api_key', 'role', '2fa'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
     meta = user.get_meta(options=options)
     return meta, 200
+
+def api_get_user_hotp(user_id):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    hotp = get_user_hotp_code(user_id)
+    return hotp, 200
+
+def api_enable_user_otp(user_id):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    if user.is_2fa_enabled():
+        return {'status': 'error', 'reason': 'User OTP is already setup'}, 400
+    delete_user_otp(user_id)
+    enable_user_2fa(user_id)
+    return user_id, 200
+
+def api_disable_user_otp(user_id):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    if not user.is_2fa_enabled():
+        return {'status': 'error', 'reason': 'User OTP is not enabled'}, 400
+    if is_2fa_enabled():
+        return {'status': 'error', 'reason': '2FA is enforced on this instance'}, 400
+    disable_user_2fa(user_id)
+    delete_user_otp(user_id)
+    return user_id, 200
+
+def api_reset_user_otp(admin_id, user_id):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    admin = AILUser(admin_id)
+    if not admin.is_in_role('admin'):
+        return {'status': 'error', 'reason': 'Access Denied'}, 403
+    if not user.is_2fa_setup():
+        return {'status': 'error', 'reason': 'User OTP is not setup'}, 400
+    delete_user_otp(user_id)
+    enable_user_2fa(user_id)
+    return user_id, 200
 
 def api_create_user_api_key_self(user_id): # TODO LOG USER ID
     user = AILUser(user_id)
@@ -471,7 +521,7 @@ def get_users_metadata(list_users):
         users.append(get_user_metadata(user))
     return users
 
-def create_user(user_id, password=None, chg_passwd=True, role=None): # TODO ###############################################################
+def create_user(user_id, password=None, chg_passwd=True, role=None, otp=False): # TODO ###############################################################
     # # TODO: check password strength
     if password:
         new_password = password
@@ -482,7 +532,7 @@ def create_user(user_id, password=None, chg_passwd=True, role=None): # TODO ####
     # EDIT
     if exists_user(user_id):
         if password or chg_passwd:
-            edit_user_password(user_id, password_hash, chg_passwd=chg_passwd)
+            edit_user(user_id, password_hash, chg_passwd=chg_passwd)
         if role:
             edit_user_role(user_id, role)
     # CREATE USER
@@ -503,7 +553,10 @@ def create_user(user_id, password=None, chg_passwd=True, role=None): # TODO ####
         # create user token
         generate_new_token(user_id)
 
-def edit_user_password(user_id, password_hash, chg_passwd=False):
+        if otp or is_2fa_enabled():
+            enable_user_2fa(user_id)
+
+def edit_user(user_id, password_hash, chg_passwd=False, otp=False):  # TODO ######################################################3333
     if chg_passwd:
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
     else:
@@ -516,6 +569,11 @@ def edit_user_password(user_id, password_hash, chg_passwd=False):
     r_serv_db.hset('ail:users:all', user_id, password_hash)
     # create new token
     generate_new_token(user_id)
+
+    if otp or is_2fa_enabled():
+        enable_user_2fa(user_id)
+    else:
+        disable_user_2fa(user_id)
 
 # # TODO: solve edge_case self delete
 def delete_user(user_id):

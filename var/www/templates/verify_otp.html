@@ -68,10 +68,10 @@
 
     <form class="form-signin" action="{{ url_for('root.verify_2fa')}}"  method="post">
         <img class="mb-4" src="{{ url_for('static', filename='image/ail-project.png')}}" width="300">
-        <h1 class="h3 mb-3 text-secondary">2FA: Please Enter your TOTP or HOTP</h1>
+        <h1 class="h3 mb-3 text-secondary">2FA: Please Enter your TOTP or HOTP #{{ htop_counter }}</h1>
 {#        <label for="inputEmail" class="sr-only">Email address</label>#}
         <input type="text" id="otp" name="otp" class="form-control {% if error %}is-invalid{% endif %}" placeholder="OTP Code" autocomplete="off" required autofocus>
-{#        <input type="text" id="next_page" name="next_page" value="{{next_page}}" hidden>#}
+        <input type="text" id="next_page" name="next_page" value="{{next_page}}" hidden>
         {% if error %}
             <div class="invalid-feedback">
                 {{error}}

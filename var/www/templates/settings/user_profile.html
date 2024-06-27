@@ -62,6 +62,35 @@
                                                     </span>
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <td>2FA OTP</td>
+                                                <td>
+                                                    {% if meta['2fa'] %}
+                                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
+                                                        {% if acl_admin %}
+                                                            <div>
+                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_reset_self')}}"><i class="fas fa-sync"></i> RESET OTP</a>
+                                                            </div>
+                                                        {% endif %}
+                                                        {% if not global_2fa %}
+                                                            <div>
+                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_disable_self')}}"><i class="fas fa-warning"></i> DISABLE 2FA OTP</a>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
+                                                        <div>
+                                                            <a class="btn btn-success" href="{{url_for('settings_b.user_otp_enable_self')}}"><i class="fas fa-plus"></i> ACTIVATE 2FA OTP</a>
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% if meta['2fa'] %}
+                                                <tr>
+                                                    <td>TOTP</td>
+                                                    <td><a class="btn btn-info" href="{{url_for('settings_b.user_hotp')}}"><i class="fas fa-eye"></i> View Paper Tokens</a></td>
+                                                </tr>
+                                            {% endif %}
                                             </tbody>
                                         </table>
                                     </div>

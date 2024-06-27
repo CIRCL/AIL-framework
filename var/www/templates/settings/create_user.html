@@ -66,6 +66,11 @@
                     </select>
 
                     <div class="custom-control custom-switch mt-4 mb-3">
+  				        <input type="checkbox" class="custom-control-input" id="enable_2_fa" name="enable_2_fa" checked>
+  				        <label class="custom-control-label" for="enable_2_fa">2FA OTP</label>
+				    </div>
+
+                    <div class="custom-control custom-switch mt-4 mb-3">
   				        <input type="checkbox" class="custom-control-input" id="set_manual_password" value="" onclick="toggle_password_fields();">
   				        <label class="custom-control-label" for="set_manual_password">{% if meta['id'] %}Reset{% else %}Set{% endif %} Password</label>
 				    </div>

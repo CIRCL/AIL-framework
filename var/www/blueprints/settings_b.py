@@ -70,7 +70,94 @@ def user_profile():
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     meta = r[0]
-    return render_template("user_profile.html", meta=meta, acl_admin=acl_admin)
+    global_2fa = ail_users.is_2fa_enabled()
+    return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/hotp", methods=['GET'])
+@login_required
+@login_read_only
+def user_hotp():
+    # if not current_user.is_authenticated:  # TODO CHECK IF FRESH LOGIN/SESSION -> check last loging time -> rerequest if expired
+
+    acl_admin = current_user.is_in_role('admin')
+    user_id = current_user.get_user_id()
+    r = ail_users.api_get_user_hotp(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    hotp = r[0]
+    return render_template("user_hotp.html", hotp=hotp, acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/otp/enable/self", methods=['GET'])
+@login_required
+@login_read_only
+def user_otp_enable_self():
+    user_id = current_user.get_user_id()
+    r = ail_users.api_enable_user_otp(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    current_user.kill_session()
+    return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/otp/disable/self", methods=['GET'])
+@login_required
+@login_read_only
+def user_otp_disable_self():
+    user_id = current_user.get_user_id()
+    r = ail_users.api_disable_user_otp(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    current_user.kill_session()
+    return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/otp/reset/self", methods=['GET'])
+@login_required
+@login_admin
+def user_otp_reset_self():  # TODO ask for password ?
+    user_id = current_user.get_user_id()
+    r = ail_users.api_reset_user_otp(user_id, user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        current_user.kill_session()
+        return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/otp/enable", methods=['GET'])
+@login_required
+@login_admin
+def user_otp_enable():
+    user_id = request.args.get('user_id')
+    r = ail_users.api_enable_user_otp(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    user = ail_users.AILUser.get(user_id)
+    user.kill_session()
+    return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/otp/disable", methods=['GET'])
+@login_required
+@login_admin
+def user_otp_disable():
+    user_id = request.args.get('user_id')
+    r = ail_users.api_disable_user_otp(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    user = ail_users.AILUser.get(user_id)
+    user.kill_session()
+    return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/otp/reset", methods=['GET'])
+@login_required
+@login_admin
+def user_otp_reset():  # TODO ask for password ?
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_reset_user_otp(admin_id, user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        user = ail_users.AILUser.get(user_id)
+        user.kill_session()
+        return redirect(url_for('settings_b.user_profile'))
 
 @settings_b.route("/settings/user/api_key/new", methods=['GET'])
 @login_required
@@ -132,6 +219,11 @@ def create_user_post():
     role = request.form.get('user_role')
     password1 = request.form.get('password1')
     password2 = request.form.get('password2')
+    enable_2_fa = request.form.get('enable_2_fa')
+    if enable_2_fa or ail_users.is_2fa_enabled():
+        enable_2_fa = True
+    else:
+        enable_2_fa = False
 
     all_roles = ail_users.get_all_roles()
 
@@ -156,14 +248,14 @@ def create_user_post():
                     if not password1 and not password2:
                         password = None
                         str_password = 'Password not changed'
-                ail_users.create_user(email, password=password, role=role)
-                new_user = {'email': email, 'password': str_password}
+                ail_users.create_user(email, password=password, role=role, otp=enable_2_fa)
+                new_user = {'email': email, 'password': str_password, 'otp': enable_2_fa}
                 return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
 
         else:
-            return render_template("create_user.html", all_roles=all_roles, acl_admin=True)
+            return render_template("create_user.html", all_roles=all_roles, meta={}, acl_admin=True)
     else:
-        return render_template("create_user.html", all_roles=all_roles, error_mail=True, acl_admin=True)
+        return render_template("create_user.html", all_roles=all_roles, meta={}, error_mail=True, acl_admin=True)
 
 
 

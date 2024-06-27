@@ -87,8 +87,10 @@ def login():
                     if not user.is_2fa_setup():
                         return redirect(url_for('root.setup_2fa'))
                     else:
-                        htop_counter = user.get_htop_counter()
-                        return redirect(url_for('root.verify_2fa', htop_counter=htop_counter))
+                        if next_page and next_page != 'None' and next_page != '/':
+                            return redirect(url_for('root.verify_2fa', next=next_page))
+                        else:
+                            return redirect(url_for('root.verify_2fa'))
 
                 else:
                     # Login User
@@ -152,6 +154,7 @@ def verify_2fa():
     if request.method == 'POST':
 
         code = request.form.get('otp')
+        next_page = request.form.get('next_page')
 
         if user.is_valid_otp(code):
             session.pop('user_id', None)
@@ -164,20 +167,19 @@ def verify_2fa():
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
             else:
-                # # next page
-                # if next_page and next_page != 'None' and next_page != '/':
-                #     return redirect(next_page)
-                # dashboard
-                # else:
+                # NEXT PAGE
+                if next_page and next_page != 'None' and next_page != '/':
+                    return redirect(next_page)
                 return redirect(url_for('dashboard.index'))
         else:
             htop_counter = user.get_htop_counter()
             error = "The OTP is incorrect or has expired"
-            return render_template("verify_otp.html", htop_counter=htop_counter, error=error)
+            return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
 
     else:
         htop_counter = user.get_htop_counter()
-        return render_template("verify_otp.html", htop_counter=htop_counter)
+        next_page = request.args.get('next')
+        return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page)
 
 @root.route('/2fa/setup', methods=['POST', 'GET'])
 def setup_2fa():
@@ -222,10 +224,10 @@ def setup_2fa():
     else:
         error = request.args.get('error')
         if error:
-            qr_code, hotp_codes = user.init_setup_2fa(create=False)
+            qr_code, otp_url, hotp_codes = user.init_setup_2fa(create=False)
         else:
-            qr_code, hotp_codes = user.init_setup_2fa()
-        return render_template("setup_otp.html", qr_code=qr_code, hotp_codes=hotp_codes, error=error)
+            qr_code, otp_url, hotp_codes = user.init_setup_2fa()
+        return render_template("setup_otp.html", qr_code=qr_code, hotp_codes=hotp_codes, otp_url=otp_url, error=error)
 
 @root.route('/change_password', methods=['POST', 'GET'])
 @login_required

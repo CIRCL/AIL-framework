@@ -21,13 +21,23 @@
 
     <div class="row">
         <div class="col-lg-6">
-            <h3 class="text-secondary">TOTP</h3>
+            <h3 class="text-secondary mb-0"><b>TOTP</b></h3>
             <img src="data:image/png;base64, {{ qr_code }}">
             <div style="font-size: 20px;"> - Install an <b>authenticator application</b> on your mobile.</div>
             <div style="font-size: 20px;"> - <b>Scan</b> the QRCode</div>
-        </div>
+            <p>
+                <button class="btn btn-sm btn-info" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                    <i class="fas fa-link"></i> <b>TOTP URL</b>
+                </button>
+            </p>
+            <div class="collapse" id="collapseExample">
+                <div class="card card-body">
+                    {{ otp_url }}
+                </div>
+            </div>
+            </div>
         <div class="col-lg-6">
-            <h3 class="text-secondary">HOTP</h3>
+            <h3 class="text-secondary"><b>HOTP</b></h3>
                 {% for code in hotp_codes %}
                     <div><i>{{ code[:-6] }}</i> <b>{{ code[-6:] }}</b></div>
                 {% endfor %}

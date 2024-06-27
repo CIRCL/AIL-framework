@@ -35,6 +35,7 @@
                         <th>Role</th>
                         <th>Api Key</th>
                         <th></th>
+                        <th>2FA</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -45,7 +46,7 @@
                             <td>{{user['role']}}</td>
                             <td>
                                 <span id="censored_key_{{loop.index0}}">
-                                    {{user['api_key'][:4]}}*********************************{{user['api_key'][-4:]}}
+                                    {{user['api_key'][:4]}}**...**{{user['api_key'][-4:]}}
                                 </span>
                                 <span id="uncensored_key_{{loop.index0}}" style="display: none;">
                                     {{user['api_key']}}
@@ -58,6 +59,27 @@
                                 <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key_{{loop.index0}}" onclick="show_api_key({{loop.index0}})">
                                     <i class="fas fa-eye"></i>
                                 </span>
+                            </td>
+                            <td>
+                                {% if user['2fa'] %}
+                                    {% if user['otp_setup'] %}
+                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
+                                        <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}">
+                                            <i class="fas fa-random"></i> Reset
+                                        </a>
+                                    {% else %}
+                                        <span class="badge badge-warning" style="font-size: 1.0rem;"><b>ENFORCED</b></span>
+                                    {% endif %}
+                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
+                                    <a class="btn btn-outline-success px-1 py-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}">
+                                        <i class="fas fa-plus"></i>
+                                    </a>
+                                {% endif %}
+
                             </td>
                             <td>
                                 <div class="d-flex justify-content-start">

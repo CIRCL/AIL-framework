@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>User Profile - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+	<div class="container-fluid">
+		<div class="row">
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <h1 class="text-center mt-2">HOTP - Paper-Based Single Use Tokens</h1>
+
+                <div>In case you don't have access to your phone or authentication software, please use the following list of tokens.</div>
+                <div>Be sure to print these tokens and keep them in a secure place for future use.</div>
+
+                <div class="text-center my-4">
+                    {% for code in hotp %}
+                        <div><i>{{ code[:-6] }}</i> <b>{{ code[-6:] }}</b></div>
+                    {% endfor %}
+                </div>
+
+    	    </div>
+		</div>
+	</div>
+</body>
+
+<script>
+$(document).ready(function(){
+  $("#nav_edit_profile").addClass("active");
+	//$("#nav_my_profile").removeClass("text-muted");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+</html>
