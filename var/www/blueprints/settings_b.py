@@ -157,7 +157,7 @@ def user_otp_reset():  # TODO ask for password ?
     else:
         user = ail_users.AILUser.get(user_id)
         user.kill_session()
-        return redirect(url_for('settings_b.user_profile'))
+        return redirect(url_for('settings_b.users_list'))
 
 @settings_b.route("/settings/user/api_key/new", methods=['GET'])
 @login_required
@@ -177,6 +177,29 @@ def new_token_user():
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
     r = ail_users.api_create_user_api_key(user_id, admin_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/logout", methods=['GET'])
+@login_required
+@login_admin
+def user_logout():
+    user_id = request.args.get('user_id') # TODO LOGS
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_logout_user(admin_id, user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/users/logout", methods=['GET'])
+@login_required
+@login_admin
+def users_logout():
+    admin_id = current_user.get_user_id() # TODO LOGS
+    r = ail_users.api_logout_users(admin_id)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -248,7 +271,7 @@ def create_user_post():
                     if not password1 and not password2:
                         password = None
                         str_password = 'Password not changed'
-                ail_users.create_user(email, password=password, role=role, otp=enable_2_fa)
+                ail_users.create_user(email, password=password, admin_id=admin_id, role=role, otp=enable_2_fa)
                 new_user = {'email': email, 'password': str_password, 'otp': enable_2_fa}
                 return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
 

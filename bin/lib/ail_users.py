@@ -11,6 +11,7 @@ import sys
 import segno
 
 from base64 import b64encode
+from datetime import datetime
 from flask_login import UserMixin
 from io import BytesIO
 from uuid import uuid4
@@ -75,6 +76,11 @@ def kill_sessions():
     r_cache.delete('ail:sessions')
     r_cache.delete('ail:sessions:users')
 
+def is_user_logged(user_id):
+    if get_user_session(user_id):
+        return True
+    else:
+        return False
 
 #### PASSWORDS ####
 
@@ -255,6 +261,111 @@ def get_users():
 def get_user_role(user_id):
     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role')
 
+## --USERS-- ##
+
+#### USERS ####
+
+def get_user_creator(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'creator')
+
+def get_user_creation_date(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'created_at')
+
+def get_user_last_edit(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'last_edit')  # self edit or admin ???
+
+def get_user_last_login(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'last_login')
+
+def get_user_last_seen(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'last_seen')
+
+def get_disabled_users():
+    return r_serv_db.smembers(f'ail:users:disabled')
+
+def is_user_disabled(user_id):
+    return r_serv_db.sismember(f'ail:users:disabled', user_id)
+
+def disable_user(user_id):
+    r_serv_db.sadd(f'ail:users:disabled', user_id)
+
+def enable_user(user_id):
+    r_serv_db.srem(f'ail:users:disabled', user_id)
+
+def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=None, otp=False):  # TODO LOGS
+    # # TODO: check password strength
+    if password:
+        new_password = password
+    else:
+        new_password = gen_password()
+    password_hash = hashing_password(new_password)
+
+    # EDIT
+    if exists_user(user_id):
+        if password or chg_passwd:
+            edit_user(user_id, password_hash, chg_passwd=chg_passwd)
+        if role:
+            edit_user_role(user_id, role)
+    # CREATE USER
+    elif admin_id:
+        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', admin_id)
+        date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
+        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
+
+        # Role
+        if not role:
+            role = get_default_role()
+
+        if role in get_all_roles():
+            for role_to_add in get_all_user_role(role):
+                r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
+            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
+
+        r_serv_db.hset('ail:users:all', user_id, password_hash)
+        if chg_passwd:
+            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
+
+        # create user token
+        generate_new_token(user_id)
+
+        if otp or is_2fa_enabled():
+            enable_user_2fa(user_id)
+
+
+def edit_user(user_id, password_hash, chg_passwd=False, otp=True):
+    if chg_passwd:
+        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
+        r_serv_db.hset('ail:users:all', user_id, password_hash)
+
+        # create new token
+        generate_new_token(user_id)
+    else:
+        r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
+
+    # 2FA OTP
+    if otp or is_2fa_enabled():
+        enable_user_2fa(user_id)
+    else:
+        disable_user_2fa(user_id)
+
+    date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
+
+    # Remove default user password file
+    if user_id == 'admin@admin.test':
+        default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
+        if os.path.isfile(default_passwd_file):
+            os.remove(default_passwd_file)
+
+
+
+
+
+
+
+
+## --USER-- ##
 
 ########################################################################################################################
 ########################################################################################################################
@@ -295,8 +406,24 @@ class AILUser(UserMixin):
     def exists(self): # TODO CHECK USAGE
         return r_serv_db.exists(f'ail:user:metadata:{self.user_id}')
 
-    def get_meta(self, options=set()): # TODO user creation date
+    def update_last_seen(self):
+        r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'last_seen', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+    def update_last_login(self):
+        r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'last_login', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+    def get_meta(self, options=set()):
         meta = {'id': self.user_id}
+        if 'creator' in options:
+            meta['creator'] = get_user_creator(self.user_id)
+        if 'created_at' in options:
+            meta['created_at'] = get_user_creation_date(self.user_id)
+        if 'last_edit' in options:
+            meta['last_edit'] = get_user_last_edit(self.user_id)
+        if 'last_login' in options:
+            meta['last_login'] = get_user_last_login(self.user_id)
+        if 'last_seen' in options:
+            meta['last_seen'] =  get_user_last_seen(self.user_id)
         if 'api_key' in options: # TODO add option to censor key
             meta['api_key'] = self.get_api_key()
         if 'role' in options:
@@ -305,12 +432,16 @@ class AILUser(UserMixin):
             meta['2fa'] = self.is_2fa_enabled()
         if 'otp_setup' in options:
             meta['otp_setup'] = self.is_2fa_setup()
+        if 'is_disabled' in options:
+            meta['is_disabled'] = self.is_disabled()
+        if 'is_logged' in options:
+            meta['is_logged'] = is_user_logged(self.user_id)
         return meta
 
     ## SESSION ##
 
-    def is_logged(self): #####################################################################################################
-        pass
+    def is_disabled(self):
+        return is_user_disabled(self.user_id)
 
     def get_session(self):
         return self.id
@@ -426,7 +557,7 @@ class AILUser(UserMixin):
 
 def api_get_users_meta():
     meta = {'users': []}
-    options = {'api_key', 'role', '2fa', 'otp_setup'}
+    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))
@@ -446,6 +577,35 @@ def api_get_user_hotp(user_id):
         return {'status': 'error', 'reason': 'User not found'}, 404
     hotp = get_user_hotp_code(user_id)
     return hotp, 200
+
+def api_logout_user(admin_id, user_id): # TODO LOG ADMIN ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    print(admin_id)
+    return user.kill_session(), 200
+
+def api_logout_users(admin_id): # TODO LOG ADMIN ID
+    print(admin_id)
+    return kill_sessions(), 200
+
+def api_disable_user(admin_id, user_id): # TODO LOG ADMIN ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    if user.is_disabled():
+        return {'status': 'error', 'reason': 'User is already disabled'}, 400
+    print(admin_id)
+    disable_user(user_id)
+
+def api_enable_user(admin_id, user_id): # TODO LOG ADMIN ID
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    if not user.is_disabled():
+        return {'status': 'error', 'reason': 'User is not disabled'}, 400
+    print(admin_id)
+    enable_user(user_id)
 
 def api_enable_user_otp(user_id):
     user = AILUser(user_id)
@@ -521,60 +681,6 @@ def get_users_metadata(list_users):
         users.append(get_user_metadata(user))
     return users
 
-def create_user(user_id, password=None, chg_passwd=True, role=None, otp=False): # TODO ###############################################################
-    # # TODO: check password strength
-    if password:
-        new_password = password
-    else:
-        new_password = gen_password()
-    password_hash = hashing_password(new_password)
-
-    # EDIT
-    if exists_user(user_id):
-        if password or chg_passwd:
-            edit_user(user_id, password_hash, chg_passwd=chg_passwd)
-        if role:
-            edit_user_role(user_id, role)
-    # CREATE USER
-    else:
-        # Role
-        if not role:
-            role = get_default_role()
-
-        if role in get_all_roles():
-            for role_to_add in get_all_user_role(role):
-                r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
-
-        r_serv_db.hset('ail:users:all', user_id, password_hash)
-        if chg_passwd:
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
-
-        # create user token
-        generate_new_token(user_id)
-
-        if otp or is_2fa_enabled():
-            enable_user_2fa(user_id)
-
-def edit_user(user_id, password_hash, chg_passwd=False, otp=False):  # TODO ######################################################3333
-    if chg_passwd:
-        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
-    else:
-        r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
-    # remove default user password file
-    if user_id == 'admin@admin.test':
-        default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
-        if os.path.isfile(default_passwd_file):
-            os.remove(default_passwd_file)
-    r_serv_db.hset('ail:users:all', user_id, password_hash)
-    # create new token
-    generate_new_token(user_id)
-
-    if otp or is_2fa_enabled():
-        enable_user_2fa(user_id)
-    else:
-        disable_user_2fa(user_id)
-
 # # TODO: solve edge_case self delete
 def delete_user(user_id):
     if exists_user(user_id):
@@ -585,6 +691,7 @@ def delete_user(user_id):
             r_serv_db.hdel('ail:users:tokens', user_token)
         r_serv_db.delete(f'ail:user:metadata:{user_id}')
         r_serv_db.hdel('ail:users:all', user_id)
+        r_serv_db.srem(f'ail:users:disabled', user_id)
 
     # # TODO: raise Exception
     else:
@@ -662,9 +769,9 @@ def check_user_role_integrity(user_id):
 
 ## --ROLES-- ##
 
-if __name__ == '__main__':
-    user_id = 'admin@admin.test'
-    instance_name = 'AIL TEST'
-    delete_user_otp(user_id)
-    # q = get_user_otp_qr_code(user_id, instance_name)
-    # print(q)
+# if __name__ == '__main__':
+#     user_id = 'admin@admin.test'
+#     instance_name = 'AIL TEST'
+#     delete_user_otp(user_id)
+#     # q = get_user_otp_qr_code(user_id, instance_name)
+#     # print(q)

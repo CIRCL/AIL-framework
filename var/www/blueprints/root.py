@@ -14,7 +14,6 @@ from flask import session
 from flask_login import login_required, current_user, login_user, logout_user
 
 sys.path.append('modules')
-import Flask_config
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst
@@ -24,9 +23,18 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import Users
-from lib.ail_users import AILUser
+from lib.ail_users import AILUser, kill_sessions
+from lib.ConfigLoader import ConfigLoader
 
-r_cache = Flask_config.r_cache
+
+# Config
+config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+config_loader = None
+
+# Kill previous sessions
+kill_sessions()
+
 
 # ============ BLUEPRINT ============
 
@@ -96,6 +104,7 @@ def login():
                     # Login User
                     user.rotate_session()
                     login_user(user)
+                    user.update_last_login()
 
                     if user.request_password_change():
                         return redirect(url_for('root.change_password'))
@@ -163,6 +172,7 @@ def verify_2fa():
             # Login User
             user.rotate_session()
             login_user(user)
+            user.update_last_login()
 
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
@@ -213,6 +223,7 @@ def setup_2fa():
             # Login User
             user.rotate_session()
             login_user(user)
+            user.update_last_login()
 
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))

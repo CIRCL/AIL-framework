@@ -32,6 +32,9 @@
                     <thead class="thead-dark">
                     <tr>
                         <th>User</th>
+                        <th>Last Edit</th>
+                        <th>Last Login</th>
+                        <th>Last Seen</th>
                         <th>Role</th>
                         <th>Api Key</th>
                         <th></th>
@@ -43,6 +46,20 @@
                     {% for user in meta['users'] %}
                         <tr>
                             <td>{{user['id']}}</td>
+                            <td>{{user['last_edit']}}</td>
+                            <td>
+                                {% if user['last_login'] %}
+                                    {{user['last_login']}}
+                                {% else %}-{% endif %}
+                            {{ meta['is_logged'] }}
+                                {% if user['is_logged'] %}
+                                    <i class="fas fa-plug text-success"></i>
+                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                            <td>{% if user['last_seen'] %}{{user['last_seen']}}{% else %}-{% endif %}</td>
                             <td>{{user['role']}}</td>
                             <td>
                                 <span id="censored_key_{{loop.index0}}">
@@ -95,6 +112,10 @@
                     {% endfor %}
                     </tbody>
                 </table>
+
+                <a class="btn btn-danger my-4" href="{{ url_for('settings_b.users_logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout All Users
+                </a>
 
     	    </div>
 		</div>

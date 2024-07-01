@@ -221,6 +221,13 @@ def add_header(response):
         response.headers['Cache-Control'] = 'private, max-age=0'
     return response
 
+# ========== USERS ============
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.update_last_seen()
+
+
 # ========== ROUTES ============
 
 #@app.route('/endpoints')
