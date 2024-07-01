@@ -56,6 +56,16 @@ def event_stream():
         if msg['type'] == 'pmessage' and level != "DEBUG":
             yield 'data: %s\n\n' % json.dumps(msg)
 
+def event_stream_dashboard():
+    try:
+        while True:
+            # jsonify(row1=get_queues())
+            data = {'queues': get_queues()}
+            yield f'data: {json.dumps(data)}\n\n'
+            time.sleep(1)
+    except GeneratorExit:
+        print("Generator Exited")
+
 def get_queues():
     # We may want to put the llen in a pipeline to do only one query.
     return ail_queues.get_modules_queues_stats()
@@ -102,6 +112,12 @@ def datetime_from_utc_to_local(utc_str):
 @login_read_only
 def logs():
     return flask.Response(event_stream(), mimetype="text/event-stream")
+
+@dashboard.route("/_dashboard")
+@login_required
+@login_read_only
+def _dashboard():
+    return flask.Response(event_stream_dashboard(), content_type="text/event-stream")
 
 @dashboard.route("/_get_last_logs_json")
 @login_required

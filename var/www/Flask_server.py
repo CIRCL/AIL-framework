@@ -136,11 +136,11 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(session_id):  # TODO USE Alternative ID
-    print(session)
+    # print(session)
     user_id = get_session_user(session_id)
     if user_id:
         user = AILUser.get(user_id)
-        print(user)
+        # print(user)
         return user
     return None
 

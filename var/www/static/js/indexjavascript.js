@@ -8,12 +8,12 @@ function getSyncScriptParams() {
          var lastScript = scripts[scripts.length-1];
          var scriptName = lastScript;
          return {
-             urlstuff : scriptName.getAttribute('data-urlstuff'),
+             //urlstuff : scriptName.getAttribute('data-urlstuff'),
              urllog : scriptName.getAttribute('data-urllog')
          };
 }
 
-var urlstuff = getSyncScriptParams().urlstuff;
+//var urlstuff = getSyncScriptParams().urlstuff;
 var urllog = getSyncScriptParams().urllog;
 
 //If we do not received info from mixer, set pastes_num to 0
@@ -34,17 +34,17 @@ function checkIfReceivedData(){
 }
 
 
-function initfunc( csvay, scroot) {
-    window.csv = csvay;
-    window.scroot = scroot;
-};
+// function initfunc( csvay, scroot) {
+//     window.csv = csvay;
+//     window.scroot = scroot;
+// };
 
-function update_values() {
-    $.getJSON(urlstuff,
-        function(data) {
-            window.glob_tabvar = data;
-    });
-}
+// function update_values() {
+//     $.getJSON(urlstuff,
+//         function(data) {
+//             window.glob_tabvar = data;
+//     });
+// }
 
 
 // Plot and update the number of processed pastes
@@ -129,10 +129,10 @@ function update_processed_pastes(graph, dataset, graph_type) {
 
 // END PROCESSED PASTES
 
-function initfunc( csvay, scroot) {
-  window.csv = csvay;
-  window.scroot = scroot;
-};
+// function initfunc( csvay, scroot) {
+//   window.csv = csvay;
+//   window.scroot = scroot;
+// };
 
 var source = new EventSource(urllog);
 
@@ -146,6 +146,7 @@ function pad_2(number) {
 }
 
 function create_log_table(obj_json) {
+    //console.log("create_log_table")
     tableBody = document.getElementById("tab_body")
     var tr = document.createElement('TR')
     var time = document.createElement('TD')
@@ -294,7 +295,8 @@ function create_log_table(obj_json) {
     }
 }
 
-function create_queue_table() {
+/*
+function create_queue_table(data) {
     document.getElementById("queueing").innerHTML = "";
     var Tablediv = document.getElementById("queueing")
     var table = document.createElement('TABLE')
@@ -321,7 +323,7 @@ function create_queue_table() {
         tr.appendChild(th);
     }
 
-    if ((glob_tabvar.row1).length == 0) {
+    if ((data).length == 0) {
         var tr = document.createElement('TR');
         var td = document.createElement('TD');
         var td2 = document.createElement('TD');
@@ -334,25 +336,25 @@ function create_queue_table() {
         tableBody.appendChild(tr);
     }
     else {
-        for(i = 0; i < (glob_tabvar.row1).length;i++){
+        for(i = 0; i < (data).length;i++){
             var tr = document.createElement('TR')
             for(j = 0; j < 2; j++){
                 var td = document.createElement('TD')
-                var moduleNum = j == 0 ? "." + glob_tabvar.row1[i][3] : "";
-                td.appendChild(document.createTextNode(glob_tabvar.row1[i][j] + moduleNum));
+                var moduleNum = j == 0 ? "." + data[i][3] : "";
+                td.appendChild(document.createTextNode(data[i][j] + moduleNum));
                 tr.appendChild(td)
             }
             // Used to decide the color of the row
-            // We have glob_tabvar.row1[][j] with:
+            // We have data[][j] with:
             // - j=0: ModuleName
             // - j=1: queueLength
             // - j=2: LastProcessedPasteTime
             // - j=3: Number of the module belonging in the same category
-            if (glob_tabvar.row1[i][3]==="Not Launched")
+            if (data[i][3]==="Not Launched")
                 tr.className += " bg-danger text-white";
-            else if (parseInt(glob_tabvar.row1[i][2]) > window.threshold_stucked_module && parseInt(glob_tabvar.row1[i][1]) > 2)
+            else if (parseInt(data[i][2]) > window.threshold_stucked_module && parseInt(data[i][1]) > 2)
                 tr.className += " table-danger";
-            else if (parseInt(glob_tabvar.row1[i][1]) === 0)
+            else if (parseInt(data[i][1]) === 0)
                 tr.className += " table-disabled";
             else
                 tr.className += " table-success";
@@ -360,9 +362,9 @@ function create_queue_table() {
         }
     }
     Tablediv.appendChild(table);
-}
+}*/
 
-
+/*
 function load_queues() {
     var data = [];
     var data2 = [];
@@ -429,7 +431,7 @@ function load_queues() {
     var interval = 1000;   //number of mili seconds between each call
     var refresh = function() {
 
-        $.ajax({
+        $.ajax({ ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             url: "",
             cache: false,
             success: function(html) {
@@ -487,16 +489,18 @@ function load_queues() {
 
     refresh();
 }
+*/
 
-function manage_undefined() {
-    if (typeof glob_tabvar == "undefined")
-        setTimeout(function() { if (typeof glob_tabvar == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
-    else if (typeof glob_tabvar.row1 == "undefined")
-        setTimeout(function() { if (typeof glob_tabvar.row1 == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
-    else
-        load_queues();
-}
+// function manage_undefined() {
+//     if (typeof glob_tabvar == "undefined")
+//         setTimeout(function() { if (typeof glob_tabvar == "undefined") { manage_undefined(); } else { /*load_queues();*/ } }, 1000);
+//     else if (typeof glob_tabvar.row1 == "undefined")
+//         setTimeout(function() { if (typeof glob_tabvar.row1 == "undefined") { manage_undefined(); } else { load_queues(); } }, 1000);
+//     else
+//         load_queues();
+// }
 
-$(document).ready(function () {
-    manage_undefined();
-});
+
+// $(document).ready(function () {
+//     manage_undefined();
+// });
