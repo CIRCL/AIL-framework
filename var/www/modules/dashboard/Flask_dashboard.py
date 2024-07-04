@@ -11,7 +11,7 @@ import datetime
 import time
 import flask
 
-from flask import Flask, render_template, jsonify, request, Blueprint, url_for
+from flask import Flask, render_template, jsonify, request, Blueprint, url_for, stream_with_context
 
 from Role_Manager import login_admin, login_analyst, login_read_only
 from flask_login import login_required
@@ -38,33 +38,34 @@ max_dashboard_logs = Flask_config.max_dashboard_logs
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
-
 def event_stream():
     pubsub = r_serv_log.pubsub()
     pubsub.psubscribe("Script" + '.*')
-    for msg in pubsub.listen():
+    try:
+        for msg in pubsub.listen():
+            mtype = msg['type']
+            pattern = msg['pattern']
+            channel = msg['channel']
+            data = msg['data']
 
-        # print(msg)
-        type = msg['type']
-        pattern = msg['pattern']
-        channel = msg['channel']
-        data = msg['data']
+            msg = {'channel': channel, 'type': mtype, 'pattern': pattern, 'data': data}
 
-        msg = {'channel': channel, 'type': type, 'pattern': pattern, 'data': data}
-
-        level = (msg['channel']).split('.')[1]
-        if msg['type'] == 'pmessage' and level != "DEBUG":
-            yield 'data: %s\n\n' % json.dumps(msg)
+            level = (msg['channel']).split('.')[1]
+            if msg['type'] == 'pmessage' and level != "DEBUG":
+                yield 'data: %s\n\n' % json.dumps(msg)
+    except GeneratorExit:
+        print("Generator Exited")
+        pubsub.unsubscribe()
 
 def event_stream_dashboard():
     try:
         while True:
-            # jsonify(row1=get_queues())
             data = {'queues': get_queues()}
             yield f'data: {json.dumps(data)}\n\n'
             time.sleep(1)
     except GeneratorExit:
-        print("Generator Exited")
+        print("Generator dashboard Exited")
+        pass
 
 def get_queues():
     # We may want to put the llen in a pipeline to do only one query.
@@ -117,7 +118,7 @@ def logs():
 @login_required
 @login_read_only
 def _dashboard():
-    return flask.Response(event_stream_dashboard(), content_type="text/event-stream")
+    return flask.Response(stream_with_context(event_stream_dashboard()), content_type="text/event-stream")
 
 @dashboard.route("/_get_last_logs_json")
 @login_required

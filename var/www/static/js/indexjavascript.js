@@ -140,6 +140,10 @@ source.onmessage = function(event) {
     var feed = JSON.parse( event.data );
     create_log_table(feed);
 };
+source.onerror = function(event) {
+    console.error('EventSource failed:', event);
+    source.close();
+};
 
 function pad_2(number) {
     return (number < 10 ? '0' : '') + number;

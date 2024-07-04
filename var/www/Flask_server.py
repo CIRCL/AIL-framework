@@ -81,13 +81,30 @@ log_dir = os.path.join(os.environ['AIL_HOME'], 'logs')
 if not os.path.isdir(log_dir):
     os.makedirs(log_dir)
 
-logging.config.dictConfig(ail_logger.get_config(name='flask'))
+# ========= LOGS =========#
 
-# =========       =========#
+class FilterLogErrors(logging.Filter):
+    def filter(self, record):
+        # print(dict(record.__dict__))
+        if record.levelname == 'ERROR':
+            if record.msg.startswith('Error on request:'):
+                if 'ssl.SSLEOFError: EOF occurred in violation of protocol' in record.msg:
+                    return False
+        return True
+
+
+logging.config.dictConfig(ail_logger.get_config(name='flask'))
+flask_logger = logging.getLogger()
+ignore_filter = FilterLogErrors()
+for handler in flask_logger.handlers:
+    handler.addFilter(ignore_filter)
+
 
 # =========  TLS  =========#
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
+ssl_context.suppress_ragged_eofs = True
 # print(ssl_context.get_ciphers())
 # =========       =========#
 

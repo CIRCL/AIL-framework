@@ -18,7 +18,7 @@
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 
   <script type="text/javascript" src="{{ url_for('static', filename='js/indexjavascript.js')}}"
-      data-urlstuff="{{ url_for('dashboard.stuff') }}" data-urllog="{{ url_for('dashboard.logs') }}">
+      data-urllog="{{ url_for('dashboard.logs') }}">
   </script>
 
   <style>
@@ -38,15 +38,6 @@
 
   <script>
       window.default_minute = {{ default_minute }};
-      window.glob_tabvar = []; // Avoid undefined
-      window.threshold_stucked_module = {{ threshold_stucked_module }}
-      function update_values() {
-          $.getJSON("{{ url_for('dashboard.stuff') }}",
-              function(data) {
-                  window.glob_tabvar = data;
-              });
-      };
-      update_values();
   </script>
 
 </head>
@@ -162,7 +153,11 @@
 
 </body>
 
-<script> var url_showSavedPath = "{{ url_for('investigations_b.get_object_gid') }}"; </script>
+
+
+<script>
+    var url_showSavedPath = "{{ url_for('investigations_b.get_object_gid') }}";
+</script>
 
     <script>
         $("#page-Dashboard").addClass("active");
@@ -317,21 +312,32 @@ function create_queue_table(data) {
     Tablediv.appendChild(table);
 }
 
+//
+//
 
-document.addEventListener("DOMContentLoaded", function() {
-    let eventSource = new EventSource("{{ url_for('dashboard._dashboard') }}");
 
-    eventSource.onmessage = function(event) {
+
+var event_queues
+
+$(document).ready(function() {
+    // Hide Browser Error: connection interrupted while the page was loading
+    $(window).on("beforeunload", function() {
+        event_queues.close();
+        source.close();
+    });
+
+    event_queues = new EventSource("{{ url_for('dashboard._dashboard') }}");
+    event_queues.onmessage = function(event) {
         let data = JSON.parse(event.data);
         create_queue_table(data['queues'])
-
     };
-
-    eventSource.onerror = function(event) {
+    event_queues.onerror = function(event) {
         console.error('EventSource failed:', event);
-        eventSource.close(); // Close the connection
+        event_queues.close();
     };
+
 });
+
 </script>
 
 </html>

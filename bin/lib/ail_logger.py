@@ -27,7 +27,3 @@ def get_config(name=None):
         config = json.load(f)
         config['handlers']['file']['filename'] = os.path.join(os.environ['AIL_HOME'], 'logs', name)
     return config
-
-
-if __name__ == '__main__':
-    pass
