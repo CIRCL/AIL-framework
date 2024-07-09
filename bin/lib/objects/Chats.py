@@ -203,6 +203,12 @@ class Chats(AbstractChatObjects):
     def __init__(self):
         super().__init__('chat')
 
+    def get_ids_with_messages_by_subtype(self, subtype):
+        return r_object.smembers(f'{self.type}_w_mess:{subtype}')
+
+    # def get_ids_with_messages_iter(self, subtype):
+    #     return sscan_iter(r_object, f'{self.type}_w_mess:{subtype}')
+
 # TODO factorize
 def get_all_subtypes():
     return ail_core.get_object_all_subtypes('chat')

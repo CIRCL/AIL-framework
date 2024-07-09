@@ -180,6 +180,11 @@ class ChatServiceInstance:
             meta['chats'] = []
             for chat_id in self.get_chats():
                 meta['chats'].append(Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages'}))
+        if 'chats_with_messages':
+            meta['chats'] = []
+            for chat_id in self.get_chats_with_messages():
+                meta['chats'].append(
+                    Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages'}))
         return meta
 
     def get_nb_chats(self):
@@ -187,6 +192,9 @@ class ChatServiceInstance:
 
     def get_chats(self):
         return Chats.Chats().get_ids_by_subtype(self.uuid)
+
+    def get_chats_with_messages(self):
+        return Chats.Chats().get_ids_with_messages_by_subtype(self.uuid)
 
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
@@ -583,6 +591,23 @@ def fix_correlations_subchannel_message():
                     _, _, message_id = mess[0].split(':', )
                     subchannel.add_correlation('message', '', message_id)
 
+def fix_chats_with_messages():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+
+            messages = chat.get_nb_messages()
+            if messages > 0:
+                chat.add_chat_with_messages()
+                continue
+
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                if subchannel.get_nb_messages() > 0:
+                    chat.add_chat_with_messages()
+                    break
+
 #### API ####
 
 def get_chat_user_account_label(chat_gid):
@@ -636,7 +661,8 @@ def api_get_chat_service_instance(chat_instance_uuid):
     chat_instance = ChatServiceInstance(chat_instance_uuid)
     if not chat_instance.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    return chat_instance.get_meta({'chats'}), 200
+    # return chat_instance.get_meta({'chats'}), 200
+    return chat_instance.get_meta({'chats_with_messages'}), 200
 
 def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True):
     chat = Chats.Chat(chat_id, chat_instance_uuid)

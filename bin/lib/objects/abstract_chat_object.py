@@ -284,6 +284,9 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 objs_global_id.append(obj_global_id)
         return objs_global_id
 
+    def add_chat_with_messages(self):
+        r_object.sadd(f'{self.type}_w_mess:{self.subtype}', self.id)
+
     def add_message(self, obj_global_id, message_id, timestamp, reply_id=None):
         r_object.hset(f'messages:ids:{self.type}:{self.subtype}:{self.id}', message_id, obj_global_id)
         r_object.zadd(f'messages:{self.type}:{self.subtype}:{self.id}', {obj_global_id: float(timestamp)})

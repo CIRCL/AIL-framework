@@ -229,12 +229,15 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('subchannel'):
             subchannel, thread = self.process_subchannel(obj, date, timestamp, reply_id=reply_id)
             chat.add_children(obj_global_id=subchannel.get_global_id())
+            if obj.type == 'message':
+                chat.add_chat_with_messages()
         else:
             if obj.type == 'message':
                 if self.get_thread_id():
                     thread = self.process_thread(obj, chat, date, timestamp, reply_id=reply_id)
                 else:
                     chat.add_message(obj.get_global_id(), self.get_message_id(), timestamp, reply_id=reply_id)
+                chat.add_chat_with_messages()
 
         chats_obj = [chat]
         if subchannel:

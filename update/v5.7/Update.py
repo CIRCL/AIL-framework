@@ -13,7 +13,7 @@ sys.path.append(os.environ['AIL_HOME'])
 from update.bin.ail_updater import AIL_Updater
 from lib import ail_users
 from lib.ConfigLoader import ConfigLoader
-
+from lib import chats_viewer
 
 class Updater(AIL_Updater):
     """default Updater."""
@@ -32,6 +32,8 @@ if __name__ == '__main__':
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', 'admin@admin.test')
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
+
+    chats_viewer.fix_chats_with_messages()
 
     updater = Updater('v5.7')
     updater.run_update()
