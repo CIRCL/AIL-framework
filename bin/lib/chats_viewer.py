@@ -465,6 +465,22 @@ def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
         nb_day += 1
     return stats
 
+def get_user_account_usernames_timeline(subtype, user_id):
+    user_account = UsersAccount.UserAccount(user_id, subtype)
+    usernames = user_account.get_usernames_history()
+    if usernames:
+        for row in usernames:
+            row['obj'] = row['obj'].rsplit(':', 1)[1]
+            if row['start'] > row['end']:
+                t = row['start']
+                row['start'] = row['end']
+                row['end'] = t
+            if row['start'] == row['end']:
+                row['end'] = row['end'] + 1
+            row['start'] = row['start'] * 1000
+            row['end'] = row['end'] * 1000
+    return usernames
+
 def get_user_account_chats_chord(subtype, user_id):
     nb = {}
     user_account = UsersAccount.UserAccount(user_id, subtype)
@@ -733,7 +749,7 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
-    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
+    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'usernames', 'username_meta'}, translation_target=translation_target)
     if meta['chats']:
         meta['chats'] = get_user_account_chats_meta(user_id, meta['chats'], meta['subchannels'])
     return meta, 200

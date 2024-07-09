@@ -8,6 +8,10 @@
 
 const create_directed_chord_diagram = (container_id, data, min_value= 0, max_value = -1, fct_mouseover, fct_mouseout, options) => {
 
+    if(!Object.keys(data.data).length){
+        return;
+    }
+
     // Filter data by value between target and source
     if (min_value > 0) {
         data.data = data.data.filter(function(value) {

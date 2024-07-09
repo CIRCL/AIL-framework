@@ -288,6 +288,9 @@ def objects_user_account():
     if target == "Don't Translate":
         target = None
     user_account = chats_viewer.api_get_user_account(user_id, instance_uuid, translation_target=target)
+    # print()
+    # print(user_account[0]['usernames'])
+    # print()
     if user_account[1] != 200:
         return create_json_response(user_account[0], user_account[1])
     else:
@@ -296,6 +299,15 @@ def objects_user_account():
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                translation_languages=languages, translation_target=target)
+
+@chats_explorer.route("/objects/user-account_usernames_timeline_json", methods=['GET']) # TODO API
+@login_required
+@login_read_only
+def objects_user_account_usernames_timeline_json():
+    subtype = request.args.get('subtype')
+    user_id = request.args.get('id')
+    json_graph = chats_viewer.get_user_account_usernames_timeline(subtype, user_id)
+    return jsonify(json_graph)
 
 @chats_explorer.route("/objects/user-account_chats_chord_json", methods=['GET']) # TODO API
 @login_required

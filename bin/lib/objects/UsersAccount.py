@@ -132,7 +132,15 @@ class UserAccount(AbstractSubtypeObject):
         return self._get_timeline_username().get_last_obj_id()
 
     def get_usernames(self):
-        return self._get_timeline_username().get_objs_ids()
+        usernames = []
+        names = self._get_timeline_username().get_objs_ids()
+        for name in names:
+            _, subtype, obj_id = name.split(':', 2)
+            usernames.append({'type': 'username', 'subtype': subtype, 'id': obj_id})
+        return usernames
+
+    def get_usernames_history(self):
+        return self._get_timeline_username().get_objs()
 
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)

@@ -19,7 +19,7 @@
                 <table class="table">
                     <thead class="">
                     <tr>
-                        <th>username</th>
+                        <th>usernames</th>
                         <th>ID</th>
                         <th>First Seen</th>
                         <th>Last Seen</th>
@@ -28,7 +28,17 @@
                     </thead>
                     <tbody style="font-size: 15px;">
                     <tr>
-                        <td>{{ meta['username']['id'] }}</td>
+                        <td>
+                            {% if 'usernames' in meta %}
+                                <ul>
+                                    {% for username in meta['usernames'] %}
+                                        <li>{{ username['id'] }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                {{ meta['username']['id'] }}
+                            {% endif %}
+                        </td>
                         <td>{{ meta['id']  }}</td>
                         <td>
                             {% if meta['first_seen'] %}

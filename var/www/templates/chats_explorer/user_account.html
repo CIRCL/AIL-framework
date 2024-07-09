@@ -20,6 +20,7 @@
     <script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/d3/heatmap_week_hour.js')}}"></script>
     <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/d3/timeline_basic.js')}}"></script>
 
 
 </head>
@@ -46,6 +47,9 @@
                 {% if meta['chats'] %}
                     <h4 class="mx-5 mt-2 text-secondary">User All Messages:</h4>
                     <div id="heatmapweekhourall"></div>
+
+                    <h4>Usernames:</h4>
+                    <div id="timeline_user_usernames" style="max-width: 900px"></div>
 
                     <h4>Numbers of Messages Posted by Chat:</h4>
                     <div id="chord_user_chats" style="max-width: 900px"></div>
@@ -84,6 +88,13 @@
 {#            });#}
 {#        {% endif %}#}
   });
+
+
+let url_t = "{{ url_for('chats_explorer.objects_user_account_usernames_timeline_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
+d3.json(url_t)
+    .then(function(data) {
+        create_timeline_basic('#timeline_user_usernames', data);
+});
 
 d3.json("{{ url_for('chats_explorer.user_account_messages_stats_week_all') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}")
     .then(function(data) {

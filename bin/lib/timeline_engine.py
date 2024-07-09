@@ -112,7 +112,27 @@ class Timeline:
         for block in r_meta.zrange(f'line:{self.id}:{self.name}', 0, -1):
             if block:
                 if block.startswith('start:'):
+                    print(self._get_block_obj_global_id(block[6:]))
                     objs.add(self._get_block_obj_global_id(block[6:]))
+        return objs
+
+    def get_objs(self):
+        objs = []
+        blocks = r_meta.zrange(f'line:{self.id}:{self.name}', 0, -1, withscores=True)
+        for i in range(0, len(blocks), 2):
+            block1, score1 = blocks[i]
+            block2, score2 =blocks[i + 1]
+            score1 = int(score1)
+            score2 = int(score2)
+            if block1.startswith('start:'):
+                start = score1
+                end = score2
+                obj = self._get_block_obj_global_id(block1[6:])
+            else:
+                start = score2
+                end = score1
+                obj = self._get_block_obj_global_id(block2[6:])
+            objs.append({'obj': obj, 'start': start, 'end': end})
         return objs
 
     # def get_objs_ids(self):
