@@ -151,7 +151,9 @@ class Tracker_Yara(AbstractModule):
 
             # Webhook
             if tracker.webhook_export():
-                self.exporters['webhook'].export(tracker, self.obj)
+                if not matches:
+                    matches = self.extract_matches(data)
+                self.exporters['webhook'].export(tracker, self.obj, matches)
 
         return yara.CALLBACK_CONTINUE
 

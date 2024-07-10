@@ -7,6 +7,8 @@ Importer Class
 Import Content
 
 """
+import json
+import logging
 import os
 import requests
 import sys
@@ -18,10 +20,9 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 #################################
 from exporter.abstract_exporter import AbstractExporter
+from lib.ail_core import get_ail_uuid
 
-# from ConfigLoader import ConfigLoader
-# from lib.objects.abstract_object import AbstractObject
-# from lib.Tracker import Tracker
+logger = logging.getLogger()
 
 class WebHookExporter(AbstractExporter, ABC):
     def __init__(self, url=''):
@@ -35,11 +36,9 @@ class WebHookExporter(AbstractExporter, ABC):
         try:
             response = requests.post(self.url, json=data)
             if response.status_code >= 400:
-                print(f"Webhook request failed for {self.url}\nReason: {response.reason}")
-                # self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: {response.reason}")
+                logger.error(f"Webhook request failed for {self.url}\nReason: {response.reason}")
         except Exception as e:
-            print(f"Webhook request failed for {self.url}\nReason: Something went wrong {e}")
-            # self.redis_logger.error(f"Webhook request failed for {webhook_to_post}\nReason: Something went wrong")
+            logger.error(f"Webhook request failed for {self.url}\nReason: Something went wrong {e}")
 
 
 class WebHookExporterTracker(WebHookExporter):
@@ -48,17 +47,26 @@ class WebHookExporterTracker(WebHookExporter):
         super().__init__(url=url)
 
     # TODO Change exported keys
-    def export(self, tracker, obj):
+    def export(self, tracker, obj, matches=[]):
         self.set_url(tracker.get_webhook())
-        data = {'trackerId': tracker.get_uuid(),
-                'trackerType': tracker.get_type(),
-                'tags': tracker.get_tags(),
-                'tracker': tracker.get_tracked(),
-                # object
-                'itemId': obj.get_id(),
-                'itemURL': obj.get_link()}
-        # Item
-        # data['itemDate'] = obj.get_date()
-        # data["itemSource"] = obj.get_source()
+        data = {'version': 0,
+                'type': 'tracker:match',
+                'ail_uuid': get_ail_uuid(),
+                'tracker': {
+                    'uuid': tracker.get_uuid(),
+                    'type': tracker.get_type(),
+                    'tags': list(tracker.get_tags()),
+                    'tracker': tracker.get_tracked(),
+                },
+                'obj': {'type': obj.get_type(),
+                        'subtype': obj.get_subtype(r_str=True),
+                        'id': obj.get_id(),
+                        'tags': list(obj.get_tags()),
+                        'url': obj.get_link()
+                        },
+                }
+        if matches:
+            data['matches'] = matches
 
+        # data = json.dumps(data)
         self._export(data)
