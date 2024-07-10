@@ -133,7 +133,9 @@ class Tracker_Regex(AbstractModule):
                 self.exporters['mail'].export(tracker, obj, matches)
 
             if tracker.webhook_export():
-                self.exporters['webhook'].export(tracker, obj)
+                if not matches:
+                    matches = self.extract_matches(re_matches)
+                self.exporters['webhook'].export(tracker, obj, matches)
 
 
 if __name__ == "__main__":
