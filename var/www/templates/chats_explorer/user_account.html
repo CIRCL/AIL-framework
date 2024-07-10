@@ -103,12 +103,12 @@ d3.json("{{ url_for('chats_explorer.user_account_messages_stats_week_all') }}?su
 
 let url = "{{ url_for('chats_explorer.objects_user_account_chats_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
 d3.json(url).then(function(data) {
-    create_directed_chord_diagram('#chord_user_chats', data, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+    create_directed_chord_diagram('#chord_user_chats', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
 });
 
 let url2 = "{{ url_for('chats_explorer.objects_user_account_mentions_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
 d3.json(url2).then(function(data) {
-    create_directed_chord_diagram('#chord_mentions', data, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+    create_directed_chord_diagram('#chord_mentions', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
 });
 
 </script>
