@@ -95,7 +95,7 @@ unzip temp/yara.zip -d temp/
 pushd temp/yara-${YARA_VERSION}
 ./bootstrap.sh
 ./configure
-make
+make -j
 sudo make install
 make check
 popd
