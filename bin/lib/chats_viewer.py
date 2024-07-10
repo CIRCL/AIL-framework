@@ -476,8 +476,11 @@ def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
 def get_user_account_usernames_timeline(subtype, user_id):
     user_account = UsersAccount.UserAccount(user_id, subtype)
     usernames = user_account.get_usernames_history()
+    r_usernames = []
     if usernames:
         for row in usernames:
+            if not row['obj']:
+                continue
             row['obj'] = row['obj'].rsplit(':', 1)[1]
             if row['start'] > row['end']:
                 t = row['start']
@@ -487,7 +490,8 @@ def get_user_account_usernames_timeline(subtype, user_id):
                 row['end'] = row['end'] + 1
             row['start'] = row['start'] * 1000
             row['end'] = row['end'] * 1000
-    return usernames
+            r_usernames.append(row)
+    return r_usernames
 
 def get_user_account_chats_chord(subtype, user_id):
     nb = {}
