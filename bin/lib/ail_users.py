@@ -448,7 +448,6 @@ class AILUser(UserMixin):
 
     def rotate_session(self):
         self.id = _rotate_user_session(self.user_id)
-        print('rotate session:', self.id)
         return self.id
 
     def kill_session(self):
@@ -527,9 +526,7 @@ class AILUser(UserMixin):
 
     ## ROLE ##
 
-    def is_in_role(self, role):  # TODO Get role via user alternative ID
-        print('is_in_role')
-        print(f'ail:users:role:{role}', self.user_id)
+    def is_in_role(self, role):
         if r_serv_db.sismember(f'ail:users:role:{role}', self.user_id):
             return True
         else:

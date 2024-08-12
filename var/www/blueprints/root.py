@@ -22,7 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib import Users
+from lib import Users  # TODO ########################################################3
 from lib.ail_users import AILUser, kill_sessions
 from lib.ConfigLoader import ConfigLoader
 
@@ -136,7 +136,7 @@ def login():
         if current_user.is_authenticated:
             return redirect(url_for('dashboard.index'))
         else:
-            print(current_user)
+            # print(current_user)
             next_page = request.args.get('next')
             error = request.args.get('error')
             return render_template("login.html", next_page=next_page, error=error)
