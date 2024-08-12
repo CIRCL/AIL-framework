@@ -417,6 +417,18 @@ def get_nb_messages_iterator(filters={}):
             nb_messages += chat.get_nb_messages()
     return nb_messages
 
+def get_chat_object_messages_forward_meta(c_messages):
+    temp_chats = {}
+    for date in c_messages:
+        for meta in c_messages[date]:
+            if 'forwarded_from' in meta:
+                if meta['forwarded_from'] not in temp_chats:
+                    chat = get_obj_chat_from_global_id(meta['forwarded_from'])
+                    temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
+                else:
+                    meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+    return c_messages
+
 def get_user_account_chats_meta(user_id, chats, subchannels):
     meta = []
     for chat_g_id in chats:
@@ -683,6 +695,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
             translation_target = None
         if messages:
             meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
+            meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
     return meta, 200
 
 def api_get_nb_message_by_week(chat_type, chat_instance_uuid, chat_id):
@@ -728,6 +741,7 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     meta['messages'], meta['pagination'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target, nb=nb, page=page)
+    meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
     return meta, 200
 
 def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=-1, page=-1):
@@ -739,13 +753,17 @@ def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=
     # if meta['chat']:
     #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, nb=nb, page=page)
+    meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
     return meta, 200
 
 def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'chat', 'content', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    if 'forwarded_from' in meta:
+        chat = get_obj_chat_from_global_id(meta['forwarded_from'])
+        meta['forwarded_from'] = chat.get_meta({'icon'})
     return meta, 200
 
 def api_message_detect_language(message_id):

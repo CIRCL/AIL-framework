@@ -278,6 +278,10 @@ class Message(AbstractObject):
                 if parent_type == 'message':
                     message = Message(parent_id)
                     meta['reply_to'] = message.get_meta(options=options, translation_target=translation_target)
+        if 'forwarded_from' in options:
+            fwd_from = self.get_first_relationship('forwarded_from', 'chat')
+            if fwd_from:
+                meta['forwarded_from'] = fwd_from['id']
         if 'investigations' in options:
             meta['investigations'] = self.get_investigations()
         if 'link' in options:

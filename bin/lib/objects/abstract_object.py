@@ -302,6 +302,11 @@ class AbstractObject(ABC):
     def get_obj_relationships(self, relationships=set(), filter_types=set()):
         return get_obj_relationships(self.get_global_id(), relationships=relationships, filter_types=filter_types)
 
+    def get_first_relationship(self, relationship, filter_type):
+        rel = get_obj_relationships(self.get_global_id(), relationships={relationship}, filter_types={filter_type})
+        if rel:
+            return rel.pop()
+
     def add_relationship(self, obj2_global_id, relationship, source=True):
         # is source
         if source:
