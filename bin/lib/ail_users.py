@@ -283,6 +283,12 @@ def get_user_last_login(user_id):
 def get_user_last_seen(user_id):
     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'last_seen')
 
+def get_user_last_seen_api(user_id):
+    return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'last_seen_api')
+
+def update_user_last_seen_api(user_id):
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_seen_api', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
 def get_disabled_users():
     return r_serv_db.smembers(f'ail:users:disabled')
 
@@ -366,8 +372,7 @@ def edit_user(user_id, password_hash, chg_passwd=False, otp=True):
 ########################################################################################################################
 ########################################################################################################################
 
-# TODO USER:     - Creation Date
-#                - Last API Usage
+# TODO USER:
 #                - Organisation ???
 #                - Disabled / Lock
 
@@ -400,6 +405,9 @@ class AILUser(UserMixin):
     def update_last_seen(self):
         r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'last_seen', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
 
+    def update_last_seen_api(self):
+        update_user_last_seen_api(self.user_id)
+
     def update_last_login(self):
         r_serv_db.hset(f'ail:user:metadata:{self.user_id}', 'last_login', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
 
@@ -415,6 +423,8 @@ class AILUser(UserMixin):
             meta['last_login'] = get_user_last_login(self.user_id)
         if 'last_seen' in options:
             meta['last_seen'] = get_user_last_seen(self.user_id)
+        if 'last_seen_api' in options:
+            meta['last_seen_api'] = get_user_last_seen_api(self.user_id)
         if 'api_key' in options: # TODO add option to censor key
             meta['api_key'] = self.get_api_key()
         if 'role' in options:
@@ -543,7 +553,7 @@ class AILUser(UserMixin):
 
 def api_get_users_meta():
     meta = {'users': []}
-    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'role', '2fa', 'otp_setup'}
+    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))

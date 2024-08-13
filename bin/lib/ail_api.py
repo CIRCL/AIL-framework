@@ -73,6 +73,7 @@ def authenticate_user(token, ip_address):
             return {'status': 'error', 'reason': 'Malformed Authentication String'}, 400
 
         if is_valid_token(token):
+            ail_users.update_user_last_seen_api(get_user_from_token(token))
             return True, 200
         # Failed Login
         else:
