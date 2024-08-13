@@ -306,7 +306,7 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=Non
     # EDIT
     if exists_user(user_id):
         if password or chg_passwd:
-            edit_user(user_id, password_hash, chg_passwd=chg_passwd)
+            edit_user(user_id, password_hash, chg_passwd=chg_passwd, otp=otp)
         if role:
             edit_user_role(user_id, role)
     # CREATE USER

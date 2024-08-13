@@ -49,7 +49,12 @@
 
                     <h1 class="h3 mt-1 mb-3 text-center text-secondary">{% if meta['id'] %}Edit{% else %}Create{% endif %} User</h1>
                     <label for="inputEmail" class="sr-only">Email address</label>
-                    <input type="email" id="inputEmail" name="username" class="form-control {% if error_mail %}is-invalid{% endif %}" placeholder="Email address" autocomplete="off" required {% if meta['id'] %}value="{{ meta['id'] }}"{% endif %} {% if meta['id'] %}disabled{% endif %}>
+                    {% if meta['id'] %}
+                        <input type="email" id="inputEmail" class="form-control" placeholder="Email address" autocomplete="off" value="{{ meta['id'] }}" disabled>
+                        <input type="email" name="username" hidden="" value="{{ meta['id'] }}">
+                    {% else %}
+                        <input type="email" id="inputEmail" name="username" class="form-control {% if error_mail %}is-invalid{% endif %}" placeholder="Email address" autocomplete="off" required>
+                    {% endif %}
                     {% if error_mail %}
                         <div class="invalid-feedback">Please provide a valid email address</div>
                     {% endif %}
