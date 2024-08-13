@@ -2,15 +2,12 @@
 # -*-coding:UTF-8 -*
 
 import os
-import re
 import sys
-import redis
-import bcrypt
 
 from functools import wraps
-from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_login import LoginManager, current_user, logout_user, login_required
 
-from flask import request, make_response, current_app
+from flask import make_response, current_app
 
 login_manager = LoginManager()
 login_manager.login_view = 'root.role'

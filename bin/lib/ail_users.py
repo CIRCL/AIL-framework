@@ -36,9 +36,6 @@ config_loader = None
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
 regex_password = re.compile(regex_password)
 
-# # TODO: migrate Role_Manager
-
-
 #### SESSIONS ####
 
 def get_sessions():
@@ -218,9 +215,6 @@ def get_user_hotp_code(user_id):
     for i in range(counter, counter + 20):
         codes.append(f'{i}: {hotp.at(i)}')
     return codes
-
-# TODO GET USER HOTP LISTS
-# TODO RESET OTP
 
 def is_user_otp_setup(user_id):
     otp_setup = r_serv_db.hget(f'ail:user:metadata:{user_id}', 'otp_setup')
