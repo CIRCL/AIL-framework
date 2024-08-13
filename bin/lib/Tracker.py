@@ -29,7 +29,7 @@ from lib import ail_logger
 from lib import ConfigLoader
 from lib import item_basic
 from lib import Tag
-from lib.Users import User
+from lib.ail_users import AILUser
 
 # LOGS
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
@@ -795,7 +795,7 @@ def api_check_tracker_acl(tracker_uuid, user_id):
         return res
     tracker = Tracker(tracker_uuid)
     if tracker.is_level_user():
-        if tracker.get_user() != user_id or not User(user_id).is_in_role('admin'):
+        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
             return {"status": "error", "reason": "Access Denied"}, 403
     return None
 
@@ -805,7 +805,7 @@ def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
     tracker_creator = r_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
     if not tracker_creator:
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    user = User(user_id)
+    user = AILUser(user_id)
     if not user.is_in_role('admin') and user_id != tracker_creator:
         return {"status": "error", "reason": "Access Denied"}, 403
     return {"uuid": tracker_uuid}, 200
@@ -817,7 +817,7 @@ def api_is_allowed_to_access_tracker(tracker_uuid, user_id):
     tracker_creator = r_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
     if not tracker_creator:
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    user = User(user_id)
+    user = AILUser(user_id)
     if not is_tracker_global_level(tracker_uuid):
         if not user.is_in_role('admin') and user_id != tracker_creator:
             return {"status": "error", "reason": "Access Denied"}, 403

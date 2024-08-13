@@ -11,21 +11,26 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib import Users
+from lib import ail_users
 
-sys.path.append(os.environ['AIL_FLASK'])
-sys.path.append(os.path.join(os.environ['AIL_FLASK'], 'modules'))
+from lib.ConfigLoader import ConfigLoader
 
 class TestApiV1(unittest.TestCase):
 
     def setUp(self):
-        # TODO GET HOST + PORT
-        self.ail = PyAIL('https://localhost:7000', Users.get_user_token('admin@admin.test'), ssl=False)
+        config = ConfigLoader()
+        port = config.get_config_str('Flask', 'port')
+        self.ail = PyAIL(f'https://localhost:{port}', ail_users.get_user_token('admin@admin.test'), ssl=False)
 
     # GET /api/v1/ping
     def test_0001_api_ping(self):
         r = self.ail.ping_ail()
         self.assertEqual(r.get('status'), 'pong')
+        print()
+        print('----------------------------------------------------')
+        print('  AIL successfully reached Flask / Web interface')
+        print('----------------------------------------------------')
+        print()
 
     # # GET /api/v1/uuid
     # def test_0001_api_uuid(self):

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Blueprint Flask: root endpoints: login, ...
-'''
+"""
 
 import os
 import sys
 import time
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask import session
 from flask_login import login_required, current_user, login_user, logout_user
 
@@ -22,8 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib import Users  # TODO ########################################################3
-from lib.ail_users import AILUser, kill_sessions
+from lib.ail_users import AILUser, kill_sessions, create_user, check_password_strength, check_user_role_integrity
 from lib.ConfigLoader import ConfigLoader
 
 
@@ -43,9 +42,7 @@ root = Blueprint('root', __name__, template_folder='templates')
 # ============ VARIABLES ============
 
 
-
 # ============ FUNCTIONS ============
-
 
 
 # ============= ROUTES ==============
@@ -83,7 +80,7 @@ def login():
                     return render_template("login.html", error=logging_error)
 
             if user.exists() and user.check_password(password):
-                if not Users.check_user_role_integrity(user.get_user_id()):
+                if not check_user_role_integrity(user.get_user_id()):
                     logging_error = 'Incorrect User ACL, Please contact your administrator'
                     return render_template("login.html", error=logging_error)
 
@@ -250,11 +247,11 @@ def change_password():
     if error:
         return render_template("change_password.html", error=error)
 
-    if current_user.is_authenticated and password1 != None:
+    if current_user.is_authenticated and password1 is not None:
         if password1 == password2:
-            if Users.check_password_strength(password1):
+            if check_password_strength(password1):
                 user_id = current_user.get_user_id()
-                Users.create_user(user_id, password=password1, chg_passwd=False)
+                create_user(user_id, password=password1, chg_passwd=False) # TODO RENAME ME
                 # update Note
                 # dashboard
                 return redirect(url_for('dashboard.index', update_note=True))

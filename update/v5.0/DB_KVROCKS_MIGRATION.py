@@ -15,7 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib import Tag
-from lib import Users
+from lib import ail_users
 from lib.objects import Decodeds
 from lib.objects import Domains
 from lib.objects import Items
@@ -111,7 +111,7 @@ def user_migration():
     print('USER MIGRATION...')
 
     # create role_list
-    Users._create_roles_list()
+    ail_users._create_roles_list()
 
     for user_id in r_serv_db.hkeys('user:all'):
         role = r_serv_db.hget(f'user_metadata:{user_id}', 'role')
@@ -121,11 +121,8 @@ def user_migration():
         if not chg_passwd:
             chg_passwd = None
 
-        Users.create_user(user_id, password=None, chg_passwd=chg_passwd, role=role)
-        Users.edit_user_password(user_id, password_hash, chg_passwd=chg_passwd)
-        Users._delete_user_token(user_id)
+        ail_users.create_user(user_id, password=password_hash, chg_passwd=chg_passwd, role=role)
         print(user_id, token)
-        Users._set_user_token(user_id, token)
 
     for invite_row in r_crawler.smembers('telegram:invite_code'):
         r_obj.sadd('telegram:invite_code', invite_row)

@@ -263,7 +263,10 @@ def get_user_role(user_id):
 
 ## --USERS-- ##
 
-#### USERS ####
+#### USER ####
+
+def exists_user(user_id):
+    return r_serv_db.exists(f'ail:user:metadata:{user_id}')
 
 def get_user_creator(user_id):
     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'creator')
@@ -358,24 +361,12 @@ def edit_user(user_id, password_hash, chg_passwd=False, otp=True):
         if os.path.isfile(default_passwd_file):
             os.remove(default_passwd_file)
 
-
-
-
-
-
-
-
 ## --USER-- ##
 
 ########################################################################################################################
 ########################################################################################################################
 
-# TODO USER LAST LOGIN TIME
-# TODO Check if logged
-
 # TODO USER:     - Creation Date
-#                - Last Login
-#                - Last Request
 #                - Last API Usage
 #                - Organisation ???
 #                - Disabled / Lock
@@ -423,7 +414,7 @@ class AILUser(UserMixin):
         if 'last_login' in options:
             meta['last_login'] = get_user_last_login(self.user_id)
         if 'last_seen' in options:
-            meta['last_seen'] =  get_user_last_seen(self.user_id)
+            meta['last_seen'] = get_user_last_seen(self.user_id)
         if 'api_key' in options: # TODO add option to censor key
             meta['api_key'] = self.get_api_key()
         if 'role' in options:
@@ -548,8 +539,6 @@ class AILUser(UserMixin):
         r_serv_db.hdel('ail:users:all', self.user_id)
 
 
-# def create_user(user_id):
-
 #### API ####
 
 def api_get_users_meta():
@@ -662,40 +651,6 @@ def api_delete_user(user_id, admin_id): # TODO LOG ADMIN ID
 ########################################################################################################################
 ########################################################################################################################
 
-
-def exists_user(user_id):
-    return r_serv_db.exists(f'ail:user:metadata:{user_id}')
-
-def get_user_metadata(user_id):
-    user_metadata = {'email': user_id,
-                     'role': r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role'),
-                     'api_key': r_serv_db.hget(f'ail:user:metadata:{user_id}', 'token')}
-    return user_metadata
-
-def get_users_metadata(list_users):
-    users = []
-    for user in list_users:
-        users.append(get_user_metadata(user))
-    return users
-
-# # TODO: solve edge_case self delete
-def delete_user(user_id):
-    if exists_user(user_id):
-        for role_id in get_all_roles():
-            r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
-        user_token = get_user_token(user_id)
-        if user_token:
-            r_serv_db.hdel('ail:users:tokens', user_token)
-        r_serv_db.delete(f'ail:user:metadata:{user_id}')
-        r_serv_db.hdel('ail:users:all', user_id)
-        r_serv_db.srem(f'ail:users:disabled', user_id)
-
-    # # TODO: raise Exception
-    else:
-        print(f'Error: user {user_id} do not exist')
-
-## --USERS-- ##
-
 #### ROLES ####
 
 def get_all_roles():
@@ -724,7 +679,7 @@ def get_all_user_upper_role(user_role):
     current_role_val = get_role_level(user_role)
     # remove one rank
     if current_role_val > 1:
-        return r_serv_db.zrange('ail:roles:all', 0, current_role_val -2)
+        return r_serv_db.zrange('ail:roles:all', 0, current_role_val - 2)
     else:
         return []
 
