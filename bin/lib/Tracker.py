@@ -215,6 +215,8 @@ class Tracker:
 
     def del_filters(self, tracker_type, to_track):
         filters = self.get_filters()
+        if not filters:
+            filters = get_objects_tracked()
         for obj_type in filters:
             r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
             r_tracker.srem(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
@@ -541,12 +543,12 @@ class Tracker:
             r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
             r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
 
+        self._set_field('last_change', time.time())
+
         # Refresh Trackers
         trigger_trackers_refresh(tracker_type)
         if tracker_type != old_type:
             trigger_trackers_refresh(old_type)
-
-        self._set_field('last_change', time.time())
         return self.uuid
 
     def delete(self):
