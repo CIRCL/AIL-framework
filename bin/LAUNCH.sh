@@ -581,6 +581,15 @@ function update_thirdparty {
 function launch_tests() {
   tests_dir=${AIL_HOME}/tests
   bin_dir=${AIL_BIN}
+  echo -e ""
+  echo -e $GREEN"AIL SCREENS:"$DEFAULT
+  echo -e $ROSE`screen -ls`$DEFAULT
+  echo -e $GREEN"\t* Redis:   $isredis"$DEFAULT
+  echo -e $GREEN"\t* Kvrocks: $iskvrocks $isscripted $isflasked"$DEFAULT
+  echo -e $GREEN"\t* Modules: $isscripted"$DEFAULT
+  echo -e $GREEN"\t* Flask:   $isflasked"$DEFAULT
+  echo -e ""
+  echo -e ""
   python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
 }
 
