@@ -83,6 +83,8 @@ if not os.path.isdir(log_dir):
 
 # ========= LOGS =========#
 
+access_logger = ail_logger.get_access_config(create=True)
+
 class FilterLogErrors(logging.Filter):
     def filter(self, record):
         # print(dict(record.__dict__))

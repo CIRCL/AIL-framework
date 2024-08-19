@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ail_users import AILUser, kill_sessions, create_user, check_password_strength, check_user_role_integrity
 from lib.ConfigLoader import ConfigLoader
+from lib import ail_logger
 
 
 # Config
@@ -33,6 +34,9 @@ config_loader = None
 
 # Kill previous sessions
 kill_sessions()
+
+# LOGS
+access_logger = ail_logger.get_access_config()
 
 
 # ============ BLUEPRINT ============
@@ -56,6 +60,10 @@ def login():
         login_failed_ip = int(login_failed_ip)
         if login_failed_ip >= 5:
             wait_time = r_cache.ttl(f'failed_login_ip:{current_ip}')
+            username = request.form.get('username')
+            if not username:
+                username = ''
+            access_logger.warning(f'Brute Force', extra={'user_id': username, 'ip_address': current_ip})
             logging_error = f'Max Connection Attempts reached, Please wait {wait_time}s'
             return render_template("login.html", error=logging_error)
 
@@ -68,7 +76,7 @@ def login():
             return render_template("login.html", error='Password is required.')
 
         if username is not None:
-            user = AILUser.get(username)  # TODO ANONYMOUS USER
+            user = AILUser.get(username)
 
             # brute force by user_id
             login_failed_user_id = r_cache.get(f'failed_login_user_id:{username}')
@@ -76,12 +84,14 @@ def login():
                 login_failed_user_id = int(login_failed_user_id)
                 if login_failed_user_id >= 5:
                     wait_time = r_cache.ttl(f'failed_login_user_id:{username}')
+                    access_logger.warning(f'Max login attempts reached', extra={'user_id': user.get_user_id(), 'ip_address': current_ip})
                     logging_error = f'Max Connection Attempts reached, Please wait {wait_time}s'
                     return render_template("login.html", error=logging_error)
 
             if user.exists() and user.check_password(password):
                 if not check_user_role_integrity(user.get_user_id()):
                     logging_error = 'Incorrect User ACL, Please contact your administrator'
+                    access_logger.info(f'Login fail: Invalid ACL', extra={'user_id': user.get_user_id(), 'ip_address': current_ip})
                     return render_template("login.html", error=logging_error)
 
                 if user.is_2fa_enabled():
@@ -92,6 +102,7 @@ def login():
                     if not user.is_2fa_setup():
                         return redirect(url_for('root.setup_2fa'))
                     else:
+                        access_logger.info(f'First Login', extra={'user_id': user.get_user_id(), 'ip_address': current_ip})
                         if next_page and next_page != 'None' and next_page != '/':
                             return redirect(url_for('root.verify_2fa', next=next_page))
                         else:
@@ -102,6 +113,7 @@ def login():
                     user.rotate_session()
                     login_user(user)
                     user.update_last_login()
+                    access_logger.info(f'Login', extra={'user_id': user.get_user_id(), 'ip_address': current_ip})
 
                     if user.request_password_change():
                         return redirect(url_for('root.change_password'))
@@ -123,6 +135,8 @@ def login():
                 r_cache.incr(f'failed_login_user_id:{username}')
                 r_cache.expire(f'failed_login_user_id:{username}', 300)
                 #
+
+                access_logger.info(f'Login Failed', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
 
                 logging_error = 'Login/Password Incorrect'
                 return render_template("login.html", error=logging_error)
@@ -150,6 +164,7 @@ def verify_2fa():
     if otp_expire < int(time.time()):  # TODO LOG
         session.pop('user_id', None)
         session.pop('otp_expire', None)
+        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.remote_addr})
         error = "First Login Expired"
         return redirect(url_for('root.login', error=error))
 
@@ -171,6 +186,8 @@ def verify_2fa():
             login_user(user)
             user.update_last_login()
 
+            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
             else:
@@ -180,6 +197,7 @@ def verify_2fa():
                 return redirect(url_for('dashboard.index'))
         else:
             htop_counter = user.get_htop_counter()
+            access_logger.info(f'Invalid OTP', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
             error = "The OTP is incorrect or has expired"
             return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
 
@@ -200,6 +218,7 @@ def setup_2fa():
     if otp_expire < int(time.time()):  # TODO LOG
         session.pop('user_id', None)
         session.pop('otp_expire', None)
+        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.remote_addr})
         error = "First Login Expired"
         return redirect(url_for('root.login', error=error))
 
@@ -222,11 +241,14 @@ def setup_2fa():
             login_user(user)
             user.update_last_login()
 
+            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
             else:
                 return redirect(url_for('dashboard.index'))
         else:
+            access_logger.info(f'OTP Invalid', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
             error = "The OTP is incorrect or has expired"
             return redirect(url_for('root.setup_2fa', error=error))
     else:
@@ -252,6 +274,7 @@ def change_password():
             if check_password_strength(password1):
                 user_id = current_user.get_user_id()
                 create_user(user_id, password=password1, chg_passwd=False) # TODO RENAME ME
+                access_logger.info(f'Password change', extra={'user_id': user_id, 'ip_address': request.remote_addr})
                 # update Note
                 # dashboard
                 return redirect(url_for('dashboard.index', update_note=True))
@@ -268,6 +291,7 @@ def change_password():
 @root.route('/logout')
 @login_required
 def logout():
+    access_logger.info(f'Logout', extra={'user_id': current_user.get_user_id(), 'ip_address': request.remote_addr})
     current_user.kill_session()
     logout_user()
     return redirect(url_for('root.login'))

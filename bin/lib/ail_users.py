@@ -7,7 +7,6 @@ import pyotp
 import re
 import secrets
 import sys
-
 import segno
 
 from base64 import b64encode
@@ -20,7 +19,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
+
+# LOGS
+
+access_logger = ail_logger.get_access_config()
 
 # Config
 config_loader = ConfigLoader()
@@ -295,7 +299,7 @@ def disable_user(user_id):
 def enable_user(user_id):
     r_serv_db.srem(f'ail:users:disabled', user_id)
 
-def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=None, otp=False):  # TODO LOGS
+def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=None, otp=False):
     # # TODO: check password strength
     if password:
         new_password = password
@@ -568,15 +572,15 @@ def api_get_user_hotp(user_id):
     hotp = get_user_hotp_code(user_id)
     return hotp, 200
 
-def api_logout_user(admin_id, user_id): # TODO LOG ADMIN ID
+def api_logout_user(admin_id, user_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    print(admin_id)
+    access_logger.info(f'Logout user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
     return user.kill_session(), 200
 
-def api_logout_users(admin_id): # TODO LOG ADMIN ID
-    print(admin_id)
+def api_logout_users(admin_id, ip_address):
+    access_logger.info('Logout all users', extra={'user_id': admin_id, 'ip_address': ip_address})
     return kill_sessions(), 200
 
 def api_disable_user(admin_id, user_id): # TODO LOG ADMIN ID
@@ -597,7 +601,7 @@ def api_enable_user(admin_id, user_id): # TODO LOG ADMIN ID
     print(admin_id)
     enable_user(user_id)
 
-def api_enable_user_otp(user_id):
+def api_enable_user_otp(user_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -607,7 +611,7 @@ def api_enable_user_otp(user_id):
     enable_user_2fa(user_id)
     return user_id, 200
 
-def api_disable_user_otp(user_id):
+def api_disable_user_otp(user_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -619,7 +623,7 @@ def api_disable_user_otp(user_id):
     delete_user_otp(user_id)
     return user_id, 200
 
-def api_reset_user_otp(admin_id, user_id):
+def api_reset_user_otp(admin_id, user_id, ip_address): # TODO LOGS
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -632,24 +636,29 @@ def api_reset_user_otp(admin_id, user_id):
     enable_user_2fa(user_id)
     return user_id, 200
 
-def api_create_user_api_key_self(user_id): # TODO LOG USER ID
+def api_create_user_api_key_self(user_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
+    access_logger.info('New api key', extra={'user_id': user_id, 'ip_address': ip_address})
     return user.new_api_key(), 200
 
-def api_create_user_api_key(user_id, admin_id): # TODO LOG ADMIN ID
+def api_create_user_api_key(user_id, admin_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    print(admin_id)
+    access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
     return user.new_api_key(), 200
 
-def api_delete_user(user_id, admin_id): # TODO LOG ADMIN ID
+def api_create_user(admin_id, ip_address, user_id, password, role, otp):
+    create_user(user_id, password=password, admin_id=admin_id, role=role, otp=otp)
+    access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+
+def api_delete_user(user_id, admin_id, ip_address):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    print(admin_id)
+    access_logger.info(f'Delete user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
     return user.delete(), 200
 
 ########################################################################################################################

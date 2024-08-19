@@ -92,7 +92,7 @@ def user_hotp():
 @login_read_only
 def user_otp_enable_self():
     user_id = current_user.get_user_id()
-    r = ail_users.api_enable_user_otp(user_id)
+    r = ail_users.api_enable_user_otp(user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     current_user.kill_session()
@@ -103,7 +103,7 @@ def user_otp_enable_self():
 @login_read_only
 def user_otp_disable_self():
     user_id = current_user.get_user_id()
-    r = ail_users.api_disable_user_otp(user_id)
+    r = ail_users.api_disable_user_otp(user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     current_user.kill_session()
@@ -114,7 +114,7 @@ def user_otp_disable_self():
 @login_admin
 def user_otp_reset_self():  # TODO ask for password ?
     user_id = current_user.get_user_id()
-    r = ail_users.api_reset_user_otp(user_id, user_id)
+    r = ail_users.api_reset_user_otp(user_id, user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -126,7 +126,7 @@ def user_otp_reset_self():  # TODO ask for password ?
 @login_admin
 def user_otp_enable():
     user_id = request.args.get('user_id')
-    r = ail_users.api_enable_user_otp(user_id)
+    r = ail_users.api_enable_user_otp(user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     user = ail_users.AILUser.get(user_id)
@@ -138,7 +138,7 @@ def user_otp_enable():
 @login_admin
 def user_otp_disable():
     user_id = request.args.get('user_id')
-    r = ail_users.api_disable_user_otp(user_id)
+    r = ail_users.api_disable_user_otp(user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     user = ail_users.AILUser.get(user_id)
@@ -151,7 +151,7 @@ def user_otp_disable():
 def user_otp_reset():  # TODO ask for password ?
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
-    r = ail_users.api_reset_user_otp(admin_id, user_id)
+    r = ail_users.api_reset_user_otp(admin_id, user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -164,7 +164,7 @@ def user_otp_reset():  # TODO ask for password ?
 @login_read_only
 def new_token_user_self():
     user_id = current_user.get_user_id()
-    r = ail_users.api_create_user_api_key_self(user_id)
+    r = ail_users.api_create_user_api_key_self(user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -176,7 +176,7 @@ def new_token_user_self():
 def new_token_user():
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
-    r = ail_users.api_create_user_api_key(user_id, admin_id)
+    r = ail_users.api_create_user_api_key(user_id, admin_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -188,7 +188,7 @@ def new_token_user():
 def user_logout():
     user_id = request.args.get('user_id') # TODO LOGS
     admin_id = current_user.get_user_id()
-    r = ail_users.api_logout_user(admin_id, user_id)
+    r = ail_users.api_logout_user(admin_id, user_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -199,7 +199,7 @@ def user_logout():
 @login_admin
 def users_logout():
     admin_id = current_user.get_user_id() # TODO LOGS
-    r = ail_users.api_logout_users(admin_id)
+    r = ail_users.api_logout_users(admin_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -271,7 +271,7 @@ def create_user_post():
                     if not password1 and not password2:
                         password = None
                         str_password = 'Password not changed'
-                ail_users.create_user(email, password=password, admin_id=admin_id, role=role, otp=enable_2_fa)
+                ail_users.api_create_user(admin_id, request.remote_addr, email, password, role, enable_2_fa)
                 new_user = {'email': email, 'password': str_password, 'otp': enable_2_fa}
                 return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
 
@@ -288,7 +288,7 @@ def create_user_post():
 def delete_user():
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
-    r = ail_users.api_delete_user(user_id, admin_id)
+    r = ail_users.api_delete_user(user_id, admin_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
