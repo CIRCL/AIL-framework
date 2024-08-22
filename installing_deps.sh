@@ -45,7 +45,7 @@ git submodule update --init
 test ! -d redis/ && git clone https://github.com/antirez/redis.git
 pushd redis/
 git checkout 5.0
-make
+make -j
 popd
 
 # Faup
@@ -53,7 +53,7 @@ test ! -d faup/ && git clone https://github.com/stricaud/faup.git
 pushd faup/
 test ! -d build && mkdir build
 cd build
-cmake .. && make
+cmake .. && make -j
 sudo make install
 echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
 sudo ldconfig
@@ -74,7 +74,7 @@ test ! -d pgpdump && git clone https://github.com/kazu-yamamoto/pgpdump.git
 pushd pgpdump/
 autoreconf -fiW all
 ./configure
-make
+make -j
 sudo make install
 popd
 
