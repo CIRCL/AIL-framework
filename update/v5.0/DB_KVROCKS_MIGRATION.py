@@ -220,7 +220,7 @@ def trackers_migration():
     print('TRACKERS MIGRATION...')
     for tracker_uuid in old_Tracker.get_all_tracker_uuid():
         meta = get_tracker_metadata(tracker_uuid)
-        Tracker._re_create_tracker(meta['type'], meta['uuid'], meta['tracked'], meta['user_id'], meta['level'],
+        Tracker._re_create_tracker(meta['type'], meta['uuid'], meta['tracked'], 'TEST_ORG', meta['user_id'], meta['level'],
                                    tags=meta['tags'], mails=meta['mails'], description=meta['description'],
                                    webhook=meta['webhook'], sources=meta['sources'],
                                    first_seen=meta['first_seen'], last_seen=meta['last_seen'])

@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -67,7 +67,7 @@ def get_default_yara_rule_content():
 def trackers_dashboard():
     user_id = current_user.get_user_id()
     trackers = Tracker.get_trackers_dashboard()
-    stats = Tracker.get_trackers_stats(user_id)
+    stats = Tracker.get_trackers_stats(current_user.get_org(), user_id)
     return render_template("trackers_dashboard.html", trackers=trackers, stats=stats, bootstrap_label=bootstrap_label)
 
 @hunters.route("/trackers/all")
@@ -75,9 +75,10 @@ def trackers_dashboard():
 @login_read_only
 def tracked_menu():
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org())
     user_trackers = Tracker.get_user_trackers_meta(user_id)
     global_trackers = Tracker.get_global_trackers_meta()
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label)
 
 @hunters.route("/trackers/word")
 @login_required
@@ -85,9 +86,10 @@ def tracked_menu():
 def tracked_menu_word():
     tracker_type = 'word'
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org(), tracker_type='word')
     user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type='word')
     global_trackers = Tracker.get_global_trackers_meta(tracker_type='word')
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunters.route("/trackers/set")
 @login_required
@@ -95,9 +97,10 @@ def tracked_menu_word():
 def tracked_menu_set():
     tracker_type = 'set'
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org(), tracker_type=tracker_type)
     user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
     global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunters.route("/trackers/regex")
 @login_required
@@ -105,9 +108,10 @@ def tracked_menu_set():
 def tracked_menu_regex():
     tracker_type = 'regex'
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org(), tracker_type=tracker_type)
     user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
     global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunters.route("/trackers/yara")
 @login_required
@@ -115,9 +119,10 @@ def tracked_menu_regex():
 def tracked_menu_yara():
     tracker_type = 'yara'
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org(), tracker_type=tracker_type)
     user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
     global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers, bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunters.route("/trackers/typosquatting")
 @login_required
@@ -125,17 +130,19 @@ def tracked_menu_yara():
 def tracked_menu_typosquatting():
     tracker_type = 'typosquatting'
     user_id = current_user.get_user_id()
+    org_trackers = Tracker.get_org_trackers_meta(current_user.get_org(), tracker_type=tracker_type)
     user_trackers = Tracker.get_user_trackers_meta(user_id, tracker_type=tracker_type)
     global_trackers = Tracker.get_global_trackers_meta(tracker_type=tracker_type)
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=global_trackers,
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=global_trackers,
                            bootstrap_label=bootstrap_label, tracker_type=tracker_type)
 
 @hunters.route("/trackers/admin")
 @login_required
 @login_admin
 def tracked_menu_admin():
+    org_trackers = Tracker.get_orgs_trackers_meta()
     user_trackers = Tracker.get_users_trackers_meta()
-    return render_template("trackersManagement.html", user_trackers=user_trackers, global_trackers=[],
+    return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=[],
                            bootstrap_label=bootstrap_label)
 
 
@@ -145,8 +152,8 @@ def tracked_menu_admin():
 def show_tracker():
     user_id = current_user.get_user_id()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_is_allowed_to_access_tracker(tracker_uuid, user_id)
-    if res[1] != 200:  # invalid access
+    res = Tracker.api_check_tracker_acl(tracker_uuid, current_user.get_org(), user_id)
+    if res:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
     date_from = request.args.get('date_from')
@@ -241,10 +248,7 @@ def parse_add_edit_request(request_form):
             to_track = yara_default_rule
             tracker_type = 'yara_default'
 
-    if level == 'on':
-        level = 1
-    else:
-        level = 0
+    level = int(level)
     if mails:
         mails = mails.split()
     else:
@@ -293,7 +297,8 @@ def add_tracked_menu():
     if request.method == 'POST':
         input_dict = parse_add_edit_request(request.form)
         user_id = current_user.get_user_id()
-        res = Tracker.api_add_tracker(input_dict, user_id)
+        org = current_user.get_org()
+        res = Tracker.api_add_tracker(input_dict, org, user_id)
         if res[1] == 200:
             return redirect(url_for('hunters.trackers_dashboard'))
         else:
@@ -309,19 +314,19 @@ def add_tracked_menu():
 @login_required
 @login_analyst
 def tracker_edit():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
     if request.method == 'POST':
         input_dict = parse_add_edit_request(request.form)
-        user_id = current_user.get_user_id()
-        res = Tracker.api_edit_tracker(input_dict, user_id)
+        res = Tracker.api_edit_tracker(input_dict, user_org, user_id)
         if res[1] == 200:
             return redirect(url_for('hunters.show_tracker', uuid=res[0].get('uuid')))
         else:
             return create_json_response(res[0], res[1])
     else:
-        user_id = current_user.get_user_id()
         tracker_uuid = request.args.get('uuid', None)
-        res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
-        if res[1] != 200:  # invalid access
+        res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_org, user_id)
+        if res:  # invalid access
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
         tracker = Tracker.Tracker(tracker_uuid)
@@ -352,7 +357,7 @@ def tracker_edit():
 def tracker_delete():
     user_id = current_user.get_user_id()
     tracker_uuid = request.args.get('uuid')
-    res = Tracker.api_delete_tracker({'uuid': tracker_uuid}, user_id)
+    res = Tracker.api_delete_tracker({'uuid': tracker_uuid}, current_user.get_org(), user_id)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -365,7 +370,7 @@ def tracker_delete():
 def get_json_tracker_graph():
     user_id = current_user.get_user_id()
     tracker_uuid = request.args.get('uuid')
-    res = Tracker.api_check_tracker_acl(tracker_uuid, user_id)
+    res = Tracker.api_check_tracker_acl(tracker_uuid, current_user.get_org(), user_id)
     if res:
         return create_json_response(res[0], res[1])
 
@@ -394,7 +399,7 @@ def tracker_object_add():
         date = obj.get_date()
     else:
         date = request.args.get('date')  # TODO check daterange
-    res = Tracker.api_tracker_add_object({'uuid': tracker_uuid, 'gid': object_global_id, 'date': date}, user_id)
+    res = Tracker.api_tracker_add_object({'uuid': tracker_uuid, 'gid': object_global_id, 'date': date}, current_user.get_org(), user_id)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -410,7 +415,7 @@ def tracker_object_remove():
     user_id = current_user.get_user_id()
     tracker_uuid = request.args.get('uuid')
     object_global_id = request.args.get('gid')
-    res = Tracker.api_tracker_remove_object({'uuid': tracker_uuid, 'gid': object_global_id}, user_id)
+    res = Tracker.api_tracker_remove_object({'uuid': tracker_uuid, 'gid': object_global_id}, current_user.get_org(), user_id)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -426,8 +431,8 @@ def tracker_object_remove():
 def tracker_objects():
     user_id = current_user.get_user_id()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_id)
-    if res[1] != 200:  # invalid access
+    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, current_user.get_org(), user_id)
+    if res:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
     tracker = Tracker.Tracker(tracker_uuid)

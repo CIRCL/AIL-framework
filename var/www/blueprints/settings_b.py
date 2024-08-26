@@ -303,6 +303,56 @@ def users_list():
 
 #############################################
 
+@settings_b.route("/settings/organisations", methods=['GET'])
+@login_required
+@login_admin
+def organisations_list():
+    meta = ail_users.api_get_orgs_meta()
+    return render_template("orgs_list.html", meta=meta, acl_admin=True)
+
+@settings_b.route("/settings/create_organisation", methods=['GET'])
+@login_required
+@login_admin
+def create_organisation():
+    meta = {}
+    return render_template("create_org.html", meta=meta, error_mail=False, acl_admin=True)
+
+@settings_b.route("/settings/create_org_post", methods=['POST'])
+@login_required
+@login_admin
+def create_org_post():
+    # Admin ID
+    admin_id = current_user.get_user_id()
+
+    org_uuid = request.form.get('uuid')
+    name = request.form.get('name')
+    description = request.form.get('description')
+
+    r = ail_users.api_create_org(admin_id, org_uuid, name, request.remote_addr, description=description)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.organisations_list'))
+
+
+    # TODO check if uuid4
+    # TODO check name format + length
+
+@settings_b.route("/settings/delete_org", methods=['GET'])
+@login_required
+@login_admin
+def delete_org():
+    admin_id = current_user.get_user_id()
+    org_uuid = request.args.get('uuid')
+    r = ail_users.api_delete_org(org_uuid, admin_id, request.remote_addr)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.organisations_list'))
+
+
+#############################################
+
 @settings_b.route("/settings/passivedns", methods=['GET'])
 @login_required
 @login_read_only

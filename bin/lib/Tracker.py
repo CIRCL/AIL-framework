@@ -186,10 +186,13 @@ class Tracker:
     def is_level_user(self):
         return self.get_level() == 0
 
+    def is_level_org(self):
+        return self.get_level() == 2
+
     def is_level_global(self):
         return self.get_level() == 1
 
-    def _set_level(self, level, tracker_type=None, user=None):
+    def _set_level(self, level, tracker_type=None, org=None, user=None):
         if not tracker_type:
             tracker_type = self.get_type()
         if level == 0:  # user only
@@ -200,6 +203,9 @@ class Tracker:
         elif level == 1:  # global
             r_tracker.sadd('global:tracker', self.uuid)
             r_tracker.sadd(f'global:tracker:{tracker_type}', self.uuid)
+        elif level == 2:  # org only
+            r_tracker.sadd(f'org:tracker:{org}', self.uuid)
+            r_tracker.sadd(f'org:tracker:{org}:{tracker_type}', self.uuid)
         self._set_field('level', level)
 
     def get_filters(self):
@@ -252,6 +258,9 @@ class Tracker:
     def _del_mails(self):
         r_tracker.delete(f'tracker:mail:{self.uuid}')
 
+    def get_org(self):
+        return self._get_field('org')
+
     def get_user(self):
         return self._get_field('user_id')
 
@@ -285,6 +294,8 @@ class Tracker:
                 'date': self.get_date(),
                 'first_seen': self.get_first_seen(),
                 'last_seen': self.get_last_seen()}
+        if 'org' in options:
+            meta['org'] = self.get_org()
         if 'user' in options:
             meta['user'] = self.get_user()
         if 'level' in options:
@@ -391,7 +402,7 @@ class Tracker:
 
     # TODO escape custom tags
     # TODO escape mails ????
-    def create(self, tracker_type, to_track, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None):
+    def create(self, tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None):
         if self.exists():
             raise Exception('Error: Tracker already exists')
 
@@ -413,6 +424,7 @@ class Tracker:
         self._set_field('tracked', to_track)
         self._set_field('type', tracker_type)
         self._set_field('date', datetime.date.today().strftime("%Y%m%d"))
+        self._set_field('org', org)
         self._set_field('user_id', user_id)
         if description:
             self._set_field('description', escape(description))
@@ -426,8 +438,10 @@ class Tracker:
         r_tracker.sadd('trackers:all', self.uuid)
         r_tracker.sadd(f'trackers:all:{tracker_type}', self.uuid)
 
+
+
         # TRACKER LEVEL
-        self._set_level(level, tracker_type=tracker_type, user=user_id)
+        self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
 
         # create tracker tags list
         if tags:
@@ -454,7 +468,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, description=None, filters={}, tags=[], mails=[], webhook=None):
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None): # TODO ADMIN: EDIT ORG UUID
 
         # edit tracker
         old_type = self.get_type()
@@ -481,9 +495,14 @@ class Tracker:
             # LEVEL
             if old_level == 0:
                 r_tracker.srem(f'user:tracker:{user_id}:{old_type}', self.uuid)
+                r_tracker.srem(f'user:tracker:{user_id}', self.uuid)
             elif old_level == 1:
                 r_tracker.srem(f'global:tracker:{old_type}', self.uuid)
-            self._set_level(level, tracker_type=tracker_type, user=user_id)
+                r_tracker.srem(f'global:tracker', self.uuid)
+            elif old_level == 2:
+                r_tracker.srem(f'org:tracker:{self.get_org()}:{old_type}', self.uuid)
+                r_tracker.srem(f'org:tracker:{self.get_org()}', self.uuid)
+            self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
             # Delete OLD YARA Rule File
             if old_type == 'yara':
                 if not is_default_yara_rule(old_to_track):
@@ -506,11 +525,16 @@ class Tracker:
 
         # Same Type
         elif level != old_level:
-            if level == 0:
-                r_tracker.srem('global:tracker', self.uuid)
-            elif level == 1:
+            if old_level == 0:
                 r_tracker.srem(f'user:tracker:{user_id}', self.uuid)
-            self._set_level(level, tracker_type=tracker_type, user=user_id)
+                r_tracker.srem(f'user:tracker:{user_id}:{tracker_type}', self.uuid)
+            elif old_level == 1:
+                r_tracker.srem('global:tracker', self.uuid)
+                r_tracker.srem(f'global:tracker:{tracker_type}', self.uuid)
+            elif old_level == 2:
+                r_tracker.srem(f'org:tracker:{self.get_org()}', self.uuid)
+                r_tracker.srem(f'org:tracker:{self.get_org()}:{tracker_type}', self.uuid)
+            self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
 
         # To Track Edited
         if to_track != old_to_track:
@@ -589,21 +613,25 @@ class Tracker:
         elif level == 1:  # global
             r_tracker.srem('global:tracker', self.uuid)
             r_tracker.srem(f'global:tracker:{tracker_type}', self.uuid)
+        elif level == 2:                         # TODO ORG check delete permission
+            org = self.get_org()
+            r_tracker.srem(f'org:tracker:{org}', self.uuid)
+            r_tracker.srem(f'org:tracker:{org}:{tracker_type}', self.uuid)
 
         # meta
         r_tracker.delete(f'tracker:{self.uuid}')
         trigger_trackers_refresh(tracker_type)
 
 
-def create_tracker(tracker_type, to_track, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, tracker_uuid=None):
+def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, tracker_uuid=None):
     if not tracker_uuid:
         tracker_uuid = str(uuid.uuid4())
     tracker = Tracker(tracker_uuid)
-    return tracker.create(tracker_type, to_track, user_id, level, description=description, filters=filters, tags=tags,
+    return tracker.create(tracker_type, to_track, org, user_id, level, description=description, filters=filters, tags=tags,
                           mails=mails, webhook=webhook)
 
-def _re_create_tracker(tracker_type, tracker_uuid, to_track, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, first_seen=None, last_seen=None):
-    create_tracker(tracker_type, to_track, user_id, level, description=description, filters=filters,
+def _re_create_tracker(tracker_type, tracker_uuid, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, first_seen=None, last_seen=None):
+    create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
                    tags=tags, mails=mails, webhook=webhook, tracker_uuid=tracker_uuid)
 
 def get_trackers_types():
@@ -649,6 +677,12 @@ def get_user_trackers(user_id, tracker_type=None):
     else:
         return r_tracker.smembers(f'user:tracker:{user_id}')
 
+def get_org_trackers(org, tracker_type=None):
+    if tracker_type:
+        return r_tracker.smembers(f'org:tracker:{org}:{tracker_type}')
+    else:
+        return r_tracker.smembers(f'org:tracker:{org}')
+
 def get_nb_global_trackers(tracker_type=None):
     if tracker_type:
         return r_tracker.scard(f'global:tracker:{tracker_type}')
@@ -660,6 +694,13 @@ def get_nb_user_trackers(user_id, tracker_type=None):
         return r_tracker.scard(f'user:tracker:{user_id}:{tracker_type}')
     else:
         return r_tracker.scard(f'user:tracker:{user_id}')
+
+def get_nb_org_trackers(org, tracker_type=None):
+    if tracker_type:
+        return r_tracker.scard(f'org:tracker:{org}:{tracker_type}')
+    else:
+        return r_tracker.scard(f'org:tracker:{org}')
+
 
 def get_user_trackers_meta(user_id, tracker_type=None):
     metas = []
@@ -675,11 +716,26 @@ def get_global_trackers_meta(tracker_type=None):
         metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
     return metas
 
+def get_org_trackers_meta(user_org, tracker_type=None):
+    metas = []
+    for tracker_uuid in get_org_trackers(user_org, tracker_type=tracker_type):
+        tracker = Tracker(tracker_uuid)
+        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
+    return metas
+
 def get_users_trackers_meta():
     trackers = []
     for tracker_uuid in get_trackers():
         tracker = Tracker(tracker_uuid)
         if tracker.is_level_user():
+            trackers.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
+    return trackers
+
+def get_orgs_trackers_meta():
+    trackers = []
+    for tracker_uuid in get_trackers():
+        tracker = Tracker(tracker_uuid)
+        if tracker.is_level_org():
             trackers.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
     return trackers
 
@@ -725,13 +781,14 @@ def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS (trim)
 
     return trackers
 
-def get_trackers_stats(user_id):
+def get_trackers_stats(user_org, user_id):
     stats = {'all': 0}
     for tracker_type in get_trackers_types():
         nb_global = get_nb_global_trackers(tracker_type=tracker_type)
         nb_user = get_nb_user_trackers(user_id, tracker_type=tracker_type)
-        stats[tracker_type] = nb_global + nb_user
-        stats['all'] += nb_global + nb_user
+        nb_org = get_nb_org_trackers(user_org, tracker_type=tracker_type)
+        stats[tracker_type] = nb_global + nb_user + nb_org
+        stats['all'] += nb_global + nb_user + nb_org
     return stats
 
 
@@ -789,7 +846,7 @@ def api_check_tracker_uuid(tracker_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
 
-def api_check_tracker_acl(tracker_uuid, user_id):
+def api_check_tracker_acl(tracker_uuid, user_org, user_id):
     res = api_check_tracker_uuid(tracker_uuid)
     if res:
         return res
@@ -797,31 +854,45 @@ def api_check_tracker_acl(tracker_uuid, user_id):
     if tracker.is_level_user():
         if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
             return {"status": "error", "reason": "Access Denied"}, 403
+    elif tracker.is_level_org():
+        if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
+            return {"status": "error", "reason": "Access Denied"}, 403
     return None
 
-def api_is_allowed_to_edit_tracker(tracker_uuid, user_id):
-    if not is_valid_uuid_v4(tracker_uuid):
-        return {"status": "error", "reason": "Invalid uuid"}, 400
-    tracker_creator = r_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
-    if not tracker_creator:
-        return {"status": "error", "reason": "Unknown uuid"}, 404
-    user = AILUser(user_id)
-    if not user.is_in_role('admin') and user_id != tracker_creator:
-        return {"status": "error", "reason": "Access Denied"}, 403
-    return {"uuid": tracker_uuid}, 200
-
-
-def api_is_allowed_to_access_tracker(tracker_uuid, user_id):
-    if not is_valid_uuid_v4(tracker_uuid):
-        return {"status": "error", "reason": "Invalid uuid"}, 400
-    tracker_creator = r_tracker.hget('tracker:{}'.format(tracker_uuid), 'user_id')
-    if not tracker_creator:
-        return {"status": "error", "reason": "Unknown uuid"}, 404
-    user = AILUser(user_id)
-    if not is_tracker_global_level(tracker_uuid):
-        if not user.is_in_role('admin') and user_id != tracker_creator:
+def api_is_allowed_to_edit_tracker(tracker_uuid, user_org, user_id):
+    res = api_check_tracker_uuid(tracker_uuid)
+    if res:
+        return res
+    tracker = Tracker(tracker_uuid)
+    if tracker.is_level_user():
+        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
             return {"status": "error", "reason": "Access Denied"}, 403
-    return {"uuid": tracker_uuid}, 200
+    elif tracker.is_level_org():
+        if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
+            return {"status": "error", "reason": "Access Denied"}, 403
+    else: # global
+        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
+            return {"status": "error", "reason": "Access Denied"}, 403
+    return None
+
+def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, new_level):
+    tracker = Tracker(tracker_uuid)
+    level = tracker.get_level()
+    if level == new_level:
+        return None
+    # Global Edit
+    if level == 1:
+        if new_level == 0:
+            if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
+                return {"status": "error", "reason": "Access Denied"}, 403
+        elif new_level == 2:
+            if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
+                return {"status": "error", "reason": "Access Denied"}, 403
+    # Community Edit
+    elif level == 2:
+        if new_level == 0:
+            if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
+                return {"status": "error", "reason": "Access Denied"}, 403
 
 ##-- ACL --##
 
@@ -922,7 +993,7 @@ def api_validate_tracker_to_add(to_track, tracker_type, nb_words=1):
         return {"status": "error", "reason": "Incorrect type"}, 400
     return {"status": "success", "tracked": to_track, "type": tracker_type}, 200
 
-def api_add_tracker(dict_input, user_id):
+def api_add_tracker(dict_input, org, user_id):
     to_track = dict_input.get('tracked', None)
     if not to_track:
         return {"status": "error", "reason": "Tracker not provided"}, 400
@@ -982,17 +1053,17 @@ def api_add_tracker(dict_input, user_id):
         level = int(level)
     except TypeError:
         level = 1
-    if level not in range(0, 1):
+    if level not in range(0, 3):
         level = 1
 
-    tracker_uuid = create_tracker(tracker_type, to_track, user_id, level, description=description, filters=filters,
+    tracker_uuid = create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
                                   tags=tags, mails=mails, webhook=webhook)
 
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
-def api_edit_tracker(dict_input, user_id):
+def api_edit_tracker(dict_input, user_org, user_id):
     tracker_uuid = dict_input.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
     if res:
         return res
 
@@ -1004,6 +1075,18 @@ def api_edit_tracker(dict_input, user_id):
     tracker_type = dict_input.get('type', None)
     if not tracker_type:
         return {"status": "error", "reason": "Tracker type not provided"}, 400
+
+    level = dict_input.get('level', 1)
+    try:
+        level = int(level)
+    except TypeError:
+        level = 1
+    if level not in range(0, 3):
+        level = 1
+    res = api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, level)
+    if res:
+        return res
+
     nb_words = dict_input.get('nb_words', 1)
     description = dict_input.get('description', '')
     description = escape(description)
@@ -1053,31 +1136,23 @@ def api_edit_tracker(dict_input, user_id):
                         if subtype not in obj_subtypes:
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
 
-    level = dict_input.get('level', 1)
-    try:
-        level = int(level)
-    except TypeError:
-        level = 1
-    if level not in range(0, 1):
-        level = 1
-
-    tracker.edit(tracker_type, to_track, level, description=description, filters=filters,
+    tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
                  tags=tags, mails=mails, webhook=webhook)
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 
-def api_delete_tracker(data, user_id):
+def api_delete_tracker(data, user_org, user_id):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
     if res:
         return res
 
     tracker = Tracker(tracker_uuid)
     return tracker.delete(), 200
 
-def api_tracker_add_object(data, user_id):
+def api_tracker_add_object(data, user_org, user_id):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
     if res:
         return res
     tracker = Tracker(tracker_uuid)
@@ -1092,9 +1167,9 @@ def api_tracker_add_object(data, user_id):
         return {"status": "error", "reason": "Invalid Object"}, 400
     return tracker.add(obj_type, subtype, obj_id, date=date), 200
 
-def api_tracker_remove_object(data, user_id):
+def api_tracker_remove_object(data, user_org, user_id):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
     if res:
         return res
 
@@ -1216,7 +1291,6 @@ def get_tracked_yara_rules():
             else:
                 rules[tracked] = rule
         to_track[obj_type] = yara.compile(filepaths=rules)
-    print(to_track)
     return to_track
 
 def reload_yara_rules():

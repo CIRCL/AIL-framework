@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Create Org - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+	<div class="container-fluid">
+        <div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+            <div class="col-12 col-lg-10" id="core_content">
+
+                <form class="form-signin" action="{{ url_for('settings_b.create_org_post')}}" autocomplete="off" method="post">
+
+                    <h1 class="h3 mt-1 mb-3 text-center text-secondary">{% if meta['uuid'] %}Edit{% else %}Create{% endif %} Org</h1>
+
+                    <div class="form-group">
+                        <label for="inputUUID">UUID:</label>
+                        <input class="form-control" type="text" id="inputUUID" name="uuid" placeholder="UUID" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputName">Name:</label>
+                        <input class="form-control" type="text" id="inputName" name="name" placeholder="Name" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inputDescription">Description:</label>
+                        <input class="form-control" type="text" id="inputDescription" name="description" placeholder="Description - (optional)" autocomplete="off">
+                    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block mt-3" type="submit">Submit</button>
+                </form>
+
+    	    </div>
+		</div>
+	</div>
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#nav_create_org").addClass("active");
+	$("#nav_orgs_management").removeClass("text-muted");
+
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+</html>

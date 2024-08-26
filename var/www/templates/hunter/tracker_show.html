@@ -119,9 +119,11 @@
                                     <td class="text-right"><b>Level</b></td>
                                     <td>
                                         {% if meta['level'] == 0 %}
-                                            Private
-                                        {% else %}
+                                            My User
+                                        {% elif meta['level'] == 1 %}
                                             Global
+                                        {% elif meta['level'] == 2 %}
+                                            My Organisation
                                         {% endif %}
                                     </td>
                                 </tr>

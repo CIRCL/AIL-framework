@@ -101,6 +101,23 @@
         	      </a>
         	    </li>
             </ul>
+            <h5 class="d-flex text-muted w-100 py-2" id="nav_orgs_management">
+                <span>Organisations</span>
+            </h5>
+            <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('settings_b.organisations_list')}}" id="nav_orgs_list">
+                        <i class="fas fa-landmark"></i>
+                        <span>Organisations List</span>
+                    </a>
+        	    </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{url_for('settings_b.create_organisation')}}" id="nav_create_org">
+                        <i class="fas fa-plus"></i>
+                        <span>Create Organisation</span>
+                    </a>
+        	    </li>
+            </ul>
         {% endif %}
 
         <h5 class="d-flex text-muted w-100" id="nav_doc">
