@@ -12,6 +12,7 @@ sys.path.append(os.environ['AIL_HOME'])
 ##################################
 from update.bin.ail_updater import AIL_Updater
 from lib import ail_users
+from lib import Investigations
 from lib.ConfigLoader import ConfigLoader
 from lib import chats_viewer
 
@@ -28,10 +29,21 @@ if __name__ == '__main__':
     config_loader = None
     date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
-    for user_id in ail_users.get_users():
+    # ORGS
+    # TODO CREATE DEFAULT ORG
+
+    # USERS
+    print('Updating Users ...')
+    for user_id in ail_users.get_users():  # TODO ORG
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', 'admin@admin.test')
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
+
+    # INVESTIGATIONS
+    print('Updating Investigations ...')
+    for inv_uuid in Investigations.get_all_investigations():  # TODO Creator ORG
+        inv = Investigations.Investigation(inv_uuid)
+        inv.set_level(1, None)
 
     chats_viewer.fix_chats_with_messages()
 

@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_api
 from lib import ail_core
 from lib import ail_updates
+from lib import ail_logger
 from lib import crawlers
 from lib import chats_viewer
 
@@ -30,6 +31,10 @@ from lib.objects import Domains
 from lib.objects import Titles
 
 from importer.FeederImporter import api_add_json_feeder_to_queue
+
+
+# LOGS
+# access_logger = ail_logger.get_access_config()
 
 
 # ============ BLUEPRINT ============
@@ -66,6 +71,7 @@ def token_required(user_role):
                     return create_json_response({'status': 'error', 'reason': 'Access Forbidden'}, 403)
                 else:
                     # User Authenticated + In Role
+                    # print(funct.__name__)
                     return funct(*args, **kwargs)
             else:
                 return create_json_response({'status': 'error', 'reason': 'Internal'}, 400)
@@ -245,7 +251,9 @@ def objects_titles_download_unsafe():
 @api_rest.route("api/v1/investigation/<investigation_uuid>", methods=['GET'])  # TODO options
 @token_required('read_only')
 def v1_investigation(investigation_uuid):
-    r = Investigations.api_get_investigation(investigation_uuid)
+    user_token = get_auth_from_header()
+    user_org, user_id, is_admin = ail_api.get_basic_user_meta(user_token)
+    r = Investigations.api_get_investigation(user_org, is_admin, investigation_uuid)
     return create_json_response(r[0], r[1])
 
 # TODO CATCH REDIRECT

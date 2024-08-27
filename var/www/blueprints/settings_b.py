@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_updates
+from lib import ail_orgs
 from lib import ail_users
 from lib import d4
 from packages import git_status
@@ -307,7 +308,7 @@ def users_list():
 @login_required
 @login_admin
 def organisations_list():
-    meta = ail_users.api_get_orgs_meta()
+    meta = ail_orgs.api_get_orgs_meta()
     return render_template("orgs_list.html", meta=meta, acl_admin=True)
 
 @settings_b.route("/settings/create_organisation", methods=['GET'])
@@ -328,7 +329,7 @@ def create_org_post():
     name = request.form.get('name')
     description = request.form.get('description')
 
-    r = ail_users.api_create_org(admin_id, org_uuid, name, request.remote_addr, description=description)
+    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.remote_addr, description=description)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -344,7 +345,7 @@ def create_org_post():
 def delete_org():
     admin_id = current_user.get_user_id()
     org_uuid = request.args.get('uuid')
-    r = ail_users.api_delete_org(org_uuid, admin_id, request.remote_addr)
+    r = ail_orgs.api_delete_org(org_uuid, admin_id, request.remote_addr)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:

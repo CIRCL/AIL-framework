@@ -42,17 +42,27 @@ def create_json_response(data, status_code):
 @login_required
 @login_read_only
 def investigations_dashboard():
-    investigations = Investigations.get_all_investigations_meta(r_str=True)
+    inv_global = Investigations.get_global_investigations_meta(r_str=True)
+    inv_org = Investigations.get_org_investigations_meta(current_user.get_org(), r_str=True)
     return render_template("investigations.html", bootstrap_label=bootstrap_label,
-                                investigations=investigations)
+                                inv_global=inv_global, inv_org=inv_org)
 
 
 @investigations_b.route("/investigation", methods=['GET']) ## FIXME: add /view ????
 @login_required
 @login_read_only
 def show_investigation():
+    user_org = current_user.get_org()
+    # user_id = current_user.get_user_id()
+    is_admin = current_user.is_admin()
     investigation_uuid = request.args.get("uuid")
     investigation = Investigations.Investigation(investigation_uuid)
+    if not investigation.exists():
+        create_json_response({'status': 'error', 'reason': 'Investigation Not Found'}, 404)
+    res = Investigations.api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    if res:
+        return create_json_response(res[0], res[1])
+
     metadata = investigation.get_metadata(r_str=True)
     objs = []
     for obj in investigation.get_objects():
@@ -71,6 +81,8 @@ def show_investigation():
 def add_investigation():
     if request.method == 'POST':
         user_id = current_user.get_user_id()
+        user_org = current_user.get_org()
+        level = request.form.get("investigation_level")
         name = request.form.get("investigation_name")
         date = request.form.get("investigation_date")
         threat_level = request.form.get("threat_level")
@@ -93,7 +105,7 @@ def add_investigation():
                 galaxies_tags = []
         tags = taxonomies_tags + galaxies_tags
 
-        input_dict = {"user_id": user_id, "name": name,
+        input_dict = {"user_org": user_org, "user_id": user_id, "level": level, "name": name,
                       "threat_level": threat_level, "date": date,
                       "analysis": analysis, "info": info, "tags": tags}
         res = Investigations.api_add_investigation(input_dict)
@@ -108,10 +120,13 @@ def add_investigation():
 @investigations_b.route("/investigation/edit", methods=['GET', 'POST'])
 @login_required
 @login_analyst
-def edit_investigation():
+def edit_investigation():  # TODO CHECK ACL
     if request.method == 'POST':
+        user_org = current_user.get_org()
         user_id = current_user.get_user_id()
+        is_admin = current_user.is_admin()
         investigation_uuid = request.form.get("investigation_uuid")
+        level = request.form.get("investigation_level")
         name = request.form.get("investigation_name")
         date = request.form.get("investigation_date")
         threat_level = request.form.get("threat_level")
@@ -135,10 +150,10 @@ def edit_investigation():
                 galaxies_tags = []
         tags = taxonomies_tags + galaxies_tags
 
-        input_dict = {"user_id": user_id, "uuid": investigation_uuid,
+        input_dict = {"user_id": user_id, "uuid": investigation_uuid, "level": level,
                       "name": name, "threat_level": threat_level,
                       "analysis": analysis, "info": info, "tags": tags}
-        res = Investigations.api_edit_investigation(input_dict)
+        res = Investigations.api_edit_investigation(user_org, user_id, is_admin, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
 
@@ -158,9 +173,12 @@ def edit_investigation():
 @login_required
 @login_analyst
 def delete_investigation():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    is_admin = current_user.is_admin()
     investigation_uuid = request.args.get('uuid')
     input_dict = {"uuid": investigation_uuid}
-    res = Investigations.api_delete_investigation(input_dict)
+    res = Investigations.api_delete_investigation(user_org, user_id, is_admin, input_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard'))
@@ -169,6 +187,9 @@ def delete_investigation():
 @login_required
 @login_read_only
 def register_investigation():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    is_admin = current_user.is_admin()
     investigations_uuid = request.args.get('uuids')
     investigations_uuid = investigations_uuid.split(',')
 
@@ -182,7 +203,7 @@ def register_investigation():
                       "type": object_type, "subtype": object_subtype}
         if comment:
             input_dict["comment"] = comment
-        res = Investigations.api_register_object(input_dict)
+        res = Investigations.api_register_object(user_org, user_id, is_admin, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard', uuid=investigation_uuid))
@@ -191,13 +212,16 @@ def register_investigation():
 @login_required
 @login_read_only
 def unregister_investigation():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    is_admin = current_user.is_admin()
     investigation_uuid = request.args.get('uuid')
     object_type = request.args.get('type')
     object_subtype = request.args.get('subtype')
     object_id = request.args.get('id')
     input_dict = {"uuid": investigation_uuid, "id": object_id,
                   "type": object_type, "subtype": object_subtype}
-    res = Investigations.api_unregister_object(input_dict)
+    res = Investigations.api_unregister_object(user_org, user_id, is_admin, input_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
@@ -207,7 +231,7 @@ def unregister_investigation():
 @login_required
 @login_read_only
 def get_investigations_selector_json():
-    return jsonify(Investigations.get_investigations_selector())
+    return jsonify(Investigations.get_investigations_selector(current_user.get_org()))
 
 @investigations_b.route("/object/gid")
 @login_required

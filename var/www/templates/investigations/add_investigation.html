@@ -144,6 +144,19 @@
 											{% else %}
 												Create a new Investigation
 											{% endif %}
+
+                                            <br>
+                                            <label  class="mt-3" for="level_selector">View Level</label>
+                                            <select class="custom-select" id="level_selector" name="investigation_level">
+                                                {% if edit %}
+                                                    <option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+                                                    <option value="2" {% if metadata['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
+                                                {% else %}
+                                                    <option value="1" selected><i class="fas fa-users"></i> Global</option>
+                                                    <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
+                                                {% endif %}
+                                            </select>
+
 										</div>
 									</div>
 

@@ -9,6 +9,8 @@ import sys
 
 import importlib.util
 
+from lib.ail_core import get_ail_uuid
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -260,7 +262,7 @@ def investigations_migration():
     for investigation_uuid in old_Investigations.get_all_investigations():
         old_investigation = old_Investigations.Investigation(investigation_uuid)
         meta = old_investigation.get_metadata()
-        Investigations._re_create_investagation(meta['uuid'], meta['user_creator'], meta['date'], meta['name'], meta['threat_level'], meta['analysis'], meta['info'], meta['tags'], meta['last_change'], meta['timestamp'], meta['misp_events'])
+        Investigations._re_create_investigation(meta['uuid'], get_ail_uuid(), meta['user_creator'], 1, meta['date'], meta['name'], meta['threat_level'], meta['analysis'], meta['info'], meta['tags'], meta['last_change'], meta['timestamp'], meta['misp_events'])
         new_investigation = Investigations.Investigation(meta['uuid'])
         for dict_obj in old_investigation.get_objects():
             new_investigation.register_object(dict_obj['id'], dict_obj['type'], dict_obj['subtype'])

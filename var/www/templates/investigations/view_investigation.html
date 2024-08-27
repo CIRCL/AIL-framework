@@ -47,6 +47,16 @@
 				              <th>Creator</th>
 				              <td>{{metadata['user_creator']}}</td>
 				            </tr>
+                            <tr>
+                                <th>Level</th>
+                                <td>
+                                    {% if metadata['level'] == 1 %}
+                                        Global
+                                    {% elif metadata['level'] == 2 %}
+                                        My Organisation
+                                    {% endif %}
+                                </td>
+                                </tr>
 				            <tr>
 				              <th>Tags</th>
 				              <td>
