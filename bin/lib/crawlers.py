@@ -37,6 +37,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from packages import git_status
 from packages import Date
+from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib.objects import HHHashs
@@ -477,11 +478,25 @@ def create_cookie_crawler(cookie_dict, domain, crawler_type='web'):
 ################################################################################
 ################################################################################
 
+# # # # # # # # #
+#               #
+#   COOKIEJARS  #
+#               #
+# # # # # # # # #
+
+# TODO EDIT COOKIEJAR
+
 def get_cookiejars():
     return r_crawler.smembers('cookiejars:all')
 
 def get_cookiejars_global():
     cookiejars = r_crawler.smembers('cookiejars:global')
+    if not cookiejars:
+        cookiejars = []
+    return cookiejars
+
+def get_cookiejars_org(org_uuid):
+    cookiejars = ail_orgs.get_org_objs_by_type(org_uuid, 'cookiejar')
     if not cookiejars:
         cookiejars = []
     return cookiejars
@@ -518,20 +533,46 @@ class Cookiejar:
     def _set_user(self, user_id):
         return r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'user', user_id)
 
-    def get_level(self):
-        level = r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'level')
-        if level:
-            level = 1
-        else:
-            level = 0
-        return level
+    ## LEVEL ##
 
-    def _set_level(self, level):
-        if level:
-            level = 1
-        else:
-            level = 0
+    def get_level(self):
+        return int(r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'level'))
+
+    def set_level(self, level, org_uuid):
+        level = int(level)
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'level', level)
+        if level == 0:
+            r_crawler.sadd(f'cookiejars:user:{self.get_user()}', self.uuid)
+        elif level == 1:
+            r_crawler.sadd('cookiejars:global', self.uuid)
+        elif level == 2:
+            self.add_to_org(org_uuid)
+
+    def reset_level(self, old_level, new_level, new_org_uuid):
+        if old_level == 0:
+            r_crawler.srem(f'cookiejars:user:{self.get_user()}', self.uuid)
+        elif old_level == 1:
+            r_crawler.srem('cookiejars:global', self.uuid)
+        # Org
+        elif old_level == 2:
+            ail_orgs.remove_obj_to_org(self.get_org(), 'cookiejar', self.uuid)
+        self.set_level(new_level, new_org_uuid)
+
+    ## --LEVEL-- ##
+
+    ## ORG ##
+
+    def get_creator_org(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'creator_org')
+
+    def get_org(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'org')
+
+    def add_to_org(self, org_uuid):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'org', org_uuid)
+        ail_orgs.add_obj_to_org(org_uuid, 'cookiejar', self.uuid)
+
+        ## -ORG- ##
 
     def is_cookie_in_jar(self, cookie_uuid):
         # kvrocks sismember TEMP fix
@@ -597,19 +638,18 @@ class Cookiejar:
             cookie = Cookie(cookie_uuid)
             cookie.delete()
 
-    def create(self, user_id, description=None, level=1):
+    # TODO Last EDIT
+    def create(self, user_org, user_id, level, description=None):
         if self.exists():
             raise Exception('Cookiejar already exists')
 
         r_crawler.sadd('cookiejars:all', self.uuid)
-        if level == 0:
-            r_crawler.sadd(f'cookiejars:user:{user_id}', self.uuid)
-        else:
-            r_crawler.sadd('cookiejars:global', self.uuid)
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'creator_org', user_org)
 
         self._set_user(user_id)
-        self._set_date(datetime.now().strftime("%Y%m%d"))
-        self._set_level(level)
+        self.set_level(level, user_org)
+
+        self._set_date(datetime.now().strftime("%Y%m%d"))  # TODO improve DATE
         if description:
             self.set_description(description)
 
@@ -619,10 +659,13 @@ class Cookiejar:
         r_crawler.srem(f'cookiejars:user:{self.get_user()}', self.uuid)
         r_crawler.srem('cookiejars:global', self.uuid)
         r_crawler.srem('cookiejars:all', self.uuid)
+        level = self.get_level()
+        if level == 2:
+            ail_orgs.remove_obj_to_org(self.get_org(), 'investigation', self.uuid)
         r_crawler.delete(f'cookiejar:meta:{self.uuid}')
 
 
-def create_cookiejar(user_id, description=None, level=1, cookiejar_uuid=None):
+def create_cookiejar(user_org, user_id, description=None, level=1, cookiejar_uuid=None):
     if cookiejar_uuid:
         cookiejar = Cookiejar(cookiejar_uuid)
         if cookiejar.exists():
@@ -630,7 +673,7 @@ def create_cookiejar(user_id, description=None, level=1, cookiejar_uuid=None):
     else:
         cookiejar_uuid = generate_uuid()
     cookiejar = Cookiejar(cookiejar_uuid)
-    cookiejar.create(user_id, description=description, level=level)
+    cookiejar.create(user_org, user_id, level, description=description)
     return cookiejar_uuid
 
 def get_cookiejars_meta_by_iterator(iter_cookiejar_uuid):
@@ -640,16 +683,17 @@ def get_cookiejars_meta_by_iterator(iter_cookiejar_uuid):
         cookiejars_meta.append(cookiejar.get_meta(nb_cookies=True))
     return cookiejars_meta
 
-def get_cookiejars_by_user(user_id):
+def get_cookiejars_by_user(user_org, user_id):
     cookiejars_global = get_cookiejars_global()
+    cookiejars_org = get_cookiejars_org(user_org)
     cookiejars_user = get_cookiejars_user(user_id)
-    return [*cookiejars_user, *cookiejars_global]
+    return [*cookiejars_user, *cookiejars_org, *cookiejars_global]
 
 ## API ##
 
-def api_get_cookiejars_selector(user_id):
+def api_get_cookiejars_selector(user_org, user_id):
     cookiejars = []
-    for cookiejar_uuid in get_cookiejars_by_user(user_id):
+    for cookiejar_uuid in get_cookiejars_by_user(user_org, user_id):
         cookiejar = Cookiejar(cookiejar_uuid)
         description = cookiejar.get_description()
         if not description:
@@ -657,37 +701,54 @@ def api_get_cookiejars_selector(user_id):
         cookiejars.append(f'{description} : {cookiejar.uuid}')
     return sorted(cookiejars)
 
-def api_verify_cookiejar_acl(cookiejar_uuid, user_id):
-    cookiejar = Cookiejar(cookiejar_uuid)
-    if not cookiejar.exists():
-        return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
-    if cookiejar.get_level() == 0:  # TODO: check if user is admin
-        if cookiejar.get_user() != user_id:
-            return {'error': 'The access to this cookiejar is restricted'}, 403
-
-def api_edit_cookiejar_description(user_id, cookiejar_uuid, description):
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+def api_edit_cookiejar_description(user_org, user_id, is_admin, cookiejar_uuid, description):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
     cookiejar.set_description(description)
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
-def api_delete_cookiejar(user_id, cookiejar_uuid):
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+def api_delete_cookiejar(user_org, user_id, is_admin, cookiejar_uuid):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
     cookiejar.delete()
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
-def api_get_cookiejar(cookiejar_uuid, user_id):
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+def api_get_cookiejar(user_org, user_id, is_admin, cookiejar_uuid):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
     meta = cookiejar.get_meta(level=True, cookies=True, r_json=True)
     return meta, 200
+
+####  ACL  ####
+
+def check_cookiejar_access_acl(cookiejar, user_org, user_id, is_admin=False):
+    if is_admin:
+        return True
+
+    level = cookiejar.get_level()
+    if level == 0:
+        return user_id == cookiejar.get_user()
+    elif level == 1:
+        return True
+    elif level == 2:
+        return ail_orgs.check_access_acl(cookiejar, user_org, is_admin=is_admin)
+    else:
+        return False
+
+def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin=False):
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if not cookiejar.exists():
+        return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+    if not check_cookiejar_access_acl(cookiejar, user_org, user_id, is_admin=is_admin):
+        return {"status": "error", "reason": "Access Denied"}, 403
+
+####  API  ####
 
 # # # # # # # #
 #             #
@@ -788,20 +849,20 @@ class Cookie:
 
 ## API ##
 
-def api_get_cookie(user_id, cookie_uuid):
+def api_get_cookie(user_org, user_id, is_admin, cookie_uuid):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
-    resp = api_verify_cookiejar_acl(cookie.get_cookiejar(), user_id)
+    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, is_admin)
     if resp:
         return resp
     return cookie.get_meta()
 
-def api_edit_cookie(user_id, cookie_uuid, cookie_dict):
+def api_edit_cookie(user_org, user_id, is_admin, cookie_uuid, cookie_dict):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
-    resp = api_verify_cookiejar_acl(cookie.get_cookiejar(), user_id)
+    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, is_admin)
     if resp:
         return resp
     if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
@@ -809,8 +870,8 @@ def api_edit_cookie(user_id, cookie_uuid, cookie_dict):
     cookie.edit(cookie_dict)
     return cookie.get_meta(), 200
 
-def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+def api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
@@ -826,12 +887,12 @@ def api_create_cookie(user_id, cookiejar_uuid, cookie_dict):
     cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, text=text)
     return resp, 200
 
-def api_delete_cookie(user_id, cookie_uuid):
+def api_delete_cookie(user_org, user_id, is_admin, cookie_uuid):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
     cookiejar_uuid = cookie.get_cookiejar()
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
@@ -877,8 +938,8 @@ def unpack_imported_json_cookie(json_cookie):
 
 ##  - -  ##
 #### COOKIEJAR API ####
-def api_import_cookies_from_json(user_id, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
-    resp = api_verify_cookiejar_acl(cookiejar_uuid, user_id)
+def api_import_cookies_from_json(user_org, user_id, is_admin, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
     if resp:
         return resp
     json_cookies = json.loads(json_cookies_str)
@@ -1724,7 +1785,7 @@ def api_parse_task_dict_basic(data, user_id):
 
     return {'url': url, 'depth_limit': depth_limit, 'har': har, 'screenshot': screenshot, 'proxy': proxy, 'tags': tags}, 200
 
-def api_add_crawler_task(data, user_id=None):
+def api_add_crawler_task(data, user_org, user_id=None):
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
@@ -1750,7 +1811,7 @@ def api_add_crawler_task(data, user_id=None):
     cookies = data.get('cookies', None)
     if not cookiejar_uuid and cookies:
         # Create new cookiejar
-        cookiejar_uuid = create_cookiejar(user_id, "single-shot cookiejar", 1, None)
+        cookiejar_uuid = create_cookiejar(user_org, user_id, "single-shot cookiejar", 1, None)  # TODO REVIEW DEFAULT LEVEL
         cookiejar = Cookiejar(cookiejar_uuid)
         for cookie in cookies:
             try:

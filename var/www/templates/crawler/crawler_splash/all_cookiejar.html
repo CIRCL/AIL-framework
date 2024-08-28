@@ -42,6 +42,17 @@
 
         <div class="card mb-3 mt-1">
           <div class="card-header text-white bg-dark">
+            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Organisation Cookiejar</h5>
+          </div>
+          <div class="card-body">
+            {% with all_cookiejar=org_cookiejar, table_id='table_org'%}
+              {% include 'crawler/crawler_splash/table_cookiejar.html' %}
+            {% endwith %}
+          </div>
+        </div>
+
+        <div class="card mb-3 mt-1">
+          <div class="card-header text-white bg-dark">
             <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Global Cookiejar</h5>
           </div>
           <div class="card-body">
@@ -67,6 +78,11 @@ $(document).ready(function(){
 	$("#nav_title_cookiejar").removeClass("text-muted");
 
   $('#table_user').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "desc" ]]
+  });
+  $('#table_org').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
         "order": [[ 0, "desc" ]]

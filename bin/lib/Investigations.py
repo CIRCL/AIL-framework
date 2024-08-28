@@ -450,7 +450,7 @@ def check_access_acl(inv, user_org, is_admin=False):
     level = inv.get_level()
     if level == 1:
         return True
-    if level == 2:
+    elif level == 2:
         return ail_orgs.check_access_acl(inv, user_org, is_admin=is_admin)
     else:
         return False

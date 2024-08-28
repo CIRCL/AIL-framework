@@ -4,6 +4,7 @@
         <th class="bg-info text-white">Description</th>
         <th class="bg-info text-white">Date</th>
         <th class="bg-info text-white">UUID</th>
+        <th class="bg-info text-white">Level</th>
         <th class="bg-info text-white">User</th>
     </tr>
   </thead>
@@ -20,6 +21,17 @@
           <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid={{ dict_cookiejar['uuid'] }}">
             {{ dict_cookiejar['uuid']}}
           </a>
+        </td>
+        <td>
+            {% if 'level' in dict_cookiejar %}
+                {% if dict_cookiejar['level'] == 0 %}
+                    User
+                {% elif dict_cookiejar['level'] == 1 %}
+                    Global
+                {% elif dict_cookiejar['level'] == 2 %}
+                    Community
+                {% endif %}
+            {% endif %}
         </td>
         <td>{{dict_cookiejar['user']}}</td>
       </tr>

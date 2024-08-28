@@ -444,7 +444,7 @@ def crawler_migration():
             # print(meta)
             cookiejar = crawlers.Cookiejar(meta['uuid'])
             if not cookiejar.exists():
-                crawlers.create_cookiejar(meta['user'], description=meta['description'], level=meta['level'],
+                crawlers.create_cookiejar(get_ail_uuid(), meta['user'], description=meta['description'], level=meta['level'],
                                           cookiejar_uuid=meta['uuid'])
                 cookiejar._set_date(meta['date'])
 
@@ -452,7 +452,7 @@ def crawler_migration():
                     cookie_dict = get_cookie_dict(cookie_uuid)
                     if cookie_dict:
                         # print(cookie_dict)
-                        crawlers.api_create_cookie(meta['user'], cookiejar_uuid, cookie_dict)
+                        crawlers.api_create_cookie(get_ail_uuid(), meta['user'], True, cookiejar_uuid, cookie_dict)
 
     auto_crawler_web = r_crawler.smembers('auto_crawler_url:regular')
     auto_crawler_onion = r_crawler.smembers('auto_crawler_url:onion')

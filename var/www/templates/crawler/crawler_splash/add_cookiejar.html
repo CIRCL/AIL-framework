@@ -44,12 +44,14 @@
 										</div>
 									</div>
 									<div class="col-12 col-md-3">
-										<div class="custom-control custom-switch mt-1">
-											<input class="custom-control-input" type="checkbox" name="level" id="id_level" checked="">
-											<label class="custom-control-label" for="id_level">
-												<i class="fas fa-users"></i>&nbsp;Show cookiejar to all Users
-											</label>
-										</div>
+
+                                        <label  class="mt-3" for="level_selector">View Level</label>
+                                        <select class="custom-select" id="level_selector" name="level">
+                                            <option value="1" selected>Global</option>
+                                            <option value="2">My Organisation</option>
+                                            <option value="0">My User</option>
+                                        </select>
+
 									</div>
 								</div>
 
