@@ -35,7 +35,9 @@
           Create New Retro Hunt
         </a>
 
-        <table id="table_user_trackers" class="table table-striped border-primary">
+        <h5>My Organisation:</h5>
+
+        <table id="table_retro_hunts_org" class="table table-striped border-primary">
           <thead class="bg-dark text-white">
             <tr>
                 <th>Name</th>
@@ -46,7 +48,74 @@
             </tr>
           </thead>
           <tbody style="font-size: 15px;">
-            {% for dict_task in retro_hunts %}
+            {% for dict_task in retro_hunts_org %}
+              <tr class="border-color: blue;">
+                <td>
+                  <a href="{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ dict_task['uuid'] }}">
+                    <span>
+                      {{ dict_task['name']}}
+                    </span>
+                  </a>
+                  <div>
+                    {% for tag in dict_task['tags'] %}
+                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                      <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                    </a>
+                    {%  endfor %}
+                  </div>
+                </td>
+                <td>{{ dict_task['date'][0:4]}}/{{ dict_task['date'][4:6]}}/{{ dict_task['date'][6:8]}}</td>
+                <td>
+                  <b><h3 class="font-weight-bold text-primary">{{dict_task['nb_match']}}</h3></b>
+                </td>
+                <td>
+                  {%if dict_task['state']=='paused'%}
+                    <a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+                      <button class='btn btn-info'><i class="fas fa-play"></i></button>
+                    </a>
+                  {%endif%}
+                  {%if dict_task['state']=='running' or dict_task['state']=='pending'%}
+                    <!-- <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+                      <button class='btn btn-secondary'><i class="fas fa-stop"></i></button>
+                    </a> -->
+                    <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
+                      <button class='btn btn-info'><i class="fas fa-pause"></i></button>
+                    </a>
+                  {%endif%}
+                </td>
+
+                <td class="text-center">
+                  <span class="justify-content-end">
+                    {%if dict_task['state']=='pending'%}
+                      <span class="text-secondary"><i class="fas fa-ellipsis-h fa-3x"></i>pending</span>
+                    {%elif dict_task['state']=='completed'%}
+                      <span class="text-success"><i class="fas fa-check-square fa-3x"></i>&nbsp;completed</span>
+                    {%elif dict_task['state']=='paused'%}
+                      <span class="text-secondary"><i class="fas fa-pause fa-3x"></i>&nbsp;paused  [{{ dict_task['progress']}}%]</span>
+                    {%elif dict_task['state']=='running'%}
+                      <span class="text-secondary"><i class="fas fa-sync-alt fa-3x fa-spin"></i>running  [{{ dict_task['progress']}}%]</span>
+                    {%endif%}
+                  <span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <h5>Global:</h5>
+
+        <table id="table_retro_hunts_global" class="table table-striped border-primary">
+          <thead class="bg-dark text-white">
+            <tr>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Nb Matches</th>
+                <th></th>
+                <th></th>
+            </tr>
+          </thead>
+          <tbody style="font-size: 15px;">
+            {% for dict_task in retro_hunts_global %}
               <tr class="border-color: blue;">
                 <td>
                   <a href="{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ dict_task['uuid'] }}">
@@ -112,7 +181,12 @@ $(document).ready(function(){
   $('#nav_title_retro_hunt').removeClass("text-muted");
   $("#nav_retro_hunts").addClass("active");
 
-  $('#table_user_trackers').DataTable({
+  $('#table_retro_hunts_org').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 1, "desc" ],[ 4, "desc" ]]
+  });
+  $('#table_retro_hunts_global').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
         "order": [[ 1, "desc" ],[ 4, "desc" ]]

@@ -15,6 +15,7 @@ from lib import ail_users
 from lib import Investigations
 from lib.ConfigLoader import ConfigLoader
 from lib import chats_viewer
+from lib import Tracker
 
 class Updater(AIL_Updater):
     """default Updater."""
@@ -44,6 +45,13 @@ if __name__ == '__main__':
     for inv_uuid in Investigations.get_all_investigations():  # TODO Creator ORG
         inv = Investigations.Investigation(inv_uuid)
         inv.set_level(1, None)
+
+    # TODO Trackers
+
+    print('Updating Retro Hunts ...')
+    for retro_hunt_uuid in Tracker.get_all_retro_hunt_tasks():  # TODO Creator ORG
+        retro = Tracker.RetroHunt(retro_hunt_uuid)
+        retro.set_level(1, None)
 
     chats_viewer.fix_chats_with_messages()
 

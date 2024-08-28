@@ -468,8 +468,10 @@ def tracker_objects():
 @login_required
 @login_read_only
 def retro_hunt_all_tasks():
-    retro_hunts = Tracker.get_retro_hunt_metas()
-    return render_template("retro_hunt_tasks.html", retro_hunts=retro_hunts, bootstrap_label=bootstrap_label)
+    user_org = current_user.get_org()
+    retro_hunts_global = Tracker.get_retro_hunt_metas(Tracker.get_retro_hunts_global())
+    retro_hunts_org = Tracker.get_retro_hunt_metas(Tracker.get_retro_hunts_org(user_org))
+    return render_template("retro_hunt_tasks.html", retro_hunts_global=retro_hunts_global, retro_hunts_org=retro_hunts_org, bootstrap_label=bootstrap_label)
 
 @hunters.route('/retro_hunt/task/show', methods=['GET'])
 @login_required
@@ -478,19 +480,19 @@ def retro_hunt_show_task():
     task_uuid = request.args.get('uuid', None)
     objs = request.args.get('objs', False)
 
-    date_from_item = request.args.get('date_from')
-    date_to_item = request.args.get('date_to')
-    if date_from_item:
-        date_from_item = date_from_item.replace('-', '')
-    if date_to_item:
-        date_to_item = date_to_item.replace('-', '')
+    # date_from_item = request.args.get('date_from')
+    # date_to_item = request.args.get('date_to')
+    # if date_from_item:
+    #     date_from_item = date_from_item.replace('-', '')
+    # if date_to_item:
+    #     date_to_item = date_to_item.replace('-', '')
 
     res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return create_json_response(res[0], res[1])
 
     retro_hunt = Tracker.RetroHunt(task_uuid)
-    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'progress', 'filters', 'nb_objs', 'tags'})
+    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'progress', 'filters', 'nb_objs', 'tags'})
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 
@@ -509,6 +511,7 @@ def retro_hunt_show_task():
 @login_analyst
 def retro_hunt_add_task():
     if request.method == 'POST':
+        level = request.form.get("level", 1)
         name = request.form.get("name", '')
         description = request.form.get("description", '')
         timeout = request.form.get("timeout", 30)
@@ -586,14 +589,15 @@ def retro_hunt_add_task():
             rule = yara_default_rule
             rule_type='yara_default'
 
+        user_org = current_user.get_org()
         user_id = current_user.get_user_id()
 
-        input_dict = {"name": name, "description": description, "creator": user_id,
+        input_dict = {"level": level, "name": name, "description": description, "creator": user_id,
                       "rule": rule, "type": rule_type,
                       "tags": tags, "filters": filters, "timeout": timeout,  # "mails": mails
                       }
 
-        res = Tracker.api_create_retro_hunt_task(input_dict, user_id)
+        res = Tracker.api_create_retro_hunt_task(input_dict, user_org, user_id)
         if res[1] == 200:
             return redirect(url_for('hunters.retro_hunt_all_tasks'))
         else:
@@ -609,8 +613,10 @@ def retro_hunt_add_task():
 @login_required
 @login_analyst
 def retro_hunt_pause_task():
+    user_org = current_user.get_org()
+    is_admin = current_user.is_admin()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_pause_retro_hunt_task(task_uuid)
+    res = Tracker.api_pause_retro_hunt_task(user_org, is_admin, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
@@ -619,8 +625,10 @@ def retro_hunt_pause_task():
 @login_required
 @login_analyst
 def retro_hunt_resume_task():
+    user_org = current_user.get_org()
+    is_admin = current_user.is_admin()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_resume_retro_hunt_task(task_uuid)
+    res = Tracker.api_resume_retro_hunt_task(user_org, is_admin, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
@@ -629,8 +637,10 @@ def retro_hunt_resume_task():
 @login_required
 @login_analyst
 def retro_hunt_delete_task():
+    user_org = current_user.get_org()
+    is_admin = current_user.is_admin()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_delete_retro_hunt_task(task_uuid)
+    res = Tracker.api_delete_retro_hunt_task(user_org, is_admin, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))

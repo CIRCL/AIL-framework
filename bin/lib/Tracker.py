@@ -26,6 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from packages import Date
 from lib.ail_core import get_objects_tracked, get_object_all_subtypes, get_objects_retro_hunted
 from lib import ail_logger
+from lib import ail_orgs
 from lib import ConfigLoader
 from lib import item_basic
 from lib import Tag
@@ -177,11 +178,44 @@ class Tracker:
     def get_description(self):
         return self._get_field('description')
 
+    ## LEVEL ##
+
     def get_level(self):
-        level = self._get_field('level')
+        level = int(self._get_field('level'))
         if not level:
             level = 0
         return int(level)
+
+    def set_level(self, level, org_uuid):
+        tracker_type = self.get_type()
+        if level == 0:  # user only
+            user_id = self.get_user()
+            r_tracker.sadd(f'user:tracker:{user_id}', self.uuid)
+            r_tracker.sadd(f'user:tracker:{user_id}:{tracker_type}', self.uuid)
+        elif level == 1:  # global
+            r_tracker.sadd('global:tracker', self.uuid)
+            r_tracker.sadd(f'global:tracker:{tracker_type}', self.uuid)
+        elif level == 2:  # org only
+            r_tracker.sadd(f'org:tracker:{org_uuid}', self.uuid)
+            r_tracker.sadd(f'org:tracker:{org_uuid}:{tracker_type}', self.uuid)
+            self.add_to_org(org_uuid)
+        self._set_field('level', level)
+
+    def reset_level(self, old_level, new_level, new_org_uuid):
+        if old_level == 0:
+            user_id = self.get_user()
+            r_tracker.srem(f'user:tracker:{user_id}', self.uuid)
+            r_tracker.srem(f'user:tracker:{user_id}:{self.get_type()}', self.uuid)
+        elif old_level == 1:
+            r_tracker.srem('global:tracker', self.uuid)
+            r_tracker.srem(f'global:tracker:{self.get_type()}', self.uuid)
+        # Org
+        elif old_level == 2:
+            old_org = self.get_org()
+            r_tracker.srem(f'org:tracker:{old_org}', self.uuid)
+            r_tracker.srem(f'org:tracker:{old_org}:{self.get_type()}', self.uuid)
+            ail_orgs.remove_obj_to_org(old_org, 'tracker', self.uuid)
+        self.set_level(new_level, new_org_uuid)
 
     def is_level_user(self):
         return self.get_level() == 0
@@ -192,21 +226,19 @@ class Tracker:
     def is_level_global(self):
         return self.get_level() == 1
 
-    def _set_level(self, level, tracker_type=None, org=None, user=None):
-        if not tracker_type:
-            tracker_type = self.get_type()
-        if level == 0:  # user only
-            if not user:
-                user = self.get_user()
-            r_tracker.sadd(f'user:tracker:{user}', self.uuid)
-            r_tracker.sadd(f'user:tracker:{user}:{tracker_type}', self.uuid)
-        elif level == 1:  # global
-            r_tracker.sadd('global:tracker', self.uuid)
-            r_tracker.sadd(f'global:tracker:{tracker_type}', self.uuid)
-        elif level == 2:  # org only
-            r_tracker.sadd(f'org:tracker:{org}', self.uuid)
-            r_tracker.sadd(f'org:tracker:{org}:{tracker_type}', self.uuid)
-        self._set_field('level', level)
+    ## ORG ##
+
+    def get_creator_org(self):
+        return self._get_field('creator_org')
+
+    def get_org(self):
+        return self._get_field('org')
+
+    def add_to_org(self, org_uuid):
+        self._set_field('org', org_uuid)
+        ail_orgs.add_obj_to_org(org_uuid, 'tracker', self.uuid)
+
+    ## -ORG- ##
 
     def get_filters(self):
         filters = self._get_field('filters')
@@ -257,9 +289,6 @@ class Tracker:
 
     def _del_mails(self):
         r_tracker.delete(f'tracker:mail:{self.uuid}')
-
-    def get_org(self):
-        return self._get_field('org')
 
     def get_user(self):
         return self._get_field('user_id')
@@ -424,7 +453,7 @@ class Tracker:
         self._set_field('tracked', to_track)
         self._set_field('type', tracker_type)
         self._set_field('date', datetime.date.today().strftime("%Y%m%d"))
-        self._set_field('org', org)
+        self._set_field('creator_org', org)
         self._set_field('user_id', user_id)
         if description:
             self._set_field('description', escape(description))
@@ -441,7 +470,7 @@ class Tracker:
 
 
         # TRACKER LEVEL
-        self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
+        self.set_level(level, org)
 
         # create tracker tags list
         if tags:
@@ -493,16 +522,7 @@ class Tracker:
 
         if tracker_type != old_type:
             # LEVEL
-            if old_level == 0:
-                r_tracker.srem(f'user:tracker:{user_id}:{old_type}', self.uuid)
-                r_tracker.srem(f'user:tracker:{user_id}', self.uuid)
-            elif old_level == 1:
-                r_tracker.srem(f'global:tracker:{old_type}', self.uuid)
-                r_tracker.srem(f'global:tracker', self.uuid)
-            elif old_level == 2:
-                r_tracker.srem(f'org:tracker:{self.get_org()}:{old_type}', self.uuid)
-                r_tracker.srem(f'org:tracker:{self.get_org()}', self.uuid)
-            self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
+            self.reset_level(old_level, level, org)
             # Delete OLD YARA Rule File
             if old_type == 'yara':
                 if not is_default_yara_rule(old_to_track):
@@ -524,17 +544,9 @@ class Tracker:
             r_tracker.sadd(f'trackers:all:{tracker_type}', self.uuid)
 
         # Same Type
-        elif level != old_level:
-            if old_level == 0:
-                r_tracker.srem(f'user:tracker:{user_id}', self.uuid)
-                r_tracker.srem(f'user:tracker:{user_id}:{tracker_type}', self.uuid)
-            elif old_level == 1:
-                r_tracker.srem('global:tracker', self.uuid)
-                r_tracker.srem(f'global:tracker:{tracker_type}', self.uuid)
-            elif old_level == 2:
-                r_tracker.srem(f'org:tracker:{self.get_org()}', self.uuid)
-                r_tracker.srem(f'org:tracker:{self.get_org()}:{tracker_type}', self.uuid)
-            self._set_level(level, tracker_type=tracker_type, org=org, user=user_id)
+
+        # LEVEL
+        self.reset_level(old_level, level, org)
 
         # To Track Edited
         if to_track != old_to_track:
@@ -581,11 +593,6 @@ class Tracker:
 
         tracker_type = self.get_type()
         tracked = self.get_tracked()
-        r_tracker.srem(f'all:tracker:{tracker_type}', tracked)
-        # tracker - uuid map
-        r_tracker.srem(f'all:tracker_uuid:{tracker_type}:{tracked}', self.uuid)
-        r_tracker.srem('trackers:all', self.uuid)
-        r_tracker.srem(f'trackers:all:{tracker_type}', self.uuid)
 
         if tracker_type == 'typosquatting':
             r_tracker.delete(f'tracker:typosquatting:{tracked}')
@@ -613,11 +620,17 @@ class Tracker:
         elif level == 1:  # global
             r_tracker.srem('global:tracker', self.uuid)
             r_tracker.srem(f'global:tracker:{tracker_type}', self.uuid)
-        elif level == 2:                         # TODO ORG check delete permission
+        elif level == 2:
             org = self.get_org()
             r_tracker.srem(f'org:tracker:{org}', self.uuid)
             r_tracker.srem(f'org:tracker:{org}:{tracker_type}', self.uuid)
 
+        r_tracker.srem(f'all:tracker:{tracker_type}', tracked)
+        # tracker - uuid map
+        r_tracker.srem(f'all:tracker_uuid:{tracker_type}:{tracked}', self.uuid)
+        r_tracker.srem('trackers:all', self.uuid)
+        r_tracker.srem(f'trackers:all:{tracker_type}', self.uuid)
+        ail_orgs.remove_obj_to_org(self.get_org(), 'tracker', self.uuid)
         # meta
         r_tracker.delete(f'tracker:{self.uuid}')
         trigger_trackers_refresh(tracker_type)
@@ -1436,6 +1449,48 @@ class RetroHunt:
     def _set_field(self, field, value):
         return r_tracker.hset(f'retro_hunt:{self.uuid}', field, value)
 
+    ## LEVEL ##
+
+    def get_level(self):
+        level = int(self._get_field('level'))
+        if not level:
+            level = 0
+        return int(level)
+
+    def set_level(self, level, org_uuid):
+        if level == 1:  # global
+            r_tracker.sadd('retro_hunts', self.uuid)
+        elif level == 2:  # org only
+            self.add_to_org(org_uuid)
+        self._set_field('level', level)
+
+    def delete_level(self, level=None):
+        if not level:
+            level = self.get_level()
+        if level == 1:
+            r_tracker.srem('retro_hunts', self.uuid)
+        # Org
+        elif level == 2:
+            ail_orgs.remove_obj_to_org(self.get_org(), 'retro_hunt', self.uuid)
+
+    def reset_level(self, old_level, new_level, new_org_uuid):
+        self.delete_level(old_level)
+        self.set_level(new_level, new_org_uuid)
+
+    ## ORG ##
+
+    def get_creator_org(self):
+        return self._get_field('creator_org')
+
+    def get_org(self):
+        return self._get_field('org')
+
+    def add_to_org(self, org_uuid):
+        self._set_field('org', org_uuid)
+        ail_orgs.add_obj_to_org(org_uuid, 'retro_hunt', self.uuid)
+
+    ## -ORG- ##
+
     def get_creator(self):
         return self._get_field('creator')
 
@@ -1515,6 +1570,8 @@ class RetroHunt:
             meta['date'] = self.get_date()
         if 'description' in options:
             meta['description'] = self.get_description()
+        if 'level' in options:
+            meta['level'] = self.get_level()
         if 'mails' in options:
             meta['mails'] = self.get_mails()
         if 'nb_match' in options:
@@ -1624,7 +1681,7 @@ class RetroHunt:
         r_tracker.srem(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}', self.uuid)
         self._decr_nb_match()
 
-    def create(self, name, rule, creator, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending'):
+    def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending'):
         if self.exists():
             raise Exception('Error: Retro Hunt Task already exists')
 
@@ -1634,7 +1691,8 @@ class RetroHunt:
 
         self._set_field('date', datetime.date.today().strftime("%Y%m%d"))
         self._set_field('name', escape(name))
-        self._set_field('creator', creator)
+        self._set_field('creator_org', org_uuid)
+        self._set_field('creator', user_id)
         if description:
             self._set_field('description', description)
         if timeout:
@@ -1649,6 +1707,7 @@ class RetroHunt:
         if filters:
             self.set_filters(filters)
 
+        self.set_level(level, org_uuid)
         r_tracker.sadd('retro_hunts:all', self.uuid)
 
         # add to pending tasks
@@ -1667,6 +1726,8 @@ class RetroHunt:
             if filepath:
                 os.remove(filepath)
 
+        self.delete_level()
+
         r_tracker.srem('retro_hunts:pending', self.uuid)
         r_tracker.delete(f'retro_hunts:{self.uuid}')
         r_tracker.delete(f'retro_hunt:tags:{self.uuid}')
@@ -1683,13 +1744,13 @@ class RetroHunt:
         self.clear_cache()
         return self.uuid
 
-def create_retro_hunt(name, rule_type, rule, creator, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', task_uuid=None):
+def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', task_uuid=None):
     if not task_uuid:
         task_uuid = str(uuid.uuid4())
     retro_hunt = RetroHunt(task_uuid)
     # rule_type: yara_default - yara custom
     rule = save_yara_rule(rule_type, rule, tracker_uuid=retro_hunt.uuid)
-    retro_hunt.create(name, rule, creator, description=description, mails=mails, tags=tags,
+    retro_hunt.create(user_org, user_id , level, name, rule, description=description, mails=mails, tags=tags,
                       timeout=timeout, filters=filters, state=state)
     return retro_hunt.uuid
 
@@ -1712,6 +1773,12 @@ def create_retro_hunt(name, rule_type, rule, creator, description=None, filters=
 
 def get_all_retro_hunt_tasks():
     return r_tracker.smembers('retro_hunts:all')
+
+def get_retro_hunts_global():
+    return r_tracker.smembers('retro_hunts')
+
+def get_retro_hunts_org(org_uuid):
+    return ail_orgs.get_org_objs_by_type(org_uuid, 'retro_hunt')
 
 def get_retro_hunt_pending_tasks():
     return r_tracker.smembers('retro_hunts:pending')
@@ -1736,9 +1803,9 @@ def get_retro_hunt_task_to_start():
 
 ## Metadata ##
 
-def get_retro_hunt_metas():
+def get_retro_hunt_metas(trackers_uuid):
     tasks = []
-    for task_uuid in get_all_retro_hunt_tasks():
+    for task_uuid in trackers_uuid:
         retro_hunt = RetroHunt(task_uuid)
         tasks.append(retro_hunt.get_meta(options={'date', 'progress', 'nb_match', 'tags'}))
     return tasks
@@ -1756,7 +1823,26 @@ def delete_obj_retro_hunts(obj_type, subtype, obj_id):
         retro_hunt = RetroHunt(retro_uuid)
         retro_hunt.remove(obj_type, subtype, obj_id)
 
-## API ##
+####  ACL  ####
+
+def check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=False):
+    if is_admin:
+        return True
+
+    level = retro_hunt.get_level()
+    if level == 1:
+        return True
+    elif level == 2:
+        return ail_orgs.check_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    else:
+        return False
+
+def api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=False):
+    if not check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin):
+        return {"status": "error", "reason": "Access Denied"}, 403
+
+####  API  ####
+
 def api_check_retro_hunt_task_uuid(task_uuid):
     if not is_valid_uuid_v4(task_uuid):
         return {"status": "error", "reason": "Invalid uuid"}, 400
@@ -1765,22 +1851,28 @@ def api_check_retro_hunt_task_uuid(task_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
 
-def api_pause_retro_hunt_task(task_uuid):
+def api_pause_retro_hunt_task(user_org, is_admin, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
+    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    if res:
+        return res
     task_state = retro_hunt.get_state()
     if task_state not in ['pending', 'running']:
         return {"status": "error", "reason": f"Task {task_uuid} not paused, current state: {task_state}"}, 400
     retro_hunt.pause()
     return task_uuid, 200
 
-def api_resume_retro_hunt_task(task_uuid):
+def api_resume_retro_hunt_task(user_org, is_admin, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
+    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    if res:
+        return res
     if not retro_hunt.is_paused():
         return {"status": "error",
                 "reason": f"Task {task_uuid} not paused, current state: {retro_hunt.get_state()}"}, 400
@@ -1798,7 +1890,7 @@ def api_validate_rule_to_add(rule, rule_type):
         return {"status": "error", "reason": "Incorrect type"}, 400
     return {"status": "success", "rule": rule, "type": rule_type}, 200
 
-def api_create_retro_hunt_task(dict_input, creator):
+def api_create_retro_hunt_task(dict_input, user_org, user_id):
     # # TODO: API: check mandatory arg
     # # TODO: TIMEOUT
 
@@ -1809,6 +1901,15 @@ def api_create_retro_hunt_task(dict_input, creator):
     task_type = dict_input.get('type', None)
     if not task_type:
         return {"status": "error", "reason": "type not provided"}, 400
+
+    # Level
+    level = dict_input.get('level', 1)
+    try:
+        level = int(level)
+    except TypeError:
+        level = 1
+    if level not in range(1, 3):
+        level = 1
 
     # # TODO: limit
     name = dict_input.get('name', '')
@@ -1867,15 +1968,18 @@ def api_create_retro_hunt_task(dict_input, creator):
                 if res:
                     return res
 
-    task_uuid = create_retro_hunt(name, task_type, rule, creator, description=description,
+    task_uuid = create_retro_hunt(user_org, user_id, level, name, task_type, rule, description=description,
                                   mails=mails, tags=tags, timeout=30, filters=filters)
     return {'name': name, 'rule': rule, 'type': task_type, 'uuid': task_uuid}, 200
 
-def api_delete_retro_hunt_task(task_uuid):
+def api_delete_retro_hunt_task(user_org, is_admin, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
+    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    if res:
+        return res
     if retro_hunt.is_running() and retro_hunt.get_state() not in ['completed', 'paused']:
         return {"status": "error", "reason": "You can't delete a running task"}, 400
     else:

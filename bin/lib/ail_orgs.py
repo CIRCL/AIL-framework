@@ -27,6 +27,29 @@ r_data = config_loader.get_db_conn("Kvrocks_DB")  # TODO MOVE DEFAULT DB
 
 config_loader = None
 
+# #### PART OF ORGANISATION ####
+# from abc import ABC, abstractmethod
+#
+# class AbstractObject(ABC):
+#
+#     @abstractmethod
+#     def get_org(self):
+#         pass
+#
+#
+#     ## LEVEL ##
+#
+#     @abstractmethod
+#     def get_level(self):
+#         pass
+#
+#     @abstractmethod
+#     def set_level(self):
+#         pass
+#
+#     @abstractmethod
+#     def reset_level(self):
+#         pass
 
 #### ORGANISATIONS ####
 

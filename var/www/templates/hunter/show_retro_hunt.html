@@ -106,6 +106,16 @@
                                             <td>{{dict_task['description']}}</td>
                                         </tr>
                                         <tr>
+                                            <td class="text-right"><b>Level</b></td>
+                                            <td>
+                                                {% if dict_task['level'] == 1 %}
+                                                    Global
+                                                {% elif dict_task['level'] == 2 %}
+                                                    My Organisation
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <td class="text-right"><b>Tags</b></td>
                                             <td>
                                                 {%for tag in dict_task['tags']%}
