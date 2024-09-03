@@ -14,8 +14,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ail_users import get_user_org
 from lib.objects import ail_objects
-from lib.objects.Items import Item
 from lib.objects.Titles import Title
 from lib import correlations_engine
 from lib import regex_helper
@@ -140,13 +140,16 @@ def convert_byte_offset_to_string(b_content, offset):
 
 # TODO RETRO HUNTS
 # TODO TRACKER TYPE IN UI
-def get_tracker_match(obj, content):
+def get_tracker_match(user_org, user_id, obj, content):
     extracted = []
     extracted_yara = []
     obj_gid = obj.get_global_id()
     trackers = Tracker.get_obj_trackers(obj.type, obj.get_subtype(r_str=True), obj.id)
     for tracker_uuid in trackers:
         tracker = Tracker.Tracker(tracker_uuid)
+        if not tracker.check_level(user_org, user_id):
+            continue
+
         tracker_type = tracker.get_type()
         # print(tracker_type)
         tracked = tracker.get_tracked()
@@ -182,6 +185,9 @@ def get_tracker_match(obj, content):
     retro_hunts = Tracker.get_obj_retro_hunts(obj.type, obj.get_subtype(r_str=True), obj.id)
     for retro_uuid in retro_hunts:
         retro_hunt = Tracker.RetroHunt(retro_uuid)
+        if not retro_hunt.check_level(user_org):
+            continue
+
         rule = retro_hunt.get_rule(r_compile=True)
         rule.match(data=content.encode(), callback=_get_yara_match,
                    which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
@@ -209,23 +215,25 @@ def get_tracker_match(obj, content):
 # tag:iban
 # tracker:uuid
 # def extract(obj_id, content=None):
-def extract(obj_type, subtype, obj_id, content=None):
+def extract(user_id, obj_type, subtype, obj_id, content=None):
     obj = ail_objects.get_object(obj_type, subtype, obj_id)
     if not obj.exists():
         return []
     obj_gid = obj.get_global_id()
 
+    user_org = get_user_org(user_id)
+
     # CHECK CACHE
-    cached = r_cache.get(f'extractor:cache:{obj_gid}')
+    cached = r_cache.get(f'extractor:cache:{obj_gid}:{user_org}:{user_id}')
     # cached = None
     if cached:
-        r_cache.expire(f'extractor:cache:{obj_gid}', 300)
+        r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)
         return json.loads(cached)
 
     if not content:
         content = obj.get_content()
 
-    extracted = get_tracker_match(obj, content)
+    extracted = get_tracker_match(user_org, user_id, obj, content)
 
     # print(item.get_tags())
     for tag in obj.get_tags():
@@ -249,8 +257,8 @@ def extract(obj_type, subtype, obj_id, content=None):
     # Save In Cache
     if extracted:
         extracted_dump = json.dumps(extracted)
-        r_cache.set(f'extractor:cache:{obj_gid}', extracted_dump)
-        r_cache.expire(f'extractor:cache:{obj_gid}', 300)  # TODO Reduce CACHE ???????????????
+        r_cache.set(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', extracted_dump)
+        r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)  # TODO Reduce CACHE ???????????????
 
     return extracted
 

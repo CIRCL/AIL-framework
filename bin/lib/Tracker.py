@@ -217,6 +217,15 @@ class Tracker:
             ail_orgs.remove_obj_to_org(old_org, 'tracker', self.uuid)
         self.set_level(new_level, new_org_uuid)
 
+    def check_level(self, user_org, user_id):
+        level = self.get_level()
+        if level == 1:
+            return True
+        elif level == 0:
+            return self.get_user() == user_id
+        elif level == 2:
+            return self.get_org() == user_org
+
     def is_level_user(self):
         return self.get_level() == 0
 
@@ -1454,7 +1463,7 @@ class RetroHunt:
     def get_level(self):
         level = int(self._get_field('level'))
         if not level:
-            level = 0
+            level = 1
         return int(level)
 
     def set_level(self, level, org_uuid):
@@ -1476,6 +1485,13 @@ class RetroHunt:
     def reset_level(self, old_level, new_level, new_org_uuid):
         self.delete_level(old_level)
         self.set_level(new_level, new_org_uuid)
+
+    def check_level(self, user_org):
+        level = self.get_level()
+        if level == 1:
+            return True
+        elif level == 2:
+            return self.get_org() == user_org
 
     ## ORG ##
 

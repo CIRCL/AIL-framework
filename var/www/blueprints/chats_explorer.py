@@ -10,7 +10,7 @@ import sys
 import json
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only
@@ -236,7 +236,7 @@ def objects_message():
     else:
         message = message[0]
         languages = Language.get_translation_languages()
-        extracted = module_extractor.extract('message', '', message['id'], content=message['content'])
+        extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)
         message['extracted'] = extracted
         message['extracted_matches'] = extracted_matches

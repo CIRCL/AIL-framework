@@ -10,7 +10,7 @@ import os
 import sys
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file, send_from_directory
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
@@ -85,7 +85,7 @@ def showItem():  # # TODO: support post
     else:
         meta['investigations'] = []
 
-    extracted = module_extractor.extract('item', '', item.id, content=meta['content'])
+    extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'])
     extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
