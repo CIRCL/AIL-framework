@@ -276,7 +276,7 @@ def change_password():
             if check_password_strength(password1):
                 user_id = current_user.get_user_id()
                 res = api_change_user_self_password(user_id, password1)
-                if res != 200:
+                if res[1] != 200:
                     return create_json_response(res[0], res[1])
                 access_logger.info(f'Password change', extra={'user_id': user_id, 'ip_address': request.remote_addr})
                 # update Note
