@@ -62,6 +62,7 @@ def screenshot(filename):
 @login_required
 @login_read_only
 def showItem():  # # TODO: support post
+    user_org = current_user.get_org()
     item_id = request.args.get('id')
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
@@ -80,6 +81,9 @@ def showItem():  # # TODO: support post
         invests = []
         for investigation_uuid in meta['investigations']:
             inv = Investigations.Investigation(investigation_uuid)
+            if not inv.check_level(user_org):
+                continue
+
             invests.append(inv.get_metadata(r_str=True))
         meta['investigations'] = invests
     else:

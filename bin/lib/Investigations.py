@@ -125,6 +125,13 @@ class Investigation(object):
             ail_orgs.remove_obj_to_org(self.get_org(), 'investigation', self.uuid)
         self.set_level(new_level, new_org_uuid)
 
+    def check_level(self, user_org):
+        level = self.get_level()
+        if level == 1:
+            return True
+        elif level == 2:
+            return self.get_org() == user_org
+
     ## ORG ##
 
     def get_creator_org(self):
