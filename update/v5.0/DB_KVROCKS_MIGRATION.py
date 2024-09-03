@@ -123,7 +123,7 @@ def user_migration():
         if not chg_passwd:
             chg_passwd = None
 
-        ail_users.create_user(user_id, password=password_hash, chg_passwd=chg_passwd, role=role)
+        ail_users.create_user(user_id, password=password_hash, chg_passwd=chg_passwd, org_uuid=get_ail_uuid(), role=role)
         print(user_id, token)
 
     for invite_row in r_crawler.smembers('telegram:invite_code'):

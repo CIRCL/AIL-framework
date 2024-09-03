@@ -5,6 +5,7 @@
     Blueprint Flask: root endpoints: login, ...
 """
 
+import json
 import os
 import sys
 import time
@@ -12,6 +13,8 @@ import time
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask import session
 from flask_login import login_required, current_user, login_user, logout_user
+
+from blueprints.settings_b import create_json_response
 
 sys.path.append('modules')
 
@@ -22,7 +25,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_users import AILUser, kill_sessions, create_user, check_password_strength, check_user_role_integrity
+from lib.ail_users import AILUser, kill_sessions, api_change_user_self_password, check_password_strength, check_user_role_integrity
 from lib.ConfigLoader import ConfigLoader
 from lib import ail_logger
 
@@ -47,7 +50,6 @@ root = Blueprint('root', __name__, template_folder='templates')
 
 
 # ============ FUNCTIONS ============
-
 
 # ============= ROUTES ==============
 @root.route('/login', methods=['POST', 'GET'])   # TODO LOG BRUTEFORCE ATTEMPT
@@ -273,13 +275,15 @@ def change_password():
         if password1 == password2:
             if check_password_strength(password1):
                 user_id = current_user.get_user_id()
-                create_user(user_id, password=password1, chg_passwd=False) # TODO RENAME ME
+                res = api_change_user_self_password(user_id, password1)
+                if res != 200:
+                    return create_json_response(res[0], res[1])
                 access_logger.info(f'Password change', extra={'user_id': user_id, 'ip_address': request.remote_addr})
                 # update Note
                 # dashboard
                 return redirect(url_for('dashboard.index', update_note=True))
             else:
-                error = 'Incorrect password'
+                error = 'Invalid password'
                 return render_template("change_password.html", error=error)
         else:
             error = "Passwords don't match"

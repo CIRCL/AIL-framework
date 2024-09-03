@@ -220,7 +220,8 @@ def create_user():
             return create_json_response(r[0], r[1])
         meta = r[0]
     all_roles = ail_users.get_all_roles()
-    return render_template("create_user.html", all_roles=all_roles, meta=meta,
+    orgs = ail_orgs.get_orgs_selector()
+    return render_template("create_user.html", all_roles=all_roles, orgs=orgs, meta=meta,
                            error=error, error_mail=error_mail,
                            acl_admin=True)
 
@@ -240,6 +241,7 @@ def create_user_post():
     admin_id = current_user.get_user_id()
 
     email = request.form.get('username')
+    org_uuid = request.form.get('user_organisation')
     role = request.form.get('user_role')
     password1 = request.form.get('password1')
     password2 = request.form.get('password2')
@@ -266,14 +268,17 @@ def create_user_post():
             else:
                 password = ail_users.gen_password()
 
-            if current_user.is_in_role('admin'):
+            if current_user.is_admin():
                 str_password = password
                 if ail_users.exists_user(email):
                     if not password1 and not password2:
                         password = None
                         str_password = 'Password not changed'
-                ail_users.api_create_user(admin_id, request.remote_addr, email, password, role, enable_2_fa)
-                new_user = {'email': email, 'password': str_password, 'otp': enable_2_fa}
+                    edit = True
+                else:
+                    edit = False
+                ail_users.api_create_user(admin_id, request.remote_addr, email, password, org_uuid, role, enable_2_fa)
+                new_user = {'email': email, 'password': str_password, 'org': org_uuid, 'otp': enable_2_fa, 'edited': edit}
                 return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
 
         else:

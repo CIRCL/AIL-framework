@@ -32,6 +32,7 @@
                     <thead class="thead-dark">
                     <tr>
                         <th>User</th>
+                        <th>Org</th>
                         <th>Last Edit</th>
                         <th>Last Login</th>
                         <th>Last Seen</th>
@@ -46,6 +47,10 @@
                     {% for user in meta['users'] %}
                         <tr>
                             <td>{{user['id']}}</td>
+                            <td>
+                                {{ user['org_name'] }}<br>
+                                {{user['org']}}
+                            </td>
                             <td>{{user['last_edit']}}</td>
                             <td>
                                 {% if user['last_login'] %}

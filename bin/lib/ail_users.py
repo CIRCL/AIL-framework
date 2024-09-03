@@ -104,6 +104,12 @@ def hashing_password(password):
 def get_user_passwd_hash(user_id):
     return r_serv_db.hget('ail:users:all', user_id)
 
+def remove_default_password():
+    # Remove default user password file
+    default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
+    if os.path.isfile(default_passwd_file):
+        os.remove(default_passwd_file)
+
 ## --PASSWORDS-- ##
 
 def check_email(email):
@@ -304,7 +310,7 @@ def disable_user(user_id):
 def enable_user(user_id):
     r_serv_db.srem(f'ail:users:disabled', user_id)
 
-def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=None, otp=False):
+def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False):
     # # TODO: check password strength
     if password:
         new_password = password
@@ -312,14 +318,8 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=Non
         new_password = gen_password()
     password_hash = hashing_password(new_password)
 
-    # EDIT
-    if exists_user(user_id):
-        if password or chg_passwd:
-            edit_user(user_id, password_hash, chg_passwd=chg_passwd, otp=otp)
-        if role:
-            edit_user_role(user_id, role)
     # CREATE USER
-    elif admin_id:
+    if admin_id:
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', admin_id)
         date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
@@ -334,6 +334,12 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=Non
                 r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
             r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
 
+        # ORG
+        org = ail_orgs.Organisation(org_uuid)
+        if not org.exists():
+            raise Exception('Organisation does not exist')
+        org.add_user(user_id)
+
         r_serv_db.hset('ail:users:all', user_id, password_hash)
         if chg_passwd:
             r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
@@ -344,31 +350,41 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, role=Non
         if otp or is_2fa_enabled():
             enable_user_2fa(user_id)
 
+# TODO edit_org
+# TODO LOG
+def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True):
+    if password:
+        password_hash = hashing_password(password)
+        if chg_passwd:
+            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
+            r_serv_db.hset('ail:users:all', user_id, password_hash)
 
-def edit_user(user_id, password_hash, chg_passwd=False, otp=True):
-    if chg_passwd:
-        r_serv_db.hset(f'ail:user:metadata:{user_id}', 'change_passwd', 'True')
-        r_serv_db.hset('ail:users:all', user_id, password_hash)
+            # create new token
+            generate_new_token(user_id)
+        else:
+            r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
 
-        # create new token
-        generate_new_token(user_id)
-    else:
-        r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
+    if org_uuid:
+        org = ail_orgs.Organisation(org_uuid)
+        if org.exists():
+            if not org.is_user(user_id):
+                current_org = ail_orgs.Organisation(get_user_org(user_id))
+                current_org.remove_user(user_id)
+                org.add_user(user_id)
 
     # 2FA OTP
-    if otp or is_2fa_enabled():
-        enable_user_2fa(user_id)
-    else:
-        disable_user_2fa(user_id)
+    if edit_otp:
+        if otp or is_2fa_enabled():
+            enable_user_2fa(user_id)
+        else:
+            disable_user_2fa(user_id)
 
     date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
     r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
 
     # Remove default user password file
     if user_id == 'admin@admin.test':
-        default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
-        if os.path.isfile(default_passwd_file):
-            os.remove(default_passwd_file)
+        remove_default_password()
 
 ## --USER-- ##
 
@@ -445,6 +461,8 @@ class AILUser(UserMixin):
             meta['is_logged'] = is_user_logged(self.user_id)
         if 'org' in options:
             meta['org'] = self.get_org()
+            if 'org_name' in options and meta['org']:
+                meta['org_name'] = ail_orgs.Organisation(self.get_org()).get_name()
         return meta
 
     ## SESSION ##
@@ -564,14 +582,14 @@ class AILUser(UserMixin):
 
 def api_get_users_meta():
     meta = {'users': []}
-    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'role', '2fa', 'otp_setup'}
+    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))
     return meta
 
 def api_get_user_profile(user_id):
-    options = {'api_key', 'role', '2fa'}
+    options = {'api_key', 'role', '2fa', 'org'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -663,9 +681,23 @@ def api_create_user_api_key(user_id, admin_id, ip_address):
     access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
     return user.new_api_key(), 200
 
-def api_create_user(admin_id, ip_address, user_id, password, role, otp):
-    create_user(user_id, password=password, admin_id=admin_id, role=role, otp=otp)
-    access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+def api_create_user(admin_id, ip_address, user_id, password, org_uuid, role, otp):
+    user = AILUser(user_id)
+    if not user.exists():
+        create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp)
+        access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+    # Edit
+    else:
+        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp)
+        access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+
+def api_change_user_self_password(user_id, password):
+    if not check_password_strength(password):
+        return {'status': 'error', 'reason': 'Invalid Password'}, 400
+    password_hash = hashing_password(password)
+    user = AILUser(user_id)
+    user.edit_password(password_hash, chg_passwd=False)
+    return user_id, 200
 
 def api_delete_user(user_id, admin_id, ip_address):
     user = AILUser(user_id)

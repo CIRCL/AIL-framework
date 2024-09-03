@@ -71,6 +71,20 @@ def get_orgs():
 def is_user_in_org(org_uuid, user_id):
     return r_serv_db.sadd(f'ail:org:{org_uuid}:users', user_id)
 
+def get_orgs_selector():
+    orgs = []
+    for org_uuid in get_orgs():
+        org = Organisation(org_uuid)
+        name = org.get_name()
+        orgs.append({'uuid': org_uuid, 'name': name})
+    return orgs
+
+def create_default_org():
+    # org = Organisation(generate_uuid())
+    name = 'Default AIL Organisation'
+    description = 'Default AIL Organisation'
+    return create_org(name, description)
+
 #### ORGANISATION ####
 
 class Organisation:
@@ -138,6 +152,9 @@ class Organisation:
             meta['date_created'] = self._get_field('date_created')
         return meta
 
+    def is_user(self, user_id):
+        return r_serv_db.sismember(f'ail:org:{self.uuid}:users', user_id)
+
     def add_user(self, user_id):
         r_serv_db.sadd(f'ail:org:{self.uuid}:users', user_id)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'org', self.uuid)
@@ -189,6 +206,7 @@ def create_org(name, description, uuid=None, nationality=None, sector=None, org_
 
     org = Organisation(uuid)
     org.create(name, description, nationality=nationality, sector=sector, org_type=org_type, logo=logo)
+    return org
 
 def get_org_objs_by_type(org_uuid, obj_type):
     return r_serv_db.smembers(f'org:{org_uuid}:{obj_type}')

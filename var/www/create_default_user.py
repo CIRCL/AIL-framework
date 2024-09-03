@@ -8,17 +8,25 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_orgs
 from lib import ail_users
 
 if __name__ == "__main__":
 
-    # create role_list
-    ail_users._create_roles_list()
-
     user_id = 'admin@admin.test'
     password = ail_users.gen_password()
 
-    ail_users.create_user(user_id, password=password, admin_id='admin@admin.test', role='admin')
+    # create role_list
+    ail_users._create_roles_list()
+
+    if not ail_users.exists_user(user_id):
+        # Create Default Org
+        org = ail_orgs.create_default_org()
+        ail_users.create_user(user_id, password=password, admin_id='admin@admin.test', org_uuid=org.get_uuid(), role='admin')
+    # EDIT Password
+    else:
+        ail_users.edit_user('admin@admin.test', user_id, password=password, chg_passwd=True)
+
     token = ail_users.get_default_admin_token()
 
     default_passwd_file = os.path.join(os.environ['AIL_HOME'], 'DEFAULT_PASSWORD')
