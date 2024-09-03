@@ -90,6 +90,12 @@ class Investigation(object):
     def __init__(self, investigation_uuid):
         self.uuid = investigation_uuid
 
+    def _get_field(self, field):
+        return r_tracking.hget(f'investigations:data:{self.uuid}', field)
+
+    def _set_field(self, field, value):
+        r_tracking.hset(f'investigations:data:{self.uuid}', field, value)
+
     def exists(self):
         return r_tracking.exists(f'investigations:data:{self.uuid}')
 
