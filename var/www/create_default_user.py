@@ -17,7 +17,7 @@ if __name__ == "__main__":
     password = ail_users.gen_password()
 
     # create role_list
-    ail_users._create_roles_list()
+    ail_users._create_roles()
 
     if not ail_users.exists_user(user_id):
         # Create Default Org

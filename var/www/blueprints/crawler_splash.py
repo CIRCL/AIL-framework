@@ -19,7 +19,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_analyst, login_read_only, login_user_no_api
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -660,7 +660,7 @@ def crawler_cookiejar_add():
 def crawler_cookiejar_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
 
     description = request.form.get('description')
     level = request.form.get('level')
@@ -697,11 +697,11 @@ def crawler_cookiejar_add_post():
 
     # Create Cookies
     if json_cookies: # TODO CHECK Import
-        res = crawlers.api_import_cookies_from_json(user_org, user_id, is_admin, cookiejar_uuid, json_cookies)
+        res = crawlers.api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, json_cookies)
         if res:
             return create_json_response(res[0], res[1])
     for cookie_dict in l_manual_cookie:
-        crawlers.api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict)
+        crawlers.api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
 
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
 
@@ -725,10 +725,10 @@ def crawler_cookiejar_all():
 def crawler_cookiejar_show():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.args.get('uuid')
 
-    res = crawlers.api_get_cookiejar(user_org, user_id, is_admin, cookiejar_uuid)
+    res = crawlers.api_get_cookiejar(user_org, user_id, user_role, cookiejar_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -739,14 +739,14 @@ def crawler_cookiejar_show():
 
 @crawler_splash.route('/crawler/cookie/delete', methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def crawler_cookiejar_cookie_delete():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookie_uuid = request.args.get('uuid')
 
-    res = crawlers.api_delete_cookie(user_org, user_id, is_admin, cookie_uuid)
+    res = crawlers.api_delete_cookie(user_org, user_id, user_role, cookie_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -760,10 +760,10 @@ def crawler_cookiejar_cookie_delete():
 def crawler_cookiejar_delete():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.args.get('uuid')
 
-    res = crawlers.api_delete_cookiejar(user_org, user_id, is_admin, cookiejar_uuid)
+    res = crawlers.api_delete_cookiejar(user_org, user_id, user_role, cookiejar_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.crawler_cookiejar_all'))
@@ -775,11 +775,11 @@ def crawler_cookiejar_delete():
 def crawler_cookiejar_edit():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.args.get('uuid')
     description = request.args.get('description')
 
-    res = crawlers.api_edit_cookiejar_description(user_org, user_id, is_admin, cookiejar_uuid, description)
+    res = crawlers.api_edit_cookiejar_description(user_org, user_id, user_role, cookiejar_uuid, description)
     return create_json_response(res[0], res[1])
 
 
@@ -789,10 +789,10 @@ def crawler_cookiejar_edit():
 def crawler_cookiejar_cookie_edit():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookie_uuid = request.args.get('uuid')
 
-    cookie_dict = crawlers.api_get_cookie(user_org, user_id, is_admin, cookie_uuid)
+    cookie_dict = crawlers.api_get_cookie(user_org, user_id, user_role, cookie_uuid)
     return render_template("edit_cookie.html", cookie_uuid=cookie_uuid, cookie_dict=cookie_dict)
 
 
@@ -802,7 +802,7 @@ def crawler_cookiejar_cookie_edit():
 def crawler_cookiejar_cookie_edit_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookie_uuid = request.form.get('cookie_uuid')
     name = request.form.get('name')
     value = request.form.get('value')
@@ -821,7 +821,7 @@ def crawler_cookiejar_cookie_edit_post():
     if secure:
         cookie_dict['secure'] = True
 
-    res = crawlers.api_edit_cookie(user_org, user_id, is_admin, cookie_uuid, cookie_dict)
+    res = crawlers.api_edit_cookie(user_org, user_id, user_role, cookie_uuid, cookie_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     cookie = crawlers.Cookie(cookie_uuid)
@@ -835,10 +835,10 @@ def crawler_cookiejar_cookie_edit_post():
 def crawler_cookiejar_cookie_add():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.args.get('uuid')
-    res = crawlers.api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
-    if res[1] != 200:
+    res = crawlers.api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, action='edit')
+    if res:
         return create_json_response(res[0], res[1])
     return render_template("add_cookie.html", cookiejar_uuid=cookiejar_uuid)
 

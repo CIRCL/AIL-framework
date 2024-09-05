@@ -326,13 +326,9 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
 
         # Role
-        if not role:
+        if not role or role not in get_roles():
             role = get_default_role()
-
-        if role in get_all_roles():
-            for role_to_add in get_all_user_role(role):
-                r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
+        set_user_role(user_id, role)
 
         # ORG
         org = ail_orgs.Organisation(org_uuid)
@@ -569,7 +565,7 @@ class AILUser(UserMixin):
 
     def delete(self):
         kill_session_user(self.user_id)
-        for role_id in get_all_roles():
+        for role_id in get_roles():
             r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
         user_token = self.get_api_key()
         if user_token:
@@ -711,35 +707,15 @@ def api_delete_user(user_id, admin_id, ip_address):
 
 #### ROLES ####
 
-def get_all_roles():
-    return r_serv_db.zrange('ail:roles:all', 0, -1)
+def get_roles():
+    return r_serv_db.smembers('ail:roles')
 
-# create role_list
-def _create_roles_list():
-    if not r_serv_db.exists('ail:roles:all'):
-        r_serv_db.zadd('ail:roles:all', {'admin': 1})
-        r_serv_db.zadd('ail:roles:all', {'analyst': 2})
-        r_serv_db.zadd('ail:roles:all', {'user': 3})
-        r_serv_db.zadd('ail:roles:all', {'user_no_api': 4})
-        r_serv_db.zadd('ail:roles:all', {'read_only': 5})
-
-def get_role_level(role):
-    return int(r_serv_db.zscore('ail:roles:all', role))
-
-def get_user_role_by_range(inf, sup):
-    return r_serv_db.zrange('ail:roles:all', inf, sup)
-
-def get_all_user_role(user_role):
-    current_role_val = get_role_level(user_role)
-    return r_serv_db.zrange('ail:roles:all', current_role_val - 1, -1)
-
-def get_all_user_upper_role(user_role):
-    current_role_val = get_role_level(user_role)
-    # remove one rank
-    if current_role_val > 1:
-        return r_serv_db.zrange('ail:roles:all', 0, current_role_val - 2)
-    else:
-        return []
+def _create_roles():
+    r_serv_db.sadd('ail:roles', 'admin')
+    r_serv_db.sadd('ail:roles', 'read_only')
+    r_serv_db.sadd('ail:roles', 'user')
+    r_serv_db.sadd('ail:roles', 'user_no_api')
+    r_serv_db.sadd('ail:roles', 'contributor')
 
 def get_default_role():
     return 'read_only'
@@ -747,41 +723,45 @@ def get_default_role():
 def is_in_role(user_id, role):
     return r_serv_db.sismember(f'ail:users:role:{role}', user_id)
 
-def edit_user_role(user_id, role):
-    current_role = get_user_role(user_id)
-    if role != current_role:
-        request_level = get_role_level(role)
-        current_role = get_role_level(current_role)
+def _get_users_roles_list():
+    return ['read_only', 'user_no_api', 'user', 'coordinator', 'admin']
 
-        if current_role < request_level:
-            role_to_remove = get_user_role_by_range(current_role - 1, request_level - 2)
-            for role_id in role_to_remove:
-                r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
-        else:
-            role_to_add = get_user_role_by_range(request_level - 1, current_role)
-            for role_id in role_to_add:
-                r_serv_db.sadd(f'ail:users:role:{role_id}', user_id)
-            r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
+def _get_users_roles_dict():
+    return {
+        'read_only':    ['read_only'],
+        'user_no_api':  ['read_only', 'user_no_api'],
+        'user':         ['read_only', 'user_no_api', 'user'],
+        'coordinator':  ['read_only', 'user_no_api', 'user', 'coordinator'],
+        'admin':        ['read_only', 'user_no_api', 'user', 'coordinator', 'admin'],
+    }
+
+def set_user_role(user_id, role):
+    roles = _get_users_roles_dict()
+    # set role
+    for role_to_add in roles[role]:
+        r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
+    r_serv_db.hset(f'ail:user:metadata:{user_id}', 'role', role)
 
 def check_user_role_integrity(user_id):
+    roles = _get_users_roles_dict()
     user_role = get_user_role(user_id)
-    all_user_role = get_all_user_role(user_role)
-    res = True
-    for role in all_user_role:
-        if not r_serv_db.sismember(f'ail:users:role:{role}', user_id):
-            res = False
-    upper_role = get_all_user_upper_role(user_role)
-    for role in upper_role:
-        if r_serv_db.sismember(f'ail:users:role:{role}', user_id):
-            res = False
-    return res
+    if user_role not in roles:
+        return False
+    # check if is in role
+    for r in roles[user_role]:
+        if not r_serv_db.sismember(f'ail:users:role:{r}', user_id):
+            print(r)
+            return False
+    for r in list(set(_get_users_roles_list()) - set(roles[user_role])):
+        if r_serv_db.sismember(f'ail:users:role:{r}', user_id):
+            print(r)
+            return False
+    return True
 
-## --ROLES-- ##
-
-# if __name__ == '__main__':
-#     user_id = 'admin@admin.test'
-#     instance_name = 'AIL TEST'
-#     delete_user_otp(user_id)
-#     # q = get_user_otp_qr_code(user_id, instance_name)
-#     # print(q)
+# TODO
+# ACL:
+#       - mass tag correlation graph
+#
+#
+#
+#

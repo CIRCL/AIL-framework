@@ -31,20 +31,22 @@ if __name__ == '__main__':
     config_loader = None
     date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
-    # ORGS
-    # TODO CREATE DEFAULT ORG
-
     # USERS
     print('Updating Users ...')
     # Create Default Org
     org = ail_orgs.create_default_org()
     org_uuid = org.get_uuid()
 
-    for user_id in ail_users.get_users():  # TODO ORG
+    for user_id in ail_users.get_users():
+        if ail_users.get_user_role(user_id) == 'analyst':
+            ail_users.set_user_role(user_id, 'user')
         ail_users.edit_user('admin@admin.test', user_id, org_uuid=org_uuid)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', 'admin@admin.test')
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_edit', date)
+        r_serv_db.srem(f'ail:users:role:analyst', user_id)
+        user_role = ail_users.get_user_role(user_id)
+        ail_users.set_user_role(user_id, user_role)
         # ADD User to ORG
         org.add_user(user_id)
 

@@ -83,7 +83,8 @@ def create_default_org():
     # org = Organisation(generate_uuid())
     name = 'Default AIL Organisation'
     description = 'Default AIL Organisation'
-    return create_org(name, description)
+    creator = 'admin@admin.test'
+    return create_org(creator, name, description)
 
 #### ORGANISATION ####
 
@@ -99,7 +100,7 @@ class Organisation:
         return r_serv_db.hget(f'ail:org:{self.uuid}', field)
 
     def _set_fields(self, field, value):
-        return r_serv_db.hset(f'ail:org:{self.uuid}', field, value)
+        r_serv_db.hset(f'ail:org:{self.uuid}', field, value)
 
     def get_uuid(self):
         return self.uuid
@@ -197,7 +198,7 @@ class Organisation:
 def exists_org(org_uuid):
     return r_serv_db.exists(f'ail:org:{org_uuid}')
 
-def create_org(name, description, uuid=None, nationality=None, sector=None, org_type=None, logo=None): # contacts ?????
+def create_org(creator, name, description, uuid=None, nationality=None, sector=None, org_type=None, logo=None):
     if uuid is None:
         uuid = generate_uuid()
     else:
@@ -205,7 +206,7 @@ def create_org(name, description, uuid=None, nationality=None, sector=None, org_
             raise Exception('Organisation already exists')  # TODO CUSTOM ERROR
 
     org = Organisation(uuid)
-    org.create(name, description, nationality=nationality, sector=sector, org_type=org_type, logo=logo)
+    org.create(creator, name, description, nationality=nationality, sector=sector, org_type=org_type, logo=logo)
     return org
 
 def get_org_objs_by_type(org_uuid, obj_type):
@@ -224,6 +225,78 @@ def check_access_acl(obj, user_org, is_admin=False):
     if is_admin:
         return True
     return obj.get_org() == user_org
+
+# view
+# edit
+# delete -> coordinator or admin
+def check_obj_access_acl(obj, user_org, user_id, user_role, action):
+    if user_role == 'admin':
+        return True
+
+    level = obj.get_level()
+    # User
+    if level == 0:
+        return user_id == obj.get_user()
+    # Global
+    elif level == 1:
+        if action == 'view':
+            return True
+        # edit + delete
+        else:   # TODO allow user to edit same org global
+            if user_role == 'coordinator':
+                creator_org = obj.get_creator_org()
+                if user_org == creator_org:
+                    return True
+                else:
+                    return False
+            else:
+                return False  # TODO allow user (creator) to edit global tracker ????
+    # Organization
+    elif level == 2:
+        if action == 'view':
+            return obj.get_org() == user_org
+        elif action == 'edit':
+            return obj.get_org() == user_org
+        elif action == 'delete':
+            if user_role == 'coordinator':
+                if user_org == obj.get_org():
+                    return True
+                else:
+                    return False
+            else:
+                return False
+
+    return False
+
+def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
+    if user_role == 'admin':
+        return True
+
+    level = obj.get_level()
+    if new_level == level:
+        return True
+
+    # User
+    if new_level == 0:  # TODO
+        return False
+        # if obj.get_user() == user_id:
+        #     return True
+    # Global
+    elif new_level == 1:
+        if level == 0 and obj.get_id() == user_id:
+            return True
+        elif level == 2 and user_role == 'coordinator':
+            if obj.get_creator_org() == user_org:
+                return True
+    # Organisation
+    elif new_level == 2:
+        if level == 0 and obj.get_id() == user_id:
+            return True
+        elif level == 1 and user_role == 'coordinator':
+            if obj.get_creator_org() == user_org:
+                return True
+    return False
+
 
 #### API ####
 

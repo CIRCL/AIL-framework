@@ -219,7 +219,7 @@ def create_user():
         if r[1] != 200:
             return create_json_response(r[0], r[1])
         meta = r[0]
-    all_roles = ail_users.get_all_roles()
+    all_roles = ail_users.get_roles()
     orgs = ail_orgs.get_orgs_selector()
     return render_template("create_user.html", all_roles=all_roles, orgs=orgs, meta=meta,
                            error=error, error_mail=error_mail,
@@ -251,7 +251,7 @@ def create_user_post():
     else:
         enable_2_fa = False
 
-    all_roles = ail_users.get_all_roles()
+    all_roles = ail_users.get_roles()
 
     if email and len(email) < 300 and ail_users.check_email(email) and role:
         if role in all_roles:

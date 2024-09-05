@@ -16,7 +16,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_analyst, login_user_no_api, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -151,8 +151,10 @@ def tracked_menu_admin():
 @login_read_only
 def show_tracker():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_check_tracker_acl(tracker_uuid, current_user.get_org(), user_id)
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
     if res:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -312,20 +314,21 @@ def add_tracked_menu():
 
 @hunters.route("/tracker/edit", methods=['GET', 'POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def tracker_edit():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
+    user_role = current_user.get_role()
     if request.method == 'POST':
         input_dict = parse_add_edit_request(request.form)
-        res = Tracker.api_edit_tracker(input_dict, user_org, user_id)
+        res = Tracker.api_edit_tracker(input_dict, user_org, user_id, user_role)
         if res[1] == 200:
             return redirect(url_for('hunters.show_tracker', uuid=res[0].get('uuid')))
         else:
             return create_json_response(res[0], res[1])
     else:
         tracker_uuid = request.args.get('uuid', None)
-        res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, user_org, user_id)
+        res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
         if res:  # invalid access
             return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -356,8 +359,10 @@ def tracker_edit():
 @login_analyst
 def tracker_delete():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid')
-    res = Tracker.api_delete_tracker({'uuid': tracker_uuid}, current_user.get_org(), user_id)
+    res = Tracker.api_delete_tracker({'uuid': tracker_uuid}, user_org, user_id, user_role)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -369,8 +374,10 @@ def tracker_delete():
 @login_read_only
 def get_json_tracker_graph():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid')
-    res = Tracker.api_check_tracker_acl(tracker_uuid, current_user.get_org(), user_id)
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
     if res:
         return create_json_response(res[0], res[1])
 
@@ -392,6 +399,8 @@ def get_json_tracker_graph():
 @login_admin
 def tracker_object_add():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid')
     object_global_id = request.args.get('gid')
     if object_global_id.startswith('messages::'):
@@ -399,7 +408,7 @@ def tracker_object_add():
         date = obj.get_date()
     else:
         date = request.args.get('date')  # TODO check daterange
-    res = Tracker.api_tracker_add_object({'uuid': tracker_uuid, 'gid': object_global_id, 'date': date}, current_user.get_org(), user_id)
+    res = Tracker.api_tracker_add_object({'uuid': tracker_uuid, 'gid': object_global_id, 'date': date}, user_org, user_id, user_role)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -410,12 +419,14 @@ def tracker_object_add():
 
 @hunters.route('/tracker/object/remove', methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def tracker_object_remove():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid')
     object_global_id = request.args.get('gid')
-    res = Tracker.api_tracker_remove_object({'uuid': tracker_uuid, 'gid': object_global_id}, current_user.get_org(), user_id)
+    res = Tracker.api_tracker_remove_object({'uuid': tracker_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     else:
@@ -430,8 +441,10 @@ def tracker_object_remove():
 @login_admin
 def tracker_objects():
     user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
     tracker_uuid = request.args.get('uuid', None)
-    res = Tracker.api_is_allowed_to_edit_tracker(tracker_uuid, current_user.get_org(), user_id)
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
     if res:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
 
@@ -477,6 +490,10 @@ def retro_hunt_all_tasks():
 @login_required
 @login_read_only
 def retro_hunt_show_task():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+
     task_uuid = request.args.get('uuid', None)
     objs = request.args.get('objs', False)
 
@@ -490,8 +507,11 @@ def retro_hunt_show_task():
     res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return create_json_response(res[0], res[1])
-
     retro_hunt = Tracker.RetroHunt(task_uuid)
+    res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+
     dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'progress', 'filters', 'nb_objs', 'tags'})
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
@@ -614,9 +634,10 @@ def retro_hunt_add_task():
 @login_analyst
 def retro_hunt_pause_task():
     user_org = current_user.get_org()
-    is_admin = current_user.is_admin()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_pause_retro_hunt_task(user_org, is_admin, task_uuid)
+    res = Tracker.api_pause_retro_hunt_task(user_org, user_id, user_role, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
@@ -626,9 +647,10 @@ def retro_hunt_pause_task():
 @login_analyst
 def retro_hunt_resume_task():
     user_org = current_user.get_org()
-    is_admin = current_user.is_admin()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_resume_retro_hunt_task(user_org, is_admin, task_uuid)
+    res = Tracker.api_resume_retro_hunt_task(user_org, user_id, user_role, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
@@ -638,9 +660,10 @@ def retro_hunt_resume_task():
 @login_analyst
 def retro_hunt_delete_task():
     user_org = current_user.get_org()
-    is_admin = current_user.is_admin()
+    user_id = current_user.get_id()
+    user_role = current_user.get_role()
     task_uuid = request.args.get('uuid', None)
-    res = Tracker.api_delete_retro_hunt_task(user_org, is_admin, task_uuid)
+    res = Tracker.api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))

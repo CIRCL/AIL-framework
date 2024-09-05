@@ -252,8 +252,8 @@ def objects_titles_download_unsafe():
 @token_required('read_only')
 def v1_investigation(investigation_uuid):
     user_token = get_auth_from_header()
-    user_org, user_id, is_admin = ail_api.get_basic_user_meta(user_token)
-    r = Investigations.api_get_investigation(user_org, is_admin, investigation_uuid)
+    user_org, user_id, user_role = ail_api.get_basic_user_meta(user_token)
+    r = Investigations.api_get_investigation(user_org, user_id, user_role, investigation_uuid)
     return create_json_response(r[0], r[1])
 
 # TODO CATCH REDIRECT

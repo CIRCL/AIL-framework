@@ -456,29 +456,21 @@ def get_investigations_selector(org_uuid):
 
 ####  ACL  ####
 
-def check_access_acl(inv, user_org, is_admin=False):
-    if is_admin:
-        return True
-
-    level = inv.get_level()
-    if level == 1:
-        return True
-    elif level == 2:
-        return ail_orgs.check_access_acl(inv, user_org, is_admin=is_admin)
-    else:
-        return False
-
-def api_check_access_acl(inv_uuid, user_org, is_admin=False):
-    if not check_access_acl(inv_uuid, user_org, is_admin=is_admin):
+def api_check_investigation_acl(inv, user_org, user_id, user_role, action):
+    if not ail_orgs.check_obj_access_acl(inv, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
+
+def api_is_allowed_to_edit_investigation_level(inv, user_org, user_id, user_role, new_level):
+    if not ail_orgs.check_acl_edit_level(inv, user_org, user_id, user_role, new_level):
+        return {"status": "error", "reason": "Access Denied - Investigation level"}, 403
 
 ####  API  ####
 
-def api_get_investigation(user_org, is_admin, investigation_uuid):  # TODO check if is UUIDv4
+def api_get_investigation(user_org, user_id, user_role, investigation_uuid):  # TODO check if is UUIDv4
     investigation = Investigation(investigation_uuid)
     if not investigation.exists():
         return {'status': 'error', 'reason': 'Investigation Not Found'}, 404
-    res = api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
     if res:
         return res
 
@@ -528,7 +520,7 @@ def api_add_investigation(json_dict):
     return res, 200
 
 # # TODO: edit threat level / status
-def api_edit_investigation(user_org, user_id, is_admin, json_dict):
+def api_edit_investigation(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
     if not is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
@@ -536,7 +528,18 @@ def api_edit_investigation(user_org, user_id, is_admin, json_dict):
     if not exists_investigation(investigation_uuid):
         return {"status": "error", "reason": "Investigation not found"}, 404
     investigation = Investigation(investigation_uuid)
-    res = api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    level = json_dict.get('level', 1)
+    try:
+        level = int(level)
+    except TypeError:
+        level = 1
+    if level not in range(1, 3):
+        level = 1
+    res = api_is_allowed_to_edit_investigation_level(investigation, user_org, user_id, user_role, level)
     if res:
         return res
 
@@ -561,13 +564,6 @@ def api_edit_investigation(user_org, user_id, is_admin, json_dict):
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
 
-    level = json_dict.get('level', 1)
-    try:
-        level = int(level)
-    except TypeError:
-        level = 1
-    if level not in range(1, 3):
-        level = 1
     old_level = investigation.get_level()
     if level != old_level:
         investigation.reset_level(old_level, level, user_org)
@@ -581,7 +577,7 @@ def api_edit_investigation(user_org, user_id, is_admin, json_dict):
 
     return investigation_uuid, 200
 
-def api_delete_investigation(user_org, user_id, is_admin, json_dict):
+def api_delete_investigation(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
     if not is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
@@ -589,13 +585,13 @@ def api_delete_investigation(user_org, user_id, is_admin, json_dict):
     if not exists_investigation(investigation_uuid):
         return {"status": "error", "reason": "Investigation not found"}, 404
     investigation = Investigation(investigation_uuid)
-    res = api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'delete')
     if res:
         return res
     res = investigation.delete()
     return res, 200
 
-def api_register_object(user_org, user_id, is_admin, json_dict):
+def api_register_object(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
     if not is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": f"Invalid Investigation uuid: {investigation_uuid}"}, 400
@@ -603,7 +599,7 @@ def api_register_object(user_org, user_id, is_admin, json_dict):
     if not exists_investigation(investigation_uuid):
         return {"status": "error", "reason": f"Investigation not found: {investigation_uuid}"}, 404
     investigation = Investigation(investigation_uuid)
-    res = api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'edit')
     if res:
         return res
 
@@ -622,7 +618,7 @@ def api_register_object(user_org, user_id, is_admin, json_dict):
     res = investigation.register_object(obj_id, obj_type, subtype, comment=comment)
     return res, 200
 
-def api_unregister_object(user_org, user_id, is_admin, json_dict):
+def api_unregister_object(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
     if not is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": f"Invalid Investigation uuid: {investigation_uuid}"}, 400
@@ -630,7 +626,7 @@ def api_unregister_object(user_org, user_id, is_admin, json_dict):
     if not exists_investigation(investigation_uuid):
         return {"status": "error", "reason": f"Investigation not found: {investigation_uuid}"}, 404
     investigation = Investigation(investigation_uuid)
-    res = api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'edit')
     if res:
         return res
 

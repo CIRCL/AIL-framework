@@ -28,7 +28,7 @@ def get_user_from_token(token):
 
 def get_basic_user_meta(token):
     user_id = get_user_from_token(token)
-    return ail_users.get_user_org(user_id), user_id, ail_users.is_in_role(user_id, 'admin')
+    return ail_users.get_user_org(user_id), user_id, ail_users.get_user_role(user_id)
 
 def is_user_in_role(role, token):   # verify_user_role
     # User without API

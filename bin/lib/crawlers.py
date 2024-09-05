@@ -701,24 +701,24 @@ def api_get_cookiejars_selector(user_org, user_id):
         cookiejars.append(f'{description} : {cookiejar.uuid}')
     return sorted(cookiejars)
 
-def api_edit_cookiejar_description(user_org, user_id, is_admin, cookiejar_uuid, description):
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+def api_edit_cookiejar_description(user_org, user_id, user_role, cookiejar_uuid, description):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
     cookiejar.set_description(description)
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
-def api_delete_cookiejar(user_org, user_id, is_admin, cookiejar_uuid):
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+def api_delete_cookiejar(user_org, user_id, user_role, cookiejar_uuid):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'delete')
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
     cookiejar.delete()
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
-def api_get_cookiejar(user_org, user_id, is_admin, cookiejar_uuid):
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+def api_get_cookiejar(user_org, user_id, user_role, cookiejar_uuid):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'view')
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
@@ -727,25 +727,11 @@ def api_get_cookiejar(user_org, user_id, is_admin, cookiejar_uuid):
 
 ####  ACL  ####
 
-def check_cookiejar_access_acl(cookiejar, user_org, user_id, is_admin=False):
-    if is_admin:
-        return True
-
-    level = cookiejar.get_level()
-    if level == 0:
-        return user_id == cookiejar.get_user()
-    elif level == 1:
-        return True
-    elif level == 2:
-        return ail_orgs.check_access_acl(cookiejar, user_org, is_admin=is_admin)
-    else:
-        return False
-
-def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin=False):
+def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, action):
     cookiejar = Cookiejar(cookiejar_uuid)
     if not cookiejar.exists():
         return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
-    if not check_cookiejar_access_acl(cookiejar, user_org, user_id, is_admin=is_admin):
+    if not ail_orgs.check_obj_access_acl(cookiejar, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
 
 ####  API  ####
@@ -849,20 +835,20 @@ class Cookie:
 
 ## API ##
 
-def api_get_cookie(user_org, user_id, is_admin, cookie_uuid):
+def api_get_cookie(user_org, user_id, user_role, cookie_uuid):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
-    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, is_admin)
+    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, user_role, 'view')
     if resp:
         return resp
     return cookie.get_meta()
 
-def api_edit_cookie(user_org, user_id, is_admin, cookie_uuid, cookie_dict):
+def api_edit_cookie(user_org, user_id, user_role, cookie_uuid, cookie_dict):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
-    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, is_admin)
+    resp = api_check_cookiejar_access_acl(cookie.get_cookiejar(), user_org, user_id, user_role, 'edit')
     if resp:
         return resp
     if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
@@ -870,8 +856,8 @@ def api_edit_cookie(user_org, user_id, is_admin, cookie_uuid, cookie_dict):
     cookie.edit(cookie_dict)
     return cookie.get_meta(), 200
 
-def api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict):
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+def api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
     if resp:
         return resp
     if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
@@ -887,12 +873,12 @@ def api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict):
     cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, text=text)
     return resp, 200
 
-def api_delete_cookie(user_org, user_id, is_admin, cookie_uuid):
+def api_delete_cookie(user_org, user_id, user_role, cookie_uuid):
     cookie = Cookie(cookie_uuid)
     if not cookie.exists():
         return {'error': 'unknown cookie uuid', 'cookie_uuid': cookie_uuid}, 404
     cookiejar_uuid = cookie.get_cookiejar()
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
@@ -938,8 +924,8 @@ def unpack_imported_json_cookie(json_cookie):
 
 ##  - -  ##
 #### COOKIEJAR API ####
-def api_import_cookies_from_json(user_org, user_id, is_admin, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
-    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, is_admin)
+def api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, json_cookies_str):  # # TODO: add catch
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
     if resp:
         return resp
     json_cookies = json.loads(json_cookies_str)

@@ -30,7 +30,6 @@ from lib import ail_orgs
 from lib import ConfigLoader
 from lib import item_basic
 from lib import Tag
-from lib.ail_users import AILUser
 
 # LOGS
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
@@ -47,7 +46,7 @@ TOKENIZER = None
 def init_tokenizer():
     global TOKENIZER
     TOKENIZER = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\/\-/\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
-                            gaps=True, discard_empty=True)
+                                gaps=True, discard_empty=True)
 
 def get_special_characters():
     special_characters = set('[<>~!?@#$%^&*|()_-+={}":;,.\'\n\r\t]/\\')
@@ -143,8 +142,8 @@ class Tracker:
             first_seen = self.get_first_seen()
             # if op == 'add':
             if not first_seen:
-                    self._set_first_seen(date)
-                    self._set_last_seen(date)
+                self._set_first_seen(date)
+                self._set_last_seen(date)
             else:
                 first_seen = int(first_seen)
                 last_seen = int(self.get_last_seen())
@@ -476,8 +475,6 @@ class Tracker:
         r_tracker.sadd('trackers:all', self.uuid)
         r_tracker.sadd(f'trackers:all:{tracker_type}', self.uuid)
 
-
-
         # TRACKER LEVEL
         self.set_level(level, org)
 
@@ -506,7 +503,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None): # TODO ADMIN: EDIT ORG UUID
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None):
 
         # edit tracker
         old_type = self.get_type()
@@ -868,55 +865,20 @@ def api_check_tracker_uuid(tracker_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
 
-def api_check_tracker_acl(tracker_uuid, user_org, user_id):
+def api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, action):
     res = api_check_tracker_uuid(tracker_uuid)
     if res:
         return res
     tracker = Tracker(tracker_uuid)
-    if tracker.is_level_user():
-        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
-            return {"status": "error", "reason": "Access Denied"}, 403
-    elif tracker.is_level_org():
-        if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
-            return {"status": "error", "reason": "Access Denied"}, 403
-    return None
+    if not ail_orgs.check_obj_access_acl(tracker, user_org, user_id, user_role, action):
+        return {"status": "error", "reason": "Access Denied"}, 403
 
-def api_is_allowed_to_edit_tracker(tracker_uuid, user_org, user_id):
-    res = api_check_tracker_uuid(tracker_uuid)
-    if res:
-        return res
+def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_role, new_level):
     tracker = Tracker(tracker_uuid)
-    if tracker.is_level_user():
-        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
-            return {"status": "error", "reason": "Access Denied"}, 403
-    elif tracker.is_level_org():
-        if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
-            return {"status": "error", "reason": "Access Denied"}, 403
-    else: # global
-        if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
-            return {"status": "error", "reason": "Access Denied"}, 403
-    return None
+    if not ail_orgs.check_acl_edit_level(tracker, user_org, user_id, user_role, new_level):
+        return {"status": "error", "reason": "Access Denied - Tracker level"}, 403
 
-def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, new_level):
-    tracker = Tracker(tracker_uuid)
-    level = tracker.get_level()
-    if level == new_level:
-        return None
-    # Global Edit
-    if level == 1:
-        if new_level == 0:
-            if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
-                return {"status": "error", "reason": "Access Denied"}, 403
-        elif new_level == 2:
-            if tracker.get_org() != user_org or not AILUser(user_id).is_in_role('admin'):
-                return {"status": "error", "reason": "Access Denied"}, 403
-    # Community Edit
-    elif level == 2:
-        if new_level == 0:
-            if tracker.get_user() != user_id or not AILUser(user_id).is_in_role('admin'):
-                return {"status": "error", "reason": "Access Denied"}, 403
-
-##-- ACL --##
+## --ACL-- ##
 
 #### FIX DB #### TODO ###################################################################
 def fix_tracker_stats_per_day(tracker_uuid):
@@ -959,7 +921,7 @@ def fix_all_tracker_uuid_list():
                 r_tracker.sadd(f'trackers:all', tracker_uuid)
                 r_tracker.sadd(f'trackers:all:{tracker_type}', tracker_uuid)
 
-##-- FIX DB --##
+## --FIX DB-- ##
 
 #### CREATE TRACKER ####
 def api_validate_tracker_to_add(to_track, tracker_type, nb_words=1):
@@ -1083,9 +1045,9 @@ def api_add_tracker(dict_input, org, user_id):
 
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
-def api_edit_tracker(dict_input, user_org, user_id):
+def api_edit_tracker(dict_input, user_org, user_id, user_role):
     tracker_uuid = dict_input.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
     if res:
         return res
 
@@ -1105,7 +1067,7 @@ def api_edit_tracker(dict_input, user_org, user_id):
         level = 1
     if level not in range(0, 3):
         level = 1
-    res = api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, level)
+    res = api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_role, level)
     if res:
         return res
 
@@ -1163,18 +1125,18 @@ def api_edit_tracker(dict_input, user_org, user_id):
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 
-def api_delete_tracker(data, user_org, user_id):
+def api_delete_tracker(data, user_org, user_id, user_role):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'delete')
     if res:
         return res
 
     tracker = Tracker(tracker_uuid)
     return tracker.delete(), 200
 
-def api_tracker_add_object(data, user_org, user_id):
+def api_tracker_add_object(data, user_org, user_id, user_role):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
     if res:
         return res
     tracker = Tracker(tracker_uuid)
@@ -1189,9 +1151,9 @@ def api_tracker_add_object(data, user_org, user_id):
         return {"status": "error", "reason": "Invalid Object"}, 400
     return tracker.add(obj_type, subtype, obj_id, date=date), 200
 
-def api_tracker_remove_object(data, user_org, user_id):
+def api_tracker_remove_object(data, user_org, user_id, user_role):
     tracker_uuid = data.get('uuid')
-    res = api_check_tracker_acl(tracker_uuid, user_org, user_id)
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
     if res:
         return res
 
@@ -1766,7 +1728,7 @@ def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, descripti
     retro_hunt = RetroHunt(task_uuid)
     # rule_type: yara_default - yara custom
     rule = save_yara_rule(rule_type, rule, tracker_uuid=retro_hunt.uuid)
-    retro_hunt.create(user_org, user_id , level, name, rule, description=description, mails=mails, tags=tags,
+    retro_hunt.create(user_org, user_id, level, name, rule, description=description, mails=mails, tags=tags,
                       timeout=timeout, filters=filters, state=state)
     return retro_hunt.uuid
 
@@ -1841,21 +1803,14 @@ def delete_obj_retro_hunts(obj_type, subtype, obj_id):
 
 ####  ACL  ####
 
-def check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=False):
-    if is_admin:
-        return True
-
-    level = retro_hunt.get_level()
-    if level == 1:
-        return True
-    elif level == 2:
-        return ail_orgs.check_access_acl(retro_hunt, user_org, is_admin=is_admin)
-    else:
-        return False
-
-def api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=False):
-    if not check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin):
+def api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, action):
+    if not ail_orgs.check_obj_access_acl(retro_hunt, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
+
+# TODO
+def api_is_allowed_to_edit_retro_hunt_level(retro_hunt, user_org, user_id, user_role, new_level):
+    if not ail_orgs.check_acl_edit_level(retro_hunt, user_org, user_id, user_role, new_level):
+        return {"status": "error", "reason": "Access Denied - Tracker level"}, 403
 
 ####  API  ####
 
@@ -1867,12 +1822,12 @@ def api_check_retro_hunt_task_uuid(task_uuid):
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
 
-def api_pause_retro_hunt_task(user_org, is_admin, task_uuid):
+def api_pause_retro_hunt_task(user_org, user_id, user_role, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
-    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
     if res:
         return res
     task_state = retro_hunt.get_state()
@@ -1881,12 +1836,12 @@ def api_pause_retro_hunt_task(user_org, is_admin, task_uuid):
     retro_hunt.pause()
     return task_uuid, 200
 
-def api_resume_retro_hunt_task(user_org, is_admin, task_uuid):
+def api_resume_retro_hunt_task(user_org, user_id, user_role, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
-    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
     if res:
         return res
     if not retro_hunt.is_paused():
@@ -1988,12 +1943,12 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
                                   mails=mails, tags=tags, timeout=30, filters=filters)
     return {'name': name, 'rule': rule, 'type': task_type, 'uuid': task_uuid}, 200
 
-def api_delete_retro_hunt_task(user_org, is_admin, task_uuid):
+def api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(task_uuid)
-    res = api_check_retro_hunt_access_acl(retro_hunt, user_org, is_admin=is_admin)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'delete')
     if res:
         return res
     if retro_hunt.is_running() and retro_hunt.get_state() not in ['completed', 'paused']:
@@ -2006,12 +1961,12 @@ def api_delete_retro_hunt_task(user_org, is_admin, task_uuid):
 ################################################################################
 ################################################################################
 
-#### DB FIX #### TODO
+#### DB FIX ####
 
-def _fix_db_custom_tags():
-    for tag in get_trackers_tags():
-        if not Tag.is_taxonomie_tag(tag) and not Tag.is_galaxy_tag(tag):
-            Tag.create_custom_tag(tag)
+# def _fix_db_custom_tags():
+#     for tag in get_trackers_tags():
+#         if not Tag.is_taxonomie_tag(tag) and not Tag.is_galaxy_tag(tag):
+#             Tag.create_custom_tag(tag)
 
 #### -- ####
 
@@ -2026,33 +1981,32 @@ def _fix_db_custom_tags():
     # import Term
     # Term.delete_term('5262ab6c-8784-4a55-b0ff-a471018414b4')
 
-    #fix_tracker_stats_per_day('5262ab6c-8784-4a55-b0ff-a471018414b4')
+    # fix_tracker_stats_per_day('5262ab6c-8784-4a55-b0ff-a471018414b4')
 
     # tracker_uuid = '5262ab6c-8784-4a55-b0ff-a471018414b4'
     # fix_tracker_item_link(tracker_uuid)
     # res = get_item_all_trackers_uuid('archive/')
     # print(res)
 
-    #res = is_valid_yara_rule('rule dummy {  }')
+    # res = is_valid_yara_rule('rule dummy {  }')
 
     # res = create_tracker('test', 'word', 'admin@admin.test', 1, [], [], None, sources=['crawled', 'pastebin.com', 'rt/pastebin.com'])
-    #res = create_tracker('circl\.lu', 'regex', 'admin@admin.test', 1, [], [], None, sources=['crawled','pastebin.com'])
-    #print(res)
+    # res = create_tracker('circl\.lu', 'regex', 'admin@admin.test', 1, [], [], None, sources=['crawled','pastebin.com'])
+    # print(res)
 
-    #t_uuid = '1c2d35b0-9330-4feb-b454-da13007aa9f7'
-    #res = get_tracker_sources('ail-yara-rules/rules/crypto/certificate.yar', 'yara')
+    # t_uuid = '1c2d35b0-9330-4feb-b454-da13007aa9f7'
+    # res = get_tracker_sources('ail-yara-rules/rules/crypto/certificate.yar', 'yara')
 
     # sys.path.append(os.environ['AIL_BIN'])
     # from packages import Term
     # Term.delete_term('074ab4be-6049-45b5-a20e-8125a4e4f500')
 
+    # res = get_items_to_analyze('archive/pastebin.com_pro/2020/05/15', last='archive/pastebin.com_pro/2020/05/15/zkHEgqjQ.gz')
+    # get_retro_hunt_task_progress('0', nb_src_done=2)
 
-    #res = get_items_to_analyze('archive/pastebin.com_pro/2020/05/15', last='archive/pastebin.com_pro/2020/05/15/zkHEgqjQ.gz')
-    #get_retro_hunt_task_progress('0', nb_src_done=2)
-
-    #res = set_cache_retro_hunt_task_progress('0', 100)
-    #res = get_retro_hunt_task_nb_src_done('0', sources=['pastebin.com_pro', 'alerts/pastebin.com_pro', 'crawled'])
-    #print(res)
+    # res = set_cache_retro_hunt_task_progress('0', 100)
+    # res = get_retro_hunt_task_nb_src_done('0', sources=['pastebin.com_pro', 'alerts/pastebin.com_pro', 'crawled'])
+    # print(res)
 
     # sources = ['pastebin.com_pro', 'alerts/pastebin.com_pro', 'crawled']
     # rule = 'custom-rules/4a8a3d04-f0b6-43ce-8e00-bdf47a8df241.yar'
@@ -2063,13 +2017,12 @@ def _fix_db_custom_tags():
     # date_from = '20200610'
     # date_to = '20210630'
 
-    #res = create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=sources, tags=tags, description=description)
+    # res = create_retro_hunt_task(name, rule, date_from, date_to, creator, sources=sources, tags=tags, description=description)
 
+    # get_retro_hunt_nb_item_by_day(['80b402ef-a8a9-4e97-adb6-e090edcfd571'], date_from=None, date_to=None, num_day=31)
 
-    #get_retro_hunt_nb_item_by_day(['80b402ef-a8a9-4e97-adb6-e090edcfd571'], date_from=None, date_to=None, num_day=31)
+    # res = get_retro_hunt_nb_item_by_day(['c625f971-16e6-4331-82a7-b1e1b9efdec1'], date_from='20200610', date_to='20210630')
 
-    #res = get_retro_hunt_nb_item_by_day(['c625f971-16e6-4331-82a7-b1e1b9efdec1'], date_from='20200610', date_to='20210630')
+    # res = delete_retro_hunt_task('598687b6-f765-4f8b-861a-09ad76d0ab34')
 
-    #res = delete_retro_hunt_task('598687b6-f765-4f8b-861a-09ad76d0ab34')
-
-    #print(res)
+    # print(res)

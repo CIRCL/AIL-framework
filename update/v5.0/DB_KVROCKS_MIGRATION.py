@@ -113,7 +113,7 @@ def user_migration():
     print('USER MIGRATION...')
 
     # create role_list
-    ail_users._create_roles_list()
+    ail_users._create_roles()
 
     for user_id in r_serv_db.hkeys('user:all'):
         role = r_serv_db.hget(f'user_metadata:{user_id}', 'role')
@@ -247,8 +247,6 @@ def trackers_migration():
 
         for obj_id in old_Tracker.get_retro_hunt_items_by_daterange(task_uuid, meta['date_from'], meta['date_to']):
             retro_hunt.add('item', '', obj_id)
-
-    Tracker._fix_db_custom_tags()
 
 
 ###############################
@@ -452,7 +450,7 @@ def crawler_migration():
                     cookie_dict = get_cookie_dict(cookie_uuid)
                     if cookie_dict:
                         # print(cookie_dict)
-                        crawlers.api_create_cookie(get_ail_uuid(), meta['user'], True, cookiejar_uuid, cookie_dict)
+                        crawlers.api_create_cookie(get_ail_uuid(), meta['user'], 'admin', cookiejar_uuid, cookie_dict)
 
     auto_crawler_web = r_crawler.smembers('auto_crawler_url:regular')
     auto_crawler_onion = r_crawler.smembers('auto_crawler_url:onion')

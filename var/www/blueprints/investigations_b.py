@@ -53,13 +53,13 @@ def investigations_dashboard():
 @login_read_only
 def show_investigation():
     user_org = current_user.get_org()
-    # user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
     investigation_uuid = request.args.get("uuid")
     investigation = Investigations.Investigation(investigation_uuid)
     if not investigation.exists():
         create_json_response({'status': 'error', 'reason': 'Investigation Not Found'}, 404)
-    res = Investigations.api_check_access_acl(investigation, user_org, is_admin=is_admin)
+    res = Investigations.api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
     if res:
         return create_json_response(res[0], res[1])
 
@@ -124,7 +124,7 @@ def edit_investigation():  # TODO CHECK ACL
     if request.method == 'POST':
         user_org = current_user.get_org()
         user_id = current_user.get_user_id()
-        is_admin = current_user.is_admin()
+        user_role = current_user.get_role()
         investigation_uuid = request.form.get("investigation_uuid")
         level = request.form.get("investigation_level")
         name = request.form.get("investigation_name")
@@ -153,7 +153,7 @@ def edit_investigation():  # TODO CHECK ACL
         input_dict = {"user_id": user_id, "uuid": investigation_uuid, "level": level,
                       "name": name, "threat_level": threat_level,
                       "analysis": analysis, "info": info, "tags": tags}
-        res = Investigations.api_edit_investigation(user_org, user_id, is_admin, input_dict)
+        res = Investigations.api_edit_investigation(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
 
@@ -175,10 +175,10 @@ def edit_investigation():  # TODO CHECK ACL
 def delete_investigation():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     investigation_uuid = request.args.get('uuid')
     input_dict = {"uuid": investigation_uuid}
-    res = Investigations.api_delete_investigation(user_org, user_id, is_admin, input_dict)
+    res = Investigations.api_delete_investigation(user_org, user_id, user_role, input_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard'))
@@ -189,7 +189,7 @@ def delete_investigation():
 def register_investigation():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     investigations_uuid = request.args.get('uuids')
     investigations_uuid = investigations_uuid.split(',')
 
@@ -203,7 +203,7 @@ def register_investigation():
                       "type": object_type, "subtype": object_subtype}
         if comment:
             input_dict["comment"] = comment
-        res = Investigations.api_register_object(user_org, user_id, is_admin, input_dict)
+        res = Investigations.api_register_object(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard', uuid=investigation_uuid))
@@ -214,14 +214,14 @@ def register_investigation():
 def unregister_investigation():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     investigation_uuid = request.args.get('uuid')
     object_type = request.args.get('type')
     object_subtype = request.args.get('subtype')
     object_id = request.args.get('id')
     input_dict = {"uuid": investigation_uuid, "id": object_id,
                   "type": object_type, "subtype": object_subtype}
-    res = Investigations.api_unregister_object(user_org, user_id, is_admin, input_dict)
+    res = Investigations.api_unregister_object(user_org, user_id, user_role, input_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
