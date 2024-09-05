@@ -585,7 +585,7 @@ def api_get_users_meta():
     return meta
 
 def api_get_user_profile(user_id):
-    options = {'api_key', 'role', '2fa', 'org'}
+    options = {'api_key', 'role', '2fa', 'org', 'org_name'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
