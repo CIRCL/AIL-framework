@@ -19,7 +19,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only, login_user_no_api
+from Role_Manager import login_admin, login_user, login_user_no_api, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -110,7 +110,7 @@ def manual():
 
 @crawler_splash.route("/crawlers/send_to_spider", methods=['POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def send_to_spider():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -222,7 +222,7 @@ def schedule_show():
 
 @crawler_splash.route("/crawlers/schedule/delete", methods=['GET'])
 @login_required
-@login_analyst
+@login_admin
 def schedule_delete():
     schedule_uuid = request.args.get('uuid')
     schedule = crawlers.CrawlerSchedule(schedule_uuid)
@@ -235,7 +235,7 @@ def schedule_delete():
 
 @crawler_splash.route("/crawlers/blacklist", methods=['GET'])
 @login_required
-@login_analyst
+@login_admin
 def crawler_blacklist():
     domain = request.args.get('domain')
     if domain:
@@ -258,7 +258,7 @@ def crawler_blacklist():
 
 @crawler_splash.route("/crawlers/blacklist/delete", methods=['GET'])
 @login_required
-@login_analyst
+@login_admin
 def crawler_blacklist_delete():
     domain = request.args.get('domain')
     res = crawlers.api_unblacklist_domain({'domain': domain})
@@ -540,7 +540,7 @@ def domains_search_languages_get():
 
 @crawler_splash.route('/domains/name/search', methods=['GET'])
 @login_required
-@login_analyst
+@login_user
 def domains_search_name():
     name = request.args.get('name')
     page = request.args.get('page')
@@ -565,7 +565,7 @@ def domains_search_name():
 
 @crawler_splash.route('/domains/date', methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def domains_search_date():
     # TODO sanitize type + date
     dom_types = request.args.get('type')
@@ -601,7 +601,7 @@ def domains_search_date():
 
 @crawler_splash.route('/domains/date/post', methods=['POST'])
 @login_required
-@login_analyst
+@login_read_only
 def domains_search_date_post():
     domain_type = request.form.get('type')
     date_from = request.form.get('date_from')
@@ -614,7 +614,7 @@ def domains_search_date_post():
 
 @crawler_splash.route('/domains/explorer/vanity', methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def domains_explorer_vanity_clusters():
     nb_min = request.args.get('min', 4)
     if int(nb_min) < 0:
@@ -625,7 +625,7 @@ def domains_explorer_vanity_clusters():
 
 @crawler_splash.route('/domains/explorer/vanity/explore', methods=['GET'])
 @login_required
-@login_analyst
+@login_read_only
 def domains_explorer_vanity_explore():
     vanity = request.args.get('vanity')
     nb_min = request.args.get('min', 2)   # TODO SHOW DOMAINS OPTIONS + HARD CODED DOMAINS LIMIT FOR RENDER
@@ -649,14 +649,14 @@ def domains_explorer_vanity_explore():
 ## Cookiejar ##
 @crawler_splash.route('/crawler/cookiejar/add', methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def crawler_cookiejar_add():
     return render_template("add_cookiejar.html")
 
 
 @crawler_splash.route('/crawler/cookiejar/add_post', methods=['POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def crawler_cookiejar_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -756,7 +756,7 @@ def crawler_cookiejar_cookie_delete():
 
 @crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def crawler_cookiejar_delete():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -771,7 +771,7 @@ def crawler_cookiejar_delete():
 
 @crawler_splash.route('/crawler/cookiejar/edit', methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_edit():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -785,7 +785,7 @@ def crawler_cookiejar_edit():
 
 @crawler_splash.route('/crawler/cookie/edit', methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_cookie_edit():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -798,7 +798,7 @@ def crawler_cookiejar_cookie_edit():
 
 @crawler_splash.route('/crawler/cookie/edit_post', methods=['POST'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_cookie_edit_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -831,7 +831,7 @@ def crawler_cookiejar_cookie_edit_post():
 
 @crawler_splash.route('/crawler/cookiejar/cookie/add', methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_cookie_add():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -845,7 +845,7 @@ def crawler_cookiejar_cookie_add():
 
 @crawler_splash.route('/crawler/cookiejar/cookie/manual_add_post', methods=['POST'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_cookie_manual_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -877,7 +877,7 @@ def crawler_cookiejar_cookie_manual_add_post():
 
 @crawler_splash.route('/crawler/cookiejar/cookie/json_add_post', methods=['POST'])
 @login_required
-@login_read_only
+@login_user_no_api
 def crawler_cookiejar_cookie_json_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -903,7 +903,7 @@ def crawler_cookiejar_cookie_json_add_post():
 
 @crawler_splash.route('/crawler/settings', methods=['GET'])
 @login_required
-@login_analyst
+@login_admin
 def crawler_settings():
     lacus_url = crawlers.get_lacus_url()
     api_key = crawlers.get_hidden_lacus_api_key()

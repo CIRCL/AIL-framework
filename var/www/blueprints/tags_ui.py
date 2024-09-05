@@ -15,7 +15,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_user_no_api, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -57,7 +57,7 @@ def tags_taxonomy():
 
 @tags_ui.route('/tag/taxonomy/enable')
 @login_required
-@login_read_only
+@login_admin
 def taxonomy_enable():
     taxonomy = request.args.get('taxonomy')
     res = Tag.api_enable_taxonomy_tags({'taxonomy': taxonomy})
@@ -68,7 +68,7 @@ def taxonomy_enable():
 
 @tags_ui.route('/tag/taxonomy/disable')
 @login_required
-@login_read_only
+@login_admin
 def taxonomy_disable():
     taxonomy = request.args.get('taxonomy')
     res = Tag.api_disable_taxonomy_tags({'taxonomy': taxonomy})
@@ -79,7 +79,7 @@ def taxonomy_disable():
 
 @tags_ui.route('/tag/taxonomy/enable_tags')
 @login_required
-@login_read_only
+@login_admin
 def taxonomy_enable_tags():
     taxonomy = request.args.get('taxonomy')
     tags = request.args.getlist('tags')
@@ -119,7 +119,7 @@ def tags_galaxy_tag():
 
 @tags_ui.route('/tag/galaxy/enable')
 @login_required
-@login_read_only
+@login_admin
 def galaxy_enable():
     galaxy = request.args.get('galaxy')
     res = Tag.api_enable_galaxy_tags({'galaxy': galaxy})
@@ -130,7 +130,7 @@ def galaxy_enable():
 
 @tags_ui.route('/tag/galaxy/disable')
 @login_required
-@login_read_only
+@login_admin
 def galaxy_disable():
     galaxy = request.args.get('galaxy')
     res = Tag.api_disable_galaxy_tags({'galaxy': galaxy})
@@ -141,7 +141,7 @@ def galaxy_disable():
 
 @tags_ui.route('/tag/galaxy/enable_tags')
 @login_required
-@login_read_only
+@login_admin
 def galaxy_enable_tags():
     galaxy = request.args.get('galaxy')
     tags = request.args.getlist('tags')
@@ -160,7 +160,7 @@ def get_all_tags_enabled():
 
 @tags_ui.route('/tag/confirm')
 @login_required
-@login_read_only
+@login_user_no_api
 def tag_confirm():
     tag = request.args.get('tag')
     obj_type = request.args.get('type')
@@ -178,7 +178,7 @@ def tag_confirm():
 
 @tags_ui.route('/tag/add_tags')
 @login_required
-@login_analyst
+@login_user_no_api
 def add_tags():
 
     tags = request.args.get('tags')
@@ -203,7 +203,7 @@ def add_tags():
 
 @tags_ui.route('/tag/delete_tag') # TODO FIX REQUEST PARAMETER
 @login_required
-@login_analyst
+@login_user_no_api
 def delete_tag():
     object_type = request.args.get('type')
     subtype = request.args.get('subtype', '')
@@ -406,7 +406,7 @@ def get_obj_by_tags():
 
 @tags_ui.route("/tags/auto_push")
 @login_required
-@login_analyst
+@login_admin
 def auto_push():
 
     # TODO CHECK if misp or the hive connected
@@ -420,7 +420,7 @@ def auto_push():
 
 @tags_ui.route("/tags/auto_push_post", methods=['POST'])
 @login_required
-@login_analyst
+@login_admin
 def auto_push_post():
     tag_enabled_misp = request.form.getlist('tag_enabled_misp')
     tag_enabled_hive = request.form.getlist('tag_enabled_hive')
@@ -430,28 +430,28 @@ def auto_push_post():
 
 @tags_ui.route("/tags/auto_push/misp/enable")
 @login_required
-@login_analyst
+@login_admin
 def enable_misp_auto_push():
     Tag.enable_auto_push('misp')
     return redirect(url_for('tags_ui.auto_push'))
 
 @tags_ui.route("/tags/auto_push/misp/disable")
 @login_required
-@login_analyst
+@login_admin
 def disable_misp_auto_push():
     Tag.disable_auto_push('misp')
     return redirect(url_for('tags_ui.auto_push'))
 
 @tags_ui.route("/tags/auto_push/thehive/enable")
 @login_required
-@login_analyst
+@login_admin
 def enable_hive_auto_push():
     Tag.enable_auto_push('thehive')
     return redirect(url_for('tags_ui.auto_push'))
 
 @tags_ui.route("/tags/auto_push/thehive/disable")
 @login_required
-@login_analyst
+@login_admin
 def disable_hive_auto_push():
     Tag.disable_auto_push('thehive')
     return redirect(url_for('tags_ui.auto_push'))

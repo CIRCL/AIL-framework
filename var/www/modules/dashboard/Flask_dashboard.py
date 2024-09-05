@@ -13,7 +13,7 @@ import flask
 
 from flask import Flask, render_template, jsonify, request, Blueprint, url_for, stream_with_context
 
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_read_only
 from flask_login import login_required
 
 sys.path.append(os.environ['AIL_BIN'])

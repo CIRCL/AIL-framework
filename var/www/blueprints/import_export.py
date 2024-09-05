@@ -15,7 +15,7 @@ from flask_login import login_required, current_user
 sys.path.append('modules')
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_coordinator, login_read_only, login_user_no_api
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -48,7 +48,7 @@ def create_json_response(data, status_code):
 # ============= ROUTES ==============
 @import_export.route('/import_export/import')
 @login_required
-@login_analyst
+@login_user_no_api
 def import_object():
     return render_template("import_object.html")
 
@@ -56,7 +56,7 @@ def import_object():
 # TODO
 @import_export.route("/import_export/import_file", methods=['POST'])
 @login_required
-@login_analyst
+@login_admin
 def import_object_file():
     error = None
 
@@ -89,7 +89,7 @@ def import_object_file():
 
 @import_export.route("/misp/objects/export", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def objects_misp_export():
     user_id = current_user.get_user_id()
     object_types = ail_core.get_all_objects_with_subtypes_tuple()
@@ -99,9 +99,10 @@ def objects_misp_export():
 
 @import_export.route("/misp/objects/export/post", methods=['POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def objects_misp_export_post():
     user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
 
     # Get new added Object
     new_export = []
@@ -150,6 +151,11 @@ def objects_misp_export_post():
     info = request.form.get('misp_event_info')
     publish = request.form.get('misp_event_info', False)
 
+    # TODO Refactor to use MISP user api key
+    if user_role != 'admin':
+        export = False
+        publish = False
+
     objs = ail_objects.get_objects(objects)
     if not objs:
         return create_json_response({'error': 'Empty Event, nothing to export'}, 400)
@@ -175,7 +181,7 @@ def objects_misp_export_post():
 
 @import_export.route("/misp/objects/export/add", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def add_object_id_to_export():
     user_id = current_user.get_user_id()
     obj_type = request.args.get('type')
@@ -197,7 +203,7 @@ def add_object_id_to_export():
 
 @import_export.route("/misp/objects/export/delete", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def delete_object_id_to_export():
     user_id = current_user.get_user_id()
     obj_type = request.args.get('type')
@@ -210,7 +216,7 @@ def delete_object_id_to_export():
 
 @import_export.route("/investigation/misp/export", methods=['GET'])
 @login_required
-@login_analyst
+@login_coordinator
 def export_investigation():
     investigation_uuid = request.args.get("uuid")
     investigation = Investigation(investigation_uuid)
@@ -227,7 +233,7 @@ def export_investigation():
 
 @import_export.route("/thehive/objects/case/export", methods=['POST'])
 @login_required
-@login_analyst
+@login_admin
 def create_thehive_case():
     description = request.form['hive_description']
     title = request.form['hive_case_title']

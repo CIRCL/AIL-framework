@@ -16,7 +16,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_read_only
 
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -206,7 +206,7 @@ def correlation_delete():
 
 @correlation.route('/correlation/tags/add', methods=['POST'])
 @login_required
-@login_analyst
+@login_admin
 def correlation_tags_add():
     obj_id = request.form.get('tag_obj_id')
     subtype = request.form.get('tag_subtype', '')

@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_user, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -162,7 +162,7 @@ def user_otp_reset():  # TODO ask for password ?
 
 @settings_b.route("/settings/user/api_key/new", methods=['GET'])
 @login_required
-@login_read_only
+@login_user
 def new_token_user_self():
     user_id = current_user.get_user_id()
     r = ail_users.api_create_user_api_key_self(user_id, request.remote_addr)

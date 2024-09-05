@@ -16,7 +16,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_user_no_api, login_read_only
+from Role_Manager import login_admin, login_coordinator, login_user, login_user_no_api, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -294,7 +294,7 @@ def parse_add_edit_request(request_form):
 
 @hunters.route("/tracker/add", methods=['GET', 'POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def add_tracked_menu():
     if request.method == 'POST':
         input_dict = parse_add_edit_request(request.form)
@@ -356,7 +356,7 @@ def tracker_edit():
 
 @hunters.route('/tracker/delete', methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def tracker_delete():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
@@ -396,7 +396,7 @@ def get_json_tracker_graph():
 
 @hunters.route('/tracker/object/add', methods=['GET'])
 @login_required
-@login_admin
+@login_user
 def tracker_object_add():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
@@ -528,7 +528,7 @@ def retro_hunt_show_task():
 
 @hunters.route('/retro_hunt/add', methods=['GET', 'POST'])
 @login_required
-@login_analyst
+@login_user
 def retro_hunt_add_task():
     if request.method == 'POST':
         level = request.form.get("level", 1)
@@ -631,7 +631,7 @@ def retro_hunt_add_task():
 
 @hunters.route('/retro_hunt/task/pause', methods=['GET'])
 @login_required
-@login_analyst
+@login_user
 def retro_hunt_pause_task():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -644,7 +644,7 @@ def retro_hunt_pause_task():
 
 @hunters.route('/retro_hunt/task/resume', methods=['GET'])
 @login_required
-@login_analyst
+@login_user
 def retro_hunt_resume_task():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -657,7 +657,7 @@ def retro_hunt_resume_task():
 
 @hunters.route('/retro_hunt/task/delete', methods=['GET'])
 @login_required
-@login_analyst
+@login_coordinator
 def retro_hunt_delete_task():
     user_org = current_user.get_org()
     user_id = current_user.get_id()

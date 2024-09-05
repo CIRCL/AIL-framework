@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_user, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -75,7 +75,7 @@ def objects_title_range_json():
 
 @objects_title.route("/objects/title/search_post", methods=['POST'])
 @login_required
-@login_analyst
+@login_user
 def objects_title_search_post():
     to_search = request.form.get('to_search')
     search_type = request.form.get('search_type', 'id')
@@ -92,7 +92,7 @@ def objects_title_search_post():
 
 @objects_title.route("/objects/title/search", methods=['GET'])
 @login_required
-@login_analyst
+@login_user
 def objects_title_search():
     to_search = request.args.get('search')
     type_to_search = request.args.get('search_type', 'id')

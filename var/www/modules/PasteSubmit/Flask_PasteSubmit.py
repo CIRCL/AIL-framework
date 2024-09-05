@@ -18,7 +18,7 @@ from functools import wraps
 
 # Flask
 from flask import render_template, jsonify, request, Blueprint, url_for, redirect, abort
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_admin, login_user_no_api
 from flask_login import login_required
 
 
@@ -93,7 +93,7 @@ def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
 
 @PasteSubmit.route("/PasteSubmit/", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def PasteSubmit_page():
     # Get all active tags/galaxy
     active_taxonomies = Tag.get_active_taxonomies()
@@ -108,7 +108,7 @@ def PasteSubmit_page():
 
 @PasteSubmit.route("/PasteSubmit/submit", methods=['POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 @limit_content_length()
 def submit():
     logger.debug('submit')
@@ -234,7 +234,7 @@ def submit():
 
 @PasteSubmit.route("/PasteSubmit/submit_status", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def submit_status():
     UUID = request.args.get('UUID')
 

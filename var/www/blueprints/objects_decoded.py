@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -35,7 +35,7 @@ objects_decoded = Blueprint('objects_decoded', __name__,
 
 # ============= ROUTES ==============
 
-@objects_decoded.route("/object/decodeds", methods=['GET', 'POST'])
+@objects_decoded.route("/objects/decodeds", methods=['GET', 'POST'])
 @login_required
 @login_read_only
 def decodeds_dashboard():
@@ -80,15 +80,14 @@ def decodeds_dashboard():
                            algos=Decodeds.get_algos(), show_decoded=show_decoded,
                            mimetypes=Decodeds.get_all_mimetypes())
 
-@objects_decoded.route("/object/decodeds/search", methods=['POST'])
+@objects_decoded.route("/objects/decodeds/search", methods=['POST'])
 @login_required
 @login_read_only
 def decodeds_search():
     decoded_id = request.form.get('object_id')
-    print(decoded_id)
     return redirect(url_for('correlation.show_correlation', type='decoded', id=decoded_id))
 
-@objects_decoded.route("/object/decoded/download")
+@objects_decoded.route("/objects/decoded/download")
 @login_required
 @login_read_only
 def decoded_download():
@@ -105,7 +104,7 @@ def decoded_download():
         abort(404)
 
 
-@objects_decoded.route("/object/decoded/send_to_vt")
+@objects_decoded.route("/objects/decoded/send_to_vt")
 @login_required
 @login_read_only
 def send_to_vt():
@@ -121,7 +120,7 @@ def send_to_vt():
         abort(404)
 
 
-@objects_decoded.route("/object/decoded/refresh_vt_report")
+@objects_decoded.route("/objects/decoded/refresh_vt_report")
 @login_required
 @login_read_only
 def refresh_vt_report():
@@ -138,7 +137,7 @@ def refresh_vt_report():
 
 
 # TODO
-@objects_decoded.route("/object/decoded/algo_pie_chart/json", methods=['GET'])
+@objects_decoded.route("/objects/decoded/algo_pie_chart/json", methods=['GET'])
 @login_required
 @login_read_only
 def decoder_pie_chart_json():
@@ -148,7 +147,7 @@ def decoder_pie_chart_json():
     return jsonify(Decodeds.api_pie_chart_decoder_json(date_from, date_to, mimetype))
 
 # TODO
-@objects_decoded.route("/object/decoded/mimetype_pie_chart/json", methods=['GET'])
+@objects_decoded.route("/objects/decoded/mimetype_pie_chart/json", methods=['GET'])
 @login_required
 @login_read_only
 def mimetype_pie_chart_json():
@@ -157,7 +156,7 @@ def mimetype_pie_chart_json():
     algo = request.args.get('algo')
     return jsonify(Decodeds.api_pie_chart_mimetype_json(date_from, date_to, algo))
 
-@objects_decoded.route("/object/decoded/barchart/json", methods=['GET'])
+@objects_decoded.route("/objects/decoded/barchart/json", methods=['GET'])
 @login_required
 @login_read_only
 def barchart_json():
@@ -166,7 +165,7 @@ def barchart_json():
     mimetype = request.args.get('mimetype')
     return jsonify(Decodeds.api_barchart_range_json(date_from, date_to , mimetype))
 
-@objects_decoded.route("/object/decoded/graphline/json", methods=['GET'])
+@objects_decoded.route("/objects/decoded/graphline/json", methods=['GET'])
 @login_required
 @login_read_only
 def graphline_json():

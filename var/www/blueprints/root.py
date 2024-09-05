@@ -19,7 +19,7 @@ from blueprints.settings_b import create_json_response
 sys.path.append('modules')
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst
+from Role_Manager import login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -308,6 +308,6 @@ def role():
 
 @root.route('/searchbox/')
 @login_required
-@login_analyst
+@login_read_only
 def searchbox():
     return render_template("searchbox.html")

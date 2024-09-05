@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_user_no_api, login_read_only
 
 sys.path.append('modules')
 import Flask_config
@@ -77,7 +77,7 @@ def show_investigation():
 
 @investigations_b.route("/investigation/add", methods=['GET', 'POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def add_investigation():
     if request.method == 'POST':
         user_id = current_user.get_user_id()
@@ -119,7 +119,7 @@ def add_investigation():
 
 @investigations_b.route("/investigation/edit", methods=['GET', 'POST'])
 @login_required
-@login_analyst
+@login_user_no_api
 def edit_investigation():  # TODO CHECK ACL
     if request.method == 'POST':
         user_org = current_user.get_org()
@@ -171,7 +171,7 @@ def edit_investigation():  # TODO CHECK ACL
 
 @investigations_b.route("/investigation/delete", methods=['GET'])
 @login_required
-@login_analyst
+@login_user_no_api
 def delete_investigation():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
@@ -185,7 +185,7 @@ def delete_investigation():
 
 @investigations_b.route("/investigation/object/register", methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def register_investigation():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
@@ -210,7 +210,7 @@ def register_investigation():
 
 @investigations_b.route("/investigation/object/unregister", methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def unregister_investigation():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
@@ -245,7 +245,7 @@ def get_object_gid():
 #
 # @investigations_b.route("/object/item") #completely shows the paste in a new tab
 # @login_required
-# @login_analyst
+# @login_user
 # def showItem(): # # TODO: support post
 #     item_id = request.args.get('id')
 #     if not item_id or not Item.exist_item(item_id):

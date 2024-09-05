@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_user_no_api, login_read_only
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -38,7 +38,7 @@ def create_json_response(data, status_code):
 # ============= ROUTES ==============
 @languages_ui.route("/languages/object/translate", methods=['POST'])
 @login_required
-@login_read_only
+@login_user_no_api
 def translate_object():
     obj_type = request.form.get('type')
     subtype = request.form.get('subtype')
@@ -61,7 +61,7 @@ def translate_object():
 
 @languages_ui.route("/languages/object/detect/language", methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def detect_object_language():
     obj_type = request.args.get('type')
     subtype = request.args.get('subtype')

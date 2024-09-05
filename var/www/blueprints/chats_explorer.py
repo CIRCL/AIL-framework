@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_read_only, login_user_no_api
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -246,7 +246,7 @@ def objects_message():
 
 @chats_explorer.route("/objects/message/translate", methods=['POST'])
 @login_required
-@login_read_only
+@login_user_no_api
 def objects_message_translate():
     message_id = request.form.get('id')
     source = request.form.get('language_target')
@@ -265,7 +265,7 @@ def objects_message_translate():
 
 @chats_explorer.route("/objects/message/detect/language", methods=['GET'])
 @login_required
-@login_read_only
+@login_user_no_api
 def objects_message_detect_language():
     message_id = request.args.get('id')
     target = request.args.get('target')

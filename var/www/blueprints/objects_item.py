@@ -13,7 +13,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
+from Role_Manager import login_admin, login_user, login_read_only, no_cache
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -58,7 +58,7 @@ def screenshot(filename):
     s = Screenshot(filename)
     return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
 
-@objects_item.route("/object/item")
+@objects_item.route("/objects/item")
 @login_required
 @login_read_only
 def showItem():  # # TODO: support post
@@ -106,7 +106,7 @@ def showItem():  # # TODO: support post
 
     ## Dynamic Path FIX
 
-@objects_item.route("/object/item/html2text")
+@objects_item.route("/objects/item/html2text")
 @login_required
 @login_read_only
 def html2text(): # # TODO: support post
@@ -116,7 +116,7 @@ def html2text(): # # TODO: support post
     item = Item(item_id)
     return item.get_html2text_content()
 
-@objects_item.route("/object/item/raw_content")
+@objects_item.route("/objects/item/raw_content")
 @login_required
 @login_read_only
 def item_raw_content(): # # TODO: support post
@@ -126,7 +126,7 @@ def item_raw_content(): # # TODO: support post
     item = Item(item_id)
     return Response(item.get_content(), mimetype='text/plain')
 
-@objects_item.route("/object/item/download")
+@objects_item.route("/objects/item/download")
 @login_required
 @login_read_only
 def item_download():  # # TODO: support post
@@ -136,7 +136,7 @@ def item_download():  # # TODO: support post
     item = Item(item_id)
     return send_file(item.get_raw_content(), download_name=item_id, as_attachment=True)
 
-@objects_item.route("/object/item/content/more")
+@objects_item.route("/objects/item/content/more")
 @login_required
 @login_read_only
 def item_content_more():
@@ -146,9 +146,9 @@ def item_content_more():
     to_return = item_content[max_preview_modal-1:]
     return to_return
 
-@objects_item.route("/object/item/diff")
+@objects_item.route("/objects/item/diff")
 @login_required
-@login_analyst
+@login_user
 def object_item_diff():
     id1 = request.args.get('s1', '')
     id2 = request.args.get('s2', '')
@@ -166,7 +166,7 @@ def object_item_diff():
     diff = htmldiff.make_file(lines1, lines2)
     return diff
 
-@objects_item.route("/object/item/preview")
+@objects_item.route("/objects/item/preview")
 @login_required
 @login_read_only
 def item_preview():

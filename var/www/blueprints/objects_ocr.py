@@ -15,7 +15,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only, no_cache
+from Role_Manager import login_admin, login_read_only, no_cache
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################

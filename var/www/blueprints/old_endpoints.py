@@ -12,7 +12,7 @@ from flask import Flask, render_template, jsonify, request, Blueprint, redirect,
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_analyst, login_read_only
+from Role_Manager import login_admin, login_read_only
 
 # ============ BLUEPRINT ============
 old_endpoints = Blueprint('old_endpoints', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates'))
