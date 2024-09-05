@@ -168,7 +168,7 @@ class Decoded(AbstractDaterangeObject):
 
         obj_attrs.append(obj.add_attribute('sha1', value=self.id))
         obj_attrs.append(obj.add_attribute('mimetype', value=self.get_mimetype()))
-        obj_attrs.append(obj.add_attribute('malware-sample', value=self.id, data=self.get_content()))
+        obj_attrs.append(obj.add_attribute('malware-sample', value=self.id, data=self.get_content(r_type='bytes')))
         for obj_attr in obj_attrs:
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
