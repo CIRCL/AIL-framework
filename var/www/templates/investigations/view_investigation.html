@@ -49,7 +49,11 @@
 				            </tr>
                             <tr>
 				              <th>Org</th>
-				              <td>{{metadata['org_name']}}<br>{{ metadata['org'] }}</td>
+                              <td>
+                                {% if metadata['org'] %}
+                                    {{ metadata['org_name']}}<br>{{ metadata['org'] }}
+                                {% endif %}
+                            </td>
 				            </tr>
                             <tr>
                                 <th>Level</th>

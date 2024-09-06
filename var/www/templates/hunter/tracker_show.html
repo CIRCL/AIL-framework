@@ -133,7 +133,11 @@
                                 </tr>
                                 <tr>
                                     <td class="text-right"><b>Org</b></td>
-                                    <td>{{meta['org_name']}}<br>{{ meta['org'] }}</td>
+                                    <td>
+                                        {% if meta['org'] %}
+                                            {{meta['org_name']}}<br>{{ meta['org'] }}
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right"><b>First Seen</b></td>

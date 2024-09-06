@@ -94,7 +94,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
+                                    {% if dict_uuid['org'] %}
+                                        {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
@@ -243,7 +245,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
+                                    {% if dict_uuid['org'] %}
+                                        {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
+                                    {% endif %}
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}

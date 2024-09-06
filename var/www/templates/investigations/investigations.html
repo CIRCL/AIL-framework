@@ -58,7 +58,9 @@
                                     </div>
                                 </a>
                             </td>
-                            <td>{{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}</td>
+                            <td>
+                                {{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}
+                            </td>
                             <td>{{ dict_investigation['date']}}</td>
                             <td>{{ dict_investigation['last_change']}}</td>
                             <td>{{ dict_investigation['info']}}</td>
@@ -96,7 +98,11 @@
                                     </div>
                                 </a>
                             </td>
-                            <td>{{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}</td>
+                            <td>
+                                {% if dict_investigation['org'] %}
+                                    {{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}
+                                {% endif %}
+                            </td>
                             <td>{{ dict_investigation['date']}}</td>
                             <td>{{ dict_investigation['last_change']}}</td>
                             <td>{{ dict_investigation['info']}}</td>

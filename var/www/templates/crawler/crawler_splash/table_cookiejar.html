@@ -34,7 +34,11 @@
                 {% endif %}
             {% endif %}
         </td>
-        <td>{{dict_cookiejar['org_name']}}<br>{{ dict_cookiejar['org'] }}</td>
+        <td>
+            {% if dict_cookiejar['org'] %}
+                {{dict_cookiejar['org_name']}}<br>{{ dict_cookiejar['org'] }}
+            {% endif %}
+        </td>
         <td>{{dict_cookiejar['user']}}</td>
       </tr>
     {% endfor %}
