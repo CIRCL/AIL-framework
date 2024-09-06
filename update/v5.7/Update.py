@@ -33,6 +33,9 @@ if __name__ == '__main__':
 
     # USERS
     print('Updating Users ...')
+    # create role_list
+    ail_users._create_roles()
+
     # Create Default Org
     org = ail_orgs.create_default_org()
     org_uuid = org.get_uuid()
