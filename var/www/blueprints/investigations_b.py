@@ -45,7 +45,15 @@ def investigations_dashboard():
     inv_global = Investigations.get_global_investigations_meta(r_str=True)
     inv_org = Investigations.get_org_investigations_meta(current_user.get_org(), r_str=True)
     return render_template("investigations.html", bootstrap_label=bootstrap_label,
-                                inv_global=inv_global, inv_org=inv_org)
+                           inv_global=inv_global, inv_org=inv_org)
+
+@investigations_b.route("/investigations/admin", methods=['GET'])
+@login_required
+@login_admin
+def investigations_admin():
+    inv_org = Investigations.get_orgs_investigations_meta(r_str=True)
+    return render_template("investigations.html", bootstrap_label=bootstrap_label,
+                           inv_global=[], inv_org=inv_org)
 
 
 @investigations_b.route("/investigation", methods=['GET']) ## FIXME: add /view ????
@@ -63,7 +71,7 @@ def show_investigation():
     if res:
         return create_json_response(res[0], res[1])
 
-    metadata = investigation.get_metadata(r_str=True)
+    metadata = investigation.get_metadata(r_str=True, options={'org_name'})
     objs = []
     for obj in investigation.get_objects():
         obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)

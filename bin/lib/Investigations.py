@@ -224,6 +224,8 @@ class Investigation(object):
                 }
         if 'objects' in options:
             meta['objects'] = self.get_objects()
+        if 'org_name' in options and meta['org']:
+            meta['org_name'] = ail_orgs.Organisation(self.get_org()).get_name()
         return meta
 
     def set_name(self, name):
@@ -438,7 +440,15 @@ def get_org_investigations_meta(org_uuid, r_str=False):
     investigations_meta = []
     for investigation_uuid in get_org_investigations(org_uuid):
         investigation = Investigation(investigation_uuid)
-        investigations_meta.append(investigation.get_metadata(r_str=r_str))
+        investigations_meta.append(investigation.get_metadata(r_str=r_str, options={'org_name'}))
+    return investigations_meta
+
+def get_orgs_investigations_meta(r_str=False):
+    investigations_meta = []
+    for tracker_uuid in get_all_investigations():
+        inv = Investigation(tracker_uuid)
+        if inv.get_level() == 2:
+            investigations_meta.append(inv.get_metadata(r_str=r_str, options={'org_name'}))
     return investigations_meta
 
 
