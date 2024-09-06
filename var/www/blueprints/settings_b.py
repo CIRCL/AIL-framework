@@ -165,7 +165,7 @@ def user_otp_reset():  # TODO ask for password ?
 @login_user
 def new_token_user_self():
     user_id = current_user.get_user_id()
-    r = ail_users.api_create_user_api_key_self(user_id, request.access_route[0])
+    r = ail_users.api_create_user_api_key_self(user_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -177,7 +177,7 @@ def new_token_user_self():
 def new_token_user():
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
-    r = ail_users.api_create_user_api_key(user_id, admin_id, request.access_route[0])
+    r = ail_users.api_create_user_api_key(user_id, admin_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -189,7 +189,7 @@ def new_token_user():
 def user_logout():
     user_id = request.args.get('user_id') # TODO LOGS
     admin_id = current_user.get_user_id()
-    r = ail_users.api_logout_user(admin_id, user_id, request.access_route[0])
+    r = ail_users.api_logout_user(admin_id, user_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -200,7 +200,7 @@ def user_logout():
 @login_admin
 def users_logout():
     admin_id = current_user.get_user_id() # TODO LOGS
-    r = ail_users.api_logout_users(admin_id, request.access_route[0])
+    r = ail_users.api_logout_users(admin_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -277,7 +277,7 @@ def create_user_post():
                     edit = True
                 else:
                     edit = False
-                ail_users.api_create_user(admin_id, request.access_route[0], email, password, org_uuid, role, enable_2_fa)
+                ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
                 new_user = {'email': email, 'password': str_password, 'org': org_uuid, 'otp': enable_2_fa, 'edited': edit}
                 return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
 
@@ -294,7 +294,7 @@ def create_user_post():
 def delete_user():
     user_id = request.args.get('user_id')
     admin_id = current_user.get_user_id()
-    r = ail_users.api_delete_user(user_id, admin_id, request.access_route[0])
+    r = ail_users.api_delete_user(user_id, admin_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -334,7 +334,7 @@ def create_org_post():
     name = request.form.get('name')
     description = request.form.get('description')
 
-    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], description=description)
+    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], request.user_agent, description=description)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -350,7 +350,7 @@ def create_org_post():
 def delete_org():
     admin_id = current_user.get_user_id()
     org_uuid = request.args.get('uuid')
-    r = ail_orgs.api_delete_org(org_uuid, admin_id, request.access_route[0])
+    r = ail_orgs.api_delete_org(org_uuid, admin_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:

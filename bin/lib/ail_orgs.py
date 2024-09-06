@@ -308,7 +308,7 @@ def api_get_orgs_meta():
         meta['orgs'].append(org.get_meta(options=options))
     return meta
 
-def api_create_org(creator, org_uuid, name, ip_address, description=None):
+def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):
     if not is_valid_uuid_v4(org_uuid):
         return {'status': 'error', 'reason': 'Invalid UUID'}, 400
     if exists_org(org_uuid):
@@ -316,13 +316,13 @@ def api_create_org(creator, org_uuid, name, ip_address, description=None):
 
     org = Organisation(org_uuid)
     org.create(creator, name, description=description)
-    access_logger.info(f'Created org {org_uuid}', extra={'user_id': creator, 'ip_address': ip_address})
+    access_logger.info(f'Created org {org_uuid}', extra={'user_id': creator, 'ip_address': ip_address, 'user_agent': user_agent})
     return org.get_uuid(), 200
 
-def api_delete_org(org_uuid, admin_id, ip_address):  # TODO check if nothing is linked to this org
+def api_delete_org(org_uuid, admin_id, ip_address, user_agent):  # TODO check if nothing is linked to this org
     if not exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Org not found'}, 404
-    access_logger.warning(f'Deleted org {org_uuid}', extra={'user_id': admin_id, 'ip_address': ip_address})
+    access_logger.warning(f'Deleted org {org_uuid}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     org = Organisation(org_uuid)
     org.delete()
     return org_uuid, 200

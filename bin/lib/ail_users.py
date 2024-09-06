@@ -599,15 +599,15 @@ def api_get_user_hotp(user_id):
     hotp = get_user_hotp_code(user_id)
     return hotp, 200
 
-def api_logout_user(admin_id, user_id, ip_address):
+def api_logout_user(admin_id, user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    access_logger.info(f'Logout user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+    access_logger.info(f'Logout user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.kill_session(), 200
 
-def api_logout_users(admin_id, ip_address):
-    access_logger.info('Logout all users', extra={'user_id': admin_id, 'ip_address': ip_address})
+def api_logout_users(admin_id, ip_address, user_agent):
+    access_logger.info('Logout all users', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return kill_sessions(), 200
 
 def api_disable_user(admin_id, user_id): # TODO LOG ADMIN ID
@@ -663,29 +663,29 @@ def api_reset_user_otp(admin_id, user_id, ip_address): # TODO LOGS
     enable_user_2fa(user_id)
     return user_id, 200
 
-def api_create_user_api_key_self(user_id, ip_address):
+def api_create_user_api_key_self(user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    access_logger.info('New api key', extra={'user_id': user_id, 'ip_address': ip_address})
+    access_logger.info('New api key', extra={'user_id': user_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.new_api_key(), 200
 
-def api_create_user_api_key(user_id, admin_id, ip_address):
+def api_create_user_api_key(user_id, admin_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+    access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.new_api_key(), 200
 
-def api_create_user(admin_id, ip_address, user_id, password, org_uuid, role, otp):
+def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp):
     user = AILUser(user_id)
     if not user.exists():
         create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp)
-        access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+        access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     # Edit
     else:
         edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp)
-        access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+        access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
 
 def api_change_user_self_password(user_id, password):
     if not check_password_strength(password):
@@ -695,11 +695,11 @@ def api_change_user_self_password(user_id, password):
     user.edit_password(password_hash, chg_passwd=False)
     return user_id, 200
 
-def api_delete_user(user_id, admin_id, ip_address):
+def api_delete_user(user_id, admin_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    access_logger.info(f'Delete user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address})
+    access_logger.info(f'Delete user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.delete(), 200
 
 ########################################################################################################################
