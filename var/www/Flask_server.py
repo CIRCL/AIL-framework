@@ -274,6 +274,14 @@ def _handle_client_error(e):
     else:
         return e
 
+@app.errorhandler(403)
+def error_page_not_found(e):
+    if request.path.startswith('/api/'): ## # TODO: add baseUrl
+        return Response(json.dumps({"status": "error", "reason": "403 Access Denied"}) + '\n', mimetype='application/json'), 403
+    else:
+        # avoid endpoint enumeration
+        return page_forbidden(e)
+
 @app.errorhandler(404)
 def error_page_not_found(e):
     if request.path.startswith('/api/'): ## # TODO: add baseUrl
@@ -288,6 +296,10 @@ def _handle_client_error(e):
         return Response(json.dumps({"status": "error", "reason": "Server Error"}) + '\n', mimetype='application/json'), 500
     else:
         return e
+
+@login_required
+def page_forbidden(e):
+    return render_template("error/403.html"), 403
 
 @login_required
 def page_not_found(e):

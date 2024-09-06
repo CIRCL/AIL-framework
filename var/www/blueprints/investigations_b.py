@@ -34,6 +34,10 @@ bootstrap_label = Flask_config.bootstrap_label
 
 # ============ FUNCTIONS ============
 def create_json_response(data, status_code):
+    if status_code == 403:
+        abort(403)
+    elif status_code == 404:
+        abort(404)
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 # ============= ROUTES ==============

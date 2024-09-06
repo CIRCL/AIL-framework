@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -45,6 +45,10 @@ def api_validator(api_response):
         return Response(json.dumps(api_response[0], indent=2, sort_keys=True), mimetype='application/json'), api_response[1]
 
 def create_json_response(data, status_code):
+    if status_code == 403:
+        abort(403)
+    elif status_code == 404:
+        abort(404)
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 # ============= ROUTES ==============
@@ -330,7 +334,7 @@ def tracker_edit():
         tracker_uuid = request.args.get('uuid', None)
         res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
         if res:  # invalid access
-            return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+            return create_json_response(res[0], res[1])
 
         tracker = Tracker.Tracker(tracker_uuid)
         dict_tracker = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'tags', 'webhooks'})
@@ -446,7 +450,7 @@ def tracker_objects():
     tracker_uuid = request.args.get('uuid', None)
     res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
     if res:  # invalid access
-        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+        return create_json_response(res[0], res[1])
 
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'sparkline', 'tags', 'nb_objs'})
