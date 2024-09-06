@@ -54,7 +54,7 @@ root = Blueprint('root', __name__, template_folder='templates')
 # ============= ROUTES ==============
 @root.route('/login', methods=['POST', 'GET'])   # TODO LOG BRUTEFORCE ATTEMPT
 def login():
-    current_ip = request.remote_addr
+    current_ip = request.access_route[0]
     login_failed_ip = r_cache.get(f'failed_login_ip:{current_ip}')
 
     # brute force by IP
@@ -138,7 +138,7 @@ def login():
                 r_cache.expire(f'failed_login_user_id:{username}', 300)
                 #
 
-                access_logger.info(f'Login Failed', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+                access_logger.info(f'Login Failed', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0]})
 
                 logging_error = 'Login/Password Incorrect'
                 return render_template("login.html", error=logging_error)
@@ -166,7 +166,7 @@ def verify_2fa():
     if otp_expire < int(time.time()):  # TODO LOG
         session.pop('user_id', None)
         session.pop('otp_expire', None)
-        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.remote_addr})
+        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.access_route[0]})
         error = "First Login Expired"
         return redirect(url_for('root.login', error=error))
 
@@ -188,7 +188,7 @@ def verify_2fa():
             login_user(user)
             user.update_last_login()
 
-            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0]})
 
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
@@ -199,7 +199,7 @@ def verify_2fa():
                 return redirect(url_for('dashboard.index'))
         else:
             htop_counter = user.get_htop_counter()
-            access_logger.info(f'Invalid OTP', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+            access_logger.info(f'Invalid OTP', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0]})
             error = "The OTP is incorrect or has expired"
             return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
 
@@ -220,7 +220,7 @@ def setup_2fa():
     if otp_expire < int(time.time()):  # TODO LOG
         session.pop('user_id', None)
         session.pop('otp_expire', None)
-        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.remote_addr})
+        access_logger.info(f'First Login Expired', extra={'user_id': user_id, 'ip_address': request.access_route[0]})
         error = "First Login Expired"
         return redirect(url_for('root.login', error=error))
 
@@ -243,14 +243,14 @@ def setup_2fa():
             login_user(user)
             user.update_last_login()
 
-            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+            access_logger.info(f'2FA login', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0]})
 
             if user.request_password_change():
                 return redirect(url_for('root.change_password'))
             else:
                 return redirect(url_for('dashboard.index'))
         else:
-            access_logger.info(f'OTP Invalid', extra={'user_id': user.get_user_id(), 'ip_address': request.remote_addr})
+            access_logger.info(f'OTP Invalid', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0]})
             error = "The OTP is incorrect or has expired"
             return redirect(url_for('root.setup_2fa', error=error))
     else:
@@ -278,7 +278,7 @@ def change_password():
                 res = api_change_user_self_password(user_id, password1)
                 if res[1] != 200:
                     return create_json_response(res[0], res[1])
-                access_logger.info(f'Password change', extra={'user_id': user_id, 'ip_address': request.remote_addr})
+                access_logger.info(f'Password change', extra={'user_id': user_id, 'ip_address': request.access_route[0]})
                 # update Note
                 # dashboard
                 return redirect(url_for('dashboard.index', update_note=True))
@@ -295,7 +295,7 @@ def change_password():
 @root.route('/logout')
 @login_required
 def logout():
-    access_logger.info(f'Logout', extra={'user_id': current_user.get_user_id(), 'ip_address': request.remote_addr})
+    access_logger.info(f'Logout', extra={'user_id': current_user.get_user_id(), 'ip_address': request.access_route[0]})
     current_user.kill_session()
     logout_user()
     return redirect(url_for('root.login'))

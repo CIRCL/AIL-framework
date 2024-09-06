@@ -61,7 +61,7 @@ def token_required(user_role):
                 return create_json_response({'status': 'error', 'reason': 'Invalid Role'}, 401)
 
             token = get_auth_from_header()
-            ip_source = request.remote_addr
+            ip_source = request.access_route[0]
             data, status_code = ail_api.authenticate_user(token, ip_address=ip_source)
             if status_code != 200:
                 return create_json_response(data, status_code)
