@@ -5,6 +5,7 @@
         <th class="bg-info text-white">Date</th>
         <th class="bg-info text-white">UUID</th>
         <th class="bg-info text-white">Level</th>
+        <th class="bg-info text-white">Org</th>
         <th class="bg-info text-white">User</th>
     </tr>
   </thead>
@@ -33,6 +34,7 @@
                 {% endif %}
             {% endif %}
         </td>
+        <td>{{dict_cookiejar['org_name']}}<br>{{ dict_cookiejar['org'] }}</td>
         <td>{{dict_cookiejar['user']}}</td>
       </tr>
     {% endfor %}

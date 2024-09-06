@@ -501,10 +501,26 @@ def get_cookiejars_org(org_uuid):
         cookiejars = []
     return cookiejars
 
+def get_cookiejars_orgs():
+    cookiejars = []
+    for cookiejar_uuid in get_cookiejars():
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if cookiejar.get_level() == 2:
+            cookiejars.append(cookiejar_uuid)
+    return cookiejars
+
 def get_cookiejars_user(user_id):
     cookiejars = r_crawler.smembers(f'cookiejars:user:{user_id}')
     if not cookiejars:
         cookiejars = []
+    return cookiejars
+
+def get_cookiejars_users():
+    cookiejars = []
+    for cookiejar_uuid in get_cookiejars():
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if cookiejar.get_level() == 0:
+            cookiejars.append(cookiejar_uuid)
     return cookiejars
 
 class Cookiejar:
@@ -598,7 +614,9 @@ class Cookiejar:
         meta = {'uuid': self.uuid,
                 'date': self.get_date(),
                 'description': self.get_description(),
+                'org': self.get_org(),
                 'user': self.get_user()}
+        meta['org_name'] = ail_orgs.Organisation(meta['org']).get_name()
         if level:
             meta['level'] = self.get_level()
         if nb_cookies:

@@ -718,6 +718,16 @@ def crawler_cookiejar_all():
     return render_template("all_cookiejar.html", user_cookiejar=user_cookiejars,
                            org_cookiejar=org_cookiejars, global_cookiejar=global_cookiejars)
 
+@crawler_splash.route('/crawler/cookiejar/all/admin', methods=['GET'])
+@login_required
+@login_admin
+def crawler_cookiejar_all_admin():
+    user_cookiejars = crawlers.get_cookiejars_meta_by_iterator(crawlers.get_cookiejars_users())
+    org_cookiejars = crawlers.get_cookiejars_meta_by_iterator(crawlers.get_cookiejars_orgs())
+    global_cookiejars = []
+    return render_template("all_cookiejar.html", user_cookiejar=user_cookiejars,
+                           org_cookiejar=org_cookiejars, global_cookiejar=global_cookiejars)
+
 
 @crawler_splash.route('/crawler/cookiejar/show', methods=['GET'])
 @login_required
