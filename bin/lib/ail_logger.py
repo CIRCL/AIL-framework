@@ -34,7 +34,7 @@ def get_access_config(create=False):
     logger = logging.getLogger('access.log')
 
     if create:
-        formatter = logging.Formatter('%(asctime)s - %(ip_address)s - %(levelname)s - %(user_id)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(ip_address)s - %(user_agent)s - %(levelname)s - %(user_id)s - %(message)s')
 
         # STDOUT
         handler = logging.StreamHandler()
