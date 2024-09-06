@@ -41,6 +41,7 @@
           <thead class="bg-dark text-white">
             <tr>
                 <th>Name</th>
+                <th>Org</th>
                 <th>Date</th>
                 <th>Nb Matches</th>
                 <th></th>
@@ -63,6 +64,9 @@
                     </a>
                     {%  endfor %}
                   </div>
+                </td>
+                <td>
+                    {{ dict_task['org_name'] }}<br>{{ dict_task['org'] }}
                 </td>
                 <td>{{ dict_task['date'][0:4]}}/{{ dict_task['date'][4:6]}}/{{ dict_task['date'][6:8]}}</td>
                 <td>
@@ -108,6 +112,7 @@
           <thead class="bg-dark text-white">
             <tr>
                 <th>Name</th>
+                <th>Org</th>
                 <th>Date</th>
                 <th>Nb Matches</th>
                 <th></th>
@@ -130,6 +135,9 @@
                     </a>
                     {%  endfor %}
                   </div>
+                </td>
+                <td>
+                    {{ dict_task['org_name'] }}<br>{{ dict_task['org'] }}
                 </td>
                 <td>{{ dict_task['date'][0:4]}}/{{ dict_task['date'][4:6]}}/{{ dict_task['date'][6:8]}}</td>
                 <td>

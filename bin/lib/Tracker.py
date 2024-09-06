@@ -333,6 +333,8 @@ class Tracker:
                 'last_seen': self.get_last_seen()}
         if 'org' in options:
             meta['org'] = self.get_org()
+            if 'org_name' in options:
+                meta['org_name'] = ail_orgs.Organisation(self.get_org()).get_name()
         if 'user' in options:
             meta['user'] = self.get_user()
         if 'level' in options:
@@ -725,21 +727,21 @@ def get_user_trackers_meta(user_id, tracker_type=None):
     metas = []
     for tracker_uuid in get_user_trackers(user_id, tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return metas
 
 def get_global_trackers_meta(tracker_type=None):
     metas = []
     for tracker_uuid in get_global_trackers(tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return metas
 
 def get_org_trackers_meta(user_org, tracker_type=None):
     metas = []
     for tracker_uuid in get_org_trackers(user_org, tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'description', 'mails', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return metas
 
 def get_users_trackers_meta():
@@ -1556,6 +1558,10 @@ class RetroHunt:
             meta['nb_match'] = self.get_nb_match()
         if 'nb_objs' in options:
             meta['nb_objs'] = self.get_nb_objs()
+        if 'org' in options:
+            meta['org'] = self.get_org()
+            if 'org_name' in options:
+                meta['org_name'] = ail_orgs.Organisation(self.get_org()).get_name()
         if 'progress' in options:
             meta['progress'] = self.get_progress()
         if 'filters' in options:
@@ -1758,6 +1764,14 @@ def get_retro_hunts_global():
 def get_retro_hunts_org(org_uuid):
     return ail_orgs.get_org_objs_by_type(org_uuid, 'retro_hunt')
 
+def get_retro_hunts_orgs():
+    retros = []
+    for retro_uuid in get_all_retro_hunt_tasks():
+        retro = RetroHunt(retro_uuid)
+        if retro.get_level() == 2:
+            retros.append(retro_uuid)
+    return retros
+
 def get_retro_hunt_pending_tasks():
     return r_tracker.smembers('retro_hunts:pending')
 
@@ -1785,7 +1799,7 @@ def get_retro_hunt_metas(trackers_uuid):
     tasks = []
     for task_uuid in trackers_uuid:
         retro_hunt = RetroHunt(task_uuid)
-        tasks.append(retro_hunt.get_meta(options={'date', 'progress', 'nb_match', 'tags'}))
+        tasks.append(retro_hunt.get_meta(options={'date', 'progress', 'org', 'org_name', 'nb_match', 'tags'}))
     return tasks
 
 ## Objects ##

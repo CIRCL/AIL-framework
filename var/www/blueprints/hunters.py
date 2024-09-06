@@ -167,7 +167,7 @@ def show_tracker():
         date_to = date_to.replace('-', '')
 
     tracker = Tracker.Tracker(tracker_uuid)
-    meta = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'sparkline', 'tags',
+    meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
                                      'user', 'webhooks', 'nb_objs'})
 
     if meta['type'] == 'yara':
@@ -486,6 +486,13 @@ def retro_hunt_all_tasks():
     retro_hunts_org = Tracker.get_retro_hunt_metas(Tracker.get_retro_hunts_org(user_org))
     return render_template("retro_hunt_tasks.html", retro_hunts_global=retro_hunts_global, retro_hunts_org=retro_hunts_org, bootstrap_label=bootstrap_label)
 
+@hunters.route('/retro_hunt/tasks/admin', methods=['GET'])
+@login_required
+@login_admin
+def retro_hunt_all_tasks_admin():
+    retro_hunts_org = Tracker.get_retro_hunt_metas(Tracker.get_retro_hunts_orgs())
+    return render_template("retro_hunt_tasks.html", retro_hunts_global=[], retro_hunts_org=retro_hunts_org, bootstrap_label=bootstrap_label)
+
 @hunters.route('/retro_hunt/task/show', methods=['GET'])
 @login_required
 @login_read_only
@@ -512,7 +519,7 @@ def retro_hunt_show_task():
     if res:
         return res
 
-    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'progress', 'filters', 'nb_objs', 'tags'})
+    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'org', 'org_name', 'progress', 'filters', 'nb_objs', 'tags'})
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 

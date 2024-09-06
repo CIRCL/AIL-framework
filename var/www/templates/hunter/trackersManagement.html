@@ -58,6 +58,7 @@
                         <tr>
                             <th>Type</th>
                             <th>Tracker</th>
+                            <th>Org</th>
                             <th>First seen</th>
                             <th>Last seen</th>
                             <th>Emails</th>
@@ -91,6 +92,9 @@
                                             </a>
                                         {% endfor %}
                                     </div>
+                                </td>
+                                <td>
+                                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
@@ -130,6 +134,7 @@
                         <tr>
                             <th>Type</th>
                             <th>Tracker</th>
+                            <th>Org</th>
                             <th>First seen</th>
                             <th>Last seen</th>
                             <th>Emails</th>
@@ -163,6 +168,9 @@
                                             </a>
                                         {% endfor %}
                                     </div>
+                                </td>
+                                <td>
+                                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
@@ -199,6 +207,7 @@
                         <tr>
                             <th>Type</th>
                             <th>Tracker</th>
+                            <th>Org</th>
                             <th>First seen</th>
                             <th>Last seen</th>
                             <th>Email notification</th>
@@ -232,6 +241,9 @@
                                             </a>
                                         {% endfor %}
                                     </div>
+                                </td>
+                                <td>
+                                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
                                 </td>
                                 <td>
                                     {% if dict_uuid['first_seen'] %}
