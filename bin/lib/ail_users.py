@@ -544,7 +544,7 @@ class AILUser(UserMixin):
     def init_setup_2fa(self, create=True):
         if create:
             create_user_otp(self.user_id)
-        instance_name = f'{ail_2fa_name}: {self.user_id}'
+        instance_name = ail_2fa_name
         return get_user_otp_qr_code(self.user_id, instance_name), get_user_otp_uri(self.user_id, instance_name), get_user_hotp_code(self.user_id)
 
     def setup_2fa(self):
