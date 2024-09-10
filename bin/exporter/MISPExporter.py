@@ -212,7 +212,8 @@ class MISPExporter(AbstractExporter, ABC):
 
         misp_objects = ail_objects.get_misp_objects(objs)
         for obj in misp_objects:
-            event.add_object(obj)
+            if obj:
+                event.add_object(obj)
         # print(event.to_json())
 
         if export:
