@@ -82,6 +82,7 @@ DiffMaxLineLength = 10000
 ##### Users #####
 [Users]
 force_2fa = False
+2fa_name = AIL
 
 [AIL_2_AIL]
 server_host = 0.0.0.0

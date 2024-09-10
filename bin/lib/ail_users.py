@@ -37,6 +37,9 @@ if config_loader.get_config_boolean('Users', 'force_2fa'):
     r_serv_db.hset('ail:2fa', '2fa', 1)
 else:
     r_serv_db.hset('ail:2fa', '2fa', 0)
+
+ail_2fa_name = config_loader.get_config_str('Users', '2fa_name')
+
 config_loader = None
 
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
@@ -541,7 +544,7 @@ class AILUser(UserMixin):
     def init_setup_2fa(self, create=True):
         if create:
             create_user_otp(self.user_id)
-        instance_name = 'AIL TEST'
+        instance_name = f'{ail_2fa_name}: {self.user_id}'
         return get_user_otp_qr_code(self.user_id, instance_name), get_user_otp_uri(self.user_id, instance_name), get_user_hotp_code(self.user_id)
 
     def setup_2fa(self):
