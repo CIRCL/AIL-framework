@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ail_core import generate_uuid
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -591,6 +592,64 @@ def get_message_report(l_mess): # TODO Force language + translation
         messages.append(meta)
 
     return chats, messages
+
+# # # # # # # # # # # # # #
+#                         #
+#   ChatMonitoringRequest #
+#                         #
+# # # # # # # # # # # # # #
+
+def get_chats_monitoring_requests():
+    return r_obj.smembers(f'chats:requests')
+
+def get_chats_monitoring_requests_metas():
+    requests = []
+    for r in get_chats_monitoring_requests():
+        cr = ChatsMonitoringRequest(r)
+        requests.append(cr.get_meta())
+    return requests
+
+class ChatsMonitoringRequest:
+    def __init__(self, r_uuid):
+        self.uuid = r_uuid
+
+    def _get_field(self, name):
+        return r_obj.hget(f'chats:request:{self.uuid}', name)
+
+    def _set_field(self, name, value):
+        r_obj.hset(f'chats:request:{self.uuid}', name, value)
+
+    def exists(self):
+        r_obj.exists(f'chats:request:{self.uuid}')
+
+    def get_meta(self):
+        return {'uuid': self.uuid,
+                'date':  self._get_field('date'),
+                'creator': self._get_field('creator'),
+                'chat_type': self._get_field('chat_type'),
+                'invite': self._get_field('invite'),
+                'username': self._get_field('username'),
+                'description': self._get_field('description'),
+        }
+
+    def create(self, creator, chat_type, invite, username, description):
+        self._set_field('chat_type', chat_type)
+        self._set_field('creator', creator)
+        self._set_field('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        if invite:
+            self._set_field('invite', invite)
+        if username:
+            self._set_field('username', username)
+        if description:
+            self._set_field('description', description)
+        r_obj.sadd(f'chats:requests', self.uuid)
+
+def create_chat_monitoring_requests(creator, chat_type, invite, username, description):
+    r_uuid = generate_uuid()
+    chat_request = ChatsMonitoringRequest(r_uuid)
+    chat_request.create(creator, chat_type, invite, username, description)
+    return r_uuid
+
 
 #### FIX ####
 

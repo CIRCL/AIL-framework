@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/ail-project.css') }}" />
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-3">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 200px">
+                            <b>Request Chat Monitoring</b>
+                        </h4>
+                    </div>
+                    <div class="card-body">
+
+                        {% if uuid %}
+                            <h1>Chat Monitoring Request {{ uuid }} Created</h1>
+                        {% endif %}
+
+                        <form action="{{ url_for('chats_explorer.chat_monitoring_request') }}" method='post'>
+
+                            <label  class="mt-3" for="level_selector">Type</label>
+                            <select class="custom-select" id="level_selector" name="type">
+                                <option value="telegram" selected>Telegram</option>
+                                <option value="discord">Discord</option>
+                            </select>
+
+                            <div class="form-group">
+                                <label for="username"><b>Chat Username</b></label>
+                                <input type="text" class="form-control" id="username" name="username">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="invite"><b>Chat Invite</b></label>
+                                <input type="text" class="form-control" id="invite" name="invite">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description"><b>Comments</b></label>
+                                <textarea class="form-control" id="paste_content" name="description" rows="5"></textarea>
+                            </div>
+
+
+                            <div class="form-group">
+								<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-plus"></i> Request Monitoring</button>
+							</div>
+
+
+                        </form>
+
+                    </div>
+                </div>
+
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#page-Decoded").addClass("active");
+        $("#nav_explorer_chat").addClass("active");
+
+});
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>

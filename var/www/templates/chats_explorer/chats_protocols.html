@@ -51,6 +51,25 @@
                     <h4>No Protocol/Chats Imported</h4>
                 {% endif %}
 
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <div class="text-center">
+{#                    <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 400px">#}
+                    <div>
+                        <a class="btn btn-light border-secondary" style="" href="{{ url_for('chats_explorer.chat_monitoring_request') }}">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 200px">
+                                        <b>Request Chat Monitoring</b>
+                                    </h4>
+                                </div>
+                            </a>
+                    </div>
+                </div>
+
             </div>
 
         </div>

@@ -221,6 +221,35 @@ def objects_thread_messages_download():
 
 #### ####
 
+@chats_explorer.route("/chats/explorer/chat/monitoring/request", methods=['GET', 'POST'])
+@login_required
+@login_user_no_api
+def chat_monitoring_request():
+    if request.method == 'POST':
+        user_id = current_user.get_user_id()
+        chat_type = request.form.get('type')
+        username = request.form.get('username')
+        invite = request.form.get('invite')
+        description = request.form.get('description')
+        if chat_type not in ['discord', 'telegram']:
+            return create_json_response({"status": "error", "reason": "Invalid Chat Type"}, 400)
+        if not username and not invite and not description:
+            return create_json_response({"status": "error", "reason": "Please provide a username/username/invite/comment"}, 400)
+        cm_uuid = chats_viewer.create_chat_monitoring_requests(user_id, chat_type, invite, username, description)
+        return render_template('request_chat_monitoring.html', uuid=cm_uuid)
+    else:
+        return render_template('request_chat_monitoring.html')
+
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/admin", methods=['GET'])
+@login_required
+@login_admin
+def chat_monitoring_requests():
+    metas = chats_viewer.get_chats_monitoring_requests_metas()
+    return render_template('chat_monitoring_requests.html', metas=metas)
+
+#### ####
+
 
 @chats_explorer.route("/objects/message", methods=['GET'])
 @login_required

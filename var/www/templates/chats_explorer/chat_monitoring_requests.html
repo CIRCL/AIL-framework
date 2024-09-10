@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/ail-project.css') }}" />
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <h3>Monitoring Requests:</h3>
+
+                <table id="table_investigation" class="table table-striped border-primary">
+                    <thead class="bg-dark text-white">
+                    <tr>
+                        <th>UUID</th>
+                        <th>Date</th>
+                        <th>Creator</th>
+                        <th>Type</th>
+                        <th>Username</th>
+                        <td>Invite</td>
+                        <th>Description</th>
+                    </tr>
+                    </thead>
+                    <tbody style="font-size: 15px;">
+                    {% for meta in metas %}
+                        <tr class="border-color: blue;">
+                            <td>
+                                {{ meta['uuid'] }}
+                            </td>
+                            <td>{{ meta['date'] }}</td>
+                            <td>{{ meta['creator'] }}</td>
+                            <td>{{ meta['chat_type'] }}</td>
+                            <td>{{ meta['username'] }}</td>
+                            <td>{{ meta['invite'] }}</td>
+                            <td>{{ meta['description'] }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+
+			</div>
+
+		</div>
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_investigation').removeClass("text-muted");
+	$("#nav_add_investigation").addClass("active");
+
+});
+
+$('#table_investigation').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 2, "desc" ]]
+  });
+
+</script>
