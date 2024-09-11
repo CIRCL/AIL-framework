@@ -777,11 +777,13 @@ def get_trackers_graph_by_day(l_trackers, num_day=31, date_from=None, date_to=No
         list_tracker_stats.append({"name": tracker.get_tracked(), "Data": dict_tracker_data})
     return list_tracker_stats
 
-def get_trackers_dashboard():
+def get_trackers_dashboard(user_org, user_id):
     trackers = []
     for raw in r_tracker.lrange('trackers:dashboard', 0, -1):
         tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
         tracker = Tracker(tracker_uuid)
+        if not Tracker.check_level(user_org, user_id):
+            continue
         meta = tracker.get_meta(options={'description', 'tags'})
         if not meta.get('type'):
             meta['type'] = 'Tracker DELETED'
