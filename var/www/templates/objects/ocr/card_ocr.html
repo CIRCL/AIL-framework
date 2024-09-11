@@ -30,6 +30,8 @@
                             </svg>
                             {{ meta['type'] }}
                         </td>
+                        <td><b>First Seen:</b> {% if meta['first_seen'] %}{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}{% endif %}</td>
+                        <td><b>Last Seen:</b> {% if meta['last_seen'] %}{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}{% endif %}</td>
                     </tr>
                     </tbody>
                 </table>
