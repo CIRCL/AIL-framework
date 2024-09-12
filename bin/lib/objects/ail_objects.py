@@ -72,6 +72,7 @@ def sanitize_objs_types(objs, default=False):
 def get_object(obj_type, subtype, obj_id):
     if subtype == 'None':
         subtype = None
+    obj_id = str(obj_id)
     if not subtype:
         if obj_type == 'item':
             return Item(obj_id)
