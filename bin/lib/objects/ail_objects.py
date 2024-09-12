@@ -70,6 +70,8 @@ def sanitize_objs_types(objs, default=False):
 #### OBJECT ####
 
 def get_object(obj_type, subtype, obj_id):
+    if subtype == 'None':
+        subtype = None
     if not subtype:
         if obj_type == 'item':
             return Item(obj_id)
