@@ -782,7 +782,7 @@ def get_trackers_dashboard(user_org, user_id):
     for raw in r_tracker.lrange('trackers:dashboard', 0, -1):
         tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
         tracker = Tracker(tracker_uuid)
-        if not Tracker.check_level(user_org, user_id):
+        if not tracker.check_level(user_org, user_id):
             continue
         meta = tracker.get_meta(options={'description', 'tags'})
         if not meta.get('type'):
