@@ -69,9 +69,10 @@ def get_default_yara_rule_content():
 @login_required
 @login_read_only
 def trackers_dashboard():
+    user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    trackers = Tracker.get_trackers_dashboard()
-    stats = Tracker.get_trackers_stats(current_user.get_org(), user_id)
+    trackers = Tracker.get_trackers_dashboard(user_org, user_id)
+    stats = Tracker.get_trackers_stats(user_org, user_id)
     return render_template("trackers_dashboard.html", trackers=trackers, stats=stats, bootstrap_label=bootstrap_label)
 
 @hunters.route("/trackers/all")
