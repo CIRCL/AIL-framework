@@ -39,6 +39,7 @@
                             <div class="card-body">
                                 <p>User: {{new_user['email']}}</p>
                                 <p>Password: {{new_user['password']}}</p>
+                                <img src="data:image/png;base64, {{ qr_code }}">
                                 <a href="{{url_for('settings_b.users_list')}}" class="btn btn-primary"><i class="fas fa-eye-slash"></i> Hide</a>
                             </div>
                         </div>

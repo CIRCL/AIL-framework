@@ -215,13 +215,16 @@ def delete_user_otp(user_id):
 def get_user_otp_uri(user_id, instance_name):
     return pyotp.totp.TOTP(get_user_otp_secret(user_id)).provisioning_uri(name=user_id, issuer_name=instance_name)
 
-def get_user_otp_qr_code(user_id, instance_name):
-    uri = get_user_otp_uri(user_id, instance_name)
-    qrcode = segno.make_qr(uri)
+def create_qr_code(content):
+    qrcode = segno.make_qr(content)
     buff = BytesIO()
     qrcode.save(buff, kind='png', scale=10)
     return b64encode(buff.getvalue()).decode()
     # qrcode.save('qrcode.png', scale=10)
+
+def get_user_otp_qr_code(user_id, instance_name):
+    uri = get_user_otp_uri(user_id, instance_name)
+    return create_qr_code(uri)
 
 def get_user_hotp_code(user_id):
     hotp = _get_hotp(get_user_otp_secret(user_id))

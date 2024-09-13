@@ -279,7 +279,9 @@ def create_user_post():
                     edit = False
                 ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
                 new_user = {'email': email, 'password': str_password, 'org': org_uuid, 'otp': enable_2_fa, 'edited': edit}
-                return render_template("create_user.html", new_user=new_user, meta={}, all_roles=all_roles, acl_admin=True)
+                qr_code = ail_users.create_qr_code(password)
+                return render_template("create_user.html", new_user=new_user, meta={}, qr_code=qr_code,
+                                       all_roles=all_roles, acl_admin=True)
 
         else:
             return render_template("create_user.html", all_roles=all_roles, meta={}, acl_admin=True)
