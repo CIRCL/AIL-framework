@@ -354,7 +354,7 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
 
 # TODO edit_org
 # TODO LOG
-def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True):
+def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True, role=None):
     if password:
         password_hash = hashing_password(password)
         if chg_passwd:
@@ -373,6 +373,9 @@ def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None,
                 current_org = ail_orgs.Organisation(get_user_org(user_id))
                 current_org.remove_user(user_id)
                 org.add_user(user_id)
+
+    if role:
+        set_user_role(user_id, role)
 
     # 2FA OTP
     if edit_otp:
@@ -690,7 +693,7 @@ def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uui
         access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     # Edit
     else:
-        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp)
+        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role)
         access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
 
 def api_change_user_self_password(user_id, password):
