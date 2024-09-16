@@ -430,7 +430,6 @@ def _reprocess_all_hars_hhhashs():
         extract_hhhash_by_id(har_id, domain, date)
 
 
-
 def _gzip_har(har_id):
     har_path = os.path.join(HAR_DIR, har_id)
     new_id = f'{har_path}.gz'
@@ -1436,8 +1435,8 @@ class CrawlerCapture:
         launch_time = int(time.time())
         r_crawler.hset(f'crawler:task:{task_uuid}', 'capture', self.uuid)
         r_crawler.hset('crawler:captures:tasks', self.uuid, task_uuid)
-        r_crawler.zadd('crawler:captures', {self.uuid: launch_time})
         r_cache.hset(f'crawler:capture:{self.uuid}', 'launch_time', launch_time)
+        r_crawler.zadd('crawler:captures', {self.uuid: launch_time})
         r_cache.zadd('crawler:captures', {self.uuid: launch_time})
 
     def update(self, status):
@@ -1481,15 +1480,24 @@ def get_captures_status():
     for capture_uuid in get_crawler_captures():
         capture = CrawlerCapture(capture_uuid)
         task = capture.get_task()
-        domain = task.get_domain()
-        dom = Domain(domain)
-        meta = {
-            'uuid': task.uuid,
-            'domain': dom.get_id(),
-            'type': dom.get_domain_type(),
-            'start_time': capture.get_start_time(),
-            'status': capture.get_status(),
-        }
+        if not task:
+            meta = {
+                'uuid': 'UNKNOWN',
+                'domain': 'UNKNOWN',
+                'type': 'UNKNOWN',
+                'start_time': capture.get_start_time(),
+                'status': capture.get_status(),
+            }
+        else:
+            domain = task.get_domain()
+            dom = Domain(domain)
+            meta = {
+                'uuid': task.uuid,
+                'domain': dom.get_id(),
+                'type': dom.get_domain_type(),
+                'start_time': capture.get_start_time(),
+                'status': capture.get_status(),
+            }
         capture_status = capture.get_status()
         if capture_status:
             capture_status = CaptureStatus(int(capture_status)).name
@@ -1502,7 +1510,7 @@ def delete_captures():
         capture = CrawlerCapture(capture_uuid)
         capture.delete()
 
-##-- CRAWLER STATE --##
+## --CRAWLER STATE-- ##
 
 
 #### CRAWLER TASK ####
@@ -1848,13 +1856,13 @@ def api_add_crawler_task(data, user_org, user_id=None):
     if frequency:
         # TODO verify user
         task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                               cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
+                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
     else:
         # TODO HEADERS
         # TODO USER AGENT
         task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                           cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
-                           parent='manual', priority=90)
+                                cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
+                                parent='manual', priority=90)
 
     return {'uuid': task_uuid}, 200
 
@@ -1919,10 +1927,10 @@ def create_item_id(item_dir, domain):
     # remove /
     domain = domain.replace('/', '_')
     if len(domain) > 215:
-        UUID = domain[-215:]+str(uuid.uuid4())
+        n_uuid = domain[-215:]+str(uuid.uuid4())
     else:
-        UUID = domain+str(uuid.uuid4())
-    return os.path.join(item_dir, UUID)
+        n_uuid = domain+str(uuid.uuid4())
+    return os.path.join(item_dir, n_uuid)
 
 # # # # # # # # # # # #
 #                     #
@@ -2160,15 +2168,15 @@ def test_ail_crawlers():
 load_blacklist()
 
 # if __name__ == '__main__':
-    # delete_captures()
-
-    # item_id = 'crawled/2023/02/20/data.gz'
-    # item = Item(item_id)
-    # content = item.get_content()
-    # temp_url = ''
-    # r = extract_favicon_from_html(content, temp_url)
-    # print(r)
-    # _reprocess_all_hars_cookie_name()
-    # _reprocess_all_hars_etag()
-    # _gzip_all_hars()
-    # _reprocess_all_hars_hhhashs()
+#     delete_captures()
+#
+#     item_id = 'crawled/2023/02/20/data.gz'
+#     item = Item(item_id)
+#     content = item.get_content()
+#     temp_url = ''
+#     r = extract_favicon_from_html(content, temp_url)
+#     print(r)
+#     _reprocess_all_hars_cookie_name()
+#     _reprocess_all_hars_etag()
+#     _gzip_all_hars()
+#     _reprocess_all_hars_hhhashs()
