@@ -210,8 +210,6 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Categ" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Categ.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Indexer.py; read x"
-    sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tags" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Tags.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "SubmitPaste" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./SubmitPaste.py; read x"
@@ -270,6 +268,8 @@ function launching_scripts {
 #    screen -S "Script_AIL" -X screen -t "LibInjection" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./LibInjection.py; read x"
 #    sleep 0.1
 #    screen -S "Script_AIL" -X screen -t "Pasties" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Pasties.py; read x"
+#    sleep 0.1
+#    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Indexer.py; read x"
 #    sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "MISP_Thehive_Auto_Push" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./MISP_Thehive_Auto_Push.py; read x"
