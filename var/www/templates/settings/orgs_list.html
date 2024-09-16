@@ -42,7 +42,7 @@
                     {% for org in meta['orgs'] %}
                         <tr>
                             <td>{{org['name']}}</td>
-                            <td>{{org['uuid']}}</td>
+                            <td><a href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}">{{ org['uuid'] }}</a></td>
                             <td>{{org['description']}}</td>
                             <td>
                                 {% if org['date_created'] %}

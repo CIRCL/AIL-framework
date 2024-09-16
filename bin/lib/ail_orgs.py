@@ -151,6 +151,13 @@ class Organisation:
             meta['creator'] = self._get_field('creator')
         if 'date_created' in options:
             meta['date_created'] = self._get_field('date_created')
+        if 'users' in options:
+            meta['users'] = self.get_users()
+        if 'nb_users' in options:
+            if 'users' in meta:
+                meta['nb_users'] = len(meta['users'])
+            else:
+                meta['nb_users'] = self.get_nb_users()
         return meta
 
     def is_user(self, user_id):
@@ -228,7 +235,7 @@ def check_access_acl(obj, user_org, is_admin=False):
 
 # view
 # edit
-# delete -> coordinator or admin
+# delete -> org_admin or admin
 def check_obj_access_acl(obj, user_org, user_id, user_role, action):
     if user_role == 'admin':
         return True
@@ -243,7 +250,7 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
             return True
         # edit + delete
         else:   # TODO allow user to edit same org global
-            if user_role == 'coordinator':
+            if user_role == 'org_admin':
                 creator_org = obj.get_creator_org()
                 if user_org == creator_org:
                     return True
@@ -258,7 +265,7 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
         elif action == 'edit':
             return obj.get_org() == user_org
         elif action == 'delete':
-            if user_role == 'coordinator':
+            if user_role == 'org_admin':
                 if user_org == obj.get_org():
                     return True
                 else:
@@ -285,14 +292,14 @@ def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
     elif new_level == 1:
         if level == 0 and obj.get_id() == user_id:
             return True
-        elif level == 2 and user_role == 'coordinator':
+        elif level == 2 and user_role == 'org_admin':
             if obj.get_creator_org() == user_org:
                 return True
     # Organisation
     elif new_level == 2:
         if level == 0 and obj.get_id() == user_id:
             return True
-        elif level == 1 and user_role == 'coordinator':
+        elif level == 1 and user_role == 'org_admin':
             if obj.get_creator_org() == user_org:
                 return True
     return False
@@ -307,6 +314,15 @@ def api_get_orgs_meta():
         org = Organisation(org_uuid)
         meta['orgs'].append(org.get_meta(options=options))
     return meta
+
+def api_get_org_meta(org_uuid):
+    if not is_valid_uuid_v4(org_uuid):
+        return {'status': 'error', 'reason': 'Invalid UUID'}, 400
+    if not exists_org(org_uuid):
+        return {'status': 'error', 'reason': 'Unknown org'}, 404
+    org = Organisation(org_uuid)
+    meta = org.get_meta(options={'date_created', 'description', 'name', 'users', 'nb_users'})
+    return meta, 200
 
 def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):
     if not is_valid_uuid_v4(org_uuid):

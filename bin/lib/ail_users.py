@@ -270,6 +270,13 @@ def disable_user_2fa(user_id):
 def get_users():
     return r_serv_db.hkeys('ail:users:all')
 
+def get_users_meta(users):
+    meta = []
+    for user_id in users:
+        user = AILUser(user_id)
+        meta.append(user.get_meta({'role'}))
+    return meta
+
 def get_user_role(user_id):
     return r_serv_db.hget(f'ail:user:metadata:{user_id}', 'role')
 
@@ -733,15 +740,15 @@ def is_in_role(user_id, role):
     return r_serv_db.sismember(f'ail:users:role:{role}', user_id)
 
 def _get_users_roles_list():
-    return ['read_only', 'user_no_api', 'user', 'coordinator', 'admin']
+    return ['read_only', 'user_no_api', 'user', 'org_admin', 'admin']
 
 def _get_users_roles_dict():
     return {
         'read_only':    ['read_only'],
         'user_no_api':  ['read_only', 'user_no_api'],
         'user':         ['read_only', 'user_no_api', 'user'],
-        'coordinator':  ['read_only', 'user_no_api', 'user', 'coordinator'],
-        'admin':        ['read_only', 'user_no_api', 'user', 'coordinator', 'admin'],
+        'org_admin':    ['read_only', 'user_no_api', 'user', 'org_admin'],
+        'admin':        ['read_only', 'user_no_api', 'user', 'org_admin', 'admin'],
     }
 
 def set_user_role(user_id, role):

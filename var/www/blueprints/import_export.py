@@ -15,7 +15,7 @@ from flask_login import login_required, current_user
 sys.path.append('modules')
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_coordinator, login_read_only, login_user_no_api
+from Role_Manager import login_admin, login_org_admin, login_read_only, login_user_no_api
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -216,7 +216,7 @@ def delete_object_id_to_export():
 
 @import_export.route("/investigation/misp/export", methods=['GET'])
 @login_required
-@login_coordinator
+@login_org_admin
 def export_investigation():
     investigation_uuid = request.args.get("uuid")
     investigation = Investigation(investigation_uuid)

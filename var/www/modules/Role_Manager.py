@@ -41,12 +41,12 @@ def login_admin(func):
         return func(*args, **kwargs)
     return decorated_view
 
-def login_coordinator(func):
+def login_org_admin(func):
     @wraps(func)
     def decorated_view(*args, **kwargs):
         if not current_user.is_authenticated:
             return login_manager.unauthorized()
-        elif not current_user.is_in_role('coordinator'):
+        elif not current_user.is_in_role('org_admin'):
             return login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view

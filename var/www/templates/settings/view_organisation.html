@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="card my-1">
+					<div class="card-header bg-dark text-white">
+						<h4 class="card-title">{{meta['name']}}</h4>
+					</div>
+					<div class="card-body">
+						<div class="container-fluid">
+							<div class="row">
+								<div class="col-12 col-lg-6">
+
+									<table class="table table-hover">
+                                        <tr>
+                                            <th style="width:30%">UUID</th>
+                                            <td>{{meta['uuid']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Creator</th>
+                                            <td>{{meta['creator']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Date</th>
+                                            <td>{{meta['date_created']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>NB Users</th>
+                                            <td>
+                                                {{ meta['nb_users'] }}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Tags</th>
+                                            <td>
+												{% for tag in meta['tags'] %}
+													<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+												{% endfor %}
+											</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Description</th>
+                                            <td>{{meta['descriptions']}}</td>
+                                        </tr>
+                                    </table>
+
+								</div>
+								<div class="col-12 col-lg-6">
+
+									<div class="my-4">
+{#										<a href="{{ url_for('investigations_b.delete_investigation') }}?uuid={{metadata['uuid']}}">#}
+{#											<button type="button" class="btn btn-danger">#}
+{#												<i class="fas fa-trash-alt"></i> <b>Delete</b>#}
+{#												</button>#}
+{#										</a>#}
+{#										<a href="{{ url_for('investigations_b.edit_investigation') }}?uuid={{metadata['uuid']}}">#}
+{#											<button type="button" class="btn btn-info">#}
+{#												<i class="fas fa-pencil-alt"></i> <b>Edit</b>#}
+{#											</button>#}
+{#										</a>#}
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<h3>Users</h3>
+
+				<table id="table_org_users" class="table table-striped border-primary">
+			  	<thead class="bg-dark text-white">
+			    	<tr>
+                        <th>User</th>
+			      	    <th>Role</th>
+                        <th></th>
+				   	</tr>
+					</thead>
+					<tbody style="font-size: 15px;">
+						{% for user in meta['users'] %}
+							<tr class="border-color: blue;">
+								<td>
+									{{ user['id'] }}
+								</td>
+								<td>
+									{{ user['role'] }}
+								</td>
+								<td class="text-right">
+{#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ metadata['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
+{#										<button type="button" class="btn btn-danger"><i class="fas fa-trash-alt"></i></button>#}
+{#									</a>#}
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+
+
+
+		</div>
+
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+
+  $('#table_org_users').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "asc" ]]
+  });
+
+});
+
+
+</script>

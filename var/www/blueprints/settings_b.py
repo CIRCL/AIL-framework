@@ -318,6 +318,18 @@ def organisations_list():
     meta = ail_orgs.api_get_orgs_meta()
     return render_template("orgs_list.html", meta=meta, acl_admin=True)
 
+@settings_b.route("/settings/organisation", methods=['GET'])
+@login_required
+@login_admin
+def organisation():
+    org_uuid = request.args.get('uuid')
+    meta, r = ail_orgs.api_get_org_meta(org_uuid)
+    if r != 200:
+        return create_json_response(meta, r)
+    if 'users' in meta:
+        meta['users'] = ail_users.get_users_meta(meta['users'])
+    return render_template("view_organisation.html", meta=meta, acl_admin=True)
+
 @settings_b.route("/settings/create_organisation", methods=['GET'])
 @login_required
 @login_admin
