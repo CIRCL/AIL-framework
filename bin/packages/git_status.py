@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import os
 import subprocess
+import sys
+
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
+from lib.ConfigLoader import ConfigLoader
+
+config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+config_loader = None
 
 TERMINAL_RED = '\033[91m'
 TERMINAL_YELLOW = '\33[93m'
@@ -154,15 +166,50 @@ def get_last_tag_from_remote(verbose=False):
             print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
         return ''
 
+def clear_git_meta_cache():
+    r_cache.delete('git:meta')
+
+def _get_git_meta():
+    if r_cache.exists('git:meta'):
+        dict_git = {'current_branch': r_cache.hget('git:meta', 'branch'),
+                    'is_clone': r_cache.hget('git:meta', 'is_clone') == 'True',
+                    'is_working_directory_clean': is_working_directory_clean(),
+                    'current_commit': r_cache.hget('git:meta', 'commit'),
+                    'last_remote_commit': r_cache.hget('git:meta', 'remote_commit'),
+                    'last_local_tag': r_cache.hget('git:meta', 'tag'),
+                    'last_remote_tag': r_cache.hget('git:meta', 'remote_tag')}
+        for k in dict_git:
+            if not dict_git[k] and dict_git[k] is not False:
+                return {}
+        return dict_git
+    else:
+        return {}
+
 def get_git_metadata():
-    dict_git = {}
-    dict_git['current_branch'] = get_current_branch()
-    dict_git['is_clone'] = is_not_fork(REPO_ORIGIN)
-    dict_git['is_working_directory_clean'] = is_working_directory_clean()
-    dict_git['current_commit'] = get_last_commit_id_from_local()
-    dict_git['last_remote_commit'] = get_last_commit_id_from_remote()
-    dict_git['last_local_tag'] = get_last_tag_from_local()
-    dict_git['last_remote_tag'] = get_last_tag_from_remote()
+    dict_git = _get_git_meta()
+    if not dict_git:
+        branch = get_current_branch()
+        commit = get_last_commit_id_from_local()
+        remote_commit = get_last_commit_id_from_remote()
+        is_clone = is_not_fork(REPO_ORIGIN)
+        tag = get_last_tag_from_local()
+        remote_tag = get_last_tag_from_remote()
+
+        r_cache.hset('git:meta', 'branch', branch)
+        r_cache.hset('git:meta', 'commit', commit)
+        r_cache.hset('git:meta', 'remote_commit', remote_commit)
+        r_cache.hset('git:meta', 'is_clone', str(is_clone))
+        r_cache.hset('git:meta', 'tag', tag)
+        r_cache.hset('git:meta', 'remote_tag', remote_tag)
+        r_cache.expire('git:meta', 108000)
+
+        dict_git['current_branch'] = branch
+        dict_git['is_clone'] = is_clone
+        dict_git['is_working_directory_clean'] = is_working_directory_clean()
+        dict_git['current_commit'] = commit
+        dict_git['last_remote_commit'] = remote_commit
+        dict_git['last_local_tag'] = tag
+        dict_git['last_remote_tag'] = remote_tag
 
     if dict_git['current_commit'] != dict_git['last_remote_commit']:
         dict_git['new_git_update_available'] = True

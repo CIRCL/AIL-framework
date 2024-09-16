@@ -11,6 +11,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_updates
 from lib.ConfigLoader import ConfigLoader
+from packages.git_status import clear_git_meta_cache
 
 class AIL_Updater(object):
     """docstring for AIL_Updater."""
@@ -24,6 +25,7 @@ class AIL_Updater(object):
 
         self.f_version = float(self.version[1:])
         self.current_f_version = ail_updates.get_ail_float_version()
+        clear_git_meta_cache()
 
     def update(self):
         """

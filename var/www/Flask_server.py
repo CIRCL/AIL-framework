@@ -26,7 +26,10 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_users import AILUser, get_session_user
 from lib import Tag
+from lib import ail_core
 from lib import ail_logger
+
+from packages.git_status import clear_git_meta_cache
 
 # Import config
 import Flask_config
@@ -143,7 +146,7 @@ app.register_blueprint(api_rest, url_prefix=baseUrl)
 # =========       =========#
 
 # ========= Cookie name ========
-app.config.update(SESSION_COOKIE_NAME='ail_framework_{}'.format(uuid.uuid4().int))
+app.config.update(SESSION_COOKIE_NAME='ail_framework_{}'.format(ail_core.get_ail_uuid_int()))
 
 # ========= session ========
 app.secret_key = str(random.getrandbits(256))
@@ -312,6 +315,9 @@ default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
 # enable default taxonomies
 for taxonomy in default_taxonomies:
     Tag.enable_taxonomy_tags(taxonomy)
+
+# ========== GIT Cache ============
+clear_git_meta_cache()
 
 # rrrr = [str(p) for p in app.url_map.iter_rules()]
 # for p in rrrr:

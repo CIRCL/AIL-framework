@@ -38,6 +38,11 @@ def _set_ail_uuid():
     r_serv_db.set('ail:uuid', ail_uuid)
     return ail_uuid
 
+def get_ail_uuid_int():
+    ail_uuid = get_ail_uuid()
+    header_uuid = ail_uuid.replace('-', '')
+    return uuid.UUID(hex=header_uuid, version=4).int
+
 def is_valid_uuid_v4(header_uuid):
     try:
         header_uuid = header_uuid.replace('-', '')
