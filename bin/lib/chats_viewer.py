@@ -185,7 +185,7 @@ class ChatServiceInstance:
             meta['chats'] = []
             for chat_id in self.get_chats_with_messages():
                 meta['chats'].append(
-                    Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages'}))
+                    Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'}))
         return meta
 
     def get_nb_chats(self):

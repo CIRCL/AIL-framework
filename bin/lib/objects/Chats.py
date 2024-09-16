@@ -94,6 +94,8 @@ class Chat(AbstractChatObject):
             meta['nb_messages'] = self.get_nb_messages()
         if 'username' in options:
             meta['username'] = self.get_username()
+            if meta['username'] and 'str_username' in options:
+                meta['username'] = meta['username'].split(':', 2)[2]
         if 'subchannels' in options:
             meta['subchannels'] = self.get_subchannels()
         if 'nb_subchannels':
