@@ -35,6 +35,7 @@
                         <th>uuid</th>
                         <th>Description</th>
                         <th>Created at</th>
+                        <th>Nb Users</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -49,6 +50,7 @@
                                     {{org['date_created']}}
                                 {% endif %}
                             </td>
+                            <td>{{org['nb_users']}}</td>
                             <td>
                                 <div class="d-flex justify-content-start">
 {#                                    <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', org_uuid=org['uuid']) }}">#}

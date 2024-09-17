@@ -309,7 +309,7 @@ def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
 
 def api_get_orgs_meta():
     meta = {'orgs': []}
-    options = {'date_created', 'description', 'name'}
+    options = {'date_created', 'description', 'name', 'nb_users'}
     for org_uuid in get_orgs():
         org = Organisation(org_uuid)
         meta['orgs'].append(org.get_meta(options=options))
