@@ -231,7 +231,7 @@ def chat_monitoring_request():
         username = request.form.get('username')
         invite = request.form.get('invite')
         description = request.form.get('description')
-        if chat_type not in ['discord', 'telegram']:
+        if chat_type not in ['discord', 'telegram', 'other']:
             return create_json_response({"status": "error", "reason": "Invalid Chat Type"}, 400)
         if not username and not invite and not description:
             return create_json_response({"status": "error", "reason": "Please provide a username/username/invite/comment"}, 400)

@@ -46,21 +46,22 @@
                             <select class="custom-select" id="level_selector" name="type">
                                 <option value="telegram" selected>Telegram</option>
                                 <option value="discord">Discord</option>
+                                <option value="other">Other</option>
                             </select>
 
                             <div class="form-group">
                                 <label for="username"><b>Chat Username</b></label>
-                                <input type="text" class="form-control" id="username" name="username">
+                                <input type="text" class="form-control" id="username" name="username" placeholder="Chat Username (Optional)">
                             </div>
 
                             <div class="form-group">
                                 <label for="invite"><b>Chat Invite</b></label>
-                                <input type="text" class="form-control" id="invite" name="invite">
+                                <input type="text" class="form-control" id="invite" name="invite" placeholder="Chat Invite (Optional)">
                             </div>
 
                             <div class="form-group">
                                 <label for="description"><b>Comments</b></label>
-                                <textarea class="form-control" id="paste_content" name="description" rows="5"></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="5" placeholder="Additional Comments (Optional)"></textarea>
                             </div>
 
 
