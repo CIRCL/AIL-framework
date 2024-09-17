@@ -1018,6 +1018,16 @@ def get_crawlers_stats(domain_type=None):
         stats[domain_type] = {'queue': queue, 'up': up, 'down': down, 'crawled': crawled}
     return stats
 
+def reload_crawlers_stats():
+    for domain_type in get_crawler_all_types():
+        to_remove = []
+        for task_uuid in r_crawler.smembers(f'crawler:queue:type:{domain_type}'):
+            task = CrawlerTask(task_uuid)
+            if not task.exists():
+                to_remove.append(task_uuid)
+        for task_uuid in to_remove:
+            r_crawler.srem(f'crawler:queue:type:{domain_type}', task_uuid)
+
 #### Blocklist ####
 
 def get_blacklist():

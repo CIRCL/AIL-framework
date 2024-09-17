@@ -61,6 +61,8 @@ class Crawler(AbstractModule):
         crawlers.load_blacklist()
         # update captures cache
         crawlers.reload_crawler_captures()
+        # update crawler queue stats
+        crawlers.reload_crawlers_stats()
 
         self.crawler_scheduler = crawlers.CrawlerScheduler()
 
