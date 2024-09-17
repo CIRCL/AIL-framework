@@ -1020,13 +1020,11 @@ def get_crawlers_stats(domain_type=None):
 
 def reload_crawlers_stats():
     for domain_type in get_crawler_all_types():
-        to_remove = []
-        for task_uuid in r_crawler.smembers(f'crawler:queue:type:{domain_type}'):
+        tasks = r_crawler.smembers(f'crawler:queue:type:{domain_type}')
+        for task_uuid in tasks:
             task = CrawlerTask(task_uuid)
-            if not task.exists():
-                to_remove.append(task_uuid)
-        for task_uuid in to_remove:
-            r_crawler.srem(f'crawler:queue:type:{domain_type}', task_uuid)
+            if not task.is_in_queue() and task.get_status() is None:
+                task.delete()
 
 #### Blocklist ####
 
@@ -1532,6 +1530,12 @@ class CrawlerTask:
 
     def exists(self):
         return r_crawler.exists(f'crawler:task:{self.uuid}')
+
+    def is_in_queue(self):
+        if r_crawler.zscore('crawler:queue', self.uuid) is not None:
+            return True
+        else:
+            return False
 
     def get_url(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'url')
