@@ -586,6 +586,10 @@ class AILUser(UserMixin):
         user_token = self.get_api_key()
         if user_token:
             r_serv_db.hdel('ail:users:tokens', user_token)
+        user_org = self.get_org()
+        if user_org:
+            org = ail_orgs.Organisation(user_org)
+            org.remove_user(self.user_id)
         r_serv_db.delete(f'ail:user:metadata:{self.user_id}')
         r_serv_db.hdel('ail:users:all', self.user_id)
 
