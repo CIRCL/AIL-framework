@@ -69,7 +69,7 @@ DomainClassifier
 whoosh>=2.7.4
 
 # LibInjection bindings
-pylibinjection>=0.2.4
+#pylibinjection>=0.2.4
 
 #Others
 phonenumbers>8.12.1

@@ -161,7 +161,7 @@ class Crawler(AbstractModule):
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
 
             except ConnectionError:
-                print(capture.uuid)
+                self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
                 capture.update(-1)
                 self.refresh_lacus_status()
 
