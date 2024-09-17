@@ -1023,7 +1023,7 @@ def reload_crawlers_stats():
         tasks = r_crawler.smembers(f'crawler:queue:type:{domain_type}')
         for task_uuid in tasks:
             task = CrawlerTask(task_uuid)
-            if not task.is_in_queue() and task.get_status() is None:
+            if not task.is_in_queue() and task.get_status() is None and not task.get_capture():
                 task.delete()
 
 #### Blocklist ####
