@@ -29,6 +29,17 @@ const barchart_stack = (container_id, data, options) => {
 
 	let color = d3.scaleOrdinal(d3.schemeSet3);
 
+	function colorScale(name) {
+		if (name === 'down') {
+			return '#dc3545';
+		} else if (name === 'up') {
+			return '#28a745';
+		} else {
+			return color(name);
+		}
+	}
+
+
 	let svg = d3.select("#"+container_id).append("svg")
 			.attr("viewBox", "0 0 "+width_graph+" "+options.height)
 			.attr("width",  options.width)
@@ -112,7 +123,7 @@ const barchart_stack = (container_id, data, options) => {
 			  	.attr("width", x.bandwidth())
 			  	.attr("y", function (d) { return y(d.y1); })
 			  	.attr("height", function (d) { return y(d.y0) - y(d.y1); })
-			  	.style("fill", function (d) { return color(d.name); })
+			  	.style("fill", function (d) { return colorScale(d.name); })
 			  	.style("stroke", "grey")
 			  	.on("mouseover", mouseover)
 				.on("mouseout", mouseleave)
@@ -139,7 +150,7 @@ const barchart_stack = (container_id, data, options) => {
 		.attr("x", width_graph)
 		.attr("width", 10)
 		.attr("height", 10)
-		.style("fill", color)
+		.style("fill", function(d) { return colorScale(d); })
 		.style("stroke", "grey");
 
 	legend.append("text")
