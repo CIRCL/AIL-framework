@@ -156,7 +156,7 @@ def galaxy_enable_tags():
 @login_required
 @login_read_only
 def get_all_tags_enabled():
-    return jsonify(Tags.get_enabled_tags_with_synonyms_ui())
+    return jsonify(Tag.get_enabled_tags_with_synonyms_ui())
 
 @tags_ui.route('/tag/confirm')
 @login_required
@@ -353,7 +353,12 @@ def get_obj_by_tags():
         date_from = date_from.replace('-', '')
     if date_to:
         date_to = date_to.replace('-', '')
+    date_today = Date.get_today_date_str()
+    if date_today == date_from == date_to:
+        date_from = None
+        date_to = None
 
+    # TODO REFACTOR ME
     # unpack tags
     list_tags = ltags.split(',')
     list_tag = []
@@ -376,7 +381,7 @@ def get_obj_by_tags():
     # print(dict_obj)
 
     if dict_obj['tagged_obj']:
-        dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s",
+        dict_tagged = {
                        "tagged_obj": [], "page": dict_obj['page'], "nb_pages": dict_obj['nb_pages'],
                        "nb_first_elem": dict_obj['nb_first_elem'], "nb_last_elem": dict_obj['nb_last_elem'],
                        "nb_all_elem": dict_obj['nb_all_elem']}
@@ -388,15 +393,19 @@ def get_obj_by_tags():
 
         dict_tagged['tab_keys'] = ail_objects.get_ui_obj_tag_table_keys(object_type)
 
-        if len(list_tag) == 1:
-            dict_tagged['current_tags'] = [ltags.replace('"', '\"')]
-        else:
-            dict_tagged['current_tags'] = list_tag
-        dict_tagged['current_tags_str'] = ltags
-
         # return jsonify(dict_tagged)
     else:
-        dict_tagged = {"object_type": object_type, "object_name": object_type.title() + "s"}
+        dict_tagged = {}
+        dict_tagged['tag_last_seen'] = Tag.get_tags_min_last_seen(list_tag, r_int=False)
+
+    dict_tagged['object_type'] = object_type
+    dict_tagged['object_name'] = f'{object_type.title()}s'
+
+    if len(list_tag) == 1:
+        dict_tagged['current_tags'] = [ltags.replace('"', '\"')]
+    else:
+        dict_tagged['current_tags'] = list_tag
+    dict_tagged['current_tags_str'] = ltags
 
     if 'date' in dict_obj:
         dict_tagged['date'] = dict_obj['date']
