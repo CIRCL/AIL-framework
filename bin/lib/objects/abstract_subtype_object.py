@@ -7,8 +7,9 @@ Base Class for AIL Objects
 # Import External packages
 ##################################
 import os
+import re
 import sys
-from abc import ABC
+from abc import ABC, abstractmethod
 
 # from flask import url_for
 
@@ -192,6 +193,62 @@ class AbstractSubtypeObject(AbstractObject, ABC):
     def _delete(self):
         pass
 
+
+class AbstractSubtypeObjects(ABC):
+    """
+    Abstract Subtype Objects
+    """
+    def __init__(self, obj_type, obj_class):
+        self.type = obj_type
+        self.obj_class = obj_class
+
+    def get_ids(self): # TODO FORMAT
+        ids = []
+        for subtype in get_object_all_subtypes(self.type):
+            ids += r_object.zrange(f'{self.type}_all:{subtype}', 0, -1)
+        return ids
+
+    def get_id_iterators_by_subtype(self, subtype):
+        return zscan_iter(r_object, f'{self.type}_all:{subtype}')
+
+    def get_metas(self, subtype, obj_ids, options=set()):
+        dict_obj = {}
+        for obj_id in obj_ids:
+            obj = self.obj_class(obj_id, subtype)
+            dict_obj[obj_id] = obj.get_meta(options=options)
+        return dict_obj
+
+    @abstractmethod
+    def sanitize_id_to_search(self, subtypes, id_to_search):
+        return id_to_search
+
+    # TODO
+    def search_by_id(self, name_to_search, subtypes=[], r_pos=False, case_sensitive=True):
+        objs = {}
+        if case_sensitive:
+            flags = 0
+        else:
+            flags = re.IGNORECASE
+        # for subtype in subtypes:
+        r_name = self.sanitize_id_to_search(subtypes, name_to_search)
+        if not name_to_search or isinstance(r_name, dict):
+            return objs
+        r_name = re.compile(r_name, flags=flags)
+        for subtype in subtypes:
+            for obj_id in self.get_id_iterators_by_subtype(subtype):
+                obj_id = obj_id[0]
+                res = re.search(r_name, obj_id)
+                if res:
+                    objs[obj_id] = {}
+                    if r_pos:
+                        objs[obj_id]['hl-start'] = res.start()
+                        objs[obj_id]['hl-end'] = res.end()
+        return objs
+
+########################################################################
+########################################################################
+########################################################################
+
 def get_all_id(obj_type, subtype):
     return r_object.zrange(f'{obj_type}_all:{subtype}', 0, -1)
 
@@ -246,3 +303,5 @@ def get_subtypes_objs_range_json(obj_type, date_from, date_to):
                 objs_range.append(day_dict)
 
     return objs_range
+
+

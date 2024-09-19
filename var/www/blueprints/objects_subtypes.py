@@ -23,6 +23,7 @@ from lib import ail_core
 from lib.objects import abstract_subtype_object
 from lib.objects import ail_objects
 from lib.objects import CryptoCurrencies
+from lib.objects import Usernames
 from packages import Date
 
 # ============ BLUEPRINT ============
@@ -116,6 +117,43 @@ def objects_dashboard_pgp():
 @login_read_only
 def objects_dashboard_username():
     return subtypes_objects_dashboard('username', request)
+
+@objects_subtypes.route("/objects/usernames/search", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def objects_username_search():
+    if request.method == 'POST':
+        to_search = request.form.get('to_search')
+        subtype = request.form.get('search_subtype')
+        page = request.form.get('page', 1)
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+        return redirect(url_for('objects_subtypes.objects_username_search', search=to_search, page=page, subtype=subtype))
+    else:
+        to_search = request.args.get('search')
+        subtype = request.args.get('subtype')  # TODO sanityze
+        page = request.args.get('page', 1)
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+
+        usernames = Usernames.Usernames()
+        search_result = usernames.search_by_id(to_search, [subtype], page)
+
+        if search_result:
+            ids = sorted(search_result.keys())
+            dict_page = ail_core.paginate_iterator(ids, nb_obj=500, page=page)
+            dict_objects = usernames.get_metas(subtype, dict_page['list_elem'], options={'icon', 'sparkline'})  # TODO OPTIONS
+        else:
+            dict_objects = {}
+            dict_page = {}
+
+        return render_template("username/search_usernames_result.html", dict_objects=dict_objects, search_result=search_result,
+                               dict_page=dict_page, subtypes=ail_core.get_object_all_subtypes('username'),
+                               to_search=to_search, subtype=subtype)
 
 @objects_subtypes.route("/objects/user-accounts", methods=['GET'])
 @login_required

@@ -70,6 +70,12 @@
                     </div>
                 </div>
 
+                <br>
+                <br>
+                {% with subtypes=username_subtypes %}
+                    {% include 'username/block_usernames_search.html' %}
+                {% endwith %}
+
             </div>
 
         </div>

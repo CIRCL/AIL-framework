@@ -13,7 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -65,7 +65,7 @@ class Username(AbstractSubtypeObject):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
-        meta['tags'] = self.get_tags(r_list=True)
+        meta['tags'] = self.get_tags(r_list=True) # TODO NB Chats
         return meta
 
     def get_misp_object(self):
@@ -136,7 +136,20 @@ def search_usernames_by_name(name_to_search, subtype, r_pos=False):
     return usernames
 
 
+class Usernames(AbstractSubtypeObjects):
+    """
+        Usernames Objects
+    """
+    def __init__(self):
+        super().__init__('username', Username)
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
+
+
 # if __name__ == '__main__':
 #     name_to_search = 'co'
-#     subtype = 'telegram'
-#     print(search_usernames_by_name(name_to_search, subtype))
+#     subtypes = ['telegram']
+#     u = Usernames()
+#     r = u.search_by_id(name_to_search, subtypes, r_pos=True)
+#     print(r)

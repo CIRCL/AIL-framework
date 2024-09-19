@@ -49,7 +49,7 @@ def chats_explorer_dashboard():
 @login_read_only
 def chats_explorer_protocols():
     protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('chats_protocols.html', protocols=protocols)
+    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'))
 
 @chats_explorer.route("chats/explorer/networks", methods=['GET'])
 @login_required

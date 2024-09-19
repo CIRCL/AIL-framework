@@ -76,28 +76,35 @@
 						<div class="mt-1" id="barchart_type">
 						</div>
 
-            <div class="card border-secondary my-2">
-          		<div class="card-body text-dark">
-          			<h5 class="card-title">Search {{obj_type}} by name:</h5>
+                        {% if obj_type == 'username' %}
+                            {% with subtypes=subtypes %}
+                                {% include 'username/block_usernames_search.html' %}
+                            {% endwith %}
+                        {% else %}
 
-                <form action="{{ url_for('objects_subtypes.objects_subtypes_search') }}" id="search_subtype_onj" method='post'>
+                            <div class="card border-secondary my-2">
+                                <div class="card-body text-dark">
+                                    <h5 class="card-title">Search {{obj_type}} by name:</h5>
 
-                  <div class="input-group mb-1">
-                    <input type="text" class="form-control" name="type" value="{{obj_type}}" hidden>
-                  	<select class="custom-select col-2" name="subtype" value="{{subtype}}" required>
-                      <option value="">{{obj_type}} Type...</option>
-                      {% for typ in subtypes %}
-                        <option value="{{typ}}">{{typ}}</option>
-                      {% endfor %}
-                    </select>
+                                <form action="{{ url_for('objects_subtypes.objects_subtypes_search') }}" id="search_subtype_onj" method='post'>
 
-                    <input type="text" class="form-control col-8" name="id" value="" placeholder="{{obj_type}} ID" required>
-                    <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
-                  </div>
+                                  <div class="input-group mb-1">
+                                    <input type="text" class="form-control" name="type" value="{{obj_type}}" hidden>
+                                    <select class="custom-select col-2" name="subtype" value="{{subtype}}" required>
+                                      <option value="">{{obj_type}} Type...</option>
+                                      {% for typ in subtypes %}
+                                        <option value="{{typ}}">{{typ}}</option>
+                                      {% endfor %}
+                                    </select>
 
-                </form>
-              </div>
-            </div>
+                                    <input type="text" class="form-control col-8" name="id" value="" placeholder="{{obj_type}} ID" required>
+                                    <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
+                                  </div>
+
+                                </form>
+                              </div>
+                            </div>
+                        {% endif %}
 
 					</div>
 
