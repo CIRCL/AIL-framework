@@ -11,7 +11,7 @@
                 <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider" onchange="blur_images();">
             </div>
             <div class="col-md-3 text-center">
-                <button class="btn btn-sm btn-secondary" onclick="blur_slider.val(15);blur_images();">
+                <button class="btn btn-sm btn-secondary" id="btn_unblur_img" onclick="blur_slider.val(15);blur_images();">
                     <i class="fas fa-image"></i>
                     <span class="label-icon">Full</span>
                 </button>
@@ -30,5 +30,12 @@
         for(i = 0; i < images.length; i++) {
             images[i].style.filter = "blur(" + blurValue + "px)";
         }
+    }
+    function blur_unsafe(){
+        blur_slider.val(0);
+        blur_images();
+        let btn = $('#btn_unblur_img');
+        btn.removeClass("btn-secondary")
+        btn.addClass("btn-danger");
     }
 </script>

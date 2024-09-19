@@ -423,12 +423,16 @@
                                       {%  endfor %}
                                     </div>
                                 </td>
-                                <td class="text-center">
-                                    {%if item['crawler']["screenshot"]%}
-                                        <span class="icon_img" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
-                                        <i class="far fa-image"></i>
-                                    {%endif%}
-                                </td>
+                                {%if item['crawler']["screenshot"]%}
+                                    <td class="text-center icon_img" title="Show Screenshot" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
+                                        <span class="">
+                                            <i class="far fa-image"></i>
+                                        </span>
+                                    </td>
+                                {% else %}
+                                    <td></td>
+                                {%endif%}
+
                             </tr>
                         {%  endfor %}
 
@@ -474,32 +478,12 @@
 					</div>
 
 					<div class="col-12 col-xl-6">
-						<div class="card my-2" style="background-color:#ecf0f1;">
-							<div class="card-body py-2">
-								<div class="row">
-                  <div class="col-md-3 text-center">
-										<button class="btn {%if dict_domain['tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=0;pixelate();">
-												<i class="fas fa-eye-slash"></i>
-												<span class="label-icon">Hide</span>
-										</button>
-									</div>
-									<div class="col-md-6">
-										<input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="{%if dict_domain['tags_safe']%}13{%else%}0{%endif%}">
-									</div>
-									<div class="col-md-3 text-center">
-										<button class="btn {%if dict_domain['tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=50;pixelate();">
-                      {%if dict_domain['tags_safe']%}
-                        <i class="fas fa-plus-square"></i>
-                      {%else%}
-                        <i class="fas fa-exclamation-triangle"></i>
-                      {%endif%}
-												<span class="label-icon">Full resolution</span>
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-						<canvas id="canvas" style="width:100%;"></canvas>
+{#            button usafe if not tag safe          <i class="fas fa-exclamation-triangle"></i>                      #}
+
+						<div class="mt-2">
+                            {% include 'objects/image/block_blur_img_slider.html' %}
+                        </div>
+                        <span><img class="object_image mb-1" style="width: 100%;" alt="" id="domain_screenshot"></span>
 						<div class="text-center">
 							<small class="text-info" style="line-height:0.9;">
 								<a target="_blank" href="" id="screenshot_link"></a>
@@ -557,88 +541,58 @@ function toggle_sidebar(){
 </script>
 
 <script>
-var ctx = canvas.getContext('2d'), img = new Image();
-var base_url = "{{ url_for('objects_item.screenshot', filename="") }}";
-var screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
+{% if not dict_domain['tags_safe'] %}
+    blur_unsafe();
+{% else %}
+    blur_images();
+{% endif %}
 
-/// turn off image smoothing
-ctx.webkitImageSmoothingEnabled = false;
-ctx.imageSmoothingEnabled = false;
 
-img.onload = pixelate;
-img.addEventListener("error", img_error);
-var draw_img = false;
 
-{%if "crawler_history_items" in dict_domain%}
-  {%if "random_item" in dict_domain%}
-    {%if dict_domain['random_item']['crawler']['screenshot']%}
-      var screenshot = "{{dict_domain['random_item']['crawler']['screenshot']}}";
-      var selected_icon = $("#"+screenshot.replace(/\//g, ""));
-      selected_icon.addClass("icon_selected");
-      selected_icon.removeClass("icon_img");
+const base_url = "{{ url_for('objects_item.screenshot', filename="") }}";
+const screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
+const domain_screenshot = document.getElementById('domain_screenshot');
+var screenshot;
+var screenshot_link = $("#screenshot_link");
 
-      $("#screenshot_link").attr("href", screenshot_href + "{{dict_domain['random_item']['id']}}");
-      $("#screenshot_link").text("{{dict_domain['random_item']['crawler']['url']}}");
-    {%else%}
-      var screenshot = "";
-    {%endif%}
-  {%endif%}
-{%else%}
-  var screenshot = "";
-{%endif%}
+domain_screenshot.addEventListener('error', function() {
+    domain_screenshot.src = "{{ url_for('static', filename='image/AIL.png') }}";
+});
 
-img.src = base_url + screenshot;
+{% if "crawler_history_items" in dict_domain %}
+    {% if "random_item" in dict_domain %}
+        {% if dict_domain['random_item']['crawler']['screenshot'] %}
+            screenshot = "{{dict_domain['random_item']['crawler']['screenshot']}}";
+            var selected_icon = $("#"+screenshot.replace(/\//g, ""));
+            selected_icon.addClass("icon_selected");
+            selected_icon.removeClass("icon_img");
 
-function pixelate() {
-  /// use slider value
-  if( blocks.value == 50 ){
-    size = 1;
-  } else {
-    var size = (blocks.value) * 0.01;
-  }
-
-  canvas.width = img.width;
-  canvas.height = img.height;
-
-  /// cache scaled width and height
-  w = canvas.width * size;
-  h = canvas.height * size;
-
-	/// draw original image to the scaled size
-  ctx.drawImage(img, 0, 0, w, h);
-
-  /// pixelated
-  ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-
-}
-
-blocks.addEventListener('change', pixelate, false);
-
-function img_error() {
-	img.onerror=null;
-	img.src="{{ url_for('static', filename='image/AIL.png') }}";
-	blocks.value = 50;
-	pixelate;
-}
+            screenshot_link.attr("href", screenshot_href + "{{dict_domain['random_item']['id']}}");
+            screenshot_link.text("{{dict_domain['random_item']['crawler']['url']}}");
+        {% else %}
+            screenshot = "";
+        {% endif %}
+    {% endif %}
+{% else %}
+    screenshot = "";
+{% endif %}
+domain_screenshot.src = base_url + screenshot;
 
 function reload_image(new_screenshot, link, item_id) {
-  if (screenshot) {
-    $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
-  }
-  screenshot = new_screenshot;
+    if (screenshot) {
+        $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+    }
+    screenshot = new_screenshot;
 
-  img.src=base_url + screenshot;
-  selected_icon = $("#"+screenshot.replace(/\//g, ""));
-  selected_icon.addClass("icon_selected");
-  selected_icon.removeClass("icon_img")
+    domain_screenshot.src=base_url + screenshot;
+    selected_icon = $("#"+screenshot.replace(/\//g, ""));
+    selected_icon.addClass("icon_selected");
+    selected_icon.removeClass("icon_img")
 
-  $("#screenshot_link").attr("href", screenshot_href + item_id);
-  $("#screenshot_link").text(link);
-  pixelate;
+    screenshot_link.attr("href", screenshot_href + item_id);
+    screenshot_link.text(link);
 }
 
-
 </script>
-
 
 </html>
