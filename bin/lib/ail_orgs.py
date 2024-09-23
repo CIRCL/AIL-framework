@@ -76,7 +76,7 @@ def get_orgs_selector():
     for org_uuid in get_orgs():
         org = Organisation(org_uuid)
         name = org.get_name()
-        orgs.append({'uuid': org_uuid, 'name': name})
+        orgs.append(f'{org_uuid}: {name}')
     return orgs
 
 def create_default_org():

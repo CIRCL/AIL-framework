@@ -333,6 +333,11 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
 
     # CREATE USER
     if admin_id:
+        # ORG
+        org = ail_orgs.Organisation(org_uuid)
+        if not org.exists():
+            raise Exception('Organisation does not exist')
+
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'creator', admin_id)
         date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'created_at', date)
@@ -344,9 +349,6 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
         set_user_role(user_id, role)
 
         # ORG
-        org = ail_orgs.Organisation(org_uuid)
-        if not org.exists():
-            raise Exception('Organisation does not exist')
         org.add_user(user_id)
 
         r_serv_db.hset('ail:users:all', user_id, password_hash)
@@ -699,13 +701,19 @@ def api_create_user_api_key(user_id, admin_id, ip_address, user_agent):
 
 def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp):
     user = AILUser(user_id)
+    if not ail_orgs.exists_org(org_uuid):
+        return {'status': 'error', 'reason': 'Unknown Organisation'}, 400
+    if not exists_role(role):
+        return {'status': 'error', 'reason': 'Unknown User Role'}, 400
     if not user.exists():
         create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp)
         access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+        return user_id, 200
     # Edit
     else:
         edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role)
         access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+        return user_id, 200
 
 def api_change_user_self_password(user_id, password):
     if not check_password_strength(password):
@@ -754,6 +762,9 @@ def _get_users_roles_dict():
         'org_admin':    ['read_only', 'user_no_api', 'user', 'org_admin'],
         'admin':        ['read_only', 'user_no_api', 'user', 'org_admin', 'admin'],
     }
+
+def exists_role(role):
+    return role in _get_users_roles_list()
 
 def set_user_role(user_id, role):
     roles = _get_users_roles_dict()

@@ -221,8 +221,12 @@ def create_user():
         meta = r[0]
     all_roles = ail_users.get_roles()
     orgs = ail_orgs.get_orgs_selector()
+    if meta:
+        selector_val = f"{meta['org']}: {meta['org_name']}"
+    else:
+        selector_val = None
     return render_template("create_user.html", all_roles=all_roles, orgs=orgs, meta=meta,
-                           error=error, error_mail=error_mail,
+                           error=error, error_mail=error_mail, selector_val=selector_val,
                            acl_admin=True)
 
 @settings_b.route("/settings/edit_user", methods=['GET'])
@@ -251,6 +255,9 @@ def create_user_post():
     else:
         enable_2_fa = False
 
+    if org_uuid:
+        org_uuid = org_uuid[2:].split(':', 1)[0]
+
     all_roles = ail_users.get_roles()
 
     if email and len(email) < 300 and ail_users.check_email(email) and role:
@@ -277,7 +284,10 @@ def create_user_post():
                     edit = True
                 else:
                     edit = False
-                ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
+                r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
+                if r[1] != 200:
+                    return create_json_response(r[0], r[1])
+
                 new_user = {'email': email, 'password': str_password, 'org': org_uuid, 'otp': enable_2_fa, 'edited': edit}
                 # qr_code = ail_users.create_qr_code(f'{email} - {password}')
                 return render_template("create_user.html", new_user=new_user, meta={},
