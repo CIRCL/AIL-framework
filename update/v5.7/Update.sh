@@ -24,6 +24,12 @@ bash ${AIL_BIN}/LAUNCH.sh -lrv
 bash ${AIL_BIN}/LAUNCH.sh -lkv
 
 echo ""
+echo -e $GREEN"Updating python packages ..."$DEFAULT
+echo ""
+pip install -U pyotp
+pip install -U segno
+
+echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
 echo ""
 python ${AIL_HOME}/update/v5.7/Update.py
