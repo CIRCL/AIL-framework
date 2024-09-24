@@ -34,6 +34,9 @@
 		-webkit-transform:rotate(180deg);
 		transform:rotate(180deg);
 	}
+    .text_wrap{
+        white-space: pre-wrap;
+    }
 	</style>
 
 </head>
@@ -255,78 +258,78 @@
 
   {% endif %}
 
-  {% if  meta['duplicates'] %}
-    <div id="accordionDuplicate" class="mb-2 mx-3">
-      <div class="card">
-        <div class="card-header py-1" id="headingDuplicate">
-          <div class="row">
-            <div class="col-11">
-              <div class="mt-2">
-                <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;
-                <div class="badge badge-warning">{{meta['duplicates']|length}}</div>
-              </div>
-            </div>
-            <div class="col-1">
-              <button class="btn btn-link btn-lg py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDuplicate" aria-expanded="true" aria-controls="collapseDuplicate">
-                <i class="fas fa-chevron-circle-down"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="collapseDuplicate" class="collapse" aria-labelledby="headingDuplicate" data-parent="#accordionDuplicate">
-          <div class="card-body">
-
-            <table class="table" id="tableDup">
-              <thead class="thead-dark">
-                <tr>
-                  <th>Date</th>
-                  <th>Similarity</th>
-                  <th>Item</th>
-                  <th>Diff</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for duplicate_id in meta['duplicates'] %}
-                  <tr>
-                    <td>{{meta['duplicates'][duplicate_id]['date']}}</td>
-                    <td class="py-0">
-                      <table class="table table-borderless table-sm my-0">
-                        <tbody>
-                          {%for dict_algo in meta['duplicates'][duplicate_id]|sort(attribute='algo')%}
-                            <tr>
-                              <td class="py-0">{{dict_algo['algo']}}</td>
-                              <td class="w-100 py-0">
-                                <div class="progress mt-1">
-                                  <div class="progress-bar progress-bar-striped {%if dict_algo['algo']=='tlsh'%}bg-secondary{%endif%}" role="progressbar" style="width: {{dict_algo['similarity']}}%;" aria-valuenow="{{dict_algo['similarity']}}" aria-valuemin="0" aria-valuemax="100">
-                                    {{dict_algo['similarity']}}%
-                                  </div>
-                                </div>
-                              </td>
-                            </tr>
-                          {%endfor%}
-                        </tbody>
-                      </table>
-                    </td>
-                    <td>
-                      <a href="{{ url_for('objects_item.showItem')}}?id={{duplicate_id}}" target="_blank">
-                        {{duplicate_id}}
-                      </a>
-                    </td>
-                    <td>
-                      <a target="_blank" href="{{ url_for('objects_item.object_item_diff') }}?id1={{meta['id']}}&id2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-
-          </div>
-        </div>
-
-      </div>
-    </div>
-  {% endif %}
+{#  {% if  meta['duplicates'] %}#}
+{#    <div id="accordionDuplicate" class="mb-2 mx-3">#}
+{#      <div class="card">#}
+{#        <div class="card-header py-1" id="headingDuplicate">#}
+{#          <div class="row">#}
+{#            <div class="col-11">#}
+{#              <div class="mt-2">#}
+{#                <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;#}
+{#                <div class="badge badge-warning">{{meta['duplicates']|length}}</div>#}
+{#              </div>#}
+{#            </div>#}
+{#            <div class="col-1">#}
+{#              <button class="btn btn-link btn-lg py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDuplicate" aria-expanded="true" aria-controls="collapseDuplicate">#}
+{#                <i class="fas fa-chevron-circle-down"></i>#}
+{#              </button>#}
+{#            </div>#}
+{#          </div>#}
+{#        </div>#}
+{##}
+{#        <div id="collapseDuplicate" class="collapse" aria-labelledby="headingDuplicate" data-parent="#accordionDuplicate">#}
+{#          <div class="card-body">#}
+{##}
+{#            <table class="table" id="tableDup">#}
+{#              <thead class="thead-dark">#}
+{#                <tr>#}
+{#                  <th>Date</th>#}
+{#                  <th>Similarity</th>#}
+{#                  <th>Item</th>#}
+{#                  <th>Diff</th>#}
+{#                </tr>#}
+{#              </thead>#}
+{#              <tbody>#}
+{#                {% for duplicate_id in meta['duplicates'] %}#}
+{#                  <tr>#}
+{#                    <td>{{meta['duplicates'][duplicate_id]['date']}}</td>#}
+{#                    <td class="py-0">#}
+{#                      <table class="table table-borderless table-sm my-0">#}
+{#                        <tbody>#}
+{#                          {%for dict_algo in meta['duplicates'][duplicate_id]|sort(attribute='algo')%}#}
+{#                            <tr>#}
+{#                              <td class="py-0">{{dict_algo['algo']}}</td>#}
+{#                              <td class="w-100 py-0">#}
+{#                                <div class="progress mt-1">#}
+{#                                  <div class="progress-bar progress-bar-striped {%if dict_algo['algo']=='tlsh'%}bg-secondary{%endif%}" role="progressbar" style="width: {{dict_algo['similarity']}}%;" aria-valuenow="{{dict_algo['similarity']}}" aria-valuemin="0" aria-valuemax="100">#}
+{#                                    {{dict_algo['similarity']}}%#}
+{#                                  </div>#}
+{#                                </div>#}
+{#                              </td>#}
+{#                            </tr>#}
+{#                          {%endfor%}#}
+{#                        </tbody>#}
+{#                      </table>#}
+{#                    </td>#}
+{#                    <td>#}
+{#                      <a href="{{ url_for('objects_item.showItem')}}?id={{duplicate_id}}" target="_blank">#}
+{#                        {{duplicate_id}}#}
+{#                      </a>#}
+{#                    </td>#}
+{#                    <td>#}
+{#                      <a target="_blank" href="{{ url_for('objects_item.object_item_diff') }}?id1={{meta['id']}}&id2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>#}
+{#                    </td>#}
+{#                  </tr>#}
+{#                {% endfor %}#}
+{#              </tbody>#}
+{#            </table>#}
+{##}
+{#          </div>#}
+{#        </div>#}
+{##}
+{#      </div>#}
+{#    </div>#}
+{#  {% endif %}#}
 
 
 {#  {% if  l_64|length != 0 %}#}
@@ -433,26 +436,11 @@
           </div>
 
           <div class="col-md-7">
-            <div class="card my-2" style="background-color:#ecf0f1;">
-              <div class="card-body py-2">
-                <div class="row">
-                  <div class="col-md-8">
-                    <input class="custom-range mt-2" id="blocks" type="range" min="1" max="50" value="{%if meta['crawler']['is_tags_safe']%}13{%else%}0{%endif%}">
-                  </div>
-                  <div class="col-md-4">
-                    <button class="btn {%if meta['crawler']['is_tags_safe']%}btn-primary{%else%}btn-danger{%endif%}" onclick="blocks.value=50;pixelate();">
-                      {%if meta['crawler']['is_tags_safe']%}
-                        <i class="fas fas fa-plus-square"></i>
-                      {%else%}
-                        <i class="fas fa-exclamation-triangle"></i>
-                      {%endif%}
-                      <span class="label-icon">Full resolution</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+
+            <div class="mt-2">
+                {% include 'objects/image/block_blur_img_slider.html' %}
             </div>
-            <canvas id="canvas" style="width:100%;"></canvas>
+              <span><img class="object_image mb-1" src="{% if meta['crawler']['screenshot'] %}{{ url_for('objects_item.screenshot', filename=meta['crawler']['screenshot']) }}{% endif %}" style="width: 100%;" alt=""></span>
           </div>
         </div>
 
@@ -540,15 +528,21 @@
             <a class="dropdown-item" href="{{ url_for('objects_item.item_download', id=meta['id']) }}"><i class="fas fa-download"></i> &nbsp;Download</a>
           </div>
         </li>
+        <li class="nav-item">
+            <button class="btn btn-info" onclick="wrap_content()"><span id="btn_wrap_text">Wrap Text</span></button>
+        </li>
       </ul>
 
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-content" role="tabpanel" aria-labelledby="pills-content-tab">
             {% if not extracted %}
-                <p class="my-0"> <pre class="border">{{ meta['content'] }}</pre></p>
+                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
             {% else %}
-                <p class="my-0"> <pre class="border">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[r[0]]['subtype'] }}</div>{{ extracted_matches[r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[r[0]]['subtype'] }}</div>{{ extracted_matches[r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
+        </div>
+        <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
+          <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
           <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
@@ -561,89 +555,49 @@
   </div>
 
 <script>
-    var ltags
-    var ltagsgalaxies
     $(document).ready(function(){
-        $('#tableDup').DataTable();
-          // $('#tableb64').DataTable({
-    			// 	"aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-    			// 	"iDisplayLength": 5,
-    			// 	"order": [[ 1, "asc" ]]
-    			// });
+        {% if meta['crawler'] %}
+            {% if not meta['crawler']['is_tags_safe'] %}
+                blur_unsafe();
+            {% else %}
+                blur_images();
+            {% endif %}
+        {% endif %}
         {% if extracted %}
             $('#table_extracted').DataTable();
         {% endif %}
         $(".rotate").click(function(){
             $(this).toggleClass("down");
-        })
+        });
         $('[data-toggle="popover"]').popover({
             boundary:'window',
-        })
+        });
     });
 
-      $('#pills-html2text-tab').on('shown.bs.tab', function (e) {
-        if ($('#html2text-container').is(':empty')){
-          $.get("{{ url_for('objects_item.html2text') }}?id={{ meta['id'] }}").done(function(data){
-            $('#html2text-container').text(data);
-          });
-
+    let text_wrapped = false;
+    function wrap_content() {
+        if (text_wrapped) {
+            $('#obj_content').removeClass("text_wrap");
+            $('#btn_wrap_text').text("Wrap Text");
+            text_wrapped = false;
+        } else {
+            $('#obj_content').addClass("text_wrap");
+            $('#btn_wrap_text').text("UnWrap Text");
+            text_wrapped = true;
         }
-      });
-      $('[data-toggle="popover"]').popover();
-</script>
-
-{% if meta['crawler'] %}
-  <script>
-  var ctx = canvas.getContext('2d'), img = new Image();
-
-  /// turn off image smoothing
-  ctx.webkitImageSmoothingEnabled = false;
-  ctx.imageSmoothingEnabled = false;
-
-  img.onload = pixelate;
-  img.addEventListener("error", img_error);
-  var draw_img = false;
-
-  {% if meta['crawler']['screenshot'] %}
-      img.src = "{{ url_for('objects_item.screenshot', filename=meta['crawler']['screenshot']) }}";
-  {% else %}
-      img.src = "";
-  {% endif %}
-
-  function pixelate() {
-
-    /// use slider value
-    if( blocks.value == 50 ){
-        size = 1;
-    } else {
-        var size = (blocks.value) * 0.01;
     }
 
-    canvas.width = img.width;
-    canvas.height = img.height;
 
-    /// cache scaled width and height
-    w = canvas.width * size;
-    h = canvas.height * size;
 
-    /// draw original image to the scaled size
-    ctx.drawImage(img, 0, 0, w, h);
-
-    /// pixelated
-    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-
-  }
-
-  function img_error() {
-    img.onerror=null;
-    img.src="{{ url_for('static', filename='image/AIL.png') }}";
-    blocks.value = 50;
-    pixelate;
-  }
-
-  blocks.addEventListener('change', pixelate, false);
-  </script>
-{% endif %}
+    $('#pills-html2text-tab').on('shown.bs.tab', function (e) {
+        if ($('#html2text-container').is(':empty')){
+            $.get("{{ url_for('objects_item.html2text') }}?id={{ meta['id'] }}").done(function(data){
+                $('#html2text-container').text(data);
+            });
+        }
+    });
+    // $('[data-toggle="popover"]').popover();
+</script>
 
 </body>
 
