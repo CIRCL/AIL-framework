@@ -135,10 +135,10 @@ class Mail(AbstractModule):
     # # TODO: sanitize mails
     def compute(self, message):
         score = message
-        obj = self.get_obj()
+        item = self.get_obj()
         item_date = item.get_date()
 
-        mails = self.regex_findall(self.email_regex, obj.id, obj.get_content())
+        mails = self.regex_findall(self.email_regex, item.id, item.get_content())
         mxdomains_email = {}
         for mail in mails:
             mxdomain = mail.rsplit('@', 1)[1].lower()
