@@ -1642,6 +1642,7 @@ def _fix_tag_obj_id(date_from):
             if ';' in tag:
                 print(tag)
                 new_tag = tag.split(';')[0]
+                tag = tag.replace('"', '\"')
                 print(new_tag)
                 r_tags.hdel(f'tag_metadata:{tag}', 'first_seen')
                 r_tags.hdel(f'tag_metadata:{tag}', 'last_seen')
