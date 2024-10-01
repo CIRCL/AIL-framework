@@ -57,6 +57,7 @@ from blueprints.objects_hhhash import objects_hhhash
 from blueprints.chats_explorer import chats_explorer
 from blueprints.objects_image import objects_image
 from blueprints.objects_ocr import objects_ocr
+from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
 from blueprints.api_rest import api_rest
 
@@ -140,6 +141,7 @@ app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
 app.register_blueprint(chats_explorer, url_prefix=baseUrl)
 app.register_blueprint(objects_image, url_prefix=baseUrl)
 app.register_blueprint(objects_ocr, url_prefix=baseUrl)
+app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 

@@ -359,6 +359,7 @@ class Crawler(AbstractModule):
                             # Create Correlations
                             screenshot.add_correlation('item', '', item_id)
                             screenshot.add_correlation('domain', '', self.domain.id)
+                        self.add_message_to_queue(obj=screenshot, queue='Images')
             # HAR
             if self.har:
                 if 'har' in entries and entries.get('har'):

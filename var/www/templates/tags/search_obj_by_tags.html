@@ -228,10 +228,12 @@
           {% endwith %}
 
         {% else %}
-            <h2>
-                {% if dict_tagged['date']['date_from'] %}{{ dict_tagged['date']['date_from'][0:4] }}-{{ dict_tagged['date']['date_from'][4:6] }}-{{ dict_tagged['date']['date_from'][6:8] }} {% endif %}
-                - {{ dict_tagged['date']['date_to'][0:4] }}-{{ dict_tagged['date']['date_to'][4:6] }}-{{ dict_tagged['date']['date_to'][6:8] }} No Result
-            </h2>
+            {% if 'date' in dict_tagged and 'current_tags' in dict_tagged %}
+                <h2>
+                    {% if dict_tagged['date']['date_from'] %}{{ dict_tagged['date']['date_from'][0:4] }}-{{ dict_tagged['date']['date_from'][4:6] }}-{{ dict_tagged['date']['date_from'][6:8] }} {% endif %}
+                    - {{ dict_tagged['date']['date_to'][0:4] }}-{{ dict_tagged['date']['date_to'][4:6] }}-{{ dict_tagged['date']['date_to'][6:8] }} No Result
+                </h2>
+            {% endif %}
             {% for tag in dict_tagged['current_tags'] %}
                 <span class="badge badge-secondary my-1">{{ tag }}"</span>
             {% endfor %}

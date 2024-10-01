@@ -36,7 +36,8 @@ from lib.objects import Images
 from lib.objects import Messages
 from lib.objects import Ocrs
 from lib.objects import Pgps
-from lib.objects.Screenshots import Screenshot
+from lib.objects import QrCodes
+from lib.objects import Screenshots
 from lib.objects import Titles
 from lib.objects import UsersAccount
 from lib.objects import Usernames
@@ -98,8 +99,10 @@ def get_object(obj_type, subtype, obj_id):
             return Messages.Message(obj_id)
         elif obj_type == 'ocr':
             return Ocrs.Ocr(obj_id)
+        elif obj_type == 'qrcode':
+            return QrCodes.Qrcode(obj_id)
         elif obj_type == 'screenshot':
-            return Screenshot(obj_id)
+            return Screenshots.Screenshot(obj_id)
         elif obj_type == 'title':
             return Titles.Title(obj_id)
         else:
@@ -330,6 +333,8 @@ def obj_iterator(obj_type, filters):
         return get_all_decodeds_objects(filters=filters)
     elif obj_type == 'image':
         return Images.get_all_images_objects(filters=filters)
+    elif obj_type == 'screenshot':
+        return Screenshots.get_screenshots_obj_iterator(filters=filters)
     elif obj_type == 'item':
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':

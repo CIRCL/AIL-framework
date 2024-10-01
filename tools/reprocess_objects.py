@@ -31,10 +31,12 @@ from lib.objects import ail_objects
 
 from modules.Languages import Languages
 from modules.OcrExtractor import OcrExtractor
+from modules.QrCodeReader import QrCodeReader
 
 MODULES = {
     'Languages': Languages,
-    'OcrExtractor': OcrExtractor
+    'OcrExtractor': OcrExtractor,
+    'QrCodeReader': QrCodeReader
 
 }
 
@@ -68,7 +70,7 @@ if __name__ == "__main__":
     obj_type = args.type
     if not is_object_type(obj_type):
         raise Exception(f'Invalid Object Type: {obj_type}')
-    if obj_type not in ['image', 'item', 'message']:
+    if obj_type not in ['image', 'item', 'message', 'screenshot']:
         raise Exception(f'Currently not supported Object Type: {obj_type}')
 
     modulename = args.module

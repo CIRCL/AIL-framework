@@ -43,22 +43,23 @@ config_loader = None
 CORRELATION_TYPES_BY_OBJ = {
     "chat": ["chat-subchannel", "chat-thread", "image", "message", "ocr", "user-account"],  # message or direct correlation like cve, bitcoin, ... ???
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
-    "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"], # TODO user account
+    "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"],
     "cookie-name": ["domain"],
-    "cryptocurrency": ["domain", "item", "message", "ocr"],
-    "cve": ["domain", "item", "message", "ocr"],
-    "decoded": ["domain", "item", "message", "ocr"],
+    "cryptocurrency": ["domain", "item", "message", "ocr", "qrcode"],
+    "cve": ["domain", "item", "message", "ocr", "qrcode"],
+    "decoded": ["domain", "item", "message", "ocr", "qrcode"],
     "domain": ["cve", "cookie-name", "cryptocurrency", "decoded", "etag", "favicon", "hhhash", "item", "pgp", "title", "screenshot", "username"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "file-name": ["chat", "message"],
     "hhhash": ["domain"],
-    "image": ["chat", "chat-subchannel", "chat-thread", "message", "ocr", "user-account"],  # TODO subchannel + threads ????
+    "image": ["chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
     "item": ["cve", "cryptocurrency", "decoded", "domain", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
     "message": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "ocr", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
     "pgp": ["domain", "item", "message", "ocr"],
-    "screenshot": ["domain", "item"],
+    "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
+    "screenshot": ["domain", "item", "qrcode"],
     "title": ["domain", "item"],
     "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
     "username": ["domain", "item", "message", "user-account"],
@@ -67,7 +68,9 @@ CORRELATION_TYPES_BY_OBJ = {
 def get_obj_correl_types(obj_type):
     return CORRELATION_TYPES_BY_OBJ.get(obj_type)
 
-def sanityze_obj_correl_types(obj_type, correl_types):
+def sanityze_obj_correl_types(obj_type, correl_types, sanityze=True):
+    if not sanityze:
+        return correl_types
     obj_correl_types = get_obj_correl_types(obj_type)
     if correl_types:
         correl_types = set(correl_types).intersection(obj_correl_types)
@@ -99,11 +102,11 @@ def get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type, unpac
     else:
         return correl
 
-def get_correlations(obj_type, subtype, obj_id, filter_types=[], unpack=False):
+def get_correlations(obj_type, subtype, obj_id, filter_types=[], unpack=False, sanityze=True):
     if subtype is None:
         subtype = ''
     obj_correlations = {}
-    filter_types = sanityze_obj_correl_types(obj_type, filter_types)
+    filter_types = sanityze_obj_correl_types(obj_type, filter_types, sanityze=sanityze)
     for correl_type in filter_types:
         obj_correlations[correl_type] = get_correlation_by_correl_type(obj_type, subtype, obj_id, correl_type,
                                                                        unpack=unpack)

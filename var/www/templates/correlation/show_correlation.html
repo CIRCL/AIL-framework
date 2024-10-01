@@ -132,6 +132,8 @@
 						{% include 'chats_explorer/card_image.html' %}
                     {% elif dict_object["object_type"] == "ocr" %}
 						{% include 'objects/ocr/card_ocr.html' %}
+                    {% elif dict_object["object_type"] == "qrcode" %}
+						{% include 'objects/qrcode/card_qrcode.html' %}
 					{% elif dict_object["object_type"] == "item" %}
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
@@ -318,6 +320,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="ocr_Check" name="ocr_Check" {%if "ocr" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="ocr_Check">OCR</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="qrcode_Check" name="qrcode_Check" {%if "qrcode" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="qrcode_Check">Qrcode</label>
                                             </div>
 
                                             <hr>

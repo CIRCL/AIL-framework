@@ -235,7 +235,7 @@ class AbstractObject(ABC):
         """
         Get object correlation
         """
-        return get_correlations(self.type, self.subtype, self.id, filter_types=[obj_type])
+        return get_correlations(self.type, self.subtype, self.id, filter_types=[obj_type], sanityze=False)
 
     def get_first_correlation(self, obj_type):
         correlation = self.get_correlation(obj_type)

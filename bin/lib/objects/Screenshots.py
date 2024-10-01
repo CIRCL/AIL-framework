@@ -47,6 +47,22 @@ class Screenshot(AbstractObject):
     def exists(self):
         return os.path.isfile(self.get_filepath())
 
+    def get_last_seen(self):
+        dates = self.get_dates()
+        date = 0
+        for d in dates:
+            if int(d) > int(date):
+                date = d
+        return date
+
+    def get_dates(self):
+        dates = []
+        for i_id in self.get_correlation('item').get('item'):
+            if i_id.startswith(':crawled'):
+                i_id = i_id.split('/', 4)
+                dates.append(f'{i_id[1]}{i_id[2]}{i_id[3]}')
+        return dates
+
     def get_link(self, flask_context=False):
         if flask_context:
             url = url_for('correlation.show_correlation', type=self.type, id=self.id)
@@ -116,6 +132,14 @@ def get_all_screenshots():
             screenshots.append(screenshot_id)
     return screenshots
 
+def get_screenshots_obj_iterator(filters=[]):
+    screenshot_dir = os.path.join(os.environ['AIL_HOME'], SCREENSHOT_FOLDER)
+    for root, dirs, files in os.walk(screenshot_dir):
+        for file in files:
+            screenshot_path = f'{root}{file}'
+            screenshot_id = screenshot_path.replace(SCREENSHOT_FOLDER, '').replace('/', '')[:-4]
+            yield Screenshot(screenshot_id)
+
 # FIXME STR SIZE LIMIT
 def create_screenshot(content, size_limit=5000000, b64=True, force=False):
     size = (len(content)*3) / 4
@@ -155,5 +179,6 @@ def search_screenshots_by_name(name_to_search, r_pos=False):
 
 
 # if __name__ == '__main__':
-#     name_to_search = '29ba'
-#     print(search_screenshots_by_name(name_to_search))
+#     obj_id = ''
+#     obj = Screenshot(obj_id)
+#     obj.get_last_seen()
