@@ -86,6 +86,8 @@ class QrCodeReader(AbstractModule):
         for content in contents:
             print(content)
             qr_code = QrCodes.create(content, self.obj)  # copy screenshot + image daterange
+            if not qr_code:
+                print('Error Empty content', self.obj.get_global_id())
             qr_code.add(qr_code.get_date(), self.obj)
 
             for obj_type in ['chat', 'domain', 'message']:  # TODO ITEM ???
