@@ -51,7 +51,11 @@ class QrCodeReader(AbstractModule):
     def extract_qrcode(self, path):
         qr_codes = False
         contents = []
-        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+        try:
+            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+        except cv2.error:
+            image = cv2.imread(path)
+
         try:
             decodeds = decode(image)
             for decoded in decodeds:
