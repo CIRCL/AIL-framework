@@ -22,7 +22,32 @@ baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+digits32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l'
 
+
+def decode_bech32(address):
+    if not all(33 <= ord(x) <= 126 for x in address):
+        return None, None
+    address = address.lower()
+    pos = address.rfind('1')
+    if pos < 1 or pos + 7 > len(address):
+        return None, None
+    hrp = address[:pos]
+    data = address[pos+1:]
+    if not all(x in digits32 for x in data):
+        return None, None
+    data = [digits32.find(c) for c in data]
+    # if not verify_checksum(hrp, data): # TODO checksum ???
+    #     return None, None
+    return hrp, data[:-6]
+
+def check_bech32_address(address):
+    hrp, data = decode_bech32(address)
+    if hrp is None or data is None:
+        return False
+    if hrp != 'bc' and hrp != 'tb':
+        return False
+    return True
 
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def decode_base58(bc, length):
@@ -60,7 +85,12 @@ class CryptoCurrency(AbstractSubtypeObject):
         pass
 
     def is_valid_address(self):
-        if self.subtype == 'bitcoin' or self.subtype == 'dash' or self.subtype == 'litecoin' or self.subtype == 'tron':
+        if self.subtype == 'bitcoin':
+            if self.id.startswith('bc'):
+                if check_bech32_address(self.id):
+                    return True
+            return check_base58_address(self.id)
+        elif self.subtype == 'dash' or self.subtype == 'litecoin' or self.subtype == 'tron':
             return check_base58_address(self.id)
         else:
             return True
