@@ -60,9 +60,10 @@ class QrCodeReader(AbstractModule):
         try:
             decodeds = decode(image)
             for decoded in decodeds:
-                qr_codes = True
-                if decoded.data:
-                    contents.append(decoded.data.decode())
+                if decoded.type == 'QRCODE':
+                    qr_codes = True
+                    if decoded.data:
+                        contents.append(decoded.data.decode())
         except ValueError as e:
             self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
