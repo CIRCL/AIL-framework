@@ -55,7 +55,7 @@ class QrCodeReader(AbstractModule):
             image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
         except cv2.error:
             self.logger.warning(f'Invalid image: {self.obj.get_global_id()}')
-            return []
+            return False, []
 
         try:
             decodeds = decode(image)
