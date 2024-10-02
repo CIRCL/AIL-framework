@@ -87,6 +87,10 @@ ail_typo_squatting
 # OCR
 easyocr
 
+# Qrcode
+qreader
+pyzbar
+
 # Tests
 nose2>=0.12.0
 coverage>=5.5

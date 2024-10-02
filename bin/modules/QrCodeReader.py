@@ -9,9 +9,12 @@ The OcrExtractor Module
 ##################################
 # Import External packages
 ##################################
-import cv2
 import os
 import sys
+
+import cv2
+from pyzbar.pyzbar import decode
+from qreader import QReader
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -46,23 +49,39 @@ class QrCodeReader(AbstractModule):
         self.r_cache.setex(f'qrcode:no:{self.obj.type}:{self.obj.id}', 86400, 0)
 
     def extract_qrcode(self, path):
-        detector = cv2.QRCodeDetector()  # TODO Move me in init ???
-        image = cv2.imread(path)
-
-        # multiple extraction
+        qr_codes = False
+        contents = []
+        image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
         try:
-            qr_found, contents, qarray, _ = detector.detectAndDecodeMulti(image)
-            if qr_found:
-                return contents
-            else:
-                # simple extraction
-                content, box, _ = detector.detectAndDecode(image)
-                if content:
-                    return [content]
-                else:
-                    return []
-        except cv2.error as e:
-            self.logger.error(f'{e}, {self.obj.get_global_id()}')
+            decodeds = decode(image)
+            for decoded in decodeds:
+                if decoded.data:
+                    contents.append(decoded.data.decode())
+        except ValueError as e:
+            self.logger.error(f'{e}: {self.obj.get_global_id()}')
+
+        if not contents:
+            detector = cv2.QRCodeDetector()
+            qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
+            if qr:
+                qr_codes = True
+                for d in decodeds:
+                    if d:
+                        contents.append(d)
+            data_qr, box, qrcode_image = detector.detectAndDecode(image)
+            if data_qr:
+                contents.append(data_qr)
+
+        if qr_codes and not contents:
+            # # # # 0.5s per image
+            try:
+                qreader = QReader()
+                decoded_text = qreader.detect_and_decode(image=image)
+                for d in decoded_text:
+                    contents.append(d)
+            except ValueError as e:
+                self.logger.error(f'{e}: {self.obj.get_global_id()}')
+        return qr_codes, contents
 
     def compute(self, message):
         obj = self.get_obj()
@@ -77,7 +96,7 @@ class QrCodeReader(AbstractModule):
 
         # image - screenshot
         path = self.obj.get_filepath()
-        contents = self.extract_qrcode(path)
+        is_qrcode, contents = self.extract_qrcode(path)
         if not contents:
             # print('no qr code detected')
             self.add_to_cache()
@@ -95,16 +114,14 @@ class QrCodeReader(AbstractModule):
                     o_subtype, o_id = c_id.split(':', 1)
                     qr_code.add_correlation(obj_type, o_subtype, o_id)
 
-            tag = 'infoleak:automatic-detection="qrcode"'
-            self.add_message_to_queue(obj=self.obj, message=tag, queue='Tags')
-
             # TODO only if new ???
             self.add_message_to_queue(obj=qr_code, queue='Item')
+
+        if is_qrcode:
+            tag = 'infoleak:automatic-detection="qrcode"'
+            self.add_message_to_queue(obj=self.obj, message=tag, queue='Tags')
 
 
 if __name__ == '__main__':
     module = QrCodeReader()
     module.run()
-    # from lib.objects.Images import Image
-    # module.obj = Image('8a690f4d09509dbfe52a6fb139db500b16b3d5f07e22617944752c4d4885737c')
-    # module.compute(None)
