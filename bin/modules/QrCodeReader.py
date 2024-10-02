@@ -60,6 +60,7 @@ class QrCodeReader(AbstractModule):
         try:
             decodeds = decode(image)
             for decoded in decodeds:
+                qr_codes = True
                 if decoded.data:
                     contents.append(decoded.data.decode())
         except ValueError as e:
@@ -76,6 +77,7 @@ class QrCodeReader(AbstractModule):
             data_qr, box, qrcode_image = detector.detectAndDecode(image)
             if data_qr:
                 contents.append(data_qr)
+                qr_codes = True
 
         if qr_codes and not contents:
             # # # # 0.5s per image
@@ -84,6 +86,7 @@ class QrCodeReader(AbstractModule):
                 decoded_text = qreader.detect_and_decode(image=image)
                 for d in decoded_text:
                     contents.append(d)
+                    qr_codes = True
             except ValueError as e:
                 self.logger.error(f'{e}: {self.obj.get_global_id()}')
         return qr_codes, contents
@@ -122,7 +125,7 @@ class QrCodeReader(AbstractModule):
             # TODO only if new ???
             self.add_message_to_queue(obj=qr_code, queue='Item')
 
-        if is_qrcode:
+        if is_qrcode or contents:
             tag = 'infoleak:automatic-detection="qrcode"'
             self.add_message_to_queue(obj=self.obj, message=tag, queue='Tags')
 
