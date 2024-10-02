@@ -112,6 +112,8 @@ class QrCodeReader(AbstractModule):
             return None
 
         for content in contents:
+            if not content:
+                continue
             print(content)
             qr_code = QrCodes.create(content, self.obj)  # copy screenshot + image daterange
             if not qr_code:
