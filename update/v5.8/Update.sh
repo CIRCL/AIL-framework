@@ -17,6 +17,11 @@ echo -e $GREEN"Shutting down AIL ..."$DEFAULT
 bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
+# Install LIB
+sudo apt-get install python3-opencv
+sudo apt-get install libzbar0
+
+
 # SUBMODULES #
 git submodule update
 
