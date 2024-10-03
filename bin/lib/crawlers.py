@@ -40,6 +40,7 @@ from packages import Date
 from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
+from lib.objects.Titles import Title
 from lib.objects import HHHashs
 from lib.objects.Items import Item
 
@@ -54,6 +55,34 @@ activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
 config_loader = None
 
 faup = Faup()
+
+# # # # # # # #
+#             #
+#   DOMAINS   #
+#             #
+# # # # # # # #
+
+# is safe ???
+# TODO FILTER URL ???
+
+def api_get_domain_lookup_meta(domain):
+    dom = Domain(domain)
+    if not dom.exists():
+        return {'error': 'domain not found', 'domain': domain}, 404
+    meta = dom.get_meta(options={'languages'})
+    meta['first_seen'] = meta['first_seen'].replace('/', '-')
+    meta['last_seen'] = meta['last_check'].replace('/', '-')
+    meta['languages'] = list(meta['languages'])
+    del meta['domain']
+    del meta['last_check']
+    del meta['type']
+    del meta['status']
+    meta['titles'] = []
+    for h in dom.get_correlation('title').get('title', []):
+        t = Title(h[1:])
+        meta['titles'].append(t.get_content())
+    return meta
+
 
 # # # # # # # #
 #             #

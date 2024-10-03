@@ -215,6 +215,15 @@ def objects_chat_thread_messages():
     return create_json_response(r[0], r[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # #      DOMAINS      # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@api_rest.route("api/v1/domain/lookup/<domain>", methods=['GET'])
+@token_required('user')
+def api_domain_lookup(domain):
+    return create_json_response(crawlers.api_get_domain_lookup_meta(domain), 200)
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
