@@ -145,7 +145,7 @@
                             <tr>
                                 <td>
                                     <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=favicon&id={{ obj_id }}">
-                                        <img class="object_image mb-1" src="{{ url_for('objects_favicon.favicon', filename=dict_objects[obj_id]['img'])}}">
+                                        <img class="object_image mb-1" src="{{ url_for('objects_favicon.favicon', filename=dict_objects[obj_id]['img'])}}" loading="lazy" style="max-width: 100px">
                                         {{ dict_objects[obj_id]['id'] }}
                                     </a>
                                 </td>
