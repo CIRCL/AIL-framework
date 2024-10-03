@@ -69,16 +69,22 @@ class QrCodeReader(AbstractModule):
 
         if not contents:
             detector = cv2.QRCodeDetector()
-            qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
-            if qr:
-                qr_codes = True
-                for d in decodeds:
-                    if d:
-                        contents.append(d)
-            data_qr, box, qrcode_image = detector.detectAndDecode(image)
-            if data_qr:
-                contents.append(data_qr)
-                qr_codes = True
+            try:
+                qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
+                if qr:
+                    qr_codes = True
+                    for d in decodeds:
+                        if d:
+                            contents.append(d)
+            except cv2.error as e:
+                self.logger.error(f'{e}: {self.obj.get_global_id()}')
+            try:
+                data_qr, box, qrcode_image = detector.detectAndDecode(image)
+                if data_qr:
+                    contents.append(data_qr)
+                    qr_codes = True
+            except cv2.error as e:
+                self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
         if qr_codes and not contents:
             # # # # 0.5s per image
