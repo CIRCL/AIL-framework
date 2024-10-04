@@ -80,7 +80,7 @@ def objects_qrcodes_range_json():
     return jsonify(QrCodes.Qrcodes().api_get_chart_nb_by_daterange(date_from, date_to))
 
 
-@objects_qrcode.route("/objects/qrcodes", methods=['GET'])
+@objects_qrcode.route("/objects/qrcode", methods=['GET'])
 @login_required
 @login_read_only
 def object_qrcode():
@@ -90,11 +90,9 @@ def object_qrcode():
         return create_json_response(meta[0], meta[1])
     else:
         meta = meta[0]
-        languages = Language.get_translation_languages()
         return render_template("ShowQrcode.html", meta=meta,
                                bootstrap_label=bootstrap_label,
-                               ail_tags=Tag.get_modal_add_tags(meta['id'], meta['type'], meta['subtype']),
-                               translation_languages=languages, translation_target=target)
+                               ail_tags=Tag.get_modal_add_tags(meta['id'], meta['type'], meta['subtype']))
 
 
 # ============= ROUTES ==============

@@ -151,6 +151,12 @@ class Message(AbstractObject):
                 images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id)})
         return images
 
+    def get_qrcodes(self):
+        qrcodes = []
+        for c in self.get_correlation('qrcode').get('qrcode', []):
+            qrcodes.append(c[1:])
+        return qrcodes
+
     def get_user_account(self, meta=False):
         user_account = self.get_correlation('user-account')
         if user_account.get('user-account'):
@@ -300,6 +306,8 @@ class Message(AbstractObject):
                 meta['thread'] = thread
         if 'images' in options:
             meta['images'] = self.get_images()
+        if 'qrcodes' in options:
+            meta['qrcodes'] = self.get_qrcodes()
         if 'files-names' in options:
             meta['files-names'] = self.get_files_names()
         if 'reactions' in options:

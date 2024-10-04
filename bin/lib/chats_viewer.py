@@ -23,6 +23,7 @@ from lib.objects import Chats
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
 from lib.objects import Messages
+from lib.objects.QrCodes import Qrcode
 from lib.objects import UsersAccount
 from lib.objects import Usernames
 from lib import Language
@@ -418,7 +419,7 @@ def get_nb_messages_iterator(filters={}):
             nb_messages += chat.get_nb_messages()
     return nb_messages
 
-def get_chat_object_messages_forward_meta(c_messages):
+def get_chat_object_messages_meta(c_messages):
     temp_chats = {}
     for date in c_messages:
         for meta in c_messages[date]:
@@ -428,6 +429,12 @@ def get_chat_object_messages_forward_meta(c_messages):
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
                 else:
                     meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+            if meta['qrcodes']:
+                qrcodes = []
+                for q in meta['qrcodes']:
+                    qr = Qrcode(q)
+                    qrcodes.append({'id': qr.id, 'content': qr.get_content(), 'tags': qr.get_tags()})
+                meta['qrcodes'] = qrcodes
     return c_messages
 
 def get_user_account_chats_meta(user_id, chats, subchannels):
@@ -754,7 +761,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
             translation_target = None
         if messages:
             meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
-            meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
+            meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     return meta, 200
 
 def api_get_nb_message_by_week(chat_type, chat_instance_uuid, chat_id):
@@ -800,7 +807,7 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     meta['messages'], meta['pagination'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target, nb=nb, page=page)
-    meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
+    meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     return meta, 200
 
 def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=-1, page=-1):
@@ -812,17 +819,22 @@ def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=
     # if meta['chat']:
     #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
     meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, nb=nb, page=page)
-    meta['messages'] = get_chat_object_messages_forward_meta(meta['messages'])
+    meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     return meta, 200
 
 def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
+    qrcodes = []
+    for q in meta['qrcodes']:
+        qr = Qrcode(q)
+        qrcodes.append({'id': qr.id, 'content': qr.get_content(), 'tags': qr.get_tags()})
+    meta['qrcodes'] = qrcodes
     return meta, 200
 
 def api_message_detect_language(message_id):
