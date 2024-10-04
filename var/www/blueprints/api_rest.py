@@ -218,10 +218,10 @@ def objects_chat_thread_messages():
 # # # # # # # # # # # # # # #      DOMAINS      # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-@api_rest.route("api/v1/domain/lookup/<domain>", methods=['GET'])
+@api_rest.route("api/v1/lookup/onion/<domain>", methods=['GET'])
 @token_required('user')
-def api_domain_lookup(domain):
-    return create_json_response(crawlers.api_get_domain_lookup_meta(domain), 200)
+def api_lookup_onion(domain):
+    return create_json_response(crawlers.api_get_onion_lookup(domain), 200)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW

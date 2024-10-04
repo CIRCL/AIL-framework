@@ -52,6 +52,8 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 ITEMS_FOLDER = config_loader.get_config_str("Directories", "pastes")
 HAR_DIR = config_loader.get_files_directory('har')
 activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
+D_HAR = config_loader.get_config_boolean('Crawler', 'default_har')
+D_SCREENSHOT = config_loader.get_config_boolean('Crawler', 'default_screenshot')
 config_loader = None
 
 faup = Faup()
@@ -65,9 +67,14 @@ faup = Faup()
 # is safe ???
 # TODO FILTER URL ???
 
-def api_get_domain_lookup_meta(domain):
+def api_get_onion_lookup(domain):
+    domain = domain.lower()
     dom = Domain(domain)
+    if not is_valid_onion_v3_domain(domain):
+        return {'error': 'Invalid Domain', 'domain': domain}, 404
     if not dom.exists():
+        if is_crawler_activated():
+            create_task(domain, parent='lookup', priority=0, har=D_HAR, screenshot=D_SCREENSHOT)
         return {'error': 'domain not found', 'domain': domain}, 404
     meta = dom.get_meta(options={'languages'})
     meta['first_seen'] = meta['first_seen'].replace('/', '-')
@@ -108,6 +115,11 @@ def get_date_crawled_items_source(date):
 
 def get_har_dir():
     return HAR_DIR
+
+def is_valid_onion_v3_domain(domain):
+    if len(domain) == 62:  # v3 address
+        return domain[:56].isalnum()
+    return False
 
 def is_valid_onion_domain(domain):
     if not domain.endswith('.onion'):
