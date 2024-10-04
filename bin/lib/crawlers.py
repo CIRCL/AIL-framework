@@ -69,6 +69,8 @@ faup = Faup()
 
 def api_get_onion_lookup(domain):
     domain = domain.lower()
+    url_unpack = unpack_url(domain)
+    domain = url_unpack['domain']
     dom = Domain(domain)
     if not is_valid_onion_v3_domain(domain):
         return {'error': 'Invalid Domain', 'domain': domain}, 404
