@@ -87,6 +87,11 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
     meta['first_seen'] = meta['first_seen'].replace('/', '-')
     meta['last_seen'] = meta['last_check'].replace('/', '-')
     meta['languages'] = list(meta['languages'])
+    tags = []
+    for tag in meta['tags']:
+        if tag.startswith('dark-web:') or tag.startswith('infoleak:'):
+            tags.append(tag)
+    meta['tags'] = tags
     del meta['domain']
     del meta['last_check']
     del meta['type']
