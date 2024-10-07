@@ -195,6 +195,9 @@ def get_processed_end_objs():
 def get_processed_end_obj():
     return r_obj_process.spop(f'objs:processed')
 
+def is_obj_in_process(obj_gid):
+    return r_obj_process.sismember(f'objs:process', obj_gid)
+
 def get_processed_objs_by_type(obj_type):
     return r_obj_process.zrange(f'objs:process:{obj_type}', 0, -1)
 

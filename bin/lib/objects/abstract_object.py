@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_logger
+from lib.ail_queues import is_obj_in_process
 from lib import Tag
 from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
@@ -91,6 +92,15 @@ class AbstractObject(ABC):
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
+
+    ## Queues ##
+
+    # is_in_queue , is_in_module
+
+    def is_being_processed(self):
+        return is_obj_in_process(self.get_global_id())
+
+    # -Queues- #
 
     ## Tags ##
     def get_tags(self, r_list=False):

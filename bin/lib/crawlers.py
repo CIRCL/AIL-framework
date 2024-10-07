@@ -67,7 +67,7 @@ faup = Faup()
 # is safe ???
 # TODO FILTER URL ???
 
-def api_get_onion_lookup(domain):
+def api_get_onion_lookup(domain):  # TODO check if object process done ???
     domain = domain.lower()
     url_unpack = unpack_url(domain)
     domain = url_unpack['domain']
@@ -78,6 +78,11 @@ def api_get_onion_lookup(domain):
         if is_crawler_activated():
             create_task(domain, parent='lookup', priority=0, har=D_HAR, screenshot=D_SCREENSHOT)
         return {'error': 'domain not found', 'domain': domain}, 404
+    if not dom.was_up():
+        return {'error': 'domain not found', 'domain': domain}, 404
+    # else
+    ## TODO check if object process done -> return result if more than one history
+    #   #-> check item history
     meta = dom.get_meta(options={'languages'})
     meta['first_seen'] = meta['first_seen'].replace('/', '-')
     meta['last_seen'] = meta['last_check'].replace('/', '-')

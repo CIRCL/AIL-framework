@@ -86,7 +86,7 @@ def get_default_correlation_objects():
     return AIL_OBJECTS_CORRELATIONS_DEFAULT
 
 def get_obj_queued():
-    return ['item', 'image', 'message', 'ocr', 'qrcode']
+    return ['item', 'image', 'message', 'ocr', 'qrcode'] # screenshot ???
 
 def get_objects_tracked():
     return ['decoded', 'item', 'pgp', 'message', 'ocr', 'qrcode', 'title']

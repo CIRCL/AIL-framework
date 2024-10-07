@@ -78,6 +78,7 @@ class Crawler(AbstractModule):
         self.items_dir = None
         self.original_domain = None
         self.domain = None
+        self.parent = None
 
         # TODO Replace with warning list ???
         self.placeholder_screenshots = {'07244254f73e822bd4a95d916d8b27f2246b02c428adc29082d09550c6ed6e1a'   # blank
@@ -243,6 +244,7 @@ class Crawler(AbstractModule):
             return None
 
         self.domain = Domain(domain)
+        self.parent = self.domain.get_parent()
         self.original_domain = Domain(domain)
 
         epoch = int(time.time())
@@ -263,7 +265,9 @@ class Crawler(AbstractModule):
         # Save Capture
         self.save_capture_response(parent_id, entries)
 
-        self.domain.update_daterange(self.date.replace('/', ''))
+        if self.parent != 'lookup':
+            # Update domain first/last seen
+            self.domain.update_daterange(self.date.replace('/', ''))
         # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
@@ -271,6 +275,7 @@ class Crawler(AbstractModule):
             # Tags
             for tag in task.get_tags():
                 self.domain.add_tag(tag)
+        # Crawler stats
         self.domain.add_history(epoch, root_item=self.root_item)
 
         if self.domain != self.original_domain:
