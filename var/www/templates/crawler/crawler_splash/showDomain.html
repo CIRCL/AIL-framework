@@ -129,7 +129,6 @@
 
                 <div class="d-flex flex-row-reverse bd-highlight mt-2">
                   {% if 'correlation_nb' in dict_domain %}
-                    {% if dict_domain["correlation_nb"] > 0 %}
                       <hr>
                       <div>
                           <a href="{{ url_for('correlation.show_correlation')}}?type=domain&id={{ dict_domain['domain'] }}&correlation_objects=domain" target="_blank" style="font-size: 15px">
@@ -138,7 +137,6 @@
                               </button>
                           </a>
                       </div>
-                    {%endif%}
                   {%endif%}
                   {% with obj_type='domain', obj_id=dict_domain['domain'], obj_subtype=''%}
                     {% include 'modals/investigations_register_obj.html' %}
