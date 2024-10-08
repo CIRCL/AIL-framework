@@ -23,7 +23,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
 from lib import crawlers
 
 class Onion(AbstractModule):
@@ -35,9 +34,9 @@ class Onion(AbstractModule):
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
 
-        self.pending_seconds = config_loader.get_config_int("Onion", "max_execution_time")
+        self.pending_seconds = 10
         # regex timeout
-        self.regex_timeout = 30
+        self.regex_timeout = config_loader.get_config_int("Onion", "max_execution_time")
 
         self.faup = crawlers.get_faup()
 
@@ -80,6 +79,7 @@ class Onion(AbstractModule):
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
             url = x[0]
+            url = url.lower()
             print(url)
 
             # TODO Crawl subdomain
@@ -108,5 +108,4 @@ class Onion(AbstractModule):
 
 if __name__ == "__main__":
     module = Onion()
-    # module.compute('submitted/2022/10/10/submitted_705d1d92-7e9a-4a44-8c21-ccd167bfb7db.gz 9')
     module.run()
