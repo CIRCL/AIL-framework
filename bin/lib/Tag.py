@@ -625,20 +625,29 @@ def _update_tag_first_seen(tag, first_seen, last_seen):
 
 # # TODO:
 def _update_tag_last_seen(tag, first_seen, last_seen):
-    if first_seen == last_seen:
-        if r_tags.scard(f'item::{tag}:{last_seen}') > 0:
-            r_tags.hset(f'tag_metadata:{tag}', 'last_seen', last_seen)
-        # no tag in db
+    update = True
+    while update:
+        if first_seen == last_seen:
+            if r_tags.scard(f'item::{tag}:{last_seen}') > 0:
+                r_tags.hset(f'tag_metadata:{tag}', 'last_seen', last_seen)
+                update = False
+                break
+            # no tag in db
+            else:
+                r_tags.hdel(f'tag_metadata:{tag}', 'first_seen')
+                r_tags.hdel(f'tag_metadata:{tag}', 'last_seen')
+                update = False
+                break
         else:
-            r_tags.hdel(f'tag_metadata:{tag}', 'first_seen')
-            r_tags.hdel(f'tag_metadata:{tag}', 'last_seen')
-    else:
-        if r_tags.scard(f'item::{tag}:{last_seen}') > 0:
-            r_tags.hset(f'tag_metadata:{tag}', 'last_seen', last_seen)
-        else:
-            last_seen = Date.date_substract_day(str(last_seen))
-            if int(last_seen) >= int(first_seen):
-                _update_tag_last_seen(tag, first_seen, last_seen)
+            if r_tags.scard(f'item::{tag}:{last_seen}') > 0:
+                r_tags.hset(f'tag_metadata:{tag}', 'last_seen', last_seen)
+                update = False
+                break
+            else:
+                last_seen = Date.date_substract_day(str(last_seen))
+                if int(last_seen) < int(first_seen):
+                    update = False
+                    break
 
 
 def update_tag_metadata(tag, date, delete=False): # # TODO: delete Tags
