@@ -64,7 +64,6 @@
 										<tr>
 											<th>First Seen</th>
 											<th>Last Check</th>
-                                            <th>Ports</th>
                                             <th>Languages</th>
 										</tr>
 									</thead>
@@ -72,7 +71,6 @@
 										<tr>
 											<td class="panelText">{%if "first_seen" in dict_domain%}{{ dict_domain['first_seen'] }}{%endif%}</td>
 											<td class="panelText">{%if "last_check" in dict_domain%}{{ dict_domain['last_check'] }}{%endif%}</td>
-                                            <td class="panelText">{%if dict_domain["ports"]%}{{ dict_domain["ports"] }}{%endif%}</td>
                                             <td class="panelText">
                                                 {% for languages in dict_domain['languages'] %}
                                                     {{languages}}
@@ -105,7 +103,7 @@
                   </thead>
                   <tbody>
                     {% if 'last_origin' in dict_domain %}
-                      {% if dict_domain['last_origin']=='manual' or dict_domain['last_origin']=='auto' %}
+                      {% if dict_domain['last_origin']['item']=='manual' or dict_domain['last_origin']['item']=='auto' %}
                         <tr>
                           <td></td>
                           <td><span class="badge badge-dark">{{ dict_domain['last_origin']['item'] }}</span></td>
@@ -161,6 +159,20 @@
                 </div>
 						</div>
 
+            {% for obj_type in dict_domain['correlations_nb'] %}
+                {% if dict_domain['correlations_nb'][obj_type] %}
+                    {% if obj_type not in ['cryptocurrency', 'decoded', 'pgp', 'screenshot', 'title'] %}
+                        <div class="row">
+                            <div class="col-8">
+                                {{ obj_type }}
+                            </div>
+                            <div class="col-4">
+                                <span class="badge badge-primary">{{ dict_domain['correlations_nb'][obj_type] }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
 
             {% if 'decoded' in dict_domain%}
               <div id="accordiondecoded" class="mt-3">
@@ -376,7 +388,7 @@
                         <tbody>
                           {% for title in dict_domain['title']%}
                             <tr>
-                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=title&id={{ title[1] }}">{{ title[1] }}</a></td>
+                              <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=title&id={{ title['id'] }}">{{ title['content'] }}</a></td>
                             </tr>
                           {% endfor %}
                         </tbody>
@@ -417,9 +429,11 @@
                                     </a>
                                     <div>
                                       {% for tag in item["tags"] %}
-                                          <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag["tag"] }}">
-                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag["min_tag"] }}</span>
-                                          </a>
+                                          {% if tag != 'infoleak:submission="crawler"' %}
+                                              <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                                                <small class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</small>
+                                              </a>
+                                          {% endif %}
                                       {%  endfor %}
                                     </div>
                                 </td>

@@ -29,6 +29,7 @@ from lib import crawlers
 from lib import Language
 from lib.objects import Domains
 from lib.objects.Items import Item
+from lib.objects.Titles import Title
 from lib import Tag
 
 from packages import Date
@@ -372,9 +373,22 @@ def showDomain():
     dict_domain = domain.get_meta(options=['last_origin', 'languages'])
     dict_domain['domain'] = domain.id
     if domain.was_up():
-        dict_domain = {**dict_domain, **domain.get_correlations(unpack=True)}
-        dict_domain['correlation_nb'] = len(dict_domain['decoded']) + len(dict_domain['username']) + len(
-            dict_domain['pgp']) + len(dict_domain['cryptocurrency']) + len(dict_domain['screenshot'])
+        dict_domain = {**dict_domain, **domain.get_correlations(filter_types=['cryptocurrency', 'decoded', 'pgp', 'screenshot', 'title'], unpack=True)}
+
+        titles = []
+        # for t in domain.get_correlation('title').get('title', []):
+        #     title = Title(t[1:])
+        #     titles.append(title.get_content())
+        for t in dict_domain['title']:
+            title = Title(t[1])
+            titles.append({'id': title.id, 'content': title.get_content()})
+        dict_domain['title'] = titles
+
+        dict_domain['correlations_nb'] = domain.get_nb_correlations()
+        nb = 0
+        for correl_type in dict_domain['correlations_nb']:
+            nb += dict_domain['correlations_nb'][correl_type]
+        dict_domain['correlation_nb'] = nb
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
         dict_domain['history'] = domain.get_history(status=True)
         curr_epoch = None
