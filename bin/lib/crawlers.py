@@ -187,12 +187,18 @@ def unpack_url(url):
 # TODO options to only extract domains
 # TODO extract onions
 def extract_url_from_text(content):
-    urls = []
+    urls = set()
     r_url = r"(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\[(?:(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,7}:|(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}|::(?:[A-Fa-f0-9]{1,4}:){0,5}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,5}::(?:[A-Fa-f0-9]{1,4})?|(?:[A-Fa-f0-9]{1,4}:){1,4}::(?:[A-Fa-f0-9]{1,4}:){0,1}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,3}:){1}::(?:[A-Fa-f0-9]{1,4}:){0,2}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,2}:){1}::(?:[A-Fa-f0-9]{1,4}:){0,3}[A-Fa-f0-9]{1,4}|[A-Fa-f0-9]{1,4}::(?:[A-Fa-f0-9]{1,4}:){0,4}[A-Fa-f0-9]{1,4}|::(?:[A-Fa-f0-9]{1,4}:){0,5}[A-Fa-f0-9]{1,4}|fe80:(?:[A-Fa-f0-9]{0,4}:){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9])?[0-9])\.){3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9])?[0-9]))\]|(?:(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})|(?:(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}))(?::\d{2,5})?(?:\/[^\s]*)?"
     for url in regex_findall('extract_url_from_text', gen_uuid(), r_url, 'user_id', content, max_time=10):
-        urls.append(url)
+        if url.startswith('http://'):
+            if url in urls:
+                continue
+        elif not url.startswith('https://'):
+            if f'http://{url}' in urls:
+                continue
+        urls.add(url)
         # check if onions
-    return urls
+    return list(urls)
     # extract onions
     # extract IP
 
