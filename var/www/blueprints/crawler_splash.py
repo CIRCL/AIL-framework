@@ -122,6 +122,20 @@ def send_to_spider():
 
     # POST val
     url = request.form.get('url_to_crawl')
+    urls = request.form.get('urls_to_crawl')
+    if urls:
+        urls = crawlers.extract_url_from_text(urls)
+        l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
+        crawlers_types = crawlers.get_crawler_all_types()
+        proxies = []  # TODO HANDLE PROXIES
+        return render_template("crawler_manual.html", urls=urls,
+                               is_manager_connected=crawlers.get_lacus_connection_metadata(),
+                               crawlers_types=crawlers_types,
+                               proxies=proxies,
+                               l_cookiejar=l_cookiejar,
+                               tags_selector_data=Tag.get_tags_selector_data())
+
+    urls = request.form.getlist('urls')
     crawler_type = request.form.get('crawler_queue_type')
     screenshot = request.form.get('screenshot')
     har = request.form.get('har')
@@ -185,7 +199,11 @@ def send_to_spider():
             cookiejar_uuid = cookiejar_uuid.rsplit(':')
             cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
 
-    data = {'url': url, 'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'frequency': frequency}
+    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'frequency': frequency}
+    if url:
+        data['url']= url
+    if urls:
+        data['urls'] = urls
     if proxy:
         data['proxy'] = proxy
     if cookiejar_uuid:

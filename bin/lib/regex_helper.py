@@ -7,7 +7,6 @@ Regex Helper
 
 import os
 import logging.config
-import phonenumbers
 import re
 import sys
 import uuid
@@ -20,7 +19,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_logger
 from lib import ConfigLoader
-# from lib import Statistics
 
 logging.config.dictConfig(ail_logger.get_config())
 logger = logging.getLogger()
@@ -171,6 +169,7 @@ def regex_search(r_key, regex, item_id, content, max_time=30):
 
 ## Phone Regexs ##
 def _regex_phone_iter(r_key, country_code, content):
+    import phonenumbers
     iterator = phonenumbers.PhoneNumberMatcher(content, country_code)
     for match in iterator:
         value = match.raw_string

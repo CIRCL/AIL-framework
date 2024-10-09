@@ -39,6 +39,7 @@ from packages import git_status
 from packages import Date
 from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
+from lib.regex_helper import regex_findall
 from lib.objects.Domains import Domain
 from lib.objects.Titles import Title
 from lib.objects import HHHashs
@@ -182,6 +183,19 @@ def unpack_url(url):
     url_decoded['domain'] = url_decoded['domain'].lower()
     url_decoded['url'] = url.replace(url_decoded['host'], url_decoded['host'].lower(), 1)
     return url_decoded
+
+# TODO options to only extract domains
+# TODO extract onions
+def extract_url_from_text(content):
+    urls = []
+    r_url = r"(?:(?:https?|ftp):\/\/)?(?:\S+(?::\S*)?@)?(?:\[(?:(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,7}:|(?:[A-Fa-f0-9]{1,4}:){1,6}:[A-Fa-f0-9]{1,4}|::(?:[A-Fa-f0-9]{1,4}:){0,5}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,4}:){1,5}::(?:[A-Fa-f0-9]{1,4})?|(?:[A-Fa-f0-9]{1,4}:){1,4}::(?:[A-Fa-f0-9]{1,4}:){0,1}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,3}:){1}::(?:[A-Fa-f0-9]{1,4}:){0,2}[A-Fa-f0-9]{1,4}|(?:[A-Fa-f0-9]{1,2}:){1}::(?:[A-Fa-f0-9]{1,4}:){0,3}[A-Fa-f0-9]{1,4}|[A-Fa-f0-9]{1,4}::(?:[A-Fa-f0-9]{1,4}:){0,4}[A-Fa-f0-9]{1,4}|::(?:[A-Fa-f0-9]{1,4}:){0,5}[A-Fa-f0-9]{1,4}|fe80:(?:[A-Fa-f0-9]{0,4}:){0,4}%[0-9a-zA-Z]{1,}|::(?:ffff(?::0{1,4}){0,1}:){0,1}(?:(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9])?[0-9])\.){3}(?:25[0-5]|(?:2[0-4]|1{0,1}[0-9])?[0-9]))\]|(?:(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|\d{1,2})|(?:(?:[a-zA-Z0-9\-]+\.)+[a-zA-Z]{2,}))(?::\d{2,5})?(?:\/[^\s]*)?"
+    for url in regex_findall('extract_url_from_text', gen_uuid(), r_url, 'user_id', content, max_time=10):
+        urls.append(url)
+        # check if onions
+    return urls
+    # extract onions
+    # extract IP
+
 
 # # # # # # # #
 #             #
@@ -1828,8 +1842,9 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
 
 def api_parse_task_dict_basic(data, user_id):
     url = data.get('url', None)
-    if not url or url == '\n':
-        return {'status': 'error', 'reason': 'No url supplied'}, 400
+    urls = data.get('urls', None)
+    if (not url or url == '\n') and not urls:
+        return {'status': 'error', 'reason': 'No url(s) supplied'}, 400
 
     screenshot = data.get('screenshot', False)
     if screenshot:
@@ -1863,14 +1878,20 @@ def api_parse_task_dict_basic(data, user_id):
 
     tags = data.get('tags', [])
 
-    return {'url': url, 'depth_limit': depth_limit, 'har': har, 'screenshot': screenshot, 'proxy': proxy, 'tags': tags}, 200
+    data = {'depth_limit': depth_limit, 'har': har, 'screenshot': screenshot, 'proxy': proxy, 'tags': tags}
+    if url :
+        data['url'] = url
+    elif urls:
+        data['urls'] = urls
+    return data, 200
 
 def api_add_crawler_task(data, user_org, user_id=None):
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
 
-    url = task['url']
+    url = task.get('url')
+    urls = task.get('urls')
     screenshot = task['screenshot']
     har = task['har']
     depth_limit = task['depth_limit']
@@ -1920,17 +1941,22 @@ def api_add_crawler_task(data, user_org, user_id=None):
                 if max(months, weeks, days, hours, minutes) <= 0:
                     return {'error': 'Invalid frequency'}, 400
                 frequency = f'{months}:{weeks}:{days}:{hours}:{minutes}'
-
-    if frequency:
-        # TODO verify user
-        task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
-    else:
-        # TODO HEADERS
-        # TODO USER AGENT
-        task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                                cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
-                                parent='manual', priority=90)
+    if url:
+        if frequency:
+            # TODO verify user
+            task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+                                        cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
+        else:
+            # TODO HEADERS
+            # TODO USER AGENT
+            task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
+                                    parent='manual', priority=90)
+    elif urls:
+        for url in urls:
+            task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
+                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
+                                    parent='manual', priority=90)
 
     return {'uuid': task_uuid}, 200
 

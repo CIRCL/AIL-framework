@@ -43,9 +43,28 @@
 								<form action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
 									<div class="row">
 										<div class="col-12 col-lg-6">
-											<div class="input-group" id="date-range-from">
-												<input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
-											</div>
+                                            {% if urls %}
+                                                {% for url in urls %}
+                                                    <div class="input-group mb-1">
+                                                        <input type="text" class="form-control col-10" name="urls" value="{{ url }}">
+                                                        <span class="btn btn-danger col-1" id="" onclick="$(this).parent().remove();"><i class="fas fa-trash-alt"></i></span>
+                                                    </div>
+                                                {% endfor %}
+
+                                            {% else %}
+                                                <div class="input-group" id="single_urls">
+                                                    <input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-secondary" type="button" onclick="btn_multiple_urls()"><i class="fa fa-plus"></i> Multiple Urls</button>
+                                                    </div>
+                                                </div>
+                                                <div class="input-group" id="multiple_urls">
+                                                    <textarea type="text" class="form-control" id="urls_to_crawl" name="urls_to_crawl" rows="3" placeholder="List Of Urls or Free Text"></textarea>
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-secondary" type="button" onclick="btn_single_url()"><i class="fa fa-minus"></i> One Url</button>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
 											<div class="d-flex mt-2">
 												<i class="fas fa-spider mt-1"></i> &nbsp;Crawler Type&nbsp;&nbsp;
 												<div class="custom-control custom-switch">
@@ -221,6 +240,7 @@ $(document).ready(function(){
 	queue_type_selector_input_controler()
 	manual_crawler_input_controler();
     $("#custom_frequency").hide();
+    $("#multiple_urls").hide();
 
 	$('#crawler_scheduler').on("change", function () {
 		manual_crawler_input_controler();
@@ -243,6 +263,16 @@ function toggle_sidebar(){
 		$('#side_menu').addClass('col-lg-2')
 		$('#core_content').addClass('col-lg-10')
 	}
+}
+
+function btn_single_url() {
+    $("#multiple_urls").hide();
+    $("#single_urls").show()
+}
+
+function btn_multiple_urls() {
+    $("#single_urls").hide()
+    $("#multiple_urls").show();
 }
 
 function manual_crawler_input_controler() {
