@@ -17,6 +17,7 @@ from modules.abstract_module import AbstractModule
 from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
+from lib.Tag import get_domain_vanity_tags
 from lib.objects import CookiesNames
 from lib.objects import Etags
 from lib.objects.Domains import Domain
@@ -39,6 +40,9 @@ class Crawler(AbstractModule):
         self.pending_seconds = 1
 
         self.tracker_yara = Tracker_Yara(queue=False)
+
+        self.vanity_tags = get_domain_vanity_tags()
+        print('vanity tags:', self.vanity_tags)
 
         config_loader = ConfigLoader()
 
@@ -271,7 +275,12 @@ class Crawler(AbstractModule):
         # Origin + History + tags
         if self.root_item:
             self.domain.set_last_origin(parent_id)
+            # Vanity
             self.domain.update_vanity_cluster()
+            domain_vanity = self.domain.get_vanity()
+            if domain_vanity in self.vanity_tags:
+                for tag in self.vanity_tags[domain_vanity]:
+                    self.domain.add_tag(tag)
             # Tags
             for tag in task.get_tags():
                 self.domain.add_tag(tag)

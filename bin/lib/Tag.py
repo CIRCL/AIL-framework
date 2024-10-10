@@ -1521,6 +1521,24 @@ def refresh_auto_push():
 
 # --- TAG AUTO PUSH --- #
 
+def get_domain_vanity_tags():
+    vanity = {}
+    try:
+        with open(os.path.join(os.environ['AIL_HOME'], 'files/vanity_tags')) as f:
+            ltags = json.load(f)
+            if ltags:
+                for tag in ltags:
+                    if is_taxonomie_tag(tag) or is_galaxy_tag(tag):
+                        for s_vanity in ltags[tag]:
+                            if s_vanity not in vanity:
+                                vanity[s_vanity] = []
+                            vanity[s_vanity].append(tag)
+    except FileNotFoundError:
+        pass
+    except json.decoder.JSONDecodeError:
+        print('Error files/vanity_tags, Invalid JSON')
+    return vanity
+
 ###################################################################################
 ###################################################################################
 ###################################################################################

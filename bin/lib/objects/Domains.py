@@ -411,6 +411,9 @@ class Domain(AbstractObject):
         r_crawler.sadd(f'language:domains:{self.domain_type}:{language}', self.id)
         r_crawler.sadd(f'domain:language:{self.id}', language)
 
+    def get_vanity(self, len_vanity=4):
+        return get_domain_vanity(self.id, len_vanity=len_vanity)
+
     def update_vanity_cluster(self):
         if self.get_domain_type() == 'onion':
             update_vanity_cluster(self.id)
