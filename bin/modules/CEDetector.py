@@ -106,9 +106,7 @@ def test_detection():
         dom = Domain(domain)
         is_detected = False
         for h in dom.get_correlation('title').get('title', []):
-            t = Title(h[1:])
-            title = t.get_content()
-            module.obj = title
+            module.obj = Title(h[1:])
             if module.compute(''):
                 is_detected = True
         if not is_detected:
