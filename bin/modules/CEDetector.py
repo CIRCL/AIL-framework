@@ -71,7 +71,6 @@ class CEDetector(AbstractModule):
         words = set(words)
 
         for word in words:
-            print(word)
             if word in self.csam_words:
                 is_csam = True
             if word in self.child_worlds:
@@ -111,7 +110,18 @@ def test_detection():
                 is_detected = True
         if not is_detected:
             not_detected.add(domain)
-    print(not_detected)
+
+    print()
+    print()
+    print()
+    print()
+    for domain in not_detected:
+        dom = Domain(domain)
+        print('-----------', domain)
+        for h in dom.get_correlation('title').get('title', []):
+            print(Title(h[1:]).get_content().lower())
+        print()
+        print()
 
 
 if __name__ == "__main__":
