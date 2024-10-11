@@ -193,8 +193,18 @@ class AbstractDaterangeObjects(ABC):
         self.type = obj_type
         self.obj_class = obj_class
 
+    ################################################
+    ################################################
+
     def get_ids(self):
         return r_object.smembers(f'{self.type}:all')
+
+    def get_iterator(self):
+        for obj_id in self.get_ids():
+            yield self.obj_class(obj_id)
+
+    ################################################
+    ################################################
 
     # def get_ids_iterator(self):
     #     return r_object.sscan_iter(r_object, f'{self.type}:all')

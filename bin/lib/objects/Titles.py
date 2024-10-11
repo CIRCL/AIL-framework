@@ -96,6 +96,7 @@ def create_title(content):
         title.create(content)
     return title
 
+
 class Titles(AbstractDaterangeObjects):
     """
         Titles Objects
