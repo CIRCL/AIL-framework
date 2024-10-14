@@ -354,10 +354,10 @@ class Crawler(AbstractModule):
                 title.add(item.get_date(), item)
                 # Tracker
                 self.tracker_yara.compute_manual(title)
-                if not title.is_tags_safe():
-                    unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
-                    self.domain.add_tag(unsafe_tag)
-                    item.add_tag(unsafe_tag)
+                # if not title.is_tags_safe():
+                #     unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                #     self.domain.add_tag(unsafe_tag)
+                #     item.add_tag(unsafe_tag)
 
             # SCREENSHOT
             if self.screenshot:
