@@ -341,6 +341,8 @@ def obj_iterator(obj_type, filters):
         return Pgps.get_all_pgps_objects(filters=filters)
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
+    elif obj_type == 'title':
+        return Titles.Titles().get_iterator()
 
 
 def card_objs_iterators(filters):

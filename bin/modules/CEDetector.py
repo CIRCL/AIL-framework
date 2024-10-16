@@ -111,17 +111,28 @@ def test_detection():
         if not is_detected:
             not_detected.add(domain)
 
-    print()
-    print()
-    print()
-    print()
     for domain in not_detected:
         dom = Domain(domain)
-        print('-----------', domain)
+        # print('-----------', domain)
         for h in dom.get_correlation('title').get('title', []):
-            print(Title(h[1:]).get_content().lower())
-        print()
-        print()
+            c = Title(h[1:]).get_content().lower()
+            if c == '404 not found':
+                lt = []
+                dom = Domain(domain)
+                print('-----------', domain)
+                for hi in dom.get_correlation('title').get('title', []):
+                    print(Title(hi[1:]).get_content().lower())
+                    ci = Title(hi[1:]).get_content().lower()
+                    if ci != '404 not found' and ci not in []:
+                        lt.append(ci)
+                if lt:
+                    print('-----------', domain)
+                    for ti in lt:
+                        print(ti)
+                    print()
+                    print()
+
+            # Tag.delete_object_tag(tag, 'domain', domain)
 
 
 if __name__ == "__main__":
