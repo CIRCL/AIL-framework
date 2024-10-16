@@ -87,7 +87,7 @@ class CEDetector(AbstractModule):
             to_tag = True
 
         if to_tag:
-            # print(f'{content}                         DETECTED')
+            print(f'CSAM DETECTED    {content}')
             # print()
             self.add_message_to_queue(message=self.ce_tag, queue='Tags')
 
