@@ -25,6 +25,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib.objects.Domains import Domain
 
 class CEDetector(AbstractModule):
     """docstring for Onion module."""
@@ -90,6 +91,10 @@ class CEDetector(AbstractModule):
             print(f'CSAM DETECTED    {content}')
             # print()
             self.add_message_to_queue(message=self.ce_tag, queue='Tags')
+            # Domains
+            for dom in self.obj.get_correlation('domain').get('domain', []):
+                domain = Domain(dom[1:])
+                self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
 
         return to_tag
 
