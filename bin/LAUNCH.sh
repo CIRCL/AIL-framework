@@ -283,6 +283,10 @@ function launching_scripts {
     screen -S "Script_AIL" -X screen -t "QrCodeReader" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./QrCodeReader.py; read x"
     sleep 0.1
 
+    # TITLES
+    screen -S "Script_AIL" -X screen -t "CEDetector" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CEDetector.py; read x"
+    sleep 0.1
+
     ##################################
     #       TRACKERS MODULES         #
     ##################################

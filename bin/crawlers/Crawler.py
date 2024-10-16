@@ -358,6 +358,7 @@ class Crawler(AbstractModule):
                 #     unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
                 #     self.domain.add_tag(unsafe_tag)
                 #     item.add_tag(unsafe_tag)
+                self.add_message_to_queue(obj=title, message=msg, queue='Titles')
 
             # SCREENSHOT
             if self.screenshot:
