@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Dom-Hashs - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+
+	<style>
+		.input-group .form-control {
+			position: unset;
+		}
+		.line {
+  		fill: none;
+  		stroke: #000;
+  		stroke-width: 2.0px;
+		}
+		.bar {
+      fill: steelblue;
+    }
+    .bar:hover{
+      fill: brown;
+			cursor: pointer;
+    }
+		.bar_stack:hover{
+			cursor: pointer;
+    }
+		.pie_path:hover{
+			cursor: pointer;
+		}
+		.svgText {
+  		pointer-events: none;
+		}
+		div.tooltip {
+			position: absolute;
+			text-align: center;
+			padding: 2px;
+			font: 12px sans-serif;
+			background: #ebf4fb;
+			border: 2px solid #b7ddf2;
+			border-radius: 8px;
+			pointer-events: none;
+			color: #000000;
+		}
+	</style>
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+				<div class="row">
+					<div class="col-xl-10">
+						<div class="mt-1" id="barchart_type"></div>
+
+{#                        <div class="card border-secondary my-2">#}
+{#                            <div class="card-body text-dark">#}
+{#                                <h5 class="card-title">Search Dom-Hash by name:</h5>#}
+{#                                <form action="{{ url_for('objects_dom_hash.objects_dom_hash_search') }}" id="search_subtype_onj" method='post'>#}
+{#                                    <div class="input-group mb-1">#}
+{#                                        <input type="text" class="form-control col-8" name="object_id" value="" placeholder="Dom-Hash ID" required>#}
+{#                                        <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>#}
+{#                                    </div>#}
+{#                                </form>#}
+{#                            </div>#}
+{#                        </div>#}
+                    </div>
+
+
+					<div class="col-xl-2">
+
+						<div class="card mb-3 mt-2" style="background-color:#d9edf7;">
+						  <div class="card-body text-center py-2">
+						    <h6 class="card-title" style="color:#286090;">Select a date range :</h6>
+								<form action="{{ url_for('objects_dom_hash.objects_dom_hashs_post') }}" id="hash_selector_form" method='post'>
+									<div class="input-group" id="date-range-from">
+										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+										<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" value="{{ date_from }}" name="date_from" autocomplete="off">
+									</div>
+									<div class="input-group" id="date-range-to">
+										<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+										<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" value="{{ date_to }}" name="date_to" autocomplete="off">
+									</div>
+									<div class="form-check my-1">
+										<input class="form-check-input" type="checkbox" id="checkbox-input-show" name="show_objects" value="True" {% if show_objects %}checked{% endif %}>
+										<label class="form-check-label" for="checkbox-input-show">
+											<span style="color:#286090; font-size: 14px;">
+												Show Dom-Hash <i class="fas fa-key"></i>
+											</span>
+										</label>
+									</div>
+									<button class="btn btn-primary" style="text-align:center;">
+										<i class="fas fa-copy"></i> Search
+									</button>
+								</form>
+						  </div>
+						</div>
+
+						<div id="pie_chart_encoded">
+						</div>
+						<div id="pie_chart_top5_types">
+						</div>
+					</div>
+				</div>
+
+				{% if dict_objects %}
+                    {% if date_from|string == date_to|string %}
+                        <h3> {{ date_from }} Dom-Hash: </h3>
+                    {% else %}
+                        <h3> {{ date_from }} to {{ date_to }} Dom-Hash: </h3>
+                    {% endif %}
+                    <table id="tableb64" class="table table-striped table-bordered">
+                        <thead class="bg-dark text-white">
+                        <tr>
+                            <th>Dom-Hash-ID</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>Total</th>
+                            <th>Last days</th>
+                        </tr>
+                        </thead>
+						<tbody style="font-size: 15px;">
+                        {% for dom_hash_id in dict_objects %}
+                            <tr>
+                                <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=dom-hash&id={{ dom_hash_id }}">{{ dom_hash_id }}</a></td>
+                                <td>{{ dict_objects[dom_hash_id]['first_seen'] }}</td>
+                                <td>{{ dict_objects[dom_hash_id]['last_seen'] }}</td>
+                                <td>{{ dict_objects[dom_hash_id]['nb_seen'] }}</td>
+                                <td id="sparklines_{{ dom_hash_id }}" style="text-align:center;"></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+
+                {% else %}
+                    {% if show_objects %}
+                        {% if date_from|string == date_to|string %}
+							<h3> {{ date_from }}, No Dom-Hash</h3>
+                        {% else %}
+							<h3> {{ date_from }} to {{ date_to }}, No Dom-Hash</h3>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    var chart = {};
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_dom_hash").addClass("active");
+
+        $('#date-range-from').dateRangePicker({
+            separator : ' to ',
+            getValue: function()
+            {
+                if ($('#date-range-from-input').val() && $('#date-range-to').val() )
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to').val();
+                else
+                    return '';
+            },
+            setValue: function(s,s1,s2)
+            {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            },
+        });
+        $('#date-range-to').dateRangePicker({
+            separator : ' to ',
+            getValue: function()
+            {
+                if ($('#date-range-from-input').val() && $('#date-range-to').val() )
+                    return $('#date-range-from-input').val() + ' to ' + $('#date-range-to').val();
+                else
+                    return '';
+            },
+            setValue: function(s,s1,s2)
+            {
+                $('#date-range-from-input').val(s1);
+                $('#date-range-to-input').val(s2);
+            },
+        });
+
+        $('#date-range-from').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
+        $('#date-range-to').data('dateRangePicker').setDateRange('{{date_from}}','{{date_to}}');
+
+        $('#tableb64').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 3, "desc" ]]
+        });
+
+
+        chart.stackBarChart = barchart_type_stack("{{ url_for('objects_dom_hash.objects_dom_hash_range_json') }}?date_from={{date_from}}&date_to={{date_to}}", 'id');
+
+
+        chart.onResize();
+        $(window).on("resize", function() {
+            chart.onResize();
+        });
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+<script>
+	{% for dom_hash_id in dict_objects %}
+    sparkline("sparklines_{{ dom_hash_id }}", {{ dict_objects[dom_hash_id]['sparkline'] }}, {});
+	{% endfor %}
+</script>
+
+<script>
+var margin = {top: 20, right: 100, bottom: 55, left: 45},
+				width  = 1000 - margin.left - margin.right,
+				height = 500  - margin.top  - margin.bottom;
+var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+
+var y = d3.scaleLinear().rangeRound([height, 0]);
+
+var xAxis = d3.axisBottom(x);
+
+var yAxis = d3.axisLeft(y);
+
+var color = d3.scaleOrdinal(d3.schemeSet3);
+
+var svg = d3.select("#barchart_type").append("svg")
+				.attr("id", "thesvg")
+				.attr("viewBox", "0 0 1000 500")
+				.attr("width",  width  + margin.left + margin.right)
+				.attr("height", height + margin.top  + margin.bottom)
+			.append("g")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+function barchart_type_stack(url, id) {
+
+  d3.json(url)
+    .then(function(data){
+
+			var labelVar = 'date';  //A
+		  var varNames = d3.keys(data[0])
+		      .filter(function (key) { return key !== labelVar;}); //B
+
+		  data.forEach(function (d) { //D
+		    var y0 = 0;
+		    d.mapping = varNames.map(function (name) {
+		      return {
+		        name: name,
+		        label: d[labelVar],
+		        y0: y0,
+		        y1: y0 += +d[name]
+		      };
+		    });
+		    d.total = d.mapping[d.mapping.length - 1].y1;
+		  });
+
+		  x.domain(data.map(function (d) { return (d.date); })); //E
+		  y.domain([0, d3.max(data, function (d) { return d.total; })]);
+
+			svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+				.selectAll("text")
+					.attr("class", "bar")
+					{% if  date_from|string == date_to|string and type is none %}
+						.on("click", function (d) { window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}?date_from={{date_from}}&date_to={{date_to}}&type_id="+d })
+						.attr("transform", "rotate(-18)" )
+					{% elif  date_from|string == date_to|string and type is not none %}
+						.on("click", function (d) { window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}?date_from="+d+'&date_to='+d })
+						.attr("transform", "rotate(-18)" )
+					{% else %}
+						.on("click", function (d) { window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}?date_from="+d+'&date_to='+d })
+						.attr("transform", "rotate(-40)" )
+					{% endif %}
+					.style("text-anchor", "end");
+
+    	svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+      	.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 6)
+        	.attr("dy", ".71em")
+        	.style("text-anchor", "end");
+
+			var selection = svg.selectAll(".series")
+		    .data(data)
+		    .enter().append("g")
+		      .attr("class", "series")
+		      .attr("transform", function (d) { return "translate(" + x((d.date)) + ",0)"; });
+
+			selection.selectAll("rect")
+	      .data(function (d) { return d.mapping; })
+	    .enter().append("rect")
+				.attr("class", "bar_stack")
+	      .attr("width", x.bandwidth())
+	      .attr("y", function (d) { return y(d.y1); })
+	      .attr("height", function (d) { return y(d.y0) - y(d.y1); })
+	      .style("fill", function (d) { return color(d.name); })
+	      .style("stroke", "grey")
+	      .on("mouseover", function (d) { showPopover.call(this, d); })
+				.on("mouseout", function (d) { removePopovers(); })
+				{% if  date_from|string == date_to|string and type is none %}
+					.on("click", function(d){ window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}" +'?date_from={{date_from}}&date_to={{date_to}}&type_id='+d.label+'&encoding='+d.name; });
+				{% elif  date_from|string == date_to|string and type is not none %}
+					.on("click", function(d){ window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}" +'?type_id={{type_id}}&date_from='+d.label+'&date_to='+d.label+'&encoding='+d.name; });
+				{% else %}
+					.on("click", function(d){ window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}" +'?type_id='+ d.name +'&date_from='+d.label+'&date_to='+d.label; });
+				{% endif %}
+
+				data.forEach(function(d) {
+					if(d.total !== 0){
+						svg.append("text")
+								.attr("class", "bar")
+								.attr("dy", "-.35em")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+								.attr('y', y(d.total))
+								{% if  date_from|string == date_to|string and type is none %}
+									.on("click", function () {window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}"+'?date_from={{date_from}}&date_to={{date_to}}&type_id='+d.date })
+								{% elif  date_from|string == date_to|string and type is not none %}
+									.on("click", function () {window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}?type_id={{type_id}}&date_from="+d.date+'&date_to='+d.date })
+								{% else %}
+									.on("click", function () {window.location.href = "{{ url_for('objects_dom_hash.objects_dom_hashs') }}"+'?date_from='+d.date+'&date_to='+d.date })
+								{% endif %}
+								.style("text-anchor", "middle")
+								.text(d.total);
+					}
+				});
+
+			drawLegend(varNames);
+    });
+
+}
+
+function drawLegend (varNames) {
+    var legend = svg.selectAll(".legend")
+        .data(varNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function (d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", 943)
+        .attr("width", 10)
+        .attr("height", 10)
+        .style("fill", color)
+        .style("stroke", "grey");
+
+    legend.append("text")
+				.attr("class", "svgText")
+        .attr("x", 941)
+        .attr("y", 6)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function (d) { return d; });
+}
+
+function removePopovers () {
+    $('.popover').each(function() {
+      $(this).remove();
+    });
+  }
+
+function showPopover (d) {
+  $(this).popover({
+    title: "<b><span id='tooltip-id-name-bar'></span></b>",
+    placement: 'top',
+    container: 'body',
+    trigger: 'manual',
+    html : true,
+    content: function() {
+      return "<span id='tooltip-id-label'></span>" +
+            "<br/>num: <span id='tooltip-id-value-bar'></span>"; }
+  });
+  $(this).popover('show');
+  $("#tooltip-id-name-bar").text(d.name);
+  $("#tooltip-id-label").text(d.label);
+  $("#tooltip-id-value-bar").text(d3.format(",")(d.value ? d.value: d.y1 - d.y0));
+}
+
+chart.onResize = function () {
+    var aspect = 1000 / 500, chart = $("#thesvg");
+    var targetWidth = chart.parent().width();
+    chart.attr("width", targetWidth);
+    chart.attr("height", targetWidth / aspect);
+  }
+
+window.chart = chart;
+
+</script>
+
+<script>
+function draw_pie_chart(id, url_json, pie_on_click_url) {
+
+		var width_pie = 200;
+		var height_pie = 200;
+		var padding_pie = 10;
+		var opacity_pie = .8;
+
+		var radius_pie = Math.min(width_pie - padding_pie, height_pie - padding_pie) / 2;
+		//var color_pie = d3.scaleOrdinal(d3.schemeCategory10);
+		var color_pie = d3.scaleOrdinal(d3.schemeSet3);
+
+		var div_pie = d3.select("body").append("div")
+				.attr("class", "tooltip")
+				.style("opacity", 0);
+
+		var svg_pie = d3.select("#"+id)
+				.append('svg')
+				.attr("width", '100%')
+				.attr("height", '100%')
+				.attr('viewBox','0 0 '+Math.min(width_pie,height_pie) +' '+Math.min(width_pie,height_pie) )
+				.attr('preserveAspectRatio','xMinYMin')
+
+
+		var g_pie = svg_pie.append('g')
+				.attr('transform', 'translate(' + (width_pie/2) + ',' + (height_pie/2) + ')');
+
+		var arc_pie = d3.arc()
+				.innerRadius(0)
+				.outerRadius(radius_pie);
+
+		d3.json(url_json)
+			.then(function(data){
+
+			var pie_pie = d3.pie()
+					.value(function(d) { return d.value; })
+					.sort(null);
+
+			var path_pie = g_pie.selectAll('path')
+				  .data(pie_pie(data))
+				  .enter()
+				  .append("g")
+				  .append('path')
+				  .attr('d', arc_pie)
+				  .attr('fill', (d,i) => color_pie(i))
+					.attr('class', 'pie_path')
+					.on("mouseover", mouseovered_pie)
+					.on("mouseout", mouseouted_pie)
+					.on("click", function (d) {window.location.href = pie_on_click_url+d.data.name })
+				  .style('opacity', opacity_pie)
+				  .style('stroke', 'white');
+			});
+
+
+		function mouseovered_pie(d) {
+      //remove old content
+      $("#tooltip-id-name").remove();
+      $("#tooltip-id-value").remove();
+
+			// tooltip
+			var content;
+
+			content = "<b><span id='tooltip-id-name'></span></b><br/>"+
+								"<br/>"+
+								"<i>Decoded</i>: <span id='tooltip-id-value'></span><br/>"
+
+			div_pie.transition()
+				.duration(200)
+				.style("opacity", .9);
+			div_pie.html(content)
+				.style("left", (d3.event.pageX) + "px")
+				.style("top", (d3.event.pageY - 28) + "px");
+
+      $("#tooltip-id-name").text(d.data.name);
+      $("#tooltip-id-value").text(d.data.value);
+		}
+
+		function mouseouted_pie() {
+			div_pie.transition()
+				.duration(500)
+				.style("opacity", 0);
+		}
+}
+
+</script>
+
+
+
+<script>
+function barchart_type(url, id) {
+
+
+  var margin = {top: 20, right: 20, bottom: 70, left: 40};
+
+  var width = 960 - margin.left - margin.right;
+  var height = 500 - margin.top - margin.bottom;
+
+  var x = d3.scaleBand().rangeRound([0, width]).padding(0.1);
+  var y = d3.scaleLinear().rangeRound([height, 0]);
+
+  var xAxis = d3.axisBottom(x)
+    //.tickFormat(d3.time.format("%Y-%m"));
+
+  var yAxis = d3.axisLeft(y)
+    .ticks(10);
+
+/*var svg = d3.select(id).append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+			.attr("id", "thesvg")
+      .append("g")
+        .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");*/
+
+
+  d3.json(url)
+    .then(function(data){
+
+        data.forEach(function(d) {
+          d.value = +d.value;
+        });
+
+				x.domain(data.map(function(d) { return d.date; }));
+        y.domain([0, d3.max(data, function(d) { return d.value; })]);
+
+        var label = svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+          .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", "-.55em")
+						{% if  daily_type_chart %}
+						.attr("transform", "rotate(-20)" );
+						{% else %}
+						.attr("transform", "rotate(-70)" )
+						.attr("class", "bar")
+						{% endif %}
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+          .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Value ($)");
+
+        var bar = svg.selectAll("bar")
+            .data(data)
+          .enter().append("rect")
+            .attr("class", "bar")
+            //.style("fill", "steelblue")
+						.attr("x", function(d) { return x(d.date); })
+            .attr("width", x.bandwidth())
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+
+
+        data.forEach(function(d) {
+          if(d.value != 0){
+            svg.append("text")
+                .attr("class", "bar")
+                .attr("dy", "-.35em")
+                //.text(function(d) { return d.value; });
+                .text(d.value)
+								.style("text-anchor", "middle")
+								.attr('x', x(d.date) + x.bandwidth()/2)
+                .attr('y', y(d.value));
+          }
+        });
+
+    });
+
+}
+</script>
+
+
+</body>
+
+</html>

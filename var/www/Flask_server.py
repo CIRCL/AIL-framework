@@ -54,6 +54,7 @@ from blueprints.objects_title import objects_title
 from blueprints.objects_cookie_name import objects_cookie_name
 from blueprints.objects_etag import objects_etag
 from blueprints.objects_hhhash import objects_hhhash
+from blueprints.objects_dom_hash import objects_dom_hash
 from blueprints.chats_explorer import chats_explorer
 from blueprints.objects_image import objects_image
 from blueprints.objects_ocr import objects_ocr
@@ -138,6 +139,7 @@ app.register_blueprint(objects_title, url_prefix=baseUrl)
 app.register_blueprint(objects_cookie_name, url_prefix=baseUrl)
 app.register_blueprint(objects_etag, url_prefix=baseUrl)
 app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
+app.register_blueprint(objects_dom_hash, url_prefix=baseUrl)
 app.register_blueprint(chats_explorer, url_prefix=baseUrl)
 app.register_blueprint(objects_image, url_prefix=baseUrl)
 app.register_blueprint(objects_ocr, url_prefix=baseUrl)

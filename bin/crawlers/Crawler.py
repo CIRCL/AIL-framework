@@ -21,6 +21,7 @@ from lib.Tag import get_domain_vanity_tags
 from lib.objects import CookiesNames
 from lib.objects import Etags
 from lib.objects.Domains import Domain
+from lib.objects import DomHashs
 from lib.objects import Favicons
 from lib.objects.Items import Item
 from lib.objects import Screenshots
@@ -347,6 +348,11 @@ class Crawler(AbstractModule):
             if self.root_item is None:
                 self.root_item = item_id
             parent_id = item_id
+
+            # DOM-HASH
+            dom_hash = DomHashs.create(entries['html'])
+            dom_hash.add(self.date.replace('/', ''), item)
+            dom_hash.add_correlation('domain', '', self.domain.id)
 
             title_content = crawlers.extract_title_from_html(entries['html'])
             if title_content:

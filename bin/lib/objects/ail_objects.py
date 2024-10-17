@@ -30,6 +30,7 @@ from lib.objects.Domains import Domain
 from lib.objects import Etags
 from lib.objects import Favicons
 from lib.objects import FilesNames
+from lib.objects import DomHashs
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
@@ -91,6 +92,8 @@ def get_object(obj_type, subtype, obj_id):
             return Favicons.Favicon(obj_id)
         elif obj_type == 'file-name':
             return FilesNames.FileName(obj_id)
+        elif obj_type == 'dom-hash':
+            return DomHashs.DomHash(obj_id)
         elif obj_type == 'hhhash':
             return HHHashs.HHHash(obj_id)
         elif obj_type == 'image':

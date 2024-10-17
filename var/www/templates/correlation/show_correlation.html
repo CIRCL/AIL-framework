@@ -126,6 +126,8 @@
 						{% include 'correlation/metadata_card_cookie_name.html' %}
                     {% elif dict_object["object_type"] == "etag" %}
 						{% include 'correlation/metadata_card_etag.html' %}
+                    {% elif dict_object["object_type"] == "dom-hash" %}
+						{% include 'correlation/metadata_card_dom_hash.html' %}
                     {% elif dict_object["object_type"] == "hhhash" %}
 						{% include 'correlation/metadata_card_hhhash.html' %}
                     {% elif dict_object["object_type"] == "image" %}
@@ -266,6 +268,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="favicon_Check" name="favicon_Check" {%if "favicon" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="favicon_Check">Favicon</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="domhash_Check" name="domhash_Check" {%if "dom-hash" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="domhash_Check">DomHash</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="hhhash_Check" name="hhhash_Check" {%if "hhhash" in dict_object["filter"]%}checked{%endif%}>

@@ -1,0 +1,173 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=dict_object['metadata_card']['add_tags_modal']%}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+<div class="card my-3">
+	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+        <h4>{{ dict_object["metadata"]["content"] }}</h4>
+        <div class="text-secondary">{{ dict_object["correlation_id"] }}</div>
+		<ul class="list-group mb-2">
+			<li class="list-group-item py-0">
+				<div class="row">
+					<div class="col-md-10">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Object type</th>
+									<th>First seen</th>
+									<th>Last seen</th>
+									<th>Nb seen</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>
+										<svg height="26" width="26">
+											<g class="nodes">
+												<circle cx="13" cy="13" r="13" fill="orange"></circle>
+												<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ dict_object["metadata_card"]["svg_icon"]["style"] }}" font-size="16px">{{ dict_object["metadata_card"]["svg_icon"]["icon"] }}</text>
+											</g>
+										</svg>
+                                        {{ dict_object["object_type"] }}
+									</td>
+									<td>{{ dict_object["metadata"]['first_seen'] }}</td>
+									<td>{{ dict_object["metadata"]['last_seen'] }}</td>
+									<td>{{ dict_object["metadata"]['nb_seen'] }}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="col-md-1">
+						<div id="sparkline"></div>
+					</div>
+				</div>
+			</li>
+
+            <li class="list-group-item py-0">
+				<br>
+				<div class="mb-3">
+					Tags:
+					{% for tag in dict_object["metadata"]['tags'] %}
+						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+						data-tagid="{{ tag }}" data-objtype="domhash" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
+							{{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+          	            <i class="far fa-plus-square"></i>
+                    </button>
+				</div>
+			</li>
+		</ul>
+
+		{% with obj_type='dom-hash', obj_id=dict_object['correlation_id'], obj_subtype='' %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
+	</div>
+</div>
+
+<script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
+<script>
+	sparkline("sparkline", {{ dict_object["metadata_card"]["sparkline"] }}, {});
+</script>
+
+
+<script>
+function create_line_chart(id, url){
+
+	var width = 900;
+	var height = Math.round(width / 4);
+
+	var margin = {top: 20, right: 55, bottom: 50, left: 40};
+
+	var x = d3.scaleTime().range([0, width]);
+	var y = d3.scaleLinear().rangeRound([height, 0]);
+
+	var xAxis = d3.axisBottom(x);
+	var yAxis = d3.axisLeft(y);
+
+	var parseTime = d3.timeParse("%Y-%m-%d");
+
+	var line = d3.line()
+							.x(function(d) {
+          			return x(d.date);
+        			}).y(function(d) {
+          			return y(d.value);
+        			});
+
+	var svg_line = d3.select('#'+id).append('svg')
+				.attr("id", "graph_div")
+				.attr("width", width + margin.left + margin.right)
+				.attr("height", height + margin.top + margin.bottom)
+				.append('g')
+						.attr('transform', "translate("+ margin.left +","+ margin.top +")");
+
+	var div = d3.select('body').append('div')
+				.attr('class', 'tooltip')
+				.style('opacity', 0);
+
+	//add div tooltip
+
+d3.json(url)
+	.then(function(data){
+
+		data.forEach(function(d) {
+			d.date_label = d.date;
+			d.date = parseTime(d.date);
+			d.value = +d.value;
+		});
+
+		// fit the data
+		x.domain(d3.extent(data, function(d) { return d.date; }));
+		//x.domain(data.map(function (d) { return d.date; })); //E
+		y.domain([0, d3.max(data, function(d){ return d.value ; })]);
+
+		//line
+		svg_line.append("path")
+				.data([data])
+				.attr("class", "line_graph")
+				.attr("d", line);
+
+		// add X axis
+		svg_line.append("g")
+		    .attr("transform", "translate(0," + height + ")")
+		    .call(d3.axisBottom(x))
+				.selectAll("text")
+					.style("text-anchor", "end")
+					.attr("transform", "rotate(-45)" );
+
+		// Add the Y Axis
+		svg_line.append("g")
+		    .call(d3.axisLeft(y));
+
+		//add a dot circle
+    svg_line.selectAll('dot')
+				.data(data).enter()
+				.append('circle')
+						.attr('r', 2)
+							.attr('cx', function(d) { return x(d.date); })
+							.attr('cy', function(d) { return y(d.value); })
+
+            	.on('mouseover', function(d) {
+	            	div.transition().style('opacity', .9);
+	            	div.html('' + d.date_label+ '<br/>' + d.value).style('left', (d3.event.pageX) + 'px')
+								.style("left", (d3.event.pageX) + "px")
+								.style("top", (d3.event.pageY - 28) + "px");
+          		})
+            	.on('mouseout', function(d)
+          			{
+            			div.transition().style('opacity', 0);
+          			});
+
+	});
+}
+</script>

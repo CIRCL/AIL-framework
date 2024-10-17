@@ -46,6 +46,10 @@ BACKGROUND_UPDATES = {
         'message': 'Compress HAR',
         'scripts': ['compress_har.py']
     },
+    'v5.9': {
+        'message': 'Compute Domain/Items Dom-Hash',
+        'scripts': ['reprocess_dom_hash.py']
+    }
 }
 
 class AILBackgroundUpdate:
