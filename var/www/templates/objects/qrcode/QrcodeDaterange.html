@@ -136,10 +136,7 @@
                         {% for obj_id in dict_objects %}
                             <tr>
                                 <td style="word-break: break-all;">
-                                    <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=qrcode&id={{ obj_id }}">{{ dict_objects[obj_id]['id'] }}</a>
-                                    {% if dict_objects[obj_id]['content'] %}
-                                        <div><small>{{ dict_objects[obj_id]['content'] }}</small></div>
-                                    {% endif %}
+                                    <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=qrcode&id={{ obj_id }}">{{ dict_objects[obj_id]['content'] }}</a>
                                 </td>
                                 <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
                                 <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
