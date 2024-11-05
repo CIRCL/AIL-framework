@@ -22,22 +22,25 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib.objects import BarCodes
 from lib.objects import QrCodes
 
 
-class QrCodeReader(AbstractModule):
+class CodeReader(AbstractModule):
     """
     QrCodeReader for AIL framework
     """
 
     def __init__(self):
-        super(QrCodeReader, self).__init__()
+        super(CodeReader, self).__init__()
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
+
+        self.barcode_type = {'CODABAR', 'CODE39', 'CODE93', 'CODE128', 'EAN8', 'EAN13', 'I25'}  # 2 - 5
 
         # Send module state to logs
         self.logger.info(f'Module {self.module_name} initialized')
@@ -48,26 +51,35 @@ class QrCodeReader(AbstractModule):
     def add_to_cache(self):
         self.r_cache.setex(f'qrcode:no:{self.obj.type}:{self.obj.id}', 86400, 0)
 
-    def extract_qrcode(self, path):
+    def extract_codes(self, path):
+        barcodes = []
+        qrcodes = []
         qr_codes = False
-        contents = []
         try:
             image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
         except cv2.error:
             self.logger.warning(f'Invalid image: {self.obj.get_global_id()}')
-            return False, []
+            return [], []
 
         try:
             decodeds = decode(image)
             for decoded in decodeds:
+                # print(decoded)
                 if decoded.type == 'QRCODE':
                     qr_codes = True
                     if decoded.data:
-                        contents.append(decoded.data.decode())
+                        qrcodes.append(decoded.data.decode())
+                elif decoded.type in self.barcode_type:
+                    if decoded.data:
+                        rect = decoded.rect
+                        if rect.width and rect.height and decoded.quality > 1:
+                            barcodes.append(decoded.data.decode())
+                elif decoded.type:
+                    self.logger.error(f'Unsupported pyzbar code type {decoded.type}: {self.obj.get_global_id()}')
         except ValueError as e:
             self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
-        if not contents:
+        if not qrcodes:
             detector = cv2.QRCodeDetector()
             try:
                 qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
@@ -75,28 +87,31 @@ class QrCodeReader(AbstractModule):
                     qr_codes = True
                     for d in decodeds:
                         if d:
-                            contents.append(d)
+                            qrcodes.append(d)
             except cv2.error as e:
                 self.logger.error(f'{e}: {self.obj.get_global_id()}')
             try:
                 data_qr, box, qrcode_image = detector.detectAndDecode(image)
                 if data_qr:
-                    contents.append(data_qr)
+                    qrcodes.append(data_qr)
                     qr_codes = True
             except cv2.error as e:
                 self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
-        if qr_codes and not contents:
+        if qr_codes and not qrcodes:
             # # # # 0.5s per image
             try:
                 qreader = QReader()
                 decoded_text = qreader.detect_and_decode(image=image)
                 for d in decoded_text:
-                    contents.append(d)
+                    qrcodes.append(d)
                     qr_codes = True
             except ValueError as e:
                 self.logger.error(f'{e}: {self.obj.get_global_id()}')
-        return qr_codes, contents
+            if not qr_codes:
+                self.logger.warning(f'Can notextract qr code: {self.obj.get_global_id()}')
+
+        return barcodes, qrcodes
 
     def compute(self, message):
         obj = self.get_obj()
@@ -111,13 +126,12 @@ class QrCodeReader(AbstractModule):
 
         # image - screenshot
         path = self.obj.get_filepath()
-        is_qrcode, contents = self.extract_qrcode(path)
-        if not contents:
-            # print('no qr code detected')
+        barcodes, qrcodes = self.extract_codes(path)
+        if not barcodes and not qrcodes:
             self.add_to_cache()
             return None
 
-        for content in contents:
+        for content in qrcodes:
             if not content:
                 continue
             print(content)
@@ -134,11 +148,32 @@ class QrCodeReader(AbstractModule):
             # TODO only if new ???
             self.add_message_to_queue(obj=qr_code, queue='Item')
 
-        if is_qrcode or contents:
+        for content in barcodes:
+            if not content:
+                continue
+            print(content)
+            barcode = BarCodes.create(content, self.obj)  # copy screenshot + image daterange
+            if not barcode:
+                print('Error Empty content', self.obj.get_global_id())
+            barcode.add(barcode.get_date(), self.obj)
+
+            for obj_type in ['chat', 'domain', 'message']:  # TODO ITEM ???
+                for c_id in self.obj.get_correlation(obj_type).get(obj_type, []):
+                    o_subtype, o_id = c_id.split(':', 1)
+                    barcode.add_correlation(obj_type, o_subtype, o_id)
+
+            self.add_message_to_queue(obj=barcode, queue='Item')
+
+        if qrcodes:
             tag = 'infoleak:automatic-detection="qrcode"'
+            self.add_message_to_queue(obj=self.obj, message=tag, queue='Tags')
+
+        if barcodes:
+            tag = 'infoleak:automatic-detection="barcode"'
             self.add_message_to_queue(obj=self.obj, message=tag, queue='Tags')
 
 
 if __name__ == '__main__':
-    module = QrCodeReader()
+    module = CodeReader()
     module.run()
+    

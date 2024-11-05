@@ -1,0 +1,83 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=ail_tags %}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+<style>
+    .object_image {
+        filter: blur(5px);
+    }
+</style>
+
+<div class="card my-1">
+	<div class="card-header">
+        <small>{{ meta["id"] }} :</small>
+		<div class="py-1 my-1 bg-white">{{ meta["content"] }}</div>
+		<ul class="list-group mb-2">
+            <li class="list-group-item py-0">
+                <table class="table">
+                    <tbody style="font-size: 15px;">
+                    <tr>
+                        <td>
+                            <svg height="26" width="26">
+                                <g class="nodes">
+                                    <circle cx="13" cy="13" r="13" fill="orange"></circle>
+                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ meta["svg_icon"]["style"] }}" font-size="16px">{{ meta["svg_icon"]["icon"] }}</text>
+                                </g>
+                            </svg>
+                            {{ meta['type'] }}
+                        </td>
+                        <td><b>First Seen:</b> {% if meta['first_seen'] %}{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}{% endif %}</td>
+                        <td><b>Last Seen:</b> {% if meta['last_seen'] %}{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}{% endif %}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li class="list-group-item py-0">
+
+
+            </li>
+
+			<li class="list-group-item py-0">
+				<div class="my-2">
+					Tags:
+					{% for tag in meta['tags'] %}
+                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
+                                data-toggle="modal" data-target="#edit_tags_modal"
+						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="" data-objid="{{ meta["id"] }}">
+                                {{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                        <i class="far fa-plus-square"></i>
+                    </button>
+				</div>
+			</li>
+		</ul>
+
+		{% with obj_type='barcode', obj_id=meta['id'], obj_subtype='' %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
+        <span class="mb-2 float-right">
+            {% if is_correlation %}
+                <a href="{{ url_for('objects_barcode.object_barcode')}}?id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
+                    </button>
+                </a>
+            {% endif %}
+        </span>
+
+	</div>
+</div>

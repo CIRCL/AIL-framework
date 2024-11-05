@@ -280,7 +280,7 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "OcrExtractor" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./OcrExtractor.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "QrCodeReader" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./QrCodeReader.py; read x"
+    screen -S "Script_AIL" -X screen -t "CodeReader" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CodeReader.py; read x"
     sleep 0.1
 
     # TITLES

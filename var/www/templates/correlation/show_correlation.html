@@ -134,6 +134,8 @@
 						{% include 'chats_explorer/card_image.html' %}
                     {% elif dict_object["object_type"] == "ocr" %}
 						{% include 'objects/ocr/card_ocr.html' %}
+                    {% elif dict_object["object_type"] == "barcode" %}
+						{% include 'objects/barcode/card_barcode.html' %}
                     {% elif dict_object["object_type"] == "qrcode" %}
 						{% include 'objects/qrcode/card_qrcode.html' %}
 					{% elif dict_object["object_type"] == "item" %}

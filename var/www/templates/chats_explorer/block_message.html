@@ -97,6 +97,21 @@
                         <a class="btn btn-info" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>
                     </span>
                 {% endif %}
+                {% if message['barcodes'] %}
+                    {% for barcode in message['barcodes'] %}
+                        <span>
+                            <a class="btn btn-info" target="_blank" href="{{ url_for('correlation.show_correlation', type='barcode', id=barcode['id'])}}" style="max-width: 49%">
+                                <i class="fas fa-barcode fa-lg"></i> {{ barcode['content'] }}
+                                <div>
+                                    {% for tag in barcode['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {%  endfor %}
+                                </div>
+                            </a>
+                        </span>
+
+                    {% endfor %}
+                {% endif %}
                 {% if message['qrcodes'] %}
                     {% for qrcode in message['qrcodes'] %}
                         <span>

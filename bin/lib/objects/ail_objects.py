@@ -19,6 +19,7 @@ from lib import Tag
 
 from lib import chats_viewer
 
+from lib.objects import BarCodes
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
@@ -102,6 +103,8 @@ def get_object(obj_type, subtype, obj_id):
             return Messages.Message(obj_id)
         elif obj_type == 'ocr':
             return Ocrs.Ocr(obj_id)
+        elif obj_type == 'barcode':
+            return BarCodes.Barcode(obj_id)
         elif obj_type == 'qrcode':
             return QrCodes.Qrcode(obj_id)
         elif obj_type == 'screenshot':

@@ -30,16 +30,15 @@ from lib.objects import ail_objects
 # from modules.Telegram import Telegram
 
 from modules.CEDetector import CEDetector
+from modules.CodeReader import CodeReader
 from modules.Languages import Languages
 from modules.OcrExtractor import OcrExtractor
-from modules.QrCodeReader import QrCodeReader
 
 MODULES = {
     'CEDetector': CEDetector,
+    'CodeReader': CodeReader,
     'Languages': Languages,
-    'OcrExtractor': OcrExtractor,
-    'QrCodeReader': QrCodeReader
-
+    'OcrExtractor': OcrExtractor
 }
 
 def reprocess_message_objects(object_type, module_name=None):

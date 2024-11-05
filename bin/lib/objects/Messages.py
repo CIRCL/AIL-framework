@@ -151,6 +151,12 @@ class Message(AbstractObject):
                 images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id)})
         return images
 
+    def get_barcodes(self):
+        barcodes = []
+        for c in self.get_correlation('barcode').get('barcode', []):
+            barcodes.append(c[1:])
+        return barcodes
+
     def get_qrcodes(self):
         qrcodes = []
         for c in self.get_correlation('qrcode').get('qrcode', []):
@@ -306,6 +312,8 @@ class Message(AbstractObject):
                 meta['thread'] = thread
         if 'images' in options:
             meta['images'] = self.get_images()
+        if 'barcodes' in options:
+            meta['barcodes'] = self.get_barcodes()
         if 'qrcodes' in options:
             meta['qrcodes'] = self.get_qrcodes()
         if 'files-names' in options:
@@ -336,16 +344,20 @@ class Message(AbstractObject):
 
     ## Language ##
 
-    def get_objs_container(self):
+    def get_root_obj(self):
+        return self.get_objs_container(root=True)
+
+    def get_objs_container(self, root=False):
         objs_containers = set()
         # chat
         objs_containers.add(self.get_chat())
-        subchannel = self.get_subchannel()
-        if subchannel:
-            objs_containers.add(subchannel)
-        thread = self.get_current_thread()
-        if thread:
-            objs_containers.add(thread)
+        if not root:
+            subchannel = self.get_subchannel()
+            if subchannel:
+                objs_containers.add(subchannel)
+            thread = self.get_current_thread()
+            if thread:
+                objs_containers.add(thread)
         return objs_containers
 
     #- Language -#

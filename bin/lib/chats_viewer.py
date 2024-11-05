@@ -23,6 +23,7 @@ from lib.objects import Chats
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
 from lib.objects import Messages
+from lib.objects.BarCodes import Barcode
 from lib.objects.QrCodes import Qrcode
 from lib.objects import UsersAccount
 from lib.objects import Usernames
@@ -429,6 +430,12 @@ def get_chat_object_messages_meta(c_messages):
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
                 else:
                     meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+            if meta['barcodes']:
+                barcodes = []
+                for q in meta['barcodes']:
+                    obj = Barcode(q)
+                    barcodes.append({'id': obj.id, 'content': obj.get_content(), 'tags': obj.get_tags()})
+                meta['qrcodes'] = barcodes
             if meta['qrcodes']:
                 qrcodes = []
                 for q in meta['qrcodes']:
@@ -746,6 +753,14 @@ def api_get_chat_service_instance(chat_instance_uuid):
     # return chat_instance.get_meta({'chats'}), 200
     return chat_instance.get_meta({'chats_with_messages'}), 200
 
+def api_get_chats_selector():
+    selector = []
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_chat_instance()}: {chat.get_label()}'})
+    return selector
+
 def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
@@ -826,10 +841,15 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'barcodes', 'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
+    barcodes = []
+    for q in meta['barcodes']:
+        obj = Barcode(q)
+        barcodes.append({'id': obj.id, 'content': obj.get_content(), 'tags': obj.get_tags()})
+    meta['barcodes'] = barcodes
     qrcodes = []
     for q in meta['qrcodes']:
         qr = Qrcode(q)
