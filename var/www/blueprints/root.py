@@ -305,9 +305,3 @@ def logout():
 @login_required
 def role():
     return render_template("error/403.html"), 403
-
-@root.route('/searchbox/')
-@login_required
-@login_read_only
-def searchbox():
-    return render_template("searchbox.html")

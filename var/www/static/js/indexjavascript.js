@@ -26,7 +26,6 @@ function checkIfReceivedData(){
         } else {
             if ((new Date().getTime() - time_since_last_pastes_num["Proc"+list_feeder[i]]) > 35*1000){
                 window.paste_num_tabvar_all["Proc"+list_feeder[i]] = 0;
-                window.paste_num_tabvar_all["Dup"+list_feeder[i]] = 0;
             }
         }
     }
@@ -183,10 +182,8 @@ function create_log_table(obj_json) {
                 data_for_processed_paste["global"] = Array(totalPoints+1).join(0).split('');
 
                 var feederProc = $.plot("#Proc_feeder", [ getData(feeder, "Proc") ], options_processed_pastes);
-                var feederDup = $.plot("#Dup_feeder", [ getData(feeder, "Dup") ], options_processed_pastes);
 
                 update_processed_pastes(feederProc, "feeder", "Proc");
-                update_processed_pastes(feederDup, "feeder", "Dup");
                 update_processed_pastes(total_proc, "global");
                 setTimeout(checkIfReceivedData, 45*1000);
             }
@@ -196,10 +193,8 @@ function create_log_table(obj_json) {
             if (list_feeder.indexOf(feeder) == -1) {
                 list_feeder.push(feeder);
                 data_for_processed_paste["Proc"+feeder] = Array(totalPoints+1).join(0).split('');
-                data_for_processed_paste["Dup"+feeder] = Array(totalPoints+1).join(0).split('');
             }
 
-            var feederName = msg_type == "Duplicated" ? "Dup"+feeder : "Proc"+feeder;
             window.paste_num_tabvar_all[feederName] = paste_processed;
             time_since_last_pastes_num[feederName] = new Date().getTime();
         }
