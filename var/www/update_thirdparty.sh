@@ -8,7 +8,7 @@ git submodule update
 wget -q http://dygraphs.com/dygraph-combined.js -O ./static/js/dygraph-combined.js
 
 BOOTSTRAP_VERSION='4.2.1'
-FONT_AWESOME_VERSION='5.7.1'
+FONT_AWESOME_VERSION='6.6.0'
 
 D3_JS_VERSION='5.16.0'
 wget https://d3js.org/d3.v7.min.js -O ./static/js/d3.v7.min.js
@@ -17,8 +17,7 @@ rm -rf temp
 mkdir temp
 
 wget https://github.com/twbs/bootstrap/releases/download/v${BOOTSTRAP_VERSION}/bootstrap-${BOOTSTRAP_VERSION}-dist.zip -O temp/bootstrap${BOOTSTRAP_VERSION}.zip
-wget https://github.com/FortAwesome/Font-Awesome/archive/v4.7.0.zip -O temp/FONT_AWESOME_4.7.0.zip
-wget https://github.com/FortAwesome/Font-Awesome/archive/5.7.1.zip -O temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip
+wget https://github.com/FortAwesome/Font-Awesome/archive/${FONT_AWESOME_VERSION}.zip -O temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip
 wget https://github.com/d3/d3/releases/download/v${D3_JS_VERSION}/d3.zip -O  temp/d3_${D3_JS_VERSION}.zip
 
 # dateRangePicker
@@ -26,8 +25,7 @@ wget https://github.com/moment/moment/archive/2.24.0.zip -O temp/moment.zip
 wget https://github.com/longbill/jquery-date-range-picker/archive/v0.20.0.zip -O temp/daterangepicker.zip
 
 unzip -qq temp/bootstrap${BOOTSTRAP_VERSION}.zip -d temp/
-unzip -qq temp/FONT_AWESOME_4.7.0.zip -d temp/
-unzip -qq temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip -d temp/
+unzip temp/FONT_AWESOME_${FONT_AWESOME_VERSION}.zip -d temp/
 unzip -qq temp/d3_${D3_JS_VERSION}.zip -d temp/
 
 unzip -qq temp/moment.zip -d temp/
@@ -37,8 +35,6 @@ mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js ./static/js/boot
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/js/bootstrap.min.js.map ./static/js/bootstrap.min.js.map
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css ./static/css/bootstrap4.min.css
 mv temp/bootstrap-${BOOTSTRAP_VERSION}-dist/css/bootstrap.min.css.map ./static/css/bootstrap4.min.css.map
-
-mv temp/Font-Awesome-4.7.0 temp/font-awesome
 
 rm -rf ./static/webfonts/
 mv temp/Font-Awesome-${FONT_AWESOME_VERSION}/css/all.min.css ./static/css/font-awesome.min.css
