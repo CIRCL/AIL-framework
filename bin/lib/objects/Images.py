@@ -152,6 +152,19 @@ class Images(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('image', Image)
 
+    def get_name(self):
+        return 'Images'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'image'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_image.objects_images')
+        else:
+            url = f'{baseurl}/objects/images'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

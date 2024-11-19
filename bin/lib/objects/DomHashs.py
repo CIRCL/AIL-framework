@@ -114,6 +114,19 @@ class DomHashs(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('dom-hash', DomHash)
 
+    def get_name(self):
+        return 'DomHashs'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'align-left'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_dom_hash.objects_dom_hashs')
+        else:
+            url = f'{baseurl}/objects/dom-hashs'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search
 

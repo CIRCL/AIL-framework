@@ -193,6 +193,18 @@ class AbstractDaterangeObjects(ABC):
         self.type = obj_type
         self.obj_class = obj_class
 
+    @abstractmethod
+    def get_name(self):
+        pass
+
+    @abstractmethod
+    def get_icon(self):
+        pass
+
+    @abstractmethod
+    def get_link(self, flask_context=False):
+        pass
+
     ################################################
     ################################################
 

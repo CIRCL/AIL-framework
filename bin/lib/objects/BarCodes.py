@@ -150,6 +150,19 @@ class Barcodes(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('barcode', Barcode)
 
+    def get_name(self):
+        return 'Barcodes'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'barcode'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_barcode.objects_barcodes')
+        else:
+            url = f'{baseurl}/objects/barcodes'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

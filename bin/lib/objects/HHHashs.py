@@ -126,6 +126,19 @@ class HHHashs(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('hhhash', HHHash)
 
+    def get_name(self):
+        return 'HHHashs'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'align-left'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_hhhash.objects_hhhashs')
+        else:
+            url = f'{baseurl}/objects/hhhashs'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

@@ -6,13 +6,13 @@ import sys
 import ssl
 import json
 import time
-import uuid
 import random
 import logging
 import logging.config
 
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from flask_sock import Sock
 
 import importlib
 from os.path import join
@@ -28,6 +28,7 @@ from lib.ail_users import AILUser, get_session_user
 from lib import Tag
 from lib import ail_core
 from lib import ail_logger
+from lib import ail_stats
 
 from packages.git_status import clear_git_meta_cache
 
@@ -47,6 +48,7 @@ from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
 from blueprints.ail_2_ail_sync import ail_2_ail_sync
 from blueprints.settings_b import settings_b
+from blueprints.objects_objs import objects_objs
 from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
@@ -134,6 +136,7 @@ app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
 app.register_blueprint(settings_b, url_prefix=baseUrl)
 app.register_blueprint(objects_cve, url_prefix=baseUrl)
+app.register_blueprint(objects_objs, url_prefix=baseUrl)
 app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
 app.register_blueprint(objects_title, url_prefix=baseUrl)
@@ -163,7 +166,7 @@ login_manager.init_app(app)
 # ========= LOGIN MANAGER ========
 
 @login_manager.user_loader
-def load_user(session_id):  # TODO USE Alternative ID
+def load_user(session_id):
     # print(session)
     user_id = get_session_user(session_id)
     if user_id:
@@ -186,9 +189,7 @@ try:
 except IOError:
     pass
 
-# Dynamically import routes and functions from modules
-# Also, prepare header.html
-to_add_to_header_dico = {}
+# Dynamically import routes and functions from modules # # # # TODO REMOVE ME ################################################
 for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
     sys.path.append(join(root))
 
@@ -204,36 +205,13 @@ for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
                 continue
             name = name.strip('.py')
             importlib.import_module(name)
-        elif name == 'header_{}.html'.format(module_name):
-            with open(join(root, name), 'r') as f:
-                to_add_to_header_dico[module_name] = f.read()
 
-# create header.html
-with open(os.path.join(Flask_dir, 'templates', 'header_base.html'), 'r') as f:
-    complete_header = f.read()
-modified_header = complete_header
-
-# Add the header in the supplied order
-for module_name, txt in list(to_add_to_header_dico.items()):
-    to_replace = '<!--{}-->'.format(module_name)
-    if to_replace in complete_header:
-        modified_header = modified_header.replace(to_replace, txt)
-        del to_add_to_header_dico[module_name]
-
-# Add the header for no-supplied order
-to_add_to_header = []
-for module_name, txt in to_add_to_header_dico.items():
-    to_add_to_header.append(txt)
-
-modified_header = modified_header.replace('<!--insert here-->', '\n'.join(to_add_to_header))
-
-# Write the header.html file
-with open(os.path.join(Flask_dir, 'templates', 'header.html'), 'w') as f:
-    f.write(modified_header)
 
 # ========= JINJA2 FUNCTIONS ========
 def list_len(s):
     return len(s)
+
+
 app.jinja_env.filters['list_len'] = list_len
 
 
@@ -314,6 +292,33 @@ def page_forbidden(e):
 def page_not_found(e):
     # avoid endpoint enumeration
     return render_template('error/404.html'), 404
+
+
+# ========== WEBSOCKET ============
+
+app.config['SOCK_SERVER_OPTIONS'] = {'ping_interval': 25}
+sock = Sock(app)
+
+@login_required
+@sock.route('/ws/dashboard')
+def ws_dashboard(ws):
+    # TODO wait %30
+    next_feeders = ail_stats.get_next_feeder_timestamp(int(time.time())) + 1
+    try:
+        while True:
+            # TODO CHECK IF NEEDED
+            # if ws.closed:
+            #     print('WebSocket connection closed')
+            #     break
+            if int(time.time()) >= next_feeders:
+                feeders = ail_stats.get_feeders_dashboard()
+                # feeders['data']['telegram'] = 600
+                # feeders['data']['test'] = 1300
+                ws.send(json.dumps({'feeders': feeders}))
+                next_feeders = next_feeders + 30
+            time.sleep(1)
+    except Exception as e:  # ConnectionClosed ?
+        print("WEBSOCKET", e)
 
 
 # ========== INITIAL taxonomies ============

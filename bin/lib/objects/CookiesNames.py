@@ -109,6 +109,19 @@ class CookiesNames(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('cookie-name', CookieName)
 
+    def get_name(self):
+        return 'Cookie-Names'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'cookie-bite'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_cookie_name.objects_cookies_names')
+        else:
+            url = f'{baseurl}/objects/cookie-name'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

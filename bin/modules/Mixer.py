@@ -31,9 +31,9 @@ Note that the hash of the content is defined as the sha1(gzip64encoded).
 """
 import os
 import sys
-
-import hashlib
 import time
+
+# import hashlib
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -41,6 +41,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib import ail_stats
 
 
 class Mixer(AbstractModule):
@@ -51,12 +52,14 @@ class Mixer(AbstractModule):
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Mixer_Cache")
-        # self.r_cache_s = config_loader.get_redis_conn("Redis_Log_submit")
 
-        self.pending_seconds = 5
+        self.pending_seconds = 1
 
         self.refresh_time = 30
-        self.last_refresh = time.time()
+        timestamp = int(time.time())
+        self.last_refresh = int(timestamp - (timestamp % 30))
+        if timestamp > self.last_refresh:
+            self.last_refresh += 30
 
         self.operation_mode = config_loader.get_config_int("Module_Mixer", "operation_mode")
         print(f'Operation mode {self.operation_mode}')
@@ -64,71 +67,25 @@ class Mixer(AbstractModule):
         self.ttl_key = config_loader.get_config_int("Module_Mixer", "ttl_duplicate")
         self.default_feeder_name = config_loader.get_config_str("Module_Mixer", "default_unnamed_feed_name")
 
-        self.nb_processed_items = 0
         self.feeders_processed = {}
-        self.feeders_duplicate = {}
 
         self.logger.info(f"Module: {self.module_name} Launched")
 
-    # TODO Save stats in cache
-    # def get_feeders(self):
-    #     return self.r_cache_s.smembers("mixer_cache:feeders")
-    #
-    # def get_feeder_nb_last_processed(self, feeder):
-    #     nb = self.r_cache_s.hget("mixer_cache:feeders:last_processed", feeder)
-    #     if nb:
-    #         return int(nb)
-    #     else:
-    #         return 0
-    #
-    # def get_cache_feeders_nb_last_processed(self):
-    #     feeders = {}
-    #     for feeder in self.get_feeders():
-    #         feeders[feeder] = self.get_feeder_nb_last_processed(feeder)
-    #     return feeders
-
-    def clear_feeders_stat(self):
-        pass
-        # self.r_cache_s.delete("mixer_cache:feeders:last_processed")
-
     def increase_stat_processed(self, feeder):
-        self.nb_processed_items += 1
         try:
             self.feeders_processed[feeder] += 1
         except KeyError:
             self.feeders_processed[feeder] = 1
 
-    def increase_stat_duplicate(self, feeder):
-        self.nb_processed_items += 1
-        try:
-            self.feeders_duplicate[feeder] += 1
-        except KeyError:
-            self.feeders_duplicate[feeder] = 1
-
-    # TODO Save stats in cache
     def refresh_stats(self):
-        if int(time.time() - self.last_refresh) > self.refresh_time:
-            # update internal feeder
-            to_print = f'Mixer; ; ; ;mixer_all All_feeders Processed {self.nb_processed_items} item(s) in {self.refresh_time}sec'
-            print(to_print)
-            self.redis_logger.info(to_print)
-            self.nb_processed_items = 0
-
-            for feeder in self.feeders_processed:
-                to_print = f'Mixer; ; ; ;mixer_{feeder} {feeder} Processed {self.feeders_processed[feeder]} item(s) in {self.refresh_time}sec'
-                print(to_print)
-                self.redis_logger.info(to_print)
-                self.feeders_processed[feeder] = 0
-
-            for feeder in self.feeders_duplicate:
-                to_print = f'Mixer; ; ; ;mixer_{feeder} {feeder} Duplicated {self.feeders_duplicate[feeder]} item(s) in {self.refresh_time}sec'
-                print(to_print)
-                self.redis_logger.info(to_print)
-                self.feeders_duplicate[feeder] = 0
-
-            self.last_refresh = time.time()
-            self.clear_feeders_stat()
-            time.sleep(0.5)
+        timestamp = int(time.time())
+        if timestamp >= self.last_refresh:
+            timestamp = timestamp - timestamp % self.refresh_time
+            print('update', timestamp)
+            print(self.feeders_processed)
+            ail_stats.add_feeders(timestamp, self.feeders_processed)
+            self.feeders_processed = {}
+            self.last_refresh = self.last_refresh + 30
 
     def computeNone(self):
         self.refresh_stats()
@@ -163,22 +120,19 @@ class Mixer(AbstractModule):
                 self.queue.rename_message_obj(self.obj.id, obj_id)
 
 
-        relay_message = gzip64encoded
-        # print(relay_message)
-
-        # TODO only work for item object
-        # Avoid any duplicate coming from any sources
-        if self.operation_mode == 1:
-            digest = hashlib.sha1(gzip64encoded.encode('utf8')).hexdigest()
-            if self.r_cache.exists(digest):  # Content already exists
-                # STATS
-                self.increase_stat_duplicate(feeder_name)
-            else:  # New content
-                self.r_cache.sadd(digest, feeder_name)
-                self.r_cache.expire(digest, self.ttl_key)
-
-                self.increase_stat_processed(feeder_name)
-                self.add_message_to_queue(message=relay_message)
+        # # TODO only work for item object
+        # # Avoid any duplicate coming from any sources
+        # if self.operation_mode == 1:
+        #     digest = hashlib.sha1(gzip64encoded.encode('utf8')).hexdigest()
+        #     if self.r_cache.exists(digest):  # Content already exists
+        #         # STATS
+        #         self.increase_stat_duplicate(feeder_name)
+        #     else:  # New content
+        #         self.r_cache.sadd(digest, feeder_name)
+        #         self.r_cache.expire(digest, self.ttl_key)
+        #
+        #         self.increase_stat_processed(feeder_name)
+        #         self.add_message_to_queue(message=relay_message)
 
         # Need To Be Fixed, Currently doesn't check the source (-> same as operation 1)
         # # Keep duplicate coming from different sources
@@ -213,12 +167,10 @@ class Mixer(AbstractModule):
         #             self.increase_stat_duplicate(feeder_name)
 
         # No Filtering
-        else:
-            self.increase_stat_processed(feeder_name)
-            if self.obj.type == 'item':
-                self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
-            else:
-                self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
+        # else:
+
+        self.increase_stat_processed(feeder_name)
+        self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
 
 
 if __name__ == "__main__":

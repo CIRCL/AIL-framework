@@ -109,6 +109,19 @@ class Etags(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('etag', Etag)
 
+    def get_name(self):
+        return 'Etags'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'tag'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_etag.objects_etags')
+        else:
+            url = f'{baseurl}/objects/etags'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

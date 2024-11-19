@@ -176,4 +176,3 @@ class CodeReader(AbstractModule):
 if __name__ == '__main__':
     module = CodeReader()
     module.run()
-    

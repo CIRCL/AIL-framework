@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Objects - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+{#     <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>#}
+
+{#    <script defer src="{{ url_for('static', filename='js/regular.js')}}"></script>#}
+{#    <script defer src="{{ url_for('static', filename='js/solid.js')}}"></script>#}
+{#    <script defer src="{{ url_for('static', filename='js/fontawesome.js')}}"></script>#}
+
+
+
+    <style>
+        .icon-button {
+      position: relative;
+      display: inline-block;
+      border: none;
+      background: none;
+      {#padding: 0;#}
+      margin: 0;
+      cursor: pointer;
+      outline: inherit;
+	    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+    }
+
+    .icon-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      font-size: 14px;
+      background: forestgreen;
+    }
+  </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+
+
+		<div class="row">
+
+            <div class="col-12 col-xl-6">
+                <div id="feeders_dashboard" style="width: 100%; height:600px;"></div>
+            </div>
+
+            <div class="col-12 col-xl-6 mt-4">
+
+                <div class="row">
+
+                    {% for obj_type in nb_objects %}
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            {% with name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon']['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
+                                {% include 'objects/block_obj_button.html' %}
+                            {% endwith %}
+                        </div>
+                    {% endfor %}
+
+
+                    <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                        <a class="icon-button btn-outline-dark px-2" href="{{url_for('chats_explorer.chats_explorer_protocols')}}">
+                            <div class="icon-wrapper text-center">
+                                <i class="fas fa-comment fa-4x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    384556
+                                    <span class="sr-only">Chats by days</span>
+                                </span>
+                            </div>
+                            <div class="h4"><b>Chats</b></div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+			<div class="col-12" id="core_content">
+
+                <div class="container mt-5">
+                    <div class="row">
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <a class="icon-button btn-outline-dark px-2" href="{{url_for('chats_explorer.chats_explorer_protocols')}}">
+                                <div class="icon-wrapper text-center">
+                                    <i class="fas fa-comment fa-6x"></i>
+                                    <span class="badge badge-pill badge-danger notification-badge">
+                                        384556
+                                        <span class="sr-only">Chats by days</span>
+                                    </span>
+                                </div>
+                                <div class="h4"><b>Chats</b></div>
+                            </a>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <a class="btn" style="position:relative;display: inline-block;">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-bug fa-6x"></i>
+                                    <span class="badge badge-pill badge-danger notification-badge">
+                                        5896
+                                    </span>
+                                </div>
+                                <div class="h4"><b>CVEs</b></div>
+                            </a>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                        <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                            <div class="icon-wrapper">
+                                <i class="fas fa-bug fa-6x"></i>
+                                <span class="badge badge-pill badge-danger notification-badge">
+                                    5896
+                                </span>
+                            </div>
+                            <div class="h4"><b>CVEs</b></div>
+                        </div>
+
+                    </div>
+
+
+
+                </div>
+
+
+
+                <span class="fa-6x">
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-comment"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-bug"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-cookie-bite"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-tag"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-align-left"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-skull-crossbones"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-star-half"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-image"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-expand"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-barcode"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-qrcode"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-heading"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-lock-open"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-key"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-coins"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-user"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid  fa-user-circle"></i>
+                        <span class="fa-layers-counter" style="background:Tomato">1,419</span>
+                    </span>
+                </span>
+
+
+			</div>
+		</div>
+	</div>
+
+<script>
+    var chart = {};
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        $("#nav_dashboard_{{obj_type}}").addClass("active");
+    });
+</script>
+
+<script>
+    // Init Dashboard
+    var feederChart = echarts.init(document.getElementById('feeders_dashboard'));
+    window.addEventListener('resize', function() {
+        feederChart.resize();
+      });
+    var optionFeeder;
+    var maxDataLength = 21;
+
+    var feeders_names = [{% for feeder in feeders_dashboard['data'] %}'{{ feeder }}', {% endfor %}]
+    var feeders_xaxis = [{% for date in feeders_dashboard['dates'] %}'{{ date }}', {% endfor %}]
+    var feeders_data = {
+        {% for feeder in feeders_dashboard['data'] %}
+            {{ feeder }}: {{ feeders_dashboard['data'][feeder] }},
+        {% endfor %}
+    }
+
+
+
+optionFeeder = {
+  title: {
+    text: 'Feeders'
+  },
+  tooltip: {
+    trigger: 'axis',
+    axisPointer: {
+      type: 'cross',
+      label: {
+        backgroundColor: '#6a7985'
+      }
+    }
+  },
+  legend: {
+    data: feeders_names
+  },
+  grid: {
+    left: '3%',
+    right: '4%',
+    bottom: '3%',
+    containLabel: true
+  },
+  xAxis: [
+    {
+      type: 'category',
+      boundaryGap: false,
+      data: feeders_xaxis
+    }
+  ],
+  yAxis: [
+    {
+      type: 'value'
+    }
+  ],
+  series: [
+      {% for feeder in feeders_dashboard['data'] %}
+          {
+              name: '{{ feeder }}',
+              type: 'line',
+              stack: 'Total',
+              areaStyle: {},
+              emphasis: {
+                  focus: 'series'
+              },
+              data: feeders_data['{{ feeder }}']
+          },
+      {% endfor %}
+  ]
+};
+
+optionFeeder && feederChart.setOption(optionFeeder);
+
+{# TODO UPDATE NEW FEEDER NAME#}
+function updateFeederChart(data) {
+    let new_date = data['feeders']['date']
+    feeders_xaxis.push(new_date)
+    feeders_xaxis.shift()
+
+    for (const f_name in data['feeders']['data']) {
+        if (f_name in feeders_data) {
+            feeders_data[f_name].push(data['feeders']['data'][f_name])
+            feeders_data[f_name].shift()
+        } else {
+            let fdata = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, data['feeders']['data'][f_name]]
+            feeders_names.push(f_name)
+            feeders_data[f_name] = fdata
+            // add new feeder
+            optionFeeder.legend.data.push(f_name)
+            optionFeeder.series.push({name: f_name, type: 'line', stack: 'Total', areaStyle: {}, emphasis: {focus: 'series'}, data: feeders_data[f_name]})
+
+        }
+    }
+    feederChart.setOption(optionFeeder)
+}
+
+// WebSocket
+var socket = new WebSocket("{{ url_for('ws_dashboard') }}");
+socket.wsocket = function(event) {
+    console.log("WebSocket connection opened:", event);
+};
+socket.onmessage = function(event) {
+    let data = JSON.parse(event.data);
+    updateFeederChart(data);
+};
+socket.onerror = function(error) {
+    console.error('WebSocket error:', error);
+};
+socket.onclose = function(event) {
+    console.log('WebSocket connection closed:', event);
+    // Optionally implement reconnection logic here
+};
+
+
+</script>
+
+</body>
+</html>

@@ -34,7 +34,7 @@ def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 # ============= ROUTES ==============
-@objects_title.route("/objects/title", methods=['GET'])
+@objects_title.route("/objects/titles", methods=['GET'])
 @login_required
 @login_read_only
 def objects_titles():

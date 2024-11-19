@@ -16,7 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_daterange_object import AbstractDaterangeObject
+from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from packages import Date
 
 config_loader = ConfigLoader()
@@ -96,6 +96,29 @@ class Cve(AbstractDaterangeObject):
             return {'error': f'Connection Error'}
         except requests.exceptions.ReadTimeout:
             return {'error': f'Timeout Error'}
+
+class Cves(AbstractDaterangeObjects):
+    """
+        Barcodes Objects
+    """
+    def __init__(self):
+        super().__init__('cve', Cve)
+
+    def get_name(self):
+        return 'Cves'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'bug'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_cve.objects_cves')
+        else:
+            url = f'{baseurl}/objects/cves'
+        return url
+
+    def sanitize_id_to_search(self, name_to_search):
+        return name_to_search  # TODO
 
 
 # TODO  ADD SEARCH FUNCTION

@@ -30,7 +30,7 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 
 # ============ FUNCTIONS ============
-@objects_cve.route("/objects/cve", methods=['GET'])
+@objects_cve.route("/objects/cves", methods=['GET'])
 @login_required
 @login_read_only
 def objects_cves():

@@ -84,6 +84,20 @@ class FilesNames(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('file-name', FileName)
 
+    def get_name(self):
+        return 'File-Names'
+
+    def get_icon(self):
+        return {'fa': 'far', 'icon': 'file'}
+
+    def get_link(self, flask_context=False):
+        pass
+        # if flask_context:
+        #     url = url_for('objects_favicon.objects_favicons')
+        # else:
+        #     url = f'{baseurl}/objects/favicons'
+        # return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search
 

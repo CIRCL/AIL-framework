@@ -25,7 +25,7 @@ from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
 from lib.objects import CryptoCurrencies
 from lib.objects import CookiesNames
-from lib.objects.Cves import Cve
+from lib.objects import Cves
 from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
 from lib.objects.Domains import Domain
 from lib.objects import Etags
@@ -44,9 +44,36 @@ from lib.objects import Titles
 from lib.objects import UsersAccount
 from lib.objects import Usernames
 
-config_loader = ConfigLoader()
-
-config_loader = None
+# config_loader = ConfigLoader()
+#
+# config_loader = None
+# TODO INIT objs classes ????
+OBJECTS_CLASS = {
+    'barcode': {'obj': BarCodes.Barcode, 'objs': BarCodes.Barcodes},
+    'chat': {'obj': Chats.Chat, 'objs': None}, ## SUBTYPE #########################################
+    'chat-subchannel': {'obj': ChatSubChannels.ChatSubChannel, 'objs': None}, ######   ######
+    'chat-thread': {'obj': ChatThreads.ChatThread, 'objs': None},    ######   ######
+    'cookie-name': {'obj': CookiesNames.CookieName, 'objs': CookiesNames.CookiesNames},
+    'cve': {'obj': Cves.Cve, 'objs': Cves.Cves},
+    'cryptocurrency': {'obj': CryptoCurrencies.CryptoCurrency, 'objs': None}, ## SUBTYPE #########################################
+    'decoded': {'obj': Decoded, 'objs': None}, ###############################################################################################
+    'domain': {'obj': Domain, 'objs': None}, ####################################################################################################
+    'dom-hash': {'obj': DomHashs.DomHash, 'objs': DomHashs.DomHashs},
+    'etag': {'obj': Etags.Etag, 'objs': Etags.Etags},
+    'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
+    'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
+    'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
+    'item': {'obj': Item, 'objs': None}, ######
+    'image': {'obj': Images.Image, 'objs': Images.Images},
+    'message': {'obj': Messages.Message, 'objs': None}, ######
+    'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},
+    'pgp': {'obj': Pgps.Pgp, 'objs': None}, ## SUBTYPE ###########################################################################
+    'qrcode': {'obj': QrCodes.Qrcode, 'objs': QrCodes.Qrcodes},
+    'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ######
+    'title': {'obj': Titles.Title, 'objs': Titles.Titles},
+    'user-account': {'obj': UsersAccount.UserAccount, 'objs': None}, ## SUBTYPE ###########################################################################
+    'username': {'obj': Usernames.Username, 'objs': None}, ## SUBTYPE ###########################################################################
+}
 
 
 def is_valid_object_type(obj_type):
@@ -70,67 +97,29 @@ def sanitize_objs_types(objs, default=False):
             l_types = get_all_objects()
     return l_types
 
+
 #### OBJECT ####
+
+def get_obj_class(obj_type):
+    if obj_type in OBJECTS_CLASS:
+        return OBJECTS_CLASS[obj_type]['obj']
+
+def get_objs_class(obj_type):
+    if obj_type in OBJECTS_CLASS:
+        return OBJECTS_CLASS[obj_type]['objs']
 
 def get_object(obj_type, subtype, obj_id):
     if subtype == 'None':
         subtype = None
     obj_id = str(obj_id)
+    obj_class = OBJECTS_CLASS[obj_type]['obj']
+    if not obj_class:
+        raise AILObjectUnknown(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
     if not subtype:
-        if obj_type == 'item':
-            return Item(obj_id)
-        elif obj_type == 'domain':
-            return Domain(obj_id)
-        elif obj_type == 'decoded':
-            return Decoded(obj_id)
-        elif obj_type == 'cookie-name':
-            return CookiesNames.CookieName(obj_id)
-        elif obj_type == 'cve':
-            return Cve(obj_id)
-        elif obj_type == 'etag':
-            return Etags.Etag(obj_id)
-        elif obj_type == 'favicon':
-            return Favicons.Favicon(obj_id)
-        elif obj_type == 'file-name':
-            return FilesNames.FileName(obj_id)
-        elif obj_type == 'dom-hash':
-            return DomHashs.DomHash(obj_id)
-        elif obj_type == 'hhhash':
-            return HHHashs.HHHash(obj_id)
-        elif obj_type == 'image':
-            return Images.Image(obj_id)
-        elif obj_type == 'message':
-            return Messages.Message(obj_id)
-        elif obj_type == 'ocr':
-            return Ocrs.Ocr(obj_id)
-        elif obj_type == 'barcode':
-            return BarCodes.Barcode(obj_id)
-        elif obj_type == 'qrcode':
-            return QrCodes.Qrcode(obj_id)
-        elif obj_type == 'screenshot':
-            return Screenshots.Screenshot(obj_id)
-        elif obj_type == 'title':
-            return Titles.Title(obj_id)
-        else:
-            raise AILObjectUnknown(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
+        return obj_class(obj_id)
     # SUBTYPES
     else:
-        if obj_type == 'chat':
-            return Chats.Chat(obj_id, subtype)
-        elif obj_type == 'chat-subchannel':
-            return ChatSubChannels.ChatSubChannel(obj_id, subtype)
-        elif obj_type == 'chat-thread':
-            return ChatThreads.ChatThread(obj_id, subtype)
-        elif obj_type == 'cryptocurrency':
-            return CryptoCurrencies.CryptoCurrency(obj_id, subtype)
-        elif obj_type == 'pgp':
-            return Pgps.Pgp(obj_id, subtype)
-        elif obj_type == 'user-account':
-            return UsersAccount.UserAccount(obj_id, subtype)
-        elif obj_type == 'username':
-            return Usernames.Username(obj_id, subtype)
-        else:
-            raise AILObjectUnknown(f'Unknown AIL object: {obj_type} {subtype} {obj_id}')
+        obj_class(obj_id, subtype)
 
 def exists_obj(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
@@ -171,6 +160,32 @@ def api_get_object_global_id(global_id):
     return api_get_object(obj_type, subtype, obj_id)
 
 #### --API-- ####
+
+
+#### OBJECTS ####
+
+def get_nb_objects_by_date(date):
+    objs = {}
+    for obj_type in get_all_objects():
+        objs_class = get_objs_class(obj_type)
+        if objs_class:
+            objs_class = objs_class()
+            objs[obj_type] = objs_class.get_nb_by_date(date)
+    return objs
+
+def get_nb_objects_dashboard(date, flask_context=True):
+    objs = {}
+    for obj_type in get_all_objects():
+        objs_class = get_objs_class(obj_type)
+        if objs_class:
+            objs_class = objs_class()
+            objs[obj_type] = {}
+            objs[obj_type]['nb'] = objs_class.get_nb_by_date(date)
+            objs[obj_type]['name'] = objs_class.get_name()
+            objs[obj_type]['icon'] = objs_class.get_icon()
+            objs[obj_type]['link'] = objs_class.get_link(flask_context=flask_context)
+    return objs
+
 
 #########################################################################################
 #########################################################################################
@@ -240,6 +255,9 @@ def add_obj_tags(obj_type, subtype, id, tags):
 
 
 # -TAGS- #
+
+#### OBJ META ####
+
 
 def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
     obj = get_object(obj_type, subtype, id)

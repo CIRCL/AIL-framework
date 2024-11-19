@@ -150,6 +150,19 @@ class Qrcodes(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('qrcode', Qrcode)
 
+    def get_name(self):
+        return 'Qrcodes'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'qrcode'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_qrcode.objects_qrcodes')
+        else:
+            url = f'{baseurl}/objects/qrcodes'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

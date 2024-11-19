@@ -323,6 +323,19 @@ class Ocrs(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('ocr', Ocr)
 
+    def get_name(self):
+        return 'Ocrs'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'expand'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_ocr.objects_ocrs')
+        else:
+            url = f'{baseurl}/objects/ocrs'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search  # TODO
 

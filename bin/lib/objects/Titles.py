@@ -104,6 +104,19 @@ class Titles(AbstractDaterangeObjects):
     def __init__(self):
         super().__init__('title', Title)
 
+    def get_name(self):
+        return 'Titles'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'heading'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_title.objects_titles')
+        else:
+            url = f'{baseurl}/objects/titles'
+        return url
+
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search
 
