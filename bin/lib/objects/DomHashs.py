@@ -57,7 +57,7 @@ class DomHash(AbstractDaterangeObject):
         return url
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf714', 'color': 'grey', 'radius': 5}
+        return {'style': 'fas', 'icon': '\ue58a', 'color': 'grey', 'radius': 5}
 
     def get_misp_object(self):
         obj_attrs = []
@@ -118,7 +118,7 @@ class DomHashs(AbstractDaterangeObjects):
         return 'DomHashs'
 
     def get_icon(self):
-        return {'fa': 'fas', 'icon': 'align-left'}
+        return {'fa': 'fa-solid', 'icon': 'trowel-bricks'}
 
     def get_link(self, flask_context=False):
         if flask_context:

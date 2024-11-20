@@ -13,7 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id, get_all_id_iterator
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id, get_all_id_iterator
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -92,6 +92,30 @@ class Pgp(AbstractSubtypeObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
+
+
+class Pgps(AbstractSubtypeObjects):
+    """
+        Usernames Objects
+    """
+    def __init__(self):
+        super().__init__('pgp', Pgp)
+
+    def get_name(self):
+        return 'PGP Dumps'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'key'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_subtypes.objects_dashboard_pgp')
+        else:
+            url = f'{baseurl}/objects/pgps'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
 
     ############################################################################
     ############################################################################

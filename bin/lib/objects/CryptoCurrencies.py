@@ -15,7 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -165,6 +165,31 @@ class CryptoCurrency(AbstractSubtypeObject):
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)
         return meta
+
+
+class CryptoCurrencies(AbstractSubtypeObjects):
+    """
+        Usernames Objects
+    """
+    def __init__(self):
+        super().__init__('cryptocurrency', CryptoCurrency)
+
+    def get_name(self):
+        return 'Cryptocurrencies'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'coins'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_subtypes.objects_dashboard_cryptocurrency')
+        else:
+            url = f'{baseurl}/objects/cryptocurrencies'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
+
 
     ############################################################################
     ############################################################################

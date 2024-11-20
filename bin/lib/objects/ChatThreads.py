@@ -112,7 +112,23 @@ def create(thread_id, chat_instance, chat_id, subchannel_id, message_id, contain
 
 class ChatThreads(AbstractChatObjects):
     def __init__(self):
-        super().__init__('chat-thread')
+        super().__init__('chat-thread', ChatThread)
+
+    def get_name(self):
+        return 'Chat-Threads'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'grip-lines'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('chats_explorer.chats_explorer_protocols')
+        else:
+            url = f'{baseurl}/chats/explorer/protocols'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
 
 # if __name__ == '__main__':
 #     chat = Chat('test', 'telegram')

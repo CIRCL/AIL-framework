@@ -15,7 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, get_all_id
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
 from lib.timeline_engine import Timeline
 from lib.objects import Usernames
 
@@ -220,8 +220,6 @@ class UserAccount(AbstractSubtypeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-def get_user_by_username():
-    pass
 
 def get_all_subtypes():
     return ail_core.get_object_all_subtypes('user-account')
@@ -234,6 +232,30 @@ def get_all():
 
 def get_all_by_subtype(subtype):
     return get_all_id('user-account', subtype)
+
+
+class UserAccounts(AbstractSubtypeObjects):
+    """
+        Usernames Objects
+    """
+    def __init__(self):
+        super().__init__('user-account', UserAccount)
+
+    def get_name(self):
+        return 'User-Accounts'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'user-circle'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_subtypes.objects_dashboard_user_account')
+        else:
+            url = f'{baseurl}/objects/user-accounts'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
 
 
 if __name__ == '__main__':

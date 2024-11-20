@@ -158,7 +158,23 @@ class ChatSubChannel(AbstractChatObject):
 
 class ChatSubChannels(AbstractChatObjects):
     def __init__(self):
-        super().__init__('chat-subchannel')
+        super().__init__('chat-subchannel', ChatSubChannel)
+
+    def get_name(self):
+        return 'Chat-SubChannels'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'comments'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('chats_explorer.chats_explorer_protocols')
+        else:
+            url = f'{baseurl}/chats/explorer/protocols'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
 
 # if __name__ == '__main__':
 #     chat = Chat('test', 'telegram')

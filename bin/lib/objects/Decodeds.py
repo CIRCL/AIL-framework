@@ -18,7 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_daterange_object import AbstractDaterangeObject
+from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from packages import Date
 
 sys.path.append('../../configs/keys')
@@ -318,6 +318,32 @@ class Decoded(AbstractDaterangeObject):
         json_response = response.json()
         link = json_response['permalink'].split('analysis')[0] + 'analysis/'
         self.set_meta_vt(link, 'Please Refresh')
+
+############################################################################
+
+class Decodeds(AbstractDaterangeObjects):
+    """
+        Barcodes Objects
+    """
+    def __init__(self):
+        super().__init__('decoded', Decoded)
+
+    def get_name(self):
+        return 'Decodeds'
+
+    def get_icon(self):
+        return {'fa': 'fas', 'icon': 'lock-open'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_decoded.decodeds_dashboard')
+        else:
+            url = f'{baseurl}/objects/decodeds'
+        return url
+
+    def sanitize_id_to_search(self, name_to_search):
+        return name_to_search
+
 
 ############################################################################
 

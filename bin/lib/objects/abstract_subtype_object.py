@@ -18,7 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_object import AbstractObject
-from lib.ail_core import get_object_all_subtypes, zscan_iter
+from lib.ail_core import get_object_all_subtypes, zscan_iter, get_object_all_subtypes
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 from lib.data_retention_engine import update_obj_date
@@ -198,9 +198,45 @@ class AbstractSubtypeObjects(ABC):
     """
     Abstract Subtype Objects
     """
+
     def __init__(self, obj_type, obj_class):
+        """ Abstract for Daterange Objects
+
+            :param obj_type: object type (item, ...)
+            :param obj_class: object python class (Item, ...)
+        """
         self.type = obj_type
         self.obj_class = obj_class
+
+    def get_subtypes(self):
+        return get_object_all_subtypes(self.type)
+
+    @abstractmethod
+    def get_name(self):
+        pass
+
+    @abstractmethod
+    def get_icon(self):
+        pass
+
+    @abstractmethod
+    def get_link(self, flask_context=False):
+        pass
+
+    def get_by_date_subtype(self, subtype, date):
+        return r_object.hkeys(f'{self.type}:{subtype}:{date}')
+
+    def get_by_date(self, date):
+        pass
+
+    def get_nb_by_date_subtype(self, subtype, date):
+        return r_object.hlen(f'{self.type}:{subtype}:{date}')
+
+    def get_nb_by_date(self, date):
+        nb = 0
+        for subtype in self.get_subtypes():
+            nb += self.get_nb_by_date_subtype(subtype, date)
+        return nb
 
     def get_ids(self): # TODO FORMAT
         ids = []
@@ -248,6 +284,8 @@ class AbstractSubtypeObjects(ABC):
 ########################################################################
 ########################################################################
 ########################################################################
+
+# TODO REFACTOR
 
 def get_all_id(obj_type, subtype):
     return r_object.zrange(f'{obj_type}_all:{subtype}', 0, -1)
@@ -303,5 +341,3 @@ def get_subtypes_objs_range_json(obj_type, date_from, date_to):
                 objs_range.append(day_dict)
 
     return objs_range
-
-

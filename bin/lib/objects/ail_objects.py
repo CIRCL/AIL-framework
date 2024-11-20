@@ -26,8 +26,8 @@ from lib.objects import ChatThreads
 from lib.objects import CryptoCurrencies
 from lib.objects import CookiesNames
 from lib.objects import Cves
-from lib.objects.Decodeds import Decoded, get_all_decodeds_objects, get_nb_decodeds_objects
-from lib.objects.Domains import Domain
+from lib.objects import Decodeds
+from lib.objects import Domains
 from lib.objects import Etags
 from lib.objects import Favicons
 from lib.objects import FilesNames
@@ -50,29 +50,29 @@ from lib.objects import Usernames
 # TODO INIT objs classes ????
 OBJECTS_CLASS = {
     'barcode': {'obj': BarCodes.Barcode, 'objs': BarCodes.Barcodes},
-    'chat': {'obj': Chats.Chat, 'objs': None}, ## SUBTYPE #########################################
+    'chat': {'obj': Chats.Chat, 'objs': Chats.Chats},
     'chat-subchannel': {'obj': ChatSubChannels.ChatSubChannel, 'objs': None}, ######   ######
     'chat-thread': {'obj': ChatThreads.ChatThread, 'objs': None},    ######   ######
     'cookie-name': {'obj': CookiesNames.CookieName, 'objs': CookiesNames.CookiesNames},
     'cve': {'obj': Cves.Cve, 'objs': Cves.Cves},
-    'cryptocurrency': {'obj': CryptoCurrencies.CryptoCurrency, 'objs': None}, ## SUBTYPE #########################################
-    'decoded': {'obj': Decoded, 'objs': None}, ###############################################################################################
-    'domain': {'obj': Domain, 'objs': None}, ####################################################################################################
+    'cryptocurrency': {'obj': CryptoCurrencies.CryptoCurrency, 'objs': CryptoCurrencies.CryptoCurrencies},
+    'decoded': {'obj': Decodeds.Decoded, 'objs': Decodeds.Decodeds},
+    'domain': {'obj': Domains.Domain, 'objs': Domains.Domains},
     'dom-hash': {'obj': DomHashs.DomHash, 'objs': DomHashs.DomHashs},
     'etag': {'obj': Etags.Etag, 'objs': Etags.Etags},
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
-    'item': {'obj': Item, 'objs': None}, ######
+    'item': {'obj': Item, 'objs': None}, ####################################################################################################
     'image': {'obj': Images.Image, 'objs': Images.Images},
-    'message': {'obj': Messages.Message, 'objs': None}, ######
+    'message': {'obj': Messages.Message, 'objs': None}, #############################################################
     'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},
-    'pgp': {'obj': Pgps.Pgp, 'objs': None}, ## SUBTYPE ###########################################################################
+    'pgp': {'obj': Pgps.Pgp, 'objs': Pgps.Pgps},
     'qrcode': {'obj': QrCodes.Qrcode, 'objs': QrCodes.Qrcodes},
-    'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ######
+    'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ####################################################################################################
     'title': {'obj': Titles.Title, 'objs': Titles.Titles},
-    'user-account': {'obj': UsersAccount.UserAccount, 'objs': None}, ## SUBTYPE ###########################################################################
-    'username': {'obj': Usernames.Username, 'objs': None}, ## SUBTYPE ###########################################################################
+    'user-account': {'obj': UsersAccount.UserAccount, 'objs': UsersAccount.UserAccounts},
+    'username': {'obj': Usernames.Username, 'objs': Usernames.Usernames},
 }
 
 
@@ -119,7 +119,7 @@ def get_object(obj_type, subtype, obj_id):
         return obj_class(obj_id)
     # SUBTYPES
     else:
-        obj_class(obj_id, subtype)
+        return obj_class(obj_id, subtype)
 
 def exists_obj(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
@@ -354,7 +354,7 @@ def is_filtered(obj, filters):
 
 def obj_iterator(obj_type, filters):
     if obj_type == 'decoded':
-        return get_all_decodeds_objects(filters=filters)
+        return Decodeds.get_all_decodeds_objects(filters=filters)
     elif obj_type == 'image':
         return Images.get_all_images_objects(filters=filters)
     elif obj_type == 'screenshot':
@@ -377,7 +377,7 @@ def card_objs_iterators(filters):
 
 def card_obj_iterator(obj_type, filters):
     if obj_type == 'decoded':
-        return get_nb_decodeds_objects(filters=filters)
+        return Decodeds.get_nb_decodeds_objects(filters=filters)
     elif obj_type == 'item':
         return get_nb_items_objects(filters=filters)
     elif obj_type == 'pgp':

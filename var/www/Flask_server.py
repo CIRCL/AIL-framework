@@ -312,9 +312,8 @@ def ws_dashboard(ws):
             #     break
             if int(time.time()) >= next_feeders:
                 feeders = ail_stats.get_feeders_dashboard()
-                # feeders['data']['telegram'] = 600
-                # feeders['data']['test'] = 1300
-                ws.send(json.dumps({'feeders': feeders}))
+                objs = ail_stats.get_nb_objs_today()
+                ws.send(json.dumps({'feeders': feeders, 'objs': objs}))
                 next_feeders = next_feeders + 30
             time.sleep(1)
     except Exception as e:  # ConnectionClosed ?

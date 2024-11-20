@@ -727,6 +727,32 @@ def cluster_onion_domain_vanity(len_vanity=4):
     res = dict(sorted(occurrences.items(), key=lambda item: item[1], reverse=True))
     print(json.dumps(res))
 
+class Domains:
+    def __init__(self):
+        self.type = 'message'
+        self.obj_class = Domain
+
+    def get_name(self):
+        return 'Domains'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'spider'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('crawler_splash.crawlers_dashboard')
+        else:
+            url = f'{baseurl}/crawlers/dashboard'
+        return url
+
+    # def get_by_date(self, date):
+    #     pass
+
+    def get_nb_by_date(self, date):
+        nb = 0
+        for domain_type in get_all_domains_types():
+            nb += r_crawler.scard(f'{domain_type}_up:{date}')
+        return nb
 
 if __name__ == '__main__':
     _rebuild_vanity_clusters()

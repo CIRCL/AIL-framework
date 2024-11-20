@@ -60,6 +60,14 @@ class Chat(AbstractChatObject):
                 username = username.split(':', 2)[2]
                 return f'https://t.me/{username}'
 
+    def get_chat_instance(self):
+        if self.subtype == '00098785-7e70-5d12-a120-c5cdc1252b2b':
+            return 'telegram'
+        elif self.subtype == 'd2426e3f-22f3-5a57-9a98-d2ae9794e683':
+            return 'discord'
+        else:
+            return self.subtype
+
     def get_svg_icon(self):  # TODO
         # if self.subtype == 'telegram':
         #     style = 'fab'
@@ -164,6 +172,21 @@ class Chat(AbstractChatObject):
     def update_username_timeline(self, username_global_id, timestamp):
         self._get_timeline_username().add_timestamp(timestamp, username_global_id)
 
+    def get_label(self):
+        username = self.get_username()
+        if username:
+            username = username.split(':', 2)[2]
+        name = self.get_name()
+        if username and name:
+            label = f'{username} - {name}'
+        elif username:
+            label = username
+        elif name:
+            label = name
+        else:
+            label = ''
+        return label
+
     #### ChatSubChannels ####
 
 
@@ -203,7 +226,23 @@ class Chat(AbstractChatObject):
 
 class Chats(AbstractChatObjects):
     def __init__(self):
-        super().__init__('chat')
+        super().__init__('chat', Chat)
+
+    def get_name(self):
+        return 'Chats'
+
+    def get_icon(self):
+        return {'fas': 'fas', 'icon': 'comment'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('chats_explorer.chats_explorer_protocols')
+        else:
+            url = f'{baseurl}/chats/explorer/protocols'
+        return url
+
+    def sanitize_id_to_search(self, subtypes, name_to_search):
+        return name_to_search
 
     def get_ids_with_messages_by_subtype(self, subtype):
         return r_object.smembers(f'{self.type}_w_mess:{subtype}')

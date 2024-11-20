@@ -18,7 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects
 from lib.ail_core import unpack_correl_objs_id, zscan_iter ################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
@@ -314,9 +314,10 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         return self.get_correlation_iter('user-account', self.subtype, user_id, 'message')
 
 # TODO move me to abstract subtype
-class AbstractChatObjects(ABC):
-    def __init__(self, type):
-        self.type = type
+class AbstractChatObjects(AbstractSubtypeObjects, ABC):
+
+    def __init__(self, obj_type, obj_class):
+        super().__init__(obj_type, obj_class)
 
     def add_subtype(self, subtype):
         r_object.sadd(f'all_{self.type}:subtypes', subtype)

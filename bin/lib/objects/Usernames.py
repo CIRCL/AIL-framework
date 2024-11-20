@@ -143,6 +143,19 @@ class Usernames(AbstractSubtypeObjects):
     def __init__(self):
         super().__init__('username', Username)
 
+    def get_name(self):
+        return 'Usernames'
+
+    def get_icon(self):
+        return {'fas': 'far', 'icon': 'user'}
+
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_subtypes.objects_dashboard_username')
+        else:
+            url = f'{baseurl}/objects/usernames'
+        return url
+
     def sanitize_id_to_search(self, subtypes, name_to_search):
         return name_to_search
 
