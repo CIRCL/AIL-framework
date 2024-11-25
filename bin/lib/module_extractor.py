@@ -188,7 +188,11 @@ def get_tracker_match(user_org, user_id, obj, content):
         if not retro_hunt.check_level(user_org):
             continue
 
-        rule = retro_hunt.get_rule(r_compile=True)
+        try:
+            rule = retro_hunt.get_rule(r_compile=True)
+        except yara.Error:
+            retro_hunt.delete_objs()
+
         rule.match(data=content.encode(), callback=_get_yara_match,
                    which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
         yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')

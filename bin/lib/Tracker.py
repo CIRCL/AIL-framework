@@ -780,7 +780,7 @@ def get_trackers_graph_by_day(l_trackers, num_day=31, date_from=None, date_to=No
 def get_trackers_dashboard(user_org, user_id):
     trackers = []
     for raw in r_tracker.lrange('trackers:dashboard', 0, -1):
-        tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
+        tracker_uuid, timestamp, obj_gid = raw.split(':', 2)
         tracker = Tracker(tracker_uuid)
         if not tracker.check_level(user_org, user_id):
             continue
@@ -789,17 +789,20 @@ def get_trackers_dashboard(user_org, user_id):
             meta['type'] = 'Tracker DELETED'
         timestamp = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
         meta['timestamp'] = timestamp
+        meta['obj'] = obj_gid
+        meta['tags'] = list(meta['tags'])
         trackers.append(meta)
     return trackers
 
 def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS (trim)
     trackers = []
     for raw in r_tracker.lrange(f'trackers:user:{user_id}', 0, -1):
-        tracker_uuid, timestamp, obj_type, subtype, obj_id = raw.split(':', 4)
+        tracker_uuid, timestamp, obj_gid = raw.split(':', 2)
         tracker = Tracker(tracker_uuid)
         meta = tracker.get_meta(options={'tags'})
         timestamp = datetime.datetime.fromtimestamp(float(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
         meta['timestamp'] = timestamp
+        meta['obj'] = obj_gid
         trackers.append(meta)
 
     return trackers
@@ -1028,6 +1031,9 @@ def api_add_tracker(dict_input, org, user_id):
                         res = item_basic.verify_sources_list(filters['item']['sources'])
                         if res:
                             return res
+                    elif obj_type == 'message':
+                        pass
+                        # TODO Check IF not at the same time in sources + excludes
                     else:
                         return {"status": "error", "reason": "Invalid Filter sources"}, 400
                 elif filter_name == 'subtypes':
@@ -1701,9 +1707,20 @@ class RetroHunt:
             state = 'pending'
         self._set_state(state)
 
+    def delete_objs(self):
+        for obj_type in get_objects_retro_hunted():
+            for obj in self.get_objs_by_type(obj_type):
+                subtype, obj_id = obj.split(':', 1)
+                # match by object type:
+                r_tracker.srem(f'retro_hunt:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
+                # MAP object -> retro hunt
+                r_tracker.srem(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}', self.uuid)
+
     def delete(self):
         if self.is_running() and self.get_state() not in ['completed', 'paused']:
             return None
+
+        self.delete_objs()
 
         # Delete custom rule
         rule = self.get_rule()
