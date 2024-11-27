@@ -316,7 +316,8 @@ def ws_dashboard(ws):
                 objs = ail_stats.get_nb_objs_today()
                 tags = ail_stats.get_tagged_objs_dashboard()
                 trackers = ail_stats.get_tracked_objs_dashboard(user_org, user_id)
-                ws.send(json.dumps({'feeders': feeders, 'objs': objs, 'tags': tags, 'trackers': trackers}))
+                crawler = ail_stats.get_crawlers_stats()
+                ws.send(json.dumps({'feeders': feeders, 'objs': objs, 'crawler': crawler, 'tags': tags, 'trackers': trackers}))
                 next_feeders = next_feeders + 30
             time.sleep(1)
     except Exception as e:  # ConnectionClosed ?

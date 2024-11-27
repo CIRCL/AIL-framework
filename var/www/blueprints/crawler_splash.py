@@ -598,6 +598,36 @@ def domains_search_name():
                            l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
                            domains_types=domains_types)
 
+@crawler_splash.route('/domains/today', methods=['GET'])
+@login_required
+@login_read_only
+def domains_search_today():
+    dom_types = request.args.get('type')
+    down = bool(request.args.get('down', False))
+    up = bool(request.args.get('up'))
+    # page = request.args.get('page')
+
+    all_types = Domains.get_all_domains_types()
+    if dom_types == 'all':
+        domain_types = all_types
+    elif dom_types in Domains.get_all_domains_types():
+        domain_types = [dom_types]
+    else:
+        dom_types = 'all'
+        domain_types = all_types
+
+    date = Date.get_today_date_str()
+    domains_date = Domains.get_domains_dates_by_daterange(date, date, domain_types, up=up, down=down)
+    dict_domains = {}
+    for d in domains_date:
+        dict_domains[d] = Domains.get_domains_meta(domains_date[d])
+    date_from = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+    date_to = date_from
+
+    return render_template("domains_daterange.html", date_from=date_from, date_to=date_to,
+                           bootstrap_label=bootstrap_label,
+                           filter_down=down, filter_up=up,
+                           dict_domains=dict_domains, type=dom_types)
 
 @crawler_splash.route('/domains/date', methods=['GET'])
 @login_required

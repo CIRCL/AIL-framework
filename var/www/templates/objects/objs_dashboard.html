@@ -68,6 +68,59 @@
 
             <div class="col-12 col-xl-6">
                 <div id="feeders_dashboard" style="width: 100%; height:600px;"></div>
+
+                <div class="card mt-1 mb-4">
+                    <div class="card-header text-white bg-dark">
+                        <div class="row">
+                            <div class="col-1">
+                                <i class="fas fa-user-secret fa-2x"></i>
+                            </div>
+                            <div class="col-5">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=onion&up=True" class="badge badge-success" id="stat_crawler_onion_domain_up">{{ crawlers_stats['onion']['up'] }}</a> Up
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=onion&down=True" class="badge badge-danger" id="stat_crawler_onion_domain_down">{{ crawlers_stats['onion']['down'] }}</a> Down
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=onion&up=True&down=True" class="badge badge-success" id="stat_crawler_onion_total">{{ crawlers_stats['onion']['crawled'] }}</a> Crawled
+                                        </div>
+                                        <div>
+                                            <span class="badge badge-warning" id="stat_crawler_onion_queue">{{ crawlers_stats['onion']['queue'] }}</span> Queue
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-1">
+                                <i class="fab fa-html5 fa-2x"></i>
+                            </div>
+                            <div class="col-5">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=web&up=True" class="badge badge-success" id="stat_crawler_regular_domain_up">{{ crawlers_stats['web']['up'] }}</a> UP
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=web&down=True" class="badge badge-danger" id="stat_crawler_regular_domain_down">{{ crawlers_stats['web']['down'] }}</a> DOWN
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div>
+                                            <a href="{{ url_for('crawler_splash.domains_search_today') }}?type=web&up=True&down=True" class="badge badge-success" id="stat_crawler_regular_total">{{ crawlers_stats['web']['crawled'] }}</a> Crawled
+                                        </div>
+                                        <div>
+                                            <span class="badge badge-warning" id="stat_crawler_regular_queue">{{ crawlers_stats['web']['queue'] }}</span> Queue
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="col-12 col-xl-6 mt-4">
@@ -88,7 +141,6 @@
 
 		</div>
 
-       
 
         <div class="row">
 
@@ -286,6 +338,17 @@ function updateNbObjects(data) {
     }
 }
 
+function updateCrawlerStats(data) {
+    $("#stat_crawler_onion_domain_up").text(data['onion']['up']);
+    $("#stat_crawler_onion_domain_down").text(data['onion']['down']);
+    $("#stat_crawler_onion_total").text(data['onion']['crawled']);
+    $("#stat_crawler_onion_queue").text(data['onion']['queue']);
+    $("#stat_crawler_regular_domain_up").text(data['web']['up']);
+    $("#stat_crawler_regular_domain_down").text(data['web']['down']);
+    $("#stat_crawler_regular_total").text(data['web']['crawled']);
+    $("#stat_crawler_regular_queue").text(data['web']['queue']);
+}
+
 ///////
 
 function create_obj_svg(container, obj_gid, url, color, fa_style, icon) {
@@ -362,6 +425,7 @@ socket.onmessage = function(event) {
     let data = JSON.parse(event.data);
     updateFeederChart(data['feeders']);
     updateNbObjects(data['objs']);
+    updateCrawlerStats(data['crawler']);
     update_tracked_objs_dashboard(data['trackers']);
     update_tags_obj_dashboard(data['tags']);
 };

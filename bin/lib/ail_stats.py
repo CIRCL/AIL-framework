@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
+from lib.crawlers import get_crawlers_stats
 from lib import Tag
 from lib import Tracker
 
@@ -90,6 +91,9 @@ def get_nb_objs_today():
     date = datetime.date.today().strftime("%Y%m%d")
     nb_objs = ail_objects.get_nb_objects_by_date(date)
     return nb_objs
+
+def get_crawler_stats():
+    return get_crawlers_stats()
 
 def get_nb_objs_dashboard():
     date = datetime.date.today().strftime("%Y%m%d")

@@ -19,7 +19,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.objects import ail_objects
 from lib import ail_stats
 
 
@@ -41,11 +40,12 @@ def objects():
     user_id = current_user.get_user_id()
     nb_objects = ail_stats.get_nb_objs_dashboard()
     feeders_dashboard = ail_stats.get_feeders_dashboard_full()
+    crawlers_stats = ail_stats.get_crawlers_stats()
     trackers = ail_stats.get_tracked_objs_dashboard(user_org, user_id)
     tagged_objs = ail_stats.get_tagged_objs_dashboard()
     return render_template("objs_dashboard.html", feeders_dashboard=feeders_dashboard,
                            nb_objects=nb_objects, trackers=trackers, tagged_objs=tagged_objs,
-                           bootstrap_label=bootstrap_label)
+                           bootstrap_label=bootstrap_label, crawlers_stats=crawlers_stats)
 
 
 
