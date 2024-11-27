@@ -14,11 +14,6 @@ from flask import Flask, render_template, jsonify, request, Request, Response, s
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from flask_sock import Sock
 
-import importlib
-from os.path import join
-
-sys.path.append('./modules/')
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -37,6 +32,8 @@ import Flask_config
 
 # Import Blueprint
 from blueprints.root import root
+from blueprints.dashboard import dashboard
+from blueprints.ui_submit import PasteSubmit  #  TODO RENAME ME
 from blueprints.crawler_splash import crawler_splash
 from blueprints.correlation import correlation
 from blueprints.languages_ui import languages_ui
@@ -48,7 +45,6 @@ from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
 from blueprints.ail_2_ail_sync import ail_2_ail_sync
 from blueprints.settings_b import settings_b
-from blueprints.objects_objs import objects_objs
 from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
@@ -124,6 +120,8 @@ app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
 
 # =========  BLUEPRINT  =========#
 app.register_blueprint(root, url_prefix=baseUrl)
+app.register_blueprint(dashboard, url_prefix=baseUrl)
+app.register_blueprint(PasteSubmit, url_prefix=baseUrl)
 app.register_blueprint(crawler_splash, url_prefix=baseUrl)
 app.register_blueprint(correlation, url_prefix=baseUrl)
 app.register_blueprint(languages_ui, url_prefix=baseUrl)
@@ -136,7 +134,6 @@ app.register_blueprint(old_endpoints, url_prefix=baseUrl)
 app.register_blueprint(ail_2_ail_sync, url_prefix=baseUrl)
 app.register_blueprint(settings_b, url_prefix=baseUrl)
 app.register_blueprint(objects_cve, url_prefix=baseUrl)
-app.register_blueprint(objects_objs, url_prefix=baseUrl)
 app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
 app.register_blueprint(objects_title, url_prefix=baseUrl)
@@ -174,37 +171,6 @@ def load_user(session_id):
         # print(user)
         return user
     return None
-
-# ========= HEADER GENERATION ======== DEPRECATED
-
-
-# Get headers items that should be ignored (not displayed)
-toIgnoreModule = set()
-try:
-    with open('templates/ignored_modules.txt', 'r') as f:
-        lines = f.read().splitlines()
-        for line in lines:
-            toIgnoreModule.add(line)
-
-except IOError:
-    pass
-
-# Dynamically import routes and functions from modules # # # # TODO REMOVE ME ################################################
-for root, dirs, files in os.walk(os.path.join(Flask_dir, 'modules')):
-    sys.path.append(join(root))
-
-    # Ignore the module
-    curr_dir = root.split('/')[1]
-    if curr_dir in toIgnoreModule:
-        continue
-
-    for name in files:
-        module_name = root.split('/')[-2]
-        if name.startswith('Flask_') and name.endswith('.py'):
-            if name == 'Flask_config.py':
-                continue
-            name = name.strip('.py')
-            importlib.import_module(name)
 
 
 # ========= JINJA2 FUNCTIONS ========

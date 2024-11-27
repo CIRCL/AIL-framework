@@ -50,7 +50,7 @@ text_max_size = int(Flask_config.SUBMIT_PASTE_TEXT_MAX_SIZE) / (1000*1000)
 file_max_size = int(Flask_config.SUBMIT_PASTE_FILE_MAX_SIZE) / (1000*1000*1000)
 allowed_extensions = ", ". join(Flask_config.SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS)
 
-PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder='templates')
+PasteSubmit = Blueprint('PasteSubmit', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/submit'))
 
 # ============ Validators ============
 def limit_content_length():
@@ -296,6 +296,3 @@ def submit_status():
     else:
         return 'INVALID UUID'
 
-
-# ========= REGISTRATION =========
-app.register_blueprint(PasteSubmit, url_prefix=baseUrl)
