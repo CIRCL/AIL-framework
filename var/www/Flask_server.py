@@ -302,7 +302,8 @@ sock = Sock(app)
 @login_required
 @sock.route('/ws/dashboard')
 def ws_dashboard(ws):
-    # TODO wait %30
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
     next_feeders = ail_stats.get_next_feeder_timestamp(int(time.time())) + 1
     try:
         while True:
@@ -313,7 +314,9 @@ def ws_dashboard(ws):
             if int(time.time()) >= next_feeders:
                 feeders = ail_stats.get_feeders_dashboard()
                 objs = ail_stats.get_nb_objs_today()
-                ws.send(json.dumps({'feeders': feeders, 'objs': objs}))
+                tags = ail_stats.get_tagged_objs_dashboard()
+                trackers = ail_stats.get_tracked_objs_dashboard(user_org, user_id)
+                ws.send(json.dumps({'feeders': feeders, 'objs': objs, 'tags': tags, 'trackers': trackers}))
                 next_feeders = next_feeders + 30
             time.sleep(1)
     except Exception as e:  # ConnectionClosed ?

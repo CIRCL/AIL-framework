@@ -11,6 +11,8 @@
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 
@@ -24,6 +26,10 @@
 
 
     <style>
+        .popover {
+      max-width: none;
+      width: 500px;
+    }
         .icon-button {
       position: relative;
       display: inline-block;
@@ -34,7 +40,6 @@
       cursor: pointer;
       outline: inherit;
 	    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
     }
 
     .icon-wrapper {
@@ -83,6 +88,83 @@
 
 		</div>
 
+       
+
+        <div class="row">
+
+            <div class="col-12 col-xl-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th><i class="fa-solid fa-crosshairs"></i></th>
+                            <th>tracker</th>
+                            <th class="text-center"><i class="fas fa-cube"></i></th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tracked_objs">
+                        {% for tracker in trackers %}
+                            <tr>
+                                <td>{{ tracker['type'] }}</td>
+                                <td style="word-break: break-all;">
+                                    <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">{{ tracker['tracked'] }}</a>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                        <svg height="26" width="26" style="pointer-events:none;">
+                                        <g class="nodes">
+                                            <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
+                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                        </g>
+                                    </svg>
+                                    </a>
+                                </td>
+                                <td>{{ tracker['timestamp'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-12 col-xl-6">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center"><i class="fas fa-cube"></i></th>
+                            <th>ID</th>
+                            <th><i class="fas fa-tag"></i> Tags</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="t_tags_objs">
+                        {% for t_obj in tagged_objs %}
+                            <tr>
+                                <td>
+                                    <a href="{{ t_obj['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ t_obj['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                        <svg height="26" width="26">
+                                            <g class="nodes">
+                                                <circle cx="13" cy="13" r="13" fill="{{ t_obj['icon']['color'] }}"></circle>
+                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ t_obj['icon']['style'] }}" font-size="16px">{{ t_obj['icon']['icon'] }}</text>
+                                            </g>
+                                        </svg>
+                                    </a>
+                                </td>
+                                <td style="word-break: break-all;">
+                                    <a href="{{ t_obj['link'] }}">{{ t_obj['id'] }}</a>
+                                </td>
+                                <td>
+                                    {% for tag in t_obj['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {%  endfor %}
+                                </td>
+                                <td>{{ t_obj['date_tag'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
 
 
 	</div>
@@ -102,6 +184,9 @@
 </script>
 
 <script>
+    var tags_colors = ['primary', 'success', 'danger', 'warning', 'info'];
+    var url_obj_description = "{{ url_for('correlation.get_description') }}?object_id=";
+
     // Init Dashboard
     var feederChart = echarts.init(document.getElementById('feeders_dashboard'));
     window.addEventListener('resize', function() {
@@ -201,22 +286,90 @@ function updateNbObjects(data) {
     }
 }
 
+///////
+
+function create_obj_svg(container, obj_gid, url, color, fa_style, icon) {
+    var svg_obj = '<svg height="26" width="26"> <g class="nodes"> <circle cx="13" cy="13" r="13" fill="' + color + '"></circle> <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="' + fa_style + '" font-size="16px">' + icon + '</text> </g> </svg>';
+    var obj_link = $('<a>');
+    obj_link.on('mouseenter',  function () {
+        show_obj_tooltip(this, obj_gid);
+    });
+    obj_link.on('mouseleave',  function () {
+        hide_obj_tooltip(this);
+    });
+    obj_link.attr('href', url);
+    obj_link.html(svg_obj);
+    container.append(obj_link);
+    return container
+}
+
+function create_tags_badges(container, tags) {
+    var tspan = '';
+    for (const i in tags) {
+        tspan = tspan + '<span class="badge badge-' + 'primary' + '">' + sanitize_text(tags[i]) + '</span>'
+    }
+    return tspan;
+}
+
+function update_tags_obj_dashboard(data) {
+    // delete table
+    var tbody = $("#t_tags_objs");
+    var ntd;
+    tbody.empty();
+    for (const elem in data) {
+        let obj = data[elem];
+        var row = $('<tr></tr>');
+        ntd = $('<td></td>');
+        row.append(create_obj_svg(ntd, obj['gid'], obj.link, obj['icon']['color'], obj['icon']['style'], obj['icon']['icon']))
+        row.append('<td style="word-break: break-all;"><a href="'+ obj['link'] + '">' + sanitize_text(obj['id']) + '</a></td>');
+        ntd = $('<td></td>');
+        row.append(create_tags_badges(ntd, obj['tags']));
+        row.append('<td>' + obj['date_tag'] + '</td>');
+        tbody.append(row);
+
+
+{#   {% for tag in t_obj['tags'] %}#}
+{#       <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>#}
+{#   {%  endfor %}#}
+{#</td>#}
+    }
+}
+
+function update_tracked_objs_dashboard(data) {
+    // delete table
+    var tbody = $("#tracked_objs");
+    var ntd;
+    tbody.empty();
+    for (const elem in data) {
+        let tracker = data[elem];
+        var row = $('<tr></tr>');
+        row.append('<td>' + tracker['type'] + '</td>');
+        row.append('<td style="word-break: break-all;"><a href="{{ url_for('hunters.show_tracker') }}?uuid=' + tracker['uuid'] + '">' + sanitize_text(tracker['tracked']) + '</a></td>');
+        ntd = $('<td class="text-center"></td>');
+        row.append(create_obj_svg(ntd, tracker['obj']['gid'], tracker['obj']['link'], tracker['obj']['icon']['color'], tracker['obj']['icon']['style'], tracker['obj']['icon']['icon']));
+        row.append('<td>' + tracker['timestamp'] + '</td>');
+        tbody.append(row);
+    }
+}
+
 // WebSocket
 var socket = new WebSocket("{{ url_for('ws_dashboard') }}");
 socket.wsocket = function(event) {
     console.log("WebSocket connection opened:", event);
 };
 socket.onmessage = function(event) {
+    $("[data-toggle='popover']").popover('destroy');
     let data = JSON.parse(event.data);
     updateFeederChart(data['feeders']);
     updateNbObjects(data['objs']);
+    update_tracked_objs_dashboard(data['trackers']);
+    update_tags_obj_dashboard(data['tags']);
 };
 socket.onerror = function(error) {
     console.error('WebSocket error:', error);
 };
 socket.onclose = function(event) {
     console.log('WebSocket connection closed:', event);
-    // Optionally implement reconnection logic here
 };
 
 

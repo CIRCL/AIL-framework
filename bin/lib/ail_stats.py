@@ -15,6 +15,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
+from lib import Tag
+from lib import Tracker
 
 
 # Config
@@ -93,5 +95,20 @@ def get_nb_objs_dashboard():
     date = datetime.date.today().strftime("%Y%m%d")
     return ail_objects.get_nb_objects_dashboard(date)
 
+def get_tagged_objs_dashboard():
+    tagged_objs = []
+    for tagged_obj in Tag.get_tags_dashboard():
+        timestamp, obj_gid = tagged_obj.split(':', 1)
+        timestamp = datetime.datetime.utcfromtimestamp(int(timestamp)).strftime('%H:%M:%S')
+        obj_meta = ail_objects.get_obj_basic_meta(ail_objects.get_obj_from_global_id(obj_gid), flask_context=True)
+        obj_meta['date_tag'] = timestamp
+        tagged_objs.append(obj_meta)
+    return tagged_objs
+
+def get_tracked_objs_dashboard(user_org, user_id):
+    trackers = Tracker.get_trackers_dashboard(user_org, user_id)
+    for t in trackers:
+        t['obj'] = ail_objects.get_obj_basic_meta(ail_objects.get_obj_from_global_id(t['obj']))
+    return trackers
 
 

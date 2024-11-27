@@ -709,7 +709,15 @@ def add_object_tag(tag, obj_type, obj_id, subtype=''):
         else:
             r_tags.sadd(f'{obj_type}:{subtype}:{tag}', obj_id)
 
+        # STATS
         r_tags.hincrby(f'daily_tags:{datetime.date.today().strftime("%Y%m%d")}', tag, 1)
+        mess = f'{int(time.time())}:{obj_type}:{subtype}:{obj_id}'
+        r_tags.lpush('dashboard:tags', mess)
+        r_tags.ltrim('dashboard:tags', 0, 19)
+
+def get_tags_dashboard():
+    return r_tags.lrange('dashboard:tags', 0, -1)
+
 
 # obj -> Object()
 def confirm_tag(tag, obj):
