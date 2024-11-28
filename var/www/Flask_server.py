@@ -299,8 +299,8 @@ for taxonomy in default_taxonomies:
 # ========== GIT Cache ============
 clear_git_meta_cache()
 
-# rrrr = [str(p) for p in app.url_map.iter_rules()]
-# for p in rrrr:
+# r = [str(p) for p in app.url_map.iter_rules()]
+# for p in r:
 #     print(p)
 
 # ============ MAIN ============

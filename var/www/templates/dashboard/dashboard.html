@@ -114,7 +114,9 @@
                 </div>
             </div>
 
-            <div class="col-12 col-xl-6 mt-4">
+            <div class="col-12 col-xl-6">
+
+                <h3 class="text-center mt-1 mb-4" id="current_date"></h3>
 
                 <div class="row">
 
@@ -215,8 +217,9 @@
 <script>
     var chart = {};
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
+        $("#page-Dashboard").addClass("active");
         $("#nav_dashboard_{{obj_type}}").addClass("active");
+        updateDate();
     });
 
     var btn_selector = {
@@ -321,6 +324,12 @@ function updateFeederChart(data) {
         }
     }
     feederChart.setOption(optionFeeder)
+}
+
+function updateDate() {
+    let d = new Date();
+    let current_date = d.getUTCFullYear() + ' - ' + (d.getUTCMonth() + 1) + ' - ' + d.getUTCDate();
+    $('#current_date').text(current_date)
 }
 
 function updateNbObjects(data) {
