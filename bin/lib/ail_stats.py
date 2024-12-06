@@ -44,8 +44,7 @@ def get_feeders_by_time(timestamp):  # TODO
 
 def get_feeders_dashboard_full():
     timestamp = get_current_feeder_timestamp(int(time.time()))
-    print(timestamp)
-    # timestamp = 1731491970
+    # print(timestamp)
     f_dashboard = {}
 
     feeders = get_feeders()

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Objects - AIL</title>
+  <title>AIL Framework</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -152,7 +152,7 @@
                             <tr>
                                 <td>{{ tracker['type'] }}</td>
                                 <td style="word-break: break-all;">
-                                    <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">{{ tracker['tracked'] }}</a>
+                                    <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">{% if tracker['description'] %}{{ tracker['description'] }}{% else %}{{ tracker['tracked'] }}{% endif %}</a>
                                 </td>
                                 <td class="text-center">
                                     <a href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
@@ -412,7 +412,13 @@ function update_tracked_objs_dashboard(data) {
         let tracker = data[elem];
         var row = $('<tr></tr>');
         row.append('<td>' + tracker['type'] + '</td>');
-        row.append('<td style="word-break: break-all;"><a href="{{ url_for('hunters.show_tracker') }}?uuid=' + tracker['uuid'] + '">' + sanitize_text(tracker['tracked']) + '</a></td>');
+        let name;
+        if (tracker['description']) {
+            name = tracker['description'];
+        } else {
+            name = tracker['tracked'];
+        }
+        row.append('<td style="word-break: break-all;"><a href="{{ url_for('hunters.show_tracker') }}?uuid=' + tracker['uuid'] + '">' + sanitize_text(name) + '</a></td>');
         ntd = $('<td class="text-center"></td>');
         row.append(create_obj_svg(ntd, tracker['obj']['gid'], tracker['obj']['link'], tracker['obj']['icon']['color'], tracker['obj']['icon']['style'], tracker['obj']['icon']['icon']));
         row.append('<td>' + tracker['timestamp'] + '</td>');
