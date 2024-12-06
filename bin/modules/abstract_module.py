@@ -73,6 +73,9 @@ class AbstractModule(ABC):
         # Debug Mode
         self.debug = False
 
+        if queue:
+            self.queue.start()
+
     def get_obj(self):
         return self.obj
 
