@@ -328,7 +328,11 @@ function updateFeederChart(data) {
 
 function updateDate() {
     let d = new Date();
-    let current_date = d.getUTCFullYear() + ' - ' + (d.getUTCMonth() + 1) + ' - ' + d.getUTCDate();
+    let day = d.getUTCDate();
+    if (day < 10) {
+        day = "0" + day;
+    }
+    let current_date = d.getUTCFullYear() + ' - ' + (d.getUTCMonth() + 1) + ' - ' + day;
     $('#current_date').text(current_date)
 }
 
@@ -339,6 +343,7 @@ function updateNbObjects(data) {
 }
 
 function updateCrawlerStats(data) {
+    updateDate();
     $("#stat_crawler_onion_domain_up").text(data['onion']['up']);
     $("#stat_crawler_onion_domain_down").text(data['onion']['down']);
     $("#stat_crawler_onion_total").text(data['onion']['crawled']);
@@ -416,7 +421,7 @@ function update_tracked_objs_dashboard(data) {
 }
 
 // WebSocket
-var socket = new WebSocket("{{ url_for('ws_dashboard') }}");
+var socket = new WebSocket("wss://" + window.location.host + "/ws/dashboard");
 socket.wsocket = function(event) {
     console.log("WebSocket connection opened:", event);
 };
