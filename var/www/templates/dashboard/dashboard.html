@@ -245,7 +245,7 @@
     var feeders_xaxis = [{% for date in feeders_dashboard['dates'] %}'{{ date }}', {% endfor %}]
     var feeders_data = {
         {% for feeder in feeders_dashboard['data'] %}
-            {{ feeder }}: {{ feeders_dashboard['data'][feeder] }},
+            '{{ feeder }}': {{ feeders_dashboard['data'][feeder] }},
         {% endfor %}
     }
 
