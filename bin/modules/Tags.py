@@ -5,7 +5,7 @@
 The Tags Module
 ================================
 
-This module add tags to an item.
+This module add tags to an object.
 
 """
 
@@ -36,11 +36,11 @@ class Tags(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        item = self.obj
+        obj = self.obj
         tag = message
 
         # Create a new tag
-        item.add_tag(tag)
+        obj.add_tag(tag)
         print(f'{self.obj.get_global_id()}: Tagged {tag}')
 
         # Forward message to channel
