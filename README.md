@@ -29,9 +29,7 @@ AIL framework - Framework for Analysis of Information Leaks
 
 AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
 
-![Overview](./doc/screenshots/ail-overview.png?raw=true "AIL framework Overview")
-
-![Dashboard](./doc/screenshots/dashboard0.png?raw=true "AIL framework dashboard")
+![Overview](https://www.ail-project.org/assets/img/dashboard.jpeg "AIL framework Dashboard")
 
 
 ![Finding webshells with AIL](./doc/screenshots/webshells.gif?raw=true "Finding webshells with AIL")
@@ -112,7 +110,7 @@ cd bin/
 The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions.
 
 Requirement:
-- Python 3.7+
+- Python 3.8+
 
 ## Installation Notes
 
