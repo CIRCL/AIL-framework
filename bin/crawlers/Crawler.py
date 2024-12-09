@@ -164,9 +164,15 @@ class Crawler(AbstractModule):
                         self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
                     else:
                         capture.update(status)
-                else:
+                elif status == crawlers.CaptureStatus.QUEUED or status == crawlers.CaptureStatus.ONGOING:
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
+                # Invalid State
+                else:
+                    task = capture.get_task()
+                    task.reset()
+                    capture.delete()
+                    self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Send back in queue')
 
             except ConnectionError:
                 self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
