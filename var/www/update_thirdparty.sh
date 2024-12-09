@@ -67,6 +67,9 @@ wget https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js -O ./static/
 wget https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css -O ./static/css/dataTables.bootstrap.min.css
 wget https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js -O ./static/js/dataTables.bootstrap.min.js
 
+#Ressource for graph
+wget https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js -O ./static/js/echarts.min.js
+
 #Ressources for bootstrap popover
 POPPER_VERSION="1.16.1"
 wget https://github.com/FezVrasta/popper.js/archive/v${POPPER_VERSION}.zip -O temp/popper.zip
@@ -74,9 +77,6 @@ unzip -qq temp/popper.zip -d temp/
 mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
 mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
 
-#Ressource for graph
-# DASHBOARD   # TODO Extract from github
-wget https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js - O ./static/js/echarts.min.js
 
 
 
