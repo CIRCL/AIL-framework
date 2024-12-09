@@ -95,20 +95,20 @@ class Mail(AbstractModule):
                         # print()
 
                 except dns.resolver.NoNameservers:
-                    self.redis_logger.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
+                    self.logger.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
                     print('NoNameserver, No non-broken nameservers are available to answer the query.')
                 except dns.resolver.NoAnswer:
-                    self.redis_logger.debug('NoAnswer, The response did not contain an answer to the question.')
+                    self.logger.debug('NoAnswer, The response did not contain an answer to the question.')
                     print('NoAnswer, The response did not contain an answer to the question.')
                 except dns.name.EmptyLabel:
-                    self.redis_logger.debug('SyntaxError: EmptyLabel')
+                    self.logger.debug('SyntaxError: EmptyLabel')
                     print('SyntaxError: EmptyLabel')
                 except dns.resolver.NXDOMAIN:
                     # save_mxdomain_in_cache(mxdomain)
-                    self.redis_logger.debug('The query name does not exist.')
+                    self.logger.debug('The query name does not exist.')
                     print('The query name does not exist.')
                 except dns.name.LabelTooLong:
-                    self.redis_logger.debug('The Label is too long')
+                    self.logger.debug('The Label is too long')
                     print('The Label is too long')
                 except dns.exception.Timeout:
                     print('dns timeout')
@@ -134,9 +134,7 @@ class Mail(AbstractModule):
 
     # # TODO: sanitize mails
     def compute(self, message):
-        score = message
         item = self.get_obj()
-        item_date = item.get_date()
 
         mails = self.regex_findall(self.email_regex, item.id, item.get_content())
         mxdomains_email = {}
@@ -171,15 +169,15 @@ class Mail(AbstractModule):
         # for tld in mx_tlds:
         #     Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
 
-        msg = f'Mails;{item.get_source()};{item_date};{item.get_basename()};Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
+        msg = f'Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
         if num_valid_email > self.mail_threshold:
             print(f'{item.id}    Checked {num_valid_email} e-mail(s)')
-            self.redis_logger.warning(msg)
+            self.logger.info(msg)
             # Tags
             tag = 'infoleak:automatic-detection="mail"'
             self.add_message_to_queue(message=tag, queue='Tags')
         elif num_valid_email > 0:
-            self.redis_logger.info(msg)
+            self.logger.info(msg)
 
 
 if __name__ == '__main__':

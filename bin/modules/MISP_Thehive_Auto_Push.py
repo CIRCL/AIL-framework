@@ -18,7 +18,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.exceptions import MISPConnectionError
-from lib.objects.Items import Item
 from lib import Tag
 from exporter.MISPExporter import MISPExporterAutoDaily
 from exporter.TheHiveExporter import TheHiveExporterAlertTag
@@ -43,7 +42,7 @@ class MISP_Thehive_Auto_Push(AbstractModule):
         if self.last_refresh < Tag.get_last_auto_push_refreshed() < 0:
             self.tags = Tag.refresh_auto_push()
             self.last_refresh = time.time()
-            self.redis_logger.info('Tags Auto Push refreshed')
+            self.logger.debug('Tags Auto Push refreshed')
 
         tag = message
         item = self.get_obj()

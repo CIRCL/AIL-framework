@@ -167,11 +167,11 @@ class SentimentAnalysis(AbstractModule):
                 provider_timestamp = provider + '_' + str(timestamp)
                 self.db.incr('UniqID')
                 UniqID = self.db.get('UniqID')
-                self.redis_logger.debug(f'{provider_timestamp}->{UniqID}dropped{num_line_removed}lines')
+                self.logger.debug(f'{provider_timestamp}->{UniqID}dropped{num_line_removed}lines')
                 self.db.sadd(provider_timestamp, UniqID)
                 self.db.set(UniqID, avg_score)
         else:
-            self.redis_logger.debug(f'Dropped:{p_MimeType}')
+            self.logger.debug(f'Dropped:{p_MimeType}')
 
 
     def isJSON(self, content):

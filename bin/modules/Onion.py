@@ -4,7 +4,7 @@
 The Onion Module
 ============================
 
-This module extract url from item and returning only ones which are tor
+This module extract url from object and returning only ones which are tor
 related (.onion). All These urls are send to the crawler discovery queue.
 
 Requirements
@@ -69,12 +69,11 @@ class Onion(AbstractModule):
         onion_urls = []
         domains = []
 
-        score = message
-        item = self.get_obj()
-        item_content = item.get_content()
+        obj = self.get_obj()
+        content = obj.get_content()
 
         # max execution time on regex
-        res = self.regex_findall(self.onion_regex, item.get_id(), item_content)
+        res = self.regex_findall(self.onion_regex, obj.get_id(), content)
         for x in res:
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
@@ -92,16 +91,14 @@ class Onion(AbstractModule):
         if onion_urls:
             if crawlers.is_crawler_activated():
                 for domain in domains:
-                    task_uuid = crawlers.create_task(domain, parent=item.get_id(), priority=0,
+                    task_uuid = crawlers.create_task(domain, parent=obj.get_id(), priority=0,
                                                      har=self.har, screenshot=self.screenshot)
                     if task_uuid:
                         print(f'{domain} added to crawler queue: {task_uuid}')
             else:
-                to_print = f'Onion;{item.get_source()};{item.get_date()};{item.get_basename()};'
-                print(f'{to_print}Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
-                self.redis_logger.warning(f'{to_print}Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
+                print(f'Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
 
-            # TAG Item
+            # TAG Object
             tag = 'infoleak:automatic-detection="onion"'
             self.add_message_to_queue(message=tag, queue='Tags')
 

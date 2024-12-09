@@ -25,7 +25,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
 from lib import regex_helper
 
 # TODO REWRITE ME -> PERF + IPV6 + Tracker ?
@@ -66,11 +65,11 @@ class IPAddress(AbstractModule):
         if not self.ip_networks:
             return None
 
-        item = self.get_obj()
-        content = item.get_content()
+        obj = self.get_obj()
+        content = obj.get_content()
 
         # list of the regex results in the Item
-        results = self.regex_findall(self.re_ipv4, item.get_id(), content)
+        results = self.regex_findall(self.re_ipv4, obj.get_id(), content)
         results = set(results)
         matching_ips = []
         for ip in results:
@@ -83,7 +82,6 @@ class IPAddress(AbstractModule):
 
         if len(matching_ips) > 0:
             self.logger.info(f'{self.obj.get_global_id()} contains {len(matching_ips)} IPs')
-            self.redis_logger.warning(f'{self.obj.get_global_id()} contains IPs')
 
             # Tag message with IP
             tag = 'infoleak:automatic-detection="ip"'
@@ -93,4 +91,3 @@ class IPAddress(AbstractModule):
 if __name__ == "__main__":
     module = IPAddress()
     module.run()
-    # module.compute('submitted/2023/05/15/submitted_8a6136c2-c7f2-4c9e-8f29-e1a62315b482.gz')

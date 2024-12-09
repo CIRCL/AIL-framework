@@ -39,8 +39,6 @@ baseUrl = Flask_config.baseUrl
 r_serv_db = Flask_config.r_serv_db # TODO REMOVE ME
 r_serv_log_submit = Flask_config.r_serv_log_submit # TODO REMOVE ME
 
-logger = Flask_config.redis_logger
-
 
 valid_filename_chars = "-_ %s%s" % (string.ascii_letters, string.digits)
 
@@ -57,11 +55,9 @@ def limit_content_length():
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            logger.debug('decorator')
             cl = request.content_length
             if cl is not None:
                 if cl > Flask_config.SUBMIT_PASTE_FILE_MAX_SIZE or ('file' not in request.files and cl > Flask_config.SUBMIT_PASTE_TEXT_MAX_SIZE):
-                    logger.debug('abort')
                     abort(413)
             return f(*args, **kwargs)
         return wrapper
@@ -75,7 +71,6 @@ def allowed_file(filename):
         return True
     else:
         file_ext = filename.rsplit('.', 1)[1].lower()
-        logger.debug(file_ext)
         return file_ext in Flask_config.SUBMIT_PASTE_FILE_ALLOWED_EXTENSIONS
 
 def clean_filename(filename, whitelist=valid_filename_chars, replace=' '):
@@ -111,7 +106,6 @@ def PasteSubmit_page():
 @login_user_no_api
 @limit_content_length()
 def submit():
-    logger.debug('submit')
 
     password = request.form['archive_pass']
     ltags = request.form['tags_taxonomies']
@@ -124,12 +118,10 @@ def submit():
         paste_source = paste_source.replace('/', '')[:80]
         if paste_source in ['crawled', 'tests']:
             content = 'Invalid source'
-            logger.info(paste_source)
             return content, 400
 
         if not re.match('^[0-9a-zA-Z-_\+@#&\.;=:!]*$', paste_source):
             content = f'Invalid source name: Forbidden character(s)'
-            logger.info(content)
             return content, 400
 
     is_file = False
@@ -139,8 +131,6 @@ def submit():
             if file_import.filename:
                 is_file = True
 
-    logger.debug(f'is file ? {is_file}')
-
     submitted_tag = 'infoleak:submission="manual"'
 
     # active taxonomies
@@ -149,13 +139,11 @@ def submit():
     active_galaxies = Tag.get_active_galaxies()
 
     if ltags or ltagsgalaxies:
-        logger.debug(f'ltags ? {ltags} {ltagsgalaxies}')
         ltags = Tag.unpack_str_tags_list(ltags)
         ltagsgalaxies = Tag.unpack_str_tags_list(ltagsgalaxies)
 
         if not Tag.is_valid_tags_taxonomies_galaxy(ltags, ltagsgalaxies):
             content = 'INVALID TAGS'
-            logger.info(content)
             return content, 400
 
     # add submitted tags
@@ -164,36 +152,28 @@ def submit():
     ltags.append(submitted_tag)
 
     if is_file:
-        logger.debug('file management')
 
         if allowed_file(file_import.filename):
-            logger.debug('file extension allowed')
 
             # get UUID
             UUID = str(uuid.uuid4())
 
             # create submitted dir
             if not os.path.exists(UPLOAD_FOLDER):
-                logger.debug('create folder')
                 os.makedirs(UPLOAD_FOLDER)
 
             if '.' not in file_import.filename:
-                logger.debug('add UUID to path')
                 full_path = os.path.join(UPLOAD_FOLDER, UUID)
             else:
                 if file_import.filename[-6:] == 'tar.gz':
-                    logger.debug('file extension is tar.gz')
                     file_type = 'tar.gz'
                 else:
                     file_type = file_import.filename.rsplit('.', 1)[1]
-                    logger.debug(f'file type {file_type}')
                 name = UUID + '.' + file_type
                 full_path = os.path.join(UPLOAD_FOLDER, name)
-                logger.debug(f'full path {full_path}')
 
             # Flask verify the file size
             file_import.save(full_path)
-            logger.debug('file saved')
 
             Import_helper.create_import_queue(ltags, ltagsgalaxies, full_path, UUID, password, True)
 
@@ -204,18 +184,13 @@ def submit():
 
         else:
             content = f'wrong file type, allowed_extensions: {allowed_extensions} or remove the extension'
-            logger.info(content)
             return content, 400
 
     elif paste_content != '':
-        logger.debug(f'entering text paste management')
         if sys.getsizeof(paste_content) < Flask_config.SUBMIT_PASTE_TEXT_MAX_SIZE:
-            logger.debug(f'size {sys.getsizeof(paste_content)}')
             # get id
             UUID = str(uuid.uuid4())
-            logger.debug('create import')
             Import_helper.create_import_queue(ltags, ltagsgalaxies, paste_content, UUID, password, source=paste_source)
-            logger.debug('import OK')
             return render_template("submit_items.html",
                                         active_taxonomies = active_taxonomies,
                                         active_galaxies = active_galaxies,
@@ -223,11 +198,9 @@ def submit():
 
         else:
             content = f'text paste size is over {Flask_config.SUBMIT_PASTE_TEXT_MAX_SIZE} bytes limit'
-            logger.info(content)
             return content, 400
 
         content = 'submit aborded'
-        logger.error(content)
         return content, 400
 
     return PasteSubmit_page()

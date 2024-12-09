@@ -7,7 +7,7 @@ The CreditCards Module
 
 This module is consuming the Redis-list created by the Categ module.
 
-It apply credit card regexes on item content and warn if a valid card number is found.
+It apply credit card regexes on object content and warn if a valid card number is found.
 
 """
 
@@ -23,7 +23,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
 from packages import lib_refine
 
 class CreditCards(AbstractModule):
@@ -68,10 +67,9 @@ class CreditCards(AbstractModule):
         return extracted
 
     def compute(self, message, r_result=False):
-        score = message
-        item = self.get_obj()
-        content = item.get_content()
-        all_cards = self.regex_findall(self.regex, item.id, content)
+        obj = self.get_obj()
+        content = obj.get_content()
+        all_cards = self.regex_findall(self.regex, obj.id, content)
 
         if len(all_cards) > 0:
             # self.logger.debug(f'All matching {all_cards}')
@@ -84,11 +82,8 @@ class CreditCards(AbstractModule):
                     creditcard_set.add(valid_card)
 
             # print(creditcard_set)
-            to_print = f'CreditCard;{item.get_source()};{item.get_date()};{item.get_basename()};'
             if creditcard_set:
-                mess = f'{to_print}Checked {len(creditcard_set)} valid number(s);{self.obj.get_global_id()}'
-                print(mess)
-                self.redis_logger.warning(mess)
+                print(f'{len(creditcard_set)} valid number(s);{self.obj.get_global_id()}')
 
                 tag = 'infoleak:automatic-detection="credit-card"'
                 self.add_message_to_queue(message=tag, queue='Tags')
@@ -96,7 +91,7 @@ class CreditCards(AbstractModule):
                 if r_result:
                     return creditcard_set
             else:
-                self.redis_logger.info(f'{to_print}CreditCard related;{self.obj.get_global_id()}')
+                print(f'CreditCard related;{self.obj.get_global_id()}')
 
 
 if __name__ == '__main__':

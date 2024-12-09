@@ -65,7 +65,7 @@ class Categ(AbstractModule):
         self.matchingThreshold = config_loader.get_config_int("Categ", "matchingThreshold")
 
         self.reload_categ_words()
-        self.redis_logger.info("Script Categ started")
+        self.logger.info("Script Categ started")
 
     # # TODO: trigger reload on change ( save last reload time, ...)
     def reload_categ_words(self):
@@ -102,9 +102,6 @@ class Categ(AbstractModule):
                     # Export message to categ queue
                     print(msg, categ)
                     self.add_message_to_queue(message=msg, queue=categ)
-
-                    self.redis_logger.debug(
-                        f'Categ;{obj.get_source()};{obj.get_date()};{obj.get_basename()};Detected {lenfound} as {categ};{obj.get_id()}')
 
         if r_result:
             return categ_found

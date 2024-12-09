@@ -24,8 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
-from lib.ConfigLoader import ConfigLoader
+# from lib.ConfigLoader import ConfigLoader
 # from lib import Statistics
 
 class Iban(AbstractModule):
@@ -40,7 +39,7 @@ class Iban(AbstractModule):
     def __init__(self, queue=True):
         super(Iban, self).__init__(queue=queue)
 
-        # Waiting time in secondes between to message proccessed
+        # Waiting time in seconds between to message processed
         self.pending_seconds = 10
 
         self.regex_timeout = 30
@@ -49,7 +48,7 @@ class Iban(AbstractModule):
         self.iban_regex_verify = re.compile(r'^([A-Z]{2})([0-9]{2})([A-Z0-9]{9,30})$')
 
         # Send module state to logs
-        self.redis_logger.info(f'Module {self.module_name} initialized')
+        self.logger.info(f'Module {self.module_name} initialized')
 
     def get_iban_number(self, iban):
         return (iban[4:] + iban[:4]).translate(Iban.LETTERS_IBAN)
@@ -73,29 +72,27 @@ class Iban(AbstractModule):
         return extracted
 
     def compute(self, message):
-        item = self.get_obj()
-        item_id = item.get_id()
+        obj = self.get_obj()
+        obj_id = obj.get_id()
 
-        ibans = self.regex_findall(self.iban_regex, item_id, item.get_content())
+        ibans = self.regex_findall(self.iban_regex, obj_id, obj.get_content())
         if ibans:
             valid_ibans = set()
             for iban in ibans:
                 iban = iban[1:-1].replace("'", "").split(',')
                 iban = iban[0]+iban[1]+iban[2]
                 iban = ''.join(e for e in iban if e.isalnum())
-                if self.regex_findall(self.iban_regex_verify, item_id, iban):
+                if self.regex_findall(self.iban_regex_verify, obj_id, iban):
                     print(f'checking {iban}')
                     if self.is_valid_iban(iban):
                         valid_ibans.add(iban)
 
             if valid_ibans:
-                print(f'{valid_ibans} ibans {item_id}')
-                date = datetime.datetime.now().strftime("%Y%m")
+                print(f'{valid_ibans} ibans {self.obj.get_global_id()}')
+                # date = datetime.datetime.now().strftime("%Y%m")
                 # for iban in valid_ibans:
                 #     Statistics.add_module_tld_stats_by_date('iban', date, iban[0:2], 1)
 
-                to_print = f'Iban;{item.get_source()};{item.get_date()};{item.get_basename()};'
-                self.redis_logger.warning(f'{to_print}Checked found {len(valid_ibans)} IBAN;{self.obj.get_global_id()}')
                 # Tags
                 tag = 'infoleak:automatic-detection="iban"'
                 self.add_message_to_queue(message=tag, queue='Tags')

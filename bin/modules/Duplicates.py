@@ -27,7 +27,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
-from lib.objects.Items import Item
 
 
 class Duplicates(AbstractModule):
@@ -92,11 +91,11 @@ class Duplicates(AbstractModule):
             Duplicate.save_object_hash(algo, curr_date_ymonth, self.algos[algo]['hash'], item.get_id())
 
         if nb_duplicates:
-            self.redis_logger.info(f'Duplicate;{item.get_source()};{item.get_date()};{item.get_basename()};Detected {nb_duplicates};{self.obj.get_global_id()}')
+            self.logger.info(f'Duplicates {nb_duplicates};{self.obj.get_global_id()}')
 
         y = time.time()
         print(f'{self.obj.get_global_id()} Processed in {y-x} sec')
-        # self.redis_logger.debug('{}Processed in {} sec'.format(to_print, y-x))
+        # self.logger.debug('{}Processed in {} sec'.format(to_print, y-x))
 
 
 if __name__ == "__main__":

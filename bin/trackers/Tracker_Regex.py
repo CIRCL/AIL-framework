@@ -47,14 +47,13 @@ class Tracker_Regex(AbstractModule):
         self.exporters = {'mail': MailExporterTracker(),
                           'webhook': WebHookExporterTracker()}
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         # refresh Tracked regex
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('regex'):
             self.tracked_regexs = Tracker.get_tracked_regexs()
             self.last_refresh = time.time()
-            self.redis_logger.debug('Tracked regex refreshed')
             print('Tracked regex refreshed')
 
         obj = self.get_obj()
@@ -117,7 +116,6 @@ class Tracker_Regex(AbstractModule):
                 continue
 
             print(f'new tracked regex found: {tracker_name} in {self.obj.get_global_id()}')
-            self.redis_logger.warning(f'new tracked regex found: {tracker_name} in {self.obj.get_global_id()}')
 
             tracker.add(obj.get_type(), obj.get_subtype(r_str=True), obj_id)
 

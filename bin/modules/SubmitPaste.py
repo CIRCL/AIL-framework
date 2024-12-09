@@ -137,22 +137,21 @@ class SubmitPaste(AbstractModule):
         """
         Create a paste for given file
         """
-        self.redis_logger.debug('manage')
 
         if os.path.exists(file_full_path):
-            self.redis_logger.debug(f'file exists {file_full_path}')
+            self.logger.debug(f'file exists {file_full_path}')
 
             file_size = os.stat(file_full_path).st_size
-            self.redis_logger.debug(f'file size {file_size}')
+            self.logger.debug(f'file size {file_size}')
             # Verify file length
             if file_size < SubmitPaste.FILE_MAX_SIZE:
                 # TODO sanitize filename
                 filename = file_full_path.split('/')[-1]
-                self.redis_logger.debug(f'sanitize filename {filename}')
-                self.redis_logger.debug('file size allowed')
+                self.logger.debug(f'sanitize filename {filename}')
+                self.logger.debug('file size allowed')
 
                 if not '.' in filename:
-                    self.redis_logger.debug('no extension for filename')
+                    self.logger.debug('no extension for filename')
                     try:
                         # Read file
                         with open(file_full_path,'r') as f:
@@ -165,14 +164,14 @@ class SubmitPaste(AbstractModule):
                 else:
                     file_type = filename.rsplit('.', 1)[1]
                     file_type = file_type.lower()
-                    self.redis_logger.debug(f'file ext {file_type}')
+                    self.logger.debug(f'file ext {file_type}')
 
                     if file_type in SubmitPaste.ALLOWED_EXTENSIONS:
-                        self.redis_logger.debug('Extension allowed')
+                        self.logger.debug('Extension allowed')
                         # TODO enum of possible file extension ?
                         # TODO verify file hash with virus total ?
                         if not self._is_compressed_type(file_type):
-                            self.redis_logger.debug('Plain text file')
+                            self.logger.debug('Plain text file')
                             # plain txt file
                             with open(file_full_path,'r') as f:
                                 content = f.read()
@@ -197,7 +196,7 @@ class SubmitPaste(AbstractModule):
                             #         except:
                             #             self.abord_file_submission(uuid, "file decompression error")
                             #             raise
-                            #     self.redis_logger.debug('unpacking {} file'.format(files.unpacker))
+                            #     self.logger.debug('unpacking {} file'.format(files.unpacker))
                             #     if(not files.children):
                             #         self.abord_file_submission(uuid, "Empty compressed file")
                             #         raise
@@ -209,11 +208,11 @@ class SubmitPaste(AbstractModule):
                             #             self.create_paste(uuid, child.contents, ltags, ltagsgalaxies, uuid+'_'+ str(n) , source)
                             #             n = n + 1
                             #         else:
-                            #             self.redis_logger.error("Error in module %s: bad extention"%(self.module_name))
+                            #             self.logger.error("Error in module %s: bad extention"%(self.module_name))
                             #             self.addError(uuid, 'Bad file extension: {}'.format(child.filename.decode()) )
 
                             # except FileNotFoundError:
-                            #     self.redis_logger.error("Error in module %s: file not found"%(self.module_name))
+                            #     self.logger.error("Error in module %s: file not found"%(self.module_name))
                             #     self.addError(uuid, 'File not found: {}'.format(file_full_path), uuid )
 
             else:
@@ -248,7 +247,7 @@ class SubmitPaste(AbstractModule):
 
         # delete uuid
         self.r_serv_db.srem('submitted:uuid', uuid)
-        self.redis_logger.debug(f'{uuid} all file submitted')
+        self.logger.debug(f'{uuid} all file submitted')
         print(f'{uuid} all file submitted')
 
     def create_paste(self, uuid, paste_content, ltags, ltagsgalaxies, name, source=None):
@@ -262,11 +261,11 @@ class SubmitPaste(AbstractModule):
 
         full_path = os.path.join(ITEMS_FOLDER, save_path)
 
-        self.redis_logger.debug(f'file path of the paste {full_path}')
+        self.logger.debug(f'file path of the paste {full_path}')
 
         if not os.path.isfile(full_path):
             # file not exists in AIL paste directory
-            self.redis_logger.debug(f"new paste {paste_content}")
+            self.logger.debug(f"new paste {paste_content}")
 
             gzip64encoded = self._compress_encode_content(paste_content, uuid)
 
@@ -274,7 +273,7 @@ class SubmitPaste(AbstractModule):
 
                 # use relative path
                 rel_item_path = save_path.replace(self.PASTES_FOLDER, '', 1)
-                self.redis_logger.debug(f"relative path {rel_item_path}")
+                self.logger.debug(f"relative path {rel_item_path}")
 
                 item = Item(rel_item_path)
 
@@ -295,12 +294,12 @@ class SubmitPaste(AbstractModule):
                 if self.r_serv_log_submit.get(f'{uuid}:nb_end') == self.r_serv_log_submit.get(f'{uuid}:nb_total'):
                     self.r_serv_log_submit.set(f'{uuid}:end', 1)
 
-                self.redis_logger.debug(f'    {rel_item_path} send to Mixer')
+                self.logger.debug(f'    {rel_item_path} send to Mixer')
                 print(f'    {rel_item_path} send to Mixer')
                 self.r_serv_log_submit.sadd(f'{uuid}:paste_submit_link', rel_item_path)
 
                 curr_date = datetime.date.today()
-                self.redis_logger.debug("paste submitted")
+                self.logger.debug("paste submitted")
         else:
             self.addError(uuid, f'File: {save_path} already exist in submitted pastes')
 
@@ -316,7 +315,7 @@ class SubmitPaste(AbstractModule):
         return gzip64encoded
 
     def addError(self, uuid, errorMessage):
-        self.redis_logger.debug(errorMessage)
+        self.logger.debug(errorMessage)
         print(errorMessage)
         error = self.r_serv_log_submit.get(f'{uuid}:error')
         if error is not None:
@@ -324,7 +323,7 @@ class SubmitPaste(AbstractModule):
         self.r_serv_log_submit.incr(f'{uuid}:nb_end')
 
     def abord_file_submission(self, uuid, errorMessage):
-        self.redis_logger.debug(f'abord {uuid}, {errorMessage}')
+        self.logger.debug(f'abord {uuid}, {errorMessage}')
 
         self.addError(uuid, errorMessage)
         self.r_serv_log_submit.set(f'{uuid}:end', 1)

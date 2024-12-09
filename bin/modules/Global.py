@@ -74,7 +74,6 @@ class Global(AbstractModule):
         if int(difftime) > 30:
             to_print = f'Global; ; ; ;glob Processed {self.processed_item} item(s) in {difftime} s'
             print(to_print)
-            self.redis_logger.debug(to_print)
 
             self.time_last_stats = time.time()
             self.processed_item = 0

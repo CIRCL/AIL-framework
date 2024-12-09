@@ -615,14 +615,13 @@ function launch_all {
     update;
     launch_redis;
     launch_kvrocks;
-    launch_logs;
     launch_scripts;
     launch_flask;
 }
 
 function menu_display {
 
-  options=("Redis" "Kvrocks" "Logs" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
+  options=("Redis" "Kvrocks" "Scripts" "Flask" "Killall" "Update" "Update-config" "Update-thirdparty")
 
   menu() {
       echo "What do you want to Launch?:"
@@ -652,9 +651,6 @@ function menu_display {
                   ;;
               Kvrocks)
                   launch_kvrocks;
-                  ;;
-              Logs)
-                  launch_logs;
                   ;;
               Scripts)
                   launch_scripts;

@@ -29,7 +29,6 @@ Redis organization:
 import os
 import sys
 import time
-from datetime import datetime
 from pyfaup.faup import Faup
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -37,9 +36,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
 from lib import ConfigLoader
-# from lib import Statistics
 
 
 class Credential(AbstractModule):
@@ -80,40 +77,36 @@ class Credential(AbstractModule):
         self.pending_seconds = 10
 
         # Send module state to logs
-        self.redis_logger.info(f"Module {self.module_name} initialized")
+        self.logger.info(f"Module {self.module_name} initialized")
 
     def compute(self, message):
 
-        count = message
-        item = self.get_obj()
+        obj = self.get_obj()
 
-        item_content = item.get_content()
+        content = obj.get_content()
 
         # TODO: USE SETS
         # Extract all credentials
-        all_credentials = self.regex_findall(self.regex_cred, item.get_id(), item_content)
+        all_credentials = self.regex_findall(self.regex_cred, obj.get_id(), content)
         if all_credentials:
             nb_cred = len(all_credentials)
             message = f'Checked {nb_cred} credentials found.'
 
-            all_sites = self.regex_findall(self.regex_web, item.get_id(), item_content, r_set=True)
+            all_sites = self.regex_findall(self.regex_web, obj.get_id(), content, r_set=True)
             if all_sites:
                 discovered_sites = ', '.join(all_sites)
                 message += f' Related websites: {discovered_sites}'
 
             print(message)
 
-            to_print = f'Credential;{item.get_source()};{item.get_date()};{item.get_basename()};{message};{self.obj.get_global_id()}'
-
             # num of creds above threshold, publish an alert
             if nb_cred > self.criticalNumberToAlert:
                 print(f"========> Found more than 10 credentials in this file : {self.obj.get_global_id()}")
-                self.redis_logger.warning(to_print)
 
                 tag = 'infoleak:automatic-detection="credential"'
                 self.add_message_to_queue(message=tag, queue='Tags')
 
-                site_occurrence = self.regex_findall(self.regex_site_for_stats, item.get_id(), item_content)
+                site_occurrence = self.regex_findall(self.regex_site_for_stats, obj.get_id(), content)
 
                 creds_sites = {}
 
@@ -162,8 +155,7 @@ class Credential(AbstractModule):
                 # for tld in nb_tlds:
                 #     Statistics.add_module_tld_stats_by_date('credential', date, tld, nb_tlds[tld])
             else:
-                self.redis_logger.info(to_print)
-                print(f'found {nb_cred} credentials')
+                print(f'found {nb_cred} credentials {self.obj.get_global_id()}')
 
             # # TODO: # FIXME: TEMP DESABLE
             # # For searching credential in termFreq

@@ -58,10 +58,6 @@ class DomClassifier(AbstractModule):
     def compute(self, message, r_result=False):
         host = message
 
-        item = self.get_obj()
-        item_basename = item.get_basename()
-        item_date = item.get_date()
-        item_source = item.get_source()
         try:
 
             self.dom_classifier.text(rawtext=host)
@@ -82,19 +78,19 @@ class DomClassifier(AbstractModule):
                 localizeddomains = self.dom_classifier.include(expression=self.cc_tld)
                 if localizeddomains:
                     print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc_tld};{self.obj.get_global_id()}")
+                    self.logger.info(f"{localizeddomains} located in {self.cc_tld};{self.obj.get_global_id()}")
 
             if self.cc:
                 localizeddomains = self.dom_classifier.localizedomain(cc=self.cc)
                 if localizeddomains:
                     print(localizeddomains)
-                    self.redis_logger.warning(f"DomainC;{item_source};{item_date};{item_basename};Checked {localizeddomains} located in {self.cc};{self.obj.get_global_id()}")
+                    self.logger.info(f"{localizeddomains} located in {self.cc};{self.obj.get_global_id()}")
 
             if r_result:
                 return self.dom_classifier.vdomain
 
         except IOError as err:
-            self.redis_logger.error(f"Duplicate;{item_source};{item_date};{item_basename};CRC Checksum Failed")
+            self.logger.error(f"{self.obj.get_global_id()};CRC Checksum Failed")
             raise Exception(f"CRC Checksum Failed on: {self.obj.get_global_id()}")
 
 

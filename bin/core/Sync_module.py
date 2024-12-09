@@ -88,7 +88,6 @@ class Sync_module(AbstractModule):
             if self.last_refresh_queues < time.time():
                 timeout_processed_objs()
                 self.last_refresh_queues = time.time() + 120
-                self.redis_logger.debug('Timeout queues')
                 # print('Timeout queues')
 
             # Get one message (paste) from the QueueIn (copy of Redis_Global publish)

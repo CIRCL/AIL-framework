@@ -44,7 +44,6 @@ class CveModule(AbstractModule):
         self.logger.info(f'Module {self.module_name} initialized')
 
     def compute(self, message):
-        count = message
         item = self.get_obj()
         item_id = item.get_id()
 
@@ -56,9 +55,7 @@ class CveModule(AbstractModule):
                 cve = Cves.Cve(cve_id)
                 cve.add(date, item)
 
-            warning = f'{self.obj.get_global_id()} contains CVEs {cves}'
-            print(warning)
-            self.redis_logger.warning(warning)
+            print(f'{self.obj.get_global_id()} contains CVEs {cves}')
 
             tag = 'infoleak:automatic-detection="cve"'
             # Send to Tags Queue

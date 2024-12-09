@@ -44,14 +44,13 @@ class Tracker_Yara(AbstractModule):
         self.exporters = {'mail': MailExporterTracker(),
                           'webhook': WebHookExporterTracker()}
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         # refresh YARA list
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
             self.rules = Tracker.get_tracked_yara_rules()
             self.last_refresh = time.time()
-            self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
         self.obj = self.get_obj()
@@ -69,11 +68,9 @@ class Tracker_Yara(AbstractModule):
             yara_match = self.rules[obj_type].match(data=content, callback=self.yara_rules_match,
                                                     which_callbacks=yara.CALLBACK_MATCHES, timeout=60)
             if yara_match:
-                self.redis_logger.warning(f'tracker yara: new match {self.obj.get_global_id()}: {yara_match}')
                 print(f'{self.obj.get_global_id()}: {yara_match}')
         except yara.TimeoutError:
             print(f'{self.obj.get_id()}: yara scanning timed out')
-            self.redis_logger.info(f'{self.obj.get_id()}: yara scanning timed out')
 
     def convert_byte_offset_to_string(self, b_content, offset):
         byte_chunk = b_content[:offset + 1]

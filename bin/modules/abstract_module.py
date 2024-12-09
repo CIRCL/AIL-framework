@@ -18,7 +18,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from pubsublogger import publisher
 from lib import ail_logger
 from lib.ail_queues import AILQueue
 from lib import regex_helper
@@ -50,15 +49,6 @@ class AbstractModule(ABC):
             self.queue = AILQueue(self.module_name, self.pid)
             self.obj = None
             self.sha256_mess = None
-
-        # Init Redis Logger
-        self.redis_logger = publisher
-        # Port of the redis instance used by pubsublogger
-        self.redis_logger.port = 6380
-        # Channel name to publish logs
-        # # TODO: refactor logging
-        # If provided could be a namespaced channel like script:<ModuleName>
-        self.redis_logger.channel = 'Script'
 
         # Cache key
         self.r_cache_key = regex_helper.generate_redis_cache_key(self.module_name)

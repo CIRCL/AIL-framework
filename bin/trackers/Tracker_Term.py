@@ -62,20 +62,18 @@ class Tracker_Term(AbstractModule):
         self.exporters = {'mail': MailExporterTracker(),
                           'webhook': WebHookExporterTracker()}
 
-        self.redis_logger.info(f"Module: {self.module_name} Launched")
+        self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         # refresh Tracked term
         if self.last_refresh_word < Tracker.get_tracker_last_updated_by_type('word'):
             self.tracked_words = Tracker.get_tracked_words()
             self.last_refresh_word = time.time()
-            self.redis_logger.debug('Tracked word refreshed')
             print('Tracked word refreshed')
 
         if self.last_refresh_set < Tracker.get_tracker_last_updated_by_type('set'):
             self.tracked_sets = Tracker.get_tracked_sets()
             self.last_refresh_set = time.time()
-            self.redis_logger.debug('Tracked set refreshed')
             print('Tracked set refreshed')
 
         obj = self.get_obj()
@@ -93,7 +91,7 @@ class Tracker_Term(AbstractModule):
         try:
             dict_words_freq = Tracker.get_text_word_frequency(content)
         except TimeoutException:
-            self.redis_logger.warning(f"{self.obj.get_global_id()} processing timeout")
+            self.logger.warning(f"{self.obj.get_global_id()} processing timeout")
         else:
             signal.alarm(0)
 
@@ -125,7 +123,6 @@ class Tracker_Term(AbstractModule):
                 continue
 
             print(f'new tracked term {tracker_uuid} found: {tracker_name} in {self.obj.get_global_id()}')
-            self.redis_logger.warning(f'new tracked term found: {tracker_name} in {self.obj.get_global_id()}')
 
             tracker.add(obj.get_type(), obj.get_subtype(), obj_id)
 

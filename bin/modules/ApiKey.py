@@ -20,7 +20,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.objects.Items import Item
 
 class ApiKey(AbstractModule):
     """ApiKey module for AIL framework"""
@@ -48,20 +47,19 @@ class ApiKey(AbstractModule):
 
     def compute(self, message, r_result=False):
         score = message
-        item = self.get_obj()
-        item_content = item.get_content()
+        obj = self.get_obj()
+        content = obj.get_content()
 
-        google_api_key = self.regex_findall(self.re_google_api_key, item.get_id(), item_content, r_set=True)
-        aws_access_key = self.regex_findall(self.re_aws_access_key, item.get_id(), item_content, r_set=True)
+        google_api_key = self.regex_findall(self.re_google_api_key, obj.get_id(), content, r_set=True)
+        aws_access_key = self.regex_findall(self.re_aws_access_key, obj.get_id(), content, r_set=True)
         if aws_access_key:
-            aws_secret_key = self.regex_findall(self.re_aws_secret_key, item.get_id(), item_content, r_set=True)
+            aws_secret_key = self.regex_findall(self.re_aws_secret_key, obj.get_id(), content, r_set=True)
 
         if aws_access_key or google_api_key:
-            to_print = f'ApiKey;{item.get_source()};{item.get_date()};{item.get_basename()};'
+            to_print = obj.get_global_id()
 
             if google_api_key:
                 print(f'found google api key: {to_print}')
-                self.redis_logger.warning(f'{to_print}Checked {len(google_api_key)} found Google API Key;{self.obj.get_global_id()}')
 
                 tag = 'infoleak:automatic-detection="google-api-key"'
                 self.add_message_to_queue(message=tag, queue='Tags')
@@ -69,10 +67,8 @@ class ApiKey(AbstractModule):
             # # TODO: # FIXME: AWS regex/validate/sanitize KEY + SECRET KEY
             if aws_access_key:
                 print(f'found AWS key: {to_print}')
-                self.redis_logger.warning(f'{to_print}Checked {len(aws_access_key)} found AWS Key;{self.obj.get_global_id()}')
                 if aws_secret_key:
                     print(f'found AWS secret key')
-                    self.redis_logger.warning(f'{to_print}Checked {len(aws_secret_key)} found AWS secret Key;{self.obj.get_global_id()}')
 
                 tag = 'infoleak:automatic-detection="aws-key"'
                 self.add_message_to_queue(message=tag, queue='Tags')

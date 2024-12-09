@@ -28,7 +28,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.objects.CryptoCurrencies import CryptoCurrency
-from lib.objects.Items import Item
 
 ##################################
 ##################################
@@ -151,17 +150,10 @@ class Cryptocurrencies(AbstractModule, ABC):
 
                             # debug
                             print(private_keys)
-                            to_print = 'Cryptocurrency;{};{};{};'.format(item.get_source(),
-                                                                         item.get_date(),
-                                                                         item.get_basename())
-                            self.redis_logger.warning('{}Detected {} {} private key;{}'.format(
-                                to_print, len(private_keys), currency['name'], self.obj.get_global_id()))
                     else:
                         private_keys = []
 
-                    to_print = f"{currency['name']} found: {len(addresses)} address and {len(private_keys)} private Keys"
-                    print(to_print)
-                    self.redis_logger.warning(to_print)
+                    print(f"{currency['name']} found: {len(addresses)} address and {len(private_keys)} private Keys {self.obj.get_global_id()}")
 
 
 if __name__ == '__main__':

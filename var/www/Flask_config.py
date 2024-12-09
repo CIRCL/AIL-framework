@@ -16,7 +16,6 @@ import sys
 ##################################
 sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
-from pubsublogger import publisher
 
 # FLASK #
 app = None
@@ -33,13 +32,6 @@ r_serv_log_submit = config_loader.get_redis_conn("Redis_Log_submit")
 # # # # # # #
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")         # TODO remove redis call from blueprint
 r_serv_tags = config_loader.get_db_conn("Kvrocks_Tags")     # TODO remove redis call from blueprint
-
-# Logger (Redis)
-redis_logger = publisher
-# Port of the redis instance used by pubsublogger
-redis_logger.port = 6380
-# Channel name to publish logs
-redis_logger.channel = 'Flask'
 
 sys.path.append('../../configs/keys')
 
