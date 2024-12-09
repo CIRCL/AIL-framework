@@ -103,6 +103,10 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
         meta['titles'].append(t.get_content())
     return meta
 
+def api_get_domain_from_url(url):
+    url = url.lower()
+    url_unpack = unpack_url(url)
+    return url_unpack['domain']
 
 # # # # # # # #
 #             #

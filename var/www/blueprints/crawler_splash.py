@@ -587,11 +587,16 @@ def domains_search_name():
 
     if not name:
         return create_json_response({'error': 'Mandatory args name not provided'}, 400)
+    name = crawlers.api_get_domain_from_url(name)
 
     domains_types = request.args.getlist('domain_types')
     if domains_types:
         domains_types = domains_types[0].split(',')
     domains_types = Domains.sanitize_domains_types(domains_types)
+
+    dom = Domains.Domain(name)
+    if dom.exists():
+        return redirect(url_for('crawler_splash.showDomain', domain=dom.get_id()))
 
     l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
     return render_template("domains/domains_result_list.html", template_folder='../../',
