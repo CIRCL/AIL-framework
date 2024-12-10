@@ -56,7 +56,7 @@ class Onion(AbstractModule):
 
     def extract(self, obj, content, tag):
         extracted = []
-        if self.obj.type == 'item':
+        if obj.type == 'item':
             if 'infoleak:submission="crawler"' in obj.get_tags():
                 return extracted
         onions = self.regex_finditer(self.onion_regex, obj.get_global_id(), content)
