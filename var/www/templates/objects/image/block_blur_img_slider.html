@@ -9,6 +9,7 @@
             </div>
             <div class="col-md-6 text-center pl-0 pt-1">
                 <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider" onchange="blur_images();">
+                <div class="text-center text-danger" id="unblur_unsafe_warning" style="display: none"><i class="fa-solid fa-warning fa-2x"></i><b> Unsafe Content</b></div>
             </div>
             <div class="col-md-3 text-center">
                 <button class="btn btn-sm btn-secondary" id="btn_unblur_img" onclick="blur_slider.val(15);blur_images();">
@@ -37,5 +38,6 @@
         let btn = $('#btn_unblur_img');
         btn.removeClass("btn-secondary")
         btn.addClass("btn-danger");
+        $('#unblur_unsafe_warning').show();
     }
 </script>

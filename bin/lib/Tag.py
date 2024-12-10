@@ -39,6 +39,9 @@ UNSAFE_TAGS = None
 
 def build_unsafe_tags():
     tags = set()
+    # violence
+    tags.add('dark-web:topic="violence"')
+    tags.add('dark-web:topic="pornography-illicit-or-illegal"')
     # CE content
     tags.add('dark-web:topic="pornography-child-exploitation"')
     # add copine-scale tags
