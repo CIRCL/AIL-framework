@@ -620,7 +620,7 @@ def api_register_object(user_org, user_id, user_role, json_dict):
     subtype = json_dict.get('subtype', '')
     if subtype == 'None':
         subtype = ''
-    obj_id = json_dict.get('id', '').replace(' ', '')
+    obj_id = json_dict.get('id', '').rstrip()
 
     comment = json_dict.get('comment', '')
     # if comment:
