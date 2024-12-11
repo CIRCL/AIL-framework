@@ -97,7 +97,13 @@ CURRENCIES = {
             'regex': r'\b(?<![+/=])T[0-9a-zA-Z]{33}(?![+/=])\b',
             'max_execution_time': default_max_execution_time,
             'tag': 'infoleak:automatic-detection="tron-address"',
-        },
+    },
+    'ripple': {
+            'name': 'ripple',  # e.g.
+            'regex': r'\b(?<![+/=])r[0-9a-zA-Z]{24,34}(?![+/=])\b',
+            'max_execution_time': default_max_execution_time,
+            'tag': 'infoleak:automatic-detection="ripple-address"',
+    },
 }
 ##################################
 ##################################

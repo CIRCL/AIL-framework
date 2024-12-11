@@ -22,6 +22,7 @@ baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 digits58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+digits58_ripple = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz'
 digits32 = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l'
 
 
@@ -56,11 +57,23 @@ def decode_base58(bc, length):
         n = n * 58 + digits58.index(char)
     return n.to_bytes(length, 'big')
 
-
 # http://rosettacode.org/wiki/Bitcoin/address_validation#Python
 def check_base58_address(bc):
     try:
         bcbytes = decode_base58(bc, 25)
+        return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
+    except Exception:
+        return False
+
+def decode_base58_ripple(bc, length):
+    n = 0
+    for char in bc:
+        n = n * 58 + digits58_ripple.index(char)
+    return n.to_bytes(length, 'big')
+
+def check_base58_ripple_address(bc):
+    try:
+        bcbytes = decode_base58_ripple(bc, 25)
         return bcbytes[-4:] == sha256(sha256(bcbytes[:-4]).digest()).digest()[:4]
     except Exception:
         return False
@@ -92,6 +105,8 @@ class CryptoCurrency(AbstractSubtypeObject):
             return check_base58_address(self.id)
         elif self.subtype == 'dash' or self.subtype == 'litecoin' or self.subtype == 'tron':
             return check_base58_address(self.id)
+        elif self.subtype == 'ripple':
+            return check_base58_ripple_address(self.id)
         else:
             return True
 
@@ -110,6 +125,8 @@ class CryptoCurrency(AbstractSubtypeObject):
             return 'ZEC'
         elif self.subtype == 'dash':
             return 'DASH'
+        elif self.subtype == 'ripple':
+            return 'XRP'
         elif self.subtype == 'tron':
             return 'TRX'
         return None
@@ -197,7 +214,7 @@ class CryptoCurrencies(AbstractSubtypeObjects):
 
 def get_all_subtypes():
     # return ail_core.get_object_all_subtypes(self.type)
-    return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'tron', 'zcash']
+    return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'ripple', 'tron', 'zcash']
 
 
 # def build_crypto_regex(subtype, search_id):
@@ -229,6 +246,8 @@ def get_subtype_by_symbol(symbol):
         return 'zcash'
     elif symbol == 'DASH':
         return 'dash'
+    elif symbol == 'XRP':
+        return 'ripple'
     elif symbol == 'TRX':
         return 'tron'
     return None
