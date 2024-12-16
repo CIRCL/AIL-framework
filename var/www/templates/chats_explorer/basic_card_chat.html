@@ -77,7 +77,7 @@
                         <span class="badge badge-info" style="font-size: 0.8rem;">
                             <i class="fas fa-user-circle"></i> Participants
                         </span>
-                        {{meta["nb_participants"]}}
+                        <a class="btn btn-secondary border-white px-1 py-0"  style="font-size: 0.8rem" href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}" data-toggle="tooltip" title="Show Chat Participants">{{ meta["nb_participants"] }}&nbsp;&nbsp;</a>
                     </span>
                     {% if "nb_messages" in meta %}
                         <span class="badge badge-dark">
@@ -85,7 +85,7 @@
                                 <i class="fas fa-user-circle"></i>
                                 <i class="far fa-comment-dots"></i>
                             </span>
-                            <a class="badge-primary px-1 py-0" href="{{ url_for('chats_explorer.objects_user_account_chat') }}?subtype={{ meta['subtype'] }}&id={{ main_obj_id }}&chat_id={{ meta['id'] }}">{{ meta["nb_messages"] }}&nbsp;&nbsp;</a>
+                            <a class="btn btn-primary border-white px-1 py-0"  style="font-size: 0.8rem" href="{{ url_for('chats_explorer.objects_user_account_chat') }}?subtype={{ meta['subtype'] }}&id={{ main_obj_id }}&chat_id={{ meta['id'] }}" data-toggle="tooltip" title="Show User Messages">{{ meta["nb_messages"] }}&nbsp;&nbsp;</a>
                         </span>
                     {% endif %}
                 </div>
