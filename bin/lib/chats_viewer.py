@@ -110,6 +110,7 @@ def get_chat_protocols_meta():
     for protocol_id in get_chat_protocols():
         protocol = ChatProtocol(protocol_id)
         metas.append(protocol.get_meta(options={'icon'}))
+    metas = sorted(metas, key=lambda d: d['id'])
     return metas
 
 class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
