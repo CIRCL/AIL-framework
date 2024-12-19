@@ -278,7 +278,7 @@ class Message(AbstractObject):
         if 'last_full_date' in options:
             meta['last_full_date'] = meta['full_date']
 
-        meta['source'] = self.get_source()
+        # meta['source'] = self.get_source()
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
@@ -399,6 +399,35 @@ def create(obj_id, content, translation=None, tags=[]):
     return message
 
 # TODO Encode translation
+
+
+#####################################
+
+# class Messages:
+#     def __init__(self):
+#         super().__init__('message', Message)
+#
+#     def get_name(self):
+#         return 'Messages'
+#
+#     def get_icon(self):
+#         return {'fas': 'fas', 'icon': 'comment-dots'}
+#
+#     def get_link(self, flask_context=False):
+#         # if flask_context:
+#         #     url = url_for('chats_explorer.chats_explorer_protocols')
+#         # else:
+#         #     url = f'{baseurl}/chats/explorer/protocols'
+#         return None
+#
+#     # def get_by_date(self, date):
+#     #     pass
+#
+#     def get_nb_by_date(self, date):
+#         nb = 0
+#         for subtype in self.get_subtypes():
+#             nb += self.get_nb_by_date_subtype(subtype, date)
+#         return nb
 
 
 if __name__ == '__main__':

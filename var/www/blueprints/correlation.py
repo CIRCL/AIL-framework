@@ -162,10 +162,21 @@ def get_description():
         options = {'icon', 'tags', 'tags_safe'}
         if obj_type == 'message':
             options.add('content')
+            options.add('chat')
         res = ail_objects.get_object_meta(obj_type, subtype, obj_id, options=options,
                                           flask_context=True)
         if 'tags' in res:
             res['tags'] = list(res['tags'])
+
+        if obj_type == 'message':
+            chat_id = res['chat']
+            subtype = object_id[9:].split('/', 1)[0]
+            meta_chats = ail_objects.get_object_meta('chat', subtype, chat_id, options={'username', 'str_username'})
+            if meta_chats["username"]:
+                res['chat'] = f'{meta_chats["username"]} - {meta_chats["name"]}'
+            else:
+                res['chat'] = f'{meta_chats["name"]}'
+
         return jsonify(res)
 
 @correlation.route('/correlation/graph_node_json')
