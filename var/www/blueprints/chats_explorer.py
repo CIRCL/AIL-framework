@@ -76,6 +76,12 @@ def chats_explorer_instance():
         chat_instance = chat_instance[0]
         return render_template('chat_instance.html', chat_instance=chat_instance)
 
+@chats_explorer.route("chats/explorer/chats/selector", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_chats_selector():
+    return jsonify(chats_viewer.api_get_chats_selector())
+
 @chats_explorer.route("chats/explorer/chat", methods=['GET'])
 @login_required
 @login_read_only
@@ -122,6 +128,20 @@ def chats_explorer_messages_stats_week_all():
         return create_json_response(week[0], week[1])
     else:
         return jsonify(week[0])
+
+@chats_explorer.route("chats/explorer/messages/stats/year", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_messages_stats_year():
+    chat_type = request.args.get('type')
+    instance_uuid = request.args.get('subtype')
+    chat_id = request.args.get('id')
+    year = request.args.get('year')
+    stats = chats_viewer.api_get_nb_year_messages(chat_type, instance_uuid, chat_id, year)
+    if stats[1] != 200:
+        return create_json_response(stats[0], stats[1])
+    else:
+        return jsonify(stats[0])
 
 @chats_explorer.route("/chats/explorer/subchannel", methods=['GET'])
 @login_required

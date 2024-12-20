@@ -795,6 +795,19 @@ def api_get_nb_week_messages(chat_type, chat_instance_uuid, chat_id):
     week = chat.get_nb_week_messages()
     return week, 200
 
+def api_get_nb_year_messages(chat_type, chat_instance_uuid, chat_id, year):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
+    if not chat.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        year = datetime.now().year
+    nb_max, nb = chat.get_nb_year_messages(year)
+    nb = [[date, value] for date, value in nb.items()]
+    return {'max': nb_max, 'nb': nb}, 200
+
+
 def api_get_chat_participants(chat_type, chat_subtype, chat_id):
     if chat_type not in ['chat', 'chat-subchannel', 'chat-thread']:
         return {"status": "error", "reason": "Unknown chat type"}, 400
