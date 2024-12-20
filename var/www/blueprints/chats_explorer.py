@@ -93,7 +93,7 @@ def chats_explorer_chat():
         target = None
     nb_messages = request.args.get('nb')
     page = request.args.get('page')
-    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
+    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, nb=nb_messages, page=page, heatmap=True)
     if chat[1] != 200:
         return create_json_response(chat[0], chat[1])
     else:

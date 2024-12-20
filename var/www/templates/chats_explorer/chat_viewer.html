@@ -114,7 +114,18 @@
                 {% endif %}
 
                 <h5>Messages by year:</h5>
-                <div id="heatmapyear" style="width: 100%;height: 300px;"></div>
+                <div>
+                    <div class="row">
+                        <div class="col-12 col-lg-11">
+                            <div id="heatmapyear" style="width: 100%;height: 300px;"></div>
+                        </div>
+                        <div class="col-12 col-lg-1">
+                            {% for year in chat['years'] %}
+                                <div><button class="btn btn-info mt-1" onclick="update_heatmap_year({{ year }})">{{ year }}</button></div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
 
                 {% with translate_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
                     {% include 'chats_explorer/block_translation.html' %}
@@ -248,8 +259,7 @@ optionheatmap = {
   calendar: [
     {
       orient: 'horizontal',
-      //range: new Date().getFullYear(),
-      range: '2024',
+      range: new Date().getFullYear(),
     },
   ],
   series: [
@@ -263,14 +273,18 @@ optionheatmap = {
 };
 heatyearChart.setOption(optionheatmap);
 
-$.getJSON("{{ url_for('chats_explorer.chats_explorer_messages_stats_year') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}")
-    .done(function(data) {
-        optionheatmap['visualMap']['max'] = data['max']
-        optionheatmap['series'][0]['data'] = data['nb']
-        heatyearChart.setOption(optionheatmap)
+update_heatmap_year(null);
+function update_heatmap_year(year) {
+    $.getJSON("{{ url_for('chats_explorer.chats_explorer_messages_stats_year') }}?type=chat&subtype={{ chat['subtype'] }}&id={{ chat['id'] }}&year=" + year)
+        .done(function(data) {
+            optionheatmap['visualMap']['max'] = data['max']
+            optionheatmap['calendar'][0]['range'] = data['year']
+            optionheatmap['series'][0]['data'] = data['nb']
+            heatyearChart.setOption(optionheatmap)
 
-    }
-);
+        }
+    );
+}
 
 </script>
 

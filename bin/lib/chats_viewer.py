@@ -762,7 +762,7 @@ def api_get_chats_selector():
             selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_chat_instance()}: {chat.get_label()}'})
     return selector
 
-def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True):
+def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True, heatmap=False):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
@@ -778,6 +778,8 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
         if messages:
             meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
             meta['messages'] = get_chat_object_messages_meta(meta['messages'])
+    if heatmap:
+        meta['years'] = chat.get_message_years()
     return meta, 200
 
 def api_get_nb_message_by_week(chat_type, chat_instance_uuid, chat_id):
@@ -805,7 +807,7 @@ def api_get_nb_year_messages(chat_type, chat_instance_uuid, chat_id, year):
         year = datetime.now().year
     nb_max, nb = chat.get_nb_year_messages(year)
     nb = [[date, value] for date, value in nb.items()]
-    return {'max': nb_max, 'nb': nb}, 200
+    return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
 
 def api_get_chat_participants(chat_type, chat_subtype, chat_id):
