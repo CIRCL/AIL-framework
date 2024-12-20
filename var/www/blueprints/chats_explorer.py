@@ -408,5 +408,15 @@ def user_account_messages_stats_week_all():
     else:
         return jsonify(week[0])
 
-
-
+@chats_explorer.route("objects/user-account/messages/stats/year", methods=['GET'])
+@login_required
+@login_read_only
+def user_account_messages_stats_year():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    year = request.args.get('year')
+    stats = chats_viewer.api_get_user_account_nb_year_messages(user_id, instance_uuid, year)
+    if stats[1] != 200:
+        return create_json_response(stats[0], stats[1])
+    else:
+        return jsonify(stats[0])

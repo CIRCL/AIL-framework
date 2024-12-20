@@ -21,6 +21,7 @@
     <script src="{{ url_for('static', filename='js/d3/heatmap_week_hour.js')}}"></script>
     <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
     <script src="{{ url_for('static', filename='js/d3/timeline_basic.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
 
 
 </head>
@@ -47,6 +48,20 @@
                 {% if meta['chats'] %}
                     <h4 class="mx-5 mt-2 text-secondary">User All Messages:</h4>
                     <div id="heatmapweekhourall"></div>
+
+                    <h5>Messages by year:</h5>
+                    <div>
+                        <div class="row">
+                            <div class="col-12 col-lg-11">
+                                <div id="heatmapyear" style="width: 100%;height: 300px;"></div>
+                            </div>
+                            <div class="col-12 col-lg-1">
+                                {% for year in meta['years'] %}
+                                    <div><button class="btn btn-info mt-1" onclick="update_heatmap_year({{ year }})">{{ year }}</button></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
 
                     <h4>Usernames:</h4>
                     <div id="timeline_user_usernames" style="max-width: 900px"></div>
@@ -110,6 +125,58 @@ let url2 = "{{ url_for('chats_explorer.objects_user_account_mentions_chord_json'
 d3.json(url2).then(function(data) {
     create_directed_chord_diagram('#chord_mentions', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
 });
+
+
+var heatyearChart = echarts.init(document.getElementById('heatmapyear'));
+window.addEventListener('resize', function() {
+    heatyearChart.resize();
+});
+var optionheatmap;
+
+optionheatmap = {
+  tooltip: {
+    position: 'top',
+    formatter: function (p) {
+      return p.data[0] + ': ' + p.data[1];
+    }
+  },
+  visualMap: {
+    min: 0,
+    max: 100,
+    calculable: true,
+    orient: 'horizontal',
+    left: '500',
+    top: '-10'
+  },
+  calendar: [
+    {
+      orient: 'horizontal',
+      range: new Date().getFullYear(),
+    },
+  ],
+  series: [
+    {
+      type: 'heatmap',
+      coordinateSystem: 'calendar',
+      data: []
+    },
+
+  ]
+};
+heatyearChart.setOption(optionheatmap);
+
+update_heatmap_year(null);
+function update_heatmap_year(year) {
+    $.getJSON("{{ url_for('chats_explorer.user_account_messages_stats_year') }}?type=chat&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}&year=" + year)
+        .done(function(data) {
+            optionheatmap['visualMap']['max'] = data['max']
+            optionheatmap['calendar'][0]['range'] = data['year']
+            optionheatmap['series'][0]['data'] = data['nb']
+            heatyearChart.setOption(optionheatmap)
+
+        }
+    );
+}
 
 </script>
 

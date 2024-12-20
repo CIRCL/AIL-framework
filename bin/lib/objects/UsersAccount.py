@@ -5,7 +5,6 @@ import os
 import sys
 # import re
 
-# from datetime import datetime
 from flask import url_for
 from pymisp import MISPObject
 
@@ -72,6 +71,11 @@ class UserAccount(AbstractSubtypeObject):
             return first_name
         elif last_name:
             return last_name
+
+    def get_years(self):
+        year_start = int(self.get_first_seen()[0:4])
+        year_end = int(self.get_last_seen()[0:4])
+        return list(range(year_start, year_end + 1))
 
     def get_phone(self):
         return self._get_field('phone')
@@ -189,6 +193,8 @@ class UserAccount(AbstractSubtypeObject):
             meta['subchannels'] = self.get_chat_subchannels()
         if 'threads' in options:
             meta['threads'] = self.get_chat_threads()
+        if 'years' in options:
+            meta['years'] = self.get_years()
         return meta
 
     def get_misp_object(self):
@@ -258,8 +264,8 @@ class UserAccounts(AbstractSubtypeObjects):
         return name_to_search
 
 
-if __name__ == '__main__':
-    from lib.objects import Chats
-    chat = Chats.Chat('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
-    account = UserAccount('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
-    print(account.get_messages_by_chat_obj(chat))
+# if __name__ == '__main__':
+#     from lib.objects import Chats
+#     chat = Chats.Chat('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+#     account = UserAccount('', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+#     print(account.get_messages_by_chat_obj(chat))

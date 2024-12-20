@@ -11,7 +11,7 @@ import sys
 import time
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -501,6 +501,29 @@ def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
         nb_day += 1
     return stats
 
+
+def get_user_account_nb_year_messages(user_id, chats, year):
+    nb_year = {}
+    nb_max = 0
+    start = int(datetime(year, 1, 1, 0, 0, 0, tzinfo=timezone.utc).timestamp())
+    end = int(datetime(year, 12, 31, 23, 59, 59, tzinfo=timezone.utc).timestamp())
+
+    for chat_g_id in chats:
+        c_subtype, c_id = chat_g_id.split(':', 1)
+        chat = Chats.Chat(c_id, c_subtype)
+        for message in chat.get_user_messages(user_id):
+            timestamp = int(message.split('/', 2)[1])
+            if start <= timestamp <= end:
+                timestamp = datetime.utcfromtimestamp(timestamp)
+                date = timestamp.strftime('%Y-%m-%d')
+                if date not in nb_year:
+                    nb_year[date] = 0
+                nb_year[date] += 1
+                nb_max = max(nb_max, nb_year[date])
+
+    return nb_max, nb_year
+
+
 def get_user_account_usernames_timeline(subtype, user_id):
     user_account = UsersAccount.UserAccount(user_id, subtype)
     usernames = user_account.get_usernames_history()
@@ -904,7 +927,7 @@ def api_get_user_account(user_id, instance_uuid, translation_target=None):
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
-    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'usernames', 'username_meta'}, translation_target=translation_target)
+    meta = user_account.get_meta({'chats', 'icon', 'info', 'subchannels', 'threads', 'translation', 'username', 'usernames', 'username_meta', 'years'}, translation_target=translation_target)
     if meta['chats']:
         meta['chats'] = get_user_account_chats_meta(user_id, meta['chats'], meta['subchannels'])
     return meta, 200
@@ -927,6 +950,18 @@ def api_get_user_account_nb_all_week_messages(user_id, instance_uuid):
         return {"status": "error", "reason": "Unknown user-account"}, 404
     week = get_user_account_nb_all_week_messages(user_account.id, user_account.get_chats(), user_account.get_chat_subchannels())
     return week, 200
+
+def api_get_user_account_nb_year_messages(user_id, instance_uuid, year):
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    if not user_account.exists():
+        return {"status": "error", "reason": "Unknown user-account"}, 404
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        year = datetime.now().year
+    nb_max, nb = get_user_account_nb_year_messages(user_account.id, user_account.get_chats(), year)
+    nb = [[date, value] for date, value in nb.items()]
+    return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
 def api_chat_messages(subtype, chat_id):
     chat = Chats.Chat(chat_id, subtype)
