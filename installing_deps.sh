@@ -23,8 +23,8 @@ sudo apt-get install libssl-dev libfreetype6-dev python3-numpy -qq
 sudo apt-get install protobuf-compiler libprotobuf-dev -qq
 
 # qrcode
-sudo apt-get install python3-opencv
-sudo apt-get install libzbar0
+sudo apt-get install python3-opencv -y
+sudo apt-get install libzbar0 -y
 
 # DNS deps
 sudo apt-get install libadns1 libadns1-dev -qq

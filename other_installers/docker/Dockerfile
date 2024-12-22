@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 ARG tz_buildtime=Europe/Rome
 ENV TZ=$tz_buildtime
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -8,7 +8,7 @@ RUN apt-get clean && apt-get update -y && apt-get upgrade -y \
         && apt-get dist-upgrade -y && apt-get autoremove -y
 
 # Install needed packages
-RUN apt-get install git python-dev build-essential \
+RUN apt-get install git python3-dev build-essential \
        libffi-dev libssl-dev libfuzzy-dev wget sudo -y
 
 # Adding sudo command
