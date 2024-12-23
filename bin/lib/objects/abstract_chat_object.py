@@ -228,14 +228,17 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         return stats
 
     def get_message_years(self):
-        try:
-            timestamp = datetime.utcfromtimestamp(float(self.get_timestamp_first_message()))
+        timestamp = self.get_timestamp_first_message()
+        if not timestamp:
+            year_start = int(self.get_first_seen()[0:4])
+            year_end = int(self.get_last_seen()[0:4])
+            return list(range(year_start, year_end + 1))
+        else:
+            timestamp = datetime.utcfromtimestamp(float(timestamp))
             year_start = int(timestamp.strftime('%Y'))
             timestamp = datetime.utcfromtimestamp(float(self.get_timestamp_last_message()))
             year_end = int(timestamp.strftime('%Y'))
             return list(range(year_start, year_end + 1))
-        except:
-            return []
 
     def get_nb_year_messages(self, year):
         nb_year = {}
