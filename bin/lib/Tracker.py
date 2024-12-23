@@ -180,7 +180,7 @@ class Tracker:
     ## LEVEL ##
 
     def get_level(self):
-        level = int(self._get_field('level'))
+        level = self._get_field('level')
         if not level:
             level = 0
         return int(level)
