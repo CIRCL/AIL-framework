@@ -262,6 +262,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 if date not in nb_year:
                     nb_year[date] = 0
                 nb_year[date] += 1
+                nb_max = max(nb_max, nb_year[date])
 
         return nb_max, nb_year
 
