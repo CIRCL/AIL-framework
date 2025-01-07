@@ -27,6 +27,19 @@ from pylacus import PyLacus
 
 from pyfaup.faup import Faup
 
+
+import signal
+
+class TimeoutException(Exception):
+    pass
+
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
+
 # interact with splash_crawler API
 import requests
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
@@ -310,12 +323,18 @@ def extract_favicon_from_html(html, url):
 # # # # # # # #
 
 def extract_title_from_html(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    title = soup.title
-    if title:
-        title = title.string
+    signal.alarm(60)
+    try:
+        soup = BeautifulSoup(html, 'html.parser')
+        title = soup.title
         if title:
-            return str(title)
+            title = title.string
+            if title:
+                return str(title)
+    except TimeoutException:
+        pass
+    else:
+        signal.alarm(0)
     return ''
 
 def extract_description_from_html(html):
