@@ -147,6 +147,7 @@ class Crawler(AbstractModule):
         if capture:
             try:
                 status = self.lacus.get_capture_status(capture.uuid)
+                print(status)
                 if status == crawlers.CaptureStatus.DONE:
                     return capture
                 elif status == crawlers.CaptureStatus.UNKNOWN:
@@ -164,7 +165,10 @@ class Crawler(AbstractModule):
                         self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
                     else:
                         capture.update(status)
-                elif status == crawlers.CaptureStatus.QUEUED or status == crawlers.CaptureStatus.ONGOING:
+                elif status == crawlers.CaptureStatus.QUEUED:
+                    capture.update(status, delta=30)
+                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time() + 30))
+                elif status == crawlers.CaptureStatus.ONGOING:
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
                 # Invalid State
