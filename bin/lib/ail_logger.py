@@ -51,3 +51,24 @@ def get_access_config(create=False):
 
         logger.propagate = False
     return logger
+
+def get_test_config(create=False):
+    logger = logging.getLogger('test.log')
+
+    if create:
+        formatter = logging.Formatter("%(asctime)s %(levelname)s:%(message)s")
+
+        # STDOUT
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.INFO)
+        logger.addHandler(handler)
+
+        # FILE
+        handler = logging.handlers.RotatingFileHandler(filename=os.path.join(LOGS_DIR, f'test.log'),
+                                                       maxBytes=10*1024*1024, backupCount=5)
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+        logger.propagate = False
+    return logger
