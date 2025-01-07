@@ -13,6 +13,7 @@ import logging.config
 from flask import Flask, render_template, jsonify, request, Request, Response, session, redirect, url_for
 from flask_login import LoginManager, current_user, login_user, logout_user, login_required
 from flask_sock import Sock
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -179,6 +180,9 @@ def list_len(s):
 
 
 app.jinja_env.filters['list_len'] = list_len
+
+# ========= PROXY ========
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 
 # ========= CACHE CONTROL ========
