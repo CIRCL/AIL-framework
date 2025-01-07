@@ -1531,13 +1531,13 @@ class CrawlerCapture:
         r_crawler.zadd('crawler:captures', {self.uuid: launch_time})
         r_cache.zadd('crawler:captures', {self.uuid: launch_time})
 
-    def update(self, status, delta=0):
+    def update(self, status):
         # Error or Reload
-        if not status:
+        if status is None:
             r_cache.hset(f'crawler:capture:{self.uuid}', 'status', CaptureStatus.UNKNOWN.value)
             r_cache.zadd('crawler:captures', {self.uuid: 0})
         else:
-            last_check = int(time.time() + delta)
+            last_check = int(time.time())
             r_cache.hset(f'crawler:capture:{self.uuid}', 'status', status)
             r_cache.zadd('crawler:captures', {self.uuid: last_check})
 

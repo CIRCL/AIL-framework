@@ -166,8 +166,8 @@ class Crawler(AbstractModule):
                     else:
                         capture.update(status)
                 elif status == crawlers.CaptureStatus.QUEUED:
-                    capture.update(status, delta=30)
-                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time() + 30))
+                    capture.update(status)
+                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
                 elif status == crawlers.CaptureStatus.ONGOING:
                     capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
