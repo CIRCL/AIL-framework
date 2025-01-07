@@ -332,7 +332,7 @@ def extract_title_from_html(html):
             if title:
                 return str(title)
     except TimeoutException:
-        pass
+        signal.alarm(0)
     else:
         signal.alarm(0)
     return ''
