@@ -10,6 +10,7 @@ import base64
 import gzip
 import hashlib
 import json
+import logging
 import os
 import pickle
 import re
@@ -71,6 +72,8 @@ D_SCREENSHOT = config_loader.get_config_boolean('Crawler', 'default_screenshot')
 config_loader = None
 
 faup = Faup()
+
+logger_crawler = logging.getLogger('crawlers.log')
 
 # # # # # # # #
 #             #
@@ -322,7 +325,7 @@ def extract_favicon_from_html(html, url):
 #             #
 # # # # # # # #
 
-def extract_title_from_html(html):
+def extract_title_from_html(html, item_id):
     signal.alarm(60)
     try:
         soup = BeautifulSoup(html, 'html.parser')
@@ -333,8 +336,10 @@ def extract_title_from_html(html):
                 return str(title)
     except TimeoutException:
         signal.alarm(0)
+        logger_crawler.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
     else:
         signal.alarm(0)
+    signal.alarm(0)
     return ''
 
 def extract_description_from_html(html):

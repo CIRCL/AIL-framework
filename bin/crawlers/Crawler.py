@@ -364,7 +364,7 @@ class Crawler(AbstractModule):
             dom_hash.add(self.date.replace('/', ''), item)
             dom_hash.add_correlation('domain', '', self.domain.id)
 
-            title_content = crawlers.extract_title_from_html(entries['html'])
+            title_content = crawlers.extract_title_from_html(entries['html'], item_id)
             if title_content:
                 title = Titles.create_title(title_content)
                 title.add(item.get_date(), item)
