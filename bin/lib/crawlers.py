@@ -326,20 +326,20 @@ def extract_favicon_from_html(html, url):
 # # # # # # # #
 
 def extract_title_from_html(html, item_id):
-    signal.alarm(60)
-    try:
-        soup = BeautifulSoup(html, 'html.parser')
-        title = soup.title
+    # signal.alarm(60)
+    # try:
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.title
+    if title:
+        title = title.string
         if title:
-            title = title.string
-            if title:
-                return str(title)
-    except TimeoutException:
-        signal.alarm(0)
-        logger_crawler.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
-    else:
-        signal.alarm(0)
-    signal.alarm(0)
+            return str(title)
+    # except TimeoutException:
+    #     signal.alarm(0)
+    #     logger_crawler.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
+    # else:
+    #     signal.alarm(0)
+    # signal.alarm(0)
     return ''
 
 def extract_description_from_html(html):
