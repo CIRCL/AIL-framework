@@ -180,7 +180,7 @@ class Crawler(AbstractModule):
                         capture.update(status)
                 elif status == crawlers.CaptureStatus.QUEUED:
                     capture_start = capture.get_start_time(r_str=False)
-                    if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
+                    if int(time.time()) - capture_start > 3600:  # TODO ADD in new crawler config
                         task = capture.get_task()
                         task.reset()
                         capture.delete()
