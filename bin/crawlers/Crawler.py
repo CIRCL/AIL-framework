@@ -179,7 +179,14 @@ class Crawler(AbstractModule):
                     else:
                         capture.update(status)
                 elif status == crawlers.CaptureStatus.QUEUED:
-                    capture.update(status)
+                    capture_start = capture.get_start_time(r_str=False)
+                    if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
+                        task = capture.get_task()
+                        task.reset()
+                        capture.delete()
+                        self.logger.warning(f'capture QUEUED Timeout, {task.uuid} Send back in queue')
+                    else:
+                        capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
                 elif status == crawlers.CaptureStatus.ONGOING:
                     capture.update(status)
