@@ -17,6 +17,7 @@ from modules.abstract_module import AbstractModule
 from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
+from lib.exceptions import TimeoutException
 from lib.Tag import get_domain_vanity_tags
 from lib.objects import CookiesNames
 from lib.objects import Etags
@@ -29,6 +30,15 @@ from lib.objects import Titles
 from trackers.Tracker_Yara import Tracker_Yara
 
 logging.config.dictConfig(ail_logger.get_config(name='crawlers'))
+
+# SIGNAL ALARM
+import signal
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+
+signal.signal(signal.SIGALRM, timeout_handler)
+
 
 class Crawler(AbstractModule):
 
@@ -104,7 +114,10 @@ class Crawler(AbstractModule):
             self.is_lacus_up = False
         if not self.is_lacus_up:
             print("Can't reach lacus server", int(time.time()))
-            time.sleep(30)
+            try:
+                time.sleep(30)
+            except TimeoutException:
+                pass
 
     def print_crawler_start_info(self, url, domain_url):
         print()
@@ -183,7 +196,10 @@ class Crawler(AbstractModule):
                 capture.update(-1)
                 self.refresh_lacus_status()
 
-        time.sleep(self.pending_seconds)
+        try:
+            time.sleep(self.pending_seconds)
+        except TimeoutException:
+            pass
 
     def enqueue_capture(self, task_uuid, priority):
         task = crawlers.CrawlerTask(task_uuid)
@@ -364,7 +380,16 @@ class Crawler(AbstractModule):
             dom_hash.add(self.date.replace('/', ''), item)
             dom_hash.add_correlation('domain', '', self.domain.id)
 
-            title_content = crawlers.extract_title_from_html(entries['html'], item_id)
+            # TITLE
+            signal.alarm(60)
+            try:
+                title_content = crawlers.extract_title_from_html(entries['html'])
+            except TimeoutException:
+                self.logger.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
+                title_content = None
+            else:
+                signal.alarm(0)
+
             if title_content:
                 title = Titles.create_title(title_content)
                 title.add(item.get_date(), item)

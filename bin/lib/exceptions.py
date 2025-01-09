@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-from pymisp import PyMISPError
+# from pymisp import PyMISPError
+
+# SIGNAL ALARM
+class TimeoutException(Exception):
+    pass
 
 class AILError(Exception):
     def __init__(self, message):

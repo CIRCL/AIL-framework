@@ -21,7 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_logger
 from lib.ail_queues import AILQueue
 from lib import regex_helper
-from lib.exceptions import ModuleQueueError
+from lib.exceptions import ModuleQueueError, TimeoutException
 from lib.objects.ail_objects import get_obj_from_global_id
 
 logging.config.dictConfig(ail_logger.get_config(name='modules'))
@@ -193,7 +193,10 @@ class AbstractModule(ABC):
                 self.computeNone()
                 # Wait before next process
                 self.logger.debug(f"{self.module_name}, waiting for new message, Idling {self.pending_seconds}s")
-                time.sleep(self.pending_seconds)
+                try:
+                    time.sleep(self.pending_seconds)
+                except TimeoutException:
+                    pass
 
     def _module_name(self):
         """
