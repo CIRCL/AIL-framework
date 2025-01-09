@@ -2,7 +2,7 @@
 # -*-coding:UTF-8 -*
 
 '''
-    Flask global variables shared accross modules
+    Flask global variables shared across modules
 '''
 ##################################
 # Import External packages
