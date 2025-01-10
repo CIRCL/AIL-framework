@@ -83,7 +83,14 @@
                                      class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
                             </td>
                             <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
-                            <td><b>{{ chat['name'] }}</b></td>
+                            <td>
+                                <b>{{ chat['name'] }}</b>
+                                <div>
+                                    {% for tag in chat['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
                             <td>
                                 {% if chat['username'] %}
                                     {{ chat['username'] }}

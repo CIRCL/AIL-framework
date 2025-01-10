@@ -770,6 +770,7 @@ def enrich_chat_relationships_labels(relationships):
             else:
                 meta[row['target']] = row['target']
     return meta
+
 def api_get_chat_service_instance(chat_instance_uuid):
     chat_instance = ChatServiceInstance(chat_instance_uuid)
     if not chat_instance.exists():

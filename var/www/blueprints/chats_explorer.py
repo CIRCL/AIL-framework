@@ -74,7 +74,8 @@ def chats_explorer_instance():
         return create_json_response(chat_instance[0], chat_instance[1])
     else:
         chat_instance = chat_instance[0]
-        return render_template('chat_instance.html', chat_instance=chat_instance)
+        return render_template('chat_instance.html', chat_instance=chat_instance,
+                               bootstrap_label=bootstrap_label)
 
 @chats_explorer.route("chats/explorer/chats/selector", methods=['GET'])
 @login_required
