@@ -22,7 +22,7 @@
     }
 </style>
 
-<div class="chat-message-left pb-1">
+<div class="chat-message-left pb-1" id="{{ message['_id'] }}">
     <div>
         <a href="{{ url_for('chats_explorer.objects_user_account')}}?subtype={{ message['user-account']['subtype'] }}&id={{ message['user-account']['id'] }}">
             <img src="{% if message['user-account']['icon'] %}{{ url_for('objects_image.image', filename=message['user-account']['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
@@ -199,7 +199,12 @@
             </div>
 
             <a class="btn btn-light btn-sm text-secondary px-1" href="{{ url_for('correlation.show_correlation')}}?type={{ message['type'] }}&subtype={{ message['subtype'] }}&id={{ message['id'] }}"><i class="fas fa-project-diagram"></i></a>
-            <a class="btn btn-light btn-sm text-secondary px-1" href="{{ message['link'] }}"><i class="fas fa-eye"></i></a>
+            {% if container_url %}
+                <a class="btn btn-light btn-sm text-secondary px-1" href="{{ container_url }}&message={{ message['id'] }}"><i class="fas fa-eye"></i></a>
+            {% else %}
+                <a class="btn btn-light btn-sm text-secondary px-1" href="{{ message['link'] }}"><i class="fas fa-eye"></i></a>
+            {% endif %}
+
         </div>
     </div>
 </div>

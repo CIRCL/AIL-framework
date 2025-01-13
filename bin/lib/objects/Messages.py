@@ -265,6 +265,8 @@ class Message(AbstractObject):
         if options is None:
             options = set()
         meta = self.get_default_meta(tags=True)
+        # original_id
+        meta['_id'] = self.id.rsplit('/', 1)[-1]
 
         # timestamp
         if not timestamp:
@@ -304,6 +306,8 @@ class Message(AbstractObject):
             meta['user-account'] = self.get_user_account(meta=True)
             if not meta['user-account']:
                 meta['user-account'] = {'id': 'UNKNOWN'}
+        if 'container' in options:
+            meta['container'] = self.get_container()
         if 'chat' in options:
             meta['chat'] = self.get_chat_id()
         if 'thread' in options:
@@ -345,7 +349,16 @@ class Message(AbstractObject):
     ## Language ##
 
     def get_root_obj(self):
-        return self.get_objs_container(root=True)
+        return self.get_objs_container(root=True).pop()
+
+    def get_container(self):
+        thread = self.get_current_thread()
+        if thread:
+            return thread
+        subchannel = self.get_subchannel()
+        if subchannel:
+            return subchannel
+        return self.get_chat()
 
     def get_objs_container(self, root=False):
         objs_containers = set()

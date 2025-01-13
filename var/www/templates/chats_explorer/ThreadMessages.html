@@ -196,7 +196,9 @@
     $(document).ready(function(){
         $("#page-Decoded").addClass("active");
         $("#nav_chat").addClass("active");
-
+        {% if message_id %}
+            document.location.hash = '#{{ message_id }}';
+        {% endif %}
   });
 
 function toggle_sidebar(){

@@ -24,6 +24,7 @@ from lib import chats_viewer
 from lib import Language
 from lib import Tag
 from lib import module_extractor
+from lib.objects import ail_objects
 
 # ============ BLUEPRINT ============
 chats_explorer = Blueprint('chats_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/chats_explorer'))
@@ -93,8 +94,16 @@ def chats_explorer_chat():
     if target == "Don't Translate":
         target = None
     nb_messages = request.args.get('nb')
-    page = request.args.get('page')
-    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, nb=nb_messages, page=page, heatmap=True)
+    mess = request.args.get('message')
+    if mess:
+        message = mess
+        page = -1
+        message_id = message.rsplit('/', 1)[-1]
+    else:
+        message = None
+        message_id = None
+        page = request.args.get('page')
+    chat = chats_viewer.api_get_chat(chat_id, instance_uuid, translation_target=target, message=message, nb=nb_messages, page=page, heatmap=True)
     if chat[1] != 200:
         return create_json_response(chat[0], chat[1])
     else:
@@ -102,6 +111,7 @@ def chats_explorer_chat():
         languages = Language.get_translation_languages()
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
+                               message_id=message_id,
                                translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
@@ -154,8 +164,16 @@ def objects_subchannel_messages():
     if target == "Don't Translate":
         target = None
     nb_messages = request.args.get('nb')
-    page = request.args.get('page')
-    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
+    mess = request.args.get('message')
+    if mess:
+        message = mess
+        page = -1
+        message_id = message.rsplit('/', 1)[-1]
+    else:
+        message = None
+        message_id = None
+        page = request.args.get('page')
+    subchannel = chats_viewer.api_get_subchannel(subchannel_id, instance_uuid, translation_target=target, message=message, nb=nb_messages, page=page)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
@@ -163,6 +181,7 @@ def objects_subchannel_messages():
         languages = Language.get_translation_languages()
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
+                               message_id=message_id,
                                bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
@@ -175,14 +194,24 @@ def objects_thread_messages():
     if target == "Don't Translate":
         target = None
     nb_messages = request.args.get('nb')
-    page = request.args.get('page')
-    thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target, nb=nb_messages, page=page)
+    mess = request.args.get('message')
+    if mess:
+        message = mess
+        page = -1
+        message_id = message.rsplit('/', 1)[-1]
+    else:
+        message = None
+        message_id = None
+        page = request.args.get('page')
+    thread = chats_viewer.api_get_thread(thread_id, instance_uuid, translation_target=target, message=message, nb=nb_messages, page=page)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:
         meta = thread[0]
         languages = Language.get_translation_languages()
-        return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
+        return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               message_id=message_id,
+                               translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/participants", methods=['GET'])
 @login_required
@@ -286,12 +315,13 @@ def objects_message():
     else:
         message = message[0]
         languages = Language.get_translation_languages()
+        container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)
         message['extracted'] = extracted
         message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
-                               translation_languages=languages, translation_target=target,
+                               translation_languages=languages, translation_target=target, container_url=container_url,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
 @chats_explorer.route("/objects/message/translate", methods=['POST'])

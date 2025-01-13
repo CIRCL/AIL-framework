@@ -49,9 +49,9 @@ class ChatThread(AbstractChatObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
+            url = url_for('chats_explorer.objects_thread_messages', subtype=self.subtype, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
+            url = f'{baseurl}/chats/explorer/thread?subtype={self.subtype}&id={self.id}'
         return url
 
     def get_svg_icon(self):  # TODO

@@ -786,7 +786,7 @@ def api_get_chats_selector():
             selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_chat_instance()}: {chat.get_label()}'})
     return selector
 
-def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True, heatmap=False):
+def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True, message=None, heatmap=False):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
@@ -800,7 +800,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
         if translation_target not in Language.get_translation_languages():
             translation_target = None
         if messages:
-            meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, nb=nb, page=page)
+            meta['messages'], meta['pagination'], meta['tags_messages'] = chat.get_messages(translation_target=translation_target, message=message, nb=nb, page=page)
             meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     if heatmap:
         meta['years'] = chat.get_message_years()
@@ -849,7 +849,7 @@ def api_get_chat_participants(chat_type, chat_subtype, chat_id):
         meta['participants'] = chat_participants
         return meta, 200
 
-def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1):
+def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, message=None, nb=-1, page=-1):
     subchannel = ChatSubChannels.ChatSubChannel(chat_id, chat_instance_uuid)
     if not subchannel.exists():
         return {"status": "error", "reason": "Unknown subchannel"}, 404
@@ -861,11 +861,11 @@ def api_get_subchannel(chat_id, chat_instance_uuid, translation_target=None, nb=
         meta['threads'] = get_threads_metas(meta['threads'])
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-    meta['messages'], meta['pagination'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target, nb=nb, page=page)
+    meta['messages'], meta['pagination'], meta['tags_messages'] = subchannel.get_messages(translation_target=translation_target, message=message, nb=nb, page=page)
     meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     return meta, 200
 
-def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=-1, page=-1):
+def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, message=None, nb=-1, page=-1):
     thread = ChatThreads.ChatThread(thread_id, thread_instance_uuid)
     if not thread.exists():
         return {"status": "error", "reason": "Unknown thread"}, 404
@@ -873,7 +873,7 @@ def api_get_thread(thread_id, thread_instance_uuid, translation_target=None, nb=
     meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
     # if meta['chat']:
     #     meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
-    meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, nb=nb, page=page)
+    meta['messages'], meta['pagination'], meta['tags_messages'] = thread.get_messages(translation_target=translation_target, message=message, nb=nb, page=page)
     meta['messages'] = get_chat_object_messages_meta(meta['messages'])
     return meta, 200
 
@@ -881,7 +881,7 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})

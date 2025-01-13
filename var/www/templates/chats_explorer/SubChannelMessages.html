@@ -179,6 +179,9 @@
                 "order": [[ 3, "desc" ]]
             });
         {% endif %}
+        {% if message_id %}
+            document.location.hash = '#{{ message_id }}';
+        {% endif %}
   });
 
 function toggle_sidebar(){

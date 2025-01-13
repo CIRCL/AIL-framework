@@ -128,6 +128,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_nb_messages(self):
         return r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
 
+    def get_message_page(self, message, nb):
+        rank = r_object.zrank(f'messages:{self.type}:{self.subtype}:{self.id}', f'message::{message}')
+        if not rank:
+            return -1
+        return int(rank/ nb) + 1
+
     def _get_messages(self, nb=-1, page=-1):
         if nb < 1:
             messages = r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
@@ -273,7 +279,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         meta = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         return meta
 
-    def get_messages(self, start=0, page=-1, nb=500, unread=False, options=None, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
+    def get_messages(self, start=0, page=-1, nb=500, message=None, unread=False, options=None, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
         # TODO return message meta
         tags = {}
         messages = {}
@@ -282,12 +288,15 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
             nb = int(nb)
         except TypeError:
             nb = 500
-        if not page:
-            page = -1
-        try:
-            page = int(page)
-        except TypeError:
-            page = 1
+        if message:
+            page = self.get_message_page(message, nb)
+        else:
+            if not page:
+                page = -1
+            try:
+                page = int(page)
+            except TypeError:
+                page = 1
         mess, pagination = self._get_messages(nb=nb, page=page)
         for message in mess:
             timestamp = message[1]

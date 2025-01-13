@@ -50,7 +50,7 @@ class Chat(AbstractChatObject):
         if flask_context:
             url = url_for('chats_explorer.chats_explorer_chat', subtype=self.subtype, id=self.id)
         else:
-            url = f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
+            url = f'{baseurl}/chats/explorer/chat?subtype={self.subtype}&id={self.id}'
         return url
 
     def get_origin_link(self):
