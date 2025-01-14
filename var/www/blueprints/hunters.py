@@ -145,8 +145,10 @@ def tracked_menu_typosquatting():
 @login_required
 @login_admin
 def tracked_menu_admin():
-    org_trackers = Tracker.get_orgs_trackers_meta()
-    user_trackers = Tracker.get_users_trackers_meta()
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    org_trackers = Tracker.get_orgs_trackers_meta(user_org)
+    user_trackers = Tracker.get_users_trackers_meta(user_id)
     return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=[],
                            bootstrap_label=bootstrap_label)
 
@@ -277,6 +279,10 @@ def parse_add_edit_request(request_form):
             if sources:
                 sources = json.loads(sources)
                 filters[obj_type]['sources'] = sources
+            excludes = request_form.get(f'sources_{obj_type}_exclude', [])
+            if excludes:
+                excludes = json.loads(excludes)
+                filters[obj_type]['excludes'] = excludes
             # Subtypes
             for obj_subtype in ail_core.get_object_all_subtypes(obj_type):
                 subtype = request_form.get(f'filter_{obj_type}_{obj_subtype}')

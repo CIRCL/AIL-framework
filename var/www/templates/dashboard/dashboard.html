@@ -332,7 +332,11 @@ function updateDate() {
     if (day < 10) {
         day = "0" + day;
     }
-    let current_date = d.getUTCFullYear() + ' - ' + (d.getUTCMonth() + 1) + ' - ' + day;
+    let month = d.getUTCMonth() + 1
+    if (month < 10) {
+        month = "0" + month;
+    }
+    let current_date = d.getUTCFullYear() + ' - ' + month + ' - ' + day;
     $('#current_date').text(current_date)
 }
 

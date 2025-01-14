@@ -731,6 +731,45 @@ def api_delete_user(user_id, admin_id, ip_address, user_agent):
     return user.delete(), 200
 
 ########################################################################################################################
+
+def _fix_user_lowercase(user_id):  # TODO CHANGE EDIT DATE
+    l_user_id = user_id.lower()
+
+    if user_id != l_user_id:
+        kill_session_user(user_id)
+
+        # role
+        role = get_user_role(user_id)
+        for role_id in get_roles():
+            r_serv_db.srem(f'ail:users:role:{role_id}', user_id)
+        set_user_role(l_user_id, role)
+
+        # token
+        token = get_user_token(user_id)
+        r_serv_db.hdel('ail:users:tokens', token)
+        r_serv_db.hset('ail:users:tokens', token, l_user_id)
+
+        # org
+        org = ail_orgs.Organisation(get_user_org(user_id))
+        org.remove_user(user_id)
+
+        # meta
+        try:
+            r_serv_db.rename(f'ail:user:metadata:{user_id}', f'ail:user:metadata:{l_user_id}')
+        except Exception:
+            pass
+
+        # org
+        org.add_user(l_user_id)
+
+        # sets
+        p_hash = get_user_passwd_hash(user_id)
+        r_serv_db.hdel('ail:users:all', user_id)
+        r_serv_db.hset('ail:users:all', l_user_id, p_hash)
+
+        date = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        r_serv_db.hset(f'ail:user:metadata:{l_user_id}', 'last_edit', date)
+
 ########################################################################################################################
 
 #### ROLES ####

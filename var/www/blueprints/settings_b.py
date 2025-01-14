@@ -74,6 +74,8 @@ def user_profile():
     global_2fa = ail_users.is_2fa_enabled()
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,acl_admin=acl_admin)
 
+#### USER OTP ####
+
 @settings_b.route("/settings/user/hotp", methods=['GET'])
 @login_required
 @login_read_only
@@ -160,6 +162,10 @@ def user_otp_reset():  # TODO ask for password ?
         user.kill_session()
         return redirect(url_for('settings_b.users_list'))
 
+## --USER OTP-- ##
+
+#### USER API ####
+
 @settings_b.route("/settings/user/api_key/new", methods=['GET'])
 @login_required
 @login_user
@@ -182,6 +188,30 @@ def new_token_user():
         return create_json_response(r[0], r[1])
     else:
         return redirect(url_for('settings_b.users_list'))
+
+## --USER API-- ##
+
+#### USER MISP ####
+
+# @settings_b.route("/settings/user/misp", methods=['GET'])
+# @login_required
+# @login_user
+# def user_misp():
+#     pass
+#
+# @settings_b.route("/settings/user/misp/add", methods=['GET'])
+# @login_required
+# @login_user
+# def user_misp_add():
+#     pass
+#
+# @settings_b.route("/settings/user/misp/delete", methods=['GET'])
+# @login_required
+# @login_user
+# def user_misp_add():
+#     pass
+
+## --USER MISP-- ##
 
 @settings_b.route("/settings/user/logout", methods=['GET'])
 @login_required
@@ -244,7 +274,7 @@ def create_user_post():
     # Admin ID
     admin_id = current_user.get_user_id()
 
-    email = request.form.get('username')
+    email = request.form.get('username', '')
     org_uuid = request.form.get('user_organisation')
     role = request.form.get('user_role')
     password1 = request.form.get('password1')
@@ -260,6 +290,7 @@ def create_user_post():
 
     all_roles = ail_users.get_roles()
 
+    email = email.lower()
     if email and len(email) < 300 and ail_users.check_email(email) and role:
         if role in all_roles:
             # password set

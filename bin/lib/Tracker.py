@@ -744,20 +744,22 @@ def get_org_trackers_meta(user_org, tracker_type=None):
         metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return metas
 
-def get_users_trackers_meta():
+def get_users_trackers_meta(user_id):
     trackers = []
     for tracker_uuid in get_trackers():
         tracker = Tracker(tracker_uuid)
         if tracker.is_level_user():
-            trackers.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
+            if tracker.get_user() != user_id:
+                trackers.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return trackers
 
-def get_orgs_trackers_meta():
+def get_orgs_trackers_meta(user_org):
     trackers = []
     for tracker_uuid in get_trackers():
         tracker = Tracker(tracker_uuid)
         if tracker.is_level_org():
-            trackers.append(tracker.get_meta(options={'mails', 'sparkline', 'tags'}))
+            if tracker.get_org() != user_org:
+                trackers.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
     return trackers
 
 def get_trackers_graph_by_day(l_trackers, num_day=31, date_from=None, date_to=None):
