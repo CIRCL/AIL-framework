@@ -25,6 +25,7 @@ from lib.objects import ChatThreads
 from lib.objects import Messages
 from lib.objects.BarCodes import Barcode
 from lib.objects.QrCodes import Qrcode
+from lib.objects.Ocrs import Ocr
 from lib.objects import UsersAccount
 from lib.objects import Usernames
 from lib import Language
@@ -420,6 +421,25 @@ def get_nb_messages_iterator(filters={}):
             # messages
             nb_messages += chat.get_nb_messages()
     return nb_messages
+
+
+def get_ocrs_iterator(filters={}):
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            print(chat.get_correlation('ocr'))
+            for ocr in chat.get_correlation('ocr').get('ocr', []):
+                _, ocr_id = ocr.split(':', 1)
+                yield Ocr(ocr_id)
+
+def get_nb_ors_iterator(filters={}):
+    nb = 0
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            nb += chat.get_nb_correlation('ocr')
+    return nb
+
 
 def get_chat_object_messages_meta(c_messages):
     temp_chats = {}

@@ -371,6 +371,8 @@ def obj_iterator(obj_type, filters):
         return Pgps.get_all_pgps_objects(filters=filters)
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
+    elif obj_type == 'ocr':
+        return chats_viewer.get_ocrs_iterator(filters=filters)
     elif obj_type == 'title':
         return Titles.Titles().get_iterator()
 
@@ -390,6 +392,8 @@ def card_obj_iterator(obj_type, filters):
         return Pgps.nb_all_pgps_objects(filters=filters)
     elif obj_type == 'message':
         return chats_viewer.get_nb_messages_iterator(filters=filters)
+    elif obj_type == 'ocr':
+        return chats_viewer.get_nb_ors_iterator(filters=filters)
 
 def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
     """

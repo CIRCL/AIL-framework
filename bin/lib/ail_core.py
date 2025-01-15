@@ -93,7 +93,7 @@ def get_objects_tracked():
     return ['barcode', 'decoded', 'item', 'pgp', 'message', 'ocr', 'qrcode', 'title']
 
 def get_objects_retro_hunted():
-    return ['decoded', 'item', 'message']
+    return ['decoded', 'item', 'message', 'ocr']
 
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
