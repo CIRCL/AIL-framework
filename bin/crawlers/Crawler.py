@@ -184,7 +184,7 @@ class Crawler(AbstractModule):
                         task = capture.get_task()
                         task.reset()
                         capture.delete()
-                        self.logger.warning(f'capture QUEUED Timeout, {task.uuid} Send back in queue, start_time={capture_start}')
+                        self.logger.warning(f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Send back in queue, start_time={capture_start}')
                     else:
                         capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))

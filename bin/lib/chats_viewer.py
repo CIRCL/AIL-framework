@@ -427,7 +427,6 @@ def get_ocrs_iterator(filters={}):
     for instance_uuid in get_chat_service_instances():
         for chat_id in ChatServiceInstance(instance_uuid).get_chats():
             chat = Chats.Chat(chat_id, instance_uuid)
-            print(chat.get_correlation('ocr'))
             for ocr in chat.get_correlation('ocr').get('ocr', []):
                 _, ocr_id = ocr.split(':', 1)
                 yield Ocr(ocr_id)
