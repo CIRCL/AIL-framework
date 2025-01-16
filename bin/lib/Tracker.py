@@ -390,13 +390,22 @@ class Tracker:
     def get_nb_objs_by_date(self, date):
         return r_tracker.scard(f'tracker:objs:{self.uuid}:{date}')
 
-    def get_objs_by_date(self, date):
-        return r_tracker.smembers(f'tracker:objs:{self.uuid}:{date}')
+    def get_objs_by_date(self, date, obj_types=[]):
+        objs = r_tracker.smembers(f'tracker:objs:{self.uuid}:{date}')
+        if obj_types:
+            l_objs = set()
+            for obj in objs:
+                obj_type = obj.split(':', 1)[0]
+                if obj_type in obj_types:
+                    l_objs.add(obj)
+            return l_objs
+        else:
+            return objs
 
-    def get_objs_by_daterange(self, date_from, date_to):
+    def get_objs_by_daterange(self, date_from, date_to, obj_types):
         objs = set()
         for date in Date.get_daterange(date_from, date_to):
-            objs |= self.get_objs_by_date(date)
+            objs |= self.get_objs_by_date(date, obj_types=obj_types)
         return objs
 
     def get_obj_dates(self, obj_type, subtype, obj_id):

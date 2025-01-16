@@ -153,20 +153,33 @@ def tracked_menu_admin():
                            bootstrap_label=bootstrap_label)
 
 
-@hunters.route("/tracker/show")
+@hunters.route("/tracker/show", methods=['GET', 'POST'])
 @login_required
 @login_read_only
 def show_tracker():
     user_id = current_user.get_user_id()
     user_org = current_user.get_org()
     user_role = current_user.get_role()
-    tracker_uuid = request.args.get('uuid', None)
+    filter_obj_types = []
+
+    if request.method == 'POST':
+        tracker_uuid = request.form.get('tracker_uuid', None)
+        date_from = request.form.get('date_from')
+        date_to = request.form.get('date_to')
+        for obj_type in Tracker.get_objects_tracked():
+            new_filter = request.form.get(f'{obj_type}_obj')
+            if new_filter:
+                filter_obj_types.append(obj_type)
+        if sorted(filter_obj_types) == Tracker.get_objects_tracked():
+            filter_obj_types = []
+    else:
+        tracker_uuid = request.args.get('uuid', None)
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+
     res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
     if res:  # invalid access
         return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
-
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
 
     if date_from:
         date_from = date_from.replace('-', '')
@@ -190,7 +203,7 @@ def show_tracker():
 
     if date_from:
         date_from, date_to = Date.sanitise_daterange(date_from, date_to)
-        objs = tracker.get_objs_by_daterange(date_from, date_to)
+        objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types)
         meta['objs'] = ail_objects.get_objects_meta(objs, options={'last_full_date'}, flask_context=True)
     else:
         date_from = ''
@@ -204,9 +217,10 @@ def show_tracker():
         meta['filters'] = json.dumps(meta['filters'], indent=4)
 
     return render_template("tracker_show.html", meta=meta,
-                           rule_content=yara_rule_content,
-                           typo_squatting=typo_squatting,
-                           bootstrap_label=bootstrap_label)
+                            rule_content=yara_rule_content,
+                            typo_squatting=typo_squatting,
+                            filter_obj_types=filter_obj_types,
+                            bootstrap_label=bootstrap_label)
 
 def parse_add_edit_request(request_form):
     to_track = request_form.get("tracker")

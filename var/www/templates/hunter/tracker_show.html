@@ -223,40 +223,83 @@
                         </p>
                     {% endif %}
 
-                    <div class="card mb-5 mt-1">
-                        <div class="card-body">
+                    <form action="{{ url_for('hunters.show_tracker') }}" method='post'>
+                        <input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{ meta['uuid'] }}" hidden>
 
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="input-group" id="date-range-from">
-                                        <div class="input-group-prepend"><span class="input-group-text"><i
-                                                class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-                                        <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd"
-                                               name="date_from" autocomplete="off"
-                                               {% if meta['date_from'] %}value="{{ meta['date_from'][0:4] }}-{{ meta['date_from'][4:6] }}-{{ meta['date_from'][6:8] }}"
-                                               {% elif meta['first_seen'] %}value="{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}"
-                                               {% endif %}>
+                        <div class="card mb-5 mt-1">
+                            <div class="card-body">
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="input-group" id="date-range-from">
+                                            <div class="input-group-prepend"><span class="input-group-text"><i
+                                                    class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                            <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd"
+                                                   name="date_from" autocomplete="off"
+                                                   {% if meta['date_from'] %}value="{{ meta['date_from'][0:4] }}-{{ meta['date_from'][4:6] }}-{{ meta['date_from'][6:8] }}"
+                                                   {% elif meta['first_seen'] %}value="{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}"
+                                                   {% endif %}>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group" id="date-range-to">
+                                            <div class="input-group-prepend"><span class="input-group-text"><i
+                                                    class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+                                            <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd"
+                                                   name="date_to" autocomplete="off"
+                                                   {% if meta['date_to'] %}value="{{ meta['date_to'][0:4] }}-{{ meta['date_to'][4:6] }}-{{ meta['date_to'][6:8] }}"
+                                                   {% elif meta['last_seen'] %}value="{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}"
+                                                   {% endif %}>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="input-group" id="date-range-to">
-                                        <div class="input-group-prepend"><span class="input-group-text"><i
-                                                class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-                                        <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd"
-                                               name="date_to" autocomplete="off"
-                                               {% if meta['date_to'] %}value="{{ meta['date_to'][0:4] }}-{{ meta['date_to'][4:6] }}-{{ meta['date_to'][6:8] }}"
-                                               {% elif meta['last_seen'] %}value="{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}"
-                                               {% endif %}>
+                                <h5>Filter Objects:</h5>
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if 'decoded' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Content that has been decoded from an encoded format, such as base64"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if 'item' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                                <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text that has been processed by AIL. It can include various types of extracted information"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" {% if 'pgp' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="PGP key/block metadata"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="title_obj" id="title_obj" {% if 'title' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="title_obj"><i class="fas fa-heading"></i>&nbsp;Title <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Title that has been extracted from a HTML page"></i></label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if 'message' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Message <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Messages from Chats"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if 'ocr' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand"></i>&nbsp;OCR <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text extracted from Images"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="barcode_obj" id="barcode_obj" {% if 'barcode' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="barcode_obj"><i class="fas fa-barcode"></i>&nbsp;Barcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images ans Screenshots"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="qrcode_obj" id="qrcode_obj" {% if 'qrcode' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                            <label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode"></i>&nbsp;Qrcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images ans Screenshots"></i></label>
+                                        </div>
                                     </div>
                                 </div>
+
+                                <button class="btn btn-info mt-2">
+                                    <i class="fas fa-search"></i> Tracked Objects
+                                </button>
+
                             </div>
-
-                            <button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
-                                <i class="fas fa-search"></i> Tracked Objects
-                            </button>
-
                         </div>
-                    </div>
+                    </form>
 
                 </div>
             </div>
