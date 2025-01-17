@@ -1729,6 +1729,7 @@ class RetroHunt:
 
     def delete(self):
         if self.is_running() and self.get_state() not in ['completed', 'paused']:
+            self.pause()
             return None
 
         self.delete_objs()
