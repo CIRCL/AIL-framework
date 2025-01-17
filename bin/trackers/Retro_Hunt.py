@@ -80,10 +80,11 @@ class Retro_Hunt_Module(AbstractModule):
         self.nb_done = 0
         self.update_progress()
 
+        if last_obj_type:
+            filters['start'] = f'{last_obj_subtype}:{last_obj_id}'
+            last_obj_type = None
+
         for obj_type in filters:
-            if last_obj_type:
-                filters['start'] = f'{last_obj_subtype}:{last_obj_id}'
-                last_obj_type = None
             for obj in ail_objects.obj_iterator(obj_type, filters):
                 self.obj = obj
                 content = obj.get_content(r_type='bytes')
