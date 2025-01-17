@@ -464,17 +464,24 @@ def get_all_items_objects(filters={}):
         sources = get_all_sources()
     sources = sorted(sources)
     if filters.get('start'):
-        _, start_id = filters['start'].split(':', 1)
-        item = Item(start_id)
-        # remove sources
-        start_source = item.get_source()
-        i = 0
-        while start_source and len(sources) > i:
-            if sources[i] == start_source:
-                sources = sources[i:]
-                start_source = None
-            i += 1
-        start_date = item.get_date()
+        if filters['start']['type'] == 'item':
+            _, start_id = filters['start'].split(':', 1)
+            item = Item(start_id)
+            if not item.exists():
+                start_id = None
+                start_date = None
+            # remove sources
+            start_source = item.get_source()
+            i = 0
+            while start_source and len(sources) > i:
+                if sources[i] == start_source:
+                    sources = sources[i:]
+                    start_source = None
+                i += 1
+            start_date = item.get_date()
+        else:
+            start_id = None
+            start_date = None
     else:
         start_id = None
         start_date = None

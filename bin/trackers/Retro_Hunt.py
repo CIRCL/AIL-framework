@@ -72,6 +72,8 @@ class Retro_Hunt_Module(AbstractModule):
         last_obj = self.retro_hunt.get_last_analyzed()
         if last_obj:
             last_obj_type, last_obj_subtype, last_obj_id = last_obj.split(':', 2)
+            if last_obj_subtype is None:
+                last_obj_subtype = ''
         else:
             last_obj_type = None
             last_obj_subtype = None
@@ -81,8 +83,7 @@ class Retro_Hunt_Module(AbstractModule):
         self.update_progress()
 
         if last_obj_type:
-            filters['start'] = f'{last_obj_subtype}:{last_obj_id}'
-            last_obj_type = None
+            filters['start'] = {'type': last_obj_type, 'subtype': last_obj_subtype, 'id': last_obj_id}
 
         for obj_type in filters:
             for obj in ail_objects.obj_iterator(obj_type, filters):

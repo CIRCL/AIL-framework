@@ -454,16 +454,19 @@ def get_all_decodeds_objects(filters={}):
     mimetypes = sorted(mimetypes)
 
     if filters.get('start'):
-        _, start_id = filters['start'].split(':', 1)
-        decoded = Decoded(start_id)
-        # remove sources
-        start_mimetype = decoded.get_mimetype()
-        i = 0
-        while start_mimetype and len(mimetypes) > i:
-            if mimetypes[i] == start_mimetype:
-                mimetypes = mimetypes[i:]
-                start_mimetype = None
-            i += 1
+        if filters['start']['type'] == 'decoded':
+            _, start_id = filters['start'].split(':', 1)
+            decoded = Decoded(start_id)
+            # remove sources
+            start_mimetype = decoded.get_mimetype()
+            i = 0
+            while start_mimetype and len(mimetypes) > i:
+                if mimetypes[i] == start_mimetype:
+                    mimetypes = mimetypes[i:]
+                    start_mimetype = None
+                i += 1
+        else:
+            start_id = None
     else:
         start_id = None
 

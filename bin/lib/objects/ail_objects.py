@@ -375,6 +375,8 @@ def obj_iterator(obj_type, filters):
         return chats_viewer.get_ocrs_iterator(filters=filters)
     elif obj_type == 'title':
         return Titles.Titles().get_iterator()
+    else:
+        return []
 
 
 def card_objs_iterators(filters):
