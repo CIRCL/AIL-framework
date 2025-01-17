@@ -526,7 +526,8 @@ def get_all_items_objects(filters={}):
                         start_id = None
                     i += 1
             for obj_id in all_items:
-                yield Item(obj_id)
+                if obj_id:
+                    yield Item(obj_id)
 
 ################################################################################
 ################################################################################
