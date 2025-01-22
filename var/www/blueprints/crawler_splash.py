@@ -431,6 +431,8 @@ def showDomain():
             dict_domain['crawler_history_items'].append(Item(item_id).get_meta(options={'crawler'}))
         if dict_domain['crawler_history_items']:
             dict_domain['random_item'] = random.choice(dict_domain['crawler_history_items'])
+    else:
+        dict_domain['tags_safe'] = True
 
     return render_template("showDomain.html",
                            dict_domain=dict_domain, bootstrap_label=bootstrap_label,
