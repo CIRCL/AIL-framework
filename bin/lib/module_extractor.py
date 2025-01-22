@@ -306,6 +306,7 @@ def get_extracted_by_match(extracted):
                         matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
                         matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
                     except TypeError:
+                        logger.critical(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
                         matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf00d', 'color': 'red', 'radius': 5}
                         matches[str_obj]['link'] = ''
 
