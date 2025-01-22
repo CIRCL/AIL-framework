@@ -90,7 +90,7 @@ def get_obj_queued():
     return ['barcode', 'item', 'image', 'message', 'ocr', 'qrcode'] # screenshot ???
 
 def get_objects_tracked():
-    return ['barcode', 'decoded', 'item', 'pgp', 'message', 'ocr', 'qrcode', 'title']
+    return ['barcode', 'decoded', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title']
 
 def get_objects_retro_hunted():
     return ['decoded', 'item', 'message', 'ocr']

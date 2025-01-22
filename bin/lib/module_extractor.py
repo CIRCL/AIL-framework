@@ -302,8 +302,12 @@ def get_extracted_by_match(extracted):
                         obj_id = row_id[0]
                     matches[str_obj]['subtype'] = subtype
                     matches[str_obj]['id'] = obj_id
-                    matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
-                    matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
+                    try:
+                        matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
+                        matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
+                    except TypeError:
+                        matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf00d', 'color': 'red', 'radius': 5}
+                        matches[str_obj]['link'] = ''
 
                 matches[str_obj]['matches'] = []
 
