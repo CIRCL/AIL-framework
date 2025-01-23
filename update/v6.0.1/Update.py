@@ -71,5 +71,5 @@ class Updater(AIL_Updater):
 
 if __name__ == '__main__':
     _fix_user_lowercase()
-    # updater = Updater('v6.0.1')
-    # updater.run_update()
+    updater = Updater('v6.0.1')
+    updater.run_update()
