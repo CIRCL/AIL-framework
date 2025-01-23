@@ -68,10 +68,10 @@ def repo_is_fork():
 
     if process.returncode == 0:
         res = process.stdout.decode()
-        if f'origin	{AIL_REPO}' in res:
+        if f'origin	{AIL_REPO}' in res or f'origin	git@github.com:{AIL_REPO_NAME}' in res:
             print(f'    This repository is a {TERMINAL_BLUE}clone of {AIL_REPO}{TERMINAL_DEFAULT}')
             return False
-        elif 'origin	{}'.format(OLD_AIL_REPO) in res:
+        elif f'origin	{OLD_AIL_REPO}' in res:
             print('    old AIL repository, Updating remote origin...')
             res = git_status.set_default_remote(AIL_REPO, verbose=False)
             if res:
@@ -102,7 +102,7 @@ def is_upstream_created(upstream):
 
 def create_fork_upstream(upstream):
     print(f'{TERMINAL_YELLOW}... Creating upstream ...{TERMINAL_DEFAULT}')
-    print('git remote add {} {}'.format(upstream, AIL_REPO))
+    print(f'git remote add {upstream} {AIL_REPO}')
     process = subprocess.run(['git', 'remote', 'add', upstream, AIL_REPO],
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
@@ -181,7 +181,7 @@ def _sort_version_tags(versions, current_version):
     else:  # len(rcurrent_version) == 3
         curr_version, curr_subversion, curr_sub_release = rcurrent_version
         curr_sub_release = int(curr_sub_release)
-    curr_version = int(curr_version[1:])
+    curr_version = int(curr_version)
     curr_subversion = int(curr_subversion)
 
     for v in versions:
@@ -221,7 +221,8 @@ def _sort_version_tags(versions, current_version):
                             continue
                     sorted_versions.append(f'v{version}.{subversion}.{sub_release}')
             else:
-                sorted_versions.append(f'v{version}.{subversion}')
+                if curr_version != version and subversion != curr_subversion:
+                    sorted_versions.append(f'v{version}.{subversion}')
     if sorted_versions[0] == current_version:
         sorted_versions = sorted_versions[1:]
     return sorted_versions
@@ -249,10 +250,7 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             last_tag = last_tag[1].split('^{}')[0]
             list_upper_tags = []
             if last_tag[1:] == current_tag:
-                list_upper_tags.append((last_tag, last_commit))
-                # force update order
-                list_upper_tags.sort()
-                return list_upper_tags
+                return []
             else:
                 dict_tags_commit = {}
                 for mess_tag in list_all_tags:
@@ -289,11 +287,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
 
         update_submodules()
 
-        temp_current_tag = current_tag.replace('v', '')
-        if temp_current_tag.count('.') > 1:
-            temp_current_tag = temp_current_tag.rsplit('.', 1)
-            temp_current_tag = ''.join(temp_current_tag)
-
+        temp_current_tag = current_tag.replace('v', '').split('.')[0]
         if float(temp_current_tag) < 5.0:
             roll_back_update('2c65194b94dab95df9b8da19c88d65239f398355')
             pulled = True
@@ -317,6 +311,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 print(f'{TERMINAL_RED}                  Relaunch Launcher                    {TERMINAL_DEFAULT}')
                 sys.exit(3)
 
+            # EMERGENCY UPDATE between two tags
             if len(list_upper_tags_remote) == 1:
                 # additional update (between 2 commits on the same version)
                 additional_update_path = os.path.join(os.environ['AIL_HOME'], 'update', current_tag, 'additional_update.sh')
@@ -331,7 +326,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                         output = process.stdout.decode()
                         print(output)
                     else:
-                        print('{}{}{}'.format(TERMINAL_RED, process.stderr.decode(), TERMINAL_DEFAULT))
+                        print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
                         aborting_update()
                         sys.exit(1)
 
@@ -341,16 +336,14 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 exit(0)
 
             else:
-                # map version with roll back commit
-                list_update = []
-                previous_commit = list_upper_tags_remote[0][1]
-                for row_tuple in list_upper_tags_remote[1:]:
-                    tag = row_tuple[0]
-                    list_update.append((tag, previous_commit))
-                    previous_commit = row_tuple[1]
+                for v_update in list_upper_tags_remote:
+                    if is_fork:
+                        version_tag = v_update
+                    else:
+                        version_tag = v_update[0]
+                        previous_commit = v_update[1]
+                    launch_update_version(version_tag, current_version_path, roll_back_commit=None, is_fork=is_fork)
 
-                for update in list_update:
-                    launch_update_version(update[0], update[1], current_version_path, is_fork)
                 # Success
                 print(f'{TERMINAL_YELLOW}****************  AIL Successfully Updated  *****************{TERMINAL_DEFAULT}')
                 print()
@@ -361,7 +354,7 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
         aborting_update()
         sys.exit(0)
 
-def launch_update_version(version, roll_back_commit, current_version_path, is_fork):
+def launch_update_version(version, current_version_path, roll_back_commit=None, is_fork=False):
     update_path = os.path.join(os.environ['AIL_HOME'], 'update', str(version), 'Update.sh')
     print()
     print(f'{TERMINAL_YELLOW}------------------------------------------------------------------')
@@ -395,7 +388,7 @@ def launch_update_version(version, roll_back_commit, current_version_path, is_fo
         print('------------------------------------------------------------------')
         print(f'                   {TERMINAL_RED}Update Error: {TERMINAL_BLUE}{version}{TERMINAL_DEFAULT}')
         print('------------------------------------------------------------------')
-        if not is_fork:
+        if not is_fork and roll_back_commit:
             roll_back_update(roll_back_commit)
         else:
             aborting_update()
@@ -431,6 +424,7 @@ if __name__ == "__main__":
     TERMINAL_DEFAULT = '\033[0m'
 
     AIL_REPO = 'https://github.com/ail-project/ail-framework'
+    AIL_REPO_NAME = 'ail-project/ail-framework.git'
     OLD_AIL_REPO = 'https://github.com/CIRCL/AIL-framework.git'
 
     configfile = os.path.join(os.environ['AIL_HOME'], 'configs/update.cfg')
@@ -469,11 +463,10 @@ if __name__ == "__main__":
                 print('New Releases:')
             if is_fork:
                 for upper_tag in list_upper_tags_remote:
-                    print(f'    {TERMINAL_BLUE}{upper_tag[0]}{TERMINAL_DEFAULT}')
+                    print(f'    {TERMINAL_BLUE}{upper_tag}{TERMINAL_DEFAULT}')
             else:
                 for upper_tag in list_upper_tags_remote:
                     print(f'    {TERMINAL_BLUE}{upper_tag[0]}{TERMINAL_DEFAULT}: {upper_tag[1]}')
-            print()
             update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork)
 
         else:
@@ -485,5 +478,5 @@ if __name__ == "__main__":
         aborting_update()
         sys.exit(0)
 
-    # r = get_git_upper_tags_remote('4.1', False)
+    # r = get_git_upper_tags_remote('6.0', False)
     # print(r)
