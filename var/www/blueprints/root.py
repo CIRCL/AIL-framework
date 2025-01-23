@@ -70,7 +70,7 @@ def login():
             return render_template("login.html", error=logging_error)
 
     if request.method == 'POST':
-        username = request.form.get('username')
+        username = request.form.get('username', '').lower()
         password = request.form.get('password')
         next_page = request.form.get('next_page')
 
