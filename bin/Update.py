@@ -311,31 +311,31 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 print(f'{TERMINAL_RED}                  Relaunch Launcher                    {TERMINAL_DEFAULT}')
                 sys.exit(3)
 
-            # EMERGENCY UPDATE between two tags
-            if len(list_upper_tags_remote) == 1:
-                # additional update (between 2 commits on the same version)
-                additional_update_path = os.path.join(os.environ['AIL_HOME'], 'update', current_tag, 'additional_update.sh')
-                if os.path.isfile(additional_update_path):
-                    print()
-                    print(f'{TERMINAL_YELLOW}------------------------------------------------------------------')
-                    print('-                 Launching Additional Update:                   -')
-                    print(f'--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{TERMINAL_DEFAULT}')
-                    process = subprocess.run(['bash', additional_update_path],
-                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    if process.returncode == 0:
-                        output = process.stdout.decode()
-                        print(output)
-                    else:
-                        print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
-                        aborting_update()
-                        sys.exit(1)
+            # # EMERGENCY UPDATE between two tags
+            # if len(list_upper_tags_remote) == 1:
+            #     # additional update (between 2 commits on the same version)
+            #     additional_update_path = os.path.join(os.environ['AIL_HOME'], 'update', current_tag, 'additional_update.sh')
+            #     if os.path.isfile(additional_update_path):
+            #         print()
+            #         print(f'{TERMINAL_YELLOW}------------------------------------------------------------------')
+            #         print('-                 Launching Additional Update:                   -')
+            #         print(f'--  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --{TERMINAL_DEFAULT}')
+            #         process = subprocess.run(['bash', additional_update_path],
+            #                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            #         if process.returncode == 0:
+            #             output = process.stdout.decode()
+            #             print(output)
+            #         else:
+            #             print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
+            #             aborting_update()
+            #             sys.exit(1)
+            #
+            #     print()
+            #     print(f'{TERMINAL_YELLOW}****************  AIL Successfully Updated  *****************{TERMINAL_DEFAULT}')
+            #     print()
+            #     exit(0)
 
-                print()
-                print(f'{TERMINAL_YELLOW}****************  AIL Successfully Updated  *****************{TERMINAL_DEFAULT}')
-                print()
-                exit(0)
-
-            else:
+            if list_upper_tags_remote:
                 for v_update in list_upper_tags_remote:
                     if is_fork:
                         version_tag = v_update
@@ -459,7 +459,7 @@ if __name__ == "__main__":
             print()
             list_upper_tags_remote = get_git_upper_tags_remote(current_tag.replace('v', ''), is_fork)
             # new release
-            if len(list_upper_tags_remote) > 1:
+            if len(list_upper_tags_remote) > 0:
                 print('New Releases:')
             if is_fork:
                 for upper_tag in list_upper_tags_remote:

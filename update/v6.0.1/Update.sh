@@ -17,20 +17,13 @@ echo -e $GREEN"Shutting down AIL ..."$DEFAULT
 bash ${AIL_BIN}/LAUNCH.sh -ks
 wait
 
-echo -e $GREEN"Updating UI resources..."$DEFAULT
-bash ${AIL_BIN}/LAUNCH.sh -ut
-wait
-
-echo -e $GREEN"Updating python requirement..."$DEFAULT
-pip install -U flask-sock
-
 # SUBMODULES #
 git submodule update
 
 echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
 echo ""
-python ${AIL_HOME}/update/v6.0/Update.py
+python ${AIL_HOME}/update/v6.0.1/Update.py
 wait
 echo ""
 echo ""
