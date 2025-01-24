@@ -124,7 +124,7 @@ def v1_pyail_version():
 def add_crawler_task():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_org, user_id, _ = get_basic_user_meta(token)
+    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
     res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
     if res:
         return create_json_response(res[0], res[1])
