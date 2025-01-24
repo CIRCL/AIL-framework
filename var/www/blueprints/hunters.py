@@ -549,7 +549,7 @@ def retro_hunt_show_task():
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 
     if objs:
-        dict_task['objs'] = ail_objects.get_objects_meta(retro_hunt.get_objs(), flask_context=True)
+        dict_task['objs'] = ail_objects.get_objects_meta(retro_hunt.get_objs(), options={'last_full_date'}, flask_context=True)
     else:
         dict_task['objs'] = []
 

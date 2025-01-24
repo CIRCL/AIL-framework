@@ -88,8 +88,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         meta_dict['nb_seen'] = self.get_nb_seen()
         if 'sparkline' in options:
             meta_dict['sparkline'] = self.get_sparkline()
-        if 'last_full_date'in options:
-            meta_dict['last_full_date'] = self.get_last_full_date()
+        if 'last_full_date' in options:
+            meta_dict['last_full_date'] = meta_dict['last_seen']
         return meta_dict
 
     def set_first_seen(self, first_seen):

@@ -204,7 +204,7 @@
 										<th>Type</th>
                                         <th></th>
                                         <th>Id</th>
-                                        <th>Tags</th>
+                                        <th>Last Date</th>
                                         <th></th>
 									</tr>
 								</thead>
@@ -226,11 +226,16 @@
                                                 <a href="{{ object['link'] }}">
                                                     {{ object['id']}}
                                                 </a>
+                                                <div>
+                                                    {% for tag in object['tags'] %}
+                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                                    {% endfor %}
+                                                </div>
                                             </td>
                                             <td>
-                                                {% for tag in object['tags'] %}
-                                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-                                                {% endfor %}
+                                                {% if object['last_full_date'] %}
+                                                    {{ object['last_full_date']}}
+                                                {% endif %}
                                             </td>
                                             <td class="text-right">
             {#									<a href="{{ url_for('investigations_b.unregister_investigation') }}?uuid={{ tracker_metadata['uuid']}}&type={{ object['type'] }}&subtype={{ object['subtype']}}&id={{ object['id']}}">#}
