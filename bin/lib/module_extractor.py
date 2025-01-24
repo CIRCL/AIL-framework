@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ail_users import get_user_org
 from lib.objects import ail_objects
 from lib.objects.Titles import Title
+from lib.exceptions import TimeoutException
 from lib import correlations_engine
 from lib import regex_helper
 from lib.ConfigLoader import ConfigLoader
@@ -37,6 +38,15 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 
 r_key = regex_helper.generate_redis_cache_key('extractor')
+
+
+# SIGNAL ALARM
+import signal
+def timeout_handler(signum, frame):
+    raise TimeoutException
+
+
+signal.signal(signal.SIGALRM, timeout_handler)
 
 # TODO UI Link
 
@@ -98,7 +108,7 @@ def get_correl_match(extract_type, obj, content):
             sha256_val = sha256(value.encode()).hexdigest()
         map_value_id[sha256_val] = value
     if to_extract:
-        objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj.get_global_id(), content)
+        objs = regex_helper.regex_finditer(r_key, '|'.join(to_extract), obj.get_global_id(), content, max_time=5)
         if extract_type == 'title' and objs:
             objs = [objs[0]]
         for ob in objs:
@@ -154,13 +164,13 @@ def get_tracker_match(user_org, user_id, obj, content):
         # print(tracker_type)
         tracked = tracker.get_tracked()
         if tracker_type == 'regex':  # TODO Improve word detection -> word delimiter
-            regex_match = regex_helper.regex_finditer(r_key, tracked, obj_gid, content)
+            regex_match = regex_helper.regex_finditer(r_key, tracked, obj_gid, content, max_time=5)
             for match in regex_match:
                 extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
         elif tracker_type == 'yara':
             rule = tracker.get_rule()
             rule.match(data=content.encode(), callback=_get_yara_match,
-                       which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
+                       which_callbacks=yara.CALLBACK_MATCHES, timeout=5)
             yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
             r_cache.delete(f'extractor:yara:match:{r_key}')
             extracted = []
@@ -176,7 +186,7 @@ def get_tracker_match(user_org, user_id, obj, content):
                 words = [tracked]
             for word in words:
                 regex = _get_word_regex(word)
-                regex_match = regex_helper.regex_finditer(r_key, regex, obj_gid, content)
+                regex_match = regex_helper.regex_finditer(r_key, regex, obj_gid, content, max_time=5)
                 # print(regex_match)
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
@@ -194,7 +204,7 @@ def get_tracker_match(user_org, user_id, obj, content):
             retro_hunt.delete_objs()
 
         rule.match(data=content.encode(), callback=_get_yara_match,
-                   which_callbacks=yara.CALLBACK_MATCHES, timeout=30)
+                   which_callbacks=yara.CALLBACK_MATCHES, timeout=5)
         yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
         r_cache.delete(f'extractor:yara:match:{r_key}')
         extracted = []
@@ -234,35 +244,39 @@ def extract(user_id, obj_type, subtype, obj_id, content=None):
         r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)
         return json.loads(cached)
 
-    if not content:
-        content = obj.get_content()
+    signal.alarm(60)
+    try:
+        if not content:
+            content = obj.get_content()
+        extracted = get_tracker_match(user_org, user_id, obj, content)
+        # print(item.get_tags())
+        for tag in obj.get_tags():
+            if MODULES.get(tag):
+                # print(tag)
+                module = MODULES.get(tag)
+                matches = module.extract(obj, content, tag)
+                if matches:
+                    extracted = extracted + matches
 
-    extracted = get_tracker_match(user_org, user_id, obj, content)
-
-    # print(item.get_tags())
-    for tag in obj.get_tags():
-        if MODULES.get(tag):
-            # print(tag)
-            module = MODULES.get(tag)
-            matches = module.extract(obj, content, tag)
+        for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
+            matches = get_correl_match(obj_t, obj, content)
             if matches:
                 extracted = extracted + matches
 
-    for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
-        matches = get_correl_match(obj_t, obj, content)
-        if matches:
-            extracted = extracted + matches
+        # SORT By Start Pos
+        if extracted:
+            extracted = sorted(extracted, key=itemgetter(0))
+            extracted = merge_overlap(extracted)
 
-    # SORT By Start Pos
-    if extracted:
-        extracted = sorted(extracted, key=itemgetter(0))
-        extracted = merge_overlap(extracted)
-
-    # Save In Cache
-    if extracted:
-        extracted_dump = json.dumps(extracted)
-        r_cache.set(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', extracted_dump)
-        r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)  # TODO Reduce CACHE ???????????????
+        # Save In Cache
+        if extracted:
+            extracted_dump = json.dumps(extracted)
+            r_cache.set(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', extracted_dump)
+            r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)  # TODO Reduce CACHE ???????????????
+    except TimeoutException:
+        extracted = []
+    else:
+        signal.alarm(0)
 
     return extracted
 
