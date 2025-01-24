@@ -18,3 +18,11 @@
     font-size: 16px;
     pointer-events: none;
 }
+
+.text-collapse {
+  overflow: hidden;
+  display: block;
+  max-height: 3em;
+  line-height: 1.5em;
+  transition: max-height 0.3s ease-in-out;
+}

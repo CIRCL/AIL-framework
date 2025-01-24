@@ -8,6 +8,7 @@
     <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
     <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
@@ -219,7 +220,7 @@
                     {% if rule_content %}
                         <h5 class="mb-0">Yara Rule:</h5>
                         <p class="my-0">
-                            <pre class="border bg-light">{{ rule_content }}</pre>
+                            <pre class="text-collapse border bg-light">{{ rule_content }}</pre>
                         </p>
                     {% endif %}
 
@@ -379,6 +380,7 @@
         $('#div_edit_tags').hide();
         $('#div_edit_description').hide();
         $("#page-Tracker").addClass("active");
+        text_collapse();
 
         $('#date-range-from').dateRangePicker({
             separator: ' to ',
@@ -435,6 +437,29 @@
             $('#side_menu').addClass('col-lg-2')
             $('#core_content').addClass('col-lg-10')
         }
+    }
+
+    function text_collapse() {
+        const textElements = document.querySelectorAll(".text-collapse");
+
+        textElements.forEach((textElement) => {
+            console.log(textElements)
+            const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
+            const maxLines = 30;
+            const maxHeight = lineHeight * maxLines;
+
+            // Apply initial truncation
+            textElement.style.maxHeight = maxHeight + 'px';
+
+            // Hover effect
+            textElement.addEventListener("mouseenter", () => {
+                textElement.style.maxHeight = 'none';
+            });
+
+            textElement.addEventListener("mouseleave", () => {
+                textElement.style.maxHeight = maxHeight + 'px';
+            });
+        });
     }
 
     function edit_tags() {
