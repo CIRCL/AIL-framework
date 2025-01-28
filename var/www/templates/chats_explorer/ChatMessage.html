@@ -175,7 +175,13 @@
                                                     </svg>
                                                     {{ meta['extracted_matches'][match]['subtype'] }}
                                                 </td>
-                                                <td>{{ meta['extracted_matches'][match]['id'] }}</td>
+                                                <td>
+                                                    {% if meta['extracted_matches'][match]['subtype'] == 'tracker' %}
+                                                          <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ meta['extracted_matches'][match]['id'] }}">{{ meta['extracted_matches'][match]['id'] }}</a>
+                                                      {% else %}
+                                                          {{ meta['extracted_matches'][match]['id'] }}
+                                                      {% endif %}
+                                                </td>
                                                 <td>
                                                     {% for row in meta['extracted_matches'][match]['matches'] %}
                                                         <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
