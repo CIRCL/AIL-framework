@@ -190,8 +190,9 @@ class Message(AbstractObject):
         nb_files = 0
         s_files = set()
         for file_name in file_names:
-            files[file_name] = []
             for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
+                if file_name not in files:
+                    files[file_name] = []
                 files[file_name].append(it[1:])
                 s_files.add(it[1:])
                 nb_files += 1
