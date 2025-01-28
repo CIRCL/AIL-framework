@@ -129,7 +129,25 @@
                 {% endif %}
             {%  endfor %}
         {% endif %}
-        {% if message['files-names'] %}
+        {% if message['files'] %}
+            {% for file_name in message['files'] %}
+                {% if message['files'][file_name] | length > 1 %}
+                    <div class="flex-shrink-1 bg-white border-primary text-secondary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                        <i class="far fa-file fa-3x"></i> {{ file_name }}
+                        {% for item in message['files'][file_name] %}
+                            <br>
+                            <a href="{{ url_for('objects_item.showItem') }}?id={{ item }}"><i class="far fa-file"></i> {{ loop.index }}</a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('objects_item.showItem') }}?id={{ message['files'][file_name][0] }}">
+                        <div class="flex-shrink-1 bg-white border-primary text-primary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                            <i class="far fa-file fa-3x"></i> {{ file_name }}
+                        </div>
+                    </a>
+                {% endif %}
+            {%  endfor %}
+        {% elif message['files-names'] %}
             {% for file_name in message['files-names'] %}
                 <div class="flex-shrink-1 bg-white border-primary text-secondary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
                     <i class="far fa-file fa-3x"></i> {{ file_name }}

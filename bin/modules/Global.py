@@ -126,7 +126,11 @@ class Global(AbstractModule):
                                 return self.obj.id
 
             else:
-                self.logger.info(f"Empty Item: {message} not processed")
+                if self.obj.exists():
+                    self.add_message_to_queue(obj=self.obj, queue='Item')
+                else:
+                    self.logger.info(f"Empty Item: {message} not processed")
+
         elif self.obj.type == 'message' or self.obj.type == 'ocr':
             # TODO send to specific object queue => image, ...
             self.add_message_to_queue(obj=self.obj, queue='Item')
@@ -217,8 +221,6 @@ class Global(AbstractModule):
                 gunzipped_bytes_obj = fo.read()
         except Exception as e:
             self.logger.warning(f'Global; Invalid Gzip file: {filename}, {e}')
-            print(f'Global; Invalid Gzip file: {filename}, {e}')
-
         return gunzipped_bytes_obj
 
     def rreplace(self, s, old, new, occurrence):

@@ -53,11 +53,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
-    "file-name": ["chat", "message"],
+    "file-name": ["chat", "item", "message"],
     "hhhash": ["domain"],
     "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "ocr", "pgp", "user-account"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "message", "pgp", "screenshot", "title", "username"],  # chat ???
+    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "item", "ocr", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
     "pgp": ["domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????

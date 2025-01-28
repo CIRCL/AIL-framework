@@ -105,10 +105,15 @@ class FeederImporter(AbstractImporter):
 
         objs_messages = []
         for obj in objs:
-            if obj.type == 'item':  # object save on disk as file (Items)
-                gzip64_content = feeder.get_gzip64_content()
-                relay_message = f'{feeder_name} {gzip64_content}'
-                objs_messages.append({'obj': obj, 'message': relay_message})
+            # Text created
+            if obj.type == 'item':
+                if obj.exists():
+                    objs_messages.append({'obj': obj, 'message': feeder_name})
+                # object save on disk as file (Items)
+                else:
+                    gzip64_content = feeder.get_gzip64_content()
+                    relay_message = f'{feeder_name} {gzip64_content}'
+                    objs_messages.append({'obj': obj, 'message': relay_message})
             elif obj.type == 'image':
                 date = feeder.get_date()
                 objs_messages.append({'obj': obj, 'message': f'{feeder_name} {date}'})

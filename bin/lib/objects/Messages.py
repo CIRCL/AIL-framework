@@ -180,6 +180,28 @@ class Message(AbstractObject):
                 names.append(name[1:])
         return names
 
+    def get_nb_files(self):
+        return self.get_nb_correlation('item')
+
+    def get_files(self, file_names=None):
+        if not file_names:
+            file_names = self.get_files_names()
+        files = {}
+        nb_files = 0
+        s_files = set()
+        for file_name in file_names:
+            files[file_name] = []
+            for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
+                files[file_name].append(it[1:])
+                s_files.add(it[1:])
+                nb_files += 1
+        if nb_files < self.get_nb_files():
+            files['undefined'] = []
+            for f in self.get_correlation('item').get('item'):
+                if f[1:] not in s_files:
+                    files['undefined'].append(f[1:])
+        return files
+
     def get_reactions(self):
         return r_object.hgetall(f'meta:reactions:{self.type}::{self.id}')
 
@@ -322,6 +344,9 @@ class Message(AbstractObject):
             meta['qrcodes'] = self.get_qrcodes()
         if 'files-names' in options:
             meta['files-names'] = self.get_files_names()
+        if 'files' in options:
+            if meta.get('files-names'):
+                meta['files'] = self.get_files(file_names=meta['files-names'])
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
         if 'language' in options:

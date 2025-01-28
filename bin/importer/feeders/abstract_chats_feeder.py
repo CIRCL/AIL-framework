@@ -19,10 +19,12 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from importer.feeders.Default import DefaultFeeder
+from lib.ail_core import get_chat_instance_name
 from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
 from lib.objects import Images
+from lib.objects import Items
 from lib.objects import Messages
 from lib.objects import FilesNames
 # from lib.objects import Files
@@ -87,6 +89,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
     def get_message_id(self):
         return self.json_data['meta']['id']
 
+    def get_media_id(self):
+        return self.json_data['meta'].get('media', {}).get('id')
+
     def get_media_name(self):
         return self.json_data['meta'].get('media', {}).get('name')
 
@@ -95,7 +100,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
     def get_date(self):
         if self.json_data['meta'].get('date'):
-            date = datetime.datetime.fromtimestamp( self.json_data['meta']['date']['timestamp'])
+            date = datetime.datetime.fromtimestamp(self.json_data['meta']['date']['timestamp'])
             date = date.strftime('%Y%m%d')
         else:
             date = datetime.date.today().strftime("%Y%m%d")
@@ -154,12 +159,15 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         # channel id
         # thread id
 
-        # TODO sanitize obj type
+        # TODO sanitize obj type ################### CHECK IF IS MESSAGE BY DEFAULT
         obj_type = self.get_obj_type()
-
         if obj_type == 'image':
             self.obj = Images.Image(self.json_data['data-sha256'])
-
+        elif obj_type == 'text':
+            d = self.get_date()
+            instance_name = get_chat_instance_name(self.get_chat_instance_uuid())
+            item_id = f'{instance_name}/{d[0:4]}/{d[4:6]}/{d[6:8]}/{self.json_data["data-sha256"]}.gz'
+            self.obj = Items.Item(item_id)
         else:
             obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, thread_id=thread_id)
             self.obj = Messages.Message(obj_id)
@@ -195,8 +203,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         return chat
 
-    ##############################################################################################################################
-
+    ###########################################################################################################
 
     def process_chat(self, new_objs, obj, date, timestamp, feeder_timestamp, reply_id=None):
         meta = self.json_data['meta']['chat'] # todo replace me by function
@@ -404,7 +411,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 obj.add_reaction(reaction['reaction'], int(reaction['count']))
         elif self.obj.type == 'chat':
             pass
-        else:
+        else:  # IMAGE + ITEM
             chat_id = self.get_chat_id()
             thread_id = self.get_thread_id()
             channel_id = self.get_subchannel_id()
@@ -416,18 +423,32 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                 message.create('')
                 objs.add(message)
 
-            if message.exists(): # TODO Correlation user-account image/filename ????
-                obj = Images.create(self.get_message_content())
-                obj.add(date, message)
-                obj.set_parent(obj_global_id=message.get_global_id())
-
-                # FILENAME
-                media_name = self.get_media_name()
-                if media_name:
-                    FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
-
+            if message.exists():
+                # REACTIONS
                 for reaction in self.get_reactions():
                     message.add_reaction(reaction['reaction'], int(reaction['count']))
+
+                if self.obj.type == 'image':
+                    obj = Images.create(self.get_message_content())
+                    obj.add(date, message)
+                    obj.set_parent(obj_global_id=message.get_global_id())
+
+                    # FILENAME
+                    media_name = self.get_media_name()
+                    if media_name:
+                        FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+
+                elif self.obj.type == 'item':
+                    obj = self.obj
+                    if not obj.exists():
+                        obj.create(self.get_message_content())
+                    obj.add_correlation('message', '', message.id)
+
+                    # FILENAME
+                    media_name = self.get_media_name()
+                    if media_name:
+                        file_name = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+                        file_name.add_correlation('item', '', obj.id)
 
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 
@@ -443,7 +464,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             user_account = self.process_sender(new_objs, obj, date, feeder_timestamp)
 
             if user_account:
-            # UserAccount---ChatObjects
+                # UserAccount---ChatObjects
                 for obj_chat in curr_chats_objs:
                     user_account.add_correlation(obj_chat.type, obj_chat.get_subtype(r_str=True), obj_chat.id)
 
@@ -523,6 +544,6 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                                 if chat_obj.type == 'chat':
                                     obj.add_relationship(chat_obj.get_global_id(), 'in')
 
-         # -MENTION- #
+        # -MENTION- #
 
         return new_objs | objs

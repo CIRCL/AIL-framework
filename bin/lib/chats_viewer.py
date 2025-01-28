@@ -344,7 +344,7 @@ def get_username_meta_from_global_id(username_global_id):
 ###############################################################################
 # TODO Pagination
 def list_messages_to_dict(l_messages_id, translation_target=None):
-    options = {'content', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
+    options = {'content', 'files', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
     meta = {}
     curr_date = None
     for mess_id in l_messages_id:
@@ -621,7 +621,7 @@ def _get_chat_card_meta_options():
     return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 
 def _get_message_bloc_meta_options():
-    return {'chat', 'content', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
+    return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
 
 def get_message_report(l_mess): # TODO Force language + translation
     translation_target = 'en'
@@ -900,7 +900,7 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
@@ -993,7 +993,7 @@ def api_chat_messages(subtype, chat_id):
     if meta['subchannels']:
         meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
     else:
-        options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+        options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
         meta['messages'], _, _ = chat.get_messages(nb=-1, options=options)
     return meta, 200
 
@@ -1009,7 +1009,7 @@ def api_subchannel_messages(subtype, subchannel_id):
         meta['threads'] = get_threads_metas(meta['threads'])
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-    options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
     meta['messages'], _, _ = subchannel.get_messages(nb=-1, options=options)
     return meta, 200
 
@@ -1018,7 +1018,7 @@ def api_thread_messages(subtype, thread_id):
     if not thread.exists():
         return {"status": "error", "reason": "Unknown thread"}, 404
     meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
-    options = {'content', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
+    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
     meta['messages'], _, _ = thread.get_messages(nb=-1, options=options)
     return meta, 200
 

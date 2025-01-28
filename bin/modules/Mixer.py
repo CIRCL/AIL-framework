@@ -102,7 +102,7 @@ class Mixer(AbstractModule):
         # feeder_name - object
         if len(splitted) == 1:  # feeder_name - object   (content already saved)
             feeder_name = message
-            gzip64encoded = None
+            gzip64encoded = ''
 
         # Feeder name in message: "feeder obj_id gzip64encoded"
         elif len(splitted) == 2:  # gzip64encoded content

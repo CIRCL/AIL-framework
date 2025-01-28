@@ -134,6 +134,14 @@ def unpack_correl_objs_id(obj_type, correl_objs_id, r_type='tuple'):
 
 ##-- AIL OBJECTS --##
 
+def get_chat_instance_name(chat_instance):
+    if chat_instance == '00098785-7e70-5d12-a120-c5cdc1252b2b':
+        return 'telegram'
+    elif chat_instance == 'd2426e3f-22f3-5a57-9a98-d2ae9794e683':
+        return 'discord'
+    else:
+        return chat_instance
+
 ####    Redis     ####
 
 def _parse_zscan(response):

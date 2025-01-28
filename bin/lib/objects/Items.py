@@ -59,6 +59,20 @@ class Item(AbstractObject):
         """
         return item_basic.get_item_date(self.id, add_separator=separator)
 
+    def get_link(self, flask_context=False):
+        if flask_context:
+            url = url_for('objects_item.showItem', id=self.id)
+        else:
+            url = f'{baseurl}/object/item?id={self.id}'
+        return url
+
+    def get_svg_icon(self):
+        if is_crawled(self.id):
+            color = 'red'
+        else:
+            color = '#332288'
+        return {'style': '', 'icon': '', 'color': color, 'radius': 5}
+
     def get_source(self):
         """
         Returns Item source/feeder name
@@ -149,18 +163,13 @@ class Item(AbstractObject):
         if len(basename) > 255:
             new_basename = f'{basename[:215]}{str(uuid4())}.gz'
             self.id = rreplace(self.id, basename, new_basename, 1)
-
-
-
-
-
         return self.id
 
     # # TODO: sanitize_id
     # # TODO: check if already exists ?
     # # TODO: check if duplicate
-    def save_on_disk(self, content, binary=True, compressed=False, b64=False):
-        if not binary:
+    def _save_on_disk(self, content, content_type='bytes', b64=False, compressed=False):
+        if not content_type == 'bytes':
             content = content.encode()
         if b64:
             content = base64.standard_b64decode(content)
@@ -181,22 +190,10 @@ class Item(AbstractObject):
     # tags
     # origin
     # duplicate -> all item iterations ???
+    # father
     #
-    def create(self, content, tags, father=None, duplicates=[], _save=True):
-        if _save:
-            self.save_on_disk(content, binary=True, compressed=False, base64=False)
-
-        # # TODO:
-        # for tag in tags:
-        #     self.add_tag(tag)
-
-        if father:
-            pass
-
-        for obj_id in duplicates:
-            for dup in duplicates[obj_id]:
-                self.add_duplicate(obj_id, dup['algo'], dup['similarity'])
-
+    def create(self, content, content_type='bytes', b64=False, compressed=False):
+        self._save_on_disk(content, content_type=content_type, b64=b64, compressed=compressed)
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     # TODO: DELETE ITEM CORRELATION + TAGS + METADATA + ...
@@ -210,20 +207,6 @@ class Item(AbstractObject):
 
 ####################################################################################
 ####################################################################################
-
-    def get_link(self, flask_context=False):
-        if flask_context:
-            url = url_for('objects_item.showItem', id=self.id)
-        else:
-            url = f'{baseurl}/object/item?id={self.id}'
-        return url
-
-    def get_svg_icon(self):
-        if is_crawled(self.id):
-            color = 'red'
-        else:
-            color = '#332288'
-        return {'style': '', 'icon': '', 'color': color, 'radius': 5}
 
     def get_misp_object(self):
         obj = MISPObject('ail-leak', standalone=True)
@@ -241,9 +224,6 @@ class Item(AbstractObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
-
-    def exist_correlation(self):
-        pass
 
     def is_crawled(self):
         return self.id.startswith('crawled')
