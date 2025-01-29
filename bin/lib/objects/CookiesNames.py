@@ -119,7 +119,7 @@ class CookiesNames(AbstractDaterangeObjects):
         if flask_context:
             url = url_for('objects_cookie_name.objects_cookies_names')
         else:
-            url = f'{baseurl}/objects/cookie-name'
+            url = f'{baseurl}/objects/cookie-names'
         return url
 
     def sanitize_id_to_search(self, name_to_search):

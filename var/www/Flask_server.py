@@ -60,6 +60,7 @@ from blueprints.objects_ocr import objects_ocr
 from blueprints.objects_barcode import objects_barcode
 from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
+from blueprints.objects_file_name import objects_file_name
 from blueprints.api_rest import api_rest
 
 
@@ -148,6 +149,7 @@ app.register_blueprint(objects_ocr, url_prefix=baseUrl)
 app.register_blueprint(objects_barcode, url_prefix=baseUrl)
 app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
+app.register_blueprint(objects_file_name, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 
 # =========       =========#
