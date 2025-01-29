@@ -26,6 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_logger
+from lib import ail_users
 from exporter.abstract_exporter import AbstractExporter
 from lib.ConfigLoader import ConfigLoader
 # from lib.objects.abstract_object import AbstractObject
@@ -133,7 +134,7 @@ class MailExporterTracker(MailExporter):
 
         subject = f'AIL Framework Tracker: {description}'
         body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
-        body += f'Item: {obj.id}\nurl:{obj.get_link()}'
+        body += f'Object {obj.type}: {obj.id}\n'
 
         if matches:
             body += '\n'
@@ -141,10 +142,9 @@ class MailExporterTracker(MailExporter):
             for match in matches:
                 body += f'\nMatch {nb}: {match[0]}\nExtract:\n{match[1]}\n\n'
                 nb += 1
-        else:
-            body = f"AIL Framework, New occurrence for {tracker_type} tracker: {tracker_name}\n"
-            body += f'Item: {obj.id}\nurl:{obj.get_link()}'
 
-        # print(body)
+        ail_link = f'AIL url:{obj.get_link()}/n/n'
         for mail in tracker.get_mails():
+            if ail_users.exists_user(mail):
+                body = ail_link + body
             self._export(mail, subject, body)
