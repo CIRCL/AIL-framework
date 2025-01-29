@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import logging
 import os
 import sys
 import gzip
@@ -14,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib import Tag
 
+logger = logging.getLogger()
 
 config_loader = ConfigLoader.ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -73,11 +75,20 @@ def get_item_content(item_id):
     if item_content is None:
         try:
             with gzip.open(item_full_path, 'r') as f:
-                item_content = f.read().decode()
+                item_content = f.read()
+                try:
+                    item_content = item_content.decode()
+                except UnicodeDecodeError:
+                    item_content = str(item_content)
+                    if len(item_content) > 2:
+                        item_content = item_content[2:-1]
+                        item_content = item_content.replace(r'\r\n', '\r\n')
+                    item_content = item_content.replace(r'\n', '\n')
                 r_cache.set(item_full_path, item_content)
                 r_cache.expire(item_full_path, 300)
         except Exception as e:
             print(e)
+            logger.error(f'{e}: item {item_id}')
             item_content = ''
     return str(item_content)
 
