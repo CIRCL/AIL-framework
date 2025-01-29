@@ -109,6 +109,12 @@ class AbstractObject(ABC):
             tags = list(tags)
         return tags
 
+    def get_obj_tags(self, obj_type, subtype, obj_id, r_list=False):
+        tags = Tag.get_object_tags(obj_type, obj_id, subtype)
+        if r_list:
+            tags = list(tags)
+        return tags
+
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
 

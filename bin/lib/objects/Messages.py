@@ -193,14 +193,14 @@ class Message(AbstractObject):
             for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
                 if file_name not in files:
                     files[file_name] = []
-                files[file_name].append(it[1:])
+                files[file_name].append({'obj': it[1:], 'tags': self.get_obj_tags('item', '', it[1:])})
                 s_files.add(it[1:])
                 nb_files += 1
         if nb_files < self.get_nb_files():
             files['undefined'] = []
             for f in self.get_correlation('item').get('item'):
                 if f[1:] not in s_files:
-                    files['undefined'].append(f[1:])
+                    files['undefined'].append({'obj': f[1:], 'tags': self.get_obj_tags('item', '', f[1:])})
         return files
 
     def get_reactions(self):

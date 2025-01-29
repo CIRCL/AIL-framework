@@ -134,15 +134,29 @@
                 {% if message['files'][file_name] | length > 1 %}
                     <div class="flex-shrink-1 bg-white border-primary text-secondary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
                         <i class="far fa-file fa-3x"></i> {{ file_name }}
-                        {% for item in message['files'][file_name] %}
+                        {% for obj in message['files'][file_name] %}
                             <br>
-                            <a href="{{ url_for('objects_item.showItem') }}?id={{ item }}"><i class="far fa-file"></i> {{ loop.index }}</a>
+                            <a href="{{ url_for('objects_item.showItem') }}?id={{ obj['obj'] }}"><i class="far fa-file"></i> {{ loop.index }}</a>
+                            {% if obj['tags'] %}
+                                <div>
+                                    {% for tag in obj['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {%  endfor %}
+                                </div>
+                            {%  endif %}
                         {% endfor %}
                     </div>
                 {% else %}
-                    <a href="{{ url_for('objects_item.showItem') }}?id={{ message['files'][file_name][0] }}">
+                    <a href="{{ url_for('objects_item.showItem') }}?id={{ message['files'][file_name][0]['obj'] }}">
                         <div class="flex-shrink-1 bg-white border-primary text-primary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
                             <i class="far fa-file fa-3x"></i> {{ file_name }}
+                            {% if message['files'][file_name][0]['tags'] %}
+                                <div>
+                                    {% for tag in message['files'][file_name][0]['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {%  endfor %}
+                                </div>
+                            {%  endif %}
                         </div>
                     </a>
                 {% endif %}
