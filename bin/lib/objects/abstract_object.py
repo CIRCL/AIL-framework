@@ -9,6 +9,7 @@ Base Class for AIL Objects
 import os
 import logging.config
 import sys
+import uuid
 from abc import ABC, abstractmethod
 from pymisp import MISPObject
 
@@ -71,7 +72,7 @@ class AbstractObject(ABC):
     def get_last_full_date(self):
         return None
 
-    def get_default_meta(self, tags=False, link=False):
+    def get_default_meta(self, tags=False, link=False, options=set()):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
                      'subtype': self.get_subtype(r_str=True)}
@@ -79,6 +80,8 @@ class AbstractObject(ABC):
             dict_meta['tags'] = self.get_tags(r_list=True)
         if link:
             dict_meta['link'] = self.get_link()
+        if 'uuid' in options:
+            dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
         return dict_meta
 
     def _get_field(self, field):

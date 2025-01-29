@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_core
 from lib.objects import FilesNames
 from packages import Date
 
@@ -42,7 +43,6 @@ def objects_files_names():
 
     if show_objects:
         dict_objects = FilesNames.FilesNames().api_get_meta_by_daterange(date_from, date_to)
-        print(dict_objects)
     else:
         dict_objects = {}
 
@@ -69,19 +69,50 @@ def objects_file_name_range_json():
     date_to = date['date_to']
     return jsonify(FilesNames.FilesNames().api_get_chart_nb_by_daterange(date_from, date_to))
 
-# @objects_file_name.route("/objects/file-nam/search", methods=['POST'])
-# @login_required
-# @login_read_only
-# def objects_files_names_search():
-#     to_search = request.form.get('object_id')
-#
-#     # TODO SANITIZE ID
-#     # TODO Search all
-#     cve = Cves.Cve(to_search)
-#     if not cve.exists():
-#         abort(404)
-#     else:
-#         return redirect(cve.get_link(flask_context=True))
+@objects_file_name.route("/objects/file-nam/search", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def objects_files_names_search():
+    if request.method == 'POST':
+        to_search = request.form.get('to_search')
+        case_sensitive = bool(request.form.get('case_sensitive'))
+        if case_sensitive:
+            case_sensitive = 1
+        else:
+            case_sensitive = 0
+        page = request.form.get('page', 1)
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+        return redirect(url_for('objects_file_name.objects_files_names_search', search=to_search, page=page, case_sensitive=case_sensitive))
+    else:
+        to_search = request.args.get('search')
+        page = request.args.get('page', 1)
+        case_sensitive = request.args.get('case_sensitive', False)
+        if case_sensitive and case_sensitive != '0':
+            case_sensitive = True
+        else:
+            case_sensitive = False
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+
+        filenames = FilesNames.FilesNames()
+        search_result = filenames.search_by_id(to_search, page, case_sensitive=case_sensitive)
+
+        if search_result:
+            ids = sorted(search_result.keys())
+            dict_page = ail_core.paginate_iterator(ids, nb_obj=500, page=page)
+            dict_objects = filenames.get_metas(dict_page['list_elem'], options={'icon', 'sparkline', 'uuid'})
+        else:
+            dict_objects = {}
+            dict_page = {}
+
+        return render_template("file-name/search_file_name_result.html", dict_objects=dict_objects, search_result=search_result,
+                               dict_page=dict_page, case_sensitive=case_sensitive,
+                               to_search=to_search)
 
 # ============= ROUTES ==============
 

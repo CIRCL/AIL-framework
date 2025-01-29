@@ -1,0 +1,16 @@
+<div class="card border-secondary my-2">
+    <div class="card-body text-dark">
+        <h5 class="card-title">File Names Search:</h5>
+        <form action="{{ url_for('objects_file_name.objects_files_names_search') }}" id="search_subtype_onj" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="File Name to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="custom-control custom-switch mt-1">
+                <input class="custom-control-input" type="checkbox" name="case_sensitive" id="case_sensitive" {% if case_sensitive %}value="True" checked{% else %}value="False"{% endif %}>
+                <label class="custom-control-label" for="case_sensitive">Case Sensitive</label>
+            </div>
+        </form>
+    </div>
+</div>

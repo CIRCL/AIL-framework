@@ -82,7 +82,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             return int(nb)
 
     def _get_meta(self, options=[]):
-        meta_dict = self.get_default_meta()
+        meta_dict = self.get_default_meta(options=options)
         meta_dict['first_seen'] = self.get_first_seen()
         meta_dict['last_seen'] = self.get_last_seen()
         meta_dict['nb_seen'] = self.get_nb_seen()
@@ -311,4 +311,4 @@ class AbstractDaterangeObjects(ABC):
 
     def api_get_meta_by_daterange(self, date_from, date_to):
         date = Date.sanitise_date_range(date_from, date_to)
-        return self.get_metas(self.get_by_daterange(date['date_from'], date['date_to']), options={'sparkline'})
+        return self.get_metas(self.get_by_daterange(date['date_from'], date['date_to']), options={'sparkline', 'uuid'})

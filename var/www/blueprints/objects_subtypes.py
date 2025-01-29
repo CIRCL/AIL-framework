@@ -125,15 +125,25 @@ def objects_username_search():
     if request.method == 'POST':
         to_search = request.form.get('to_search')
         subtype = request.form.get('search_subtype')
+        case_sensitive = bool(request.form.get('case_sensitive'))
+        if case_sensitive:
+            case_sensitive = 1
+        else:
+            case_sensitive = 0
         page = request.form.get('page', 1)
         try:
             page = int(page)
         except (TypeError, ValueError):
             page = 1
-        return redirect(url_for('objects_subtypes.objects_username_search', search=to_search, page=page, subtype=subtype))
+        return redirect(url_for('objects_subtypes.objects_username_search', search=to_search, page=page, subtype=subtype, case_sensitive=case_sensitive))
     else:
         to_search = request.args.get('search')
         subtype = request.args.get('subtype')  # TODO sanityze
+        case_sensitive = request.args.get('case_sensitive', False)
+        if case_sensitive and case_sensitive != '0':
+            case_sensitive = True
+        else:
+            case_sensitive = False
         page = request.args.get('page', 1)
         try:
             page = int(page)
@@ -141,7 +151,7 @@ def objects_username_search():
             page = 1
 
         usernames = Usernames.Usernames()
-        search_result = usernames.search_by_id(to_search, [subtype], page)
+        search_result = usernames.search_by_id(to_search, [subtype], page, case_sensitive=case_sensitive)
 
         if search_result:
             ids = sorted(search_result.keys())
@@ -153,7 +163,7 @@ def objects_username_search():
 
         return render_template("username/search_usernames_result.html", dict_objects=dict_objects, search_result=search_result,
                                dict_page=dict_page, subtypes=ail_core.get_object_all_subtypes('username'),
-                               to_search=to_search, subtype=subtype)
+                               to_search=to_search, subtype=subtype, case_sensitive=case_sensitive)
 
 @objects_subtypes.route("/objects/user-accounts", methods=['GET'])
 @login_required

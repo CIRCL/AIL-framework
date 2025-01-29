@@ -75,7 +75,7 @@
 					<div class="col-xl-10">
 						<div class="mt-1" id="barchart_type"></div>
 
-{#                        {% include 'file-name/block_file_name_search.html' %}#}
+                        {% include 'file-name/block_file_name_search.html' %}
 
                     </div>
 
@@ -139,7 +139,7 @@
                                 <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
                                 <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
                                 <td>{{ dict_objects[obj_id]['nb_seen'] }}</td>
-                                <td id="sparklines_{{ obj_id | replace(".", "_point_") }}" style="text-align:center;"></td>
+                                <td id="sparklines_{{ dict_objects[obj_id]['uuid'] }}" style="text-align:center;"></td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -233,7 +233,7 @@ function toggle_sidebar(){
 
 <script>
 	{% for obj_id in dict_objects %}
-    sparkline("sparklines_{{ obj_id | replace(".", "_point_") }}", {{ dict_objects[obj_id]['sparkline'] }}, {});
+    sparkline("sparklines_{{ dict_objects[obj_id]['uuid'] }}", {{ dict_objects[obj_id]['sparkline'] }}, {});
 	{% endfor %}
 </script>
 
