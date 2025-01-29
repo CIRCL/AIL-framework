@@ -499,9 +499,14 @@
                                   {% endif %}
                               </td>
                               <td>
-                                  {% for row in extracted_matches[match]['matches'] %}
-                                      <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
-                                  {% endfor %}
+                                  <button class="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target="#collapseextracted{{ loop.index }}">
+                                      <i class="fa-solid fa-caret-up"></i>
+                                  </button>
+                                  <div class="collapse show" id="collapseextracted{{ loop.index }}">
+                                      {% for row in extracted_matches[match]['matches'] %}
+                                          <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
+                                      {% endfor %}
+                                  </div>
                               </td>
                           </tr>
                       {% endfor %}
@@ -515,7 +520,23 @@
   {% endif %}
 
 
-  <!-- nav-pills nav-justified nav-tabs-->
+
+
+
+
+  <!-- Message and Filename -->
+{% if meta['file_name'] %}
+    <div class="position-relative">
+        <div class="chat-messages p-2">
+            {% with message=message %}
+                {% include 'chats_explorer/block_message.html' %}
+            {% endwith %}
+        </div>
+    </div>
+{% endif %}
+
+
+
 
   <div class="card">
     <div class="card-body pt-0 py-1 px-2">

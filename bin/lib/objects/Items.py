@@ -149,6 +149,16 @@ class Item(AbstractObject):
         r_object.sadd(f'child:item::{self.id}', child_id)
         r_object.hset(f'meta:item::{child_id}', 'parent', self.id)
 
+    def get_file_name(self):
+        filename = self.get_correlation('file-name').get('file-name')
+        if filename:
+            return filename.pop()[1:]
+
+    def get_message(self):
+        filename = self.get_correlation('message').get('message')
+        if filename:
+            return filename.pop()[1:]
+
 ####################################################################################
 ####################################################################################
 
@@ -271,6 +281,8 @@ class Item(AbstractObject):
                 meta['crawler'] = self.get_meta_crawler(tags=tags)
         if 'duplicates' in options:
             meta['duplicates'] = self.get_duplicates()
+        if 'file_name' in options:
+            meta['file_name'] = self.get_file_name()
         if 'lines' in options:
             content = meta.get('content')
             meta['lines'] = self.get_meta_lines(content=content)

@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ConfigLoader
+from lib import chats_viewer
 from lib import item_basic
 from lib.objects.Items import Item
 from lib.objects.Screenshots import Screenshot
@@ -68,7 +69,15 @@ def showItem():  # # TODO: support post
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'investigations', 'lines', 'size'})
+    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    if meta['file_name']:
+        message = chats_viewer.api_get_message(item.get_message())
+        if message[1] == 200:
+            message = message[0]
+        else:
+            message = None
+    else:
+        message = None
 
     meta['name'] = meta['id'].replace('/', ' / ')
     meta['father'] = item_basic.get_item_parent(item_id)
@@ -95,7 +104,7 @@ def showItem():  # # TODO: support post
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                            is_hive_connected=False,
-                           meta=meta,
+                           meta=meta, message=message,
                            extracted=extracted, extracted_matches=extracted_matches)
 
     # kvrocks data
