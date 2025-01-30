@@ -35,6 +35,19 @@ def auto_update_enabled(cfg):
     else:
         return False
 
+def update_submodule():
+    process = subprocess.run(['git', 'submodule', 'update'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if process.returncode == 0:
+        res = process.stdout.decode()
+        print(res)
+        print(f'{TERMINAL_YELLOW}Submodules Updated{TERMINAL_DEFAULT}')
+        print()
+    else:
+        print('Error updating submodules:')
+        print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
+        print()
+
+
 # check if files are modify locally
 def check_if_files_modified():
     # return True
@@ -448,6 +461,7 @@ if __name__ == "__main__":
     manual_update = args.manual
 
     if auto_update_enabled(cfg) or manual_update:
+        update_submodule()
         if check_if_files_modified():
             is_fork = repo_is_fork()
             if is_fork:
