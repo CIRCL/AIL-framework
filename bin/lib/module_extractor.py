@@ -41,12 +41,12 @@ r_key = regex_helper.generate_redis_cache_key('extractor')
 
 
 # SIGNAL ALARM
-import signal
-def timeout_handler(signum, frame):
-    raise TimeoutException
-
-
-signal.signal(signal.SIGALRM, timeout_handler)
+# import signal
+# def timeout_handler(signum, frame):
+#     raise TimeoutException
+#
+#
+# signal.signal(signal.SIGALRM, timeout_handler)
 
 # TODO UI Link
 
@@ -244,7 +244,7 @@ def extract(user_id, obj_type, subtype, obj_id, content=None):
         r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)
         return json.loads(cached)
 
-    signal.alarm(60)
+    # signal.alarm(60)
     try:
         if not content:
             content = obj.get_content()
@@ -275,8 +275,8 @@ def extract(user_id, obj_type, subtype, obj_id, content=None):
             r_cache.expire(f'extractor:cache:{obj_gid}:{user_org}:{user_id}', 300)  # TODO Reduce CACHE ???????????????
     except TimeoutException:
         extracted = []
-    else:
-        signal.alarm(0)
+    # finally:
+    #     signal.alarm(0)
 
     return extracted
 
