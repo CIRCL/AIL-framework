@@ -330,7 +330,7 @@ for elem in sys.stdin:
 | **Submit texts or images**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
 | **Tag objects**                                    | ❌                | ✔ (UI only)       | ✔                | ✔                 |
 | **Submit an URL to crawl**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
-| **Create a crawler scheduler**                     | ❌                | ❌                | ❌               | ✔                 |
+| **Create a crawler scheduler**                     | ❌                | ❌                | ✔               | ✔                 |
 | **Create a tracker**                               | ❌                | Own only (UI)      | Own & Organization | Full              |
 | **Edit or delete a tracker**                       | ❌                | Own only (UI)      | Own               | Full              |
 | **Create an investigation**                        | ❌                | Own only (UI)      | Own & Organization | Full              |
