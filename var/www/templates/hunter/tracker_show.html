@@ -443,15 +443,17 @@
 
     // Hover effect
     var btn_read_more = $('#btn_read_more')
-    var textElement = document.querySelectorAll(".text-collapse")[0];
+    var textElement = document.querySelector(".text-collapse");
     const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
     var maxLines = 30;
     const maxHeight = lineHeight * maxLines;
-    
-    if (textElement.getBoundingClientRect().height < maxHeight) {
+
+    /*console.log(textElement.offsetHeight)
+    console.log(maxHeight)
+    if (textElement.offsetHeight > maxHeight) {
         textElement.style.maxHeight = '100%'
         btn_read_more.hide();
-    } else {
+    } else {*/
         // Apply initial truncation
         textElement.style.maxHeight = maxHeight + 'px';
         btn_read_more.on("click", function() {
@@ -463,7 +465,7 @@
                 btn_read_more.text("Show more");
             }
         });
-    }
+    //}
 
     function edit_tags() {
         $('#div_edit_mails').hide();
