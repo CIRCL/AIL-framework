@@ -299,9 +299,9 @@ def create_user_post():
                     if ail_users.check_password_strength(password1):
                         password = password1
                     else:
-                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password", acl_admin=True)
+                        return render_template("create_user.html", all_roles=all_roles, error="Incorrect Password", acl_admin=True, meta={})
                 else:
-                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match", acl_admin=True)
+                    return render_template("create_user.html", all_roles=all_roles, error="Passwords don't match", acl_admin=True, meta={})
             # generate password
             else:
                 password = ail_users.gen_password()
