@@ -447,12 +447,13 @@
     const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
     var maxLines = 30;
     const maxHeight = lineHeight * maxLines;
-
-    // Apply initial truncation
-    textElement.style.maxHeight = maxHeight + 'px';
+    
     if (textElement.getBoundingClientRect().height < maxHeight) {
+        textElement.style.maxHeight = '100%'
         btn_read_more.hide();
     } else {
+        // Apply initial truncation
+        textElement.style.maxHeight = maxHeight + 'px';
         btn_read_more.on("click", function() {
             if (btn_read_more.text() === "Show more") {
                 textElement.style.maxHeight = 'none';
