@@ -323,6 +323,27 @@ for elem in sys.stdin:
     pyail.feed_json_item(content , meta, feeder_name, feeder_uuid)
 ```
 
+# AIL ROLES
+
+| **Functionality**                                  | **Read-Only**    | **No-API User**    | **User**         | **Administrator** |
+|----------------------------------------------------|------------------|--------------------|------------------|-------------------|
+| **Submit texts or images**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
+| **Tag objects**                                    | ❌                | ✔ (UI only)       | ✔                | ✔                 |
+| **Submit an URL to crawl**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
+| **Create a crawler scheduler**                     | ❌                | ❌                | ❌               | ✔                 |
+| **Create a tracker**                               | ❌                | Own only (UI)      | Own & Organization | Full              |
+| **Edit or delete a tracker**                       | ❌                | Own only (UI)      | Own               | Full              |
+| **Create an investigation**                        | ❌                | Own only (UI)      | Own & Organization | Full              |
+| **Add objects to organization's investigation**    | ❌                | ❌                 | ✔                | ✔                 |
+| **Edit organization's investigation**              | ❌                | ❌                 | ❌               | ✔                 |
+| **Delete organization's investigation**            | ❌                | ❌                 | ❌               | ✔                 |
+| **Export objects or investigations**               | ❌                | Own only (UI)      | Own & Organization | Full              |
+| **View objects, investigations, trackers**         | ✔                | ✔                 | ✔                | ✔                 |
+| **Complex Search**                                 | ❌                | ❌                 | ✔                | ✔                 |
+| **Retro Hunt**                                     | ❌                | ❌                 | ✔                | ✔                 |
+| **Access API**                                     | ❌                | ❌                 | ✔                | ✔                 |
+| **Manage users and roles**                         | ❌                | ❌                 | ❌               | ✔                 |
+
 # AIL SYNC
 
 The synchronisation mechanism allow the sync from one AIL instance to another AIL using a standard WebSocket 
