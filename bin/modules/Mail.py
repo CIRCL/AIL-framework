@@ -117,7 +117,7 @@ class Mail(AbstractModule):
                     print(e)
         return valid_mxdomain
 
-    def extract(self, obj, content, tag):
+    def extract(self, obj, content, tag, check_mx_record=False):
         extracted = []
         mxdomains = {}
         mails = self.regex_finditer(self.email_regex, obj.get_global_id(), content)
@@ -127,9 +127,14 @@ class Mail(AbstractModule):
             if mxdomain not in mxdomains:
                 mxdomains[mxdomain] = []
             mxdomains[mxdomain].append(mail)
-        for mx in self.check_mx_record(mxdomains.keys()):
-            for row in mxdomains[mx]:
-                extracted.append([row[0], row[1], row[2], f'tag:{tag}'])
+        if check_mx_record:
+            for mx in self.check_mx_record(mxdomains.keys()):
+                for row in mxdomains[mx]:
+                    extracted.append([row[0], row[1], row[2], f'tag:{tag}'])
+        else:
+            for mx in mxdomains:
+                for row in mxdomains[mx]:
+                    extracted.append([row[0], row[1], row[2], f'tag:{tag}'])
         return extracted
 
     # # TODO: sanitize mails
