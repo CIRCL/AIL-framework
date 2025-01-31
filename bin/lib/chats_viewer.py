@@ -455,7 +455,7 @@ def get_chat_object_messages_meta(c_messages):
                 for q in meta['barcodes']:
                     obj = Barcode(q)
                     barcodes.append({'id': obj.id, 'content': obj.get_content(), 'tags': obj.get_tags()})
-                meta['qrcodes'] = barcodes
+                meta['barcodes'] = barcodes
             if meta['qrcodes']:
                 qrcodes = []
                 for q in meta['qrcodes']:
