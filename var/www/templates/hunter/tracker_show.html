@@ -220,7 +220,10 @@
                     {% if rule_content %}
                         <h5 class="mb-0">Yara Rule:</h5>
                         <p class="my-0">
-                            <pre class="text-collapse border bg-light">{{ rule_content }}</pre>
+                            <pre class="text-collapse border bg-light mb-0">
+                                {{ rule_content }}
+                            </pre>
+                            <button class="btn btn-info btn-sm" id="btn_read_more">Show more</button>
                         </p>
                     {% endif %}
 
@@ -380,7 +383,6 @@
         $('#div_edit_tags').hide();
         $('#div_edit_description').hide();
         $("#page-Tracker").addClass("active");
-        text_collapse();
 
         $('#date-range-from').dateRangePicker({
             separator: ' to ',
@@ -439,26 +441,26 @@
         }
     }
 
-    function text_collapse() {
-        const textElements = document.querySelectorAll(".text-collapse");
+    // Hover effect
+    var btn_read_more = $('#btn_read_more')
+    var textElement = document.querySelectorAll(".text-collapse")[0];
+    const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
+    var maxLines = 30;
+    const maxHeight = lineHeight * maxLines;
 
-        textElements.forEach((textElement) => {
-            console.log(textElements)
-            const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
-            const maxLines = 30;
-            const maxHeight = lineHeight * maxLines;
-
-            // Apply initial truncation
-            textElement.style.maxHeight = maxHeight + 'px';
-
-            // Hover effect
-            textElement.addEventListener("mouseenter", () => {
+    // Apply initial truncation
+    textElement.style.maxHeight = maxHeight + 'px';
+    if (textElement.getBoundingClientRect().height < maxHeight) {
+        btn_read_more.hide();
+    } else {
+        btn_read_more.on("click", function() {
+            if (btn_read_more.text() === "Show more") {
                 textElement.style.maxHeight = 'none';
-            });
-
-            textElement.addEventListener("mouseleave", () => {
+                btn_read_more.text("Show less");
+            } else {
                 textElement.style.maxHeight = maxHeight + 'px';
-            });
+                btn_read_more.text("Show more");
+            }
         });
     }
 
