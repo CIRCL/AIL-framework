@@ -243,7 +243,7 @@
                             </p>
                             {% if is_onion_filter_enabled %}
                                 <a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=disable">
-                                    <button class="btn btn-danger mx-4 my-2">
+                                    <button class="btn btn-danger my-2">
                                         <i class="fa-solid fa-xmark"></i> Disable Onion Filter
                                     </button>
                                 </a>
@@ -254,6 +254,34 @@
                                     </button>
                                 </a>
                             {% endif %}
+
+                            <hr class="border-1 my-4">
+
+                            <h5 class="card-title">
+                                Crawl Unknown Onion: &nbsp;&nbsp;<b class="text-primary"><span class="text-{% if is_onion_filter_unknown %}success{% else %}secondary{% endif %}">{% if is_onion_filter_unknown %}Enabled{% else %}Disabled{% endif %}</span></b>
+                            </h5>
+                            <p>This option controls whether the crawler should proceed with crawling onion domains that have <strong>not yet been classified</strong> as safe or unsafe.</p>
+
+                            <ul>
+                                <li><strong>If disabled:</strong> The crawler will process domains that have never been checked, potentially discovering new useful content but also increasing the risk of encountering unsafe materials.</li>
+                                <li><strong>If enabled:</strong> The crawler will only process domains that have been explicitly identified as safe, reducing risk but potentially missing new, unclassified domains.</li>
+                            </ul>
+
+                            <p>This option is useful for users who want to explore uncharted domains while still benefiting from the <code>filter_unsafe_onion</code> protection. However, enabling this option increases the likelihood of encountering harmful content, so caution is advised.</p>
+                            {% if is_onion_filter_unknown %}
+                                <a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=disable">
+                                    <button class="btn btn-secondary my-2">
+                                        <i class="fa-solid fa-xmark"></i> Disable Unknown Onion Filter
+                                    </button>
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=enable">
+                                    <button class="btn btn-info my-2">
+                                        <i class="fa-solid fa-check"></i> Enable Unknown Onion Filter
+                                    </button>
+                                </a>
+                            {% endif %}
+
                         </div>
                     </div>
 

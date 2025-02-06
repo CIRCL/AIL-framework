@@ -997,6 +997,7 @@ def crawler_settings():
     crawler_error_mess = crawlers.get_test_ail_crawlers_message()
 
     is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
+    is_onion_filter_unknown = crawlers.is_onion_filter_unknown(cache=False)
 
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
@@ -1011,6 +1012,7 @@ def crawler_settings():
                            is_crawler_working=is_crawler_working,
                            crawler_error_mess=crawler_error_mess,
                            is_onion_filter_enabled=is_onion_filter_enabled,
+                           is_onion_filter_unknown=is_onion_filter_unknown
                            )
 
 
@@ -1066,8 +1068,19 @@ def crawler_filter_unsafe_onion():
         filter_unsafe_onion = True
     else:
         filter_unsafe_onion = False
-    print(filter_unsafe_onion)
     crawlers.change_onion_filter_state(filter_unsafe_onion)
+    return redirect(url_for('crawler_splash.crawler_settings'))
+
+@crawler_splash.route('/crawler/settings/crawler/filter_unknown_onion', methods=['GET'])
+@login_required
+@login_admin
+def crawler_filter_unknown_onion():
+    filter_unknown_onion = request.args.get('state')
+    if filter_unknown_onion == 'enable':
+        filter_unknown_onion = True
+    else:
+        filter_unknown_onion = False
+    crawlers.change_onion_filter_unknown_state(filter_unknown_onion)
     return redirect(url_for('crawler_splash.crawler_settings'))
 
 

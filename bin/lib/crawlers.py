@@ -2296,7 +2296,7 @@ def _onion_lookup(onion_url):
         return {'error': f'Timeout Error'}
 
 
-def check_if_onion_is_safe(onion_url):
+def check_if_onion_is_safe(onion_url, unknown):
     resp = _onion_lookup(onion_url)
     if resp:
         if isinstance(resp, dict):
@@ -2305,6 +2305,11 @@ def check_if_onion_is_safe(onion_url):
             elif 'error' in resp:
                 if resp['error']:
                     raise OnionFilteringError(resp['error'])
+        elif not unknown:
+            if isinstance(resp, list):
+                if len(resp) > 1:
+                    if resp[1] == 404:
+                        return True
     return False
 
 
@@ -2345,6 +2350,40 @@ def change_onion_filter_state(new_state):
     if old_state != new_state:
         r_crawler.hset('crawler:onion_filter', 'enabled', str(new_state))
         r_cache.set('crawler:onion_filter:state', str(new_state))
+        update_time = time.time()
+        r_crawler.hset('crawler:onion_filter', 'update_time', update_time)
+        r_cache.set('crawler:onion_filter:last_update_time', update_time)
+        return True
+    return False
+
+# # Crawl Unknown Onion # #
+def _is_onion_filter_unknown():
+    unknown = r_crawler.hget('crawler:onion_filter', 'unknown')
+    if unknown is None:
+        r_crawler.hset('crawler:onion_filter', 'unknown', str(False))
+        filter_enabled = False
+    else:
+        filter_enabled = unknown == 'True'
+    r_cache.set('crawler:onion_filter:unknown', str(filter_enabled))
+    return filter_enabled
+
+def is_onion_filter_unknown(cache=True):
+    if cache:
+        res = r_cache.get('crawler:onion_filter:unknown')
+        if res is None:
+            unknown = _is_onion_filter_unknown()
+            r_cache.set('crawler:onion_filter:unknown', str(unknown))
+            return unknown
+        else:
+            return res == 'True'
+    else:
+        return _is_onion_filter_unknown()
+
+def change_onion_filter_unknown_state(new_state):
+    old_state = is_onion_filter_unknown(cache=False)
+    if old_state != new_state:
+        r_crawler.hset('crawler:onion_filter', 'unknown', str(new_state))
+        r_cache.set('crawler:onion_filter:unknown', str(new_state))
         update_time = time.time()
         r_crawler.hset('crawler:onion_filter', 'update_time', update_time)
         r_cache.set('crawler:onion_filter:last_update_time', update_time)

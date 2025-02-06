@@ -58,6 +58,7 @@ class Crawler(AbstractModule):
         config_loader = ConfigLoader()
 
         self.filter_unsafe_onion = crawlers.is_onion_filter_enabled(cache=False)
+        self.filter_unknown_onion = crawlers.is_onion_filter_unknown(cache=False)
         self.last_config_check = int(time.time())
 
         self.default_har = config_loader.get_config_boolean('Crawler', 'default_har')
@@ -145,6 +146,7 @@ class Crawler(AbstractModule):
         # Refresh Config
         if int(time.time()) - self.last_config_check > 60:
             self.filter_unsafe_onion = crawlers.is_onion_filter_enabled()
+            self.filter_unknown_onion = crawlers.is_onion_filter_unknown()
             self.last_config_check = int(time.time())
 
         # Check if a new Capture can be Launched
@@ -156,7 +158,7 @@ class Crawler(AbstractModule):
                 if self.filter_unsafe_onion:
                     if domain.endswith('.onion'):
                         try:
-                            if not crawlers.check_if_onion_is_safe(domain):
+                            if not crawlers.check_if_onion_is_safe(domain, unknown=self.filter_unknown_onion):
                                 # print('---------------------------------------------------------')
                                 # print('DOMAIN FILTERED')
                                 task.delete()
@@ -388,7 +390,7 @@ class Crawler(AbstractModule):
                     # Filter Domain
                     if self.filter_unsafe_onion:
                         if current_domain.endswith('.onion'):
-                            if not crawlers.check_if_onion_is_safe(current_domain):
+                            if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
                                 return False
 
         # TODO LAST URL
