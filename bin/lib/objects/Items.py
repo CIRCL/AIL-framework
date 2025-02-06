@@ -457,7 +457,7 @@ def get_all_items_objects(filters={}):
     sources = sorted(sources)
     if filters.get('start'):
         if filters['start']['type'] == 'item':
-            _, start_id = filters['start'].split(':', 1)
+            start_id = filters['start']['id']
             item = Item(start_id)
             if not item.exists():
                 start_id = None
