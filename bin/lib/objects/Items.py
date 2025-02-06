@@ -307,17 +307,17 @@ class Item(AbstractObject):
         """
         :type tags: list
         """
-        if tags is None:
-            tags = []
         crawler = {}
         if self.is_crawled():
             crawler['domain'] = self.get_domain()
             crawler['har'] = self.get_har()
             crawler['screenshot'] = self.get_screenshot()
             crawler['url'] = self.get_url()
-            if not tags:
+
+            domain_tags = self.get_obj_tags('domain', '', crawler['domain'], r_list=True)
+            if tags is None:
                 tags = self.get_tags()
-            crawler['is_tags_safe'] = self.is_tags_safe(tags)
+            crawler['is_tags_safe'] = self.is_tags_safe(tags) and self.is_tags_safe(domain_tags)
         return crawler
 
     def get_meta_lines(self, content=None):
