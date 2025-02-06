@@ -17,7 +17,7 @@ from modules.abstract_module import AbstractModule
 from lib import ail_logger
 from lib import crawlers
 from lib.ConfigLoader import ConfigLoader
-from lib.exceptions import TimeoutException
+from lib.exceptions import TimeoutException, OnionFilteringError
 from lib.Tag import get_domain_vanity_tags
 from lib.objects import CookiesNames
 from lib.objects import Etags
@@ -56,6 +56,9 @@ class Crawler(AbstractModule):
         print('vanity tags:', self.vanity_tags)
 
         config_loader = ConfigLoader()
+
+        self.filter_unsafe_onion = crawlers.is_onion_filter_enabled(cache=False)
+        self.last_config_check = int(time.time())
 
         self.default_har = config_loader.get_config_boolean('Crawler', 'default_har')
         self.default_screenshot = config_loader.get_config_boolean('Crawler', 'default_screenshot')
@@ -139,11 +142,31 @@ class Crawler(AbstractModule):
         if not self.is_lacus_up:
             return None
 
+        # Refresh Config
+        if int(time.time()) - self.last_config_check > 60:
+            self.filter_unsafe_onion = crawlers.is_onion_filter_enabled()
+            self.last_config_check = int(time.time())
+
         # Check if a new Capture can be Launched
         if crawlers.get_nb_crawler_captures() < crawlers.get_crawler_max_captures():
             task_row = crawlers.add_task_to_lacus_queue()
             if task_row:
                 task, priority = task_row
+                domain = task.get_domain()
+                if self.filter_unsafe_onion:
+                    if domain.endswith('.onion'):
+                        try:
+                            if not crawlers.check_if_onion_is_safe(domain):
+                                # print('---------------------------------------------------------')
+                                # print('DOMAIN FILTERED')
+                                task.delete()
+                                return None
+                        except OnionFilteringError:
+                            task.reset()
+                            self.logger.warning(f'Onion Filtering Connection Error, {task.uuid} Send back in queue')
+                            time.sleep(10)
+                            return None
+
                 task.start()
                 task_uuid = task.uuid
                 try:
@@ -301,41 +324,46 @@ class Crawler(AbstractModule):
         self.root_item = None
 
         # Save Capture
-        self.save_capture_response(parent_id, entries)
-
-        if self.parent != 'lookup':
-            # Update domain first/last seen
-            self.domain.update_daterange(self.date.replace('/', ''))
-        # Origin + History + tags
-        if self.root_item:
-            self.domain.set_last_origin(parent_id)
-            # Vanity
-            self.domain.update_vanity_cluster()
-            domain_vanity = self.domain.get_vanity()
-            if domain_vanity in self.vanity_tags:
-                for tag in self.vanity_tags[domain_vanity]:
-                    self.domain.add_tag(tag)
-            # Tags
-            for tag in task.get_tags():
-                self.domain.add_tag(tag)
-        # Crawler stats
-        self.domain.add_history(epoch, root_item=self.root_item)
-
-        if self.domain != self.original_domain:
-            self.original_domain.update_daterange(self.date.replace('/', ''))
+        saved = self.save_capture_response(parent_id, entries)
+        if saved:
+            if self.parent != 'lookup':
+                # Update domain first/last seen
+                self.domain.update_daterange(self.date.replace('/', ''))
+            # Origin + History + tags
             if self.root_item:
-                self.original_domain.set_last_origin(parent_id)
+                self.domain.set_last_origin(parent_id)
+                # Vanity
+                self.domain.update_vanity_cluster()
+                domain_vanity = self.domain.get_vanity()
+                if domain_vanity in self.vanity_tags:
+                    for tag in self.vanity_tags[domain_vanity]:
+                        self.domain.add_tag(tag)
                 # Tags
                 for tag in task.get_tags():
                     self.domain.add_tag(tag)
-            self.original_domain.add_history(epoch, root_item=self.root_item)
-            # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
+            # Crawler stats
+            self.domain.add_history(epoch, root_item=self.root_item)
 
-        crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
-        print('capture:', capture.uuid, 'completed')
-        print('task:   ', task.uuid, 'completed')
-        print()
+            if self.domain != self.original_domain:
+                self.original_domain.update_daterange(self.date.replace('/', ''))
+                if self.root_item:
+                    self.original_domain.set_last_origin(parent_id)
+                    # Tags
+                    for tag in task.get_tags():
+                        self.domain.add_tag(tag)
+                self.original_domain.add_history(epoch, root_item=self.root_item)
+                # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
+
+            crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
+            print('capture:', capture.uuid, 'completed')
+            print('task:   ', task.uuid, 'completed')
+            print()
+        else:
+            print('capture:', capture.uuid, 'Unsafe Content Filtered')
+            print('task:   ', task.uuid, 'Unsafe Content Filtered')
+            print()
         task.remove()
+        self.root_item = None
 
     def save_capture_response(self, parent_id, entries):
         print(entries.keys())
@@ -357,6 +385,12 @@ class Crawler(AbstractModule):
                 print(f'External redirection {self.domain.id} -> {current_domain}')
                 if not self.root_item:
                     self.domain = Domain(current_domain)
+                    # Filter Domain
+                    if self.filter_unsafe_onion:
+                        if current_domain.endswith('.onion'):
+                            if not crawlers.check_if_onion_is_safe(current_domain):
+                                return False
+
         # TODO LAST URL
         # FIXME
         else:
@@ -449,6 +483,7 @@ class Crawler(AbstractModule):
         if entries_children:
             for children in entries_children:
                 self.save_capture_response(parent_id, children)
+        return True
 
 
 if __name__ == '__main__':

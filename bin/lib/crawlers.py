@@ -39,12 +39,14 @@ sys.path.append(os.environ['AIL_BIN'])
 from packages import git_status
 from packages import Date
 from lib import ail_orgs
+from lib.exceptions import OnionFilteringError
 from lib.ConfigLoader import ConfigLoader
 from lib.regex_helper import regex_findall
 from lib.objects.Domains import Domain
 from lib.objects.Titles import Title
 from lib.objects import HHHashs
 from lib.objects.Items import Item
+from lib import Tag
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -2269,13 +2271,87 @@ def test_ail_crawlers():
 
 #### ---- ####
 
-# TODO CHECK MIGRATION - Rest API
 
-# TODO MIGRATE ME
-# def api_create_crawler_task(user_id, url, screenshot=True, har=True, depth_limit=1, max_pages=100, auto_crawler=False, crawler_delta=3600, crawler_type=None, cookiejar_uuid=None, user_agent=None):
-#     # validate url
-#     if url is None or url=='' or url=='\n':
-#         return ({'error':'invalid depth limit'}, 400)
+# # # # # # # # # # # # #
+#                       #
+#   CONTENT FILTERING   #
+#                       #
+# # # # # # # # # # # # #
+
+def _onion_lookup(onion_url):
+    try:
+        commit_id = git_status.get_last_commit_id_from_local()
+        user_agent = f'AIL-{commit_id}'
+        headers = {'User-Agent': user_agent}
+        response = requests.get(f'https://onion.ail-project.org/api/lookup/{onion_url}', timeout=10, headers=headers)
+        if response.status_code == 200:
+            json_response = response.json()
+            return json_response
+        else:
+            print(response)
+            return {'error': f'{response.status_code}'}
+    except requests.exceptions.ConnectionError:
+        return {'error': f'Connection Error'}
+    except requests.exceptions.ReadTimeout:
+        return {'error': f'Timeout Error'}
+
+
+def check_if_onion_is_safe(onion_url):
+    resp = _onion_lookup(onion_url)
+    if resp:
+        if isinstance(resp, dict):
+            if 'tags' in resp:
+                return Tag.is_tags_safe(resp['tags'])
+            elif 'error' in resp:
+                if resp['error']:
+                    raise OnionFilteringError(resp['error'])
+    return False
+
+
+def _is_onion_filter_enabled():
+    enabled = r_crawler.hget('crawler:onion_filter', 'enabled')
+    if enabled is None:
+        r_crawler.hset('crawler:onion_filter', 'enabled', str(True))
+        filter_enabled = True
+    else:
+        filter_enabled = enabled == 'True'
+    r_cache.set('crawler:onion_filter:state', str(filter_enabled))
+    return filter_enabled
+
+def is_onion_filter_enabled(cache=True):
+    if cache:
+        res = r_cache.get('crawler:onion_filter:state')
+        if res is None:
+            enabled = _is_onion_filter_enabled()
+            r_cache.set('crawler:onion_filter:state', str(enabled))
+            return enabled
+        else:
+            return res == 'True'
+    else:
+        return _is_onion_filter_enabled()
+
+def get_onion_filter_last_update_time():
+    last_update_time = r_cache.get('crawler:onion_filter:last_update_time')
+    if not last_update_time:
+        last_update_time = r_crawler.hget('crawler:onion_filter', 'update_time')
+        if not last_update_time:
+            last_update_time = 0
+        last_update_time = float(last_update_time)
+        r_cache.set('crawler:onion_filter:last_update_time', last_update_time)
+    return float(last_update_time)
+
+def change_onion_filter_state(new_state):
+    old_state = is_onion_filter_enabled(cache=False)
+    if old_state != new_state:
+        r_crawler.hset('crawler:onion_filter', 'enabled', str(new_state))
+        r_cache.set('crawler:onion_filter:state', str(new_state))
+        update_time = time.time()
+        r_crawler.hset('crawler:onion_filter', 'update_time', update_time)
+        r_cache.set('crawler:onion_filter:last_update_time', update_time)
+        return True
+    return False
+
+#### ---- ####
 
 
 # TODO MOVE ME IN CRAWLER OR FLASK

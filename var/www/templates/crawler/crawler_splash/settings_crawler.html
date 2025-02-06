@@ -226,6 +226,37 @@
 							</div>
 						</div> -->
 
+                    <div class="card border-secondary my-4">
+                        <div class="card-body text-dark">
+                            <h5 class="card-title">
+                                Filter Unsafe Onion: &nbsp;&nbsp;<b class="text-primary"><span class="text-{% if is_onion_filter_enabled %}success{% else %}danger{% endif %}">{{ is_onion_filter_enabled }}</span></b>
+                            </h5>
+                            <p>
+                                This option enables filtering of onion domains that are considered unsafe due to containing violent content, child sexual abuse material (CSAM), or other harmful materials. When enabled, the system will attempt to identify and exclude such domains from crawling.<br><br>
+
+                                <span class="text-danger"><i class="fa-solid fa-triangle-exclamation fa-2x"></i></span><b> Disabling this option may result in crawling and downloading content that includes CSAM, extreme violence, or other harmful materials.</b><br> Users are strongly advised to keep this feature enabled to avoid unintentional exposure to such content.<br><br>
+
+                                🔍 How It Works: The filtering mechanism leverages known blocklists, heuristics, and automated detection techniques to reduce the risk of crawling unsafe content. While no filtering system is perfect, we continuously strive to improve detection and minimize exposure to harmful materials.<br><br>
+
+                                By using this feature, you benefit from an added layer of protection, but please note that some unsafe onion domains may still bypass detection due to evolving content and obfuscation techniques.<br>
+                                We encourage users to remain cautious and use this feature as an additional safeguard.
+                            </p>
+                            {% if is_onion_filter_enabled %}
+                                <a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=disable">
+                                    <button class="btn btn-danger mx-4 my-2">
+                                        <i class="fa-solid fa-xmark"></i> Disable Onion Filter
+                                    </button>
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=enable">
+                                    <button class="btn btn-success my-2">
+                                        <i class="fa-solid fa-check"></i> Enable Onion Filter
+                                    </button>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <a href="{{ url_for('crawler_splash.crawler_blacklist') }}">
                         <button type="button" class="btn btn-outline-danger">Blacklisted domains</button>
                     </a>

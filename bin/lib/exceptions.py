@@ -26,3 +26,6 @@ class MISPConnectionError(AILError):
 
 class AILObjectUnknown(AILError):
     pass
+
+class OnionFilteringError(AILError):
+    pass

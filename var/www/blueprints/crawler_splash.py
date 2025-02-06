@@ -996,6 +996,8 @@ def crawler_settings():
     is_crawler_working = crawlers.is_test_ail_crawlers_successful()
     crawler_error_mess = crawlers.get_test_ail_crawlers_message()
 
+    is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
+
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
 
@@ -1008,6 +1010,7 @@ def crawler_settings():
                            # all_proxies=all_proxies,
                            is_crawler_working=is_crawler_working,
                            crawler_error_mess=crawler_error_mess,
+                           is_onion_filter_enabled=is_onion_filter_enabled,
                            )
 
 
@@ -1053,5 +1056,19 @@ def crawler_settings_crawlers_to_launch():
 def crawler_settings_crawler_test():
     crawlers.test_ail_crawlers()
     return redirect(url_for('crawler_splash.crawler_settings'))
+
+@crawler_splash.route('/crawler/settings/crawler/filter_unsafe_onion', methods=['GET'])
+@login_required
+@login_admin
+def crawler_filter_unsafe_onion():
+    filter_unsafe_onion = request.args.get('state')
+    if filter_unsafe_onion == 'enable':
+        filter_unsafe_onion = True
+    else:
+        filter_unsafe_onion = False
+    print(filter_unsafe_onion)
+    crawlers.change_onion_filter_state(filter_unsafe_onion)
+    return redirect(url_for('crawler_splash.crawler_settings'))
+
 
 # --- LACUS ---#
