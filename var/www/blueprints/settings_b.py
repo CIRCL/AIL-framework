@@ -255,6 +255,8 @@ def create_user():
         selector_val = f"{meta['org']}: {meta['org_name']}"
     else:
         selector_val = None
+    if not meta.get('role'):
+        meta['role'] = 'user'
     return render_template("create_user.html", all_roles=all_roles, orgs=orgs, meta=meta,
                            error=error, error_mail=error_mail, selector_val=selector_val,
                            acl_admin=True)
