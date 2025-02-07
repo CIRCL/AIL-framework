@@ -72,6 +72,8 @@ def trackers_dashboard():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     trackers = Tracker.get_trackers_dashboard(user_org, user_id)
+    for t in trackers:
+        t['obj'] = ail_objects.get_obj_basic_meta(ail_objects.get_obj_from_global_id(t['obj']))
     stats = Tracker.get_trackers_stats(user_org, user_id)
     return render_template("trackers_dashboard.html", trackers=trackers, stats=stats, bootstrap_label=bootstrap_label)
 
