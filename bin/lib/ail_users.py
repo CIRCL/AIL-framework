@@ -167,7 +167,7 @@ def _get_totp(secret):
     return pyotp.TOTP(secret)
 
 def _verify_totp(totp, code):
-    return totp.verify(code)
+    return totp.verify(code, valid_window=1)
 
 def _get_hotp(secret):
     return pyotp.HOTP(secret)
