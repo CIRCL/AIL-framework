@@ -226,11 +226,11 @@ def get_user_otp_qr_code(user_id, instance_name):
     uri = get_user_otp_uri(user_id, instance_name)
     return create_qr_code(uri)
 
-def get_user_hotp_code(user_id):
+def get_user_hotp_code(user_id, nb=20):
     hotp = _get_hotp(get_user_otp_secret(user_id))
     counter = get_user_hotp_counter(user_id)
     codes = []
-    for i in range(counter, counter + 20):
+    for i in range(counter, counter + nb):
         codes.append(f'{i}: {hotp.at(i)}')
     return codes
 
@@ -614,11 +614,11 @@ def api_get_user_profile(user_id):
     meta = user.get_meta(options=options)
     return meta, 200
 
-def api_get_user_hotp(user_id):
+def api_get_user_hotp(user_id, nb=20):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
-    hotp = get_user_hotp_code(user_id)
+    hotp = get_user_hotp_code(user_id, nb=nb)
     return hotp, 200
 
 def api_logout_user(admin_id, user_id, ip_address, user_agent):

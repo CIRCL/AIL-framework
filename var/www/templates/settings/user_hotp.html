@@ -27,16 +27,23 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <h1 class="text-center mt-2">HOTP - Paper-Based Single Use Tokens</h1>
+                <button class="btn btn-lg btn-primary my-4" onclick="printTokens()"><i class="fa-solid fa-print"></i> Print HOTP Tokens</button>
 
-                <div>In case you don't have access to your phone or authentication software, please use the following list of tokens.</div>
-                <div>Be sure to print these tokens and keep them in a secure place for future use.</div>
+                <span id="token-list">
+                    <h1 class="text-center">{{ ail_2fa_name }} <img src="/static/image/AIL.png" alt="AIL" style="width:150px;"> {{ user_id }}</h1>
+                    <h3 class="text-center">HOTP - Paper-Based Single Use Tokens</h3>
 
-                <div class="text-center my-4">
-                    {% for code in hotp %}
-                        <div><i>{{ code[:-6] }}</i> <b>{{ code[-6:] }}</b></div>
-                    {% endfor %}
-                </div>
+                    <div class="text-center">If you don’t have access to your phone or authentication app, use the tokens below.</div>
+                    <div class="text-center">Print and store them securely for future access.</div>
+
+                    <div class="text-center my-2">
+                        {% for code in hotp %}
+                            <div><i>{{ code[:-6] }}</i> <b>{{ code[-6:] }}</b></div>
+                        {% endfor %}
+                    </div>
+                </span>
+
+                <button class="btn btn-lg btn-primary my-4" onclick="printTokens()"><i class="fa-solid fa-print"></i> Print HOTP Tokens</button>
 
     	    </div>
 		</div>
@@ -48,6 +55,15 @@ $(document).ready(function(){
   $("#nav_edit_profile").addClass("active");
 	//$("#nav_my_profile").removeClass("text-muted");
 } );
+
+function printTokens() {
+    let printContent = document.getElementById("token-list").innerHTML;
+    let originalContent = document.body.innerHTML;
+
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+}
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

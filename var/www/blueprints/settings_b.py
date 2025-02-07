@@ -84,11 +84,13 @@ def user_hotp():
 
     acl_admin = current_user.is_in_role('admin')
     user_id = current_user.get_user_id()
-    r = ail_users.api_get_user_hotp(user_id)
+    r = ail_users.api_get_user_hotp(user_id, nb=50)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     hotp = r[0]
-    return render_template("user_hotp.html", hotp=hotp, acl_admin=acl_admin)
+    ail_2fa_name = ail_users.ail_2fa_name
+    return render_template("user_hotp.html", hotp=hotp, acl_admin=acl_admin,
+                           ail_2fa_name=ail_2fa_name, user_id=user_id)
 
 @settings_b.route("/settings/user/otp/enable/self", methods=['GET'])
 @login_required
