@@ -114,6 +114,7 @@ def get_correl_match(extract_type, obj, content):
         for ob in objs:
             if map_subtype.get(ob[2]):
                 subtype = map_subtype[ob[2]]
+                sha256_val = ob[2]
             else:
                 subtype = ''
                 sha256_val = sha256(ob[2].encode()).hexdigest()
@@ -202,6 +203,7 @@ def get_tracker_match(user_org, user_id, obj, content):
             rule = retro_hunt.get_rule(r_compile=True)
         except yara.Error:
             retro_hunt.delete_objs()
+            continue
 
         rule.match(data=content.encode(), callback=_get_yara_match,
                    which_callbacks=yara.CALLBACK_MATCHES, timeout=5)
