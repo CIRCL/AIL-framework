@@ -12,7 +12,7 @@ setVars() {
     NETWORK_NAME=${NETWORK_NAME:0:14}
     PROFILE=$(generateName "AIL")
 
-    UBUNTU="ubuntu:22.04"
+    UBUNTU="ubuntu:24.04"
 }
 
 setDefaults(){
@@ -165,11 +165,10 @@ createLacusContainer(){
     lxc exec "$LACUS_CONTAINER" -- apt install pipx -y
     lxc exec "$LACUS_CONTAINER" -- pipx install poetry 
     lxc exec "$LACUS_CONTAINER" -- pipx ensurepath
-    lxc exec "$LACUS_CONTAINER" -- apt install build-essential tcl -y
-    lxc exec "$LACUS_CONTAINER" -- git clone https://github.com/redis/redis.git
-    lxc exec "$LACUS_CONTAINER" --cwd=/root/redis -- git checkout 7.2
-    lxc exec "$LACUS_CONTAINER" --cwd=/root/redis -- make
-    lxc exec "$LACUS_CONTAINER" --cwd=/root/redis -- make test
+    lxc exec "$LACUS_CONTAINER" -- apt install build-essential tcl ffmpeg libavcodec-extra -y
+    lxc exec "$LACUS_CONTAINER" -- git clone https://github.com/valkey-io/valkey.git
+    lxc exec "$LACUS_CONTAINER" --cwd=/root/valkey -- git checkout 8.0
+    lxc exec "$LACUS_CONTAINER" --cwd=/root/valkey -- make
     lxc exec "$LACUS_CONTAINER" -- git clone https://github.com/ail-project/lacus.git
     lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- /root/.local/bin/poetry install
     AIL_VENV_PATH=$(lxc exec "$LACUS_CONTAINER" --cwd=/root/lacus -- bash -c "/root/.local/bin/poetry env info -p")
@@ -475,7 +474,8 @@ if $LACUS; then
     lacus_ip=$(lxc list "$LACUS_CONTAINER" --format=json | jq -r '.[0].state.network.eth0.addresses[] | select(.family=="inet").address')
 fi
 echo "--------------------------------------------------------------------------------------------"
-echo -e "${BLUE}AIL ${NC}is up and running on $ail_ip"
+echo -e "${BLUE}AIL ${NC}is up and running on $ail_ip."
+echo "You can access the web interface using https://$ail_ip:7000"
 echo "--------------------------------------------------------------------------------------------"
 echo -e "${BLUE}AIL ${NC}credentials:"
 echo -e "Email: ${GREEN}$ail_email${NC}"
@@ -484,5 +484,7 @@ echo -e "API Key: ${GREEN}$ail_API_Key${NC}"
 echo "--------------------------------------------------------------------------------------------"
 if $LACUS; then
     echo -e "${BLUE}Lacus ${NC}is up and running on $lacus_ip"
+    echo "You can add your Lacus instance to AIL in the settings by editing the Lacus URL:"
+    echo "http://$lacus_ip:7100"
 fi
 echo "--------------------------------------------------------------------------------------------"
