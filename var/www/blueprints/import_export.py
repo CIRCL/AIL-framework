@@ -279,9 +279,10 @@ def export_investigation():
 
                 misp = MISPExporter.MISPExporterInvestigation(url=misp_meta['url'], key=misp_meta['key'], ssl=misp_meta['ssl'])
                 try:
-                    event_url = misp.export(investigation)
+                    event = misp.export(investigation)
                 except MISPConnectionError as e:
                     return create_json_response({"error": e.message}, 400)
+                event_url = event['url']
                 return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid, misp_url=event_url))
 
 
