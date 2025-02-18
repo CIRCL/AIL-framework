@@ -9,12 +9,14 @@
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css"/>
 
 	<!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 </head>
 
@@ -39,69 +41,69 @@
 								<div class="col-12 col-lg-6">
 
 									<table class="table table-hover">
-				            <tr>
-				              <th style="width:30%">UUID</th>
-				              <td>{{metadata['uuid']}}</td>
-				            </tr>
-				            <tr>
-				              <th>Creator</th>
-				              <td>{{metadata['user_creator']}}</td>
-				            </tr>
-                            <tr>
-				              <th>Org</th>
-                              <td>
-                                {% if metadata['org'] %}
-                                    {{ metadata['org_name']}}<br>{{ metadata['org'] }}
-                                {% endif %}
-                            </td>
-				            </tr>
-                            <tr>
-                                <th>Level</th>
-                                <td>
-                                    {% if metadata['level'] == 1 %}
-                                        Global
-                                    {% elif metadata['level'] == 2 %}
-                                        My Organisation
-                                    {% endif %}
-                                </td>
-                                </tr>
-				            <tr>
-				              <th>Tags</th>
-				              <td>
-												{% for tag in metadata['tags'] %}
-													<span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-												{% endfor %}
-											</td>
-				            </tr>
-				            <tr>
-				              <th>Date</th>
-				              <td>{{metadata['date']}}</td>
-				            </tr>
-				            <tr>
-				              <th>Threat Level</th>
-				              <td>{{metadata['threat_level']}}</td>
-				            </tr>
-				            <tr>
-				              <th>Analysis</th>
-				              <td>{{metadata['analysis']}}</td>
-				            </tr>
-				            <tr>
-				              <th>Info</th>
-				              <td>{{metadata['info']}}</td>
-				            </tr>
-										<tr>
-				              <th># Objects</th>
-				              <td>{{metadata['nb_objects']}}</td>
-				            </tr>
-				            <tr>
-				              <th>Timestamp</th>
-				              <td>{{metadata['timestamp']}}</td>
-				            </tr>
-										<tr>
-				              <th>Last change</th>
-				              <td>{{metadata['last_change']}}</td>
-				            </tr>
-				          </table>
+                                        <tr>
+                                          <th style="width:30%">UUID</th>
+                                          <td>{{metadata['uuid']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Creator</th>
+                                          <td>{{metadata['user_creator']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Org</th>
+                                          <td>
+                                            {% if metadata['org'] %}
+                                                {{ metadata['org_name']}}<br>{{ metadata['org'] }}
+                                            {% endif %}
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Level</th>
+                                            <td>
+                                                {% if metadata['level'] == 1 %}
+                                                    Global
+                                                {% elif metadata['level'] == 2 %}
+                                                    My Organisation
+                                                {% endif %}
+                                            </td>
+                                            </tr>
+                                        <tr>
+                                          <th>Tags</th>
+                                          <td>
+                                              {% for tag in metadata['tags'] %}
+                                                  <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                              {% endfor %}
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <th>Date</th>
+                                          <td>{{metadata['date']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Threat Level</th>
+                                          <td>{{metadata['threat_level']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Analysis</th>
+                                          <td>{{metadata['analysis']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Info</th>
+                                          <td>{{metadata['info']}}</td>
+                                        </tr>
+                                                    <tr>
+                                          <th># Objects</th>
+                                          <td>{{metadata['nb_objects']}}</td>
+                                        </tr>
+                                        <tr>
+                                          <th>Timestamp</th>
+                                          <td>{{metadata['timestamp']}}</td>
+                                        </tr>
+                                                    <tr>
+                                          <th>Last change</th>
+                                          <td>{{metadata['last_change']}}</td>
+                                        </tr>
+				                    </table>
 
 								</div>
 								<div class="col-12 col-lg-6">
@@ -117,18 +119,47 @@
 												<i class="fas fa-pencil-alt"></i> <b>Edit</b>
 											</button>
 										</a>
-										<a class="btn btn-outline-dark" href="{{ url_for('import_export.export_investigation')}}?uuid={{metadata['uuid']}}">
-											<img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">
+                                        <button class="btn btn-outline-dark" type="button" data-toggle="collapse" data-target="#collapseMISP" aria-expanded="false" aria-controls="collapseMISP">
+                                            <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">
 											Export as Event
-										</a>
+                                        </button>
+                                        <div class="" id="collapseMISP">
+                                            <div class="card card-body">
+
+                                                <form action="{{ url_for('import_export.export_investigation') }}" method="post" enctype=multipart/form-data onsubmit="submitPaste()">
+
+                                                    <input type="text" name="investigation_uuid" hidden="" value="{{ metadata['uuid'] }}">
+
+                                                    <div class="d-flex mb-3">
+                                                        JSON Export&nbsp;
+                                                        <div class="custom-control custom-switch">
+                                                            <input class="custom-control-input" type="checkbox" name="export_to_misp" value="True" id="export_to_misp">
+                                                            <label class="custom-control-label" for="export_to_misp">
+                                                                Export to MISP Instance
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card border-dark my-3 px-3 py-3" id="export_to_misp_div">
+                                                        <label  class="mt-3" for="misp_selector">MISP Account:</label>
+                                                        <div class="input-group">
+                                                            <input id="user_misp" name="user_misp" type="text" class="form-control" aria-describedby="misp_selector" autocomplete="off">
+                                                        </div>
+                                                     </div>
+
+                                                    <div class="form-group">
+                                                        <button class="btn btn-outline-primary" type="submit">
+                                                            <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">
+											                Export as Event
+                                                        </button>
+                                                    </div>
+                                                </form>
+
+                                            </div>
+                                        </div>
 									</div>
 
-									{% if metadata['misp_events'] %}
-										{% for misp_url in metadata['misp_events'] %}
-											<a target="_blank" href="{{ misp_url }}">
-												{{ misp_url }}</br>
-											</a>
-										{% endfor %}
+									{% if misp_url %}
+                                        <a href="{{ misp_url }}">{{ misp_url }}</a>
 									{% endif %}
 
 								</div>
@@ -207,8 +238,31 @@ $(document).ready(function(){
         "iDisplayLength": 10,
         "order": [[ 0, "asc" ]]
   });
+  $('#user_misp').tagSuggest({
+      data: [{% for misp in misps %}"{{ misp }}" ,{% endfor %}],
+      sortOrder: 'name',
+      maxDropHeight: 200,
+      maxSelection: 1,
+      emptyText: 'Select MISP Account',
+      name: 'user_misp',
+      {% if selector_val %}value: ['{{ selector_val | safe}}']{% endif %}
+  });
+  $("#collapseMISP").addClass("collapse");
+
+  export_to_misp_input_controler();
+
+  $('#export_to_misp').change(function () {
+      export_to_misp_input_controler();
+  });
 
 });
 
+function export_to_misp_input_controler() {
+	if($('#export_to_misp').is(':checked')){
+			$("#export_to_misp_div").show();
+		}else{
+			$("#export_to_misp_div").hide();
+		}
+}
 
 </script>

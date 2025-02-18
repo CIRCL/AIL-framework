@@ -1,3 +1,8 @@
+<label  class="mt-3" for="misp_selector">MISP Account:</label>
+<input id="user_misp" name="user_misp" type="text" class="form-control" aria-describedby="misp_selector" autocomplete="off">
+
+<hr>
+
 <div class="form-group row">
   <label class="col-form-labe col-sm-2" for="EventDistribution">Distribution: </label>
 	<div class="col-sm-10">
@@ -44,3 +49,15 @@
 	<label class="col-form-label" for="EventInfo">Publish Event </label>
 	<input type="checkbox" value="True" id="misp_publish" name="misp_publish">
 </div>
+
+<script>
+$('#user_misp').tagSuggest({
+    data: [{% for misp in misps %}"{{ misp }}" ,{% endfor %}],
+    sortOrder: 'name',
+    maxDropHeight: 200,
+    maxSelection: 1,
+    emptyText: 'Select MISP Account',
+    name: 'user_misp',
+    {% if selector_val %}value: ['{{ selector_val | safe}}']{% endif %}
+});
+</script>

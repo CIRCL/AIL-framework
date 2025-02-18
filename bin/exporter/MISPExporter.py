@@ -85,19 +85,22 @@ class MISPExporter(AbstractExporter, ABC):
         elif url or key:
             raise Exception('Error: missing url or api key')
         else:
-            try:
-                from mispKEYS import misp_url, misp_key, misp_verifycert
-                self.url = misp_url
-                self.key = misp_key
-                self.ssl = misp_verifycert
-                if self.ssl is False:
-                    urllib3_disable_warnings()
-                if self.url.endswith('/'):
-                    self.url = self.url[:-1]
-            except Exception:  # ModuleNotFoundError
-                self.url = None
-                self.key = None
-                self.ssl = None
+            self.url = None
+            self.key = None
+            self.ssl = None
+            # try:
+            #     from mispKEYS import misp_url, misp_key, misp_verifycert
+            #     self.url = misp_url
+            #     self.key = misp_key
+            #     self.ssl = misp_verifycert
+            #     if self.ssl is False:
+            #         urllib3_disable_warnings()
+            #     if self.url.endswith('/'):
+            #         self.url = self.url[:-1]
+            # except Exception:  # ModuleNotFoundError
+            #     self.url = None
+            #     self.key = None
+            #     self.ssl = None
 
     def get_misp(self):
         try:
@@ -125,7 +128,7 @@ class MISPExporter(AbstractExporter, ABC):
     @staticmethod
     def sanitize_distribution(distribution):
         try:
-            int(distribution)
+            distribution = int(distribution)
             if 0 <= distribution <= 3:
                 return distribution
             else:
@@ -136,7 +139,7 @@ class MISPExporter(AbstractExporter, ABC):
     @staticmethod
     def sanitize_threat_level(threat_level):
         try:
-            int(threat_level)
+            threat_level = int(threat_level)
             if 1 <= threat_level <= 4:
                 return threat_level
             else:
@@ -147,7 +150,7 @@ class MISPExporter(AbstractExporter, ABC):
     @staticmethod
     def sanitize_analysis(analysis):
         try:
-            int(analysis)
+            analysis = int(analysis)
             if 0 <= analysis <= 2:
                 return analysis
             else:
@@ -189,7 +192,7 @@ class MISPExporter(AbstractExporter, ABC):
     def create_event(self, objs, export=False, event_uuid=None, date=None, publish=False, info=None, tags=None,
                      analysis=0, distribution=0, threat_level=4):
         # Test Connection
-        if export:
+        if export and self.url:
             self.get_misp()
         if tags is None:
             tags = []
@@ -289,8 +292,8 @@ class MISPExporterInvestigation(MISPExporter):
                                   tags=investigation.get_tags(),
                                   export=True)
         url = event['url']
-        if url:
-            investigation.add_misp_events(url)
+        # if url:
+        #     investigation.add_misp_events(url)
         return url
 
 class MISPExporterTrackerMatch(MISPExporter):

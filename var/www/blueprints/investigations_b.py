@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_config
 from lib import Investigations
 from lib.objects import ail_objects
 from lib import Tag
@@ -60,7 +61,7 @@ def investigations_admin():
                            inv_global=[], inv_org=inv_org)
 
 
-@investigations_b.route("/investigation", methods=['GET']) ## FIXME: add /view ????
+@investigations_b.route("/investigation", methods=['GET'])  # # FIXME: add /view ????
 @login_required
 @login_read_only
 def show_investigation():
@@ -68,6 +69,7 @@ def show_investigation():
     user_id = current_user.get_user_id()
     user_role = current_user.get_role()
     investigation_uuid = request.args.get("uuid")
+    misp_url = request.args.get("misp_url")
     investigation = Investigations.Investigation(investigation_uuid)
     if not investigation.exists():
         create_json_response({'status': 'error', 'reason': 'Investigation Not Found'}, 404)
@@ -83,8 +85,10 @@ def show_investigation():
         if comment:
             obj_meta['comment'] = comment
         objs.append(obj_meta)
+    misps = ail_config.get_user_misps_selector(user_id)
     return render_template("view_investigation.html", bootstrap_label=bootstrap_label,
-                                metadata=metadata, investigation_objs=objs)
+                           misps=misps, misp_url=misp_url,
+                           metadata=metadata, investigation_objs=objs)
 
 
 @investigations_b.route("/investigation/add", methods=['GET', 'POST'])
@@ -179,7 +183,7 @@ def edit_investigation():  # TODO CHECK ACL
         tags_selector_data['taxonomies_tags'] = taxonomies_tags
         tags_selector_data['galaxies_tags'] = galaxies_tags
         return render_template("add_investigation.html", edit=True,
-                                tags_selector_data=tags_selector_data, metadata=metadata)
+                               tags_selector_data=tags_selector_data, metadata=metadata)
 
 @investigations_b.route("/investigation/delete", methods=['GET'])
 @login_required
@@ -218,7 +222,7 @@ def register_investigation():
         res = Investigations.api_register_object(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
-    return redirect(url_for('investigations_b.investigations_dashboard', uuid=investigation_uuid))
+    return redirect(url_for('investigations_b.investigations_dashboard'))
 
 @investigations_b.route("/investigation/object/unregister", methods=['GET'])
 @login_required

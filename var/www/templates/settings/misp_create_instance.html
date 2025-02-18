@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>MISP Settings - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+	<div class="container-fluid">
+        <div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+            <div class="col-12 col-lg-10" id="core_content">
+
+
+                <form class="form-signin" action="{{ url_for('settings_b.edit_misp_post')}}" autocomplete="off" method="post">
+
+                    <h1 class="h3 my-2 text-center text-secondary">{% if meta %}Edit{% else %}ADD{% endif %} MISP API</h1>
+                    <label  class="mt-3" for="misp_url">URL:</label>
+                    {% if meta['url'] %}
+                        <input type="text" name="uuid" hidden="" value="{{ meta['uuid'] }}">
+                        <input type="text" id="misp_url" name="misp_url" class="form-control" placeholder="URL" value="{{ meta['url'] }}" aria-describedby="misp_url" required>
+                    {% else %}
+                        <input type="text" id="misp_url" name="misp_url" class="form-control" placeholder="URL" aria-describedby="misp_url" required>
+                    {% endif %}
+
+                    <label  class="mt-3" for="api_key">API Key:</label>
+                    {% if meta['key'] %}
+                        <input type="text" id="api_key" name="api_key" class="form-control" placeholder="API KEY" value="{{ meta['key'] }}" aria-describedby="api_key" required>
+                    {% else %}
+                        <input type="text" id="api_key" name="api_key" class="form-control" placeholder="API KEY" aria-describedby="api_key" required>
+                    {% endif %}
+
+                    <label  class="mt-3" for="description">Description:</label>
+                    {% if meta['key'] %}
+                        <input type="text" id="description" name="description" class="form-control" placeholder="DESCRIPTION" value="{% if meta['description'] %}{{ meta['description'] }}{% endif %}" aria-describedby="description">
+                    {% else %}
+                        <input type="text" id="description" name="description" class="form-control" placeholder="DESCRIPTION" aria-describedby="description">
+                    {% endif %}
+
+                    <div class="custom-control custom-switch mt-4 mb-3">
+  				        <input type="checkbox" class="custom-control-input" id="misp_verify_ssl" name="misp_verify_ssl" {% if meta %}{% if meta['ssl'] %}checked{% endif %}{% else %}checked{% endif %}>
+  				        <label class="custom-control-label" for="misp_verify_ssl">Verify SSL Certificate</label>
+				    </div>
+
+                    <button class="btn btn-lg btn-primary btn-block mt-3" type="submit">Submit</button>
+                </form>
+
+    	    </div>
+		</div>
+	</div>
+</body>
+
+<script>
+$(document).ready(function(){
+  $("#password-section").hide();
+  $("#password-section-info").hide();
+  $("#nav_create_user").addClass("active");
+	$("#nav_user_management").removeClass("text-muted");
+
+  {% if error %}
+    toggle_password_fields();
+  {% endif %}
+
+$('#user_organisation').tagSuggest({
+    data: [{% for org in orgs %}"{{ org }}" ,{% endfor %}],
+    sortOrder: 'name',
+    maxDropHeight: 200,
+    maxSelection: 1,
+    emptyText: 'Select Organisation',
+    name: 'user_organisation',
+    {% if selector_val %}value: ['{{ selector_val | safe}}']{% endif %}
+  });
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function toggle_password_fields() {
+  var password_div = $("#password-section");
+  if(password_div.is(":visible")){
+    $("#password-section").hide();
+    $("#password-section-info").hide();
+    $("#inputPassword1").prop('required',false);
+    $("#inputPassword2").prop('required',false);
+  } else {
+    $("#password-section").show();
+    $("#password-section-info").show();
+    $("#inputPassword1").prop('required',true);
+    $("#inputPassword2").prop('required',true);
+  }
+}
+</script>
+
+</html>

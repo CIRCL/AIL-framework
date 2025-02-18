@@ -55,6 +55,17 @@ def is_valid_uuid_v4(header_uuid):
 def generate_uuid():
     return str(uuid.uuid4())
 
+def is_valid_uuid_v5(header_uuid):
+    try:
+        header_uuid = header_uuid.replace('-', '')
+        uuid_test = uuid.UUID(hex=header_uuid, version=5)
+        return uuid_test.hex == header_uuid
+    except:
+        return False
+
+def generate_uuid5(name):
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
+
 #### AIL OBJECTS ####
 
 def get_all_objects():

@@ -10,11 +10,13 @@
 	  <!-- Core CSS -->
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css"/>
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 	</head>
 	<body>
@@ -172,9 +174,12 @@ $('.add-field').click(function() {
 });
 
 $('.fields').on('click', '.delete-field', function(){
-    var obj = $(this).attr('id').split(":", 3);
-    var params = "?type=" + obj[0] + "&subtype=" + obj[1] +"&id=" + obj[2];
-    $.ajax({url: "{{ url_for('import_export.delete_object_id_to_export') }}" + params })
+    var obj = $(this).attr('id')
+    if (obj) {
+        obj = obj.split(":", 3);
+        var params = "?type=" + obj[0] + "&subtype=" + obj[1] +"&id=" + obj[2];
+        $.ajax({url: "{{ url_for('import_export.delete_object_id_to_export') }}" + params })
+    }
     $(this).parent().remove();
 });
 

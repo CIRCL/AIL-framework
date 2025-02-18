@@ -104,6 +104,80 @@
                                 </div>
                             </div>
                         </div>
+
+
+
+                        <div class="card my-2">
+                            <div class="card-header bg-dark text-white">
+                                <h3 class="txt-secondary my-2">User Settings:</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" style="width:150px;"></h3>
+
+
+                                        <table id="table_misp_config" class="table table-striped border-primary">
+                                            <thead class="bg-dark text-white">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>url</th>
+                                                <th>key</th>
+                                                <th>verify cert</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody style="font-size: 15px;">
+                                            {% for misp in misps %}
+                                                <tr class="border-color: blue;">
+                                                    <td>
+                                                        {% if misp['description'] %}
+                                                            {{ misp['description'] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ misp['url'] }}</td>
+                                                    <td>
+                                                        {% if misp['key'] %}
+                                                            {{ misp['key'][0:4] }}*********************************{{ misp['key'][-4:] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if misp['ssl'] %}
+                                                            <i class="fa-solid fa-check"></i>
+                                                        {% else %}
+                                                            <i class="fa-solid fa-xmark"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td></td>
+                                                    <td>
+                                                        <a href="{{ url_for('settings_b.edit_misp') }}?uuid={{ misp['uuid'] }}">
+															<button type="button" class="btn btn-outline-info">
+																<i class="fas fa-pencil-alt"></i>
+															</button>
+														</a>
+                                                        <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}">
+															<button type="button" class="btn btn-outline-danger">
+																<i class="fa-solid fa-trash-can"></i>
+															</button>
+														</a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+
+                                        <a href="{{ url_for('settings_b.edit_misp') }}">
+                                            <button class="btn btn-primary my-2">
+                                                <i class="fa-solid fa-plus"></i> Add <b>MISP</b> Account
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
 					</div>
 				</div>
 
@@ -114,8 +188,14 @@
 
 <script>
 $(document).ready(function(){
-  $("#nav_edit_profile").addClass("active");
+    $("#nav_edit_profile").addClass("active");
 	$("#nav_my_profile").removeClass("text-muted");
+    $('#table_misp_config').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 2, "desc" ]]
+    });
+
 } );
 
 function toggle_sidebar(){

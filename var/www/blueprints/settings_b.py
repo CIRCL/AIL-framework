@@ -21,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_updates
 from lib import ail_orgs
+from lib import ail_config
 from lib import ail_users
 from lib import d4
 from packages import git_status
@@ -72,7 +73,9 @@ def user_profile():
         return create_json_response(r[0], r[1])
     meta = r[0]
     global_2fa = ail_users.is_2fa_enabled()
-    return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,acl_admin=acl_admin)
+    return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
+                           misps=ail_config.get_user_config_misps(user_id),
+                           acl_admin=acl_admin)
 
 #### USER OTP ####
 
@@ -195,23 +198,52 @@ def new_token_user():
 
 #### USER MISP ####
 
-# @settings_b.route("/settings/user/misp", methods=['GET'])
-# @login_required
-# @login_user
-# def user_misp():
-#     pass
-#
-# @settings_b.route("/settings/user/misp/add", methods=['GET'])
-# @login_required
-# @login_user
-# def user_misp_add():
-#     pass
-#
-# @settings_b.route("/settings/user/misp/delete", methods=['GET'])
-# @login_required
-# @login_user
-# def user_misp_add():
-#     pass
+@settings_b.route("/settings/user/edit_misp", methods=['GET'])
+@login_required
+@login_user
+def edit_misp():
+    acl_admin = current_user.is_in_role('admin')
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        meta = ail_config.api_get_user_misps(user_id, conf_uuid)[0]
+    else:
+        meta = {}
+    return render_template("misp_create_instance.html", meta=meta,
+                           acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/edit_misp_post", methods=['POST'])
+@login_required
+@login_user
+def edit_misp_post():
+    user_id = current_user.get_user_id()
+    uuidv5 = request.form.get('uuid')
+    url = request.form.get('misp_url')
+    key = request.form.get('api_key')
+    description = request.form.get('description')
+    misp_ssl = request.form.get('misp_verify_ssl')
+    if misp_ssl:
+        misp_ssl = True
+    else:
+        misp_ssl = False
+    data = {'url': url, 'key': key, 'ssl': misp_ssl, 'description': description}
+    if uuidv5:
+        data['uuid'] = uuidv5
+    r = ail_config.api_edit_user_misp(user_id, data)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/misp/delete", methods=['GET'])
+@login_required
+@login_user
+def delete_misp():
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        ail_config.api_delete_user_misp(user_id, {'uuid': conf_uuid})
+    return redirect(url_for('settings_b.user_profile'))
 
 ## --USER MISP-- ##
 

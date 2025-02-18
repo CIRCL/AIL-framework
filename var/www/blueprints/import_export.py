@@ -26,7 +26,8 @@ from exporter import TheHiveExporter
 from lib.exceptions import MISPConnectionError
 from lib.objects import ail_objects
 from lib import ail_core
-from lib.Investigations import Investigation
+from lib import ail_config
+from lib.Investigations import Investigation, api_check_investigation_acl
 
 # ============ BLUEPRINT ============
 import_export = Blueprint('import_export', __name__,
@@ -54,37 +55,37 @@ def import_object():
 
 
 # TODO
-@import_export.route("/import_export/import_file", methods=['POST'])
-@login_required
-@login_admin
-def import_object_file():
-    error = None
-
-    is_file = False
-    if 'file' in request.files:
-        file = request.files['file']
-        if file:
-            if file.filename:
-                is_file = True
-
-    all_imported_obj = []
-    if is_file:
-        filename = MispImport.sanitize_import_file_path(file.filename)
-        file.save(filename)
-        map_uuid_global_id = MispImport.import_objs_from_file(filename)
-        os.remove(filename)
-        for obj_uuid in map_uuid_global_id:
-            dict_obj = MispImport.get_global_id_from_id(map_uuid_global_id[obj_uuid])
-            obj = ail_objects.get_object(dict_obj['type'], dict_obj['subtype'], dict_obj['id'])
-            dict_obj['uuid'] = obj_uuid
-            dict_obj['url'] = obj.get_link(flask_context=True)
-            dict_obj['node'] = obj.get_svg_icon()
-            all_imported_obj.append(dict_obj)
-
-        if not all_imported_obj:
-            error = "error: Empty or invalid JSON file"
-
-    return render_template("import_object.html", all_imported_obj=all_imported_obj, error=error)
+# @import_export.route("/import_export/import_file", methods=['POST'])
+# @login_required
+# @login_admin
+# def import_object_file():
+#     error = None
+#
+#     is_file = False
+#     if 'file' in request.files:
+#         file = request.files['file']
+#         if file:
+#             if file.filename:
+#                 is_file = True
+#
+#     all_imported_obj = []
+#     if is_file:
+#         filename = MispImport.sanitize_import_file_path(file.filename)
+#         file.save(filename)
+#         map_uuid_global_id = MispImport.import_objs_from_file(filename)
+#         os.remove(filename)
+#         for obj_uuid in map_uuid_global_id:
+#             dict_obj = MispImport.get_global_id_from_id(map_uuid_global_id[obj_uuid])
+#             obj = ail_objects.get_object(dict_obj['type'], dict_obj['subtype'], dict_obj['id'])
+#             dict_obj['uuid'] = obj_uuid
+#             dict_obj['url'] = obj.get_link(flask_context=True)
+#             dict_obj['node'] = obj.get_svg_icon()
+#             all_imported_obj.append(dict_obj)
+#
+#         if not all_imported_obj:
+#             error = "error: Empty or invalid JSON file"
+#
+#     return render_template("import_object.html", all_imported_obj=all_imported_obj, error=error)
 
 
 @import_export.route("/misp/objects/export", methods=['GET'])
@@ -94,7 +95,9 @@ def objects_misp_export():
     user_id = current_user.get_user_id()
     object_types = ail_core.get_all_objects_with_subtypes_tuple()
     to_export = MISPExporter.get_user_misp_objects_to_export(user_id)
-    return render_template("export_object.html", object_types=object_types, to_export=to_export)
+    misps = ail_config.get_user_misps_selector(user_id)
+    return render_template("export_object.html", object_types=object_types, to_export=to_export,
+                           misps=misps)
 
 
 @import_export.route("/misp/objects/export/post", methods=['POST'])
@@ -102,7 +105,6 @@ def objects_misp_export():
 @login_user_no_api
 def objects_misp_export_post():
     user_id = current_user.get_user_id()
-    user_role = current_user.get_role()
 
     # Get new added Object
     new_export = []
@@ -141,42 +143,61 @@ def objects_misp_export_post():
 
     if invalid_obj:
         object_types = ail_core.get_all_objects_with_subtypes_tuple()
+        misps = ail_config.get_user_misps_selector(user_id)
         return render_template("export_object.html", object_types=object_types,
-                               to_export=objects, l_obj_invalid=invalid_obj)
+                               to_export=objects, l_obj_invalid=invalid_obj, misps=misps)
 
     export = request.form.get('export_to_misp', False)
     distribution = request.form.get('misp_event_distribution')
-    threat_level = request.form.get('threat_level_id')
+    threat_level = request.form.get('misp_threat_level_id')
     analysis = request.form.get('misp_event_analysis')
     info = request.form.get('misp_event_info')
     publish = request.form.get('misp_event_info', False)
-
-    # TODO Refactor to use MISP user api key
-    if user_role != 'admin':
-        export = False
-        publish = False
 
     objs = ail_objects.get_objects(objects)
     if not objs:
         return create_json_response({'error': 'Empty Event, nothing to export'}, 400)
 
-    try:
-        event = misp_exporter_objects.create_event(objs, distribution=distribution, threat_level=threat_level,
-                                                   analysis=analysis, info=info, export=export, publish=publish)
-    except MISPConnectionError as e:
-        return create_json_response({"error": e.message}, 400)
+    if export:
+        misp_uuid = request.form.get('user_misp')
+        if misp_uuid:
+            misp_uuid = misp_uuid[0:-1]
 
-    MISPExporter.delete_user_misp_objects_to_export(user_id)
-    if not export:
-        event_uuid = event[10:46]
-        event = f'{{"Event": {event}}}'
-        # TODO ADD JAVASCRIPT REFRESH PAGE IF RESP == 200
-        return send_file(io.BytesIO(event.encode()), as_attachment=True,
-                         download_name=f'ail_export_{event_uuid}.json')
+            if not misp_uuid:
+                return create_json_response({'error': 'Undefined misp config uuid'}, 400)
+            else:
+                misp_uuid = misp_uuid[2:].split(':', 1)[0]
+                if not ail_core.is_valid_uuid_v5(misp_uuid):
+                    return create_json_response({'error': 'Invalid misp config uuid'}, 400)
+
+                misp_meta = ail_config.api_get_user_misps(user_id, misp_uuid)
+                if misp_meta[1] != 200:
+                    return create_json_response(misp_meta[0], misp_meta[1])
+                else:
+                    misp_meta = misp_meta[0]
+
+                misp = MISPExporter.MISPExporterAILObjects(url=misp_meta['url'], key=misp_meta['key'], ssl=misp_meta['ssl'])
+                try:
+                    event = misp.create_event(objs, distribution=distribution, threat_level=threat_level, analysis=analysis, info=info, export=export, publish=publish)
+                except MISPConnectionError as e:
+                    return create_json_response({"error": e.message}, 400)
+
+                MISPExporter.delete_user_misp_objects_to_export(user_id)
+
+                object_types = ail_core.get_all_objects_with_subtypes_tuple()
+                misps = ail_config.get_user_misps_selector(user_id)
+                return render_template("export_object.html", object_types=object_types,
+                                       misp_url=event['url'], misps=misps)
+
     else:
-        object_types = ail_core.get_all_objects_with_subtypes_tuple()
-        return render_template("export_object.html", object_types=object_types,
-                               misp_url=event['url'])
+        event = misp_exporter_objects.create_event(objs, distribution=distribution, threat_level=threat_level, analysis=analysis, info=info, export=export, publish=publish)
+
+        # print(event)
+        event_uuid = event[9:45]
+        event = f'{{"Event": {event}}}'
+
+        MISPExporter.delete_user_misp_objects_to_export(user_id)
+        return send_file(io.BytesIO(event.encode()), as_attachment=True, download_name=f'ail_export_{event_uuid}.json')
 
 
 @import_export.route("/misp/objects/export/add", methods=['GET'])
@@ -214,21 +235,54 @@ def delete_object_id_to_export():
     return jsonify(success=True)
 
 
-@import_export.route("/investigation/misp/export", methods=['GET'])
+@import_export.route("/investigation/misp/export", methods=['POST'])
 @login_required
-@login_org_admin
+@login_user_no_api
 def export_investigation():
-    investigation_uuid = request.args.get("uuid")
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    investigation_uuid = request.form.get("investigation_uuid")
     investigation = Investigation(investigation_uuid)
+
     if not investigation.exists():
-        abort(404)
-    if misp_exporter_objects.ping_misp():
+        create_json_response({'status': 'error', 'reason': 'Investigation Not Found'}, 404)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
+    if res:
+        return create_json_response(res[0], res[1])
+
+    # JSON Export
+    export = request.form.get('export_to_misp', False)
+    if not export:
         event = misp_exporter_investigation.export(investigation)
-        print(event)
+        event_uuid = event[9:45]
+        event = f'{{"Event": {event}}}'
+        return send_file(io.BytesIO(event.encode()), as_attachment=True, download_name=f'ail_export_{event_uuid}.json')
+    # MISP Export
     else:
-        return Response(json.dumps({"error": "Can't reach MISP Instance"}, indent=2, sort_keys=True),
-                        mimetype='application/json'), 400
-    return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid))
+        misp_uuid = request.form.get('user_misp')
+        if misp_uuid:
+            misp_uuid = misp_uuid[0:-1]
+
+            if not misp_uuid:
+                return create_json_response({'error': 'Undefined misp config uuid'}, 400)
+            else:
+                misp_uuid = misp_uuid[2:].split(':', 1)[0]
+                if not ail_core.is_valid_uuid_v5(misp_uuid):
+                    return create_json_response({'error': 'Invalid misp config uuid'}, 400)
+
+                misp_meta = ail_config.api_get_user_misps(user_id, misp_uuid)
+                if misp_meta[1] != 200:
+                    return create_json_response(misp_meta[0], misp_meta[1])
+                else:
+                    misp_meta = misp_meta[0]
+
+                misp = MISPExporter.MISPExporterInvestigation(url=misp_meta['url'], key=misp_meta['key'], ssl=misp_meta['ssl'])
+                try:
+                    event_url = misp.export(investigation)
+                except MISPConnectionError as e:
+                    return create_json_response({"error": e.message}, 400)
+                return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid, misp_url=event_url))
 
 
 @import_export.route("/thehive/objects/case/export", methods=['POST'])

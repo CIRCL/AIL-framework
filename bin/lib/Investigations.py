@@ -51,7 +51,7 @@ def sanityze_uuid(UUID):
 def generate_uuid():
     return str(uuid.uuid4()).replace('-', '')
 
-##-- UUID --##
+## -- UUID -- ##
 
 # status
 # created
@@ -195,8 +195,8 @@ class Investigation(object):
             last_change = datetime.datetime.fromtimestamp(float(last_change)).strftime('%Y-%m-%d %H:%M:%S')
         return last_change
 
-    def get_misp_events(self):
-        return r_tracking.smembers(f'investigations:misp:{self.uuid}')
+    # def get_misp_events(self):
+    #     return r_tracking.smembers(f'investigations:misp:{self.uuid}')
 
     # # TODO: DATE FORMAT
     def get_metadata(self, options=set(), r_str=False):
@@ -220,7 +220,7 @@ class Investigation(object):
                 'last_change': self.get_last_change(r_str=r_str),
                 'info': self.get_info(),
                 'nb_objects': self.get_nb_objects(),
-                'misp_events': list(self.get_misp_events())
+                # 'misp_events': list(self.get_misp_events())
                 }
         if 'objects' in options:
             meta['objects'] = self.get_objects()
@@ -648,7 +648,7 @@ def api_unregister_object(user_org, user_id, user_role, json_dict):
     res = investigation.unregister_object(obj_id, obj_type, subtype)
     return res, 200
 
-##--  API  --##
+## -- API -- ##
 
 #
 # if __name__ == '__main__':
