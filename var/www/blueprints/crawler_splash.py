@@ -217,6 +217,19 @@ def send_to_spider():
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
 
+@crawler_splash.route("/crawlers/domain_discovery", methods=['GET'])
+@login_required
+@login_user_no_api
+def domain_discovery():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    domain = request.form.get('domain')
+    data = {'depth': 1, 'har': True, 'screenshot': True, 'url': f'http://{domain}', 'proxy': 'force_tor'}
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawlers_dashboard'))
 
 @crawler_splash.route("/crawlers/scheduler", methods=['GET'])
 @login_required
@@ -599,10 +612,16 @@ def domains_search_name():
     dom = Domains.Domain(name)
     if dom.exists():
         return redirect(url_for('crawler_splash.showDomain', domain=dom.get_id()))
+    else:
+        if name.endswith('.onion') and len(name) == 62:
+            send_to_crawler = True
+        else:
+            send_to_crawler = False
 
     l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
     return render_template("domains/domains_result_list.html", template_folder='../../',
                            l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
+                           send_to_crawler=send_to_crawler,
                            domains_types=domains_types)
 
 @crawler_splash.route('/domains/today', methods=['GET'])

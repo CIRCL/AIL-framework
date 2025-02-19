@@ -43,6 +43,16 @@
                         </div>
                     </div>
 
+                    {% if send_to_crawler %}
+                        <div class="text-center">
+                            <a href="{{ url_for('crawler_splash.domain_discovery') }}?domain={{ l_dict_domains['search'] }}">
+                                <button class="btn btn-outline-dark pb-2">
+                                    <i class="fa-solid fa-spider fa-4x fa-bounce"></i><span class="mb-2"> Send Unknown Onion to Crawler</span>
+                                </button>
+                            </a>
+                        </div>
+                    {% endif %}
+
                     {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
                         {% include 'domains/card_img_domain.html' %}
                     {% endwith %}
