@@ -22,6 +22,7 @@ from lib.ail_core import get_object_all_subtypes, zscan_iter, get_object_all_sub
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 from lib.data_retention_engine import update_obj_date
+from lib.telegram import USERNAME_CHARS
 
 from packages import Date
 
@@ -253,6 +254,15 @@ class AbstractSubtypeObjects(ABC):
             obj = self.obj_class(obj_id, subtype)
             dict_obj[obj_id] = obj.get_meta(options=options)
         return dict_obj
+
+    def is_valid_search(self, subtypes, id_to_search):
+        if subtypes == 'telegram':
+            return set(id_to_search).issubset(USERNAME_CHARS)
+        elif subtypes == 'discord':
+            id_to_search = id_to_search.replace('.', '').replace('#', '')
+            return set(id_to_search).issubset(USERNAME_CHARS)
+        else:
+            return True
 
     @abstractmethod
     def sanitize_id_to_search(self, subtypes, id_to_search):

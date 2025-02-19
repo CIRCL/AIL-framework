@@ -19,6 +19,7 @@ config_loader = None
 
 REGEX_USERNAME = re.compile(r'[0-9a-zA-z_]+')
 REGEX_JOIN_HASH = re.compile(r'[0-9a-zA-z-]+')
+USERNAME_CHARS = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
 
 ##  ##
 

@@ -151,6 +151,9 @@ def objects_username_search():
             page = 1
 
         usernames = Usernames.Usernames()
+        if not usernames.is_valid_search(subtype, to_search):
+            return create_json_response({'status': 'error', 'message': 'Invalid Username'}, 400)
+
         search_result = usernames.search_by_id(to_search, [subtype], page, case_sensitive=case_sensitive)
 
         if search_result:
