@@ -19,7 +19,7 @@ import datetime
 import dns.resolver
 import dns.exception
 
-from pyfaup.faup import Faup
+# from pyfaup.faup import Faup
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -43,7 +43,7 @@ class Mail(AbstractModule):
 
         self.dns_server = config_loader.get_config_str('Mail', 'dns')
 
-        self.faup = Faup()
+        # self.faup = Faup()
 
         # Numbers of Mails needed to Tags
         self.mail_threshold = 10
@@ -153,7 +153,7 @@ class Mail(AbstractModule):
 
         valid_mx = self.check_mx_record(mxdomains_email.keys())
         print(f'valid_mx: {valid_mx}')
-        mx_tlds = {}
+        # mx_tlds = {}
         num_valid_email = 0
         for domain_mx in valid_mx:
             nb_mails = len(mxdomains_email[domain_mx])
@@ -164,13 +164,13 @@ class Mail(AbstractModule):
             # self.add_message_to_queue(msg, 'ModuleStats')
 
             # Create country stats
-            self.faup.decode(domain_mx)
-            tld = self.faup.get()['tld']
-            try:
-                tld = tld.decode()
-            except:
-                pass
-            mx_tlds[tld] = mx_tlds.get(tld, 0) + nb_mails
+            # self.faup.decode(domain_mx)
+            # tld = self.faup.get()['tld']
+            # try:
+            #     tld = tld.decode()
+            # except:
+            #     pass
+            # mx_tlds[tld] = mx_tlds.get(tld, 0) + nb_mails
         # for tld in mx_tlds:
         #     Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
 
