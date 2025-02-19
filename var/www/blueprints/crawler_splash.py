@@ -224,6 +224,9 @@ def domain_discovery():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     domain = request.args.get('domain')
+    if not crawlers.is_valid_onion_domain(domain):
+        return create_json_response({'status': 'error', 'reason': 'Invalid onion domain'}, 400)
+
     data = {'depth': 1, 'har': True, 'screenshot': True, 'url': f'http://{domain}', 'proxy': 'force_tor'}
     res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
 
