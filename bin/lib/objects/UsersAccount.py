@@ -171,7 +171,7 @@ class UserAccount(AbstractSubtypeObject):
         if 'username' in options:
             meta['username'] = self.get_username()
             if meta['username']:
-                _, username_account_subtype, username_account_id = meta['username'].split(':', 3)
+                _, username_account_subtype, username_account_id = meta['username'].split(':', 2)
                 if 'username_meta' in options:
                     meta['username'] = Usernames.Username(username_account_id, username_account_subtype).get_meta(options={'icon'})
                 else:

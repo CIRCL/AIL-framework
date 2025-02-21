@@ -168,7 +168,7 @@ class Message(AbstractObject):
         if user_account.get('user-account'):
             user_account = f'user-account:{user_account["user-account"].pop()}'
             if meta:
-                _, user_account_subtype, user_account_id = user_account.split(':', 3)
+                _, user_account_subtype, user_account_id = user_account.split(':', 2)
                 user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
         return user_account
 

@@ -78,7 +78,6 @@ class DomHash(AbstractDaterangeObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
-        return None
 
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')

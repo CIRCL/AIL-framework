@@ -62,10 +62,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         return self.name
 
     def get_chat_network(self):
-        self.json_data['meta'].get('network', None)
+        return self.json_data['meta'].get('network', None)
 
     def get_chat_address(self):
-        self.json_data['meta'].get('address', None)
+        return self.json_data['meta'].get('address', None)
 
     def get_chat_instance_uuid(self):
         chat_instance_uuid = chats_viewer.create_chat_service_instance(self.get_chat_protocol(),
