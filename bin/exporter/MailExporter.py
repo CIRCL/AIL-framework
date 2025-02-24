@@ -80,9 +80,10 @@ class MailExporter(AbstractExporter, ABC):
 
     def get_smtp_client(self):
         # try:
+        smtp_server = smtplib.SMTP(self.host, self.port)
         if self.pw is not None:
             try:
-                smtp_server = smtplib.SMTP(self.host, self.port)
+                smtp_server.ehlo()
                 smtp_server.starttls()
             except smtplib.SMTPNotSupportedError:
                 self.logger.info(f"The server {self.host}:{self.port} does not support the STARTTLS extension.")
@@ -97,8 +98,6 @@ class MailExporter(AbstractExporter, ABC):
                 smtp_server.login(self.user, self.pw)
             else:
                 smtp_server.login(self.sender, self.pw)
-        else:
-            smtp_server = smtplib.SMTP(self.host, self.port)
         return smtp_server
         # except Exception as err:
         # traceback.print_tb(err.__traceback__)
