@@ -881,7 +881,9 @@ def api_get_chat_participants(chat_type, chat_subtype, chat_id):
         chat_participants = []
         for participant in meta['participants']:
             user_account = UsersAccount.UserAccount(participant['id'], participant['subtype'])
-            chat_participants.append(user_account.get_meta({'icon', 'info', 'username'}))
+            user_account_meta = user_account.get_meta({'icon', 'info', 'username'})
+            user_account_meta['nb_messages'] = user_account.get_nb_messages_by_chat_obj(chat_obj)
+            chat_participants.append(user_account_meta)
         meta['participants'] = chat_participants
         return meta, 200
 

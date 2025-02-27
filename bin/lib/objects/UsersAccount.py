@@ -163,6 +163,13 @@ class UserAccount(AbstractSubtypeObject):
             messages.append(f'message:{mess}')
         return messages
 
+    def get_nb_messages_by_chat_obj(self, chat_obj):
+        messages = self.get_correlation_iter_obj(chat_obj, 'message')
+        if messages:
+            return len(messages)
+        else:
+            return 0
+
     def get_meta(self, options=set(), translation_target=None): # TODO Username timeline
         meta = self._get_meta(options=options)
         meta['id'] = self.id
