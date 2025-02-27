@@ -42,14 +42,14 @@ config_loader = None
 
 CORRELATION_TYPES_BY_OBJ = {
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
-    "chat": ["barcode", "chat-subchannel", "chat-thread", "image", "message", "ocr", "user-account"],  # message or direct correlation like cve, bitcoin, ... ???
+    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "image", "message", "ocr", "pgp", "user-account"],
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
     "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"],
     "cookie-name": ["domain"],
-    "cryptocurrency": ["barcode", "domain", "item", "message", "ocr", "qrcode"],
-    "cve": ["barcode", "domain", "item", "message", "ocr", "qrcode"],
-    "decoded": ["barcode", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "hhhash", "item", "pgp", "title", "screenshot", "username"],
+    "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
+    "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
+    "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "hhhash", "item", "message", "pgp", "title", "screenshot", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
@@ -57,9 +57,9 @@ CORRELATION_TYPES_BY_OBJ = {
     "hhhash": ["domain"],
     "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
     "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "message", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "file-name", "image", "item", "ocr", "pgp", "user-account"],
+    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "ocr", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
-    "pgp": ["domain", "item", "message", "ocr"],
+    "pgp": ["chat", "domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
     "screenshot": ["barcode", "domain", "item", "qrcode"],
     "title": ["domain", "item"],

@@ -11,7 +11,6 @@ import logging.config
 import sys
 import uuid
 from abc import ABC, abstractmethod
-from pymisp import MISPObject
 
 # from flask import url_for
 

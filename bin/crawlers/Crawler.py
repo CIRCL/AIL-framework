@@ -346,7 +346,7 @@ class Crawler(AbstractModule):
             # Crawler stats
             self.domain.add_history(epoch, root_item=self.root_item)
 
-            if self.domain != self.original_domain:
+            if self.domain != self.original_domain:  # TODO ADD RELATIONSHIP REDIRECT
                 self.original_domain.update_daterange(self.date.replace('/', ''))
                 if self.root_item:
                     self.original_domain.set_last_origin(parent_id)
@@ -364,6 +364,11 @@ class Crawler(AbstractModule):
             print('capture:', capture.uuid, 'Unsafe Content Filtered')
             print('task:   ', task.uuid, 'Unsafe Content Filtered')
             print()
+
+        # onion messages correlation
+        if crawlers.is_domain_correlation_cache(self.original_domain):
+            crawlers.save_domain_correlation_cache(self.original_domain.was_up(), domain)
+
         task.remove()
         self.root_item = None
 
@@ -377,14 +382,13 @@ class Crawler(AbstractModule):
                 print('retrieved content')
                 # print(entries.get('html'))
 
-        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):
+        if 'last_redirected_url' in entries and entries.get('last_redirected_url'): # TODO ADD RELATIONSHIP REDIRECT
             last_url = entries['last_redirected_url']
             unpacked_last_url = crawlers.unpack_url(last_url)
             current_domain = unpacked_last_url['domain']
             # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
                 self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
-                print(f'External redirection {self.domain.id} -> {current_domain}')
                 if not self.root_item:
                     self.domain = Domain(current_domain)
                     # Filter Domain

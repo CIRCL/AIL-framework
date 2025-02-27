@@ -186,6 +186,11 @@ class AbstractSubtypeObject(AbstractObject, ABC):
                     domain = get_item_domain(item_id)
                     self.add_correlation('domain', '', domain)
 
+            elif obj.type == 'message':
+                chat_subtype = obj.get_chat_instance()
+                chat_id = obj.get_chat_id()
+                self.add_correlation('chat', chat_subtype, chat_id)
+
     # TODO:ADD objects + Stats
     # def create(self, first_seen, last_seen):
     #     self.set_first_seen(first_seen)

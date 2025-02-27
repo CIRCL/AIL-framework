@@ -113,6 +113,32 @@ def api_get_domain_from_url(url):
     url_unpack = unpack_url(url)
     return url_unpack['domain']
 
+## onion correlation cache ##
+
+def is_domain_correlation_cache(domain):
+    return r_cache.sismember('cache:domain:correlation', domain)
+
+def add_domain_correlation_cache(domain, obj_gid):
+    r_cache.sadd('cache:domain:correlation', domain)
+    r_cache.sadd(f'cache:domain:correlation:objs:{domain}', obj_gid)
+
+def save_domain_correlation_cache(is_domain_up, domain):
+    if is_domain_up:
+        dom = Domain(domain)
+        for obj_gid in r_cache.sadd(f'cache:domain:correlation:objs:{domain}'):
+            obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
+            if not obj_subtype:
+                obj_subtype = ''
+            dom.add_correlation(obj_type, obj_subtype, obj_id)
+    r_cache.srem('cache:domain:correlation', domain)
+    r_cache.delete(f'cache:domain:correlation:objs:{domain}')
+
+# TODO CHECK ALL TASK IF STORED IN DB
+def cleanup_domain_correlation_cache(domain):
+    pass
+
+# -- #
+
 # # # # # # # #
 #             #
 #   COMMON    #

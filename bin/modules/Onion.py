@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib.objects.Domains import Domain
 from lib import crawlers
 
 class Onion(AbstractModule):
@@ -98,6 +99,19 @@ class Onion(AbstractModule):
                                                      har=self.har, screenshot=self.screenshot)
                     if task_uuid:
                         print(f'{domain} added to crawler queue: {task_uuid}')
+                    if self.obj.type == 'message':
+                        dom = Domain(domain)
+                        # check if domain was up
+                        if dom.was_up():
+                            self.obj.add_correlation('domain', '', domain)
+                            chat_subtype = obj.get_chat_instance()
+                            chat_id = obj.get_chat_id()
+                            dom.add_correlation('chat', chat_subtype, chat_id)
+                        elif task_uuid and not dom.exists():
+                            chat_subtype = obj.get_chat_instance()
+                            chat_id = obj.get_chat_id()
+                            crawlers.add_domain_correlation_cache(domain, f'chat:{chat_subtype}:{chat_id}')
+                            crawlers.add_domain_correlation_cache(domain, self.obj.get_global_id())
             else:
                 print(f'Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
 

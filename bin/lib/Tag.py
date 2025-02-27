@@ -789,6 +789,16 @@ def delete_object_tags(obj_type, subtype, obj_id):
         delete_object_tag(tag, obj_type, obj_id, subtype=subtype)
 
 
+def get_objs_by_date(obj_type, tags, date):
+    objs = []
+    if obj_type == 'item' or obj_type == 'message':
+        l_set_keys = get_obj_keys_by_tags(tags, obj_type, date=date)
+        if len(l_set_keys) < 2:
+            objs = get_obj_by_tag(l_set_keys[0])
+        else:
+            objs = r_tags.sinter(l_set_keys[0], *l_set_keys[1:])
+    return objs
+
 ################################################################################################################
 
 # TODO: REWRITE OLD
@@ -1212,6 +1222,20 @@ def get_tags_min_last_seen(l_tags, r_int=False):
         return min_last_seen
     else:
         return str(min_last_seen)
+
+def get_tags_min_first_seen(l_tags, r_int=False):
+    """
+    Get min first seen from a list of tags (current: daterange objs only)
+    """
+    min_first_seen = 99999999
+    for tag in l_tags:
+        first_seen = get_tag_first_seen(tag, r_int=True)
+        if first_seen < min_first_seen:
+            min_first_seen = first_seen
+    if r_int:
+        return min_first_seen
+    else:
+        return str(min_first_seen)
 
 def get_all_tags():
     return list(r_tags.smembers('list_tags'))

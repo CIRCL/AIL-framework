@@ -29,6 +29,8 @@ from lib.objects.Ocrs import Ocr
 from lib.objects import UsersAccount
 from lib.objects import Usernames
 from lib import Language
+from lib import Tag
+from packages import Date
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -373,36 +375,51 @@ def list_messages_to_dict(l_messages_id, translation_target=None):
 ## Threads IDS
 ## Daterange
 def get_messages_iterator(filters={}):
+    # Tags
+    tags = filters.get('tags', [])
+    if tags:
+        date_from = filters.get('date_from')
+        date_to = filters.get('date_to')
+        if not date_from:
+            date_from = Tag.get_tags_min_first_seen(tags)
+            if date_from == '99999999':
+                return None
+        if not date_to:
+            date_to = Date.get_today_date_str()
+        daterange = Date.get_daterange(date_from, date_to)
+        for date in daterange:
+            for message_id in Tag.get_objs_by_date('message', tags, date):
+                yield Messages.Message(message_id)
+    else:
+        for instance_uuid in get_chat_service_instances():
 
-    for instance_uuid in get_chat_service_instances():
+            for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+                chat = Chats.Chat(chat_id, instance_uuid)
 
-        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
-            chat = Chats.Chat(chat_id, instance_uuid)
+                # subchannels
+                for subchannel_gid in chat.get_subchannels():
+                    _, _, subchannel_id = subchannel_gid.split(':', 2)
+                    subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                    messages, _ = subchannel._get_messages(nb=-1)
+                    for mess in messages:
+                        _, _, message_id = mess[0].split(':', )
+                        yield Messages.Message(message_id)
+                    # threads
 
-            # subchannels
-            for subchannel_gid in chat.get_subchannels():
-                _, _, subchannel_id = subchannel_gid.split(':', 2)
-                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
-                messages, _ = subchannel._get_messages(nb=-1)
+                # threads
+                for threads in chat.get_threads():
+                    thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
+                    messages, _ = thread._get_messages(nb=-1)
+                    for mess in messages:
+                        message_id, _, message_id = mess[0].split(':', )
+                        yield Messages.Message(message_id)
+
+                # messages
+                messages, _ = chat._get_messages(nb=-1)
                 for mess in messages:
                     _, _, message_id = mess[0].split(':', )
                     yield Messages.Message(message_id)
-                # threads
-
-            # threads
-            for threads in chat.get_threads():
-                thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
-                messages, _ = thread._get_messages(nb=-1)
-                for mess in messages:
-                    message_id, _, message_id = mess[0].split(':', )
-                    yield Messages.Message(message_id)
-
-            # messages
-            messages, _ = chat._get_messages(nb=-1)
-            for mess in messages:
-                _, _, message_id = mess[0].split(':', )
-                yield Messages.Message(message_id)
-                # threads ???
+                    # threads ???
 
 def get_nb_messages_iterator(filters={}):
     nb_messages = 0
@@ -1030,9 +1047,10 @@ def api_thread_messages(subtype, thread_id):
 
 
 if __name__ == '__main__':
-    r = get_chat_service_instances()
-    print(r)
-    r = ChatServiceInstance(r.pop())
-    print(r.get_meta({'chats'}))
+    get_messages_iterator(filters={'tags': ['infoleak:automatic-detection="cve"']})
+    # r = get_chat_service_instances()
+    # print(r)
+    # r = ChatServiceInstance(r.pop())
+    # print(r.get_meta({'chats'}))
     # r = get_chat_protocols()
     # print(r)

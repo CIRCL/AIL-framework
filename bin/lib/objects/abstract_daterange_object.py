@@ -162,6 +162,10 @@ class AbstractDaterangeObject(AbstractObject, ABC):
                 if is_crawled(item_id):
                     domain = get_item_domain(item_id)
                     self.add_correlation('domain', '', domain)
+            elif obj.type == 'message':
+                chat_subtype = obj.get_chat_instance()
+                chat_id = obj.get_chat_id()
+                self.add_correlation('chat', chat_subtype, chat_id)
 
     def add(self, date, obj):
         self._add(date, obj)
