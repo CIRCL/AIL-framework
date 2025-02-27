@@ -39,11 +39,11 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 
-@chats_explorer.route("/chats/explorer", methods=['GET'])
-@login_required
-@login_read_only
-def chats_explorer_dashboard():
-    return
+# @chats_explorer.route("/chats/explorer", methods=['GET'])
+# @login_required
+# @login_read_only
+# def chats_explorer_dashboard():
+#     return
 
 @chats_explorer.route("chats/explorer/protocols", methods=['GET'])
 @login_required
