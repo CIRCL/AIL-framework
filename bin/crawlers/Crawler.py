@@ -366,7 +366,7 @@ class Crawler(AbstractModule):
             print()
 
         # onion messages correlation
-        if crawlers.is_domain_correlation_cache(self.original_domain):
+        if crawlers.is_domain_correlation_cache(self.original_domain.id):
             crawlers.save_domain_correlation_cache(self.original_domain.was_up(), domain)
 
         task.remove()
