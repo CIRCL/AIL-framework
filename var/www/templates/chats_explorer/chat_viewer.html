@@ -117,7 +117,7 @@
                 <div>
                     <div class="row">
                         <div class="col-12 col-lg-11">
-                            <div id="heatmapyear" style="width: 100%;height: 300px;"></div>
+                            <div id="heatmapyear" style="width: 100%;height: 250px;"></div>
                         </div>
                         <div class="col-12 col-lg-1">
                             {% for year in chat['years'] %}
@@ -126,6 +126,10 @@
                         </div>
                     </div>
                 </div>
+
+                <h5>Languages:</h5>
+                <div id="langpie" style="width: 100%;height: 300px;"></div>
+                {% include 'chats_explorer/block_language_stats.html' %}
 
                 {% with translate_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
                     {% include 'chats_explorer/block_translation.html' %}
@@ -287,7 +291,6 @@ function update_heatmap_year(year) {
         }
     );
 }
-
 </script>
 
 

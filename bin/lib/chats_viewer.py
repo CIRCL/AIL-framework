@@ -869,6 +869,16 @@ def api_get_nb_year_messages(chat_type, chat_instance_uuid, chat_id, year):
     nb = [[date, value] for date, value in nb.items()]
     return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
+def api_get_languages_stats(chat_type, chat_instance_uuid, chat_id):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
+    if not chat.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    stats = chat.get_obj_language_stats()
+    langs = []
+    for stat in stats:
+        langs.append({'name': Language.get_language_from_iso(stat[0]), 'value': int(stat[1])})
+    return langs
+
 
 def api_get_chat_participants(chat_type, chat_subtype, chat_id):
     if chat_type not in ['chat', 'chat-subchannel', 'chat-thread']:

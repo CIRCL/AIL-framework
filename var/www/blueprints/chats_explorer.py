@@ -109,9 +109,10 @@ def chats_explorer_chat():
     else:
         chat = chat[0]
         languages = Language.get_translation_languages()
+        languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
-                               message_id=message_id,
+                               message_id=message_id, languages_stats=languages_stats,
                                translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
@@ -179,9 +180,10 @@ def objects_subchannel_messages():
     else:
         subchannel = subchannel[0]
         languages = Language.get_translation_languages()
+        languages_stats = chats_viewer.api_get_languages_stats('chat-subchannel', instance_uuid, subchannel_id)
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
-                               message_id=message_id,
+                               message_id=message_id, languages_stats=languages_stats,
                                bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
