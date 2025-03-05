@@ -125,7 +125,7 @@ def add_domain_correlation_cache(domain, obj_gid):
 def save_domain_correlation_cache(is_domain_up, domain):
     if is_domain_up:
         dom = Domain(domain)
-        for obj_gid in r_cache.sadd(f'cache:domain:correlation:objs:{domain}'):
+        for obj_gid in r_cache.smembers(f'cache:domain:correlation:objs:{domain}'):
             obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
             if not obj_subtype:
                 obj_subtype = ''
