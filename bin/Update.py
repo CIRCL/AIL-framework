@@ -36,6 +36,7 @@ def auto_update_enabled(cfg):
         return False
 
 def update_submodule():
+    print(f'{TERMINAL_YELLOW}git submodule update:{TERMINAL_DEFAULT}')
     process = subprocess.run(['git', 'submodule', 'update'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         res = process.stdout.decode()
@@ -281,15 +282,6 @@ def get_git_upper_tags_remote(current_tag, is_fork):
             aborting_update()
             sys.exit(0)
 
-def update_submodules():
-    print(f'{TERMINAL_YELLOW}git submodule update:{TERMINAL_DEFAULT}')
-    process = subprocess.run(['git', 'submodule', 'update'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if process.returncode == 0:
-        print(process.stdout.decode())
-        print()
-    else:
-        print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
-
 def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_fork):
     print(f'{TERMINAL_YELLOW}git checkout master:{TERMINAL_DEFAULT}')
     process = subprocess.run(['git', 'checkout', 'master'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -297,8 +289,6 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
     if process.returncode == 0:
         print(process.stdout.decode())
         print()
-
-        update_submodules()
 
         temp_current_tag = current_tag.replace('v', '').split('.')[0]
         if float(temp_current_tag) < 5.0:
@@ -318,6 +308,8 @@ def update_ail(current_tag, list_upper_tags_remote, current_version_path, is_for
                 sys.exit(1)
 
         if pulled:
+            update_submodule()
+
             # CHECK IF UPDATER Update
             if float(os.stat(UPDATER_FILENAME).st_mtime) > UPDATER_LAST_MODIFICATION:
                 # request updater relaunch
