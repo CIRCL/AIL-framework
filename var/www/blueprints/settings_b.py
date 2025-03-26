@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_updates
 from lib import ail_orgs
 from lib import ail_config
+from lib import ail_queues
 from lib import ail_users
 from lib import d4
 from packages import git_status
@@ -60,7 +61,8 @@ def get_background_update_metadata_json():
 @login_read_only
 def settings_modules():
     acl_admin = current_user.is_in_role('admin')
-    return render_template("settings/modules.html", acl_admin=acl_admin)
+    queues_stats = ail_queues.get_modules_queues_stats()
+    return render_template("settings/modules.html", acl_admin=acl_admin, queues_stats=queues_stats)
 
 @settings_b.route("/settings/user/profile", methods=['GET'])
 @login_required

@@ -29,6 +29,26 @@
                 </div>
                 <object data="{{ url_for('static', filename='image/ail_queues.svg') }}" type="image/svg+xml" style="width:100%;"></object>
 
+                <h3 class="mt-4">Modules</h3>
+                <table class="table mb-4">
+                    <thead class="bg-dark text-white">
+                    <tr>
+                        <th>Module Name</th>
+                        <th>Nb Modules Launched</th>
+                        <th>Nb in Queue</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for module_stats in queues_stats %}
+                        <tr>
+                            <td>{{ module_stats }}</td>
+                            <td>{{ queues_stats[module_stats]['modules'] | length }}</td>
+                            <td>{{ queues_stats[module_stats]['in'] }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
             </div>
 		</div>
 	</div>
