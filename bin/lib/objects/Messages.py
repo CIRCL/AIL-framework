@@ -170,7 +170,8 @@ class Message(AbstractObject):
             if meta:
                 _, user_account_subtype, user_account_id = user_account.split(':', 2)
                 user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
-        return user_account
+            return user_account
+        return None
 
     def get_files_names(self):
         names = []
@@ -397,6 +398,9 @@ class Message(AbstractObject):
             thread = self.get_current_thread()
             if thread:
                 objs_containers.add(thread)
+            user_account = self.get_user_account()
+            if user_account:
+                objs_containers.add(user_account)
         return objs_containers
 
     #- Language -#

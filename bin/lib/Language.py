@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_core import get_object_all_subtypes
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -24,212 +25,226 @@ config_loader = None
 
 
 dict_iso_languages = {
-    'af': 'Afrikaans',
-    'am': 'Amharic',
-    'ar': 'Arabic',
-    'bg': 'Bulgarian',
-    'bn': 'Bangla',
-    'bs': 'Bosnian',
-    'ca': 'Catalan',
+    'afr': 'Afrikaans',
+    'amh': 'Amharic',
+    'ara': 'Arabic',
+    'ben': 'Bengali',
+    'bos': 'Bosnian',
+    'bul': 'Bulgarian',
+    'cat': 'Catalan',
     'ceb': 'Cebuano',
-    'co': 'Corsican',
-    'cs': 'Czech',
-    'cy': 'Welsh',
-    'da': 'Danish',
-    'de': 'German',
-    'el': 'Greek',
-    'en': 'English',
-    'eo': 'Esperanto',
-    'es': 'Spanish',
-    'et': 'Estonian',
-    'eu': 'Basque',
-    'fa': 'Persian',
-    'fi': 'Finnish',
+    'ces': 'Czech',
+    'cos': 'Corsican',
+    'cym': 'Welsh',
+    'dan': 'Danish',
+    'deu': 'German',
+    'ell': 'Greek',
+    'eng': 'English',
+    'epo': 'Esperanto',
+    'est': 'Estonian',
+    'eus': 'Basque',
+    'fas': 'Persian',
+    'fin': 'Finnish',
     'fil': 'Filipino',
-    'fr': 'French',
-    'fy': 'Western Frisian',
-    'ga': 'Irish',
-    'gd': 'Scottish Gaelic',
-    'gl': 'Galician',
-    'gu': 'Gujarati',
-    'ha': 'Hausa',
+    'fra': 'French',
+    'fry': 'Western Frisian',
+    'gla': 'Scottish Gaelic',
+    'gle': 'Irish',
+    'glg': 'Galician',
+    'guj': 'Gujarati',
+    'hat': 'Haitian',
+    'hau': 'Hausa',
     'haw': 'Hawaiian',
-    'hi': 'Hindi',
+    'heb': 'Hebrew',
+    'hin': 'Hindi',
     'hmn': 'Hmong',
-    'hr': 'Croatian',
-    'ht': 'Haitian Creole',
-    'hu': 'Hungarian',
-    'hy': 'Armenian',
-    'id': 'Indonesian',
-    'ig': 'Igbo',
-    'is': 'Icelandic',
-    'it': 'Italian',
-    'iw': 'Hebrew',
-    'ja': 'Japanese',
-    'jv': 'Javanese',
-    'ka': 'Georgian',
-    'kk': 'Kazakh',
-    'km': 'Khmer',
-    'kn': 'Kannada',
-    'ko': 'Korean',
-    'ku': 'Kurdish',
-    'ky': 'Kyrgyz',
-    'la': 'Latin',
-    'lb': 'Luxembourgish',
-    'lo': 'Lao',
-    'lt': 'Lithuanian',
-    'lv': 'Latvian',
-    'mg': 'Malagasy',
-    'mi': 'Maori',
-    'mk': 'Macedonian',
-    'ml': 'Malayalam',
-    'mn': 'Mongolian',
-    'mr': 'Marathi',
-    'ms': 'Malay',
-    'mt': 'Maltese',
-    'my': 'Burmese',
-    'ne': 'Nepali',
-    'nl': 'Dutch',
-    'no': 'Norwegian',
-    'ny': 'Nyanja',
-    'pa': 'Punjabi',
-    'pl': 'Polish',
-    'ps': 'Pashto',
-    'pt': 'Portuguese',
-    'ro': 'Romanian',
-    'ru': 'Russian',
-    'sd': 'Sindhi',
-    'si': 'Sinhala',
-    'sk': 'Slovak',
-    'sl': 'Slovenian',
-    'sm': 'Samoan',
-    'sn': 'Shona',
-    'so': 'Somali',
-    'sq': 'Albanian',
-    'sr': 'Serbian',
-    'st': 'Southern Sotho',
-    'su': 'Sundanese',
-    'sv': 'Swedish',
-    'sw': 'Swahili',
-    'ta': 'Tamil',
-    'te': 'Telugu',
-    'tg': 'Tajik',
-    'th': 'Thai',
-    'tr': 'Turkish',
-    'uk': 'Ukrainian',
-    'ur': 'Urdu',
-    'uz': 'Uzbek',
-    'vi': 'Vietnamese',
-    'xh': 'Xhosa',
-    'yi': 'Yiddish',
-    'yo': 'Yoruba',
-    'zh': 'Chinese',
-    'zu': 'Zulu'
+    'hrv': 'Croatian',
+    'hun': 'Hungarian',
+    'hye': 'Armenian',
+    'ibo': 'Igbo',
+    'ind': 'Indonesian',
+    'isl': 'Icelandic',
+    'ita': 'Italian',
+    'jav': 'Javanese',
+    'jpn': 'Japanese',
+    'kab': 'Kabyle',
+    'kan': 'Kannada',
+    'kat': 'Georgian',
+    'kaz': 'Kazakh',
+    'khm': 'Khmer',
+    'kir': 'Kirghiz',
+    'kor': 'Korean',
+    'kur': 'Kurdish',
+    'lao': 'Lao',
+    'lat': 'Latin',
+    'lav': 'Latvian',
+    'lit': 'Lithuanian',
+    'ltz': 'Luxembourgish',
+    'mal': 'Malayalam',
+    'mar': 'Marathi',
+    'mkd': 'Macedonian',
+    'mlg': 'Malagasy',
+    'mlt': 'Maltese',
+    'mon': 'Mongolian',
+    'mri': 'Maori',
+    'msa': 'Malay',
+    'mya': 'Burmese',
+    'nep': 'Nepali',
+    'nld': 'Dutch',
+    'nor': 'Norwegian',
+    'nya': 'Nyanja',
+    'oci': 'Occitan',
+    'pan': 'Panjabi',
+    'pol': 'Polish',
+    'por': 'Portuguese',
+    'pus': 'Pushto',
+    'ron': 'Romanian',
+    'rus': 'Russian',
+    'sin': 'Sinhala',
+    'slk': 'Slovak',
+    'slv': 'Slovenian',
+    'smo': 'Samoan',
+    'sna': 'Shona',
+    'snd': 'Sindhi',
+    'som': 'Somali',
+    'sot': 'Southern Sotho',
+    'spa': 'Spanish',
+    'sqi': 'Albanian',
+    'hbs': 'Serbo-Croatian',
+    'sun': 'Sundanese',
+    'swa': 'Swahili',
+    'swe': 'Swedish',
+    'tam': 'Tamil',
+    'tel': 'Telugu',
+    'tgk': 'Tajik',
+    'tha': 'Thai',
+    'tur': 'Turkish',
+    'ukr': 'Ukrainian',
+    'urd': 'Urdu',
+    'uzb': 'Uzbek',
+    'vie': 'Vietnamese',
+    'xho': 'Xhosa',
+    'yid': 'Yiddish',
+    'yor': 'Yoruba',
+    'zho': 'Chinese',
+    'zul': 'Zulu'
 }
 
-dict_languages_iso = {
-    'Afrikaans': 'af',
-    'Amharic': 'am',
-    'Arabic': 'ar',
-    'Bulgarian': 'bg',
-    'Bangla': 'bn',
-    'Bosnian': 'bs',
-    'Catalan': 'ca',
-    'Cebuano': 'ceb',
-    'Corsican': 'co',
-    'Czech': 'cs',
-    'Welsh': 'cy',
-    'Danish': 'da',
-    'German': 'de',
-    'Greek': 'el',
-    'English': 'en',
-    'Esperanto': 'eo',
-    'Spanish': 'es',
-    'Estonian': 'et',
-    'Basque': 'eu',
-    'Persian': 'fa',
-    'Finnish': 'fi',
-    'Filipino': 'fil',
-    'French': 'fr',
-    'Western Frisian': 'fy',
-    'Irish': 'ga',
-    'Scottish Gaelic': 'gd',
-    'Galician': 'gl',
-    'Gujarati': 'gu',
-    'Hausa': 'ha',
-    'Hawaiian': 'haw',
-    'Hindi': 'hi',
-    'Hmong': 'hmn',
-    'Croatian': 'hr',
-    'Haitian Creole': 'ht',
-    'Hungarian': 'hu',
-    'Armenian': 'hy',
-    'Indonesian': 'id',
-    'Igbo': 'ig',
-    'Icelandic': 'is',
-    'Italian': 'it',
-    'Hebrew': 'iw',
-    'Japanese': 'ja',
-    'Javanese': 'jv',
-    'Georgian': 'ka',
-    'Kazakh': 'kk',
-    'Khmer': 'km',
-    'Kannada': 'kn',
-    'Korean': 'ko',
-    'Kurdish': 'ku',
-    'Kyrgyz': 'ky',
-    'Latin': 'la',
-    'Luxembourgish': 'lb',
-    'Lao': 'lo',
-    'Lithuanian': 'lt',
-    'Latvian': 'lv',
-    'Malagasy': 'mg',
-    'Maori': 'mi',
-    'Macedonian': 'mk',
-    'Malayalam': 'ml',
-    'Mongolian': 'mn',
-    'Marathi': 'mr',
-    'Malay': 'ms',
-    'Maltese': 'mt',
-    'Burmese': 'my',
-    'Nepali': 'ne',
-    'Dutch': 'nl',
-    'Norwegian': 'no',
-    'Nyanja': 'ny',
-    'Punjabi': 'pa',
-    'Polish': 'pl',
-    'Pashto': 'ps',
-    'Portuguese': 'pt',
-    'Romanian': 'ro',
-    'Russian': 'ru',
-    'Sindhi': 'sd',
-    'Sinhala': 'si',
-    'Slovak': 'sk',
-    'Slovenian': 'sl',
-    'Samoan': 'sm',
-    'Shona': 'sn',
-    'Somali': 'so',
-    'Albanian': 'sq',
-    'Serbian': 'sr',
-    'Southern Sotho': 'st',
-    'Sundanese': 'su',
-    'Swedish': 'sv',
-    'Swahili': 'sw',
-    'Tamil': 'ta',
-    'Telugu': 'te',
-    'Tajik': 'tg',
-    'Thai': 'th',
-    'Turkish': 'tr',
-    'Ukrainian': 'uk',
-    'Urdu': 'ur',
-    'Uzbek': 'uz',
-    'Vietnamese': 'vi',
-    'Xhosa': 'xh',
-    'Yiddish': 'yi',
-    'Yoruba': 'yo',
-    'Chinese': 'zh',
-    'Zulu': 'zu'
+def create_dict_iso_languages():
+    dict_lang = {}
+    for code in dict_iso_languages:
+        dict_lang[dict_iso_languages[code]] = code
+    return dict_lang
+
+
+dict_languages_iso = create_dict_iso_languages()
+
+dict_iso_1_to_3 = {
+    'af': 'afr',
+    'am': 'amh',
+    'ar': 'ara',
+    'bg': 'bul',
+    'bn': 'ben',
+    'bs': 'bos',
+    'ca': 'cat',
+    'co': 'cos',
+    'cs': 'ces',
+    'cy': 'cym',
+    'da': 'dan',
+    'de': 'deu',
+    'el': 'ell',
+    'en': 'eng',
+    'eo': 'epo',
+    'es': 'spa',
+    'et': 'est',
+    'eu': 'eus',
+    'fa': 'fas',
+    'fi': 'fin',
+    'fr': 'fra',
+    'fy': 'fry',
+    'ga': 'gle',
+    'gd': 'gla',
+    'gl': 'glg',
+    'gu': 'guj',
+    'ha': 'hau',
+    'he': 'heb',
+    'hi': 'hin',
+    'hr': 'hrv',
+    'ht': 'hat',
+    'hu': 'hun',
+    'hy': 'hye',
+    'id': 'ind',
+    'ig': 'ibo',
+    'is': 'isl',
+    'it': 'ita',
+    'ja': 'jpn',
+    'jv': 'jav',
+    'ka': 'kat',
+    'kk': 'kaz',
+    'km': 'khm',
+    'kn': 'kan',
+    'ko': 'kor',
+    'ku': 'kur',
+    'ky': 'kir',
+    'la': 'lat',
+    'lb': 'ltz',
+    'lo': 'lao',
+    'lt': 'lit',
+    'lv': 'lav',
+    'mg': 'mlg',
+    'mi': 'mri',
+    'mk': 'mkd',
+    'ml': 'mal',
+    'mn': 'mon',
+    'mr': 'mar',
+    'ms': 'msa',
+    'mt': 'mlt',
+    'my': 'mya',
+    'ne': 'nep',
+    'nl': 'nld',
+    'no': 'nor',
+    'ny': 'nya',
+    'pa': 'pan',
+    'pl': 'pol',
+    'ps': 'pus',
+    'pt': 'por',
+    'ro': 'ron',
+    'ru': 'rus',
+    'sd': 'snd',
+    'si': 'sin',
+    'sk': 'slk',
+    'sl': 'slv',
+    'sm': 'smo',
+    'sn': 'sna',
+    'so': 'som',
+    'sq': 'sqi',
+    'sr': 'hbs',  # lexilang invalid use of sr. Should se deprecated sh
+    'st': 'sot',
+    'su': 'sun',
+    'sv': 'swe',
+    'sw': 'swa',
+    'ta': 'tam',
+    'te': 'tel',
+    'tg': 'tgk',
+    'th': 'tha',
+    'tr': 'tur',
+    'uk': 'ukr',
+    'ur': 'urd',
+    'uz': 'uzb',
+    'vi': 'vie',
+    'xh': 'xho',
+    'yi': 'yid',
+    'yo': 'yor',
+    'zh': 'zho',
+    'zu': 'zul'
 }
+
+def convert_iso_code(code_iso1):
+    iso3 = dict_iso_1_to_3.get(code_iso1)
+    if iso3:
+        return iso3
+    elif len(code_iso1) == 3:
+        return code_iso1
 
 def get_language_from_iso(iso_language):
     return dict_iso_languages.get(iso_language, None)
@@ -318,14 +333,16 @@ def get_language_objs(language, obj_type, obj_subtype=''):
 
 ## Objs
 def get_objs_languages(obj_type, obj_subtype=''):
-    if obj_subtype:
-        return r_lang.smembers(f'objs:lang:{obj_type}:{obj_subtype}')
-    else:
-        return r_lang.smembers(f'objs:langs:{obj_type}')
+    if obj_subtype is None:
+        obj_subtype = ''
+    return r_lang.smembers(f'objs:lang:{obj_type}:{obj_subtype}')
 
 ## Obj
 def get_obj_languages(obj_type, obj_subtype, obj_id):
     return r_lang.smembers(f'obj:lang:{obj_type}:{obj_subtype}:{obj_id}')
+
+def get_obj_languages_objs_by_lang(obj_type, obj_subtype, obj_id, lang):
+    return r_lang.smembers(f'obj:lang:{lang}:{obj_type}:{obj_subtype}:{obj_id}')
 
 def get_obj_language_stats(obj_type, obj_subtype, obj_id):
     return r_lang.zrange(f'obj:langs:stat:{obj_type}:{obj_subtype}:{obj_id}', 0, -1, withscores=True)
@@ -335,7 +352,51 @@ def get_obj_main_language(obj_type, obj_subtype, obj_id):
     if language:
         return language[0]
 
-# TODO ADD language to CHAT GLOBAL SET
+# obj_type -> languages
+# obj_type + subtype -> languages   - chat:telegram, subchannel:telegram, thread:telegram, user-account:telegram
+#
+# Stats ZSET obj_type + subtype -> languages
+#
+# obj -> languages
+#
+# if containers: (user-account as container)
+#   container: ZSET -> languages
+#   container + language -> objs_global_id
+# else:
+#   obj_type + subtype + language -> obj_global_id
+
+def get_container_language_objs(language, global_id):
+    return r_lang.smembers(f'obj:lang:{language}:{global_id}')  # TODO REPLACE ME obj->cobj
+
+def _add_container_language(language, global_id, obj_gid):
+    r_lang.sadd(f'obj:lang:{language}:{global_id}', obj_gid)
+    nb = r_lang.zincrby(f'obj:langs:stat:{global_id}', 1, language)
+    if int(nb) == 1:
+        c_type, c_subtype, _ = global_id.split(':', 2)
+        r_lang.zincrby(f'container:stat:{c_type}:{c_subtype}', 1, language)
+
+def _delete_container_language(language, global_id, obj_gid):
+    r_lang.srem(f'obj:lang:{language}:{global_id}', obj_gid)
+    r = r_lang.zincrby(f'obj:langs:stat:{global_id}', -1, language)
+    if int(r) < 1:
+        r_lang.zrem(f'obj:langs:stat:{global_id}', language)
+        c_type, c_subtype, _ = global_id.split(':', 2)
+        nb = r_lang.zincrby(f'container:stat:{c_type}:{c_subtype}', -1, language)
+        if int(nb) < 1:
+            r_lang.zrem(f'container:stat:{c_type}:{c_subtype}', language)
+            return True
+        return False
+    return False
+
+def _delete_obj_type_stats(language, obj_type, obj_subtype):
+    delete_lang_type = True
+    for obj_type in get_object_all_subtypes(obj_type):
+        if r_lang.sismember(f'objs:lang:{obj_type}:{obj_subtype}', language):
+            delete_lang_type = False
+            break
+    if delete_lang_type:
+        r_lang.srem(f'objs:langs:{obj_type}', language)
+
 def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):  # (s)
     if not obj_subtype:
         obj_subtype = ''
@@ -343,37 +404,47 @@ def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=se
 
     r_lang.sadd(f'objs:langs:{obj_type}', language)
     r_lang.sadd(f'objs:lang:{obj_type}:{obj_subtype}', language)
+    # Obj languages
     new = r_lang.sadd(f'obj:lang:{obj_global_id}', language)
-
-    r_lang.sadd(f'languages:{language}', f'{obj_type}:{obj_subtype}') ################### REMOVE ME ???
-    r_lang.sadd(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
-
     if new:
-        for global_id in objs_containers:
-            r_lang.zincrby(f'obj:langs:stat:{global_id}', 1, language)
-
+        # only if no objs_containers, ex: domains
+        if not objs_containers:
+            r_lang.sadd(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
+        else:
+            for global_id in objs_containers:
+                _add_container_language(language, global_id, obj_global_id)
 
 def remove_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
-    rem = r_lang.srem(f'obj:lang:{obj_global_id}', language)
-
+    r_lang.srem(f'obj:lang:{obj_global_id}', language)
     delete_obj_translation(obj_global_id, language)
 
-    r_lang.srem(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
-    if not r_lang.exists(f'langs:{obj_type}:{obj_subtype}:{language}'):
-        r_lang.srem(f'objs:lang:{obj_type}:{obj_subtype}', language)
-        r_lang.srem(f'languages:{language}', f'{obj_type}:{obj_subtype}')
-        if not r_lang.exists(f'objs:lang:{obj_type}:{obj_subtype}'):
-            if r_lang.scard(f'objs:langs:{obj_type}') <= 1:
-                r_lang.srem(f'objs:langs:{obj_type}', language)
+    if not objs_containers:
+        r_lang.srem(f'langs:{obj_type}:{obj_subtype}:{language}', obj_global_id)
+        if not r_lang.exists(f'langs:{obj_type}:{obj_subtype}:{language}'):
+            r_lang.srem(f'objs:lang:{obj_type}:{obj_subtype}', language)
+            _delete_obj_type_stats(language, obj_type, obj_subtype)
 
-    if rem:
+    else:
+        # REMOVE STATS FROM CONTAINER
+        remove_stats_lang = True
         for global_id in objs_containers:
-            r = r_lang.zincrby(f'obj:langs:stat:{global_id}', -1, language)
-            if r < 1:
-                r_lang.zrem(f'obj:langs:stat:{global_id}', language)
+            r = _delete_container_language(language, global_id, obj_global_id)
+            if not r:
+                remove_stats_lang = False
+        if remove_stats_lang:
+            r_lang.srem(f'objs:lang:{obj_type}:{obj_subtype}', language)
+            _delete_obj_type_stats(language, obj_type, obj_subtype)
+
+def delete_obj_language(obj_type, obj_subtype, obj_id, objs_containers=set()):
+    for language in get_obj_languages(obj_type, obj_subtype, obj_id):
+        remove_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
 
 # TODO handle fields
 def detect_obj_language(obj_type, obj_subtype, obj_id, content, objs_containers=set()):
@@ -436,7 +507,6 @@ def delete_obj_translation(obj_global_id, language, field=''):
 
 
 #### AIL Objects ####
-
 class LanguagesDetector:
 
     def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=-1, min_len=0):
@@ -472,6 +542,7 @@ class LanguagesDetector:
 
     def detect_lexilang(self, content):
         language, prob = lexilang_detect(content)
+        # print(language, prob)
         if prob > 0 and self.min_probability == -1:
             return [language]
         elif prob > 0.4:
@@ -495,7 +566,7 @@ class LanguagesDetector:
                     languages.append(language)
         return languages
 
-    def detect(self, content, force_gcld3=False):  # TODO detect length between 20-200 ????
+    def detect(self, content, force_gcld3=False, iso3=True):  # TODO detect length between 20-200 ????
         if not content:
             return []
         content = _clean_text_to_translate(content, html=True)
@@ -518,8 +589,16 @@ class LanguagesDetector:
         # else:
         #     languages = self.detect_libretranslate(content)
         if not languages:
-            languages = []
-        return languages
+            return []
+        if iso3:
+            langs = []
+            for lang in languages:
+                iso_lang = convert_iso_code(lang)
+                if iso_lang:
+                    langs.append(iso_lang)
+            return langs
+        else:
+            return languages
 
 class LanguageTranslator:
 
@@ -600,8 +679,7 @@ def get_translation_languages():
 
 
 if __name__ == '__main__':
-    # t_content = ''
-    langg = LanguageTranslator()
-    # langg = LanguagesDetector()
-    # lang.translate(t_content, source='ru')
-    langg.languages()
+    t_content = ''
+    ddetector = LanguagesDetector(nb_langs=1)
+    langg = ddetector.detect(t_content)
+    print(langg)

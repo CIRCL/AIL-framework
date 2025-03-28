@@ -110,9 +110,35 @@ def chats_explorer_chat():
         chat = chat[0]
         languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
+        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
-                               message_id=message_id, languages_stats=languages_stats,
+                               message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
+                               translation_languages=languages, translation_target=target)
+
+@chats_explorer.route("chats/explorer/chat/lang", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_chat_lang():
+    chat_type = request.args.get('type')
+    chat_id = request.args.get('id')
+    instance_uuid = request.args.get('subtype')
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    language = request.args.get('lang')
+    if language:
+        language = Language.get_iso_from_language(language)
+    if not language:
+        return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
+    meta = chats_viewer.api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=None)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    else:
+        meta = meta[0]
+        languages = Language.get_translation_languages()
+        return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               ail_tags=Tag.get_modal_add_tags(meta['chat']['id'], meta['chat']['type'], meta['chat']['subtype']),
                                translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
@@ -181,9 +207,10 @@ def objects_subchannel_messages():
         subchannel = subchannel[0]
         languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat-subchannel', instance_uuid, subchannel_id)
+        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
-                               message_id=message_id, languages_stats=languages_stats,
+                               message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
@@ -378,8 +405,11 @@ def objects_user_account():
     else:
         user_account = user_account[0]
         languages = Language.get_translation_languages()
+        languages_stats = chats_viewer.api_get_languages_stats('user-account', instance_uuid, user_id)
+        lang_endpoint = url_for('chats_explorer.objects_user_account_lang') + f'?subtype={instance_uuid}&id={user_id}&lang='
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
+                               languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                translation_languages=languages, translation_target=target)
 
 @chats_explorer.route("/objects/user-account_usernames_timeline_json", methods=['GET']) # TODO API
@@ -420,6 +450,30 @@ def objects_user_account_chat():
     if target == "Don't Translate":
         target = None
     meta = chats_viewer.api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translation_target=target)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    else:
+        meta = meta[0]
+        languages = Language.get_translation_languages()
+        return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
+                               translation_languages=languages, translation_target=target)
+
+@chats_explorer.route("/objects/user-account/lang", methods=['GET'])
+@login_required
+@login_read_only
+def objects_user_account_lang():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    language = request.args.get('lang')
+    if language:
+        language = Language.get_iso_from_language(language)
+    if not language:
+        return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    meta = chats_viewer.api_get_user_account_messages_by_lang(user_id, instance_uuid, language, translation_target=None)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
     else:

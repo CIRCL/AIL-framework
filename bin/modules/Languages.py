@@ -34,9 +34,9 @@ class Languages(AbstractModule):
                     print(lang)
                     domain.add_language(lang)
         # Detect Chat Message Language
-        # elif obj.type == 'message':
-        #     lang = obj.detect_language()
-        #     print(self.obj.id, lang)
+        elif obj.type == 'message':
+            lang = obj.detect_language()
+            print(self.obj.id, lang)
 
 
 if __name__ == '__main__':

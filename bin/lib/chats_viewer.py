@@ -348,15 +348,13 @@ def get_username_meta_from_global_id(username_global_id):
 def list_messages_to_dict(l_messages_id, translation_target=None):
     options = {'content', 'files', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
     meta = {}
-    curr_date = None
     for mess_id in l_messages_id:
         message = Messages.Message(mess_id[1:])
         timestamp = message.get_timestamp()
         date_day = message.get_date()
         date_day = f'{date_day[0:4]}/{date_day[4:6]}/{date_day[6:8]}'
-        if date_day != curr_date:
+        if date_day not in meta:
             meta[date_day] = []
-            curr_date = date_day
         meta_mess = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         meta[date_day].append(meta_mess)
 
@@ -366,6 +364,11 @@ def list_messages_to_dict(l_messages_id, translation_target=None):
         #             tags[tag] = 0
         #         tags[tag] += 1
     # return messages, pagination, tags
+
+    # sort dict by date
+    meta = dict(sorted(meta.items()))
+    for k in meta:
+        meta[k] = sorted(meta[k], key=lambda d: d['full_date'])
     return meta
 
 # TODO Filter
@@ -402,7 +405,7 @@ def get_messages_iterator(filters={}):
                     subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
                     messages, _ = subchannel._get_messages(nb=-1)
                     for mess in messages:
-                        _, _, message_id = mess[0].split(':', )
+                        _, _, message_id = mess[0].split(':', 2)
                         yield Messages.Message(message_id)
                     # threads
 
@@ -411,13 +414,13 @@ def get_messages_iterator(filters={}):
                     thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
                     messages, _ = thread._get_messages(nb=-1)
                     for mess in messages:
-                        message_id, _, message_id = mess[0].split(':', )
+                        message_id, _, message_id = mess[0].split(':', 2)
                         yield Messages.Message(message_id)
 
                 # messages
                 messages, _ = chat._get_messages(nb=-1)
                 for mess in messages:
-                    _, _, message_id = mess[0].split(':', )
+                    _, _, message_id = mess[0].split(':', 2)
                     yield Messages.Message(message_id)
                     # threads ???
 
@@ -640,6 +643,10 @@ def _get_chat_card_meta_options():
 def _get_message_bloc_meta_options():
     return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
 
+def _delete_messages_languages():
+    for message in get_messages_iterator():
+        message.delete_languages()
+
 def get_message_report(l_mess): # TODO Force language + translation
     translation_target = 'en'
     chats = {}
@@ -826,7 +833,6 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    # print(chat.get_obj_language_stats())
     meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
@@ -869,11 +875,25 @@ def api_get_nb_year_messages(chat_type, chat_instance_uuid, chat_id, year):
     nb = [[date, value] for date, value in nb.items()]
     return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
-def api_get_languages_stats(chat_type, chat_instance_uuid, chat_id):
-    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
-    if not chat.exists():
+def api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=None):
+    meta = {}
+    obj = get_obj_chat(chat_type, instance_uuid, chat_id)
+    if not obj.exists():
+        return {"status": "error", "reason": f"Unknown chat:   {chat_type}:{instance_uuid}:{chat_id}"}, 404
+    meta['chat'] = obj.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    if meta['chat'].get('username'):
+        meta['chat']['username'] = get_username_meta_from_global_id(meta['chat']['username'])
+    meta['messages'] = list_messages_to_dict(obj.get_messages_by_lang(language), translation_target=None)
+    return meta, 200
+
+def api_get_languages_stats(obj_type, chat_instance_uuid, chat_id):
+    if obj_type == 'user-account':
+        obj = UsersAccount.UserAccount(chat_id, chat_instance_uuid)
+    else:
+        obj = get_obj_chat(obj_type, chat_instance_uuid, chat_id)
+    if not obj.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    stats = chat.get_obj_language_stats()
+    stats = obj.get_obj_language_stats()
     langs = []
     for stat in stats:
         langs.append({'name': Language.get_language_from_iso(stat[0]), 'value': int(stat[1])})
@@ -992,6 +1012,16 @@ def api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translat
         return resp
     meta['chat'] = resp[0]
     return meta, 200
+
+def api_get_user_account_messages_by_lang(user_id, instance_uuid, language, translation_target=None):
+    meta = {}
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    if not user_account.exists():
+        return {"status": "error", "reason": "Unknown user-account"}, 404
+    meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
+    meta['messages'] = list_messages_to_dict(user_account.get_messages_by_lang(language), translation_target=None)
+    return meta, 200
+
 
 def api_get_user_account_nb_all_week_messages(user_id, instance_uuid):
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)

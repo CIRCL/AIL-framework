@@ -26,7 +26,7 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
-from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language
+from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -344,11 +344,17 @@ class AbstractObject(ABC):
     def get_languages(self):
         return get_obj_languages(self.type, self.get_subtype(r_str=True), self.id)
 
+    def get_language_objs(self, language):
+        return get_container_language_objs(language, self.get_global_id())
+
     def add_language(self, language):
         return add_obj_language(language, self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
 
     def remove_language(self, language):
         return remove_obj_language(language, self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
+
+    def delete_languages(self):
+        delete_obj_language(self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
 
     def edit_language(self, old_language, new_language):
         if old_language:
