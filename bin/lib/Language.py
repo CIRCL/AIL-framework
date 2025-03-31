@@ -28,6 +28,7 @@ dict_iso_languages = {
     'afr': 'Afrikaans',
     'amh': 'Amharic',
     'ara': 'Arabic',
+    'aze': 'Azerbaijani',
     'ben': 'Bengali',
     'bos': 'Bosnian',
     'bul': 'Bulgarian',
@@ -55,6 +56,7 @@ dict_iso_languages = {
     'hat': 'Haitian',
     'hau': 'Hausa',
     'haw': 'Hawaiian',
+    'hbs': 'Serbo-Croatian',
     'heb': 'Hebrew',
     'hin': 'Hindi',
     'hmn': 'Hmong',
@@ -110,13 +112,13 @@ dict_iso_languages = {
     'sot': 'Southern Sotho',
     'spa': 'Spanish',
     'sqi': 'Albanian',
-    'hbs': 'Serbo-Croatian',
     'sun': 'Sundanese',
     'swa': 'Swahili',
     'swe': 'Swedish',
     'tam': 'Tamil',
     'tel': 'Telugu',
     'tgk': 'Tajik',
+    'tgl': 'Tagalog',
     'tha': 'Thai',
     'tur': 'Turkish',
     'ukr': 'Ukrainian',
@@ -143,6 +145,7 @@ dict_iso_1_to_3 = {
     'af': 'afr',
     'am': 'amh',
     'ar': 'ara',
+    'az': 'aze',
     'bg': 'bul',
     'bn': 'ben',
     'bs': 'bos',
@@ -203,6 +206,7 @@ dict_iso_1_to_3 = {
     'ne': 'nep',
     'nl': 'nld',
     'no': 'nor',
+    'nb': 'nor', # libretranslate incorrect mapping ?
     'ny': 'nya',
     'pa': 'pan',
     'pl': 'pol',
@@ -227,6 +231,7 @@ dict_iso_1_to_3 = {
     'te': 'tel',
     'tg': 'tgk',
     'th': 'tha',
+    'tl': 'tgl',
     'tr': 'tur',
     'uk': 'ukr',
     'ur': 'urd',
@@ -235,7 +240,7 @@ dict_iso_1_to_3 = {
     'xh': 'xho',
     'yi': 'yid',
     'yo': 'yor',
-    'zh': 'zho',
+    'zh': 'zho',  # {'iso': 'zt', 'language': 'Chinese (traditional)'} libretranslate INVALID code
     'zu': 'zul'
 }
 
@@ -671,7 +676,15 @@ def get_translation_languages():
         try:
             LIST_LANGUAGES = {}
             for lang in LanguageTranslator().languages():
-                LIST_LANGUAGES[lang['iso']] = lang['language']
+                iso = convert_iso_code(lang['iso'])
+                language = get_language_from_iso(iso)
+                if language:
+                    LIST_LANGUAGES[iso] = language
+                # DEBUG
+                # else:
+                #     print('MISSING LANGUAGE', lang)
+                #     print(iso)
+                #     print(language)
         except Exception as e:
             print(e)
             LIST_LANGUAGES = {}
