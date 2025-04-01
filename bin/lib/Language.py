@@ -206,7 +206,7 @@ dict_iso_1_to_3 = {
     'ne': 'nep',
     'nl': 'nld',
     'no': 'nor',
-    'nb': 'nor', # libretranslate incorrect mapping ?
+    'nb': 'nor',  # libretranslate incorrect mapping ?
     'ny': 'nya',
     'pa': 'pan',
     'pl': 'pol',
@@ -515,15 +515,6 @@ def delete_obj_translation(obj_global_id, language, field=''):
 class LanguagesDetector:
 
     def __init__(self, nb_langs=3, min_proportion=0.2, min_probability=-1, min_len=0):
-        lt_url = get_translator_instance()
-        if not lt_url:
-            self.lt = None
-        else:
-            self.lt = LibreTranslateAPI(get_translator_instance())
-        try:
-            self.lt.languages()
-        except Exception:
-            self.lt = None
         self.detector = gcld3.NNetLanguageIdentifier(min_num_bytes=0, max_num_bytes=1000)
         self.nb_langs = nb_langs
         self.min_proportion = min_proportion
@@ -555,22 +546,6 @@ class LanguagesDetector:
         else:
             return []
 
-    def detect_libretranslate(self, content):
-        languages = []
-        try:
-            # [{"confidence": 0.6, "language": "en"}]
-            resp = self.lt.detect(content)
-        except Exception as e:  # TODO ERROR MESSAGE
-            raise Exception(f'libretranslate error: {e}')
-            # resp = []
-        if resp:
-            if isinstance(resp, dict):
-                raise Exception(f'libretranslate error {resp}')
-            for language in resp:
-                if language.confidence >= self.min_probability:
-                    languages.append(language)
-        return languages
-
     def detect(self, content, force_gcld3=False, iso3=True):  # TODO detect length between 20-200 ????
         if not content:
             return []
@@ -587,12 +562,7 @@ class LanguagesDetector:
             languages = self.detect_lexilang(content)
         # gcld3
         else:
-            # if len(content) >= 200 or not self.lt or force_gcld3:
-            # print('gcld3')
             languages = self.detect_gcld3(content)
-        # libretranslate
-        # else:
-        #     languages = self.detect_libretranslate(content)
         if not languages:
             return []
         if iso3:
