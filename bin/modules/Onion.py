@@ -93,7 +93,7 @@ class Onion(AbstractModule):
                 onion_urls.append(url)
 
         if onion_urls:
-            if crawlers.is_crawler_activated():
+            if crawlers.is_crawler_activated() or crawlers.is_lacus_connected():
                 for domain in domains:
                     task_uuid = crawlers.create_task(domain, parent=obj.get_id(), priority=0,
                                                      har=self.har, screenshot=self.screenshot)
