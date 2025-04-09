@@ -118,7 +118,7 @@ ssl_context.suppress_ragged_eofs = True
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
-app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 2000 * 1024 * 1024
 
 # =========  BLUEPRINT  =========#
 app.register_blueprint(root, url_prefix=baseUrl)

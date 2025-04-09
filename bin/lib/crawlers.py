@@ -55,6 +55,7 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 
 ITEMS_FOLDER = config_loader.get_config_str("Directories", "pastes")
 HAR_DIR = config_loader.get_files_directory('har')
+COOKIEJAR_LOCAL_STORAGE = config_loader.get_files_directory('cookiejar_local_storage')
 activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
 D_HAR = config_loader.get_config_boolean('Crawler', 'default_har')
 D_SCREENSHOT = config_loader.get_config_boolean('Crawler', 'default_screenshot')
@@ -719,6 +720,27 @@ class Cookiejar:
     def get_nb_cookies(self):
         return r_crawler.scard(f'cookiejar:cookies:{self.uuid}')
 
+    def get_local_storage_file(self):
+        return f'{os.path.join(COOKIEJAR_LOCAL_STORAGE, self.uuid)}.gz'
+
+    def exists_local_storage(self): # TODO SPLIT in multiple directory ?????
+        return os.path.isfile(self.get_local_storage_file())
+
+    def get_local_storage(self):
+        try:
+            with gzip.open(self.get_local_storage_file()) as f:
+                try:
+                    return json.loads(f.read())
+                except json.decoder.JSONDecodeError:
+                    return {}
+        except Exception as e:
+            print(e)  # TODO LOGS
+            return {}
+
+    def set_local_storage(self, storage): # TODO check if file already exists
+        with gzip.open(self.get_local_storage_file(), 'w+') as f:
+            f.write(json.dumps(storage).encode())
+
     def get_meta(self, level=False, nb_cookies=False, cookies=False, r_json=False):
         meta = {'uuid': self.uuid,
                 'date': self.get_date(),
@@ -862,6 +884,41 @@ def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role,
         return {"status": "error", "reason": "Access Denied"}, 403
 
 ####  API  ####
+
+
+#########################################################################
+
+# TODO edit existing cookiejat local storage
+def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
+    url = data.get('url')
+    storage = data.get('storage')
+
+    if not url:
+        return {'error': 'url not set'}, 400
+    if not storage:
+        return {'error': 'lacus storage not set'}, 400
+
+    cookiejar_uuid = None # TODO edit/replace cookiejar
+    cookies = storage.get('cookies')
+    origins = storage.get('origins')
+
+    if not cookies and not origins:
+        return {'error': 'No cookies or local storage to import'}, 400
+
+    # TODO check if is valid JSON
+
+    # TODO extract DOMAIN
+
+    # Create new cookiejar
+    if not cookiejar_uuid:
+        cookiejar_uuid = create_cookiejar(user_org, user_id, f"{url} - imported from lacus", 1, None)
+    cookiejar = Cookiejar(cookiejar_uuid)
+
+    cookiejar.set_local_storage(storage)
+
+    return {'cookiejar_uuid': cookiejar_uuid}, 200
+
+#########################################################################
 
 # # # # # # # #
 #             #

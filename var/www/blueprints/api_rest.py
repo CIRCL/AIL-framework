@@ -146,6 +146,22 @@ def add_crawler_capture():
     dict_res = {'url': data['url']}
     return create_json_response(dict_res, 200)
 
+@api_rest.route("api/v1/lacus/capture/import", methods=['POST'])
+@token_required('user')
+def lacus_capture_import():  # TODO ONLY LACUS OR HAR
+    pass
+
+@api_rest.route("api/v1/lacus/cookiejar/import", methods=['POST'])
+@token_required('user')
+def lacus_cookiejar_import():  # TODO ONLY LACUS OR HAR
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
+
+    res = crawlers.api_import_lacus_cookiejar(user_org, user_id, data)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #       IMPORTERS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
