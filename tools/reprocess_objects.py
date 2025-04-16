@@ -34,6 +34,7 @@ from modules.CodeReader import CodeReader
 from modules.Cryptocurrencies import Cryptocurrencies
 from modules.Decoder import Decoder
 from modules.Languages import Languages
+from modules.Mail import Mail
 from modules.OcrExtractor import OcrExtractor
 from modules.Onion import Onion
 from modules.PgpDump import PgpDump
@@ -45,6 +46,7 @@ MODULES = {
     'CodeReader': CodeReader,
     'Decoder': Decoder,
     'Languages': Languages,
+    'Mail': Mail,
     'OcrExtractor': OcrExtractor,
     'Onion': Onion,
     'PgpDump': PgpDump

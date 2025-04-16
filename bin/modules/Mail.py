@@ -27,6 +27,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib.objects import Mails
 # from lib import Statistics
 
 
@@ -49,14 +50,25 @@ class Mail(AbstractModule):
         self.mail_threshold = 10
 
         self.regex_timeout = 30
-        self.email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}"
+        #self.email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}"
+        self.email_regex = r"[\w._%+-]+@[\w.-]+\.\w{2,63}"
         re.compile(self.email_regex)
+
+        self.mail_correlation = {"domain", "item", "message"}
+        # self.mail_item_banned_sources = {"alerts/gist.github.com", "archive/gist.github.com"}
+        self.mail_item_allowed_sources = {"crawled", "submitted", "telegram"}
 
     def is_mxdomain_in_cache(self, mxdomain):
         return self.r_cache.exists(f'mxdomain:{mxdomain}')
 
-    def save_mxdomain_in_cache(self, mxdomain):
-        self.r_cache.setex(f'mxdomain:{mxdomain}', datetime.timedelta(days=1), 1)
+    def is_mxdomain_in_cache_down(self, mxdomain):
+        return self.r_cache.exists(f'mxdomain:down:{mxdomain}')
+
+    def save_mxdomain_in_cache(self, mxdomain, is_up=True):
+        if is_up:
+            self.r_cache.setex(f'mxdomain:{mxdomain}', datetime.timedelta(days=1), 1)
+        else:
+            self.r_cache.setex(f'mxdomain:down:{mxdomain}', 3600, 0)
 
     def check_mx_record(self, set_mxdomains):
         """Check if emails MX domains are responding.
@@ -74,9 +86,12 @@ class Mail(AbstractModule):
         for mxdomain in set_mxdomains:
 
             # check if is in cache
-            # # TODO:
+            # # TODO: SAVE INVALID IN CACHE ???
             if self.is_mxdomain_in_cache(mxdomain):
                 valid_mxdomain.append(mxdomain)
+            elif self.is_mxdomain_in_cache_down(mxdomain):
+                print(f'cache down: {mxdomain}')
+                continue
             else:
 
                 # DNS resolution
@@ -93,6 +108,8 @@ class Mail(AbstractModule):
                         # print(answers.rdclass)
                         # print(answers.nameserver)
                         # print()
+                    else:
+                        self.save_mxdomain_in_cache(mxdomain, is_up=False)
 
                 except dns.resolver.NoNameservers:
                     self.logger.debug('NoNameserver, No non-broken nameservers are available to answer the query.')
@@ -105,6 +122,7 @@ class Mail(AbstractModule):
                     print('SyntaxError: EmptyLabel')
                 except dns.resolver.NXDOMAIN:
                     # save_mxdomain_in_cache(mxdomain)
+                    self.save_mxdomain_in_cache(mxdomain, is_up=False)
                     self.logger.debug('The query name does not exist.')
                     print('The query name does not exist.')
                 except dns.name.LabelTooLong:
@@ -113,6 +131,7 @@ class Mail(AbstractModule):
                 except dns.exception.Timeout:
                     print('dns timeout')
                     # save_mxdomain_in_cache(mxdomain)
+                    self.save_mxdomain_in_cache(mxdomain, is_up=False)
                 except Exception as e:
                     print(e)
         return valid_mxdomain
@@ -142,47 +161,47 @@ class Mail(AbstractModule):
         item = self.get_obj()
 
         mails = self.regex_findall(self.email_regex, item.id, item.get_content())
-        mxdomains_email = {}
-        for mail in mails:
-            mxdomain = mail.rsplit('@', 1)[1].lower()
-            if not mxdomain in mxdomains_email:
-                mxdomains_email[mxdomain] = set()
-            mxdomains_email[mxdomain].add(mail)
+        if mails:
+            mxdomains_email = {}
+            for mail in mails:
+                mxdomain = mail.rsplit('@', 1)[1].lower()
+                if not mxdomain in mxdomains_email:
+                    mxdomains_email[mxdomain] = set()
+                mxdomains_email[mxdomain].add(mail.lower())
 
-            # # TODO: add MAIL trackers
+                # # TODO: add MAIL trackers
 
-        valid_mx = self.check_mx_record(mxdomains_email.keys())
-        print(f'valid_mx: {valid_mx}')
-        # mx_tlds = {}
-        num_valid_email = 0
-        for domain_mx in valid_mx:
-            nb_mails = len(mxdomains_email[domain_mx])
-            num_valid_email += nb_mails
+            valid_mx = self.check_mx_record(mxdomains_email.keys())
+            # mx_tlds = {}
+            to_tag = False
+            date = self.obj.get_date()
+            if self.obj.type == 'item':
+                source = self.obj.get_source()
+            else:
+                source = None
 
-            # Create domain_mail stats
-            # msg = f'mail;{nb_mails};{domain_mx};{item_date}'
-            # self.add_message_to_queue(msg, 'ModuleStats')
+            num_valid_email = 0
+            for domain_mx in valid_mx:
+                nb_mails = len(mxdomains_email[domain_mx])
+                num_valid_email += nb_mails
 
-            # Create country stats
-            # self.faup.decode(domain_mx)
-            # tld = self.faup.get()['tld']
-            # try:
-            #     tld = tld.decode()
-            # except:
-            #     pass
-            # mx_tlds[tld] = mx_tlds.get(tld, 0) + nb_mails
-        # for tld in mx_tlds:
-        #     Statistics.add_module_tld_stats_by_date('mail', item_date, tld, mx_tlds[tld])
+                if self.obj.type in self.mail_correlation:
+                    if source in self.mail_item_allowed_sources or source is None:
+                        to_tag = True
+                        for vmail in mxdomains_email[domain_mx]:
+                            # mail = mail.strip()
+                            mail = Mails.create(vmail)
+                            mail.add(date, self.obj)
 
-        msg = f'Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
-        if num_valid_email > self.mail_threshold:
-            print(f'{item.id}    Checked {num_valid_email} e-mail(s)')
-            self.logger.info(msg)
-            # Tags
-            tag = 'infoleak:automatic-detection="mail"'
-            self.add_message_to_queue(message=tag, queue='Tags')
-        elif num_valid_email > 0:
-            self.logger.info(msg)
+            msg = f'Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
+            if num_valid_email >= self.mail_threshold or to_tag:
+                print(f'{item.id}    Checked {num_valid_email} e-mail(s)')
+                self.logger.info(msg)
+                # Tags
+                tag = 'infoleak:automatic-detection="mail"'
+                self.add_message_to_queue(message=tag, queue='Tags')
+            elif num_valid_email > 0:
+                self.logger.info(msg)
 
 
 if __name__ == '__main__':

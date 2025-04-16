@@ -35,6 +35,7 @@ from lib.objects import DomHashs
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
+from lib.objects import Mails
 from lib.objects import Messages
 from lib.objects import Ocrs
 from lib.objects import Pgps
@@ -65,6 +66,7 @@ OBJECTS_CLASS = {
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
     'item': {'obj': Item, 'objs': None}, ####################################################################################################
     'image': {'obj': Images.Image, 'objs': Images.Images},
+    'mail': {'obj': Mails.Mail, 'objs': Mails.Mails},
     'message': {'obj': Messages.Message, 'objs': None}, #############################################################
     'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},
     'pgp': {'obj': Pgps.Pgp, 'objs': Pgps.Pgps},
@@ -369,6 +371,8 @@ def obj_iterator(obj_type, filters):
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.get_all_pgps_objects(filters=filters)
+    elif obj_type == 'mail':
+        return Mails.Mails().get_iterator()
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
     elif obj_type == 'ocr':
@@ -481,6 +485,15 @@ def get_objects_relationship(obj1, obj2):
     elif 'screenshot' in obj_types:
         relationship = 'screenshot-of'
         src, dest = get_relationship_src_dest('screenshot', obj1, obj2)
+    elif 'cookie-name' in obj_types:
+        relationship = 'extracted-from' # TODO ######################################################## set-from
+        src, dest = get_relationship_src_dest('cookie-name', obj1, obj2)
+    elif 'favicon' in obj_types:
+        relationship = 'extracted-from' # TODO ######################################################## seen-from
+        src, dest = get_relationship_src_dest('favicon', obj1, obj2)
+    elif 'dom-hash' in obj_types:
+        relationship = 'extracted-from' # TODO ############################## fingerprint-of     fingerprinted-as
+        src, dest = get_relationship_src_dest('dom-hash', obj1, obj2)
     elif 'domain' in obj_types:
         relationship = 'extracted-from'
         src, dest = get_relationship_src_dest('domain', obj1, obj2)

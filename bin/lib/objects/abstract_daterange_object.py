@@ -178,9 +178,13 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             self.set_last_seen(last_seen)
         r_object.sadd(f'{self.type}:all', self.id)
 
-    # TODO
-    def _delete(self):
-        pass
+    def delete_dates(self):
+        first_seen = r_object.hget(f'meta:{self.type}:{self.id}', 'first_seen')
+        last_seen = r_object.hget(f'meta:{self.type}:{self.id}', 'last_seen')
+        if first_seen and last_seen:
+            for date in Date.get_daterange(first_seen, last_seen):
+                r_object.zrem(f'{self.type}:date:{date}', self.id)
+        r_object.delete(f'meta:{self.type}:{self.id}')
 
 
 class AbstractDaterangeObjects(ABC):
