@@ -149,7 +149,7 @@ def create(content, tags=[]):  # TODO sanityze mail
         punycoded = punycode_encode(content)
     except UnicodeError as e:
         print(content)
-        sys.exit(0)
+        return None
 
     if punycoded != content:
         obj_id = sha256(content.encode()).hexdigest()

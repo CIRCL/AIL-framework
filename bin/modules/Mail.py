@@ -193,7 +193,8 @@ class Mail(AbstractModule):
                             if vmail:
                                 # mail = mail.strip()
                                 mail = Mails.create(vmail)
-                                mail.add(date, self.obj)
+                                if mail:
+                                    mail.add(date, self.obj)
 
             msg = f'Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
             if num_valid_email >= self.mail_threshold or to_tag:
