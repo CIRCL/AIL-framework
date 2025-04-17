@@ -164,10 +164,11 @@ class Mail(AbstractModule):
         if mails:
             mxdomains_email = {}
             for mail in mails:
-                mxdomain = mail.rsplit('@', 1)[1].lower()
-                if not mxdomain in mxdomains_email:
-                    mxdomains_email[mxdomain] = set()
-                mxdomains_email[mxdomain].add(mail.lower())
+                if len(mail) <= 100:
+                    mxdomain = mail.rsplit('@', 1)[1].lower()
+                    if mxdomain not in mxdomains_email:
+                        mxdomains_email[mxdomain] = set()
+                    mxdomains_email[mxdomain].add(mail.lower())
 
                 # # TODO: add MAIL trackers
 
