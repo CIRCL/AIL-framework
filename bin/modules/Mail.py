@@ -189,9 +189,10 @@ class Mail(AbstractModule):
                     if source in self.mail_item_allowed_sources or source is None:
                         to_tag = True
                         for vmail in mxdomains_email[domain_mx]:
-                            # mail = mail.strip()
-                            mail = Mails.create(vmail)
-                            mail.add(date, self.obj)
+                            if vmail:
+                                # mail = mail.strip()
+                                mail = Mails.create(vmail)
+                                mail.add(date, self.obj)
 
             msg = f'Checked {num_valid_email} e-mail(s);{self.obj.get_global_id()}'
             if num_valid_email >= self.mail_threshold or to_tag:

@@ -145,7 +145,12 @@ class Mail(AbstractDaterangeObject):
 
 def create(content, tags=[]):  # TODO sanityze mail
     content = content.strip().lower()
-    punycoded = punycode_encode(content)
+    try:
+        punycoded = punycode_encode(content)
+    except UnicodeError as e:
+        print(content)
+        sys.exit(0)
+
     if punycoded != content:
         obj_id = sha256(content.encode()).hexdigest()
         obj = Mail(obj_id)
