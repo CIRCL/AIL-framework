@@ -49,14 +49,15 @@ CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "hhhash", "item", "mail", "message", "pgp", "title", "screenshot", "username"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "title", "screenshot", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "file-name": ["chat", "item", "message"],
+    "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
     "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "mail", "message", "pgp", "screenshot", "title", "username"],  # chat ???
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "gtracker", "mail", "message", "pgp", "screenshot", "title", "username"],  # chat ???
     "mail": ["domain", "item", "message"],  # chat ??
     "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],

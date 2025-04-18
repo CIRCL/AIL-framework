@@ -32,6 +32,7 @@ from lib.objects import Etags
 from lib.objects import Favicons
 from lib.objects import FilesNames
 from lib.objects import DomHashs
+from lib.objects import GTrackers
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
@@ -64,6 +65,7 @@ OBJECTS_CLASS = {
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
+    'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},
     'item': {'obj': Item, 'objs': None}, ####################################################################################################
     'image': {'obj': Images.Image, 'objs': Images.Images},
     'mail': {'obj': Mails.Mail, 'objs': Mails.Mails},

@@ -272,6 +272,10 @@
                                                 <label class="form-check-label" for="favicon_Check">Favicon</label>
                                             </div>
                                             <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="gtracker_Check" name="gtracker_Check" {%if "gtracker" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="gtracker_Check">G tracking</label>
+                                            </div>
+                                            <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="domhash_Check" name="domhash_Check" {%if "dom-hash" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="domhash_Check">DomHash</label>
                                             </div>
@@ -298,6 +302,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="item_Check" name="item_Check" {%if "item" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="item_Check">Item</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="mail_Check" name="mail_Check" {%if "mail" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="mail_Check">Mail</label>
                                             </div>
 
                                             <hr>

@@ -1,0 +1,16 @@
+<div class="card border-secondary my-2">
+    <div class="card-body text-dark">
+        <h5 class="card-title">Mails Search:</h5>
+        <form action="{{ url_for('objects_gtracker.objects_gtracker_search_post') }}" id="search_subtype_onj" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <select class="custom-select col-2" name="search_type" value="{% if type_to_search %}{{ type_to_search }}{% else %}content{% endif %}" required>
+                    <option value="content">Content Search</option>
+                    <option value="id" {% if type_to_search %}{% if type_to_search == "id" %}selected{% endif %}{% endif %}>ID Search</option>
+                </select>
+                <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="ID or content to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
