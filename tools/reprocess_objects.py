@@ -38,6 +38,7 @@ from modules.Mail import Mail
 from modules.OcrExtractor import OcrExtractor
 from modules.Onion import Onion
 from modules.PgpDump import PgpDump
+from modules.TrackingId import TrackingId
 
 MODULES = {
     'CEDetector': CEDetector,
@@ -49,11 +50,13 @@ MODULES = {
     'Mail': Mail,
     'OcrExtractor': OcrExtractor,
     'Onion': Onion,
-    'PgpDump': PgpDump
+    'PgpDump': PgpDump,
+    'TrackingId': TrackingId
 }
 
 def reprocess_message_objects(object_type, module_name=None, tags=[]):
     filters = {}
+    # filters['sources'] = ['crawled']
     if tags:
         filters['tags'] = tags
     if module_name:
