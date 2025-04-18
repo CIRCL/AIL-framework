@@ -54,7 +54,7 @@
 					Tags:
 					{% for tag in dict_object["metadata"]['tags'] %}
 						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-						data-tagid="{{ tag }}" data-objtype="dom-hash" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
+						data-tagid="{{ tag }}" data-objtype="mail" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
 							{{ tag }}
 						</button>
 					{%  endfor %}
@@ -65,7 +65,7 @@
 			</li>
 		</ul>
 
-		{% with obj_type='dom-hash', obj_id=dict_object['correlation_id'], obj_subtype='' %}
+		{% with obj_type='mail', obj_id=dict_object['correlation_id'], obj_subtype='' %}
 			{% include 'modals/investigations_register_obj.html' %}
 		{% endwith %}
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">

@@ -142,6 +142,12 @@
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
 						{% include 'correlation/metadata_card_favicon.html' %}
+                    {% elif dict_object["object_type"] == "gtracker" %}
+						{% include 'correlation/metadata_card_gtracker.html' %}
+                    {% elif dict_object["object_type"] == "file-name" %}
+						{% include 'correlation/metadata_card_filename.html' %}
+                    {% elif dict_object["object_type"] == "mail" %}
+						{% include 'correlation/metadata_card_mail.html' %}
 					{% endif %}
 
 					<div class="row">
