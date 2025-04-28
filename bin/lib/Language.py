@@ -3,6 +3,8 @@
 
 import os
 import re
+import logging
+import logging.config
 import sys
 import html2text
 
@@ -14,8 +16,12 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
 from lib.ail_core import get_object_all_subtypes
+
+logging.config.dictConfig(ail_logger.get_config(name='ail'))
+logger = logging.getLogger()
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -222,7 +228,7 @@ dict_iso_1_to_3 = {
     'sn': 'sna',
     'so': 'som',
     'sq': 'sqi',
-    'sr': 'hbs',  # lexilang invalid use of sr. Should se deprecated sh
+    'sr': 'hbs',  # Lexilang invalid use of sr. Should se deprecated sh
     'st': 'sot',
     'su': 'sun',
     'sv': 'swe',
@@ -241,15 +247,36 @@ dict_iso_1_to_3 = {
     'yi': 'yid',
     'yo': 'yor',
     'zh': 'zho',  # {'iso': 'zt', 'language': 'Chinese (traditional)'} libretranslate INVALID code
+    'zt': 'zho',  # libretranslate INVALID code for Chinese (traditional)
     'zu': 'zul'
 }
 
-def convert_iso_code(code_iso1):
+def create_dict_iso_3_to_1():
+    dict_lang = {}
+    for code in dict_iso_1_to_3:
+        dict_lang[dict_iso_1_to_3[code]] = code
+    return dict_lang
+
+
+dict_iso_3_to_1 = create_dict_iso_3_to_1()
+
+def convert_iso1_code(code_iso1):
     iso3 = dict_iso_1_to_3.get(code_iso1)
     if iso3:
         return iso3
     elif len(code_iso1) == 3:
         return code_iso1
+    else:
+        raise Exception(f'Invalid language code: {code_iso1}')
+
+def convert_iso3_code(code_iso3):
+    iso1 = dict_iso_3_to_1.get(code_iso3)
+    if iso1:
+        return iso1
+    elif len(iso1) == 3:
+        return iso1
+    else:
+        raise Exception(f'Invalid language code3: {code_iso3}')
 
 def get_language_from_iso(iso_language):
     return dict_iso_languages.get(iso_language, None)
@@ -371,7 +398,7 @@ def get_obj_main_language(obj_type, obj_subtype, obj_id):
 #   obj_type + subtype + language -> obj_global_id
 
 def get_container_language_objs(language, global_id):
-    return r_lang.smembers(f'obj:lang:{language}:{global_id}')  # TODO REPLACE ME obj->cobj
+    return r_lang.smembers(f'obj:lang:{language}:{global_id}')
 
 def _add_container_language(language, global_id, obj_gid):
     r_lang.sadd(f'obj:lang:{language}:{global_id}', obj_gid)
@@ -466,6 +493,7 @@ def detect_obj_language(obj_type, obj_subtype, obj_id, content, objs_containers=
         else:
             add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=objs_containers)
         return language
+    return None
 
 ## Translation
 def r_get_obj_translation(obj_global_id, language, field=''):
@@ -568,7 +596,7 @@ class LanguagesDetector:
         if iso3:
             langs = []
             for lang in languages:
-                iso_lang = convert_iso_code(lang)
+                iso_lang = convert_iso1_code(lang)
                 if iso_lang:
                     langs.append(iso_lang)
             return langs
@@ -585,9 +613,9 @@ class LanguageTranslator:
         languages = []
         try:
             for dict_lang in self.lt.languages():
-                languages.append({'iso': dict_lang['code'], 'language': dict_lang['name']})
+                languages.append({'iso': convert_iso1_code(dict_lang['code']), 'language': dict_lang['name']})
         except Exception as e:
-            print(e)
+            logger.error(f'Failed to Load Libretranslate languages: {e}')
         return languages
 
     def detect_gcld3(self, content):
@@ -617,7 +645,7 @@ class LanguageTranslator:
             # print('##############################################################')
             return language[0]
 
-    def translate(self, content, source=None, target="en"):  # TODO source target
+    def translate(self, content, source=None, target="eng"):
         if target not in get_translation_languages():
             return None
         translation = None
@@ -628,14 +656,22 @@ class LanguageTranslator:
             if source:
                 if source != target:
                     try:
-                        # print(content, source, target)
-                        translation = self.lt.translate(content, source, target)
-                    except:
+                        source_iso1 = convert_iso3_code(source)
+                        target_iso1 = convert_iso3_code(target)
+                    except Exception as e:
+                        logger.error(f'Failed to Translate: {e}')
+                        source_iso1 = None
+                        target_iso1 = None
                         translation = None
-                    # TODO LOG and display error
-                    if translation == content:
-                        # print('EQUAL')
-                        translation = None
+                    if source_iso1 and target_iso1:
+                        try:
+                            translation = self.lt.translate(content, source_iso1, target_iso1)
+                        except Exception as e:
+                            logger.error(f'Libretranslate Translation: {e}')
+                            translation = None
+                        if translation == content:
+                            # print('EQUAL')
+                            translation = None
         return source, translation
 
 
@@ -646,7 +682,7 @@ def get_translation_languages():
         try:
             LIST_LANGUAGES = {}
             for lang in LanguageTranslator().languages():
-                iso = convert_iso_code(lang['iso'])
+                iso = convert_iso1_code(lang['iso'])
                 language = get_language_from_iso(iso)
                 if language:
                     LIST_LANGUAGES[iso] = language
