@@ -1919,6 +1919,8 @@ def api_parse_task_dict_basic(data, user_id):
     proxy = data.get('proxy', None)
     if proxy == 'onion' or proxy == 'tor' or proxy == 'force_tor':
         proxy = 'force_tor'
+    elif proxy == 'web':
+        proxy = None
     elif proxy:
         verify = api_verify_proxy(proxy)
         if verify[1] != 200:
