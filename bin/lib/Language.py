@@ -153,6 +153,7 @@ dict_iso_1_to_3 = {
     'ar': 'ara',
     'az': 'aze',
     'bg': 'bul',
+    'bg-Latn': 'bul',  # gcld3 output
     'bn': 'ben',
     'bs': 'bos',
     'ca': 'cat',
@@ -162,6 +163,7 @@ dict_iso_1_to_3 = {
     'da': 'dan',
     'de': 'deu',
     'el': 'ell',
+    'el-Latn': 'ell',  # gcld3 output
     'en': 'eng',
     'eo': 'epo',
     'es': 'spa',
@@ -178,6 +180,7 @@ dict_iso_1_to_3 = {
     'ha': 'hau',
     'he': 'heb',
     'hi': 'hin',
+    'hi-Latn': 'hin',  # gcld3 output
     'hr': 'hrv',
     'ht': 'hat',
     'hu': 'hun',
@@ -187,6 +190,7 @@ dict_iso_1_to_3 = {
     'is': 'isl',
     'it': 'ita',
     'ja': 'jpn',
+    'ja-Latn': 'jpn',  # gcld3 output
     'jv': 'jav',
     'ka': 'kat',
     'kk': 'kaz',
@@ -214,12 +218,14 @@ dict_iso_1_to_3 = {
     'no': 'nor',
     'nb': 'nor',  # libretranslate incorrect mapping ?
     'ny': 'nya',
+    'oc': 'oci',
     'pa': 'pan',
     'pl': 'pol',
     'ps': 'pus',
     'pt': 'por',
     'ro': 'ron',
     'ru': 'rus',
+    'ru-Latn': 'rus',  # gcld3 output
     'sd': 'snd',
     'si': 'sin',
     'sk': 'slk',
@@ -247,6 +253,7 @@ dict_iso_1_to_3 = {
     'yi': 'yid',
     'yo': 'yor',
     'zh': 'zho',  # {'iso': 'zt', 'language': 'Chinese (traditional)'} libretranslate INVALID code
+    'zh-Latn': 'zho',  # gcld3 output
     'zt': 'zho',  # libretranslate INVALID code for Chinese (traditional)
     'zu': 'zul'
 }
@@ -369,6 +376,9 @@ def get_objs_languages(obj_type, obj_subtype=''):
         obj_subtype = ''
     return r_lang.smembers(f'objs:lang:{obj_type}:{obj_subtype}')
 
+# def get_objs_languages_stats(objs):
+#     pass
+
 ## Obj
 def get_obj_languages(obj_type, obj_subtype, obj_id):
     return r_lang.smembers(f'obj:lang:{obj_type}:{obj_subtype}:{obj_id}')
@@ -396,6 +406,18 @@ def get_obj_main_language(obj_type, obj_subtype, obj_id):
 #   container + language -> objs_global_id
 # else:
 #   obj_type + subtype + language -> obj_global_id
+
+def get_obj_subtype_languages(obj_type, obj_subtype):
+    return r_lang.smembers(f'objs:lang:{obj_type}:{obj_subtype}')
+
+def get_obj_subtype_language_nb(obj_type, obj_subtype, language):
+    return r_lang.scard(f'langs:{obj_type}:{obj_subtype}:{language}')
+
+def get_container_subtype_languages(obj_type, obj_subtype):
+    nb = {}
+    for language in r_lang.zrange(f'container:stat:{obj_type}:{obj_subtype}', 0, -1, withscores=True):
+        nb[language[0]] = int(language[1])
+    return nb
 
 def get_container_language_objs(language, global_id):
     return r_lang.smembers(f'obj:lang:{language}:{global_id}')
@@ -551,7 +573,6 @@ class LanguagesDetector:
 
     def detect_gcld3(self, content):
         languages = []
-        content = _clean_text_to_translate(content, html=True)
         if self.min_len > 0:
             if len(content) < self.min_len:
                 return languages
