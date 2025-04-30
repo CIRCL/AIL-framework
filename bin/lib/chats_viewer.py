@@ -192,6 +192,9 @@ class ChatServiceInstance:
             for chat_id in self.get_chats_with_messages():
                 meta['chats'].append(
                     Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'}))
+        if 'languages' in options:
+            meta['languages'] = Language.get_container_subtype_languages('chat', self.uuid)
+            print(meta['languages'])
         return meta
 
     def get_nb_chats(self):
@@ -819,7 +822,7 @@ def api_get_chat_service_instance(chat_instance_uuid):
     if not chat_instance.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
     # return chat_instance.get_meta({'chats'}), 200
-    return chat_instance.get_meta({'chats_with_messages'}), 200
+    return chat_instance.get_meta({'chats_with_messages', 'languages'}), 200
 
 def api_get_chats_selector():
     selector = []
