@@ -51,7 +51,7 @@ class Mail(AbstractModule):
 
         self.regex_timeout = 30
         #self.email_regex = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}"
-        self.email_regex = r"[\w._%+-]+@[\w.-]+\.\w{2,63}"
+        self.email_regex = r"[\w._+-]+@[\w.-]+\.\w{2,63}"
         re.compile(self.email_regex)
 
         self.mail_correlation = {"domain", "item", "message"}
@@ -164,6 +164,8 @@ class Mail(AbstractModule):
         if mails:
             mxdomains_email = {}
             for mail in mails:
+                if mail.startswith('-'):
+                    mail = mail[1:]
                 if len(mail) <= 100:
                     mxdomain = mail.rsplit('@', 1)[1].lower()
                     if mxdomain not in mxdomains_email:
