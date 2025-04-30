@@ -89,6 +89,20 @@ Allow easy creation and customization by extending an abstract class.
 - Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
 - Crawler scheduler to trigger crawling on demand or at regular intervals for URLs or Tor hidden services
 
+### Trackers:
+Trackers are user-defined rules or patterns that automatically detect, tag and notify about relevant information collected by AIL.
+
+Trackers types: [Documentation](/doc/README.md#trackers-)
+- word or set of words
+- YARA rules
+- Regex
+- Typo Squatting
+
+![tracker-create](./doc/screenshots/tracker_create.png "AIL framework create tracker")
+
+![tracker-yara](./doc/screenshots/tracker_yara.png "AIL framework Yara tracker")
+
+![retro-hunt](./doc/screenshots/retro_hunt.png "AIL framework Retro Hunt")
 
 ## Installation
 
@@ -112,7 +126,7 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 Requirement:
 - Python 3.8+
 
-## Installation Notes
+### Installation Notes
 
 For Lacus Crawler and LibreTranslate installation instructions (if you want to use those features), refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
 
@@ -136,6 +150,9 @@ The default credentials for the web interface are located in the ``DEFAULT_PASSW
 
 CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://github.com/ail-project/ail-training](https://github.com/ail-project/ail-training).
 
+## Documentation
+
+The documentation is available in [doc/README.md](doc/README.md)
 
 ## API
 
@@ -206,12 +223,6 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ![ui_submit](./doc/screenshots/ui_submit.png?raw=true "AIL framework UI importer")
 
 ### Trackers
-
-![tracker-create](./doc/screenshots/tracker_create.png?raw=true "AIL framework create tracker")
-
-![tracker-yara](./doc/screenshots/tracker_yara.png?raw=true "AIL framework Yara tracker")
-
-![retro-hunt](./doc/screenshots/retro_hunt.png?raw=true "AIL framework Retro Hunt")
 
 ## License
 
