@@ -43,7 +43,7 @@ resulting in enhanced performance and speed improvements.
 - **Database Upgrade**: The database has been migrated from ARDB to Kvrocks.
 - **New Correlation Engine**: AIL v5.0 introduces a new powerful correlation engine with two new correlation types: CVE and Title.
 - **Enhanced Logging**: The logging system has been improved to provide better troubleshooting capabilities.
-- **Tagging Support**: [AIL objects](./doc/README.md#ail-objects) now support tagging, 
+- **Tagging Support**: [AIL objects](./doc/README.md#ail_objects) now support tagging, 
 allowing users to categorize and label extracted information for easier analysis and organization.
 - **Trackers**: Improved objects filtering, PGP and decoded tracking added.
 - **UI Content Visualization**: The user interface has been upgraded to visualize extracted and tracked information.
@@ -92,7 +92,7 @@ Allow easy creation and customization by extending an abstract class.
 ### Trackers:
 Trackers are user-defined rules or patterns that automatically detect, tag and notify about relevant information collected by AIL.
 
-Trackers types: [Documentation](/doc/README.md#trackers-)
+Trackers types: [Documentation](/doc/README.md#trackers)
 - word or set of words
 - YARA rules
 - Regex

@@ -5,7 +5,7 @@
 - [Feeding AIL](#feeding_ail)
   - [AIL Feeders](#ail_feeders)
   - [pystemon](#pystemon)
-- [Trackers](#trackers-)
+- [Trackers](#trackers)
 - [Users Roles](#users_roles)
 
 
@@ -381,6 +381,8 @@ rule disney_plus : credential_leak
 - Generate a list of potential typo squatting domains for a given domain.
 
 ### How to create a tracker
+
+A new tracker can be created from the Leak Hunter section in the UI.
 
 # <a name="users_roles"></a> Users ROLES
 
