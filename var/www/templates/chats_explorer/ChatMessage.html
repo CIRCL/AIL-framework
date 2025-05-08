@@ -215,11 +215,13 @@
                     </div>
                 </div>
 
-                <div class="my-2">
-                    {% with meta=meta['chat'],report_mode=False %}
-                        {% include 'chats_explorer/basic_card_chat.html' %}
-                    {% endwith %}
-                </div>
+                {% if meta['chat'] %}
+                    <div class="my-2">
+                        {% with meta=meta['chat'],report_mode=False %}
+                            {% include 'chats_explorer/basic_card_chat.html' %}
+                        {% endwith %}
+                    </div>
+                {% endif %}
 
 
                 <div class="position-relative">
