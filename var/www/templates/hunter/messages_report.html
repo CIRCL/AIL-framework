@@ -51,17 +51,26 @@
 
             <div class="col-12">
 
-            <h1>Tracker Report:</h1>
+            {% if meta['type'] == 'retro_hunt' %}
+                <h1>AIL Retro Hunt Report:</h1>
+            {% else %}
+                <h1>AIL Tracker Report:</h1>
+            {% endif %}
 
             <div class="row">
                 <div class="col-8">
 
                     <div class="card my-2">
                         <div class="card-header bg-dark text-white">
-                            <span class="badge badge-light lex-row-reverse float-right">
-                                <span id="sparkline"></span>
-                            </span>
+                            {% if meta['sparkline'] %}
+                                <span class="badge badge-light lex-row-reverse float-right">
+                                    <span id="sparkline"></span>
+                                </span>
+                            {% endif %}
                             <h4 class="card-title">
+                                {% if meta['name'] %}
+                                    {{ meta['name'] }}
+                                {% endif %}
                                 {% if meta['description'] %}
                                     {{ meta['description'] }}
                                 {% endif %}
@@ -70,23 +79,30 @@
                         <div class="card-body bg-light pt-2">
                             <table class="table table-borderless">
                                 <tbody>
-                                <tr>
-                                    <td class="text-right"><b>Type</b></td>
-                                    <td>
-                                        {% if meta['type'] == 'word' %}
-                                            <i class="fas fa-font"></i>&nbsp;
-                                        {% elif meta['type'] == 'set' %}
-                                            <i class="fas fa-layer-group"></i>&nbsp;
-                                        {% elif meta['type'] == 'regex' %}
-                                            <i class="fas fa-compass"></i>&nbsp;
-                                        {% elif meta['type'] == 'typosquatting' %}
-                                            <i class="fas fa-clone"></i>&nbsp;
-                                        {% elif meta['type'] == 'yara' %}
-                                            <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>&nbsp;
-                                        {% endif %}
-                                        {{ meta['type'] }}
-                                    </td>
-                                </tr>
+                                {% if meta['type'] == 'retro_hunt' %}
+                                    <tr>
+                                        <td class="text-right"><b>uuid</b></td>
+                                        <td>{{ meta['uuid'] }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td class="text-right"><b>Type</b></td>
+                                        <td>
+                                            {% if meta['type'] == 'word' %}
+                                                <i class="fas fa-font"></i>&nbsp;
+                                            {% elif meta['type'] == 'set' %}
+                                                <i class="fas fa-layer-group"></i>&nbsp;
+                                            {% elif meta['type'] == 'regex' %}
+                                                <i class="fas fa-compass"></i>&nbsp;
+                                            {% elif meta['type'] == 'typosquatting' %}
+                                                <i class="fas fa-clone"></i>&nbsp;
+                                            {% elif meta['type'] == 'yara' %}
+                                                <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>&nbsp;
+                                            {% endif %}
+                                            {{ meta['type'] }}
+                                        </td>
+                                    </tr>
+                                {% endif %}
                                 <tr>
                                     <td class="text-right"><b>Generation Date</b></td>
                                     <td>
@@ -97,7 +113,7 @@
                                     <td class="text-right"><b>First Seen &nbsp;<i class="fas fa-hourglass-start"></i></b></td>
                                     <td>
                                         {% if meta['first_seen'] %}
-                                            {{ meta['first_seen'][0:4] }} - {{ meta['first_seen'][4:6] }} - {{ meta['first_seen'][6:8] }}
+                                            <b>{{ meta['first_seen'] }}</b>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -105,7 +121,7 @@
                                     <td class="text-right"><b>Last Seen &nbsp;<i class="fas fa-hourglass-end"></i></b></td>
                                     <td>
                                         {% if meta['last_seen'] %}
-                                            {{ meta['last_seen'][0:4] }} - {{ meta['last_seen'][4:6] }} - {{ meta['last_seen'][6:8] }}
+                                            <b>{{ meta['last_seen'] }}</b>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -132,7 +148,7 @@
                                     </td>
                                 </tr>
                                 </tbody>
-                                {% if meta['type'] != 'yara' %}
+                                {% if meta['type'] != 'yara' and meta['type'] != 'retro_hunt' %}
                                     <tr>
                                         <td class="text-right"><b>Tracker</b></td>
                                         <td>

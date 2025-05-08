@@ -20,6 +20,9 @@
         max-width: 50%;
         filter: blur(5px);
     }
+    .object_full_image {
+        max-width: 50%;
+    }
 </style>
 
 <div class="chat-message-left pb-1" id="{{ message['_id'] }}">
@@ -91,7 +94,7 @@
         {% endif %}
         {% if message['images'] %}
             {% for message_image in message['images'] %}
-                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}"  loading="lazy">
+                <img class="{% if force_full_image%}object_full_image{% else %}object_image{% endif %} mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}"  loading="lazy">
                 {% if message_image['ocr'] %}
                     <span>
                         <a class="btn btn-info" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>

@@ -703,4 +703,42 @@ def retro_hunt_delete_task():
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
 
 
+@hunters.route('/retro_hunt/objects/report', methods=['GET'])
+@login_required
+@login_admin
+def retro_hunt_objects_report():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    task_uuid = request.args.get('uuid', None)
+    res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
+    if res:
+        return create_json_response(res[0], res[1])
+    retro_hunt = Tracker.RetroHunt(task_uuid)
+    res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+
+    meta = retro_hunt.get_meta(options={'creator', 'date', 'description', 'progress', 'filters', 'nb_objs', 'tags'})
+    yara_rule_content = Tracker.get_yara_rule_content(meta['rule'])
+    meta['filters'] = json.dumps(meta['filters'], indent=4)
+
+    # tracker = Tracker.Tracker(tracker_uuid)
+    # meta = tracker.get_meta(options={'description', 'sparkline', 'tags', 'nb_objs'})
+
+    chats, messages = chats_viewer.get_message_report(retro_hunt.get_objs())
+    if messages:
+        meta['first_seen'] = messages[0]['full_date']
+        if len(messages) > 1:
+            meta['last_seen'] = messages[-1]['full_date']
+        else:
+            meta['last_seen'] = meta['first_seen']
+
+    meta['date'] = Date.get_current_utc_full_time()
+    meta['type'] = 'retro_hunt'
+
+    return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
+                           chats=chats, messages=messages, bootstrap_label=bootstrap_label, force_full_image=True)
+
+
 ##  - -  ##

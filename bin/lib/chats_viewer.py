@@ -172,11 +172,15 @@ class ChatServiceInstance:
         network = r_obj.hget(f'chatSerIns:{self.uuid}', 'network')
         if network:
             return network
+        else:
+            return None
 
     def get_address(self): # return objects ????
         address = r_obj.hget(f'chatSerIns:{self.uuid}', 'address')
         if address:
             return address
+        else:
+            return None
 
     def get_meta(self, options=set()):
         meta = {'uuid': self.uuid,
@@ -194,7 +198,6 @@ class ChatServiceInstance:
                     Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'}))
         if 'languages' in options:
             meta['languages'] = Language.get_container_subtype_languages('chat', self.uuid)
-            print(meta['languages'])
         return meta
 
     def get_nb_chats(self):
@@ -205,6 +208,54 @@ class ChatServiceInstance:
 
     def get_chats_with_messages(self):
         return Chats.Chats().get_ids_with_messages_by_subtype(self.uuid)
+
+    def get_messages_languages(self):
+        languages = {}
+        for chat_id in self.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, self.uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, self.uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', 2)
+                    message = Messages.Message(message_id)
+                    language = message.get_language()
+                    if not language:
+                        continue
+                    if language not in languages:
+                        languages[language] = 1
+                    else:
+                        languages[language] += 1
+            # threads
+            for threads in chat.get_threads():
+                thread = ChatThreads.ChatThread(threads['id'], self.uuid)
+                messages, _ = thread._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', 2)
+                    message = Messages.Message(message_id)
+                    language = message.get_language()
+                    if not language:
+                        continue
+                    if language not in languages:
+                        languages[language] = 1
+                    else:
+                        languages[language] += 1
+            # messages
+            messages, _ = chat._get_messages(nb=-1)
+            for mess in messages:
+                _, _, message_id = mess[0].split(':', 2)
+                message = Messages.Message(message_id)
+                language = message.get_language()
+                if not language:
+                    continue
+                if language not in languages:
+                    languages[language] = 1
+                else:
+                    languages[language] += 1
+
+        return languages
 
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
@@ -237,6 +288,8 @@ def get_chat_service_instance(protocol, network, address):
     instance_uuid = get_chat_service_instance_uuid(protocol, network, address)
     if instance_uuid:
         return ChatServiceInstance(instance_uuid)
+    else:
+        return None
 
 def create_chat_service_instance(protocol, network=None, address=None):
     instance_uuid = get_chat_service_instance_uuid(protocol, network, address)
@@ -287,14 +340,6 @@ def create_chat_service_instance(protocol, network=None, address=None):
 
 
 # Chat -> subtype=uuid, id = chat id
-
-
-# instance_uuid -> chat id
-
-
-# protocol - uniq ID
-# protocol + network -> uuid ????
-# protocol + network + address -> uuid
 
 #######################################################################################
 
@@ -652,14 +697,28 @@ def _delete_messages_languages():
 
 def get_message_report(l_mess): # TODO Force language + translation
     translation_target = 'en'
+    translation_target = None
     chats = {}
     messages = []
     mess_options = _get_message_bloc_meta_options()
 
-    l_mess = sorted(l_mess, key=lambda x: x[2])
-
+    l_messages = []
+    l_ocrs = []
     for m in l_mess:
-        message = Messages.Message(m[2])
+        if m[0] == 'message':
+            l_messages.append(m[2])
+        elif m[0] == 'ocr':
+            l_ocrs.append(m[2])
+
+    for o in l_ocrs:
+        ocr = Ocr(o)
+        for m in ocr.get_messages():
+            l_messages.append(m)
+
+    l_messages = sorted(l_messages, key=lambda x: x)
+
+    for m in l_messages:
+        message = Messages.Message(m)
         meta = message.get_meta(options=mess_options, translation_target=translation_target)
         if meta['chat'] not in chats:
             chat = Chats.Chat(meta['chat'], message.get_chat_instance())
@@ -822,7 +881,13 @@ def api_get_chat_service_instance(chat_instance_uuid):
     if not chat_instance.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
     # return chat_instance.get_meta({'chats'}), 200
-    return chat_instance.get_meta({'chats_with_messages', 'languages'}), 200
+    return chat_instance.get_meta({'chats_with_messages'}), 200
+
+def api_get_messages_languages(instance_uuid):
+    chat_instance = ChatServiceInstance(instance_uuid)
+    if not chat_instance.exists():
+        return {"status": "error", "reason": "Unknown uuid"}, 404
+    return chat_instance.get_messages_languages(), 200
 
 def api_get_chats_selector():
     selector = []
