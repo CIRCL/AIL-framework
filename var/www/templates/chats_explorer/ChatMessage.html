@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Chat Message - AIL</title>
+  <title>Message - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -203,6 +203,23 @@
                 {% with translate_url=url_for('chats_explorer.objects_message', id=meta['id']), obj_id=meta['id'] %}
                     {% include 'chats_explorer/block_translation.html' %}
                 {% endwith %}
+
+                <div class="text-center my-2">
+                    <div class="card-body">
+                        <h4 class="card-title">
+                            {% if meta['protocol']['icon'] %}
+                                <i class="{{ meta['protocol']['icon']['style'] }} {{ meta['protocol']['icon']['icon'] }}"></i>
+                            {% endif %}
+                            <b>{{ meta['protocol']['id'] }}</b>
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="my-2">
+                    {% with meta=meta['chat'],report_mode=False %}
+                        {% include 'chats_explorer/basic_card_chat.html' %}
+                    {% endwith %}
+                </div>
 
 
                 <div class="position-relative">

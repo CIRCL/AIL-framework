@@ -69,14 +69,25 @@ def chats_explorer_networks():
 @login_required
 @login_read_only
 def chats_explorer_instance():
-    intance_uuid = request.args.get('subtype')
-    chat_instance = chats_viewer.api_get_chat_service_instance(intance_uuid)
+    instance_uuid = request.args.get('subtype')
+    chat_instance = chats_viewer.api_get_chat_service_instance(instance_uuid)
     if chat_instance[1] != 200:
         return create_json_response(chat_instance[0], chat_instance[1])
     else:
         chat_instance = chat_instance[0]
         return render_template('chat_instance.html', chat_instance=chat_instance,
                                bootstrap_label=bootstrap_label)
+
+@chats_explorer.route("chats/explorer/instances/languages/messages", methods=['GET'])
+@login_required
+@login_read_only
+def chats_explorer_instance_languages_messages():
+    instance_uuid = request.args.get('subtype')
+    languages = chats_viewer.api_get_messages_languages(instance_uuid)
+    if languages[1] != 200:
+        return create_json_response(languages[0], languages[1])
+    else:
+        return jsonify(languages[0])
 
 @chats_explorer.route("chats/explorer/chats/selector", methods=['GET'])
 @login_required
@@ -343,6 +354,11 @@ def objects_message():
         return create_json_response(message[0], message[1])
     else:
         message = message[0]
+        message['chat'] = chats_viewer.get_chat_meta_from_global_id(message['container'])
+        if message['chat']['username']:
+            message['chat']['username'] = chats_viewer.get_username_meta_from_global_id(message['chat']['username'])
+        message['protocol'] = chats_viewer.get_chat_protocol_meta(message['protocol'])
+
         languages = Language.get_translation_languages()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])

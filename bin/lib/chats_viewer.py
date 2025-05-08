@@ -111,10 +111,13 @@ def get_chat_protocols():
 def get_chat_protocols_meta():
     metas = []
     for protocol_id in get_chat_protocols():
-        protocol = ChatProtocol(protocol_id)
-        metas.append(protocol.get_meta(options={'icon'}))
+        metas.append(get_chat_protocol_meta(protocol_id))
     metas = sorted(metas, key=lambda d: d['id'])
     return metas
+
+def get_chat_protocol_meta(protocol_id):
+    protocol = ChatProtocol(protocol_id)
+    return protocol.get_meta(options={'icon'})
 
 class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
     def __init__(self, protocol):
@@ -378,7 +381,7 @@ def get_subchannels_meta_from_global_id(subchannels, translation_target=None):
 def get_chat_meta_from_global_id(chat_global_id):
     _, instance_uuid, chat_id = chat_global_id.split(':', 2)
     chat = Chats.Chat(chat_id, instance_uuid)
-    return chat.get_meta()
+    return get_obj_chat_meta(chat, new_options={'nb_participants', 'tags_safe'})
 
 def get_threads_metas(threads):
     metas = []
@@ -695,6 +698,9 @@ def _delete_messages_languages():
     for message in get_messages_iterator():
         message.delete_languages()
 
+# TODO
+#   - Messages duplicates
+#   - Number of tracked messages by chat
 def get_message_report(l_mess): # TODO Force language + translation
     translation_target = 'en'
     translation_target = None
@@ -1017,7 +1023,7 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})

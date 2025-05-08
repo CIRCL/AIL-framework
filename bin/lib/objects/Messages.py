@@ -26,6 +26,7 @@ from flask import url_for
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_obj = config_loader.get_db_conn("Kvrocks_DB")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 # r_content = config_loader.get_db_conn("Kvrocks_Content")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -74,6 +75,10 @@ class Message(AbstractObject):
     def get_chat_instance(self):
         c_id = self.id.split('/')
         return c_id[0]
+
+    def get_protocol(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'protocol')
 
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
@@ -308,6 +313,8 @@ class Message(AbstractObject):
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
+        if 'protocol':
+            meta['protocol'] = self.get_protocol()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
             if meta['parent'] and 'parent_meta' in options:

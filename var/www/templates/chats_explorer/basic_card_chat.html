@@ -92,9 +92,11 @@
             </div>
         </div>
 
-        <div>
-            <pre class="my-0" style="white-space: pre-wrap;">{{ meta['info'] }}</pre>
-        </div>
+        {% if meta['info'] %}
+            <div>
+                <pre class="my-0" style="white-space: pre-wrap;">{{ meta['info'] }}</pre>
+            </div>
+        {% endif %}
 
         <div class="">
             {% for tag in meta['tags'] %}
