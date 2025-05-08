@@ -354,10 +354,6 @@ def objects_message():
         return create_json_response(message[0], message[1])
     else:
         message = message[0]
-        message['chat'] = chats_viewer.get_chat_meta_from_global_id(message['container'])
-        if message['chat']['username']:
-            message['chat']['username'] = chats_viewer.get_username_meta_from_global_id(message['chat']['username'])
-        message['protocol'] = chats_viewer.get_chat_protocol_meta(message['protocol'])
 
         languages = Language.get_translation_languages()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)

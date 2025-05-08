@@ -373,10 +373,13 @@ def get_obj_chat_meta(obj_chat, new_options=set()):
 def get_subchannels_meta_from_global_id(subchannels, translation_target=None):
     meta = []
     for sub in subchannels:
-        _, instance_uuid, sub_id = sub.split(':', 2)
-        subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
-        meta.append(subchannel.get_meta({'nb_messages', 'created_at', 'icon', 'translation'}, translation_target=translation_target))
+        meta.append(get_subchannel_meta_from_global_id(sub, translation_target=translation_target))
     return meta
+
+def get_subchannel_meta_from_global_id(subchannel, translation_target=None):
+    _, instance_uuid, sub_id = subchannel.split(':', 2)
+    subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
+    return subchannel.get_meta({'nb_messages', 'created_at', 'icon', 'translation'}, translation_target=translation_target)
 
 def get_chat_meta_from_global_id(chat_global_id):
     _, instance_uuid, chat_id = chat_global_id.split(':', 2)
@@ -1037,6 +1040,17 @@ def api_get_message(message_id, translation_target=None):
         qr = Qrcode(q)
         qrcodes.append({'id': qr.id, 'content': qr.get_content(), 'tags': qr.get_tags()})
     meta['qrcodes'] = qrcodes
+
+    chat_instance = message.get_chat_instance()
+    meta['chat'] = get_chat_meta_from_global_id(f'chat:{chat_instance}:{meta["chat"]}')
+    if meta['chat']['subchannels']:
+        meta['chat']['subchannels'] = get_subchannels_meta_from_global_id(meta['chat']['subchannels'])
+
+
+    if meta['chat']['username']:
+        meta['chat']['username'] = get_username_meta_from_global_id(meta['chat']['username'])
+    meta['protocol'] = get_chat_protocol_meta(meta['protocol'])
+
     return meta, 200
 
 def api_message_detect_language(message_id):

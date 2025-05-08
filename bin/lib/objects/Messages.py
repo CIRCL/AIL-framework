@@ -127,11 +127,15 @@ class Message(AbstractObject):
         subchannel = self.get_correlation('chat-subchannel')
         if subchannel.get('chat-subchannel'):
             return f'chat-subchannel:{subchannel["chat-subchannel"].pop()}'
+        else:
+            return None
 
     def get_current_thread(self):
         subchannel = self.get_correlation('chat-thread')
         if subchannel.get('chat-thread'):
             return f'chat-thread:{subchannel["chat-thread"].pop()}'
+        else:
+            return None
 
     # children thread
     def get_thread(self):
