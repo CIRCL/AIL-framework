@@ -19,6 +19,7 @@ from lib import ail_core
 config_loader = ConfigLoader()
 r_queues = config_loader.get_redis_conn("Redis_Queues")
 r_obj_process = config_loader.get_redis_conn("Redis_Process")
+r_db = config_loader.get_db_conn('Kvrocks_DB')
 timeout_queue_obj = 172800
 config_loader = None
 
@@ -156,7 +157,9 @@ def get_queues_modules():
     return r_queues.hkeys('queues')
 
 def get_nb_queues_modules():
-    return r_queues.hgetall('queues')
+    nb = r_queues.hgetall('queues')
+    nb['FeederModuleImporter'] = r_db.llen('importer:feeder')
+    return nb
 
 def get_nb_sorted_queues_modules():
     res = r_queues.hgetall('queues')
