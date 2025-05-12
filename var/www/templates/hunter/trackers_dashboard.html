@@ -88,6 +88,11 @@
 
         {# TODO Buttons#}
 
+            <a class="btn btn-primary my-2" href="{{ url_for('hunters.add_tracked_menu') }}">
+                <i class="fas fa-plus-circle ml-auto"></i>
+                Create New Tracker
+            </a>
+
             <div class="card my-3">
                 <div class="card-header bg-dark text-white">
                     <h5 class="card-title"><b>Trackers Last Matches</b></h5>
@@ -129,11 +134,6 @@
                 </div>
             </div>
 
-
-            <a class="btn btn-primary my-4" href="{{ url_for('hunters.add_tracked_menu') }}">
-                <i class="fas fa-plus-circle ml-auto"></i>
-                Create New Tracker
-            </a>
 
         </div>
     </div>
