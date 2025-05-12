@@ -29,6 +29,8 @@ r_lang = config_loader.get_db_conn("Kvrocks_Languages")
 TRANSLATOR_URL = config_loader.get_config_str('Translation', 'libretranslate')
 config_loader = None
 
+_translate_char_table = str.maketrans(dict.fromkeys("!\"#$%&()*+,/:;<=>?@[\\]^_`{|}~.", " "))
+
 
 dict_iso_languages = {
     'afr': 'Afrikaans',
@@ -328,6 +330,8 @@ def _clean_text_to_translate(content, html=False, keys_blocks=True):
     if html:
         content = _get_html2text(content, ignore_links=True)
 
+    # TODO REMOVE @ USERNAMES (telegram)
+
     # REMOVE URLS
     regex = r'\b(?:http://|https://)?(?:[a-zA-Z\d-]{,63}(?:\.[a-zA-Z\d-]{,63})+)(?:\:[0-9]+)*(?:/(?:$|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*\b'
     url_regex = re.compile(regex)
@@ -353,7 +357,15 @@ def _clean_text_to_translate(content, html=False, keys_blocks=True):
         res = re.findall(regex_pgp_message, content)
         for it in res:
             content = content.replace(it, '')
-    return content
+
+    return content.strip().translate(_translate_char_table)
+
+# def get_words_count(content):
+#     content = content.split()
+#     for c in content:
+#     print(content)
+#     print(len(content))
+
 
 #### LANGUAGE ENGINE ####
 
@@ -599,6 +611,7 @@ class LanguagesDetector:
         if not content:
             return []
         content = _clean_text_to_translate(content, html=True)
+        # get_words_count(content)
         if not content:
             return []
         # DEBUG

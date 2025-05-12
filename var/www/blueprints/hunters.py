@@ -737,6 +737,10 @@ def retro_hunt_objects_report():
     meta['date'] = Date.get_current_utc_full_time()
     meta['type'] = 'retro_hunt'
 
+    # TODO
+    #       - Filter duplicates messages
+    #       - numbers of messages by chats
+
     return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
                            chats=chats, messages=messages, bootstrap_label=bootstrap_label, force_full_image=True)
 
