@@ -264,6 +264,12 @@ def sanitise_daterange(date_from, date_to, separator='', date_type='str'):
         date_to = res
     return date_from, date_to
 
+def get_previous_month():
+    now = datetime.date.today()
+    first = now.replace(day=1)
+    last_month = first - datetime.timedelta(days=1)
+    return last_month.strftime("%Y%m")
+
 def get_previous_month_date():
     now = datetime.date.today()
     first = now.replace(day=1)

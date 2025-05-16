@@ -254,6 +254,10 @@ class Message(AbstractObject):
         else:
             return None
 
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': self.get_content()}
+
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True)}
     #     return payload

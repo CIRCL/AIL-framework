@@ -238,6 +238,13 @@ class Item(AbstractObject):
     def is_crawled(self):
         return self.id.startswith('crawled')
 
+    def is_onion(self):
+        is_onion = False
+        if len(self.id) > 62:
+            if is_crawled(self.id) and self.id[-42:-36] == '.onion':
+                is_onion = True
+        return is_onion
+
     # if is_crawled
     def get_domain(self):
         return self.id[19:-36]
@@ -279,6 +286,8 @@ class Item(AbstractObject):
             if self.is_crawled():
                 tags = meta.get('tags')
                 meta['crawler'] = self.get_meta_crawler(tags=tags)
+        if 'url' in options:
+            meta['url'] = self.get_url()
         if 'duplicates' in options:
             meta['duplicates'] = self.get_duplicates()
         if 'file_name' in options:
@@ -341,6 +350,10 @@ class Item(AbstractObject):
         if not content:
             content = self.get_content()
         return magic.from_buffer(content, mime=True)
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': self.get_html2text_content()}
 
     ############################################################################
     ############################################################################

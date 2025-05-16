@@ -543,6 +543,13 @@ def get_domains_up_by_date(date, domain_type):
 def get_domains_down_by_date(date, domain_type):
     return r_crawler.smembers(f'{domain_type}_down:{date}')
 
+def get_domain_up_by_month(domain_type, month):
+    return r_crawler.smembers(f'month_{domain_type}_up:{month}')
+
+def get_domain_up_previous_month(domain_type):
+    month = Date.get_previous_month()
+    return get_domain_up_by_month(domain_type, month)
+
 def get_domains_by_daterange(date_from, date_to, domain_type, up=True, down=False):
     domains = []
     for date in Date.substract_date(date_from, date_to):

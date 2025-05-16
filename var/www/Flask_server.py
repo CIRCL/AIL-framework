@@ -41,6 +41,7 @@ from blueprints.languages_ui import languages_ui
 from blueprints.tags_ui import tags_ui
 from blueprints.import_export import import_export
 from blueprints.investigations_b import investigations_b
+from blueprints.search_b import search_b
 from blueprints.objects_item import objects_item
 from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
@@ -154,6 +155,7 @@ app.register_blueprint(objects_barcode, url_prefix=baseUrl)
 app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(objects_file_name, url_prefix=baseUrl)
+app.register_blueprint(search_b, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 
 # =========       =========#

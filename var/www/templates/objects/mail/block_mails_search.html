@@ -1,6 +1,6 @@
 <div class="card border-secondary my-2">
     <div class="card-body text-dark">
-        <h5 class="card-title">Mails Search:</h5>
+        <h5 class="card-title"><i class="fas fa-envelope"></i> Mails Search:</h5>
         <form action="{{ url_for('objects_mail.objects_mail_search_post') }}" id="search_subtype_onj" method='post'>
             <div class="input-group mb-1">
                 <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">

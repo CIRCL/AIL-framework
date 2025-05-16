@@ -1,6 +1,6 @@
 <div class="card border-secondary my-2">
     <div class="card-body text-dark">
-        <h5 class="card-title"><i class="fas fa-user"></i> Usernames Search:</h5>
+        <h3 class="card-title"><i class="fas fa-comment-dots"></i> Chats Messages Search:</h3>
         <form action="{{ url_for('objects_subtypes.objects_username_search') }}" id="search_subtype_onj" method='post'>
             <div class="input-group mb-1">
                 <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">

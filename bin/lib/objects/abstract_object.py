@@ -68,6 +68,11 @@ class AbstractObject(ABC):
     def get_global_id(self):
         return f'{self.get_type()}:{self.get_subtype(r_str=True)}:{self.get_id()}'
 
+    def get_uuid5(self, global_id=None):
+        if not global_id:
+            global_id = self.get_global_id()
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, global_id))
+
     def get_last_full_date(self):
         return None
 
