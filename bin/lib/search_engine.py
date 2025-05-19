@@ -14,13 +14,17 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Domains
 from lib.objects import Items
+from lib.objects import Messages
 from lib import chats_viewer
 
 config_loader = ConfigLoader()
-# URL = config_loader.get_config_str('Translation', 'libretranslate')
-M_URL = 'http://localhost:7700'
-M_KEY = 'testtesttesttesttest'
+IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearch')
+M_URL = config_loader.get_config_str('Indexer', 'meilisearch_url')
+M_KEY = config_loader.get_config_str('Indexer', 'meilisearch_key')
 config_loader = None
+
+def is_meilisearch_enabled():
+    return IS_MEILISEARCH_ENABLED
 
 
 class MeiliSearch:
@@ -75,16 +79,19 @@ class MeiliSearch:
             index.delete()
 
 
-Engine = MeiliSearch()
+if IS_MEILISEARCH_ENABLED:
+    Engine = MeiliSearch()
+else:
+    Engine = None
 ##
 
 def index_all():
     # Engine._delete_all()
-    Engine._delete('tor')
-    Engine._delete('web')
+    # Engine._delete('tor')
+    # Engine._delete('web')
     Engine._create_indexes()
     index_crawled()
-    # index_chats_messages()
+    index_chats_messages()
 
 def _index_crawled_domain(dom_id):
     domain = Domains.Domain(dom_id)
@@ -105,13 +112,18 @@ def index_crawled():
     for dom_id in Domains.get_domains_up_by_type('web'):
         _index_crawled_domain(dom_id)
 
+def index_message(message):
+    index = f'c{message.get_protocol()}'
+    document = message.get_search_document()
+    if document:
+        Engine.add(index, document)
+
+
 # TODO index chat with description
 # TODO index user-account description
 def index_chats_messages():
     for message in chats_viewer.get_messages_iterator():
-        index = f'c{message.get_protocol()}'
-        document = message.get_search_document()
-        Engine.add(index, document)
+        index_message(message)
 
 
 # def search(index, query, page=1, nb=20):
@@ -194,6 +206,45 @@ def api_search_crawled(data):
     #     pagination = create_pagination_multiple_indexes(total, nb_per_page, page)
     return (objs, pagination), 200
 
+def api_search_chats(data):
+    index = data.get("index")
+    to_search = data.get("search")
+    page = sanityze_page(data.get("page"))
+    nb_per_page = 20
+
+    protocols = chats_viewer.get_chat_protocols()
+
+    if index != 'all':
+        if not index or index not in protocols:
+            return {"status": "error", "reason": "Invalid search index"}, 400
+        if not to_search:
+            return {"status": "error", "reason": "Invalid search query"}, 400
+
+    # TODO SEARCH CHATS + USERS DESCRIPTION + MESSAGES FORWARD
+
+    indexes = []
+    if index == 'all':
+        for protocol in protocols:
+            indexes.append(f'c{protocol}')
+    else:
+        indexes.append(f'c{index}')
+
+
+    result = Engine.search(indexes, to_search, page=page, nb=nb_per_page)
+    objs = []
+    pagination = {}
+    # if isinstance(result['results'], dict):
+    if result.get("hits"):
+        pagination = extract_pagination_from_result(result, nb_per_page, page)
+        for res in result['hits']:
+            message = Messages.Message(res['id'].split(':', 2)[2])
+            meta = message.get_meta(options={'barcodes', 'files', 'files-names', 'forwarded_from', 'full_date', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'user-account'})
+            meta['protocol'] = chats_viewer.get_chat_protocol_meta(meta['protocol'])
+            if meta.get('reply_to'):
+                print(meta['reply_to'])
+            meta['result'] = res['_formatted']['content']
+            objs.append(meta)
+    return (objs, pagination), 200
 
 ### Filter
 # use filters ???
@@ -219,11 +270,7 @@ def api_search_crawled(data):
 # client.index('movies').delete_all_documents()
 # .index('movies').delete_document(25684)
 
-def test():
-    pass
-
 
 if __name__ == '__main__':
     index_all()
     # print(search('ctelegram', 'test'))
-

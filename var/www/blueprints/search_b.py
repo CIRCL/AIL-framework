@@ -21,7 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib import search_engine
-# from lib import chats_viewer
+from lib import chats_viewer
 # from lib import Language
 # from lib import Tag
 # from lib import module_extractor
@@ -50,7 +50,9 @@ def create_json_response(data, status_code):
 @login_required
 @login_read_only
 def search_dashboard():
-    return render_template('search_dashboard.html', username_subtypes=ail_core.get_object_all_subtypes('username'))
+    protocols = chats_viewer.get_chat_protocols_meta()
+    return render_template('search_dashboard.html', protocols=protocols,
+                           username_subtypes=ail_core.get_object_all_subtypes('username'))
 
 
 @search_b.route("/search/crawled/post", methods=['POST'])
@@ -65,8 +67,7 @@ def search_crawled_post():
     except (TypeError, ValueError):
         page = 1
     return redirect(
-        url_for('search_b.search_crawled', search=to_search, page=page,
-                index=search_type))
+        url_for('search_b.search_crawled', search=to_search, page=page, index=search_type))
 
 
 @search_b.route("/search/crawled", methods=['GET'])
@@ -89,13 +90,37 @@ def search_crawled():
                            bootstrap_label=bootstrap_label,
                            result=result, pagination=pagination)
 
-    # if search_result:
-    #     dict_page = paginate_iterator(ids, nb_obj=500, page=page)
-    #     dict_objects = mails.get_metas(dict_page['list_elem'], options={'sparkline'})
-    # else:
-    #     dict_objects = {}
-    #     dict_page = {}
-    #
-    # return render_template("search_mail_result.html", dict_objects=dict_objects, search_result=search_result,
-    #                        dict_page=dict_page,
-    #                        to_search=to_search, case_sensitive=case_sensitive, type_to_search=type_to_search)
+@search_b.route("/search/chats/post", methods=['POST'])
+@login_required
+@login_read_only
+def search_chats_post():
+    to_search = request.form.get('to_search')
+    search_type = request.form.get('search_type_chats')
+    page = request.form.get('page', 1)
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    return redirect(
+        url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
+
+
+@search_b.route("/search/chats", methods=['GET'])
+@login_required
+@login_read_only
+def search_chats():
+    search = request.args.get('search')
+    index = request.args.get('index', 'telegram')
+    page = request.args.get('page', 1)
+
+    r = search_engine.api_search_chats({'index': index, 'search': search, 'page': page})
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+
+    result, pagination = r[0]
+
+    protocols = chats_viewer.get_chat_protocols_meta()
+    return render_template("search_chats.html", protocols=protocols,
+                           to_search=search, search_index=index,
+                           bootstrap_label=bootstrap_label,
+                           result=result, pagination=pagination)

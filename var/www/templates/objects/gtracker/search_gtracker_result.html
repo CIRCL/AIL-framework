@@ -55,11 +55,7 @@
                         <tr>
                             <td>
                                 <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=gtracker&id={{ obj_id }}">
-                                    {% if type_to_search == 'content' %}
-                                        <span>{{ dict_objects[obj_id]['content'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['content'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['content'][search_result[obj_id]['hl-end']:] }}
-                                    {% else %}
-                                        <span>{{ dict_objects[obj_id]['content'] }}</span>
-                                    {% endif %}
+                                    <span>{{ dict_objects[obj_id]['content'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['content'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['content'][search_result[obj_id]['hl-end']:] }}
                                 </a>
                             </td>
                             <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
@@ -73,7 +69,7 @@
 
                 {% if dict_page %}
                     {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
-                        {% set target_url=url_for('objects_gtracker.objects_gtracker_search') + "?search=" + to_search + "&search_type=" + type_to_search + "&case_sensitive=" + case_sensitive|string %}
+                        {% set target_url=url_for('objects_gtracker.objects_gtracker_search') + "?search=" + to_search %}
                         {% include 'pagination.html' %}
                     {% endwith %}
                 {% endif %}

@@ -78,24 +78,19 @@ def objects_gtracker_range_json():
 @login_user
 def objects_gtracker_search_post():
     to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type', 'id')
-    case_sensitive = False
     page = request.form.get('page', 1)
     try:
         page = int(page)
     except (TypeError, ValueError):
         page = 1
     return redirect(
-        url_for('objects_gtracker.objects_gtracker_search', search=to_search, page=page,
-                search_type=search_type, case_sensitive=case_sensitive))
+        url_for('objects_gtracker.objects_gtracker_search', search=to_search, page=page))
 
 @objects_gtracker.route("/objects/gtracker/search", methods=['GET'])
 @login_required
 @login_user
 def objects_gtracker_search():
     to_search = request.args.get('search')
-    type_to_search = request.args.get('search_type', 'id')
-    case_sensitive=False
     page = request.args.get('page', 1)
     try:
         page = int(page)
@@ -103,20 +98,7 @@ def objects_gtracker_search():
         page = 1
 
     gtrackers = GTrackers.GTrackers()
-
-    if type_to_search == 'id':
-        if len(type_to_search) == 64:
-            gtracker = GTrackers.GTracker(to_search)
-            if not gtracker.exists():
-                abort(404)
-            else:
-                return redirect(gtracker.get_link(flask_context=True))
-        else:
-            search_result = gtrackers.search_by_id(to_search, r_pos=True, case_sensitive=case_sensitive)
-    elif type_to_search == 'content':
-        search_result = gtrackers.search_by_content(to_search, r_pos=True, case_sensitive=case_sensitive)
-    else:
-        return create_json_response({'error': 'Unknown search type'}, 400)
+    search_result = gtrackers.search_by_content(to_search, r_pos=True, case_sensitive=False)
 
     if search_result:
         ids = sorted(search_result.keys())
@@ -128,5 +110,5 @@ def objects_gtracker_search():
 
     return render_template("search_gtracker_result.html", dict_objects=dict_objects, search_result=search_result,
                            dict_page=dict_page,
-                           to_search=to_search, case_sensitive=case_sensitive, type_to_search=type_to_search)
+                           to_search=to_search)
 

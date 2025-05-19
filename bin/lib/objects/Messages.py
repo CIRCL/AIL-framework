@@ -256,7 +256,11 @@ class Message(AbstractObject):
 
     def get_search_document(self):
         global_id = self.get_global_id()
-        return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': self.get_content()}
+        content = self.get_content()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
 
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True)}
@@ -294,7 +298,7 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, timestamp=None, translation_target=''):
+    def get_meta(self, options=set(), timestamp=None, translation_target=''):
         """
         :type options: set
         :type timestamp: float
@@ -330,6 +334,8 @@ class Message(AbstractObject):
                 parent_type, _, parent_id = meta['parent'].split(':', 3)
                 if parent_type == 'message':
                     message = Message(parent_id)
+                    if 'content' not in options:
+                        options.add('content')
                     meta['reply_to'] = message.get_meta(options=options, translation_target=translation_target)
         if 'forwarded_from' in options:
             fwd_from = self.get_first_relationship('forwarded_from', 'chat')

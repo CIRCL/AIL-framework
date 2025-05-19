@@ -78,24 +78,22 @@ def objects_mail_range_json():
 @login_user
 def objects_mail_search_post():
     to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type', 'id')
-    case_sensitive = False
+    if to_search:
+        to_search = to_search.lower()
+    # search_type = request.form.get('search_type', 'id')
+    # case_sensitive = False
     page = request.form.get('page', 1)
     try:
         page = int(page)
     except (TypeError, ValueError):
         page = 1
-    return redirect(
-        url_for('objects_mail.objects_mail_search', search=to_search, page=page,
-                search_type=search_type, case_sensitive=case_sensitive))
+    return redirect(url_for('objects_mail.objects_mail_search', search=to_search, page=page))
 
 @objects_mail.route("/objects/mail/search", methods=['GET'])
 @login_required
 @login_user
 def objects_mail_search():
     to_search = request.args.get('search')
-    type_to_search = request.args.get('search_type', 'id')
-    case_sensitive=False
     page = request.args.get('page', 1)
     try:
         page = int(page)
@@ -104,19 +102,22 @@ def objects_mail_search():
 
     mails = Mails.Mails()
 
-    if type_to_search == 'id':
-        if len(type_to_search) == 64:
-            mail = Mails.Mail(to_search)
-            if not mail.exists():
-                abort(404)
-            else:
-                return redirect(mail.get_link(flask_context=True))
-        else:
-            search_result = mails.search_by_id(to_search, r_pos=True, case_sensitive=case_sensitive)
-    elif type_to_search == 'content':
-        search_result = mails.search_by_content(to_search, r_pos=True, case_sensitive=case_sensitive)
-    else:
-        return create_json_response({'error': 'Unknown search type'}, 400)
+    if to_search:
+        to_search = to_search.lower()
+
+    # if type_to_search == 'id':
+    #     if len(type_to_search) == 64:
+    #         mail = Mails.Mail(to_search)
+    #         if not mail.exists():
+    #             abort(404)
+    #         else:
+    #             return redirect(mail.get_link(flask_context=True))
+    #     else:
+    #         search_result = mails.search_by_id(to_search, r_pos=True, case_sensitive=False)
+    # elif type_to_search == 'content':
+    search_result = mails.search_by_content(to_search, r_pos=True, case_sensitive=False)
+    # else:
+    #     return create_json_response({'error': 'Unknown search type'}, 400)
 
     if search_result:
         ids = sorted(search_result.keys())
@@ -128,5 +129,5 @@ def objects_mail_search():
 
     return render_template("search_mail_result.html", dict_objects=dict_objects, search_result=search_result,
                            dict_page=dict_page,
-                           to_search=to_search, case_sensitive=case_sensitive, type_to_search=type_to_search)
+                           to_search=to_search)
 
