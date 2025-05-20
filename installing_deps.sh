@@ -96,7 +96,8 @@ DEFAULT_HOME=$(pwd)
 #   then sudo dpkg -i kvrocks_2.11.1-1_amd64.deb   (change the version number to yours)
 test ! -d kvrocks/ && git clone https://github.com/apache/incubator-kvrocks.git kvrocks
 pushd kvrocks
-export PORTABLE=1
+# Build Kvrocks in portable mode
+#export PORTABLE=1
 ./x.py build -j 4
 popd
 
