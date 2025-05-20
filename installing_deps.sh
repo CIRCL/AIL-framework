@@ -43,7 +43,7 @@ sudo apt-get install build-essential libffi-dev autoconf -qq
 sudo apt-get install p7zip-full -qq # TODO REMOVE ME
 
 # SUBMODULES #
-git submodule update --init
+git submodule update --init --recursive
 
 # REDIS #
 test ! -d redis/ && git clone https://github.com/redis/redis.git
@@ -96,6 +96,7 @@ DEFAULT_HOME=$(pwd)
 #   then sudo dpkg -i kvrocks_2.11.1-1_amd64.deb   (change the version number to yours)
 test ! -d kvrocks/ && git clone https://github.com/apache/incubator-kvrocks.git kvrocks
 pushd kvrocks
+export PORTABLE=1
 ./x.py build -j 4
 popd
 

@@ -110,6 +110,7 @@ To install the AIL framework, run the following commands:
 ```bash
 # Clone the repo first
 git clone https://github.com/ail-project/ail-framework.git
+git submodule update --init --recursive
 cd ail-framework
 
 # For Debian and Ubuntu based distributions
