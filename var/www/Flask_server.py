@@ -312,4 +312,4 @@ clear_git_meta_cache()
 # ============ MAIN ============
 
 if __name__ == "__main__":
-    app.run(host=host, port=FLASK_PORT, threaded=True, ssl_context=ssl_context)
+    app.run(host=host, port=FLASK_PORT, threaded=True, ssl_context=ssl_context, debug=True)
