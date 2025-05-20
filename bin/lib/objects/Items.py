@@ -321,6 +321,7 @@ class Item(AbstractObject):
             crawler['domain'] = self.get_domain()
             crawler['har'] = self.get_har()
             crawler['screenshot'] = self.get_screenshot()
+            crawler['screenshot_id'] = crawler['screenshot'].replace('/', '')
             crawler['url'] = self.get_url()
 
             domain_tags = self.get_obj_tags('domain', '', crawler['domain'], r_list=True)

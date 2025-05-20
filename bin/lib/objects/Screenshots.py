@@ -20,6 +20,7 @@ from lib.objects.abstract_object import AbstractObject
 # from lib import data_retention_engine
 
 config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
@@ -89,8 +90,18 @@ class Screenshot(AbstractObject):
             file_content = BytesIO(f.read())
         return file_content
 
+    def get_base64(self):
+        return base64.b64encode(self.get_file_content().read()).decode('utf-8')
+
     def get_content(self):
         return self.get_file_content()
+
+    def get_description(self):
+        g_id = self.get_global_id()
+        description = r_cache.get(f'images:ollama:{g_id}')
+        if description:
+            r_cache.expire(f'images:ollama:{g_id}', 300)
+        return description
 
     def get_misp_object(self):
         obj_attrs = []
@@ -107,6 +118,8 @@ class Screenshot(AbstractObject):
         meta = self.get_default_meta()
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
+        if 'description' in meta:
+            meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

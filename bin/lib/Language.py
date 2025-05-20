@@ -538,7 +538,7 @@ def _get_obj_translation(obj_global_id, language, source=None, content=None, fie
         Returns translated content
     """
     translation = r_cache.get(f'translation:{language}:{obj_global_id}:{field}')
-    r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
+    # r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
     if translation:
         # DEBUG
         # print('cache')

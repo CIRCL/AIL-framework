@@ -6,6 +6,7 @@
 '''
 
 import difflib
+import json
 import os
 import sys
 
@@ -28,6 +29,7 @@ from lib import Tag
 
 from lib import Investigations
 from lib import module_extractor
+from lib import images_engine
 
 
 # ============ BLUEPRINT ============
@@ -42,6 +44,9 @@ SCREENSHOT_FOLDER = ConfigLoader.get_screenshots_dir()
 config_loader = None
 
 # ============ FUNCTIONS ============
+
+def create_json_response(data, status_code):
+    return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 
 # ============= ROUTES ==============
@@ -86,6 +91,13 @@ def showItem():  # # TODO: support post
     # meta['hive_case'] = Export.get_item_hive_cases(item_id)
     meta['hive_case'] = None
 
+    ## screenshot
+    if meta['crawler']:
+        if meta['crawler']['screenshot']:
+            img = Screenshot(meta['crawler']['screenshot_id'])
+            meta['description'] = img.get_description()
+            meta['image_gid'] = img.get_global_id()
+
     if meta.get('investigations'):
         invests = []
         for investigation_uuid in meta['investigations']:
@@ -104,6 +116,7 @@ def showItem():  # # TODO: support post
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                            is_hive_connected=False,
+                           ollama_enabled=images_engine.is_ollama_enabled(),
                            meta=meta, message=message,
                            extracted=extracted, extracted_matches=extracted_matches)
 
@@ -200,4 +213,22 @@ def item_preview():
 
                            misp_eventid=misp_eventid, misp_url=misp_url,
                            hive_caseid=hive_caseid, hive_url=hive_url)
+
+@objects_item.route("/image/describe")
+@login_required
+@login_read_only
+def image_describe():
+    gid = request.args.get('gid')
+    r = images_engine.api_get_image_description(gid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            # TODO
+            return 'NO REFERER:'
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+
+
 

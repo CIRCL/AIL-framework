@@ -79,6 +79,11 @@ minute_processed_paste = 10
 #Maximum line length authorized to make a diff between duplicates
 DiffMaxLineLength = 10000
 
+##### Images #####
+[Images]
+ollama_url = http://127.0.0.1:11434
+ollama_enabled = True
+
 ##### Users #####
 [Users]
 force_2fa = False

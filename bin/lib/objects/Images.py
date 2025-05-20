@@ -20,6 +20,7 @@ from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 
 config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 IMAGE_FOLDER = config_loader.get_files_directory('images')
 config_loader = None
@@ -79,11 +80,21 @@ class Image(AbstractDaterangeObject):
             file_content = BytesIO(f.read())
         return file_content
 
+    def get_base64(self):
+        return base64.b64encode(self.get_file_content().read()).decode()
+
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return None
         else:
             return self.get_file_content()
+
+    def get_description(self):
+        g_id = self.get_global_id()
+        description = r_cache.get(f'images:ollama:{g_id}')
+        if description:
+            r_cache.expire(f'images:ollama:{g_id}', 300)
+        return description
 
     def get_misp_object(self):
         obj_attrs = []
@@ -103,6 +114,8 @@ class Image(AbstractDaterangeObject):
         meta['tags'] = self.get_tags(r_list=True)
         if 'content' in options:
             meta['content'] = self.get_content()
+        if 'description' in meta:
+            meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

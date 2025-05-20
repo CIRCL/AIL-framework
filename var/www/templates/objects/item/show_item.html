@@ -433,6 +433,11 @@
                 </tbody>
               </table>
             </div>
+
+              {% with ollama_description=meta['description'], image_gid=meta['image_gid'] %}
+                {% include 'block_img_ollama.html' %}
+              {% endwith %}
+
           </div>
 
           <div class="col-md-7">
