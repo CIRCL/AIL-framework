@@ -17,7 +17,7 @@ from lib.objects import Images
 from lib.objects import Screenshots
 
 config_loader = ConfigLoader()
-r_cache = config_loader.get_redis_conn("Redis_Cache")
+# r_cache = config_loader.get_redis_conn("Redis_Cache")
 OLLAMA_URL = config_loader.get_config_str('Images', 'ollama_url')
 IS_OLLAMA_ENABLED = config_loader.get_config_boolean('Images', 'ollama_enabled')
 config_loader = None
@@ -49,12 +49,11 @@ def api_get_image_description(obj_gid):
     if not image:
         return {"status": "error", "reason": "Unknown image"}, 404
 
-    model = 'qwen2.5vl'
-    description = r_cache.get(f'images:ollama:{obj_gid}')
+    description = image.get_description()
     if description:
-        r_cache.expire(f'images:ollama:{obj_gid}', 300)
         return description, 200
 
+    model = 'qwen2.5vl'
     b64 = image.get_base64()
     if not b64:
         return {"status": "error", "reason": "No Content"}, 404
@@ -70,7 +69,8 @@ def api_get_image_description(obj_gid):
     else:
         r = res.json()
         if r:
-            r_cache.set(f'images:ollama:{obj_gid}', r['response'])
-            r_cache.expire(f'images:ollama:{obj_gid}', 300)
+            # r_cache.set(f'images:ollama:{obj_gid}', r['response'])
+            # r_cache.expire(f'images:ollama:{obj_gid}', 300)
+            image.set_description(r['response'])
             return r['response'], 200
     return None, 200

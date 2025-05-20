@@ -20,7 +20,7 @@ from lib.objects.abstract_object import AbstractObject
 # from lib import data_retention_engine
 
 config_loader = ConfigLoader()
-r_cache = config_loader.get_redis_conn("Redis_Cache")
+# r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
 config_loader = None
@@ -97,11 +97,14 @@ class Screenshot(AbstractObject):
         return self.get_file_content()
 
     def get_description(self):
-        g_id = self.get_global_id()
-        description = r_cache.get(f'images:ollama:{g_id}')
-        if description:
-            r_cache.expire(f'images:ollama:{g_id}', 300)
-        return description
+        # g_id = self.get_global_id()
+        # description = r_cache.get(f'images:ollama:{g_id}')
+        # if description:
+        #     r_cache.expire(f'images:ollama:{g_id}', 300)
+        return self._get_field('description')
+
+    def set_description(self, description):
+        self._set_field('description', description)
 
     def get_misp_object(self):
         obj_attrs = []

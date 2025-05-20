@@ -127,7 +127,7 @@ def show_correlation():
             dict_object = {"type": obj_type,
                            "id": obj_id,
                            "object_type": obj_type,
-                           "gid": f'{obj_type}:{subtype}:{obj_id}',
+                           "gid": ail_objects.get_obj_global_id(obj_type, subtype, obj_id),
                            "max_nodes": max_nodes, "mode": mode, "level": level,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "hidden": objs_hidden, "hidden_str": ",".join(objs_hidden),
@@ -144,6 +144,7 @@ def show_correlation():
                 dict_object["subtype"] = ''
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
             dict_object["metadata_card"]['tags_safe'] = True
+
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
