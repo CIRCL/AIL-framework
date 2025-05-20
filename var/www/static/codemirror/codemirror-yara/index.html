@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codemirror Yara</title>
+  </head>
+  <body>
+    <h3>Codemirro Yara</h3>
+    <div id="app">
+    <textarea id="ta"></textarea>
+    <textarea id="ta2">
+rule silent_banker : banker
+{
+    meta:
+        description = "This is just an example"
+        threat_level = 3
+        in_the_wild = true
+    strings:
+        $a = {6A 40 68 00 30 00 00 6A 14 8D 91}
+        $b = {8D 4D B0 2B C1 83 C0 27 99 6A 4E 59 F7 F9}
+        $c = "UVODFRYSIHLNWPEJXQZAKCBGMT"
+    condition:
+        $a or $b or $c
+}
+    </textarea>
+    </div>
+    <script type="module">
+      import { createYaraEditor } from "/src/main.js";
+
+      const yaraEditorOptions = {
+          'placeholder': `rule JekyllGitHub {
+    meta:
+        author = "Dylan Katz (@Plazmaz)"
+        description = "Jekyll Token for GitHub (Created as part of PasteHunter)"
+        reference = "https://github.com/techgaun/github-dorks"
+        date = "09/15/19"
+    strings:
+        $ = "JEKYLL_GITHUB_TOKEN" nocase
+    condition:
+        all of them
+}`,
+          codemirror_extensions: []
+        }
+      createYaraEditor(ta, yaraEditorOptions)
+    </script>
+  </body>
+</html>

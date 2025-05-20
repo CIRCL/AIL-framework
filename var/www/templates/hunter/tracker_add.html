@@ -277,7 +277,11 @@
 
 										<h6>Custom YARA rules:</h6>
 										<div class="row" id="textarea">
-											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+											<div class="col-12">
+												<div class="border">
+													<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+												</div>
+											</div>
 										</div>
 									</div>
 
@@ -425,4 +429,28 @@ function get_default_rule_content(selector){
 	}
 }
 
+</script>
+
+<script type="module">
+	import { createYaraEditor } from "{{ url_for('static', filename='js/codemirror-yara.es.js') }}";
+
+	const yaraEditorOptions = {
+		'placeholder': `rule YourYaraRule {
+    meta:
+        author = "Yourself"
+        description = "A description of your rule"
+        reference = "An (optional) reference of your rule"
+    strings:
+        $str1 = "str1" nocase
+        $str2 = "str2" nocase
+        $str3 = "str3" nocase
+    condition:
+        all of them
+}`,
+		codemirror_extensions: []
+	}
+	createYaraEditor(
+		document.getElementById('text_input'),
+		yaraEditorOptions
+	)
 </script>
