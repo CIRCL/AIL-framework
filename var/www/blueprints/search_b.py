@@ -74,11 +74,12 @@ def search_crawled_post():
 @login_required
 @login_read_only
 def search_crawled():
+    user_id = current_user.get_user_id()
     search = request.args.get('search')
     index = request.args.get('index', 'tor')
     page = request.args.get('page', 1)
 
-    r = search_engine.api_search_crawled({'index': index, 'search': search, 'page': page})
+    r = search_engine.api_search_crawled({'index': index, 'search': search, 'page': page, 'user_id': user_id})
     if r[1] != 200:
         return create_json_response(r[0], r[1])
 
@@ -109,11 +110,12 @@ def search_chats_post():
 @login_required
 @login_read_only
 def search_chats():
+    user_id = current_user.get_user_id()
     search = request.args.get('search')
     index = request.args.get('index', 'telegram')
     page = request.args.get('page', 1)
 
-    r = search_engine.api_search_chats({'index': index, 'search': search, 'page': page})
+    r = search_engine.api_search_chats({'index': index, 'search': search, 'page': page, 'user_id': user_id})
     if r[1] != 200:
         return create_json_response(r[0], r[1])
 

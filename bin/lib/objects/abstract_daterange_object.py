@@ -223,6 +223,9 @@ class AbstractDaterangeObjects(ABC):
         for obj_id in self.get_ids():
             yield self.obj_class(obj_id)
 
+    def get_nb(self):
+        return r_object.scard(f'{self.type}:all')
+
     ################################################
     ################################################
 

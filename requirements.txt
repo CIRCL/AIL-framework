@@ -41,7 +41,7 @@ scrapy-splash>=0.7.2
 # Languages
 gcld3
 libretranslatepy
-lexilang
+git+https://github.com/ail-project/LexiLang
 
 # Demoji
 git+https://github.com/ail-project/demoji
@@ -63,7 +63,7 @@ pybgpranking
 DomainClassifier
 
 # Indexer
-whoosh>=2.7.4
+meilisearch
 
 # LibInjection bindings
 #pylibinjection>=0.2.4

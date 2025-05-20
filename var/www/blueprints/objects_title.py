@@ -96,7 +96,9 @@ def objects_title_search_post():
 def objects_title_search():
     to_search = request.args.get('search')
     type_to_search = request.args.get('search_type', 'id')
-    case_sensitive = request.args.get('case_sensitive')
+    case_sensitive = request.args.get('case_sensitive', False)
+    if case_sensitive == 'False':
+        case_sensitive = False
     case_sensitive = bool(case_sensitive)
     page = request.args.get('page', 1)
     try:

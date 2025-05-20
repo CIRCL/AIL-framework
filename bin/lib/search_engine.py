@@ -2,6 +2,8 @@
 # -*-coding:UTF-8 -*
 
 import os
+import logging
+import logging.config
 import sys
 import time
 
@@ -11,11 +13,15 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Domains
 from lib.objects import Items
 from lib.objects import Messages
 from lib import chats_viewer
+
+logging.config.dictConfig(ail_logger.get_config(name='ail'))
+logger = logging.getLogger()
 
 config_loader = ConfigLoader()
 IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearch')
@@ -93,6 +99,7 @@ def index_all():
     index_crawled()
     index_chats_messages()
 
+# TODO index titles
 def _index_crawled_domain(dom_id):
     domain = Domains.Domain(dom_id)
     for item_id in domain.get_crawled_items_by_epoch():
@@ -112,6 +119,7 @@ def index_crawled():
     for dom_id in Domains.get_domains_up_by_type('web'):
         _index_crawled_domain(dom_id)
 
+# TODO index chats + user-account
 def index_message(message):
     index = f'c{message.get_protocol()}'
     document = message.get_search_document()
@@ -170,6 +178,8 @@ def api_search_crawled(data):
     to_search = data.get("search")
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
+    user_id = data.get("user_id")
+    logger.warning(f'{user_id} search: {index} - {to_search}')
 
     if not index or index not in ['tor', 'web', 'all']:
         return {"status": "error", "reason": "Invalid search index"}, 400
@@ -211,6 +221,8 @@ def api_search_chats(data):
     to_search = data.get("search")
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
+    user_id = data.get("user_id")
+    logger.warning(f'{user_id} search: {index} - {to_search}')
 
     protocols = chats_viewer.get_chat_protocols()
 

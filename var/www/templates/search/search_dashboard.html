@@ -31,9 +31,15 @@
 
                 {% include 'search/block_crawled_search.html' %}
 
+                {% include 'title/block_titles_search.html' %}
+
+                <hr class="my-6">
+
                 {% include 'search/block_chats_search.html' %}
 
-                <h1 class="m-2"><i class="fas fa-comments"></i> Chats Search:</h1>
+                {% with subtypes=username_subtypes %}
+                    {% include 'username/block_usernames_search.html' %}
+                {% endwith %}
 
 
 {#            TODO SEARCH CHATS / MESSAGES #}
@@ -41,13 +47,9 @@
 {#            TODO BUTTON with anchor ??? #}
 
 
-
-
-                {% with subtypes=username_subtypes %}
-                    {% include 'username/block_usernames_search.html' %}
-                {% endwith %}
-
                 {% include 'mail/block_mails_search.html' %}
+
+{#                {% include 'cve/block_cve_search.html' %}#}
 
                 {% include 'gtracker/block_gtrackers_search.html' %}
 
