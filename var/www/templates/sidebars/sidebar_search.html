@@ -1,0 +1,90 @@
+<div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
+
+    <button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
+        <i class="fas fa-align-left"></i>
+        <span>Toggle Sidebar</span>
+    </button>
+
+    <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+
+        <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100 mb-4">
+            <li class="nav-item">
+                <a class="nav-link" href="#search_crawled">
+                    <i class="fas fa-spider"></i>
+                    <span>Tor and Web Search</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                  <a class="nav-link" href="#search_domains_name">
+                      <i class="fas fa-user-secret"></i>
+                      <i class="fab fa-html5"></i>
+                      <span>Search Domain by name</span>
+                  </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_titles">
+                    <i class="fas fa-heading"></i>
+                    <span>Title Search</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_chats">
+                    <i class="fas fa-comments"></i>
+                    <span>Chats Search</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_usernames">
+                    <i class="fas fa-user"></i>
+      	            <span>Username Search</span>
+      	        </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_mails">
+                    <i class="fas fa-envelope"></i>
+                    <span>Mail Search</span>
+                </a>
+            </li>
+
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_gtrackers">
+                    <i class="fab fa-google"></i>
+                    <span>GTracking Search</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="#search_filenames">
+                    <i class="far fa-file"></i>
+                    <span>File Name Search</span>
+                </a>
+            </li>
+
+          </ul>
+
+
+
+      	</nav>
+      </div>
+
+      <script>
+      function toggle_sidebar(){
+      	if($('#nav_menu').is(':visible')){
+      		$('#nav_menu').hide();
+      		$('#side_menu').removeClass('border-right')
+      		$('#side_menu').removeClass('col-lg-2')
+      		$('#core_content').removeClass('col-lg-10')
+      	}else{
+      		$('#nav_menu').show();
+      		$('#side_menu').addClass('border-right')
+      		$('#side_menu').addClass('col-lg-2')
+      		$('#core_content').addClass('col-lg-10')
+      	}
+      }
+      </script>
