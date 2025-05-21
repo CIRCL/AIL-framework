@@ -276,6 +276,8 @@ class AbstractDaterangeObjects(ABC):
         return objs
 
     def sanitize_content_to_search(self, content_to_search):
+        content_to_search = content_to_search.replace('\\', '\\\\').replace('.', '\\.').replace('{', '').replace('}', '').replace('(', '').replace(')', '')
+        content_to_search = content_to_search.replace('|', '\\|').replace('?', '\\?').replace('*', '\\*').replace('+', '\\+').replace('^', '\\^').replace('&', '\\&')
         return content_to_search
 
     def get_contents_ids(self):
@@ -303,6 +305,11 @@ class AbstractDaterangeObjects(ABC):
         for obj_id in self.get_ids():  # TODO REPLACE ME WITH AN ITERATOR
             obj = self.obj_class(obj_id)
             content = obj.get_content()
+            if not content:
+                continue
+            else:
+                content = str(content)
+
             res = re.search(r_search, content)
             if res:
                 objs[obj_id] = {}
