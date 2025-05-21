@@ -427,8 +427,8 @@ def get_misp_objects(objs):
     for relation in get_objects_relationships(objs):
         obj_src = misp_objects[relation['src']]
         obj_dest = misp_objects[relation['dest']]
-        # print(relation['src'].get_id(), relation['dest'].get_id())
-        obj_src.add_reference(obj_dest.uuid, relation['relationship'], 'ail correlation')
+        if obj_src and obj_dest:
+            obj_src.add_reference(obj_dest.uuid, relation['relationship'], 'ail correlation')
     return misp_objects.values()
 
 # get misp relationship
