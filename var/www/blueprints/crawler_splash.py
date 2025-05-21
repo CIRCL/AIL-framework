@@ -31,6 +31,7 @@ from lib.objects import Domains
 from lib.objects.Items import Item
 from lib.objects.Titles import Title
 from lib import Tag
+from lib import search_engine
 
 from packages import Date
 
@@ -596,6 +597,7 @@ def domains_search_languages_get():
 @login_required
 @login_user
 def domains_search_name():
+    user_id = current_user.get_user_id()
     name = request.args.get('name')
     page = request.args.get('page')
     try:
@@ -621,6 +623,7 @@ def domains_search_name():
         else:
             send_to_crawler = False
 
+    search_engine.log(user_id, 'domain_name', name)
     l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
     return render_template("domains/domains_result_list.html", template_folder='../../',
                            l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,

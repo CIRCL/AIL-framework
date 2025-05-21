@@ -25,7 +25,10 @@
                         <option value="all" {% if search_index == "all" %}selected{% endif %}>All chats</option>
                 </select>
                 <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="content to Search" required>
-                <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_search_helper_tooltip(this)" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
             </div>
         </form>
     </div>

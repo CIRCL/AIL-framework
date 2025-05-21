@@ -16,6 +16,7 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 
 </head>
 <body>
@@ -25,21 +26,33 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_search.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                {% include 'search/block_crawled_search.html' %}
+                <div id="search_crawled">
+                    {% include 'search/block_crawled_search.html' %}
+                </div>
 
-                {% include 'title/block_titles_search.html' %}
+                <div id="search_domains_name">
+                    {% include 'domains/block_domains_name_search.html' %}
+                </div>
+
+                <div id="search_titles">
+                    {% include 'title/block_titles_search.html' %}
+                </div>
 
                 <hr class="my-6">
 
-                {% include 'search/block_chats_search.html' %}
+                <div id ="search_chats">
+                    {% include 'search/block_chats_search.html' %}
+                </div>
 
-                {% with subtypes=username_subtypes %}
-                    {% include 'username/block_usernames_search.html' %}
-                {% endwith %}
+                <div class="my-4" id="search_usernames">
+                    {% with subtypes=username_subtypes %}
+                        {% include 'username/block_usernames_search.html' %}
+                    {% endwith %}
+                </div>
 
 
 {#            TODO SEARCH CHATS / MESSAGES #}
@@ -47,13 +60,19 @@
 {#            TODO BUTTON with anchor ??? #}
 
 
-                {% include 'mail/block_mails_search.html' %}
+                <div id="search_mails">
+                    {% include 'mail/block_mails_search.html' %}
+                </div>
 
 {#                {% include 'cve/block_cve_search.html' %}#}
 
-                {% include 'gtracker/block_gtrackers_search.html' %}
+                <div id="search_gtrackers">
+                    {% include 'gtracker/block_gtrackers_search.html' %}
+                </div>
 
-                {% include 'file-name/block_file_name_search.html' %}
+                <div id="search_filenames">
+                    {% include 'file-name/block_file_name_search.html' %}
+                </div>
 
 
 

@@ -123,3 +123,25 @@ function blur_tooltip(){
         image.style.filter = "blur(" + blurValue + "px)";
     }
 }
+
+function show_search_helper_tooltip(container) {
+    container = $(container);
+
+    if (container.data('bs.popover')) {
+        container.popover('show');
+    } else {
+        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of 10 words can be used in a search query.</li></ul></div>";
+
+        container.popover({
+            content: c_helper,
+            html: true,
+            container: 'body',
+        })
+        container.popover('show');
+
+        //let popoverInstance = container.data('bs.popover');
+        //container.popover('hide');
+        //container.popover('show');
+    }
+
+}

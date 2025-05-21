@@ -10,7 +10,7 @@ import os
 import sys
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_user, login_read_only
@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from  lib.ail_core import paginate_iterator
 from lib.objects import Titles
 from packages import Date
+from lib import search_engine
 
 # ============ BLUEPRINT ============
 objects_title = Blueprint('objects_title', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/title'))
@@ -94,6 +95,7 @@ def objects_title_search_post():
 @login_required
 @login_user
 def objects_title_search():
+    user_id = current_user.get_user_id()
     to_search = request.args.get('search')
     type_to_search = request.args.get('search_type', 'id')
     case_sensitive = request.args.get('case_sensitive', False)
@@ -119,6 +121,7 @@ def objects_title_search():
             search_result = titles.search_by_id(to_search, r_pos=True, case_sensitive=case_sensitive)
     elif type_to_search == 'content':
         search_result = titles.search_by_content(to_search, r_pos=True, case_sensitive=case_sensitive)
+        search_engine.log(user_id, 'title', to_search)
     else:
         return create_json_response({'error': 'Unknown search type'}, 400)
 

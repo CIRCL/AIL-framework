@@ -9,7 +9,7 @@ import os
 import sys
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_read_only
@@ -21,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib.objects import FilesNames
 from packages import Date
+from lib import search_engine
 
 # ============ BLUEPRINT ============
 objects_file_name = Blueprint('objects_file_name', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/file-name'))
@@ -87,6 +88,7 @@ def objects_files_names_search():
             page = 1
         return redirect(url_for('objects_file_name.objects_files_names_search', search=to_search, page=page, case_sensitive=case_sensitive))
     else:
+        user_id = current_user.get_user_id()
         to_search = request.args.get('search')
         page = request.args.get('page', 1)
         case_sensitive = request.args.get('case_sensitive', False)
@@ -100,6 +102,7 @@ def objects_files_names_search():
             page = 1
 
         filenames = FilesNames.FilesNames()
+        search_engine.log(user_id, 'file-name', to_search)
         search_result = filenames.search_by_id(to_search, page, case_sensitive=case_sensitive)
 
         if search_result:

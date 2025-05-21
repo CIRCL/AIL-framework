@@ -10,7 +10,7 @@ import os
 import sys
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_user, login_read_only
@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from  lib.ail_core import paginate_iterator
 from lib.objects import GTrackers
 from packages import Date
+from lib import search_engine
 
 # ============ BLUEPRINT ============
 objects_gtracker = Blueprint('objects_gtracker', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects/gtracker'))
@@ -90,6 +91,7 @@ def objects_gtracker_search_post():
 @login_required
 @login_user
 def objects_gtracker_search():
+    user_id = current_user.get_user_id()
     to_search = request.args.get('search')
     page = request.args.get('page', 1)
     try:
@@ -98,6 +100,7 @@ def objects_gtracker_search():
         page = 1
 
     gtrackers = GTrackers.GTrackers()
+    search_engine.log(user_id, 'gtracker', to_search)
     search_result = gtrackers.search_by_content(to_search, r_pos=True, case_sensitive=False)
 
     if search_result:

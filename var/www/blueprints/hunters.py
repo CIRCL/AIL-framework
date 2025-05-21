@@ -265,6 +265,8 @@ def parse_add_edit_request(request_form):
     # YARA #
     if tracker_type == 'yara':
         yara_default_rule = request_form.get("yara_default_rule")
+        if yara_default_rule == 'Select a default rule':
+            yara_default_rule = None
         yara_custom_rule = request_form.get("yara_custom_rule")
         if yara_custom_rule:
             to_track = yara_custom_rule

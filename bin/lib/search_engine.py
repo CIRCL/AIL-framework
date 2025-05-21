@@ -133,6 +133,8 @@ def index_chats_messages():
     for message in chats_viewer.get_messages_iterator():
         index_message(message)
 
+def log(user_id, index, to_search):
+    logger.warning(f'{user_id} search: {index} - {to_search}')
 
 # def search(index, query, page=1, nb=20):
 #     return Engine.search(index, query, page=page, nb=nb)
@@ -179,7 +181,7 @@ def api_search_crawled(data):
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
     user_id = data.get("user_id")
-    logger.warning(f'{user_id} search: {index} - {to_search}')
+    log(user_id, index, to_search)
 
     if not index or index not in ['tor', 'web', 'all']:
         return {"status": "error", "reason": "Invalid search index"}, 400
@@ -222,7 +224,7 @@ def api_search_chats(data):
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
     user_id = data.get("user_id")
-    logger.warning(f'{user_id} search: {index} - {to_search}')
+    log(user_id, index, to_search)
 
     protocols = chats_viewer.get_chat_protocols()
 

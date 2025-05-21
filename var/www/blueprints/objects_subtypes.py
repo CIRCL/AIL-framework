@@ -10,7 +10,7 @@ import sys
 import json
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_read_only
@@ -25,6 +25,7 @@ from lib.objects import ail_objects
 from lib.objects import CryptoCurrencies
 from lib.objects import Usernames
 from packages import Date
+from lib import search_engine
 
 # ============ BLUEPRINT ============
 objects_subtypes = Blueprint('objects_subtypes', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects'))
@@ -137,6 +138,7 @@ def objects_username_search():
             page = 1
         return redirect(url_for('objects_subtypes.objects_username_search', search=to_search, page=page, subtype=subtype, case_sensitive=case_sensitive))
     else:
+        user_id = current_user.get_user_id()
         to_search = request.args.get('search')
         subtype = request.args.get('subtype')  # TODO sanityze
         case_sensitive = request.args.get('case_sensitive', False)
@@ -154,6 +156,7 @@ def objects_username_search():
         if not usernames.is_valid_search(subtype, to_search):
             return create_json_response({'status': 'error', 'message': 'Invalid Username'}, 400)
 
+        search_engine.log(user_id, 'username', to_search)
         search_result = usernames.search_by_id(to_search, [subtype], page, case_sensitive=case_sensitive)
 
         if search_result:
