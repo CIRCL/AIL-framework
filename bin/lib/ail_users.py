@@ -372,10 +372,6 @@ def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None,
     if send_email and not password:
         password = gen_password()
         chg_passwd = True
-        print('send email')
-        exporter = MailExporterUserCreation()
-        exporter.export(user_id, password)
-        return None
 
     if password:
         password_hash = hashing_password(password)

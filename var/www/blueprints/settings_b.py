@@ -360,7 +360,6 @@ def create_user_post():
                     edit = True
                 else:
                     edit = False
-                print('form', send_email)
                 r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa, send_email=send_email)
                 if r[1] != 200:
                     return create_json_response(r[0], r[1])
