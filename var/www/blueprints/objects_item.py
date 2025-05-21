@@ -92,7 +92,7 @@ def showItem():  # # TODO: support post
     meta['hive_case'] = None
 
     ## screenshot
-    if meta['crawler']:
+    if 'crawler' in meta:
         if meta['crawler']['screenshot']:
             img = Screenshot(meta['crawler']['screenshot_id'])
             meta['description'] = img.get_description()
