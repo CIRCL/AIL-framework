@@ -86,6 +86,11 @@
   				        <label class="custom-control-label" for="set_manual_password">{% if meta['id'] %}Reset{% else %}Set{% endif %} Password</label>
 				    </div>
 
+                    <div class="custom-control custom-switch mt-4 mb-3">
+  				        <input type="checkbox" class="custom-control-input" id="send_email" name="send_email">
+  				        <label class="custom-control-label" for="send_email">Send Email to User and reset password if user already created</label>
+				    </div>
+
                     <div id="password-section">
                         <h1 class="h3 mb-3 text-center text-secondary">Create Password</h1>
                         <label for="inputPassword1" class="sr-only">Password</label>

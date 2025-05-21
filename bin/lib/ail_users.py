@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_logger
 from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
+from exporter.MailExporter import MailExporterUserCreation
 
 
 # LOGS
@@ -323,7 +324,7 @@ def disable_user(user_id):
 def enable_user(user_id):
     r_serv_db.srem(f'ail:users:disabled', user_id)
 
-def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False):
+def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False, send_email=False):
     # # TODO: check password strength
     if password:
         new_password = password
@@ -361,9 +362,20 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
         if otp or is_2fa_enabled():
             enable_user_2fa(user_id)
 
+        if send_email:
+            exporter = MailExporterUserCreation()
+            exporter.export(user_id, new_password)
+
 # TODO edit_org
 # TODO LOG
-def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True, role=None):
+def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True, role=None, send_email=False):
+    if send_email and not password:
+        password = gen_password()
+        chg_passwd = True
+        exporter = MailExporterUserCreation()
+        exporter.export(user_id, password)
+        return None
+
     if password:
         password_hash = hashing_password(password)
         if chg_passwd:
@@ -374,6 +386,9 @@ def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None,
             generate_new_token(user_id)
         else:
             r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
+        if send_email:
+            exporter = MailExporterUserCreation()
+            exporter.export(user_id, password)
 
     if org_uuid:
         org = ail_orgs.Organisation(org_uuid)
@@ -699,19 +714,19 @@ def api_create_user_api_key(user_id, admin_id, ip_address, user_agent):
     access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.new_api_key(), 200
 
-def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp):
+def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp, send_email=False):
     user = AILUser(user_id)
     if not ail_orgs.exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Unknown Organisation'}, 400
     if not exists_role(role):
         return {'status': 'error', 'reason': 'Unknown User Role'}, 400
     if not user.exists():
-        create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp)
+        create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp, send_email=send_email)
         access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
         return user_id, 200
     # Edit
     else:
-        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role)
+        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role, send_email=send_email)
         access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
         return user_id, 200
 

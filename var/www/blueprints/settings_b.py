@@ -318,6 +318,13 @@ def create_user_post():
     password1 = request.form.get('password1')
     password2 = request.form.get('password2')
     enable_2_fa = request.form.get('enable_2_fa')
+    send_email = request.form.get('send_email')
+
+    if send_email:
+        send_email = True
+    else:
+        send_email = False
+
     if enable_2_fa or ail_users.is_2fa_enabled():
         enable_2_fa = True
     else:
@@ -353,7 +360,7 @@ def create_user_post():
                     edit = True
                 else:
                     edit = False
-                r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
+                r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa, send_email=send_email)
                 if r[1] != 200:
                     return create_json_response(r[0], r[1])
 
@@ -361,7 +368,7 @@ def create_user_post():
                 # qr_code = ail_users.create_qr_code(f'{email} - {password}')
                 return render_template("create_user.html", new_user=new_user, meta={},
                                        all_roles=all_roles, acl_admin=True)
-
+            return None
         else:
             return render_template("create_user.html", all_roles=all_roles, meta={}, acl_admin=True)
     else:
