@@ -1609,7 +1609,7 @@ def get_captures_status():
                 'uuid': 'UNKNOWN',
                 'domain': 'UNKNOWN',
                 'type': 'UNKNOWN',
-                'start_time': capture.get_start_time(),
+                'start_time': 0,
                 'status': capture.get_status(),
             }
         else:
