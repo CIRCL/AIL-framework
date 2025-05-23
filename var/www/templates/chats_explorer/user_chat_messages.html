@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Messages Language - AIL</title>
+  <title>User Messages - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -55,7 +55,7 @@
                 {% endif %}
 
                 <div class="mt-2">
-                {% with translate_url=url_for('chats_explorer.objects_user_account', subtype=meta['subtype']), obj_id=meta['id'] %}
+                {% with translate_url=url_for('chats_explorer.objects_user_account_chat', subtype=meta['user-account']['subtype']), obj_id=meta['user-account']['id'], chat_id=meta['chat']['id'] %}
                     {% include 'chats_explorer/block_translation.html' %}
                 {% endwith %}
                 {% include 'objects/image/block_blur_img_slider.html' %}

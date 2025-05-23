@@ -99,6 +99,10 @@
         {% if meta['info'] %}
             <div>
                 <pre class="my-0" style="white-space: pre-wrap;">{{ meta['info'] }}</pre>
+                {% if meta['translation_info'] %}
+                    <hr class="m-1">
+                    <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
+                {% endif %}
             </div>
         {% endif %}
 

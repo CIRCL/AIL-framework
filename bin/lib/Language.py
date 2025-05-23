@@ -262,8 +262,9 @@ dict_iso_1_to_3 = {
 
 def create_dict_iso_3_to_1():
     dict_lang = {}
+    to_remove = {'bg-Latn', 'el-Latn', 'hi-Latn', 'ja-Latn', 'ru-Latn', 'zh-Latn'}
     for code in dict_iso_1_to_3:
-        if code != 'ru-Latn':
+        if code not in to_remove:
             dict_lang[dict_iso_1_to_3[code]] = code
     return dict_lang
 

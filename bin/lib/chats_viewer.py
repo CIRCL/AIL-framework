@@ -558,14 +558,14 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         meta.append(chat_meta)
     return meta
 
-def get_user_account_chat_message(user_id, subtype, chat_id):  # TODO subchannel + threads ...
+def get_user_account_chat_message(user_id, subtype, chat_id, translation_target=None):  # TODO subchannel + threads ...
     meta = {}
     chat = Chats.Chat(chat_id, subtype)
     chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
     if chat_meta['username']:
         chat_meta['username'] = get_username_meta_from_global_id(chat_meta['username'])
 
-    meta['messages'] = list_messages_to_dict(chat.get_user_messages(user_id), translation_target=None)
+    meta['messages'] = list_messages_to_dict(chat.get_user_messages(user_id), translation_target=translation_target)
     return meta
 
 def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
@@ -1093,7 +1093,7 @@ def api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translat
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
-    meta = get_user_account_chat_message(user_id, instance_uuid, chat_id)
+    meta = get_user_account_chat_message(user_id, instance_uuid, chat_id, translation_target=translation_target)
     meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     resp = api_get_chat(chat_id, instance_uuid, translation_target=translation_target, messages=False)
     if resp[1] != 200:
