@@ -22,7 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_logger
 from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
-from exporter.MailExporter import MailExporterUserCreation
+from exporter import MailExporter
 
 
 # LOGS
@@ -363,7 +363,7 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
             enable_user_2fa(user_id)
 
         if send_email:
-            exporter = MailExporterUserCreation()
+            exporter = MailExporter.MailExporterUserCreation()
             exporter.export(user_id, new_password)
 
 # TODO edit_org
@@ -384,7 +384,7 @@ def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None,
         else:
             r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
         if send_email:
-            exporter = MailExporterUserCreation()
+            exporter = MailExporter.MailExporterUserCreation()
             exporter.export(user_id, password)
 
     if org_uuid:
