@@ -263,7 +263,8 @@ dict_iso_1_to_3 = {
 def create_dict_iso_3_to_1():
     dict_lang = {}
     for code in dict_iso_1_to_3:
-        dict_lang[dict_iso_1_to_3[code]] = code
+        if code != 'ru-Latn':
+            dict_lang[dict_iso_1_to_3[code]] = code
     return dict_lang
 
 
@@ -680,6 +681,7 @@ class LanguageTranslator:
             return language[0]
 
     def translate(self, content, source=None, target="eng"):
+        # print(source, target)
         if target not in get_translation_languages():
             return None
         translation = None
@@ -699,6 +701,7 @@ class LanguageTranslator:
                         translation = None
                     if source_iso1 and target_iso1:
                         try:
+                            # print(source_iso1, target_iso1)
                             translation = self.lt.translate(content, source_iso1, target_iso1)
                         except Exception as e:
                             logger.error(f'Libretranslate Translation: {e}')
