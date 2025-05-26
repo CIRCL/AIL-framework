@@ -118,7 +118,7 @@ def objects_mail_search():
     #         search_result = mails.search_by_id(to_search, r_pos=True, case_sensitive=False)
     # elif type_to_search == 'content':
     search_engine.log(user_id, 'mail', to_search)
-    search_result = mails.search_by_content(to_search, r_pos=True, case_sensitive=False)
+    search_result = mails.search_by_content(to_search, r_pos=True, case_sensitive=False, regex=False)
     # else:
     #     return create_json_response({'error': 'Unknown search type'}, 400)
 

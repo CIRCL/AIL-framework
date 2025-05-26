@@ -101,7 +101,7 @@ def objects_gtracker_search():
 
     gtrackers = GTrackers.GTrackers()
     search_engine.log(user_id, 'gtracker', to_search)
-    search_result = gtrackers.search_by_content(to_search, r_pos=True, case_sensitive=False)
+    search_result = gtrackers.search_by_content(to_search, r_pos=True, case_sensitive=False, regex=False)
 
     if search_result:
         ids = sorted(search_result.keys())
