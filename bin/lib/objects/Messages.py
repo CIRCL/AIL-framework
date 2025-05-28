@@ -159,7 +159,7 @@ class Message(AbstractObject):
             if obj_type == 'image':
                 image_description = self._get_obj_field('image', None, obj_id, 'desc:qwen2.5vl')
                 if image_description:
-                    image_description = image_description.replace("'", ' ').replace('"', ' ')
+                    image_description = image_description.replace("`", ' ')
                 images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id), 'description': image_description})
         return images
 

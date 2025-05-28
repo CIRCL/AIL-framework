@@ -105,7 +105,7 @@ class Image(AbstractDaterangeObject):
             model = get_default_image_description_model()
         description = self._get_field(f'desc:{model}')
         if description:
-            description = description.replace("'", ' ').replace('"', ' ')
+            description = description.replace("`", ' ')
         return description
 
     def get_misp_object(self):
