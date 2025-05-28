@@ -489,6 +489,7 @@ def tracker_objects():
     meta['date'] = Date.get_current_utc_full_time()
 
     return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
+                           # ollama_enabled=images_engine.is_ollama_enabled(),
                            chats=chats, messages=messages, bootstrap_label=bootstrap_label)
 
     # TODO

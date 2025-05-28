@@ -88,6 +88,18 @@ class AbstractObject(ABC):
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
         return dict_meta
 
+    def _get_obj_field(self, obj_type, subtype, obj_id, field):
+        if subtype is None:
+            return r_object.hget(f'meta:{obj_type}:{obj_id}', field)
+        else:
+            return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', field)
+
+    def _exists_field(self, field):
+        if self.subtype is None:
+            return r_object.hexists(f'meta:{self.type}:{self.id}', field)
+        else:
+            return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
+
     def _get_field(self, field):
         if self.subtype is None:
             return r_object.hget(f'meta:{self.type}:{self.id}', field)
@@ -99,6 +111,18 @@ class AbstractObject(ABC):
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
+
+    def _get_fields_keys(self):
+        if self.subtype is None:
+            return r_object.hkeys(f'meta:{self.type}:{self.id}')
+        else:
+            return r_object.hkeys(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
+
+    def _delete_field(self, field):
+        if self.subtype is None:
+            return r_object.hdel(f'meta:{self.type}:{self.id}', field)
+        else:
+            return r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     ## Queues ##
 

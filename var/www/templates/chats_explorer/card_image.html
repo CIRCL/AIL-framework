@@ -69,6 +69,9 @@
                         <div id="collapseImage" class="collapse show" aria-labelledby="headingImage" data-parent="#accordion_image">
                             <div class="card-body text-center">
                                 {% include 'objects/image/block_blur_img_slider.html' %}
+                                {% with ollama_description=dict_object['metadata']['description'], image_gid=dict_object['gid'] %}
+                                    {% include 'block_img_ollama.html' %}
+                                {% endwith %}
 								<img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=meta['id'])}}">
                             </div>
                         </div>

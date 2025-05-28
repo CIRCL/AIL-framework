@@ -5,7 +5,7 @@
                 <p style="white-space: pre-line">{{ ollama_description }}</p>
             {% elif ollama_enabled %}
                 <span>
-                    <a class="btn btn-primary" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> Describe Image</a>
+                    <a class="btn btn-primary" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝Image Description</a>
                 </span>
             {% endif %}
         </div>

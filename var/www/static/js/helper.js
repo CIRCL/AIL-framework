@@ -145,3 +145,21 @@ function show_search_helper_tooltip(container) {
     }
 
 }
+
+function show_text_tooltip(container, text) {
+    container = $(container);
+
+    if (container.data('bs.popover')) {
+        container.popover('show');
+    } else {
+        let c_helper = "<p style=\"white-space: pre-wrap\">" + text + "</p>";
+
+        container.popover({
+            content: c_helper,
+            html: true,
+            container: 'body',
+        })
+        container.popover('show');
+    }
+
+}

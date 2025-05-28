@@ -57,7 +57,7 @@
 								</div>
                                 {% with ollama_description=dict_object['metadata']['description'], image_gid=dict_object['gid'] %}
                                     {% include 'block_img_ollama.html' %}
-                                  {% endwith %}
+                                {% endwith %}
 								<canvas id="canvas" style="width:100%;"></canvas>
               </div>
             </div>

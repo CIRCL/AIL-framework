@@ -67,6 +67,11 @@ def is_valid_uuid_v5(header_uuid):
 def generate_uuid5(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
 
+#### IMAGES ####
+
+def get_default_image_description_model():
+    return 'qwen2.5vl'
+
 #### AIL OBJECTS ####
 
 def get_all_objects():

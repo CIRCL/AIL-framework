@@ -138,6 +138,11 @@
 
                     {% endfor %}
                 {% endif %}
+                {% if ollama_enabled %}
+                    {% with ollama_description=message_image['description'], image_gid='image::'+message_image['id'] %}
+                        {% include 'block_img_ollama_small.html' %}
+                    {% endwith %}
+                {% endif %}
             {%  endfor %}
         {% endif %}
         {% if message['files'] %}

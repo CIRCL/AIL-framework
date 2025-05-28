@@ -1,0 +1,11 @@
+{% if ollama_enabled or ollama_description %}
+    <span>
+        {% if ollama_description %}
+            <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, '{{ ollama_description }}')" onmouseleave="hide_obj_tooltip(this)"></i>
+        {% elif ollama_enabled %}
+            <span>
+                <a class="btn btn-info" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝</a>
+            </span>
+        {% endif %}
+    </span>
+{% endif %}

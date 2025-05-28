@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
+from lib.ail_core import get_default_image_description_model
 # from lib import data_retention_engine
 
 config_loader = ConfigLoader()
@@ -96,15 +97,20 @@ class Screenshot(AbstractObject):
     def get_content(self):
         return self.get_file_content()
 
-    def get_description(self):
-        # g_id = self.get_global_id()
-        # description = r_cache.get(f'images:ollama:{g_id}')
-        # if description:
-        #     r_cache.expire(f'images:ollama:{g_id}', 300)
-        return self._get_field('description')
+    def get_description_models(self):
+        models = []
+        for key in self._get_fields_keys():
+            if key.startswith('desc:'):
+                model = key[5:]
+                models.append(model)
 
-    def set_description(self, description):
-        self._set_field('description', description)
+    def add_description_model(self, model, description):
+        self._set_field(f'desc:{model}', description)
+
+    def get_description(self, model=None):
+        if not model:
+            model = get_default_image_description_model()
+        return self._get_field(f'desc:{model}')
 
     def get_misp_object(self):
         obj_attrs = []
@@ -121,7 +127,7 @@ class Screenshot(AbstractObject):
         meta = self.get_default_meta()
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
-        if 'description' in meta:
+        if 'description' in options:
             meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])

@@ -336,6 +336,10 @@ class AbstractDaterangeObjects(ABC):
                             objs[obj_id]['content'] = content
         return objs
 
+    def _fix_delete_objs_field(self, field_name):
+        for obj in self.get_iterator():
+            obj._delete_field(field_name)
+
     def api_get_chart_nb_by_daterange(self, date_from, date_to):
         date_type = []
         for date in Date.substract_date(date_from, date_to):

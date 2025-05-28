@@ -25,6 +25,7 @@ from lib import Language
 from lib import Tag
 from lib import module_extractor
 from lib.objects import ail_objects
+from lib import images_engine
 
 # ============ BLUEPRINT ============
 chats_explorer = Blueprint('chats_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/chats_explorer'))
@@ -123,6 +124,7 @@ def chats_explorer_chat():
         languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
+                               ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                translation_languages=languages, translation_target=target)
@@ -220,6 +222,7 @@ def objects_subchannel_messages():
         languages_stats = chats_viewer.api_get_languages_stats('chat-subchannel', instance_uuid, subchannel_id)
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
         return render_template('SubChannelMessages.html', subchannel=subchannel,
+                               ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
@@ -250,6 +253,7 @@ def objects_thread_messages():
         meta = thread[0]
         languages = Language.get_translation_languages()
         return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               ollama_enabled=images_engine.is_ollama_enabled(),
                                message_id=message_id,
                                translation_languages=languages, translation_target=target)
 
@@ -362,6 +366,7 @@ def objects_message():
         message['extracted'] = extracted
         message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
+                               ollama_enabled=images_engine.is_ollama_enabled(),
                                translation_languages=languages, translation_target=target, container_url=container_url,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
@@ -468,6 +473,7 @@ def objects_user_account_chat():
         meta = meta[0]
         languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
+                               ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
                                translation_languages=languages, translation_target=target)
 

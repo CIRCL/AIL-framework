@@ -157,7 +157,8 @@ class Message(AbstractObject):
         for child in self.get_childrens():
             obj_type, _, obj_id = child.split(':', 2)
             if obj_type == 'image':
-                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id)})
+                image_description = self._get_obj_field('image', None, obj_id, 'desc:qwen2.5vl')
+                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id), 'description': image_description})
         return images
 
     def get_barcodes(self):

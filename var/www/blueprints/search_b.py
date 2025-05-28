@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib import search_engine
 from lib import chats_viewer
+from lib import images_engine
 # from lib import Language
 # from lib import Tag
 # from lib import module_extractor
@@ -124,5 +125,6 @@ def search_chats():
     protocols = chats_viewer.get_chat_protocols_meta()
     return render_template("search_chats.html", protocols=protocols,
                            to_search=search, search_index=index,
+                           ollama_enabled=images_engine.is_ollama_enabled(),
                            bootstrap_label=bootstrap_label,
                            result=result, pagination=pagination)
