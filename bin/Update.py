@@ -51,7 +51,7 @@ def update_submodule():
 
 # check if files are modify locally
 def check_if_files_modified():
-    return True
+    # return True
     process = subprocess.run(['git', 'ls-files', '-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         modified_files = process.stdout
