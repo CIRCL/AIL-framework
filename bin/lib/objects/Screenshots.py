@@ -110,10 +110,7 @@ class Screenshot(AbstractObject):
     def get_description(self, model=None):
         if not model:
             model = get_default_image_description_model()
-        description = self._get_field(f'desc:{model}')
-        if description:
-            description = description.replace("'", ' ').replace('"', ' ')
-        return description
+        return self._get_field(f'desc:{model}')
 
     def get_misp_object(self):
         obj_attrs = []
