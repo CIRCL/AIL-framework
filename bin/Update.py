@@ -51,7 +51,7 @@ def update_submodule():
 
 # check if files are modify locally
 def check_if_files_modified():
-    # return True
+    return True
     process = subprocess.run(['git', 'ls-files', '-m'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if process.returncode == 0:
         modified_files = process.stdout
@@ -235,7 +235,7 @@ def _sort_version_tags(versions, current_version):
                             continue
                     sorted_versions.append(f'v{version}.{subversion}.{sub_release}')
             else:
-                if curr_version != version and subversion != curr_subversion:
+                if curr_version <= version and subversion > curr_subversion:
                     sorted_versions.append(f'v{version}.{subversion}')
     if sorted_versions[0] == current_version:
         sorted_versions = sorted_versions[1:]
