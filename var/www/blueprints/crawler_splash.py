@@ -32,6 +32,7 @@ from lib.objects.Items import Item
 from lib.objects.Titles import Title
 from lib import Tag
 from lib import search_engine
+from lib import images_engine
 
 from packages import Date
 
@@ -405,7 +406,7 @@ def showDomain():
     if not domain.exists():
         abort(404)
 
-    dict_domain = domain.get_meta(options=['last_origin', 'languages'])
+    dict_domain = domain.get_meta(options={'description', 'last_origin', 'languages'})
     dict_domain['domain'] = domain.id
     if domain.was_up():
         dict_domain = {**dict_domain, **domain.get_correlations(filter_types=['cryptocurrency', 'decoded', 'pgp', 'screenshot', 'title'], unpack=True)}
@@ -453,6 +454,7 @@ def showDomain():
 
     return render_template("showDomain.html",
                            dict_domain=dict_domain, bootstrap_label=bootstrap_label,
+                           ollama_enabled=images_engine.is_ollama_enabled(),
                            modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
 
 

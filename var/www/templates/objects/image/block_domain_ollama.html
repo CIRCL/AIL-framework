@@ -1,0 +1,13 @@
+{% if ollama_enabled or ollama_description %}
+    <div class="card border-secondary">
+        <div class="card-body py-2">
+            {% if ollama_description %}
+                <p style="white-space: pre-line">{{ ollama_description }}</p>
+            {% elif ollama_enabled %}
+                <span>
+                    <a class="btn btn-primary" href="{{ url_for('objects_item.domain_describe') }}?id={{ domain_id }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝Image Description</a>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

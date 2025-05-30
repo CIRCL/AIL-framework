@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
-from lib.ail_core import paginate_iterator
+from lib.ail_core import paginate_iterator, get_default_image_description_model
 from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_domain, get_item_har
 from lib.data_retention_engine import update_obj_date
 
@@ -229,6 +229,8 @@ class Domain(AbstractObject):
                 'tags': self.get_tags(r_list=True),
                 'status': self.is_up()
                 }
+        if 'description' in options:
+            meta['description'] = self.get_description()
         if 'last_origin' in options:
             meta['last_origin'] = self.get_last_origin(obj=True)
         if 'languages' in options:
@@ -315,6 +317,37 @@ class Domain(AbstractObject):
         else:
             return []
 
+    def get_crawled_images_by_epoch(self, epoch=None):
+        images = set()
+        for item_id in self.get_crawled_items_by_epoch(epoch):
+            screenshot = self.get_obj_correlations('item', '', item_id, ['screenshot']).get('screenshot')
+            if screenshot:
+                images.add(screenshot.pop()[1:])
+
+        return images
+
+    ## Descriptions ##
+
+    def get_description_models(self):
+        models = []
+        for key in self._get_fields_keys():
+            if key.startswith('desc:'):
+                model = key[5:]
+                models.append(model)
+
+    def add_description_model(self, model, description):
+        print(f'desc:{model}', description)
+        self._set_field(f'desc:{model}', description)
+
+    def get_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        description = self._get_field(f'desc:{model}')
+        if description:
+            description = description.replace("`", ' ')
+        return description
+
+    ## -Descriptions- ##
 
     # TODO FIXME
     def get_all_urls(self, date=False, epoch=None):

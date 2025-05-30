@@ -231,4 +231,18 @@ def image_describe():
             return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
 
 
-
+@objects_item.route("/domain/describe")
+@login_required
+@login_read_only
+def domain_describe():
+    domain_id = request.args.get('id')
+    r = images_engine.get_domain_description(domain_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            # TODO
+            return 'NO REFERER:'
+            return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
