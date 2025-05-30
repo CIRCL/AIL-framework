@@ -85,7 +85,7 @@ def get_domain_description(domain_id):
     domain = Domains.Domain(domain_id)
     descriptions = []
     for image_id in domain.get_crawled_images_by_epoch():
-        description = api_get_image_description(f'image::{image_id}')
+        description = api_get_image_description(f'screenshot::{image_id}')
         print(description)
         if description[1] == 200 and description[0]:
             descriptions.append(description[0])
