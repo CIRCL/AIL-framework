@@ -83,6 +83,9 @@ def get_domain_description(domain_id):
     model = get_default_image_description_model()
 
     domain = Domains.Domain(domain_id)
+    if not domain.exists():
+        return {"status": "error", "reason": f"Domain {domain_id} does not exist"}, 404
+
     descriptions = []
     for image_id in domain.get_crawled_images_by_epoch():
         description = api_get_image_description(f'screenshot::{image_id}')
@@ -111,7 +114,7 @@ def get_domain_description(domain_id):
 
 def _create_domains_up_description():
     for domain in Domains.get_domain_up_iterator():
-        print(get_domain_description(domain))
+        print(get_domain_description(domain.get_id()))
 
 
 if __name__ == '__main__':
