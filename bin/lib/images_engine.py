@@ -94,7 +94,6 @@ def get_domain_description(domain_id):
         return None, 200
 
     descriptions = '\n\nImage Description:'.join(descriptions)
-    print(descriptions)
     headers = {"Connection": "close", 'Content-Type': 'application/json', 'Accept': 'application/json'}
     try:
         res = requests.post(f'{OLLAMA_URL}/api/generate', data=create_ollama_domain_data(model, descriptions), headers=headers)
@@ -112,8 +111,8 @@ def get_domain_description(domain_id):
 
 def _create_domains_up_description():
     for domain in Domains.get_domain_up_iterator():
-        get_domain_description(domain)
+        print(get_domain_description(domain))
 
 
 if __name__ == '__main__':
-    print(_create_domain_up_description())
+    _create_domains_up_description()
