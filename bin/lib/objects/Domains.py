@@ -607,6 +607,11 @@ def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, do
                 date_domains[date] = list(domains)
     return date_domains
 
+def get_domain_up_iterator():
+    for domain_type in get_all_domains_types():
+        for dom_id in get_domains_up_by_type(domain_type):
+            yield Domain(dom_id)
+
 def get_domains_meta(domains):
     metas = []
     for domain in domains:

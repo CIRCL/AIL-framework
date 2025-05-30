@@ -110,6 +110,10 @@ def get_domain_description(domain_id):
             return r['response'], 200
     return None, 200
 
+def _create_domains_up_description():
+    for domain in Domains.get_domain_up_iterator():
+        get_domain_description(domain)
 
-# if __name__ == '__main__':
-#     print(get_domain_description(''))
+
+if __name__ == '__main__':
+    print(_create_domain_up_description())
