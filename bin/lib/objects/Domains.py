@@ -799,5 +799,23 @@ class Domains:
             nb += r_crawler.scard(f'{domain_type}_up:{date}')
         return nb
 
+#### API ####
+
+def api_get_onions_by_month(date_year_month):
+    if len(date_year_month) == 2:
+        month = int(date_year_month)
+        year = int(Date.get_current_year())
+    elif len(date_year_month) == 6 or len(date_year_month) == 8:
+        year = int(date_year_month[0:4])
+        if year < 2020:
+            return {'error': 'Invalid month date. Format: 202502'}, 400
+        month = int(date_year_month[4:6])
+    else:
+        return {'error': 'Invalid month date. Format: 202502'}, 400
+    if month < 1 or month > 12:
+        return {'error': 'Invalid month date. Format: 202502'}, 400
+    return get_domain_up_by_month('onion', f'{year}{month}'), 200
+
+
 if __name__ == '__main__':
     _rebuild_vanity_clusters()

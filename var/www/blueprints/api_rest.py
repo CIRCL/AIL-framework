@@ -146,6 +146,12 @@ def add_crawler_capture():
     dict_res = {'url': data['url']}
     return create_json_response(dict_res, 200)
 
+@api_rest.route("api/v1/onions/up/month/<path:date_year_month>", methods=['GET'])
+@token_required('admin')
+def get_onions_up_month(date_year_month):
+    res = Domains.api_get_onions_by_month(date_year_month)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #       IMPORTERS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
