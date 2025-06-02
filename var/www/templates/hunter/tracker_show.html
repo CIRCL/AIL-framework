@@ -25,6 +25,7 @@
     <script src="{{ url_for('static', filename='js/d3/graphlinesgroup.js') }}"></script>
     <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
     <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
 
     <style>
         .btn-link {
@@ -306,6 +307,20 @@
                 </div>
             </div>
 
+            <h5>Matches by year:</h5>
+            <div>
+                <div class="row">
+                    <div class="col-12 col-lg-11">
+                        <div id="heatmapyear" style="width: 100%;height: 250px;"></div>
+                    </div>
+                    <div class="col-12 col-lg-1">
+                        {% for year in meta['years'] %}
+                            <div><button class="btn btn-info mt-1" onclick="update_heatmap_year({{ year }})">{{ year }}</button></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
             {% if meta['objs'] %}
                 <hr>
                 <div class="mt-4">
@@ -442,19 +457,13 @@
     // Hover effect
     var btn_read_more = $('#btn_read_more')
     var textElement = document.querySelector(".text-collapse");
-    const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
-    var maxLines = 30;
-    const maxHeight = lineHeight * maxLines;
-
-    /*console.log(textElement.offsetHeight)
-    console.log(maxHeight)
-    if (textElement.offsetHeight > maxHeight) {
-        textElement.style.maxHeight = '100%'
-        btn_read_more.hide();
-    } else {*/
+    if (textElement) {
+        const lineHeight = parseFloat(window.getComputedStyle(textElement).lineHeight);
+        var maxLines = 30;
+        const maxHeight = lineHeight * maxLines;
         // Apply initial truncation
         textElement.style.maxHeight = maxHeight + 'px';
-        btn_read_more.on("click", function() {
+        btn_read_more.on("click", function () {
             if (btn_read_more.text() === "Show more") {
                 textElement.style.maxHeight = 'none';
                 btn_read_more.text("Show less");
@@ -463,7 +472,7 @@
                 btn_read_more.text("Show more");
             }
         });
-    //}
+    }
 
     function edit_tags() {
         $('#div_edit_mails').hide();
@@ -488,6 +497,57 @@
         var date_to = $('#date-range-to-input').val();
         window.location.replace("{{ url_for('hunters.show_tracker') }}?uuid={{ meta['uuid'] }}&date_from=" + date_from + "&date_to=" + date_to);
     }
+
+var heatyearChart = echarts.init(document.getElementById('heatmapyear'));
+window.addEventListener('resize', function() {
+    heatyearChart.resize();
+});
+var optionheatmap;
+
+optionheatmap = {
+  tooltip: {
+    position: 'top',
+    formatter: function (p) {
+      return p.data[0] + ': ' + p.data[1];
+    }
+  },
+  visualMap: {
+    min: 0,
+    max: 100,
+    calculable: true,
+    orient: 'horizontal',
+    left: '500',
+    top: '-10'
+  },
+  calendar: [
+    {
+      orient: 'horizontal',
+      range: new Date().getFullYear(),
+    },
+  ],
+  series: [
+    {
+      type: 'heatmap',
+      coordinateSystem: 'calendar',
+      data: []
+    },
+
+  ]
+};
+heatyearChart.setOption(optionheatmap);
+
+update_heatmap_year(null);
+function update_heatmap_year(year) {
+    $.getJSON("{{ url_for('hunters.tracker_show_stats_year') }}?uuid={{ meta['uuid'] }}&year=" + year)
+        .done(function(data) {
+            optionheatmap['visualMap']['max'] = data['max']
+            optionheatmap['calendar'][0]['range'] = data['year']
+            optionheatmap['series'][0]['data'] = data['nb']
+            heatyearChart.setOption(optionheatmap)
+
+        }
+    );
+}
 
 </script>
 

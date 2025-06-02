@@ -190,7 +190,7 @@ def show_tracker():
 
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
-                                     'user', 'webhooks', 'nb_objs'})
+                                     'user', 'webhooks', 'nb_objs', 'years'})
 
     if meta['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
@@ -223,6 +223,27 @@ def show_tracker():
                             typo_squatting=typo_squatting,
                             filter_obj_types=filter_obj_types,
                             bootstrap_label=bootstrap_label)
+
+@hunters.route("/tracker/show/stats/year", methods=['GET'])
+@login_required
+@login_read_only
+def tracker_show_stats_year():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+
+    tracker_uuid = request.args.get('uuid', None)
+    year = request.args.get('year')
+
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
+    if res:  # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+    stats = Tracker.api_get_nb_year_tracker(tracker_uuid, year)
+    if stats[1] != 200:
+        return create_json_response(stats[0], stats[1])
+    else:
+        return jsonify(stats[0])
 
 def parse_add_edit_request(request_form):
     to_track = request_form.get("tracker")

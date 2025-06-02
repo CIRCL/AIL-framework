@@ -275,3 +275,27 @@ def get_previous_month_date():
     first = now.replace(day=1)
     last_month = first - datetime.timedelta(days=1)
     return last_month.strftime("%Y%m%d")
+
+def get_current_year():
+    dt = datetime.date.today()
+    return dt.strftime("%Y")
+
+def get_year_daterange(year):
+    year = int(year)
+    date_from = datetime.date(year, 1, 1)
+    date_to = datetime.date(year, 12, 31)
+    delta = date_to - date_from  # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append(date.strftime('%Y%m%d'))
+    return l_date
+
+def get_year_range(year_start, year_end):
+    if year_start == year_end:
+        return [year_start]
+    else:
+        years = []
+        for i in range(int(year_start), int(year_end) + 1):
+            years.append(i)
+        return years

@@ -318,6 +318,26 @@ class Tracker:
             sparkline.append(int(nb_seen_this_day))
         return sparkline
 
+    def get_nb_year(self, year):
+        nb_year = {}
+        nb_max = 0
+        for date in Date.get_year_daterange(year):
+            nb = self.get_nb_objs_by_date(date)
+            if nb:
+                nb_year[f'{date[0:4]}-{date[4:6]}-{date[6:8]}'] = nb
+                nb_max = max(nb_max, nb)
+        return nb_max, nb_year
+
+    def get_years(self):
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        if first_seen and last_seen:
+            first_year = first_seen[:4]
+            last_seen = last_seen[:4]
+            return Date.get_year_range(first_year, last_seen)
+        else:
+            return []
+
     def get_rule(self):
         yar_path = self.get_tracked()
         return yara.compile(filepath=os.path.join(get_yara_rules_dir(), yar_path))
@@ -353,6 +373,8 @@ class Tracker:
             meta['webhook'] = self.get_webhook()
         if 'sparkline' in options:
             meta['sparkline'] = self.get_sparkline(6)
+        if 'years' in options:
+            meta['years'] = self.get_years()
         return meta
 
     def _add_to_dashboard(self, obj_type, subtype, obj_id):
@@ -897,6 +919,18 @@ def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_r
         return {"status": "error", "reason": "Access Denied - Tracker level"}, 403
 
 ## --ACL-- ##
+
+def api_get_nb_year_tracker(tracker_uuid, year):
+    tracker = Tracker(tracker_uuid)
+    if not tracker.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        year = datetime.datetime.now().year
+    nb_max, nb = tracker.get_nb_year(year)
+    nb = [[date, value] for date, value in nb.items()]
+    return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
 #### FIX DB #### TODO ###################################################################
 def fix_tracker_stats_per_day(tracker_uuid):
