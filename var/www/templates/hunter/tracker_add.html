@@ -54,6 +54,10 @@
 										        </div>
 												<input id="webhook" name="webhook" class="form-control" placeholder="Webhook URL" type="text" {%if dict_tracker%}{%if dict_tracker['webhook']%}value="{{dict_tracker['webhook']}}"{%endif%}{%endif%}>
                                             </div>
+                                            <div class="custom-control custom-switch my-1">
+                                                <input class="custom-control-input" type="checkbox" name="notification_filter_duplicate" id="notification_filter_duplicate" {% if dict_tracker['filter_duplicate_notification'] %}checked=""{% endif %}>
+                                                <label class="custom-control-label" for="notification_filter_duplicate"><i class="fas fa-clone"></i>&nbsp;Notification: Filter Duplicate Content <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Prevent duplicate notifications by filtering matches with identical object content in email and webhook alerts."></i></label>
+                                            </div>
 											<div class="input-group mb-2 mr-sm-2">
                                                 <div class="input-group-prepend">
                                                     <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>

@@ -11,6 +11,7 @@ import uuid
 import yara
 import datetime
 import base64
+from hashlib import sha256
 
 import math
 
@@ -103,11 +104,17 @@ class Tracker:
     def exists(self):
         return r_tracker.exists(f'tracker:{self.uuid}')
 
+    def _exists_field(self, field):
+        return r_tracker.hexists(f'tracker:{self.uuid}', field)
+
     def _get_field(self, field):
         return r_tracker.hget(f'tracker:{self.uuid}', field)
 
     def _set_field(self, field, value):
         r_tracker.hset(f'tracker:{self.uuid}', field, value)
+
+    def _delete_field(self, field):
+        r_tracker.hdel(f'tracker:{self.uuid}', field)
 
     def get_date(self):
         return self._get_field('date')
@@ -248,6 +255,39 @@ class Tracker:
 
     ## -ORG- ##
 
+    ## CACHE ##
+
+    def enable_duplicate_notification_filtering(self):
+        self._set_field('duplicate_notification', 'False')
+
+    def disable_duplicate_notification_filtering(self):
+        self._delete_field('duplicate_notification')
+
+    def is_duplicate_notification_filtering_enabled(self):
+        return self._exists_field('duplicate_notification')
+
+    def _is_duplicate_content(self, date, sha_content):
+        return r_cache.sismember(f'tracker:content:{self.uuid}:{date}', sha_content)
+
+    def is_duplicate_content(self, content):
+        sha_content = sha256(content).hexdigest()
+        date = Date.get_current_year()
+        is_duplicate = self._is_duplicate_content(date, sha_content)
+        self._cache_content(date, sha_content)
+        return is_duplicate
+
+    def _cache_content(self, date, sha_content):
+        r_cache.sadd(f'tracker:content:{self.uuid}:{date}', sha_content)
+        if r_cache.ttl(f'tracker:content:{self.uuid}:{date}') == -1:
+            r_cache.expire(f'tracker:content:{self.uuid}:{date}', Date.get_second_until_next_day())
+
+    def cache_content(self, content):
+        content = sha256(content).hexdigest()
+        date = Date.get_current_year()
+        self._cache_content(date, content)
+
+    ## -CACHE- ##
+
     def get_filters(self):
         filters = self._get_field('filters')
         if not filters:
@@ -375,6 +415,8 @@ class Tracker:
             meta['sparkline'] = self.get_sparkline(6)
         if 'years' in options:
             meta['years'] = self.get_years()
+        if 'filter_duplicate_notification' in options:
+            meta['filter_duplicate_notification'] = self.is_duplicate_notification_filtering_enabled()
         return meta
 
     def _add_to_dashboard(self, obj_type, subtype, obj_id):
@@ -536,7 +578,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None):
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False):
 
         # edit tracker
         old_type = self.get_type()
@@ -605,6 +647,10 @@ class Tracker:
         if nb_old_mails > 0 or mails:
             self._del_mails()
             self._set_mails(mails)
+        if notification_filter_duplicate:
+            self.enable_duplicate_notification_filtering()
+        else:
+            self.disable_duplicate_notification_filtering()
 
         # Filters
         self.del_filters(old_type, old_to_track)
@@ -1142,6 +1188,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     res = verify_mail_list(mails)
     if res:
         return res
+    notification_filter_duplicate = dict_input.get('notification_filter_duplicate', False)
 
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
@@ -1176,7 +1223,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
 
     tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
-                 tags=tags, mails=mails, webhook=webhook)
+                 tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate)
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 

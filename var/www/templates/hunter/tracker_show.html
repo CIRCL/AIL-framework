@@ -165,6 +165,12 @@
                                         {%endfor%}
                                     </td>
                                 </tr>
+                                {% if meta['filter_duplicate_notification'] %}
+                                    <td class="text-right"><b>Notification</b></td>
+                                    <td>
+                                        <i class="fas fa-clone"></i> Filter Duplicate Content
+                                    </td>
+                                {% endif %}
                                 <tr>
                                     <td class="text-right"><b>Mails</b></td>
                                     <td>

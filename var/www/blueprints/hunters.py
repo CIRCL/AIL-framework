@@ -190,6 +190,7 @@ def show_tracker():
 
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
+                                     'filter_duplicate_notification',
                                      'user', 'webhooks', 'nb_objs', 'years'})
 
     if meta['type'] == 'yara':
@@ -254,6 +255,7 @@ def parse_add_edit_request(request_form):
     webhook = request_form.get("webhook", '')
     level = request_form.get("level", 0)
     mails = request_form.get("mails", [])
+    notification_filter_duplicate = request_form.get('notification_filter_duplicate', False)
 
     # TAGS
     tags = request_form.get("tags", [])
@@ -301,6 +303,10 @@ def parse_add_edit_request(request_form):
         mails = mails.split()
     else:
         mails = []
+    if notification_filter_duplicate == 'on':
+        notification_filter_duplicate = True
+    else:
+        notification_filter_duplicate = False
 
     # FILTERS
     filters = {}
@@ -332,6 +338,7 @@ def parse_add_edit_request(request_form):
 
     input_dict = {"tracked": to_track, "type": tracker_type,
                   "tags": tags, "mails": mails, "filters": filters,
+                  "notification_filter_duplicate" : notification_filter_duplicate,
                   "level": level, "description": description, "webhook": webhook}
     if tracker_uuid:
         input_dict['uuid'] = tracker_uuid
@@ -383,7 +390,7 @@ def tracker_edit():
             return create_json_response(res[0], res[1])
 
         tracker = Tracker.Tracker(tracker_uuid)
-        dict_tracker = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'tags', 'webhooks'})
+        dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks'})
         if dict_tracker['type'] == 'yara':
             if not Tracker.is_default_yara_rule(dict_tracker['tracked']):
                 dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])

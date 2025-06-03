@@ -87,6 +87,11 @@ def get_today_date_str(separator=False):
     else:
         return datetime.date.today().strftime("%Y%m%d")
 
+def get_second_until_next_day():
+    dt = datetime.datetime.now()
+    tomorrow = dt + datetime.timedelta(days=1)
+    return int((datetime.datetime.combine(tomorrow, datetime.time.min) - dt).seconds)
+
 def get_current_week_day():
     dt = datetime.date.today()
     start = dt - datetime.timedelta(days=dt.weekday())

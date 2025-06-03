@@ -133,14 +133,22 @@ class Tracker_Term(AbstractModule):
                 else:
                     obj.add_tag(tag)
 
-            # Mail
-            if tracker.mail_export():
-                # TODO add matches + custom subjects
-                self.exporters['mail'].export(tracker, obj)
+            # Notification Export
+            if tracker.mail_export() or tracker.webhook_export():
+                filter_notifications = False
 
-            # Webhook
-            if tracker.webhook_export():
-                self.exporters['webhook'].export(tracker, obj)
+                if tracker.is_duplicate_notification_filtering_enabled():
+                    content = self.obj.get_content(r_type='bytes')
+                    filter_notifications = tracker.is_duplicate_content(content)
+
+                if not filter_notifications:
+                    # Mails
+                    if tracker.mail_export():
+                        self.exporters['mail'].export(tracker, obj)
+
+                    # Webhook
+                    if tracker.webhook_export():
+                        self.exporters['webhook'].export(tracker, obj)
 
 
 if __name__ == '__main__':

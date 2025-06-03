@@ -125,15 +125,25 @@ class Tracker_Regex(AbstractModule):
                 else:
                     obj.add_tag(tag)
 
-            if tracker.mail_export():
-                if not matches:
-                    matches = self.extract_matches(re_matches)
-                self.exporters['mail'].export(tracker, obj, matches)
+            # Notification Export
+            if tracker.mail_export() or tracker.webhook_export():
+                filter_notifications = False
 
-            if tracker.webhook_export():
-                if not matches:
-                    matches = self.extract_matches(re_matches)
-                self.exporters['webhook'].export(tracker, obj, matches)
+                if tracker.is_duplicate_notification_filtering_enabled():
+                    content = self.obj.get_content(r_type='bytes')
+                    filter_notifications = tracker.is_duplicate_content(content)
+
+                if not filter_notifications:
+                    if not matches:
+                        matches = self.extract_matches(re_matches)
+
+                    # Mails
+                    if tracker.mail_export():
+                        self.exporters['mail'].export(tracker, self.obj, matches)
+
+                    # Webhook
+                    if tracker.webhook_export():
+                        self.exporters['webhook'].export(tracker, self.obj, matches)
 
 
 if __name__ == "__main__":
