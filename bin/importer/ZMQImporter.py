@@ -111,23 +111,26 @@ class ZMQModuleImporter(AbstractModule):
             # Filters
             if feeder_name in self.filters:
                 content = ail_files.get_b64_gzipped_content(gzip64encoded, 'ZMQImporter')
-                # TODO remove empty line ???
-                to_filter = False
-                for f in self.filters[feeder_name]:
-                    if content.startswith(f['start']) and content.endswith(f['end']):
-                        same_pattern = True
-                        for line in content.splitlines():
-                            if line:
-                                if not (line.startswith(f['start']) and line.endswith(f['end'])):
-                                    same_pattern = False
-                                    break
-                        if same_pattern:
-                            to_filter = True
-                            break
-                # Filter content
-                if to_filter:
-                    print(f'Filtered {feeder_name}: {obj_id}')
-                    continue
+                if content:
+                    content = content.decode()
+                
+                    # TODO remove empty line ???
+                    to_filter = False
+                    for f in self.filters[feeder_name]:
+                        if content.startswith(f['start']) and content.endswith(f['end']):
+                            same_pattern = True
+                            for line in content.splitlines():
+                                if line:
+                                    if not (line.startswith(f['start']) and line.endswith(f['end'])):
+                                        same_pattern = False
+                                        break
+                            if same_pattern:
+                                to_filter = True
+                                break
+                    # Filter content
+                    if to_filter:
+                        print(f'Filtered {feeder_name}: {obj_id}')
+                        continue
 
             obj = Item(obj_id)
             # f'{source} {content}'
