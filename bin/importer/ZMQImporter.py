@@ -8,6 +8,7 @@ ZMQ Importer
 
 """
 import os
+import json
 import sys
 import zmq
 
@@ -18,8 +19,32 @@ sys.path.append(os.environ['AIL_BIN'])
 from importer.abstract_importer import AbstractImporter
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
+from lib import ail_files
 
 from lib.objects.Items import Item
+
+def get_zmq_filter():
+    filters = {}
+    file = os.path.join(os.environ['AIL_HOME'], 'files', 'zmq_filter')
+    if not os.path.exists(file):
+        return filters
+    with open(file, 'r') as f:
+        zmq_filter = f.read()
+    zmq_filter = json.loads(zmq_filter)
+    for d in zmq_filter:
+        feeder_name = d.get('feeder')
+        if not feeder_name:
+            continue
+        if feeder_name not in filters:
+            filters[feeder_name] = []
+        str_start = d['start']
+        str_end = d['end']
+        description = d.get('description')
+        if not str_start and not str_end:
+            continue
+        filters[feeder_name].append({'start': str_start, 'end': str_end, 'description': description})
+    print('loaded zmq filters: ', filters)
+    return filters
 
 class ZMQImporters(AbstractImporter):
     def __init__(self):
@@ -65,6 +90,8 @@ class ZMQModuleImporter(AbstractModule):
         for address in addresses:
             self.zmq_importer.add(address.strip(), channel)
 
+        self.filters = get_zmq_filter()
+
     def get_message(self):
         for message in self.zmq_importer.importer():
             # remove channel from message
@@ -80,6 +107,27 @@ class ZMQModuleImporter(AbstractModule):
                 feeder_name, obj_id = splitted
             else:
                 feeder_name = self.default_feeder_name
+
+            # Filters
+            if feeder_name in self.filters:
+                content = ail_files.get_b64_gzipped_content(gzip64encoded, 'ZMQImporter')
+                # TODO remove empty line ???
+                to_filter = False
+                for f in self.filters[feeder_name]:
+                    if content.startswith(f['start']) and content.endswith(f['end']):
+                        same_pattern = True
+                        for line in content.splitlines():
+                            if line:
+                                if not (line.startswith(f['start']) and line.endswith(f['end'])):
+                                    same_pattern = False
+                                    break
+                        if same_pattern:
+                            to_filter = True
+                            break
+                # Filter content
+                if to_filter:
+                    print(f'Filtered {feeder_name}: {obj_id}')
+                    continue
 
             obj = Item(obj_id)
             # f'{source} {content}'

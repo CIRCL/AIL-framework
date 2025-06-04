@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import base64
 import datetime
+import gzip
+import io
 import logging.config
 import magic
 import os
@@ -179,3 +182,24 @@ def create_item_id(feeder_name, path):
     item_id = os.path.join(feeder_name, date, basename)
     # TODO check if already exists
     return item_id
+
+####  ####
+
+def ungzip_bytes(bytes_obj, name):
+    gunzipped_bytes_obj = None
+    try:
+        in_ = io.BytesIO()
+        in_.write(bytes_obj)
+        in_.seek(0)
+
+        with gzip.GzipFile(fileobj=in_, mode='rb') as fo:
+            gunzipped_bytes_obj = fo.read()
+    except Exception as e:
+        logger.warning(f'Invalid Gzip: {name}, {e}')
+    return gunzipped_bytes_obj
+
+def get_b64_gzipped_content(b64_gzipped_content, name):
+    decoded = base64.standard_b64decode(b64_gzipped_content)
+    return ungzip_bytes(decoded, name)
+
+
