@@ -64,6 +64,7 @@ class Hosts(AbstractModule):
             # print(self.dom_classifier.domain)
             for domain in self.dom_classifier.domain:
                 if domain:
+                    domain = domain.lower()
                     self.add_message_to_queue(message=domain, queue='Host')
 
 
