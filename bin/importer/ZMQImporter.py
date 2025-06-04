@@ -72,7 +72,7 @@ class ZMQImporters(AbstractImporter):
         for event in self.poller.poll(timeout=timeout):
             socket, event_mask = event
             # DEBUG
-            print(socket, event_mask)
+            # print(socket, event_mask)
             yield socket.recv()
 
 
@@ -113,7 +113,7 @@ class ZMQModuleImporter(AbstractModule):
                 content = ail_files.get_b64_gzipped_content(gzip64encoded, 'ZMQImporter')
                 if content:
                     content = content.decode()
-                
+
                     # TODO remove empty line ???
                     to_filter = False
                     for f in self.filters[feeder_name]:
@@ -129,14 +129,14 @@ class ZMQModuleImporter(AbstractModule):
                                 break
                     # Filter content
                     if to_filter:
-                        print(f'Filtered {feeder_name}: {obj_id}')
+                        print(f'Filtered -------- {feeder_name}: {obj_id}')
                         continue
 
             obj = Item(obj_id)
             # f'{source} {content}'
             relay_message = f'{feeder_name} {gzip64encoded}'
 
-            print(f'feeder_name item::{obj_id}')
+            print(f'{feeder_name} item::{obj_id}')
             self.add_message_to_queue(obj=obj, message=relay_message)
 
 
