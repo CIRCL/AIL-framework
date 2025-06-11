@@ -15,7 +15,22 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
+from lib.objects import BarCodes
+from lib.objects import CookiesNames
+from lib.objects import CryptoCurrencies
+from lib.objects import Domains
+from lib.objects import Favicons
+from lib.objects import FilesNames
+from lib.objects import GTrackers
+from lib.objects import Mails
+from lib.objects import Pgps
+from lib.objects import QrCodes
+from lib.objects import Titles
+from lib.objects import Usernames
 from lib.crawlers import get_crawlers_stats
+from lib import ail_orgs
+from lib import ail_users
+from lib import chats_viewer
 from lib import Tag
 from lib import Tracker
 
@@ -49,7 +64,7 @@ def get_feeders_dashboard_full():
 
     feeders = get_feeders()
     d_time = []
-    for i in range(timestamp - 30*20, timestamp +30, 30):
+    for i in range(timestamp - 30*20, timestamp + 30, 30):
         t_feeders = get_feeders_by_time(i)
         for feeder in feeders:
             if feeder not in f_dashboard:
@@ -115,3 +130,25 @@ def get_tracked_objs_dashboard(user_org, user_id):
     return trackers
 
 
+def get_global_stats():  # decoded ??  domhash, hhhash  etag ???
+    stats = {'orgs': ail_orgs.get_nb_orgs(),
+             'users': ail_users.get_nb_users(),
+             'objs':
+                 {'barcode': BarCodes.Barcodes().get_nb(),
+                  'chat': chats_viewer.get_nb_chats_stats(),
+                  'cookie-name': CookiesNames.CookiesNames().get_nb(),
+                  'cryptocurrency': CryptoCurrencies.CryptoCurrencies().get_nb(),
+                  'domain': {'onion': Domains.get_nb_domains_up_by_type('onion'),
+                             'web': Domains.get_nb_domains_up_by_type('web')
+                             },
+                  'favicon': Favicons.Favicons().get_nb(),
+                  'file-name': FilesNames.FilesNames().get_nb(),
+                  'gtracker': GTrackers.GTrackers().get_nb(),
+                  'mail': Mails.Mails().get_nb(),
+                  'pgp': Pgps.Pgps().get_nb(),
+                  'qrcode': QrCodes.Qrcodes().get_nb(),
+                  'title': Titles.Titles().get_nb(),
+                  'username': Usernames.Usernames().get_nb(),
+                  },
+             }
+    return stats

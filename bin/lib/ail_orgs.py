@@ -68,6 +68,9 @@ config_loader = None
 def get_orgs():
     return r_serv_db.smembers(f'ail:orgs')
 
+def get_nb_orgs():
+    return r_serv_db.scard('ail:orgs')
+
 def is_user_in_org(org_uuid, user_id):
     return r_serv_db.sadd(f'ail:org:{org_uuid}:users', user_id)
 

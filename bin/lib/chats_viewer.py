@@ -344,6 +344,24 @@ def create_chat_service_instance(protocol, network=None, address=None):
 
 # Chat -> subtype=uuid, id = chat id
 
+def get_nb_chats():
+    nb = 0
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            nb += 1
+    return nb
+
+def get_nb_chats_stats():
+    nb = {}
+    for instance_uuid in get_chat_service_instances():
+        chat_instance = ChatServiceInstance(instance_uuid)
+        protocol = chat_instance.get_protocol()
+        if protocol not in nb:
+            nb[protocol] = 0
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            nb[protocol] += 1
+    return nb
+
 #######################################################################################
 
 def get_obj_chat(chat_type, chat_subtype, chat_id):

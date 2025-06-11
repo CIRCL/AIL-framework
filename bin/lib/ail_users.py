@@ -271,6 +271,9 @@ def disable_user_2fa(user_id):
 def get_users():
     return r_serv_db.hkeys('ail:users:all')
 
+def get_nb_users():
+    return r_serv_db.hlen('ail:users:all')
+
 def get_users_meta(users):
     meta = []
     for user_id in users:

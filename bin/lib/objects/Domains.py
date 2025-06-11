@@ -563,6 +563,8 @@ def api_get_domains_by_languages(domains_types, languages, meta=False, page=1):
         domains['list_elem'] = metas
         return domains
 
+def get_nb_domains_up_by_type(domain_type):
+    return r_crawler.scard(f'full_{domain_type}_up')
 
 def get_domains_up_by_type(domain_type):
     return r_crawler.smembers(f'full_{domain_type}_up')
