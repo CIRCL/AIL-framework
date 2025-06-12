@@ -113,8 +113,12 @@ def get_domain_description(domain_id):
     return None, 200
 
 def _create_domains_up_description():
+    nb_domains = Domains.get_nb_domains_up_by_type('onion') + Domains.get_nb_domains_up_by_type('web')
+    done = 0
     for domain in Domains.get_domain_up_iterator():
         print(get_domain_description(domain.get_id()))
+        done += 1
+        print(int(done * 100 / nb_domains))
 
 
 if __name__ == '__main__':
