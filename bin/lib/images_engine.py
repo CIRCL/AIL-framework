@@ -79,12 +79,17 @@ def api_get_image_description(obj_gid):
             return r['response'], 200
     return None, 200
 
-def get_domain_description(domain_id):
+def get_domain_description(domain_id, reprocess=True):
     model = get_default_image_description_model()
 
     domain = Domains.Domain(domain_id)
     if not domain.exists():
         return {"status": "error", "reason": f"Domain {domain_id} does not exist"}, 404
+
+    if not reprocess:
+        description = domain.get_description(model)
+        if description:
+            return description, 200
 
     descriptions = []
     for image_id in domain.get_crawled_images_by_epoch():
@@ -109,6 +114,7 @@ def get_domain_description(domain_id):
         r = res.json()
         if r:
             domain.add_description_model(model, r['response'])
+            print(r['response'])
             return r['response'], 200
     return None, 200
 
@@ -116,9 +122,10 @@ def _create_domains_up_description():
     nb_domains = Domains.get_nb_domains_up_by_type('onion') + Domains.get_nb_domains_up_by_type('web')
     done = 0
     for domain in Domains.get_domain_up_iterator():
-        print(get_domain_description(domain.get_id()))
+        get_domain_description(domain.get_id(), reprocess=False)
         done += 1
-        print(int(done * 100 / nb_domains))
+        progress = int(done * 100 / nb_domains)
+        print(f'{done}/{nb_domains}        {progress}%')
 
 
 if __name__ == '__main__':
