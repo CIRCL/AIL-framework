@@ -25,6 +25,7 @@ from lib import Tag
 from lib import ail_core
 from lib import ail_logger
 from lib import ail_stats
+from lib.objects import SSHKeys
 
 from packages.git_status import clear_git_meta_cache
 
@@ -64,6 +65,7 @@ from blueprints.objects_barcode import objects_barcode
 from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
 from blueprints.objects_file_name import objects_file_name
+from blueprints.objects_ssh import objects_ssh
 from blueprints.api_rest import api_rest
 
 
@@ -155,6 +157,7 @@ app.register_blueprint(objects_barcode, url_prefix=baseUrl)
 app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(objects_file_name, url_prefix=baseUrl)
+app.register_blueprint(objects_ssh, url_prefix=baseUrl)
 app.register_blueprint(search_b, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 
@@ -310,6 +313,10 @@ for taxonomy in default_taxonomies:
 
 # ========== GIT Cache ============
 clear_git_meta_cache()
+
+# Passive SSH
+if not SSHKeys.get_passive_ssh_url():
+    SSHKeys.set_default_passive_ssh()
 
 # r = [str(p) for p in app.url_map.iter_rules()]
 # for p in r:

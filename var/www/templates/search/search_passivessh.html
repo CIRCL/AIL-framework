@@ -9,6 +9,7 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -30,55 +31,31 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <div id="search_crawled">
-                    {% include 'search/block_crawled_search.html' %}
-                </div>
+                {% include 'search/block_passive_ssh_search.html' %}
 
-                <div id="search_domains_name">
-                    {% include 'domains/block_domains_name_search.html' %}
-                </div>
-
-                <div id="search_titles">
-                    {% include 'title/block_titles_search.html' %}
-                </div>
-
-                <hr class="my-6">
-
-                <div id ="search_chats">
-                    {% include 'search/block_chats_search.html' %}
-                </div>
-
-                <div class="my-4" id="search_usernames">
-                    {% with subtypes=username_subtypes %}
-                        {% include 'username/block_usernames_search.html' %}
-                    {% endwith %}
-                </div>
+{#                {% if result %}#}
+{#                    {% set endpoint_url = url_for('search_b.search_crawled') + "?search=" + to_search + "&index=" + search_index %}#}
+{#                    {% include 'search/pagination.html' %}#}
+{#                {% endif %}#}
 
 
-{#            TODO SEARCH CHATS / MESSAGES #}
+                {% if result %}
+                    <div class="position-relative mb-3">
+                      <button class="btn btn-outline-primary position-absolute" style="top: 10px; right: 10px;" onclick="copyToClipboard('resultOutput')">
+                        <i class="fa-regular fa-clipboard"></i> Copy
+                      </button>
 
-{#            TODO BUTTON with anchor ??? #}
-
-
-                <div id="search_mails">
-                    {% include 'mail/block_mails_search.html' %}
-                </div>
-
-{#                {% include 'cve/block_cve_search.html' %}#}
-
-                <div id="search_gtrackers">
-                    {% include 'block_passive_ssh_search.html' %}
-                </div>
-
-                <div id="search_gtrackers">
-                    {% include 'gtracker/block_gtrackers_search.html' %}
-                </div>
-
-                <div id="search_filenames">
-                    {% include 'file-name/block_file_name_search.html' %}
-                </div>
+                      <pre id="resultOutput" class="border bg-light p-3 text-monospace">{{ result }}</pre>
+                    </div>
+                {% endif %}
 
 
+
+{#                {% if result %}#}
+{#                    {% include 'search/pagination.html' %}#}
+{#                    <br>#}
+{#		            <br>#}
+{#                {% endif %}#}
 
             </div>
 
@@ -88,7 +65,6 @@
 <script>
     $(document).ready(function(){
         $("#page-search").addClass("active");
-        $("#nav_explorer_chat").addClass("active");
   });
 
 function toggle_sidebar(){
@@ -103,6 +79,18 @@ function toggle_sidebar(){
 		$('#side_menu').addClass('col-lg-2')
 		$('#core_content').addClass('col-lg-10')
 	}
+}
+
+function copyToClipboard(elementId) {
+    const el = document.getElementById(elementId);
+    const text = el.innerText;
+
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
 }
 </script>
 

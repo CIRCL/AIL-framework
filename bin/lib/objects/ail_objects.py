@@ -42,6 +42,7 @@ from lib.objects import Ocrs
 from lib.objects import Pgps
 from lib.objects import QrCodes
 from lib.objects import Screenshots
+from lib.objects import SSHKeys
 from lib.objects import Titles
 from lib.objects import UsersAccount
 from lib.objects import Usernames
@@ -74,6 +75,7 @@ OBJECTS_CLASS = {
     'pgp': {'obj': Pgps.Pgp, 'objs': Pgps.Pgps},
     'qrcode': {'obj': QrCodes.Qrcode, 'objs': QrCodes.Qrcodes},
     'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ####################################################################################################
+    'ssh-key': {'obj': SSHKeys.SSHKey, 'objs': SSHKeys.SSHKeys},
     'title': {'obj': Titles.Title, 'objs': Titles.Titles},
     'user-account': {'obj': UsersAccount.UserAccount, 'objs': UsersAccount.UserAccounts},
     'username': {'obj': Usernames.Username, 'objs': Usernames.Usernames},

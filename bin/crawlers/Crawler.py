@@ -25,6 +25,7 @@ from lib.objects.Domains import Domain
 from lib.objects import DomHashs
 from lib.objects import Favicons
 from lib.objects.Items import Item
+from lib.objects import SSHKeys
 from lib.objects import Screenshots
 from lib.objects import Titles
 from trackers.Tracker_Yara import Tracker_Yara
@@ -88,6 +89,11 @@ class Crawler(AbstractModule):
         # LACUS
         self.lacus = crawlers.get_lacus()
         self.is_lacus_up = crawlers.is_lacus_connected(delta_check=0)
+
+        # Passive SSH
+        if not SSHKeys.get_passive_ssh_url():
+            SSHKeys.set_default_passive_ssh()
+        self.passive_ssh = SSHKeys.is_passive_ssh_enabled()
 
         # Capture
         self.har = None
@@ -357,6 +363,11 @@ class Crawler(AbstractModule):
                 # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
 
             crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
+
+            # Passive SSH
+            if self.passive_ssh:
+                SSHKeys.save_passive_ssh_host(self.domain.id)
+
             print('capture:', capture.uuid, 'completed')
             print('task:   ', task.uuid, 'completed')
             print()

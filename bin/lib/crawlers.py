@@ -42,7 +42,7 @@ from lib import ail_orgs
 from lib.exceptions import OnionFilteringError
 from lib.ConfigLoader import ConfigLoader
 from lib.regex_helper import regex_findall
-from lib.objects.Domains import Domain
+from lib.objects import Domains
 from lib.objects.Titles import Title
 from lib.objects import HHHashs
 from lib.objects.Items import Item
@@ -77,7 +77,7 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
     domain = domain.lower()
     url_unpack = unpack_url(domain)
     domain = url_unpack['domain']
-    dom = Domain(domain)
+    dom = Domains.Domain(domain)
     if not is_valid_onion_v3_domain(domain):
         return {'error': 'Invalid Domain', 'domain': domain}, 404
     if not dom.exists():
@@ -124,7 +124,7 @@ def add_domain_correlation_cache(domain, obj_gid):
 
 def save_domain_correlation_cache(is_domain_up, domain):
     if is_domain_up:
-        dom = Domain(domain)
+        dom = Domains.Domain(domain)
         for obj_gid in r_cache.smembers(f'cache:domain:correlation:objs:{domain}'):
             obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
             if not obj_subtype:
@@ -465,7 +465,7 @@ def _reprocess_all_hars_cookie_name():
         for cookie_name in extract_cookies_names_from_har(get_har_content(har_id)):
             print(domain, date, cookie_name)
             cookie = CookiesNames.create(cookie_name)
-            cookie.add(date, Domain(domain))
+            cookie.add(date, Domains.Domain(domain))
 
 def extract_etag_from_har(har):  # TODO check response url
     etags = set()
@@ -488,7 +488,7 @@ def _reprocess_all_hars_etag():
         for etag_content in extract_etag_from_har(get_har_content(har_id)):
             print(domain, date, etag_content)
             etag = Etags.create(etag_content)
-            etag.add(date, Domain(domain))
+            etag.add(date, Domains.Domain(domain))
 
 def extract_hhhash_by_id(har_id, domain, date):
     return extract_hhhash(get_har_content(har_id), domain, date)
@@ -518,7 +518,7 @@ def extract_hhhash(har, domain, date):
 
                         # -----
                         obj = HHHashs.create(hhhash_header, hhhash)
-                        obj.add(date, Domain(domain))
+                        obj.add(date, Domains.Domain(domain))
 
                     hhhashs.add(hhhash)
                     urls.add(url)
@@ -1614,7 +1614,7 @@ def get_captures_status():
             }
         else:
             domain = task.get_domain()
-            dom = Domain(domain)
+            dom = Domains.Domain(domain)
             meta = {
                 'uuid': task.uuid,
                 'domain': dom.get_id(),
@@ -1760,7 +1760,7 @@ class CrawlerTask:
         url = url_decoded['url']
         domain = url_decoded['domain']
 
-        dom = Domain(domain)
+        dom = Domains.Domain(domain)
 
         # Discovery crawler
         if priority == 0:

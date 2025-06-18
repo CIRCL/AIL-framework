@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+import logging
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
@@ -23,10 +24,13 @@ from lib import ail_core
 from lib import search_engine
 from lib import chats_viewer
 from lib import images_engine
+from lib.objects import SSHKeys
 # from lib import Language
 # from lib import Tag
 # from lib import module_extractor
 # from lib.objects import ail_objects
+
+logger = logging.getLogger()
 
 # ============ BLUEPRINT ============
 search_b = Blueprint('search_b', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/search'))
@@ -103,8 +107,7 @@ def search_chats_post():
         page = int(page)
     except (TypeError, ValueError):
         page = 1
-    return redirect(
-        url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
+    return redirect(url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
 
 
 @search_b.route("/search/chats", methods=['GET'])
@@ -128,3 +131,55 @@ def search_chats():
                            ollama_enabled=images_engine.is_ollama_enabled(),
                            bootstrap_label=bootstrap_label,
                            result=result, pagination=pagination)
+
+
+@search_b.route("/search/passivessh/host/ssh", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def search_passivessh_host_ssh():
+    if request.method == 'POST':
+        search = request.form.get('search')
+        return redirect(url_for('search_b.search_passivessh_host_ssh', search=search))
+    else:
+        user_id = current_user.get_user_id()
+        search = request.args.get('search')
+        # page = request.args.get('page', 1)
+
+        r = SSHKeys.api_get_passive_ssh_host(search)
+        result = json.dumps(r[0], indent=2)
+        return render_template("search_passivessh.html",
+                               to_search_host=search, result=result)
+
+@search_b.route("/search/passivessh/host/history", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def search_passivessh_host_history():
+    if request.method == 'POST':
+        search = request.form.get('search')
+        return redirect(url_for('search_b.search_passivessh_host_history', search=search))
+    else:
+        user_id = current_user.get_user_id()
+        search = request.args.get('search')
+        # page = request.args.get('page', 1)
+
+        r = SSHKeys.api_get_passive_ssh_host_history(search)
+        result = json.dumps(r[0], indent=2)
+        return render_template("search_passivessh.html",
+                               to_search_history=search, result=result)
+
+@search_b.route("/search/passivessh/fingerprint", methods=['GET', 'POST'])
+@login_required
+@login_read_only
+def search_passivessh_fingerprint():
+    if request.method == 'POST':
+        search = request.form.get('search')
+        return redirect(url_for('search_b.search_passivessh_fingerprint', search=search))
+    else:
+        user_id = current_user.get_user_id()
+        search = request.args.get('search')
+        # page = request.args.get('page', 1)
+
+        r = SSHKeys.api_get_passive_ssh_fingerprint_hosts(search)
+        result = json.dumps(r[0], indent=2)
+        return render_template("search_passivessh.html",
+                               to_search_fingerprint=search, result=result)

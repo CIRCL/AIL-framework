@@ -49,7 +49,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "title", "screenshot", "username"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "screenshot", "ssh-key", "title", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
@@ -64,6 +64,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "pgp": ["chat", "domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
     "screenshot": ["barcode", "domain", "item", "qrcode"],
+    "ssh-key": ["domain"],
     "title": ["domain", "item"],
     "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
     "username": ["domain", "item", "message", "user-account"],

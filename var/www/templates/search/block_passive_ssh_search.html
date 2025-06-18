@@ -1,0 +1,47 @@
+<div class="card border-secondary my-2">
+    <div class="card-header text-white bg-dark">
+        <div class="card-title h1"><img src="{{ url_for('static', filename='image/passivessh.png')}}" alt="Passive SSH" style="width:80px;"> Passive SSH Search:</div>
+    </div>
+    <div class="card-body text-dark">
+        <form action="{{ url_for('search_b.search_passivessh_host_ssh') }}" id="search_passive_ssh_key" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <span class="border pt-2 col-2">
+                    Get host SSH metadata
+                </span>
+                <input type="text" class="form-control col-8" name="search" value="{% if to_search_host %}{{ to_search_host }}{% endif %}" placeholder="onion or IP Address to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, 'Fetches the most recent SSH metadata for a given IP or hostname/onion. Includes banner, key type, fingerprint, and HASSH values.')" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+        <form action="{{ url_for('search_b.search_passivessh_host_history') }}" id="search_passive_ssh_history" method='post'>
+            <div class="input-group my-4">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <span class="border pt-2 col-2">
+                    SSH history of an host
+                </span>
+                <input type="text" class="form-control col-8" name="search" value="{% if to_search_history %}{{ to_search_history }}{% endif %}" placeholder="onion or IP Address to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, 'Returns all observed SSH keys and banners over time for the given host/onion. Useful to detect key rotation or suspicious changes.')" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+        <form action="{{ url_for('search_b.search_passivessh_fingerprint') }}" id="search_passive_ssh_fingerprint" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <span class="border pt-2 col-2">
+                    Get hosts by fingerprint
+                </span>
+                <input type="text" class="form-control col-8" name="search" value="{% if to_search_fingerprint %}{{ to_search_fingerprint }}{% endif %}" placeholder="SSH Key Fingerprint" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, 'Lists all hosts that have presented the same SSH public key fingerprint. Useful for identifying shared infrastructure or reused keys.')" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+    </div>
+
+</div>

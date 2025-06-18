@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Passive DNS - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap4.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+<body>
+
+  {% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="d-flex justify-content-center my-4">
+                    <a href="https://d4-project.org/">
+                        <img src="{{ url_for('static', filename='image/passivessh.png')}}" alt="Passive SSH">
+                    </a>
+                </div>
+
+                <p class="lead px-4">
+                    Passive SSH is an <a href="https://github.com/D4-project/passive-ssh">open source</a> framework consisting of a scanner and a server that collects, stores, and enables lookup of SSH keys and fingerprints associated with hosts.<br>
+                    (including IPv4, IPv6, and .onion addresses).<br>
+                    <br>
+                    Enabling the Passive SSH in AIL will enrich and add new correlation between crawled onions domains
+                    <br>
+                    <br>
+                    <i>To request unrestricted access (without rate limits) to the CIRCL-operated Passive SSH service, please contact info@circl.lu.</i>
+                </p>
+
+
+                {% if meta['is_enabled'] %}
+                    <a href="{{ url_for('settings_b.passive_ssh_disable') }}">
+                        <button class="btn btn-danger mx-4 my-2">
+                            Disable Passive SSH
+                        </button>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('settings_b.passive_ssh_enable') }}">
+                        <button class="btn btn-primary mx-4 my-2">
+                            Enable Passive SSH
+                        </button>
+                    </a>
+                {% endif %}
+
+                <div class="row mb-3 justify-content-center">
+                    <div class="col-xl-8">
+                        <div class="card text-center border-secondary">
+                            <div class="card-body px-1 py-0">
+                                <table class="table table-sm">
+                                    <tbody>
+                                    <tr>
+                                        <td>Url</td>
+                                        <td>{{ meta['url'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>User</td>
+                                        <td>{{ meta['user'] }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Password</td>
+                                        <td>{% if not meta['password']  %}-{% elif meta['password'] | length >= 8 %}{{ meta['password'][:4] }}****{{ meta['password'][-4:] }}{% else %}{{ meta['password'] }}{% endif %}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('settings_b.passive_ssh_edit') }}">
+                                                <button type="button" class="btn btn-info">
+                                                    Edit <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <pre class="bg-dark text-white">
+----------------------------
+- PASSIVE SSH TEST OUTPUT: -
+----------------------------
+
+{{ meta['test'] }}
+</pre>
+                <a href="{{ url_for('settings_b.passive_ssh_test') }}">
+                    <button type="button" class="btn btn-primary">
+                        ReRun Test <i class="fas fa-rocket"></i>
+                    </button>
+                </a>
+
+                <br>
+                    <br>
+
+    	    </div>
+		</div>
+
+
+
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+    $("#page-options").addClass("active");
+    $("#passive_ssh").addClass("active");
+	$("#nav_settings").removeClass("text-muted");
+} );
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+</script>
+
+</html>
