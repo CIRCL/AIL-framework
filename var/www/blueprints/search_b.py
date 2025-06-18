@@ -41,6 +41,9 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
+def log(user_id, index, to_search):
+    logger.warning(f'{user_id} search: {index} - {to_search}')
+
 # ============ FUNCTIONS ============
 
 # ============= ROUTES ==============
@@ -145,6 +148,7 @@ def search_passivessh_host_ssh():
         search = request.args.get('search')
         # page = request.args.get('page', 1)
 
+        log(user_id, 'ssh-host', search)
         r = SSHKeys.api_get_passive_ssh_host(search)
         result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",
@@ -162,6 +166,7 @@ def search_passivessh_host_history():
         search = request.args.get('search')
         # page = request.args.get('page', 1)
 
+        log(user_id, 'ssh-history', search)
         r = SSHKeys.api_get_passive_ssh_host_history(search)
         result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",
@@ -179,6 +184,7 @@ def search_passivessh_fingerprint():
         search = request.args.get('search')
         # page = request.args.get('page', 1)
 
+        log(user_id, 'ssh-fingerprint', search)
         r = SSHKeys.api_get_passive_ssh_fingerprint_hosts(search)
         result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",

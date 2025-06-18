@@ -251,7 +251,8 @@ def _get_passive_ssh_result(path):
     res = s.get(f'{get_passive_ssh_url()}{path}')
     if res.status_code != 200:
         # TODO LOG
-        print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
+        if res.status_code != 404:
+            print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
         # set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
         return res.text, res.status_code
     else:
