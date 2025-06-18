@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Google Trackers - AIL</title>
+  <title>SSH Keys - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -118,9 +118,9 @@
 
 				{% if dict_objects %}
                     {% if date_from|string == date_to|string %}
-                        <h3> {{ date_from }} Google Tracker: </h3>
+                        <h3> {{ date_from }} SSH Keys: </h3>
                     {% else %}
-                        <h3> {{ date_from }} to {{ date_to }} Google Tracker: </h3>
+                        <h3> {{ date_from }} to {{ date_to }} SSH Keys: </h3>
                     {% endif %}
                     <table id="tableb64" class="table table-striped table-bordered">
                         <thead class="bg-dark text-white">
@@ -149,9 +149,9 @@
                 {% else %}
                     {% if show_objects %}
                         {% if date_from|string == date_to|string %}
-							<h3> {{ date_from }}, No Google Tracker</h3>
+							<h3> {{ date_from }}, No SSH Keys</h3>
                         {% else %}
-							<h3> {{ date_from }} to {{ date_to }}, No Google Tracker</h3>
+							<h3> {{ date_from }} to {{ date_to }}, No SSH Keys</h3>
                         {% endif %}
                     {% endif %}
                 {% endif %}
