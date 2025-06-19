@@ -86,7 +86,8 @@ class Retro_Hunt_Module(AbstractModule):
             filters['start'] = {'type': last_obj_type, 'subtype': last_obj_subtype, 'id': last_obj_id}
 
         for obj_type in filters:
-            for obj in ail_objects.obj_iterator(obj_type, filters):
+            for obj in ail_objects.obj_iterator(obj_type, filters[obj_type]):
+                print(obj.get_id())
                 self.obj = obj
                 content = obj.get_content(r_type='bytes')
                 if not content:
