@@ -224,8 +224,8 @@
                         <span class="">
                             <select id="language_target" name="language_target" class="form-select" aria-label="Message Language" onchange="$('#translation').val('');">
                                     <option selected value="{{ message['language'] }}">{{ message['language'] }}</option>
-                                {% for language in translation_languages %}
-                                    <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                {% for language in all_languages %}
+                                    <option value="{{ language }}">{{ all_languages[language] }}</option>
                                 {% endfor %}
                             </select>
                         </span>

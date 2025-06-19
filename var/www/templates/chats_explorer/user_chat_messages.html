@@ -2,7 +2,14 @@
 <html>
 
 <head>
-  <title>User Messages - AIL</title>
+
+  {% if not language %}
+    <title>User Messages - AIL</title>
+  {% elif 'user-account' in meta %}
+    <title>User Messages by Language - AIL</title>
+  {% else %}
+    <title>Chat Messages by Language - AIL</title>
+  {% endif %}
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -34,7 +41,7 @@
 			<div class="col-12 col-lg-10" id="core_content">
 
                 {% if 'user-account' in meta %}
-                    <h3>User:</h3>
+                    <h3>User {% if language %}{{ language }} Language:{% endif %}</h3>
                     {% with meta=meta['user-account'] %}
                         {% include 'chats_explorer/card_user_account.html' %}
                     {% endwith %}
@@ -42,13 +49,13 @@
 
                 {% if 'chat' in meta %}
                     {% if meta['chat']['type'] == 'chat' %}
-                        <h3>Chat:</h3>
+                        <h3>Chat {% if language %}{{ language }} Language:{% endif %}</h3>
                         {% with meta=meta['chat']  %}
                             {% include 'chats_explorer/basic_card_chat.html' %}
                         {% endwith %}
                     {% endif %}
                     {% if meta['chat']['type'] == 'chat-subchannel' %}
-                        <h3>Subchannel:</h3>
+                        <h3>Subchannel {% if language %}{{ language }} Language:{% endif %}</h3>
                         {% with meta=meta['chat']  %}
                             {% include 'chats_explorer/card_chat_subchannel.html' %}
                         {% endwith %}
@@ -56,9 +63,19 @@
                 {% endif %}
 
                 <div class="mt-2">
-                {% with translate_url=url_for('chats_explorer.objects_user_account_chat', subtype=meta['user-account']['subtype']), obj_id=meta['user-account']['id'], chat_id=meta['chat']['id'] %}
-                    {% include 'chats_explorer/block_translation.html' %}
-                {% endwith %}
+                {% if not language %}
+                    {% with translate_url=url_for('chats_explorer.objects_user_account_chat', subtype=meta['user-account']['subtype']), obj_id=meta['user-account']['id'], chat_id=meta['chat']['id'] %}
+                        {% include 'chats_explorer/block_translation.html' %}
+                    {% endwith %}
+                {% elif 'user-account' in meta %}
+                    {% with translate_url=url_for('chats_explorer.objects_user_account_lang', subtype=meta['user-account']['subtype']), obj_id=meta['user-account']['id'] %}
+                        {% include 'chats_explorer/block_translation.html' %}
+                    {% endwith %}
+                {% elif 'chat' in meta %}
+                    {% with translate_url=url_for('chats_explorer.chats_explorer_chat_lang', subtype=meta['chat']['subtype']), obj_id=meta['chat']['id'], chat_type=meta['chat']['type'] %}
+                        {% include 'chats_explorer/block_translation.html' %}
+                    {% endwith %}
+                {% endif %}
                 {% include 'objects/image/block_blur_img_slider.html' %}
                 </div>
 

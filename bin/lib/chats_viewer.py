@@ -978,7 +978,7 @@ def api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, t
     meta['chat'] = obj.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['chat'].get('username'):
         meta['chat']['username'] = get_username_meta_from_global_id(meta['chat']['username'])
-    meta['messages'] = list_messages_to_dict(obj.get_messages_by_lang(language), translation_target=None)
+    meta['messages'] = list_messages_to_dict(obj.get_messages_by_lang(language), translation_target=translation_target)
     return meta, 200
 
 def api_get_languages_stats(obj_type, chat_instance_uuid, chat_id):
@@ -1125,7 +1125,7 @@ def api_get_user_account_messages_by_lang(user_id, instance_uuid, language, tran
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
     meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
-    meta['messages'] = list_messages_to_dict(user_account.get_messages_by_lang(language), translation_target=None)
+    meta['messages'] = list_messages_to_dict(user_account.get_messages_by_lang(language), translation_target=translation_target)
     return meta, 200
 
 

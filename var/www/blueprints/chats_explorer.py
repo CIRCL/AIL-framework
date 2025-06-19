@@ -121,13 +121,14 @@ def chats_explorer_chat():
     else:
         chat = chat[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
-                               translation_languages=languages, translation_target=target)
+                               all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/chat/lang", methods=['GET'])
 @login_required
@@ -140,19 +141,21 @@ def chats_explorer_chat_lang():
     if target == "Don't Translate":
         target = None
     language = request.args.get('lang')
+    lang = language
     if language:
         language = Language.get_iso_from_language(language)
     if not language:
         return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
-    meta = chats_viewer.api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=None)
+    meta = chats_viewer.api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=target)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
     else:
         meta = meta[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(meta['chat']['id'], meta['chat']['type'], meta['chat']['subtype']),
-                               translation_languages=languages, translation_target=target)
+                               language=lang, all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/messages/stats/week", methods=['GET'])
 @login_required
@@ -219,13 +222,15 @@ def objects_subchannel_messages():
     else:
         subchannel = subchannel[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat-subchannel', instance_uuid, subchannel_id)
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
-                               bootstrap_label=bootstrap_label, translation_languages=languages, translation_target=target)
+                               bootstrap_label=bootstrap_label, all_languages=languages,
+                               translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/thread", methods=['GET'])
 @login_required
@@ -252,10 +257,11 @@ def objects_thread_messages():
     else:
         meta = thread[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
-                               message_id=message_id,
-                               translation_languages=languages, translation_target=target)
+                               message_id=message_id, all_languages=languages,
+                               translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("/chats/explorer/participants", methods=['GET'])
 @login_required
@@ -360,14 +366,15 @@ def objects_message():
         message = message[0]
 
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)
         message['extracted'] = extracted
         message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
-                               ollama_enabled=images_engine.is_ollama_enabled(),
-                               translation_languages=languages, translation_target=target, container_url=container_url,
+                               ollama_enabled=images_engine.is_ollama_enabled(), all_languages=languages,
+                               translation_languages=translation_languages, translation_target=target, container_url=container_url,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
 @chats_explorer.route("/objects/message/translate", methods=['POST'])
@@ -422,12 +429,13 @@ def objects_user_account():
     else:
         user_account = user_account[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('user-account', instance_uuid, user_id)
         lang_endpoint = url_for('chats_explorer.objects_user_account_lang') + f'?subtype={instance_uuid}&id={user_id}&lang='
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
-                               languages_stats=languages_stats, lang_endpoint=lang_endpoint,
-                               translation_languages=languages, translation_target=target)
+                               languages_stats=languages_stats, lang_endpoint=lang_endpoint, all_languages=languages,
+                               translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("/objects/user-account_usernames_timeline_json", methods=['GET']) # TODO API
 @login_required
@@ -472,10 +480,11 @@ def objects_user_account_chat():
     else:
         meta = meta[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
-                               translation_languages=languages, translation_target=target)
+                               all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("/objects/user-account/lang", methods=['GET'])
 @login_required
@@ -484,6 +493,7 @@ def objects_user_account_lang():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
     language = request.args.get('lang')
+    lang = language
     if language:
         language = Language.get_iso_from_language(language)
     if not language:
@@ -491,15 +501,17 @@ def objects_user_account_lang():
     target = request.args.get('target')
     if target == "Don't Translate":
         target = None
-    meta = chats_viewer.api_get_user_account_messages_by_lang(user_id, instance_uuid, language, translation_target=None)
+    meta = chats_viewer.api_get_user_account_messages_by_lang(user_id, instance_uuid, language, translation_target=target)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
     else:
         meta = meta[0]
         languages = Language.get_all_languages()
+        translation_languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
-                               translation_languages=languages, translation_target=target)
+                               all_languages=languages,
+                               language=lang, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("objects/user-account/messages/stats/week/all", methods=['GET'])
 @login_required
