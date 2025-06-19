@@ -56,13 +56,15 @@ class CodeReader(AbstractModule):
         qrcodes = []
         qr_codes = False
         try:
-            image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            original_image = cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
+            inverted_image = cv2.bitwise_not(original_image)
         except cv2.error:
             self.logger.warning(f'Invalid image: {self.obj.get_global_id()}')
             return [], []
 
+        # PYBZAR
         try:
-            decodeds = decode(image)
+            decodeds = decode(original_image)
             for decoded in decodeds:
                 # print(decoded)
                 if decoded.type == 'QRCODE':
@@ -76,40 +78,56 @@ class CodeReader(AbstractModule):
                             barcodes.append(decoded.data.decode())
                 elif decoded.type:
                     self.logger.error(f'Unsupported pyzbar code type {decoded.type}: {self.obj.get_global_id()}')
+            # Inverted Image
+            decodeds = decode(inverted_image)
+            for decoded in decodeds:
+                if decoded.type == 'QRCODE':
+                    qr_codes = True
+                    if decoded.data:
+                        qrcodes.append(decoded.data.decode())
+                elif decoded.type in self.barcode_type:
+                    pass
+                elif decoded.type:
+                    self.logger.error(f'Unsupported pyzbar code type {decoded.type}: {self.obj.get_global_id()}')
+
         except ValueError as e:
             self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
+        # CV2
         if not qrcodes:
-            detector = cv2.QRCodeDetector()
-            try:
-                qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
-                if qr:
-                    qr_codes = True
-                    for d in decodeds:
-                        if d:
-                            qrcodes.append(d)
-            except cv2.error as e:
-                self.logger.error(f'{e}: {self.obj.get_global_id()}')
-            try:
-                data_qr, box, qrcode_image = detector.detectAndDecode(image)
-                if data_qr:
-                    qrcodes.append(data_qr)
-                    qr_codes = True
-            except cv2.error as e:
-                self.logger.error(f'{e}: {self.obj.get_global_id()}')
+            for image in (original_image, inverted_image):
+                detector = cv2.QRCodeDetector()
+                try:
+                    qr, decodeds, qarray, _ = detector.detectAndDecodeMulti(image)
+                    if qr:
+                        qr_codes = True
+                        for d in decodeds:
+                            if d:
+                                qrcodes.append(d)
+                except cv2.error as e:
+                    self.logger.error(f'{e}: {self.obj.get_global_id()}')
+                try:
+                    data_qr, box, qrcode_image = detector.detectAndDecode(image)
+                    if data_qr:
+                        qrcodes.append(data_qr)
+                        qr_codes = True
+                except cv2.error as e:
+                    self.logger.error(f'{e}: {self.obj.get_global_id()}')
 
+        # Qreader
+        # Do not require inverted image
         if qr_codes and not qrcodes:
             # # # # 0.5s per image
             try:
                 qreader = QReader()
-                decoded_text = qreader.detect_and_decode(image=image)
+                decoded_text = qreader.detect_and_decode(image=original_image)
                 for d in decoded_text:
                     qrcodes.append(d)
                     qr_codes = True
             except ValueError as e:
                 self.logger.error(f'{e}: {self.obj.get_global_id()}')
             if not qr_codes:
-                self.logger.warning(f'Can notextract qr code: {self.obj.get_global_id()}')
+                self.logger.warning(f'Can not extract qr code: {self.obj.get_global_id()}')
 
         return barcodes, qrcodes
 
