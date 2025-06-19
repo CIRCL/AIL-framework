@@ -1085,7 +1085,7 @@ def api_manually_translate_message(message_id, source, translation_target, trans
     if translation:
         if len(translation) > 200000: # TODO REVIEW LIMIT
             return {"status": "error", "reason": "Max Size reached"}, 400
-    all_languages = Language.get_translation_languages()
+    all_languages = Language.get_all_languages()
     if source not in all_languages:
         return {"status": "error", "reason": "Unknown source Language"}, 400
     message_language = message.get_language()
