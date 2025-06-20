@@ -284,14 +284,13 @@ def get_passive_ssh_fingerprint_hosts(fingerprint):
 
 def get_passive_ssh_fingerprint_ips(fingerprint):
     res = get_passive_ssh_fingerprint_hosts(fingerprint)
-    if res[1] != 200:
+    if not res:
         return []
-    else:
-        hosts = []
-        for host in res[0].get('hosts', []):
-            if not host.endswith('.onion'):
-                hosts.append(host)
-        return hosts
+    hosts = []
+    for host in res[0].get('hosts', []):
+        if not host.endswith('.onion'):
+            hosts.append(host)
+    return hosts
 
 def save_passive_ssh_fingerprint_ips(fingerprint):
     hosts = get_passive_ssh_fingerprint_ips(fingerprint)
