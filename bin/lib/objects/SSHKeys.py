@@ -324,11 +324,12 @@ def save_passive_ssh_host(domain):
             obj.add(Date.get_today_date_str(), None)
             obj.add_correlation('domain', '', domain)
             # TODO content -> base64 key
-            save_passive_ssh_fingerprint_ips(key)
+            save_passive_ssh_fingerprint_ips(key['fingerprint'])
 
 def load_ssh_correlation():
-    for domain_id in Domains.get_domains_up_by_type('onion'):
-        save_passive_ssh_host(domain_id)
+    for dom_type in ('onion', 'web'):
+        for domain_id in Domains.get_domains_up_by_type(dom_type):
+            save_passive_ssh_host(domain_id)
 
 #### API ####
 
