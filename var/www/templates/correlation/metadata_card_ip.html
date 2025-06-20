@@ -45,7 +45,7 @@
 						</table>
 					</div>
 					<div class="col-md-1">
-						<div id="sparkline"></div>
+{#						<div id="sparkline"></div>#}
 					</div>
 				</div>
 			</li>
@@ -77,10 +77,10 @@
 	</div>
 </div>
 
-<script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>
-<script>
-	sparkline("sparkline", {{ dict_object["metadata_card"]["sparkline"] }}, {});
-</script>
+{#<script src="{{ url_for('static', filename='js/d3/sparklines.js')}}"></script>#}
+{#<script>#}
+{#	sparkline("sparkline", {{ dict_object["metadata_card"]["sparkline"] }}, {});#}
+{#</script>#}
 
 
 <script>
