@@ -150,6 +150,8 @@
 						{% include 'correlation/metadata_card_mail.html' %}
                     {% elif dict_object["object_type"] == "ssh-key" %}
 						{% include 'correlation/metadata_card_ssh_key.html' %}
+                    {% elif dict_object["object_type"] == "ip" %}
+						{% include 'correlation/metadata_card_ip.html' %}
 					{% endif %}
 
 					<div class="row">
@@ -318,6 +320,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="ssh-key_Check" name="ssh-key_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="ssh-key_Check">SSH Key</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="ip_Check" name="ip_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="ip_Check">IP</label>
                                             </div>
 
                                             <hr>

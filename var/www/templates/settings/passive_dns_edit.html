@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>Edit Passive DNS - AIL</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="card my-2">
+                    <div class="card-header bg-dark text-white">
+                        <h3 class="card-title"> Passive DNS Config:</h3>
+                        <form action="{{ url_for('settings_b.passive_dns_edit') }}" method="post" enctype="multipart/form-data">
+                          <div class="form-group">
+                            <label for="passive_ssh_user">User</label>
+                            <input type="text" class="form-control" id="passive_ssh_user" placeholder="user" name="user" {%if meta['user'] %}value="{{ meta['user'] }}"{%endif%}>
+                          </div>
+                          <div class="form-group">
+                            <label for="passive_ssh_password">Password</label>
+                            <input type="text" class="form-control" id="passive_ssh_password" autocomplete="off" placeholder="password" name="password" {%if meta['password'] %}value="{{ meta['password'] }}"{%endif%}>
+                          </div>
+                          <button type="submit" class="btn btn-primary">Edit Passive DNS <i class="fas fa-pencil-alt"></i></button>
+                        </form>
+                    </div>
+                </div>
+
+
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$("#nav_settings").removeClass("text-muted");
+});
+
+</script>

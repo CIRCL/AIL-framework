@@ -17,8 +17,8 @@ r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 AIL_OBJECTS = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
-                      'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'item',
-                      'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
+                      'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip'
+                      'item', 'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
                       'user-account', 'username'})
 
 AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}

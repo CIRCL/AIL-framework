@@ -36,6 +36,7 @@ from lib.objects import GTrackers
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
+from lib.objects import IPAddresses
 from lib.objects import Mails
 from lib.objects import Messages
 from lib.objects import Ocrs
@@ -69,6 +70,7 @@ OBJECTS_CLASS = {
     'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},
     'item': {'obj': Item, 'objs': None}, ####################################################################################################
     'image': {'obj': Images.Image, 'objs': Images.Images},
+    'ip': {'obj': IPAddresses.IP, 'objs': IPAddresses.IPs},
     'mail': {'obj': Mails.Mail, 'objs': Mails.Mails},
     'message': {'obj': Messages.Message, 'objs': None}, #############################################################
     'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},

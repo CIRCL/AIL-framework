@@ -17,6 +17,7 @@ from lib.objects.abstract_daterange_object import AbstractDaterangeObject, Abstr
 from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
 from lib.objects import Domains
+from lib.objects import IPAddresses
 from packages import git_status
 from packages import Date
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
@@ -164,7 +165,6 @@ def _remove_all_objects():
 
 #### PASSIVE SSH ####
 
-# TODO is enabled by default ????
 # TODO check 429 -> Too Many Requests
 def set_default_passive_ssh():
     set_passive_ssh_url('https://pssh.circl.lu')
@@ -282,6 +282,30 @@ def get_passive_ssh_fingerprint_hosts(fingerprint):
     else:
         return None
 
+def get_passive_ssh_fingerprint_ips(fingerprint):
+    res = get_passive_ssh_fingerprint_hosts(fingerprint)
+    if res[1] != 200:
+        return []
+    else:
+        hosts = []
+        for host in res[0].get('hosts', []):
+            if not host.endswith('.onion'):
+                hosts.append(host)
+        return hosts
+
+def save_passive_ssh_fingerprint_ips(fingerprint):
+    hosts = get_passive_ssh_fingerprint_ips(fingerprint)
+    date = Date.get_today_date_str()
+    for host in hosts:
+        ip = IPAddresses.sanitize_ip(host)
+        if ip:
+            obj = IPAddresses.create(ip)
+            obj.add(date, SSHKey(fingerprint))
+
+def load_fingerprint_ips():
+    for ssh_key in SSHKeys().get_iterator():
+        save_passive_ssh_fingerprint_ips(ssh_key.get_id())
+
 def get_passive_ssh_hassh_hosts(hassh):
     res = _get_passive_ssh_result(f'/hassh/hosts/{hassh}')
     if res[1] == 200:
@@ -300,7 +324,7 @@ def save_passive_ssh_host(domain):
             obj.add(Date.get_today_date_str(), None)
             obj.add_correlation('domain', '', domain)
             # TODO content -> base64 key
-
+            save_passive_ssh_fingerprint_ips(key)
 
 def load_ssh_correlation():
     for domain_id in Domains.get_domains_up_by_type('onion'):

@@ -24,50 +24,103 @@
 
 	<div class="container-fluid">
 		<div class="row">
-
-			{% include 'settings/menu_sidebar.html' %}
+            {% include 'settings/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-        <div class="d-flex justify-content-center my-4">
-          <a href="https://d4-project.org/">
-            <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project">
-          </a>
+            <div class="d-flex justify-content-center my-4">
+                <a href="https://d4-project.org/">
+                    <img src="{{ url_for('static', filename='image/d4-logo.png')}}" alt="D4 project">
+                </a>
+            </div>
+
+            <p class="lead px-4">
+                Passive DNS or pDNS is a service which records domain name system server (DNS) answers to DNS client requests.<br>
+                In order to see the evolution of records over time, a history is recorded.<br>
+                Various sources can be used to build a large sensor network.<br>
+                <br>
+                Enabling the D4 passive DNS sensor in AIL will contribute resolved domains and host to the global Passive DNS community operated by
+                <a href="https://www.circl.lu/">CIRCL.lu</a>
+                <br>
+                <br>
+                (if you want to have access to the global Passive DNS community <a href="https://www.circl.lu/services/passive-dns/">https://www.circl.lu/services/passive-dns</a>)
+            </p>
+
+
+            {% if passivedns_enabled %}
+                <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=disable">
+                    <button class="btn btn-danger mx-4 my-2">
+                        Disable D4 Client
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=enable">
+                    <button class="btn btn-primary mx-4">
+                        Enable D4 Client
+                    </button>
+                </a>
+            {% endif %}
+
+            <div class="d-flex justify-content-center my-2">
+                <a href="https://d4-project.org/">
+                    <img src="{{ url_for('static', filename='image/passivedns.png')}}" alt="D4 project">
+                </a>
+            </div>
+
+            <p class="lead px-4">
+                AIL integrate CIRCL’s Passive DNS service to enrich the analysis IP adresses.
+                <br>
+                For example, when an onion domain is linked to a public IP address, AIL queries Passive DNS to retrieve historical domain names that have resolved to that IP.
+                <br>
+                This can help uncover related infrastructure, reused servers, or links to known malicious activity.
+                <br>
+                Enabling Passive DNS support in AIL can provide valuable historical context, often revealing connections that aren't immediately visible through live data alone.
+                <br>
+                (you can request credentials to access the global Passive DNS service with fewer API restrictions: <a href="https://www.circl.lu/services/passive-dns/">https://www.circl.lu/services/passive-dns</a>)
+            </p>
+            {% if meta['is_enabled'] %}
+                <a href="{{ url_for('settings_b.passive_dns_disable') }}">
+                    <button class="btn btn-danger mx-4 my-2">
+                        Disable Passive DNS
+                    </button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('settings_b.passive_dns_enable') }}">
+                    <button class="btn btn-primary mx-4 my-2">
+                        Enable Passive DNS
+                    </button>
+                </a>
+            {% endif %}
+            <div class="row mb-3 justify-content-center mt-6">
+                <div class="col-xl-8">
+                    <div class="card text-center border-secondary">
+                        <div class="card-body px-1 py-0">
+                            <table class="table table-sm">
+                                <tbody>
+                                <tr>
+                                    <td>User</td>
+                                    <td>{{ meta['user'] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Password</td>
+                                    <td>{% if not meta['password']  %}-{% elif meta['password'] | length >= 8 %}{{ meta['password'][:4] }}****{{ meta['password'][-4:] }}{% else %}{{ meta['password'] }}{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('settings_b.passive_ssh_edit') }}">
+                                            <button type="button" class="btn btn-info">
+                                                Edit <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                        </a>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <p class="lead px-4">
-         Passive DNS or pDNS is a service which records domain name system server (DNS) answers to DNS client requests.<br>
-         In order to see the evolution of records over time, a history is recorded.<br>
-         Various sources can be used to build a large sensor network.<br>
-         <br>
-         Enabling the D4 passive DNS sensor in AIL will contribute resolved domains and host to the global Passive DNS community operated by
-         <a href="https://www.circl.lu/">
-            CIRCL.lu
-         </a>
-         <br>
-         <br>
-         (if you want to have access to the global Passive DNS community
-         <a href="https://www.circl.lu/services/passive-dns/">
-            https://www.circl.lu/services/passive-dns
-         </a>
-         )
-        </p>
-
-
-        {% if passivedns_enabled %}
-          <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=disable">
-            <button class="btn btn-danger mx-4 my-2">
-              Disable D4 Client
-            </button>
-          </a>
-        {% else %}
-          <a href="{{ url_for('settings_b.passive_dns_change_state') }}?state=enable">
-            <button class="btn btn-primary mx-4 my-2">
-              Enable D4 Client
-            </button>
-          </a>
-        {% endif %}
-    	</div>
 		</div>
 	</div>
 

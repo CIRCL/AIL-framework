@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib import ail_logger
 from lib import crawlers
+from lib import passivedns
 from lib.ConfigLoader import ConfigLoader
 from lib.exceptions import TimeoutException, OnionFilteringError
 from lib.Tag import get_domain_vanity_tags
@@ -93,6 +94,8 @@ class Crawler(AbstractModule):
         # Passive SSH
         if not SSHKeys.get_passive_ssh_url():
             SSHKeys.set_default_passive_ssh()
+        if not passivedns.get_passive_dns_url():
+            passivedns.set_default_passive_dns()
         self.passive_ssh = SSHKeys.is_passive_ssh_enabled()
 
         # Capture

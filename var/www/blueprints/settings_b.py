@@ -25,6 +25,7 @@ from lib import ail_config
 from lib import ail_queues
 from lib import ail_users
 from lib import d4
+from lib import passivedns
 from lib.objects import SSHKeys
 from packages import git_status
 
@@ -464,8 +465,10 @@ def delete_org():
 @login_required
 @login_read_only
 def passive_dns():
+    acl_admin = current_user.is_in_role('admin')
+    meta = passivedns.get_passive_dns_meta()
     passivedns_enabled = d4.is_passive_dns_enabled()
-    return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled)
+    return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled, meta=meta, acl_admin=acl_admin)
 
 
 @settings_b.route("/settings/passivedns/change_state", methods=['GET'])
@@ -475,6 +478,37 @@ def passive_dns_change_state():
     new_state = request.args.get('state') == 'enable'
     passivedns_enabled = d4.change_passive_dns_state(new_state)
     return redirect(url_for('settings_b.passive_dns'))
+
+@settings_b.route("/settings/passivedns/enable", methods=['GET'])
+@login_required
+@login_admin
+def passive_dns_enable():
+    passivedns.enable_passive_dns()
+    return redirect(url_for('settings_b.passive_dns'))
+
+@settings_b.route("/settings/passivedns/disable", methods=['GET'])
+@login_required
+@login_admin
+def passive_dns_disable():
+    passivedns.disable_passive_dns()
+    return redirect(url_for('settings_b.passive_dns'))
+
+@settings_b.route("/settings/passivedns/edit", methods=['GET', 'POST'])
+@login_required
+@login_admin
+def passive_dns_edit():
+    if request.method == 'POST':
+        user = request.form.get('user')
+        password = request.form.get('password')
+        res = passivedns.api_edit_passive_dns(user, password)
+        if res[1] != 200:
+            return create_json_response(r[0], r[1])
+        else:
+            return redirect(url_for('settings_b.passive_dns'))
+    else:
+        meta = passivedns.get_passive_dns_meta()
+        acl_admin = current_user.is_in_role('admin')
+        return render_template("passive_dns_edit.html", meta=meta, acl_admin=acl_admin)
 
 @settings_b.route("/settings/passivessh", methods=['GET'])
 @login_required
