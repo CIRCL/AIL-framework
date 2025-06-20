@@ -287,7 +287,7 @@ def get_passive_ssh_fingerprint_ips(fingerprint):
     if not res:
         return []
     hosts = []
-    for host in res[0].get('hosts', []):
+    for host in res:
         if not host.endswith('.onion'):
             hosts.append(host)
     return hosts
