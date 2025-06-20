@@ -26,8 +26,8 @@ AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp',
 # TODO by object TYPE ????
 AIL_OBJECTS_CORRELATIONS_DEFAULT = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
                                            'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
-                                           'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'ssh-key',
-                                           'title', 'user-account', 'username'})
+                                           'image', 'ip', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot',
+                                           'ssh-key', 'title', 'user-account', 'username'})
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
