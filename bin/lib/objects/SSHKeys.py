@@ -297,6 +297,7 @@ def save_passive_ssh_fingerprint_ips(fingerprint):
     hosts = get_passive_ssh_fingerprint_ips(fingerprint)
     date = Date.get_today_date_str()
     for host in hosts:
+        print(host)
         ip = IPAddresses.sanitize_ip(host)
         if ip:
             obj = IPAddresses.create(ip)
