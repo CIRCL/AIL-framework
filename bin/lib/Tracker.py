@@ -1823,7 +1823,10 @@ class RetroHunt:
         if not is_default_yara_rule(rule):
             filepath = get_yara_rule_file_by_tracker_name(rule)
             if filepath:
-                os.remove(filepath)
+                try:
+                    os.remove(filepath)
+                except FileNotFoundError:
+                    pass
 
         self.delete_level()
 
