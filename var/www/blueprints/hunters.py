@@ -722,7 +722,7 @@ def retro_hunt_resume_task():
 
 @hunters.route('/retro_hunt/task/delete', methods=['GET'])
 @login_required
-@login_org_admin
+@login_admin
 def retro_hunt_delete_task():
     user_org = current_user.get_org()
     user_id = current_user.get_id()

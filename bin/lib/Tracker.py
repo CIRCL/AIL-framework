@@ -1464,8 +1464,11 @@ def get_yara_rule_content(yara_rule):
     if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
         return ''  # # TODO: throw exception
 
-    with open(filename, 'r') as f:
-        rule_content = f.read()
+    try:
+        with open(filename, 'r') as f:
+            rule_content = f.read()
+    except FileNotFoundError:
+        return 'FileNotFoundError'
     return rule_content
 
 def api_get_default_rule_content(default_yara_rule):
@@ -1828,6 +1831,7 @@ class RetroHunt:
         r_tracker.delete(f'retro_hunts:{self.uuid}')
         r_tracker.delete(f'retro_hunt:tags:{self.uuid}')
         r_tracker.delete(f'retro_hunt:mails:{self.uuid}')
+        r_tracker.delete(f'retro_hunt:{self.uuid}')
 
         for obj in self.get_objs():
             self.remove(obj[0], obj[1], obj[2])
