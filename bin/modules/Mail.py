@@ -19,8 +19,6 @@ import datetime
 import dns.resolver
 import dns.exception
 
-# from pyfaup.faup import Faup
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages        #
@@ -43,8 +41,6 @@ class Mail(AbstractModule):
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
 
         self.dns_server = config_loader.get_config_str('Mail', 'dns')
-
-        # self.faup = Faup()
 
         # Numbers of Mails needed to Tags
         self.mail_threshold = 10

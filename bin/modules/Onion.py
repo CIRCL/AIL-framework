@@ -25,6 +25,7 @@ from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib import crawlers
+from lib import psl_faup
 
 class Onion(AbstractModule):
     """docstring for Onion module."""
@@ -38,8 +39,6 @@ class Onion(AbstractModule):
         self.pending_seconds = 10
         # regex timeout
         self.regex_timeout = config_loader.get_config_int("Onion", "max_execution_time")
-
-        self.faup = crawlers.get_faup()
 
         # activate_crawler = p.config.get("Crawler", "activate_crawler")
         self.har = config_loader.get_config_boolean('Crawler', 'default_har')
@@ -86,8 +85,7 @@ class Onion(AbstractModule):
             print(url)
 
             # TODO Crawl subdomain
-            url_unpack = crawlers.unpack_url(url)
-            domain = url_unpack['domain']
+            domain = psl_faup.get_domain(url)
             if crawlers.is_valid_onion_domain(domain):
                 domains.append(domain)
                 onion_urls.append(url)

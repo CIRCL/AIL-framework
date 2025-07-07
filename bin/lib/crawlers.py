@@ -47,6 +47,7 @@ from lib.objects.Titles import Title
 from lib.objects import HHHashs
 from lib.objects.Items import Item
 from lib import Tag
+from lib import psl_faup
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -59,8 +60,6 @@ activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
 D_HAR = config_loader.get_config_boolean('Crawler', 'default_har')
 D_SCREENSHOT = config_loader.get_config_boolean('Crawler', 'default_screenshot')
 config_loader = None
-
-faup = Faup()
 
 # logger_crawler = logging.getLogger('crawlers.log')
 
@@ -185,18 +184,11 @@ def is_valid_onion_domain(domain):
     # return False
 
 def is_valid_domain(domain):
-    faup.decode(domain)
-    url_unpack = faup.get()
-    unpack_domain = url_unpack['domain'].lower()
+    unpack_domain = psl_faup.get_domain(domain)
     return domain == unpack_domain
 
-def get_faup():
-    return faup
-
 def unpack_url(url):
-    f = get_faup()
-    f.decode(url)
-    url_decoded = f.get()
+    url_decoded = psl_faup.unparse_url(url)
     port = url_decoded['port']
     if not port:
         if url_decoded['scheme'] == 'http':
@@ -274,9 +266,7 @@ def extract_favicon_from_html(html, url):
     #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
 
     # Root Favicon
-    f = get_faup()
-    f.decode(url)
-    url_decoded = f.get()
+    url_decoded = psl_faup.unparse_url(url)
     root_domain = f"{url_decoded['scheme']}://{url_decoded['domain']}"
     default_icon = f'{root_domain}/favicon.ico'
     favicons_urls.add(default_icon)
@@ -503,9 +493,7 @@ def extract_hhhash(har, domain, date):
             if entrie.get('response').get('status') == 200:  # != 301:
                 # print(url, entrie.get('response').get('status'))
 
-                f = get_faup()
-                f.decode(url)
-                domain_url = f.get().get('domain')
+                domain_url = psl_faup.get_domain(url)
                 if domain_url == domain:
 
                     headers = entrie.get('response').get('headers')

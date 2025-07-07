@@ -7,7 +7,7 @@ The SQLInjectionDetection Module
 
 This module is consuming the Redis-list created by the Urls module.
 
-It test different possibility to makes some sqlInjection.
+Test different possibility to makes some sqlInjection.
 
 """
 
@@ -16,7 +16,6 @@ import sys
 import re
 import urllib.request
 
-# from pyfaup.faup import Faup
 from urllib.parse import unquote
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -37,17 +36,12 @@ class SQLInjectionDetection(AbstractModule):
     def __init__(self):
         super(SQLInjectionDetection, self).__init__()
 
-        # self.faup = Faup()
-
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         url = message
 
         if self.is_sql_injection(url):
-            # self.faup.decode(url)
-            # url_parsed = self.faup.get()
-
             print(f"Detected SQL in URL: {self.obj.get_global_id()}")
             print(urllib.request.unquote(url))
 
@@ -66,7 +60,7 @@ class SQLInjectionDetection(AbstractModule):
             #     date = datetime.now().strftime("%Y%m")
             #     Statistics.add_module_tld_stats_by_date(self.module_name, date, tld, 1)
 
-    # Try to detect if the url passed might be an sql injection by applying the regex
+    # Try to detect if the url passed might be a sql injection by applying the regex
     # defined above on it.
     def is_sql_injection(self, url_parsed):
         line = unquote(url_parsed)

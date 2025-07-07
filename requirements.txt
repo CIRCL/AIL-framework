@@ -98,6 +98,8 @@ PySocks>=1.7.1
 pycountry>=20.7.3
 https://github.com/saffsd/langid.py/archive/master.zip
 
+idna
+publicsuffixlist
 requests
 
 chardet

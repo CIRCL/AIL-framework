@@ -15,17 +15,13 @@ This module extract URLs from an item and send them to others modules.
 import os
 import sys
 
-from pyfaup.faup import Faup
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.Items import Item
-
-# # TODO: Faup packages: Add new binding: Check TLD
+from lib import psl_faup
 
 class Urls(AbstractModule):
     """
@@ -39,8 +35,6 @@ class Urls(AbstractModule):
         super(Urls, self).__init__()
 
         config_loader = ConfigLoader()
-
-        self.faup = Faup()
 
         # Protocol file path
         protocolsfile_path = os.path.join(os.environ['AIL_HOME'],
@@ -68,23 +62,21 @@ class Urls(AbstractModule):
         item_content = item.get_content()
 
         # TODO Handle invalid URL
-        l_urls = self.regex_findall(self.url_regex, item.get_id(), item_content)
-        for url in l_urls:
-            self.faup.decode(url)
-            url_decoded = self.faup.get()
-            # decode URL
-            try:
-                url = url_decoded['url'].decode()
-            except AttributeError:
-                url = url_decoded['url']
+        urls = self.regex_findall(self.url_regex, item.get_id(), item_content)
+        if urls:
+            urls = set(urls)
+            for url in urls:
+                url = psl_faup.get_url(url)
+                if url:
+                    # decode URL
+                    try:
+                        url = url.decode()
+                    except AttributeError:
+                        pass
 
-            print(url, self.obj.get_global_id())
-            self.add_message_to_queue(message=str(url), queue='Url')
-            self.logger.debug(f"url_parsed: {url}")
-
-        if len(l_urls) > 0:
-            to_print = f'Urls;{item.get_source()};{item.get_date()};{item.get_basename()};'
-            print(to_print)
+                    print(url, self.obj.get_global_id())
+                    self.add_message_to_queue(message=str(url), queue='Url')
+                    self.logger.debug(f"url_parsed: {url}")
 
 
 if __name__ == '__main__':

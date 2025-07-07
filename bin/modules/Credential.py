@@ -28,8 +28,6 @@ Redis organization:
 ##################################
 import os
 import sys
-import time
-from pyfaup.faup import Faup
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -37,6 +35,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from modules.abstract_module import AbstractModule
 from lib import ConfigLoader
+from lib import psl_faup
 
 
 class Credential(AbstractModule):
@@ -56,8 +55,6 @@ class Credential(AbstractModule):
 
     def __init__(self):
         super(Credential, self).__init__()
-
-        self.faup = Faup()
 
         self.regex_web = r"((?:https?:\/\/)[\.-_0-9a-zA-Z]+\.[0-9a-zA-Z]+)"
         self.regex_cred = r"[a-zA-Z0-9\\._-]+@[a-zA-Z0-9\\.-]+\.[a-zA-Z]{2,6}[\\rn :\_\-]{1,10}[a-zA-Z0-9\_\-]+"
@@ -118,13 +115,7 @@ class Credential(AbstractModule):
                         creds_sites[site_domain] = 1
 
                 for url in all_sites:
-                    self.faup.decode(url)
-                    domain = self.faup.get()['domain']
-                    # # TODO: # FIXME: remove me, check faup versionb
-                    try:
-                        domain = domain.decode()
-                    except:
-                        pass
+                    domain = psl_faup.get_domain(url)
                     if domain in creds_sites.keys():
                         creds_sites[domain] += 1
                     else:

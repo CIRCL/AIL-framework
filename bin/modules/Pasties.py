@@ -13,8 +13,6 @@ import os
 import sys
 import time
 
-from pyfaup.faup import Faup
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -22,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
+from lib import psl_faup
 
 # TODO add url validator
 
@@ -35,7 +34,6 @@ class Pasties(AbstractModule):
 
     def __init__(self):
         super(Pasties, self).__init__()
-        self.faup = Faup()
 
         config_loader = ConfigLoader()
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
@@ -57,8 +55,7 @@ class Pasties(AbstractModule):
                 for line in f:
                     url = line.strip()
                     if url:  # TODO validate line
-                        self.faup.decode(url)
-                        url_decoded = self.faup.get()
+                        url_decoded = psl_faup.unparse_url(url)
                         host = url_decoded['host']
                         # if url_decoded.get('port', ''):
                         #     host = f'{host}:{url_decoded["port"]}'
@@ -84,8 +81,7 @@ class Pasties(AbstractModule):
             with open(url_blocklist) as f:
                 for line in f:
                     url = line.strip()
-                    self.faup.decode(url)
-                    url_decoded = self.faup.get()
+                    url_decoded = psl_faup.unparse_url(url)
                     host = url_decoded['host']
                     # if url_decoded.get('port', ''):
                     #     host = f'{host}:{url_decoded["port"]}'
@@ -104,8 +100,7 @@ class Pasties(AbstractModule):
     def compute(self, message):
         url = message.split()
 
-        self.faup.decode(url)
-        url_decoded = self.faup.get()
+        url_decoded = psl_faup.unparse_url(url)
         # print(url_decoded)
         url_host = url_decoded['host']
         # if url_decoded.get('port', ''):

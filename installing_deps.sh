@@ -52,17 +52,6 @@ git checkout 5.0
 make
 popd
 
-# Faup
-test ! -d faup/ && git clone https://github.com/stricaud/faup.git
-pushd faup/
-test ! -d build && mkdir build
-cd build
-cmake .. && make
-sudo make install
-echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
-sudo ldconfig
-popd
-
 # tlsh
 test ! -d tlsh && git clone https://github.com/trendmicro/tlsh.git
 pushd tlsh/
