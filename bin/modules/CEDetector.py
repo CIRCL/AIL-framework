@@ -63,7 +63,7 @@ class CEDetector(AbstractModule):
     def compute(self, message):
         to_tag = False
         content = self.obj.get_content().lower()
-        domain_id = self.get_message()
+        domain_id = message
 
         is_csam = False
         is_child_word = False
@@ -93,7 +93,6 @@ class CEDetector(AbstractModule):
             self.add_message_to_queue(message=self.ce_tag, queue='Tags')
             # Domain
             if domain_id:
-                print(domain_id)
                 domain = Domain(domain_id)
                 self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
             # Domains
