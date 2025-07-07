@@ -26,8 +26,6 @@ from bs4 import BeautifulSoup
 
 from pylacus import PyLacus
 
-from pyfaup.faup import Faup
-
 # interact with splash_crawler API
 import requests
 requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
