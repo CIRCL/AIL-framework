@@ -163,7 +163,10 @@ class PSLFaup:
     def get_port(self):
         if not self.decoded or not self._url:
             raise UrlNotDecoded("You must call pslfaup.decode() first")
-        return self._url.port
+        try:
+            return self._url.port
+        except ValueError:
+            return None
 
     def get_resource_path(self):
         if not self.decoded or not self._url:
