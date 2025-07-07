@@ -93,6 +93,7 @@ class CEDetector(AbstractModule):
             self.add_message_to_queue(message=self.ce_tag, queue='Tags')
             # Domain
             if domain_id:
+                print(domain_id)
                 domain = Domain(domain_id)
                 self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
             # Domains
