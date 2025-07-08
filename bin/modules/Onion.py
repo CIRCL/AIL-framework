@@ -81,6 +81,8 @@ class Onion(AbstractModule):
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
             url = x[0]
+            if url.startswith("://"):
+                url = url[3:]
             url = url.lower()
 
             # TODO Crawl subdomain
