@@ -70,7 +70,7 @@ class Onion(AbstractModule):
 
     def compute(self, message):
         onion_urls = []
-        domains = []
+        domains = set()
 
         obj = self.get_obj()
         content = obj.get_content()
@@ -88,7 +88,7 @@ class Onion(AbstractModule):
             domain = psl_faup.get_domain(url)
             if domain:
                 if crawlers.is_valid_onion_domain(domain):
-                    domains.append(domain)
+                    domains.add(domain)
                     onion_urls.append(url)
 
         if onion_urls:
