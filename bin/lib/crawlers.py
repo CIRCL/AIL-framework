@@ -1738,7 +1738,7 @@ class CrawlerTask:
     # TODO SANITIZE PRIORITY
     # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
     def create(self, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-               user_agent=None, tags=[], parent='manual', priority=0, external=False):
+               user_agent=None, tags=[], parent='manual', priority=0, external=False, new_task=False):
         if self.exists():
             raise Exception('Error: Task already exists')
 
@@ -1771,8 +1771,11 @@ class CrawlerTask:
         # Check if already in queue
         hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header, tags)
         if r_crawler.hexists(f'crawler:queue:hash', hash_query):
-            self.uuid = r_crawler.hget(f'crawler:queue:hash', hash_query)
-            return self.uuid
+            if new_task:
+                return None
+            else:
+                self.uuid = r_crawler.hget(f'crawler:queue:hash', hash_query)
+                return self.uuid
 
         self._set_field('domain', domain)
         self._set_field('url', url)
@@ -1855,7 +1858,11 @@ def add_task_to_lacus_queue():
 
 # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
 def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None, external=False):
+                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None, external=False, new_task=False):
+    """
+    Create a crawler task.
+    new_task: return task_uuid only if a new task is created
+    """
     if task_uuid:
         if CrawlerTask(task_uuid).exists():
             task_uuid = gen_uuid()
@@ -1864,7 +1871,7 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
     task = CrawlerTask(task_uuid)
     task_uuid = task.create(url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar,
                             proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority,
-                            external=external)
+                            external=external, new_task=new_task)
     return task_uuid
 
 ## -- CRAWLER TASK -- ##
