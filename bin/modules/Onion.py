@@ -86,9 +86,10 @@ class Onion(AbstractModule):
 
             # TODO Crawl subdomain
             domain = psl_faup.get_domain(url)
-            if crawlers.is_valid_onion_domain(domain):
-                domains.append(domain)
-                onion_urls.append(url)
+            if domain:
+                if crawlers.is_valid_onion_domain(domain):
+                    domains.append(domain)
+                    onion_urls.append(url)
 
         if onion_urls:
             if crawlers.is_crawler_activated():
