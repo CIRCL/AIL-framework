@@ -90,11 +90,12 @@ class Onion(AbstractModule):
                     domain = url[7:]
                     domains.add(domain)
                     onion_urls.append(url)
-                domain = psl_faup.get_domain(url)
-                if domain:
-                    if crawlers.is_valid_onion_domain(domain):
-                        domains.add(domain)
-                        onion_urls.append(url)
+                else:
+                    domain = psl_faup.get_domain(url)
+                    if domain:
+                        if crawlers.is_valid_onion_domain(domain):
+                            domains.add(domain)
+                            onion_urls.append(url)
 
         if onion_urls:
             if crawlers.is_crawler_activated():
