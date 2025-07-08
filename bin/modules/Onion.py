@@ -76,7 +76,7 @@ class Onion(AbstractModule):
         content = obj.get_content()
 
         # max execution time on regex
-        res = self.regex_findall(self.onion_regex, obj.get_id(), content)
+        res = self.regex_findall(self.onion_regex, obj.get_id(), content, r_set=True)
         for x in res:
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
