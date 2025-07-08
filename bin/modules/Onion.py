@@ -86,6 +86,10 @@ class Onion(AbstractModule):
             # TODO Crawl subdomain
             if len(url) >= 62:
                 print(url)
+                if len(url) == 69 and url.endswith(".onion"):
+                    domain = url[7:]
+                    domains.add(domain)
+                    onion_urls.append(url)
                 domain = psl_faup.get_domain(url)
                 if domain:
                     if crawlers.is_valid_onion_domain(domain):
