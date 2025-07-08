@@ -82,14 +82,15 @@ class Onion(AbstractModule):
             x = x[2:-2].replace(" '", "").split("',")
             url = x[0]
             url = url.lower()
-            print(url)
 
             # TODO Crawl subdomain
-            domain = psl_faup.get_domain(url)
-            if domain:
-                if crawlers.is_valid_onion_domain(domain):
-                    domains.add(domain)
-                    onion_urls.append(url)
+            if len(url) >= 62:
+                print(url)
+                domain = psl_faup.get_domain(url)
+                if domain:
+                    if crawlers.is_valid_onion_domain(domain):
+                        domains.add(domain)
+                        onion_urls.append(url)
 
         if onion_urls:
             if crawlers.is_crawler_activated():
