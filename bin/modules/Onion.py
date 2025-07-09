@@ -63,9 +63,10 @@ class Onion(AbstractModule):
         for onion in onions:
             start, end, value = onion
             url_unpack = crawlers.unpack_url(value)
-            domain = url_unpack['domain']
-            if crawlers.is_valid_onion_domain(domain):
-                extracted.append([start, end, value, f'tag:{tag}'])
+            if url_unpack:
+                domain = url_unpack['domain']
+                if crawlers.is_valid_onion_domain(domain):
+                    extracted.append([start, end, value, f'tag:{tag}'])
         return extracted
 
     def compute(self, message):

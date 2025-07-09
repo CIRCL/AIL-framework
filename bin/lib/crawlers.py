@@ -73,6 +73,8 @@ config_loader = None
 def api_get_onion_lookup(domain):  # TODO check if object process done ???
     domain = domain.lower()
     url_unpack = unpack_url(domain)
+    if not url_unpack:
+        return {'error': 'Invalid Domain', 'domain': domain}, 404
     domain = url_unpack['domain']
     dom = Domains.Domain(domain)
     if not is_valid_onion_v3_domain(domain):
@@ -108,7 +110,10 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
 def api_get_domain_from_url(url):
     url = url.lower()
     url_unpack = unpack_url(url)
-    return url_unpack['domain']
+    if url_unpack:
+        return url_unpack['domain']
+    else:
+        return None
 
 ## onion correlation cache ##
 
@@ -187,6 +192,8 @@ def is_valid_domain(domain):
 
 def unpack_url(url):
     url_decoded = psl_faup.unparse_url(url)
+    if not url_decoded:
+        return None
     port = url_decoded['port']
     if not port:
         if url_decoded['scheme'] == 'http':

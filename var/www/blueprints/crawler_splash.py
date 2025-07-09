@@ -609,7 +609,9 @@ def domains_search_name():
 
     if not name:
         return create_json_response({'error': 'Mandatory args name not provided'}, 400)
-    name = crawlers.api_get_domain_from_url(name)
+    url_name = crawlers.api_get_domain_from_url(name)
+    if url_name:
+        name = url_name
 
     domains_types = request.args.getlist('domain_types')
     if domains_types:
