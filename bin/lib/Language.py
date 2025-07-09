@@ -3,7 +3,6 @@
 
 import os
 import re
-import logging
 import logging.config
 import sys
 import html2text
@@ -40,6 +39,7 @@ dict_iso_languages = {
     'hye': 'Armenian',
     'aze': 'Azerbaijani',
     'eus': 'Basque',
+    'bel': 'Belarusian',
     'ben': 'Bengali',
     'bos': 'Bosnian',
     'bul': 'Bulgarian',
@@ -157,6 +157,7 @@ dict_iso_1_to_3 = {
     'am': 'amh',
     'ar': 'ara',
     'az': 'aze',
+    'be': 'bel',
     'bg': 'bul',
     'bg-Latn': 'bul',  # gcld3 output
     'bn': 'ben',
@@ -736,6 +737,7 @@ def get_translation_languages():
             print(e)
             LIST_LANGUAGES = {}
     return LIST_LANGUAGES
+
 
 if __name__ == '__main__':
     t_content = ''
