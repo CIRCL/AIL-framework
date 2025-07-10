@@ -687,8 +687,12 @@ class LanguageTranslator:
 
     def translate(self, content, source=None, target="eng"):
         # print(source, target)
-        if target not in get_translation_languages():
-            return None
+        l_languages = get_translation_languages()
+        if source:
+            if source not in l_languages:
+                return None, None
+        if target not in l_languages:
+            return None, None
         translation = None
         if content:
             if not source:
@@ -696,6 +700,8 @@ class LanguageTranslator:
             # print(source, content)
             if source:
                 if source != target:
+                    if source not in l_languages:
+                        return None, None
                     try:
                         source_iso1 = convert_iso3_code(source)
                         target_iso1 = convert_iso3_code(target)
