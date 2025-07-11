@@ -1526,15 +1526,20 @@ class CrawlerCapture:
         if task_uuid:
             return CrawlerTask(task_uuid)
 
-    def get_start_time(self, r_str=True):
-        start_time = self.get_task().get_start_time()
-        if r_str:
-            return start_time
-        elif not start_time:
-            return 0
+    def get_start_time(self, r_str=True, task=None):
+        if not task:
+            task = self.get_task()
+        if task:
+            start_time = task.get_start_time()
+            if r_str:
+                return start_time
+            elif not start_time:
+                return 0
+            else:
+                start_time = datetime.strptime(start_time, "%Y/%m/%d  -  %H:%M.%S").timestamp()
+                return int(start_time)
         else:
-            start_time = datetime.strptime(start_time, "%Y/%m/%d  -  %H:%M.%S").timestamp()
-            return int(start_time)
+            return 0
 
     def get_status(self):
         status = r_cache.hget(f'crawler:capture:{self.uuid}', 'status')
@@ -1612,7 +1617,7 @@ def get_captures_status():
                 'uuid': task.uuid,
                 'domain': dom.get_id(),
                 'type': dom.get_domain_type(),
-                'start_time': capture.get_start_time(),
+                'start_time': capture.get_start_time(task=task),
                 'status': capture.get_status(),
             }
         capture_status = capture.get_status()
