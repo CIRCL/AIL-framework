@@ -109,7 +109,10 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
 
 def api_get_domain_from_url(url):
     url = url.lower()
-    url_unpack = unpack_url(url)
+    try:
+        url_unpack = unpack_url(url)
+    except AttributeError:
+        return url
     if url_unpack:
         return url_unpack['domain']
     else:
