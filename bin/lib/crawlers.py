@@ -73,10 +73,10 @@ config_loader = None
 def api_get_onion_lookup(domain):  # TODO check if object process done ???
     domain = domain.lower().strip()
     parts = domain.split('.onion')
-    if len(parts) > 1:
-        for word in [part + '.onion' for part in parts[:-1]] + [parts[-1]]:
-            if len(word) >= 32 and word.endswith('.onion'):
-                api_get_onion_lookup(word)
+    # if len(parts) > 1:
+    #     for word in [part + '.onion' for part in parts[:-1]] + [parts[-1]]:
+    #         if len(word) >= 32 and word.endswith('.onion'):
+    #             api_get_onion_lookup(word)
 
     url_unpack = unpack_url(domain)
     if not url_unpack:
