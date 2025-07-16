@@ -266,6 +266,8 @@ def _handle_client_error(e):
     if request.path.startswith('/api/'):
         return Response(json.dumps({"status": "error", "reason": "Server Error"}) + '\n', mimetype='application/json'), 500
     else:
+        if current_user:
+            flask_logger.warning(f'User: {current_user.get_user_id()}')
         return e
 
 @login_required
