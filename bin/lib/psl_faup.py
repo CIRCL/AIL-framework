@@ -52,10 +52,16 @@ class PSLFaup:
         """
         self._clear()
         if isinstance(url, bytes) and b'//' not in url[:10]:
-            url = b'//' + url
+            if b'.onion' in url:
+                url = b'http://' + url
+            else:
+                url = b'https://' + url
         elif '//' not in url[:10]:
-            url = '//' + url
-        self._url = urlparse(url)
+            if '.onion' in url:
+                url = f'http://{url}'
+            else:
+                url = f'https://{url}'
+        self._url = urlparse(url)  # ValueError('%r does not appear to be an IPv4 or IPv6 address'
 
         if self._url is None:
             raise UrlNotDecoded("Unable to parse URL")
@@ -218,4 +224,4 @@ def unparse_url(url):
 
 
 if __name__ == '__main__':
-    print(unparse_url('Example.COM'))
+    print(unparse_url('TEST.onion'))
