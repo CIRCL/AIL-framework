@@ -71,7 +71,13 @@ config_loader = None
 # TODO FILTER URL ???
 
 def api_get_onion_lookup(domain):  # TODO check if object process done ???
-    domain = domain.lower()
+    domain = domain.lower().strip()
+    words = domain.split()
+    if len(words) > 1:
+        for word in words:
+            if len(word) >= 32:
+                api_get_onion_lookup(word)
+
     url_unpack = unpack_url(domain)
     if not url_unpack:
         return {'error': 'Invalid Domain', 'domain': domain}, 404
