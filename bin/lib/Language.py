@@ -649,6 +649,16 @@ class LanguageTranslator:
         self.lt = LibreTranslateAPI(get_translator_instance())
         self.ld = LanguagesDetector(nb_langs=1)
 
+    def ping(self):
+        try:
+            r = self.lt.translate('test', 'en', 'en')
+            if r == 'test':
+                return True
+            else:
+                return False
+        except Exception as e:
+            return False
+
     def languages(self):
         languages = []
         try:
@@ -744,9 +754,13 @@ def get_translation_languages():
             LIST_LANGUAGES = {}
     return LIST_LANGUAGES
 
+def ping_libretranslate():
+    return LanguageTranslator().ping()
+
 
 if __name__ == '__main__':
-    t_content = ''
-    ddetector = LanguagesDetector(nb_langs=1)
-    langg = ddetector.detect(t_content)
-    print(langg)
+    # t_content = ''
+    # ddetector = LanguagesDetector(nb_langs=1)
+    # langg = ddetector.detect(t_content)
+    # print(langg)
+    print(ping_libretranslate())
