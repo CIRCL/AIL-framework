@@ -663,7 +663,10 @@ class LanguageTranslator:
         languages = []
         try:
             for dict_lang in self.lt.languages():
-                languages.append({'iso': convert_iso1_code(dict_lang['code']), 'language': dict_lang['name']})
+                try:
+                    languages.append({'iso': convert_iso1_code(dict_lang['code']), 'language': dict_lang['name']})
+                except Exception as e:
+                    logger.error(f'Language code: {e} - {dict_lang}')
         except Exception as e:
             logger.error(f'Failed to Load Libretranslate languages: {e}')
         return languages
