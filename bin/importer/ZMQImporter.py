@@ -140,23 +140,27 @@ class ZMQModuleImporter(AbstractModule):
                                             break
                                 if same_pattern:
                                     to_filter = True
+                                    filter_description = f['description']
                                     break
                         elif 'content' in f:
                             if content == f['content']:
                                 to_filter = True
+                                filter_description = f['description']
                                 break
                         elif 'file_start' in f:
                             if content.startswith(f['file_start']):
                                 to_filter = True
+                                filter_description = f['description']
                                 break
                         elif 'file_end' in f:
                             if content.endswith(f['file_end']):
                                 to_filter = True
+                                filter_description = f['description']
                                 break
 
                     # Filter content
                     if to_filter:
-                        print(f'Filtered -------- {feeder_name}: {obj_id}')
+                        print(f'Filtered -------- {feeder_name}: {obj_id} -------- {filter_description}')
                         continue
 
             obj = Item(obj_id)
