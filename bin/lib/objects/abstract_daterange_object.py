@@ -224,7 +224,7 @@ class AbstractDaterangeObjects(ABC):
         return sscan_iterator(r_object, f'{self.type}:all')
 
     def get_iterator(self):
-        for obj_id in self.get_ids():
+        for obj_id in self.get_iterator_ids():
             yield self.obj_class(obj_id)
 
     def get_nb(self):
