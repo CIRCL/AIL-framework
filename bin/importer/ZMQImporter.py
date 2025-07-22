@@ -32,17 +32,27 @@ def get_zmq_filter():
         zmq_filter = f.read()
     zmq_filter = json.loads(zmq_filter)
     for d in zmq_filter:
-        feeder_name = d.get('feeder')
+        feeder_name = d.get('source')
         if not feeder_name:
             continue
         if feeder_name not in filters:
             filters[feeder_name] = []
-        str_start = d['start']
-        str_end = d['end']
+        str_start = d.get('start')
+        str_end = d.get('end')
+        file_start = d.get('file_start')
+        file_end = d.get('file_end')
         description = d.get('description')
-        if not str_start and not str_end:
+        if not str_start and not str_end and not file_start and not file_end:
             continue
-        filters[feeder_name].append({'start': str_start, 'end': str_end, 'description': description})
+        feeder = {'description': description}
+        if str_start and str_end:
+            feeder['start'] = str_start
+            feeder['end'] = str_end
+        if file_start:
+            feeder['file_start'] = file_start
+        if file_end:
+            feeder['file_end'] = file_end
+        filters[feeder_name].append(feeder)
     print('loaded zmq filters: ', filters)
     return filters
 
@@ -136,7 +146,7 @@ class ZMQModuleImporter(AbstractModule):
                             if content.endswith(f['file_end']):
                                 to_filter = True
                                 break
-                            
+
                     # Filter content
                     if to_filter:
                         print(f'Filtered -------- {feeder_name}: {obj_id}')
