@@ -41,8 +41,9 @@ def get_zmq_filter():
         str_end = d.get('end')
         file_start = d.get('file_start')
         file_end = d.get('file_end')
+        content = d.get('content')
         description = d.get('description')
-        if not str_start and not str_end and not file_start and not file_end:
+        if not str_start and not str_end and not file_start and not file_end and not content:
             continue
         feeder = {'description': description}
         if str_start and str_end:
@@ -52,6 +53,8 @@ def get_zmq_filter():
             feeder['file_start'] = file_start
         if file_end:
             feeder['file_end'] = file_end
+        if content:
+            feeder['content'] = content
         filters[feeder_name].append(feeder)
     print('loaded zmq filters: ', filters)
     return filters
@@ -138,6 +141,10 @@ class ZMQModuleImporter(AbstractModule):
                                 if same_pattern:
                                     to_filter = True
                                     break
+                        elif 'content' in f:
+                            if content == f['content']:
+                                to_filter = True
+                                break
                         elif 'file_start' in f:
                             if content.startswith(f['file_start']):
                                 to_filter = True
