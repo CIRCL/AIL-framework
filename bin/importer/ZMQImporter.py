@@ -117,16 +117,26 @@ class ZMQModuleImporter(AbstractModule):
                     # TODO remove empty line ???
                     to_filter = False
                     for f in self.filters[feeder_name]:
-                        if content.startswith(f['start']) and content.endswith(f['end']):
-                            same_pattern = True
-                            for line in content.splitlines():
-                                if line:
-                                    if not (line.startswith(f['start']) and line.endswith(f['end'])):
-                                        same_pattern = False
-                                        break
-                            if same_pattern:
+                        if 'start' and 'end' in f:
+                            if content.startswith(f['start']) and content.endswith(f['end']):
+                                same_pattern = True
+                                for line in content.splitlines():
+                                    if line:
+                                        if not (line.startswith(f['start']) and line.endswith(f['end'])):
+                                            same_pattern = False
+                                            break
+                                if same_pattern:
+                                    to_filter = True
+                                    break
+                        elif 'file_start' in f:
+                            if content.startswith(f['file_start']):
                                 to_filter = True
                                 break
+                        elif 'file_end' in f:
+                            if content.endswith(f['file_end']):
+                                to_filter = True
+                                break
+                            
                     # Filter content
                     if to_filter:
                         print(f'Filtered -------- {feeder_name}: {obj_id}')
