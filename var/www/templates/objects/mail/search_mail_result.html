@@ -39,39 +39,82 @@
 				    {% include 'mail/block_mails_search.html' %}
                 {% endwith %}
 
+                {% if dict_objects %}
+                    {% if mode == "domain_search" %}
+                        <table id="table_objects" class="table table-striped table-bordered">
+                            <thead class="bg-dark text-white">
+                            <tr>
+                                <th>Email Domain</th>
+                                <th>NB Emails</th>
+                            </tr>
+                            </thead>
+                            <tbody style="font-size: 15px;">
+                            {% for m_domain in dict_objects %}
+                                <tr>
+                                    <td>
+                                        <a target="_blank" href="{{ url_for('objects_mail.objects_mail_search') }}?mode=domain_users&domain={{ search_result[m_domain]['content'] }}">
+                                            {% if 'hl-start' in search_result[m_domain] %}
+                                                <span>{{ search_result[m_domain]['content'][:search_result[m_domain]['hl-start']] }}</span><span class="hg-text">{{search_result[m_domain]['content'][search_result[m_domain]['hl-start']:search_result[m_domain]['hl-end']]}}</span>{{ search_result[m_domain]['content'][search_result[m_domain]['hl-end']:] }}
+                                            {% else %}
+                                                <span>{{ search_result[m_domain]['content'] }}</span>
+                                            {% endif %}
+                                        </a>
+                                    </td>
+                                    <td>{{ dict_objects[m_domain]['nb'] }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
 
-				<table id="table_objects" class="table table-striped table-bordered">
-                    <thead class="bg-dark text-white">
-                    <tr>
-                        <th></th>
-                        <th>First Seen</th>
-                        <th>Last Seen</th>
-                        <th>Total</th>
-                        <th>Last days</th>
-                    </tr>
-                    </thead>
-                    <tbody style="font-size: 15px;">
-                    {% for obj_id in dict_objects %}
-                        <tr>
-                            <td>
-                                <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=mail&id={{ obj_id }}">
-                                    <span>{{ dict_objects[obj_id]['content'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['content'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['content'][search_result[obj_id]['hl-end']:] }}
-                                </a>
-                            </td>
-                            <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
-                            <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
-                            <td>{{ dict_objects[obj_id]['nb_seen'] }}</td>
-                            <td id="sparklines_{{ obj_id }}" style="text-align:center;"></td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                    {% else %}
+                        <table id="table_objects" class="table table-striped table-bordered">
+                            <thead class="bg-dark text-white">
+                            <tr>
+                                <th></th>
+                                <th>First Seen</th>
+                                <th>Last Seen</th>
+                                <th>Total</th>
+                            </tr>
+                            </thead>
+                            <tbody style="font-size: 15px;">
+                            {% for obj_id in dict_objects %}
+                                <tr>
+                                    <td>
+                                        <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=mail&id={{ obj_id }}">
+                                            {% if 'hl-start' in search_result[obj_id] %}
+                                                <span>{{ dict_objects[obj_id]['content'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['content'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['content'][search_result[obj_id]['hl-end']:] }}
+                                            {% else %}
+                                                <span>{{ dict_objects[obj_id]['content'] }}</span>
+                                            {% endif %}
+                                        </a>
+                                    </td>
+                                    <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
+                                    <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
+                                    <td>{{ dict_objects[obj_id]['nb_seen'] }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
 
-                {% if dict_page %}
-                    {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
-                        {% set target_url=url_for('objects_mail.objects_mail_search') + "?search=" + to_search %}
-                        {% include 'pagination.html' %}
-                    {% endwith %}
+                    {% if dict_page %}
+                        {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
+                            {% if mode == "domain_search" %}
+                                {% set target_url=url_for('objects_mail.objects_mail_search') + "?mode=" + mode + "&domain=" + domain %}
+                            {% else %}
+                                {% set target_url=url_for('objects_mail.objects_mail_search') + "?mode=" + mode %}
+                                {% if username %}
+                                    {% set target_url=target_url + "&username=" + username %}
+                                {% endif %}
+                                {% if domain %}
+                                    {% set target_url=target_url + "&domain=" + domain %}
+                                {% endif %}
+                            {% endif %}
+                            {% include 'pagination.html' %}
+                        {% endwith %}
+                    {% endif %}
+                {% else %}
+                    <h3 class="text-center">No Results Found</h3>
                 {% endif %}
 
             </div>
@@ -81,7 +124,7 @@
 <script>
     var chart = {};
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
+        $("#page-search").addClass("active");
         $("#nav_mail").addClass("active");
 
         $('#table_objects').DataTable({
@@ -105,13 +148,6 @@ function toggle_sidebar(){
 	}
 }
 </script>
-
-<script>
-	{% for obj_id in dict_objects %}
-    sparkline("sparklines_{{ obj_id }}", {{ dict_objects[obj_id]['sparkline'] }}, {});
-	{% endfor %}
-</script>
-
 
 </body>
 </html>

@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_object import AbstractObject
+from lib.ail_core import sscan_iterator
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
 from lib.data_retention_engine import update_obj_date
@@ -218,6 +219,9 @@ class AbstractDaterangeObjects(ABC):
 
     def get_ids(self):
         return r_object.smembers(f'{self.type}:all')
+
+    def get_iterator_ids(self):
+        return sscan_iterator(r_object, f'{self.type}:all')
 
     def get_iterator(self):
         for obj_id in self.get_ids():

@@ -172,6 +172,15 @@ def zscan_iter(r_redis, name):  # count ???
         cursor, data = _parse_zscan(r_redis.zscan(name, cursor=cursor))
         yield from data
 
+def sscan_iterator(r_redis, key):
+    cursor = 0
+    while True:
+        cursor, chunk = r_redis.sscan(key, cursor, count=1000)
+        for member in chunk:
+            yield member
+        if cursor == 0:
+            break
+
 ## --    Redis     -- ##
 
 def rreplace(s, old, new, occurrence):

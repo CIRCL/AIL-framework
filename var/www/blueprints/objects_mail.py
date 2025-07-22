@@ -95,42 +95,77 @@ def objects_mail_search_post():
 @login_user
 def objects_mail_search():
     user_id = current_user.get_user_id()
-    to_search = request.args.get('search')
+    mode = request.args.get('mode')
+    in_username = request.args.get('username')
+    in_domain = request.args.get('domain')
+
     page = request.args.get('page', 1)
     try:
         page = int(page)
     except (TypeError, ValueError):
         page = 1
 
-    mails = Mails.Mails()
-
-    if to_search:
-        to_search = to_search.lower()
-
-    # if type_to_search == 'id':
-    #     if len(type_to_search) == 64:
-    #         mail = Mails.Mail(to_search)
-    #         if not mail.exists():
-    #             abort(404)
-    #         else:
-    #             return redirect(mail.get_link(flask_context=True))
-    #     else:
-    #         search_result = mails.search_by_id(to_search, r_pos=True, case_sensitive=False)
-    # elif type_to_search == 'content':
-    search_engine.log(user_id, 'mail', to_search)
-    search_result = mails.search_by_content(to_search, r_pos=True, case_sensitive=False, regex=False)
-    # else:
-    #     return create_json_response({'error': 'Unknown search type'}, 400)
-
-    if search_result:
-        ids = sorted(search_result.keys())
-        dict_page = paginate_iterator(ids, nb_obj=500, page=page)
-        dict_objects = mails.get_metas(dict_page['list_elem'], options={'sparkline'})
+    mail = None
+    username = None
+    domain = None
+    s_username = None
+    s_domain = None
+    if mode == 'domain_users':
+        domain = in_domain.lower()
+        if in_username:
+            s_username = in_username.lower()
+            search_engine.log(user_id, 'mail', f'{mode}, {s_username} @ {domain}')
+        else:
+            search_engine.log(user_id, 'mail', f'{mode}, @ {domain}')
+    elif mode == 'user_domains':
+        username = in_username.lower()
+        if in_domain:
+            s_domain = in_domain.lower()
+            search_engine.log(user_id, 'mail', f'{mode}, {s_username} @ {s_domain}')
+        else:
+            search_engine.log(user_id, 'mail', f'{mode}, {s_username} @')
+    elif mode == 'exact':
+        mail = f'{in_username.lower()}@{in_domain.lower()}'
+        search_engine.log(user_id, 'mail', f'{mode}, {mail}')
+    elif mode == 'domain_search':
+        if in_domain:
+            s_domain = in_domain.lower()
+            search_engine.log(user_id, 'mail', f'{mode}, @ {s_domain}')
+        else:
+            return create_json_response({'error': 'Invalid search mode'}, 400)
     else:
-        dict_objects = {}
-        dict_page = {}
+        return create_json_response({'error': 'Invalid search mode domain_search, domain to search not provided'}, 400)
 
-    return render_template("search_mail_result.html", dict_objects=dict_objects, search_result=search_result,
-                           dict_page=dict_page,
-                           to_search=to_search)
+    if username and domain:
+        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {domain}')
+    elif username:
+        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {s_domain}')
+    elif domain:
+        search_engine.log(user_id, 'mail', f'{mode} {s_username} @ {domain}')
+    else:
+        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {domain}')
+    search_result = Mails.search_mail(mail=mail, username=username, domain=domain, s_username=s_username, s_domain=s_domain, r_pos=True)
+
+    if isinstance(search_result, str):
+        return redirect(url_for('correlation.show_correlation', type='mail', id=search_result))
+    else:
+        if search_result:
+            mails = Mails.Mails()
+            ids = sorted(search_result.keys())
+            dict_page = paginate_iterator(ids, nb_obj=500, page=page)
+            if mode == 'domain_search':
+                dict_objects = mails.get_domain_meta(dict_page['list_elem'])
+            else:
+                dict_objects = mails.get_metas(dict_page['list_elem'])
+        else:
+            dict_objects = {}
+            dict_page = {}
+
+        if s_username:
+            username = s_username
+        if s_domain:
+            domain = s_domain
+
+        return render_template("search_mail_result.html", dict_objects=dict_objects, search_result=search_result,
+                               dict_page=dict_page, mode=mode, username=username, domain=domain)
 

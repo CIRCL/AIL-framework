@@ -1,12 +1,103 @@
-<div class="card border-secondary my-2">
-    <div class="card-body text-dark">
-        <h5 class="card-title"><i class="fas fa-envelope"></i> Mails Search:</h5>
-        <form action="{{ url_for('objects_mail.objects_mail_search_post') }}" id="search_subtype_onj" method='post'>
-            <div class="input-group mb-1">
-                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
-                <input type="text" class="form-control col-10" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="Content to Search" required>
-                <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
-            </div>
-        </form>
+<div class="container my-5" style="max-width: 1000px">
+  <div class="card shadow-sm">
+    <div class="card-header bg-dark text-white pb-2">
+      <h4 class="mb-0"><i class="fas fa-envelope"></i> Email Search</h4>
     </div>
+
+    <div class="card-body">
+      <form id="searchForm" novalidate>
+        <div class="form-group">
+          <label for="searchMode" class="font-weight-bold mb-1">Search mode</label>
+          <select id="searchMode" class="custom-select">
+            <option value="domain_users" {% if not mode or mode == "domain_users" %}selected{% endif %}>Domain + user fragment</option>
+            <option value="user_domains" {% if mode == "user_domains" %}selected{% endif %}>User + optional domain fragment</option>
+            <option value="exact" {% if mode == "exact" %}selected{% endif %}>Exact address (user &amp; domain)</option>
+            <option value="domain_search" {% if mode == "domain_search" %}selected{% endif %}>Domain fragment only</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="font-weight-bold mb-1 d-block">Address</label>
+          <div class="input-group">
+            <input type="text" id="userInput" class="form-control" placeholder="john.doe" value="{% if username %}{{ username }}{% endif %}">
+            <div class="input-group-append input-group-prepend">
+              <span class="input-group-text"><i class="fa-solid fa-at fa-xl"></i></span>
+            </div>
+            <input type="text" id="domainInput" class="form-control" placeholder="example.com" value="{% if domain %}{{ domain }}{% endif %}">
+          </div>
+        </div>
+
+        <small id="helpText" class="text-muted d-block mb-3">Enter full user and domain.</small>
+
+        <button type="submit" class="btn btn-primary btn-block">Search</button>
+      </form>
+    </div>
+  </div>
 </div>
+
+<script>
+(function ($) {
+  'use strict';
+
+  const cfg = {
+    exact: {
+      u: {enabled: true,  placeholder: 'alice.dubois', req: true},
+      d: {enabled: true,  placeholder: 'ail-project.org', req: true},
+      help: 'Enter the full user and domain (e.g. alice.dubois@ail-project.org).'
+    },
+    domain_users: {
+      u: {enabled: true,  placeholder: 'al (fragment required)', req: true},
+      d: {enabled: true,  placeholder: 'ail-project.org (required)', req: true},
+      help: 'Full domain is required; provide at least part of the username.'
+    },
+    user_domains: {
+      u: {enabled: true,  placeholder: 'alice.dubois (required)', req: true},
+      d: {enabled: true,  placeholder: 'ail (optional)', req: false},
+      help: 'Full user is required; domain fragment is optional.'
+    },
+    domain_search: {
+      u: {enabled: false, placeholder: '', req: false},
+      d: {enabled: true,  placeholder: 'ail', req: true },
+      help: 'User name disabled. Provide part of the domain only.'
+    }
+  };
+
+  function applyMode(mode) {
+    const c              = cfg[mode];
+    const $user          = $('#userInput');
+    const $domain        = $('#domainInput');
+
+    $user.prop('disabled', !c.u.enabled).attr('placeholder', c.u.placeholder);
+    $domain.prop('disabled', !c.d.enabled).attr('placeholder', c.d.placeholder);
+
+    $user.prop('disabled',   !c.u.enabled);
+    $domain.prop('disabled', !c.d.enabled);
+
+    $('#helpText').text(c.help);
+  }
+
+  // Initialise with default mode
+  applyMode($('#searchMode').val());
+
+  // Change handler
+  $('#searchMode').on('change', function () { applyMode(this.value); });
+
+  $('#searchForm').on('submit', function (e) {
+    e.preventDefault();
+
+    const mode   = $('#searchMode').val();
+    const user   = $('#userInput').val().trim();
+    const domain = $('#domainInput').val().trim();
+    let   valid  = true;
+    let c = cfg[mode];
+
+    if (c.u.enabled && c.u.req && !user)   valid = false;
+    if (c.d.enabled && c.d.req && !domain) valid = false;
+
+    if (!valid)  { alert('Please complete the required field(s).'); return; }
+
+    console.log(`SEARCH: mode=${mode}, user='${user}', domain='${domain}'`);
+    window.location.href = "{{ url_for('objects_mail.objects_mail_search') }}?mode=" + mode + "&username=" + user + "&domain=" + domain
+  });
+})(jQuery);
+</script>

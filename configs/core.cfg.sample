@@ -217,6 +217,11 @@ host = localhost
 port = 6383
 password = ail_rels
 
+[Kvrocks_Searchs]
+host = localhost
+port = 6383
+password = ail_searchs
+
 [Kvrocks_Timeline]
 host = localhost
 port = 6383

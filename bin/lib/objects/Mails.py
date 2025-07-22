@@ -4,6 +4,8 @@
 import os
 import sys
 
+import re
+
 # import idna  # punycode  or .encode('idna').decode()
 
 from hashlib import sha256
@@ -14,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
+from lib.ail_core import sscan_iterator
 from lib.ConfigLoader import ConfigLoader
 from packages import Date
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
@@ -22,6 +25,7 @@ from flask import url_for
 
 config_loader = ConfigLoader()
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
+r_search = config_loader.get_db_conn("Kvrocks_Searchs")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
@@ -42,7 +46,7 @@ class Mail(AbstractDaterangeObject):
         super(Mail, self).__init__('mail', id)
 
     def _get_content(self):
-        self._get_field('content')
+        return self._get_field('content')
 
     def get_content(self, r_type='str'):
         """
@@ -60,10 +64,13 @@ class Mail(AbstractDaterangeObject):
         return punycode_decode(text)
 
     def get_username(self):
-        return self.get_content().rplit('@', 1)[0]
+        return self.get_content().rsplit('@', 1)[0]
 
     def get_domain(self):
-        return self.get_content().rplit('@', 1)[-1]
+        return self.get_content().rsplit('@', 1)[-1]
+
+    def get_username_domain(self):
+        return self.get_content().rsplit('@', 1)
 
     # TODO PLUG CRED DB
 
@@ -134,7 +141,12 @@ class Mail(AbstractDaterangeObject):
             self._set_field('content', content)
         for tag in tags:
             self.add_tag(tag)
+        self.index()
         return self.id
+
+    def index(self):
+        username, domain = self.get_username_domain()
+        index_mail(username, domain)
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self): # TODO DELETE CORRELATION
@@ -160,6 +172,118 @@ def create(content, tags=[]):  # TODO sanityze mail
         obj.create(content, tags=tags)
     return obj
 
+def get_mail_id(content):
+    content = content.strip().lower()
+    try:
+        punycoded = punycode_encode(content)
+    except UnicodeError as e:
+        print(content)
+        return None
+
+    if punycoded != content:
+        return sha256(content.encode()).hexdigest()
+    else:
+        return content
+
+def get_mail(content):
+    return Mail(get_mail_id(content))
+
+def index_mail(username, domain):
+    # TODO check domain validity
+    r_search.sadd('m:domains', domain)
+    r_search.sadd('m:usernames', username)
+    r_search.sadd(f'm:d:{domain}', username)
+    r_search.sadd(f'm:u:{username}', domain)
+
+def get_domain_nb_mails(domain):
+    return r_search.scard(f'm:d:{domain}')
+
+def is_indexed_domain(domain):
+    return r_search.exists(f'm:d:{domain}')
+
+def is_indexed_username(username):
+    return r_search.exists(f'm:u:{username}')
+
+
+def search_domain(s_domain=None, r_pos=False): # TODO paginate
+    if not s_domain:
+        return r_search.smembers('m:domains')  # TODO paginate
+    else:
+        domains = {}
+        re_search = re.compile(s_domain)
+        for domain in sscan_iterator(r_search, 'm:domains'):
+            if s_domain in domain:
+                res = re.search(re_search, domain)
+                if res:
+                    domains[domain] = {}
+                    if r_pos:
+                        domains[domain]['hl-start'] = res.start()
+                        domains[domain]['hl-end'] = res.end()
+                        domains[domain]['content'] = domain
+        return domains
+
+def search_domain_username(domain, s_username=None, r_pos=False): # TODO paginate
+    objs = {}
+    if not s_username:
+        for username in r_search.smembers(f'm:d:{domain}'):  # TODO paginate + SSCAN ????
+            content = f'{username}@{domain}'
+            obj_id = get_mail_id(content)
+            objs[obj_id] = {}
+            objs[obj_id]['content'] = content
+    else:
+        re_search = re.compile(s_username)
+        for username in sscan_iterator(r_search, f'm:d:{domain}'):
+            if s_username in username:
+                res = re.search(re_search, username)
+                if res:
+                    content = f'{username}@{domain}'
+                    obj_id = get_mail_id(content)
+                    objs[obj_id] = {}
+                    if r_pos:
+                        objs[obj_id]['hl-start'] = res.start()
+                        objs[obj_id]['hl-end'] = res.end()
+                        objs[obj_id]['content'] = content
+    return objs
+
+def search_username_domain(username, s_domain=None, r_pos=False):
+    objs = {}
+    if not s_domain:
+        for domain in r_search.smembers(f'm:u:{username}'):  # TODO paginate
+            obj_id = f'{username}@{domain}'
+            objs[obj_id] = {}
+    else:
+        re_search = re.compile(s_domain)
+        for domain in sscan_iterator(r_search, f'm:u:{username}'):
+            if s_domain in domain:
+                res = re.search(re_search, domain)
+                if res:
+                    content = f'{username}@{domain}'
+                    obj_id = get_mail_id(content)
+                    objs[obj_id] = {}
+                    if r_pos:
+                        objs[obj_id]['hl-start'] = len(username) + 1 + res.start()
+                        objs[obj_id]['hl-end'] = len(username) + 1 + res.end()
+                        objs[obj_id]['content'] = content
+    return objs
+
+
+def search_mail(mail=None, username=None, domain=None, s_username=None, s_domain=None, r_pos=False):
+    if mail:  # TODO
+        m = get_mail(mail)
+        if m.exists():
+            return m.get_id()
+
+    if domain:
+        if is_indexed_domain(domain):
+            return search_domain_username(domain, s_username=s_username, r_pos=r_pos)
+    elif username:
+        if is_indexed_username(username):
+            return search_username_domain(username, s_domain=s_domain, r_pos=r_pos)
+    elif s_domain:
+        return search_domain(s_domain=s_domain, r_pos=r_pos)
+    return None
+
+
 class Mails(AbstractDaterangeObjects):
     """
        Mails Objects
@@ -183,6 +307,17 @@ class Mails(AbstractDaterangeObjects):
     def sanitize_id_to_search(self, name_to_search):
         return name_to_search.lower()
 
+    def get_domain_meta(self, domains):
+        dict_domain = {}
+        for domain in domains:
+            dict_domain[domain] = {'nb': get_domain_nb_mails(domain)}
+        return dict_domain
+
+def _index_all_mails():
+    for obj in Mails().get_iterator():
+        print(obj.get_id())
+        obj.index()
+
 def _remove_all_mails():
     for obj in Mails().get_iterator():
         obj.delete()
@@ -194,3 +329,7 @@ def api_get_mail(obj_id):
         return {"status": "error", "reason": "Unknown mail"}, 404
     meta = obj.get_meta({'content', 'icon', 'link'})
     return meta, 200
+
+
+if __name__ == '__main__':
+    _index_all_mails()
