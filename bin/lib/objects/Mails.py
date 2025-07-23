@@ -205,83 +205,194 @@ def is_indexed_username(username):
     return r_search.exists(f'm:u:{username}')
 
 
-def search_domain(s_domain=None, r_pos=False): # TODO paginate
+def search_domain(s_domain=None, r_pos=False, page=1, nb=500):
     if not s_domain:
-        return r_search.smembers('m:domains')  # TODO paginate
+        domains = []
+        total = r_search.scard('m:domains')
+        start = nb * (page - 1)
+        stop = start + nb - 1
+        cursor = 0
+        for domain in r_search.smembers('m:domains'):
+            if start <= cursor <= stop:
+                domains.append(domain)
+            elif cursor > stop:
+                break
+            cursor += 1
+        return total, domains
     else:
         domains = {}
         re_search = re.compile(s_domain)
-        for domain in sscan_iterator(r_search, 'm:domains'):
-            if s_domain in domain:
-                res = re.search(re_search, domain)
-                if res:
-                    domains[domain] = {}
-                    if r_pos:
+        total, results = get_cache_search_mail(s_domain=s_domain, page=page, nb=nb)
+        if results is None:
+            results = []
+            start = nb * (page - 1)
+            stop = start + nb - 1
+            cursor = 0
+            for domain in sscan_iterator(r_search, 'm:domains'):
+                if s_domain in domain:
+                    results.append(domain)
+                    if start <= cursor <= stop:
+                        domains[domain] = {}
+                        if r_pos:
+                            res = re.search(re_search, domain)
+                            if res:
+                                domains[domain]['hl-start'] = res.start()
+                                domains[domain]['hl-end'] = res.end()
+                                domains[domain]['content'] = domain
+                    cursor += 1
+            total = len(results)
+            if results:
+                cache_search_mail(results, s_domain=s_domain)
+        else:
+            for domain in results:
+                domains[domain] = {}
+                if r_pos:
+                    res = re.search(re_search, domain)
+                    if res:
                         domains[domain]['hl-start'] = res.start()
                         domains[domain]['hl-end'] = res.end()
                         domains[domain]['content'] = domain
-        return domains
+        return total, domains
 
-def search_domain_username(domain, s_username=None, r_pos=False): # TODO paginate
+def search_domain_username(domain, s_username=None, r_pos=False, page=1, nb=500):
     objs = {}
     if not s_username:
-        for username in r_search.smembers(f'm:d:{domain}'):  # TODO paginate + SSCAN ????
-            content = f'{username}@{domain}'
-            obj_id = get_mail_id(content)
-            objs[obj_id] = {}
-            objs[obj_id]['content'] = content
+        total = r_search.scard(f'm:d:{domain}')
+        start = nb * (page - 1)
+        stop = start + nb - 1
+        cursor = 0
+        for username in sscan_iterator(r_search, f'm:d:{domain}'):
+            if start <= cursor <= stop:
+                content = f'{username}@{domain}'
+                obj_id = get_mail_id(content)
+                objs[obj_id] = {}
+                objs[obj_id]['content'] = content
+            elif cursor > stop:
+                break
+            cursor += 1
     else:
         re_search = re.compile(s_username)
-        for username in sscan_iterator(r_search, f'm:d:{domain}'):
-            if s_username in username:
-                res = re.search(re_search, username)
-                if res:
-                    content = f'{username}@{domain}'
-                    obj_id = get_mail_id(content)
-                    objs[obj_id] = {}
-                    if r_pos:
+        total, results = get_cache_search_mail(domain=domain, s_username=s_username, page=page, nb=nb)
+        if results is None:
+            results = []
+            start = nb * (page - 1)
+            stop = start + nb - 1
+            cursor = 0
+            for username in sscan_iterator(r_search, f'm:d:{domain}'):
+                if s_username in username:
+                    results.append(username)
+                    if start <= cursor <= stop:
+                        content = f'{username}@{domain}'
+                        obj_id = get_mail_id(content)
+                        objs[obj_id] = {}
+                        if r_pos:
+                            res = re.search(re_search, username)
+                            if res:
+                                objs[obj_id]['hl-start'] = res.start()
+                                objs[obj_id]['hl-end'] = res.end()
+                                objs[obj_id]['content'] = content
+                    cursor += 1
+            total = len(results)
+            if results:
+                cache_search_mail(results, domain=domain, s_username=s_username)
+        else:
+            for user in results:
+                content = f'{user}@{domain}'
+                obj_id = get_mail_id(content)
+                objs[obj_id] = {}
+                if r_pos:
+                    res = re.search(re_search, user)
+                    if res:
                         objs[obj_id]['hl-start'] = res.start()
                         objs[obj_id]['hl-end'] = res.end()
                         objs[obj_id]['content'] = content
-    return objs
+    return total, objs
 
-def search_username_domain(username, s_domain=None, r_pos=False):
+
+def search_username_domain(username, s_domain=None, r_pos=False, page=1, nb=500):
     objs = {}
     if not s_domain:
-        for domain in r_search.smembers(f'm:u:{username}'):  # TODO paginate
-            obj_id = f'{username}@{domain}'
-            objs[obj_id] = {}
-    else:
-        re_search = re.compile(s_domain)
+        total = r_search.scard(f'm:u:{username}')
+        start = nb * (page - 1)
+        stop = start + nb - 1
+        cursor = 0
         for domain in sscan_iterator(r_search, f'm:u:{username}'):
-            if s_domain in domain:
-                res = re.search(re_search, domain)
-                if res:
-                    content = f'{username}@{domain}'
-                    obj_id = get_mail_id(content)
-                    objs[obj_id] = {}
-                    if r_pos:
+            if start <= cursor <= stop:
+                content = f'{username}@{domain}'
+                obj_id = get_mail_id(content)
+                objs[obj_id] = {}
+                objs[obj_id]['content'] = content
+            if cursor > stop:
+                break
+            cursor += 1
+    else:
+        total, results = get_cache_search_mail(username=username, s_domain=s_domain, page=page, nb=page)
+        re_search = re.compile(s_domain)
+        if results is None:  # TODO no results
+            results = []
+            start = nb * (page - 1)
+            stop = start + nb
+            cursor = 0
+            for domain in sscan_iterator(r_search, f'm:u:{username}'):
+                if s_domain in domain:
+                    results.append(domain)
+                    if start <= cursor <= stop:
+                        content = f'{username}@{domain}'
+                        obj_id = get_mail_id(content)
+                        objs[obj_id] = {}
+                        if r_pos:
+                            res = re.search(re_search, domain)
+                            if res:
+                                objs[obj_id]['hl-start'] = len(username) + 1 + res.start()
+                                objs[obj_id]['hl-end'] = len(username) + 1 + res.end()
+                                objs[obj_id]['content'] = content
+                    cursor += 1
+            total = len(results)
+            if results:
+                cache_search_mail(results, username=username, s_domain=s_domain)
+        else:
+            for dom in results:
+                content = f'{username}@{dom}'
+                obj_id = get_mail_id(content)
+                objs[obj_id] = {}
+                if r_pos:
+                    res = re.search(re_search, dom)
+                    if res:
                         objs[obj_id]['hl-start'] = len(username) + 1 + res.start()
                         objs[obj_id]['hl-end'] = len(username) + 1 + res.end()
                         objs[obj_id]['content'] = content
-    return objs
+    return total, objs
 
 
-def search_mail(mail=None, username=None, domain=None, s_username=None, s_domain=None, r_pos=False):
-    if mail:  # TODO
+def search_mail(mail=None, username=None, domain=None, s_username=None, s_domain=None, r_pos=False, page=1, nb=500):
+    if mail:
         m = get_mail(mail)
         if m.exists():
-            return m.get_id()
+            return 1, m.get_id()
 
     if domain:
         if is_indexed_domain(domain):
-            return search_domain_username(domain, s_username=s_username, r_pos=r_pos)
+            return search_domain_username(domain, s_username=s_username, r_pos=r_pos, page=page, nb=nb)
     elif username:
         if is_indexed_username(username):
-            return search_username_domain(username, s_domain=s_domain, r_pos=r_pos)
+            return search_username_domain(username, s_domain=s_domain, r_pos=r_pos, page=page, nb=nb)
     elif s_domain:
-        return search_domain(s_domain=s_domain, r_pos=r_pos)
-    return None
+        return search_domain(s_domain=s_domain, r_pos=r_pos, page=page, nb=nb)
+    return None, None
+
+def cache_search_mail(to_cache, username='', domain='', s_username='', s_domain=''):
+    for result in to_cache:
+        r_cache.rpush(f'm:{username}:{domain}:{s_username}:{s_domain}', result)
+    r_cache.expire(f'm:{username}:{domain}:{s_username}:{s_domain}', 600)
+
+def get_cache_search_mail(username='', domain='', s_username='', s_domain='', page=1, nb=500):
+    total = r_cache.llen(f'm:{username}:{domain}:{s_username}:{s_domain}')
+    if not total:
+        return None, None
+    else:
+        start = nb * (page - 1)
+        stop = start + nb - 1
+        return total, r_cache.lrange(f'm:{username}:{domain}:{s_username}:{s_domain}', start, stop)
 
 
 class Mails(AbstractDaterangeObjects):

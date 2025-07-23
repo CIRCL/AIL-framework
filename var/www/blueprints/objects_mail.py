@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_core import paginate_iterator
+from lib.ail_core import paginate_iterator, get_template_pagination
 from lib.objects import Mails
 from packages import Date
 from lib import search_engine
@@ -121,9 +121,9 @@ def objects_mail_search():
         username = in_username.lower()
         if in_domain:
             s_domain = in_domain.lower()
-            search_engine.log(user_id, 'mail', f'{mode}, {s_username} @ {s_domain}')
+            search_engine.log(user_id, 'mail', f'{mode}, {username} @ {s_domain}')
         else:
-            search_engine.log(user_id, 'mail', f'{mode}, {s_username} @')
+            search_engine.log(user_id, 'mail', f'{mode}, {username} @')
     elif mode == 'exact':
         mail = f'{in_username.lower()}@{in_domain.lower()}'
         search_engine.log(user_id, 'mail', f'{mode}, {mail}')
@@ -136,23 +136,15 @@ def objects_mail_search():
     else:
         return create_json_response({'error': 'Invalid search mode domain_search, domain to search not provided'}, 400)
 
-    if username and domain:
-        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {domain}')
-    elif username:
-        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {s_domain}')
-    elif domain:
-        search_engine.log(user_id, 'mail', f'{mode} {s_username} @ {domain}')
-    else:
-        search_engine.log(user_id, 'mail', f'{mode}, {username} @ {domain}')
-    search_result = Mails.search_mail(mail=mail, username=username, domain=domain, s_username=s_username, s_domain=s_domain, r_pos=True)
+    total, search_result = Mails.search_mail(mail=mail, username=username, domain=domain, s_username=s_username, s_domain=s_domain, r_pos=True, page=page, nb=500)
 
     if isinstance(search_result, str):
         return redirect(url_for('correlation.show_correlation', type='mail', id=search_result))
     else:
         if search_result:
             mails = Mails.Mails()
-            ids = sorted(search_result.keys())
-            dict_page = paginate_iterator(ids, nb_obj=500, page=page)
+            # ids = sorted(search_result.keys())
+            dict_page = get_template_pagination(search_result, total, nb=500, page=page)
             if mode == 'domain_search':
                 dict_objects = mails.get_domain_meta(dict_page['list_elem'])
             else:
@@ -167,5 +159,6 @@ def objects_mail_search():
             domain = s_domain
 
         return render_template("search_mail_result.html", dict_objects=dict_objects, search_result=search_result,
-                               dict_page=dict_page, mode=mode, username=username, domain=domain)
+                               dict_page=dict_page, mode=mode, username=username, domain=domain,
+                               object_name='mails')
 

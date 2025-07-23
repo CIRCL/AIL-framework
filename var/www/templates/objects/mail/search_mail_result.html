@@ -70,7 +70,7 @@
                         <table id="table_objects" class="table table-striped table-bordered">
                             <thead class="bg-dark text-white">
                             <tr>
-                                <th></th>
+                                <th>Email</th>
                                 <th>First Seen</th>
                                 <th>Last Seen</th>
                                 <th>Total</th>
@@ -88,8 +88,8 @@
                                             {% endif %}
                                         </a>
                                     </td>
-                                    <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
-                                    <td>{{ dict_objects[obj_id]['last_seen'] }}</td>
+                                    <td>{% if dict_objects[obj_id]['first_seen'] %}{{ dict_objects[obj_id]['first_seen'][0:4] }}-{{ dict_objects[obj_id]['first_seen'][4:6] }}-{{ dict_objects[obj_id]['first_seen'][6:8] }}{% endif %}</td>
+                                    <td>{% if dict_objects[obj_id]['last_seen'] %}{{ dict_objects[obj_id]['last_seen'][0:4] }}-{{ dict_objects[obj_id]['last_seen'][4:6] }}-{{ dict_objects[obj_id]['last_seen'][6:8] }}{% endif %}</td>
                                     <td>{{ dict_objects[obj_id]['nb_seen'] }}</td>
                                 </tr>
                             {% endfor %}
@@ -130,7 +130,7 @@
         $('#table_objects').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
-            "order": [[ 3, "desc" ]]
+            "order": [[ 0, "asc" ]]
         });
   });
 

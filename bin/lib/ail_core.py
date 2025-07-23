@@ -187,6 +187,26 @@ def rreplace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
     return new.join(li)
 
+def get_template_pagination(elems, total, page=1, nb=50):
+    if len(elems) > nb:
+        return paginate_iterator(elems, nb_obj=nb, page=page)
+    else:
+        dict_page = {'nb_all_elem': total}
+        nb_pages = dict_page['nb_all_elem'] / nb
+        if not nb_pages.is_integer():
+            nb_pages = int(nb_pages) + 1
+        else:
+            nb_pages = int(nb_pages)
+        dict_page['list_elem'] = elems
+        dict_page['page'] = page
+        dict_page['nb_pages'] = nb_pages
+        dict_page['nb_first_elem'] = (nb * (page - 1)) + 1
+        if page == nb_pages:
+            dict_page['nb_last_elem'] = total
+        else:
+            dict_page['nb_last_elem'] = (nb * page)
+        return dict_page
+
 def paginate_iterator(iter_elems, nb_obj=50, page=1):
     dict_page = {'nb_all_elem': len(iter_elems)}
     nb_pages = dict_page['nb_all_elem'] / nb_obj
