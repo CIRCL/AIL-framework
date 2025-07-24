@@ -383,13 +383,14 @@ def search_mail(mail=None, username=None, domain=None, s_username=None, s_domain
 def cache_search_mail(to_cache, username='', domain='', s_username='', s_domain=''):
     for result in to_cache:
         r_cache.rpush(f'm:{username}:{domain}:{s_username}:{s_domain}', result)
-    r_cache.expire(f'm:{username}:{domain}:{s_username}:{s_domain}', 600)
+    r_cache.expire(f'm:{username}:{domain}:{s_username}:{s_domain}', 1800)
 
 def get_cache_search_mail(username='', domain='', s_username='', s_domain='', page=1, nb=500):
     total = r_cache.llen(f'm:{username}:{domain}:{s_username}:{s_domain}')
     if not total:
         return None, None
     else:
+        r_cache.expire(f'm:{username}:{domain}:{s_username}:{s_domain}', 1800)
         start = nb * (page - 1)
         stop = start + nb - 1
         return total, r_cache.lrange(f'm:{username}:{domain}:{s_username}:{s_domain}', start, stop)
