@@ -135,7 +135,7 @@ class Mail(AbstractModule):
     def extract(self, obj, content, tag):
         extracted = []
         correls = obj.get_correlation('mail').get('mail', [])
-        if correls > 150:
+        if len(correls) > 150:
             return []
         for m_id in correls:
             m = Mails.Mail(m_id[1:])
