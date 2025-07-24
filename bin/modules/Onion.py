@@ -62,6 +62,9 @@ class Onion(AbstractModule):
         onions = self.regex_finditer(self.onion_regex, obj.get_global_id(), content)
         for onion in onions:
             start, end, value = onion
+            # url
+            if value.startswith("://"):
+                value = value[3:]
             url_unpack = crawlers.unpack_url(value)
             if url_unpack:
                 domain = url_unpack['domain']
