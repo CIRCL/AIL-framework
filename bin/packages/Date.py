@@ -8,7 +8,7 @@ from dateutil.rrule import rrule, MONTHLY
 from dateutil.relativedelta import relativedelta
 
 def convert_date_str_to_datetime(date_str):
-    res =  datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
+    res = datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
     return res
 
 def get_full_month_str(date_from, date_to):
@@ -280,6 +280,14 @@ def get_previous_month_date():
     first = now.replace(day=1)
     last_month = first - datetime.timedelta(days=1)
     return last_month.strftime("%Y%m%d")
+
+def get_month_last_day(date_month):
+    month = int(date_month[4:6]) % 12 + 1
+    return (datetime.date(int(date_month[0:4]), month, 1) - datetime.timedelta(days=1)).strftime("%Y%m%d")
+
+def get_current_month():
+    dt = datetime.date.today()
+    return dt.strftime("%Y%m")
 
 def get_current_year():
     dt = datetime.date.today()

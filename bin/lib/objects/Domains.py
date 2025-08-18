@@ -609,6 +609,19 @@ def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, do
                 date_domains[date] = list(domains)
     return date_domains
 
+def get_domains_by_month(date_month, domains_types, up=True, down=True):
+    start = f'{date_month}01'
+    end = Date.get_month_last_day(date_month)
+    if 'onion' in domains_types:
+        domains = get_domains_by_daterange(start, end, 'onion', up=up, down=down)
+    else:
+        domains = []
+    if 'web' in domains_types:
+        web = get_domains_by_daterange(start, end, 'web', up=up, down=down)
+        if web:
+            domains.extend(web)
+    return domains
+
 def get_domain_up_iterator():
     for domain_type in get_all_domains_types():
         for dom_id in get_domains_up_by_type(domain_type):

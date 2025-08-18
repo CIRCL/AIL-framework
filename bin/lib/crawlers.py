@@ -1895,6 +1895,25 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
                             external=external, new_task=new_task)
     return task_uuid
 
+def recrawl_domain(domain_id):
+    domain = Domains.Domain(domain_id)
+    parent = domain.get_parent()
+    if not parent:
+        parent = 'manual'
+    task_uuid = create_task(domain.id, parent=parent, priority=0, new_task=True, har=D_HAR, screenshot=D_SCREENSHOT)
+    if task_uuid:
+        print(task_uuid, domain.id, parent)
+
+def recrawl_onion_domains(date_month=None, all_onions_up=False):  # TODO RENAME ME
+    if all_onions_up:
+        to_crawl = Domains.get_domains_up_by_type('onion')
+    else:
+        if not date_month:
+            date_month = Date.get_previous_month_date()
+        to_crawl = set(Domains.get_domains_by_month(date_month, ['onion']))
+    for onion in to_crawl:
+        recrawl_domain(onion)
+
 ## -- CRAWLER TASK -- ##
 
 #### CRAWLER TASK API ####
@@ -2439,6 +2458,7 @@ def change_onion_filter_unknown_state(new_state):
 load_blacklist()
 
 # if __name__ == '__main__':
+#     recrawl_onion_domains(date_month='202502', all_onions_up=False)
 #     delete_captures()
 #
 #     item_id = 'crawled/2023/02/20/data.gz'
