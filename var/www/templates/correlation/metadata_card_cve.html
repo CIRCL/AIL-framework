@@ -46,34 +46,42 @@
 					</div>
 				</div>
 			</li>
-            {% if dict_object["metadata_card"]["cve_search"] %}
-                {% if 'error' in dict_object["metadata_card"]["cve_search"] %}
-                    <b class="text-danger my-2"><i class="fas fa-exclamation-triangle"></i> CVE Search Error: {{ dict_object["metadata_card"]["cve_search"]["error"] }}</b>
+            {% if dict_object["metadata_card"]["vulnerability_lookup"] %}
+                {% if 'error' in dict_object["metadata_card"]["vulnerability_lookup"] %}
+                    <b class="text-danger my-2"><i class="fas fa-exclamation-triangle"></i> CVE Search Error: {{ dict_object["metadata_card"]["vulnerability_lookup"]["error"] }}</b>
                 {% else %}
                     <li class="list-group-item py-0">
                         <table class="table table-sm table-hover">
                             <tbody>
                             <tr>
+                                <td><img src="{{ url_for('static', filename='image/vulnerability-lookup.png')}}" alt="Vulerability Lookup" style="max-width: 200px"></td>
+                                <td class="align-middle"><a target="_blank" href="https://vulnerability.circl.lu/vuln/vulnerability/{{ dict_object["correlation_id"] }}">https://vulnerability.circl.lu/vuln/vulnerability/{{ dict_object["correlation_id"] }}</td>
+                            </tr>
+                            <tr>
                                 <td><b>Summary</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("summary") }}</td>
+                                {% for summary in dict_object["metadata_card"]["vulnerability_lookup"].get("containers", []).get("cna", []).get("descriptions", []) %}
+                                    {% if summary['lang']=='en' %}
+                                        <td>{{ summary['value'] }}</td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td><b>State</b></td>
+                                <td>{{ dict_object["metadata_card"]["vulnerability_lookup"].get("cveMetadata", []).get("state") }}</td>
                             </tr>
                             <tr>
                                 <td><b>Published</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("Published") }}</td>
+                                <td>{{ dict_object["metadata_card"]["vulnerability_lookup"].get("cveMetadata", []).get("datePublished", False) }}</td>
                             </tr>
                             <tr>
-                                <td><b>Modified</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("Modified") }}</td>
-                            </tr>
-                            <tr>
-                                <td><b>last-modified</b></td>
-                                <td>{{ dict_object["metadata_card"]["cve_search"].get("last-modified") }}</td>
+                                <td><b>Updated</b></td>
+                                <td>{{ dict_object["metadata_card"]["vulnerability_lookup"].get("cveMetadata", []).get("dateUpdated") }}</td>
                             </tr>
                             </tbody>
                         </table>
                     </li>
 
-                    {% if dict_object["metadata_card"]["cve_search"].get("references") %}
+                    {% if dict_object["metadata_card"]["vulnerability_lookup"].get("containers", []).get("cna", []).get("references") %}
                         <div id="accordion" class="mb-2">
                             <div class="card">
                                 <div class="card-header bg-dark" id="headingRefs">
@@ -81,7 +89,7 @@
                                         <button class="btn btn-link collapsed w-100" data-toggle="collapse" data-target="#collapseRefs" aria-expanded="false" aria-controls="collapseRefs">
                                             <span class="row">
                                                 <div class="col-10 text-left">
-                                                    References <span class="badge badge-primary badge-pill">{{ dict_object["metadata_card"]["cve_search"]["references"] | length }}</span>
+                                                    References <span class="badge badge-primary badge-pill">{{ dict_object["metadata_card"]["vulnerability_lookup"]["containers"]["cna"]["references"] | length }}</span>
                                                 </div>
                                                 <div class="col-2 text-right"><i class="fas fa-chevron-circle-down"></i></div>
                                             </span>
@@ -91,8 +99,8 @@
                                 <div id="collapseRefs" class="collapse" aria-labelledby="headingRefs" data-parent="#accordion">
                                     <div class="card-body">
                                         <ul>
-                                            {% for ref in dict_object["metadata_card"]["cve_search"].get("references") %}
-                                                <li>{{ ref }}</li>
+                                            {% for ref in dict_object["metadata_card"]["vulnerability_lookup"]["containers"]["cna"].get("references") %}
+                                                <li>{{ ref['url'] }}</li>
                                             {% endfor %}
                                         </ul>
                                     </div>
