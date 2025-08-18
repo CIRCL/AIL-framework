@@ -3,7 +3,7 @@ pylacus
 pymisp>=2.4.144
 d4-pyclient>=0.1.6
 
-thehive4py
+thehive4py<2.0
 git+https://github.com/MISP/PyTaxonomies
 git+https://github.com/MISP/PyMISPGalaxies
 
