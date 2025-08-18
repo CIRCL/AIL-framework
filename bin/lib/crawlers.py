@@ -1897,9 +1897,11 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
 
 def recrawl_domain(domain_id):
     domain = Domains.Domain(domain_id)
-    parent = domain.get_parent()
-    if not parent:
+    parent = domain.get_last_origin()
+    if not parent.get('item'):
         parent = 'manual'
+    else:
+        parent = parent['item']
     task_uuid = create_task(domain.id, parent=parent, priority=0, new_task=True, har=D_HAR, screenshot=D_SCREENSHOT)
     if task_uuid:
         print(task_uuid, domain.id, parent)
