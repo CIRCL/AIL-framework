@@ -254,7 +254,7 @@ for elem in sys.stdin:
 	pip install -U -r requirements.txt
 	``` 
 4. Edit the configuration file ```ail-framework/configs/core.cfg```:
-	- Modify the "pystemonpath" path accordingly.
+	- In the ``Pystemon`` section, update the ``dir`` parameter so it points to the directory where Pystemon stores its pastes. 
 
 5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
 	 - Option 1 (recommended): 
