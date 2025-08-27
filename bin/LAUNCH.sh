@@ -114,7 +114,13 @@ function launching_kvrocks {
     echo -e $GREEN"\t* Launching KVROCKS servers"$DEFAULT
 
     sleep 0.1
-    screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    if [ -f "./kvrocks/build/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    elif [ -f "/usr/bin/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; kvrocks -c '$conf_dir'/6383.conf ; read x'
+    else
+        echo -e $RED"\t* KVROCKS is not installed."$DEFAULT
+    fi
 }
 
 function launching_logs {

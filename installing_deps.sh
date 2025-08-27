@@ -71,6 +71,21 @@ make
 sudo make install
 popd
 
+# Yara
+YARA_VERSION="4.3.0"
+mkdir yara_temp
+wget https://github.com/VirusTotal/yara/archive/v${YARA_VERSION}.zip -O yara_temp/yara.zip
+unzip yara_temp/yara.zip -d yara_temp/
+pushd yara_temp/yara-${YARA_VERSION}
+./bootstrap.sh
+./configure
+make
+sudo make install
+make check
+popd
+rm -rf yara_temp
+
+
 # ARDB #
 #test ! -d ardb/ && git clone https://github.com/ail-project/ardb.git
 #pushd ardb/
