@@ -42,6 +42,7 @@ class TestApiV1(unittest.TestCase):
             test_logger.info('AIL successfully reached Flask / Web interface')
         except (AssertionError, PyAILError) as ae:
             test_logger.warning(f'Flask / Web interface is unreachable: {ae}')
+            raise ae
         print('----------------------------------------------------')
         print()
 
