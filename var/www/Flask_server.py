@@ -117,10 +117,15 @@ for handler in flask_logger.handlers:
 
 # =========  TLS  =========#
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
-ssl_context.suppress_ragged_eofs = True
-# print(ssl_context.get_ciphers())
+ssl_context = None
+self_signed_certfile = os.path.join(Flask_dir, 'server.crt')
+self_signed_keyfile = os.path.join(Flask_dir, 'server.key')
+
+if os.path.exists(self_signed_certfile) and os.path.exists(self_signed_keyfile):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile=self_signed_certfile, keyfile=self_signed_keyfile)
+    ssl_context.suppress_ragged_eofs = True
+    # print(ssl_context.get_ciphers())
 # =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
