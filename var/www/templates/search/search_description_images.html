@@ -70,7 +70,7 @@
                             {% if obj['tags_safe'] %}
                                 {% if obj['type'] == 'image' %}
                                     <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
-                                {% if obj['type'] == 'screenshot' or obj['type'] == 'domain'%}
+                                {% elif obj['type'] == 'screenshot' or obj['type'] == 'domain'%}
                                     <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
                                 {% endif %}
                             {% else %}
