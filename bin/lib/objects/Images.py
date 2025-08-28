@@ -108,6 +108,14 @@ class Image(AbstractDaterangeObject):
             description = description.replace("`", ' ')
         return description
 
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
+
     def get_misp_object(self):
         obj_attrs = []
         obj = MISPObject('file')

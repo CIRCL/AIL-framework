@@ -349,6 +349,18 @@ class Domain(AbstractObject):
 
     ## -Descriptions- ##
 
+    ## Search ##
+
+    def get_search_description_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
+
+    ## -Search- ##
+
     # TODO FIXME
     def get_all_urls(self, date=False, epoch=None):
         if date:

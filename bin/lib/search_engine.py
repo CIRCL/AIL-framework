@@ -16,8 +16,10 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Domains
+from lib.objects import Images
 from lib.objects import Items
 from lib.objects import Messages
+from lib.objects import Screenshots
 from lib import chats_viewer
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -66,7 +68,7 @@ class MeiliSearch:
         return self.client.get_indexes()
 
     def _create_indexes(self):
-        for index in ['cdiscord', 'ctelegram', 'cmatrix', 'tor', 'web']:  # TODO dynamic load of chat uuid ?
+        for index in ['cdiscord', 'ctelegram', 'cmatrix', 'desc:dom', 'desc:img', 'desc:screen', 'tor', 'web']:  # TODO dynamic load of chat uuid ?
             self.client.create_index(index, {'primaryKey': 'uuid'})
 
     def add(self, index, document):
@@ -96,8 +98,11 @@ def index_all():
     # Engine._delete('tor')
     # Engine._delete('web')
     Engine._create_indexes()
-    index_crawled()
-    index_chats_messages()
+    # index_crawled()
+    # index_chats_messages()
+    index_images_descriptions()
+    index_screenshots_descriptions()
+    # index_domains_descriptions()
 
 # TODO index titles
 def _index_crawled_domain(dom_id):
@@ -132,6 +137,43 @@ def index_message(message):
 def index_chats_messages():
     for message in chats_viewer.get_messages_iterator():
         index_message(message)
+
+
+def index_image_description(image):
+    index = f'desc:img'
+    document = image.get_search_document()
+    if document:
+        Engine.add(index, document)
+
+def index_images_descriptions():
+    for image in Images.get_all_images_objects():
+        index_image_description(image)
+
+
+def index_screenshot_description(screenshot):
+    index = f'desc:screen'
+    document = screenshot.get_search_document()
+    if document:
+        Engine.add(index, document)
+
+def index_screenshots_descriptions():
+    for screenshot in Screenshots.get_screenshots_obj_iterator():
+        index_screenshot_description(screenshot)
+
+
+def index_domain_description(domain_id):
+    index = f'desc:dom'
+    domain = Domains.Domain(domain_id)
+    document = domain.get_search_description_document()
+    if document:
+        Engine.add(index, document)
+
+def index_domains_descriptions():
+    for dom_id in Domains.get_domains_up_by_type('onion'):
+        index_domain_description(dom_id)
+    for dom_id in Domains.get_domains_up_by_type('web'):
+        index_domain_description(dom_id)
+
 
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')
