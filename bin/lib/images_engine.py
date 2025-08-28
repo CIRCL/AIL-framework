@@ -17,6 +17,7 @@ from lib.ail_core import get_default_image_description_model
 from lib.objects import Domains
 from lib.objects import Images
 from lib.objects import Screenshots
+from lib import search_engine
 
 config_loader = ConfigLoader()
 OLLAMA_URL = config_loader.get_config_str('Images', 'ollama_url')
@@ -37,7 +38,7 @@ def get_image_obj(obj_gid):
 
 def create_ollama_domain_data(model, descriptions):
     return json.dumps({'model': model,
-                       'prompt': f'From this list of images descritions, Can you please describe this domain and check if it\'s related to child exploitaton?\n\n{descriptions}',
+                       'prompt': f'From this list of images descriptions, Can you please describe this domain and check if it\'s related to child exploitation?\n\n{descriptions}',
                        'stream': False
                        })
 
@@ -76,6 +77,13 @@ def api_get_image_description(obj_gid):
         r = res.json()
         if r:
             image.add_description_model(model, r['response'])
+            # index
+            if search_engine.is_meilisearch_enabled():
+                if image.type == 'image':
+                    search_engine.index_image_description(image)
+                else:
+                    search_engine.index_screenshot_description(image)
+
             return r['response'], 200
     return None, 200
 
@@ -114,6 +122,10 @@ def get_domain_description(domain_id, reprocess=True):
         r = res.json()
         if r:
             domain.add_description_model(model, r['response'])
+            # index
+            if search_engine.is_meilisearch_enabled():
+                search_engine.index_domain_description(domain_id)
+
             print(r['response'])
             return r['response'], 200
     return None, 200
