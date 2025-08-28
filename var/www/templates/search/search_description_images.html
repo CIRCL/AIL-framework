@@ -45,7 +45,7 @@
                 </span>
 
                 {% if result %}
-                    {% set endpoint_url = url_for('search_b.search_crawled') + "?search=" + to_search + "&index=" + search_index %}
+                    {% set endpoint_url = url_for('search_b.search_description_images') + "?search=" + to_search + "&index=" + search_index %}
                     {% include 'search/pagination.html' %}
                 {% endif %}
 
@@ -71,7 +71,7 @@
                                 {% if obj['tags_safe'] or obj['is_tags_safe'] %}
                                     {% if obj['type'] == 'image' %}
                                         <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
-                                    {% elif obj['type'] == 'screenshot' or obj['type'] == 'domain'%}
+                                    {% elif obj['type'] == 'screenshot' or 'domain' in obj %}
                                         <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
                                     {% endif %}
                                 {% else %}
