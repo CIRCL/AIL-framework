@@ -605,6 +605,7 @@ function launch_tests() {
   echo -e ""
   echo -e ""
   python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
+  exit $?
 }
 
 function reset_password() {
