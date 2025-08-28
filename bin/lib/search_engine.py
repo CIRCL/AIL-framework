@@ -140,7 +140,7 @@ def index_chats_messages():
 
 
 def index_image_description(image):
-    index = f'desc:img'
+    index = f'desc-img'
     document = image.get_search_document()
     if document:
         Engine.add(index, document)
@@ -151,7 +151,7 @@ def index_images_descriptions():
 
 
 def index_screenshot_description(screenshot):
-    index = f'desc:screen'
+    index = f'desc-screen'
     document = screenshot.get_search_document()
     if document:
         Engine.add(index, document)
@@ -162,7 +162,7 @@ def index_screenshots_descriptions():
 
 
 def index_domain_description(domain_id):
-    index = f'desc:dom'
+    index = f'desc-dom'
     domain = Domains.Domain(domain_id)
     document = domain.get_search_description_document()
     if document:
