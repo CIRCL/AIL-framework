@@ -302,6 +302,47 @@ def api_search_chats(data):
             objs.append(meta)
     return (objs, pagination), 200
 
+
+def api_search_images(data):
+    index = data.get("index")
+    to_search = data.get("search")
+    page = sanityze_page(data.get("page"))
+    nb_per_page = 20
+    user_id = data.get("user_id")
+    log(user_id, index, to_search)
+
+    if not index or index not in ['desc-dom', 'desc-img', 'desc-screen']:
+        return {"status": "error", "reason": "Invalid search index"}, 400
+    if not to_search:
+        return {"status": "error", "reason": "Invalid search query"}, 400
+
+    if index == 'all':
+        indexes = ['desc-dom', 'desc-img', 'desc-screen']
+    else:
+        indexes = [index]
+
+    result = Engine.search(indexes, to_search, page=page, nb=nb_per_page)
+    objs = []
+    pagination = {}
+    # if isinstance(result['results'], dict):
+    if result.get("hits"):
+        pagination = extract_pagination_from_result(result, nb_per_page, page)
+        for res in result['hits']:
+            obj_type, subtype, obj_id = res['id'].split(':', 2)
+            if obj_type == 'image':
+                obj = Images.Image(obj_id)
+            elif obj_type == 'screenshot':
+                obj = Screenshots.Screenshot(obj_id)
+            elif obj_type == 'domain':
+                obj = Domains.Domain(obj_id)
+            else:
+                continue  # TODO ERROR
+            # domain
+            meta = obj.get_meta(options={'link'})
+            meta['result'] = res['_formatted']['content']
+            objs.append(meta)
+    return (objs, pagination), 200
+
 ### Filter
 # use filters ???
 # onion
