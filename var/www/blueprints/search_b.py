@@ -146,7 +146,7 @@ def search_description_images_post():
         page = int(page)
     except (TypeError, ValueError):
         page = 1
-    return redirect(url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
+    return redirect(url_for('search_b.search_description_images', search=to_search, page=page, index=search_type))
 
 
 @search_b.route("/search/description/images", methods=['GET'])
