@@ -19,6 +19,13 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 
+    <style>
+    .object_image {
+        max-width: 50%;
+        filter: blur(5px);
+    }
+</style>
+
 </head>
 <body>
 
@@ -32,6 +39,10 @@
 			<div class="col-12 col-lg-10" id="core_content">
 
                 {% include 'search/block_description_images_search.html' %}
+
+                <span class="mt-3">
+                    {% include 'objects/image/block_blur_img_slider.html' %}
+                </span>
 
                 {% if result %}
                     {% set endpoint_url = url_for('search_b.search_crawled') + "?search=" + to_search + "&index=" + search_index %}
@@ -55,6 +66,19 @@
                             </div>
 
                             <pre class="border">{{ obj['result'] }}</pre>
+
+                            {% if obj['tags_safe'] %}
+                                {% if obj['type'] == 'image' %}
+                                    <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
+                                {% if obj['type'] == 'screenshot' or obj['type'] == 'domain'%}
+                                    <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
+                                {% endif %}
+                            {% else %}
+                                <span class="my-2 fa-stack fa-8x">
+                                    <i class="fas fa-stack-1x fa-image"></i>
+                                    <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+                                </span>
+                            {% endif %}
 
                         </div>
                     </div>

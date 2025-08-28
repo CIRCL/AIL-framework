@@ -338,7 +338,7 @@ def api_search_images(data):
             else:
                 continue  # TODO ERROR
             # domain
-            meta = obj.get_meta(options={'link'})
+            meta = obj.get_meta(options={'link', 'tags_safe'})
             meta['result'] = res['_formatted']['content']
             objs.append(meta)
     return (objs, pagination), 200

@@ -237,6 +237,8 @@ class Domain(AbstractObject):
             meta['languages'] = self.get_languages()
         if 'screenshot' in options:
             meta['screenshot'] = self.get_screenshot()
+        if 'img' in options:
+            meta['img'] = self.get_screenshot()
         if 'tags_safe' in options:
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'link' in options:
