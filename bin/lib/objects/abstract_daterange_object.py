@@ -82,7 +82,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return int(nb)
 
-    def _get_meta(self, options=[]):
+    def _get_meta(self, options=[], flask_context=False):
         meta_dict = self.get_default_meta(options=options)
         meta_dict['first_seen'] = self.get_first_seen()
         meta_dict['last_seen'] = self.get_last_seen()
@@ -91,6 +91,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             meta_dict['sparkline'] = self.get_sparkline()
         if 'last_full_date' in options:
             meta_dict['last_full_date'] = meta_dict['last_seen']
+        if 'link' in options:
+            meta_dict['link'] = self.get_link(flask_context=flask_context)
         return meta_dict
 
     def set_first_seen(self, first_seen):

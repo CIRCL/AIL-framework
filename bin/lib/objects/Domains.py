@@ -220,7 +220,7 @@ class Domain(AbstractObject):
         return ['type', 'first_seen', 'last_check', 'last_origin', 'ports', 'status', 'tags', 'languages']
 
     # options: set of optional meta fields
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), flask_context=False):
         meta = {'type': self.domain_type,  # TODO RENAME ME -> Fix template
                 'id': self.id,
                 'domain': self.id, # TODO Remove me -> Fix templates
@@ -239,6 +239,8 @@ class Domain(AbstractObject):
             meta['screenshot'] = self.get_screenshot()
         if 'tags_safe' in options:
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\

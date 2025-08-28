@@ -131,7 +131,7 @@ class Screenshot(AbstractObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), flask_context=False):
         meta = self.get_default_meta()
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
@@ -139,6 +139,8 @@ class Screenshot(AbstractObject):
             meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
 def get_screenshot_dir():
