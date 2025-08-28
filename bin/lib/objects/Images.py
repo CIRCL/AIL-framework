@@ -24,6 +24,7 @@ config_loader = ConfigLoader()
 # r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 IMAGE_FOLDER = config_loader.get_files_directory('images')
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
