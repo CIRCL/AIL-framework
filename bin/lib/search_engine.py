@@ -68,7 +68,7 @@ class MeiliSearch:
         return self.client.get_indexes()
 
     def _create_indexes(self):
-        for index in ['cdiscord', 'ctelegram', 'cmatrix', 'desc:dom', 'desc:img', 'desc:screen', 'tor', 'web']:  # TODO dynamic load of chat uuid ?
+        for index in ['cdiscord', 'ctelegram', 'cmatrix', 'desc-dom', 'desc-img', 'desc-screen', 'tor', 'web']:  # TODO dynamic load of chat uuid ?
             self.client.create_index(index, {'primaryKey': 'uuid'})
 
     def add(self, index, document):
