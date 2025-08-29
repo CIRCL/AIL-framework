@@ -139,6 +139,16 @@ def _create_domains_up_description():
         progress = int(done * 100 / nb_domains)
         print(f'{done}/{nb_domains}        {progress}%')
 
+def _create_image_description():
+    total = Images.Images().get_nb()
+    done = 0
+    for image in Images.get_all_images_objects():
+        api_get_image_description(image.get_global_id())
+        done += 1
+        progress = int(done * 100 / total)
+        print(f'{done}/{total}        {progress}%')
+
 
 if __name__ == '__main__':
-    _create_domains_up_description()
+    # _create_domains_up_description()
+    _create_image_description()
