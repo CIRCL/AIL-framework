@@ -145,8 +145,10 @@ def _create_image_description():
     for image in Images.get_all_images_objects():
         api_get_image_description(image.get_global_id())
         done += 1
-        progress = int(done * 100 / total)
-        print(f'{done}/{total}        {progress}%')
+        print(done)
+        done += 1
+        # progress = int(done * 100 / total)
+        # print(f'{done}/{total}        {progress}%')
 
 
 if __name__ == '__main__':
