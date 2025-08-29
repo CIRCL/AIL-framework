@@ -49,13 +49,16 @@ regex_password = re.compile(regex_password)
 #### SESSIONS ####
 
 def get_sessions():
-    r_cache.smembers('ail:sessions')
+    return r_cache.hkeys('ail:sessions')
+
+def get_nb_sessions():
+    return r_cache.hlen('ail:sessions')
 
 def exists_session(session):
-    r_cache.hexists('ail:sessions', session)
+    return r_cache.hexists('ail:sessions', session)
 
 def exists_session_user(user_id):
-    r_cache.hexists('ail:sessions:users', user_id)
+    return r_cache.hexists('ail:sessions:users', user_id)
 
 def get_session_user(session):
     return r_cache.hget('ail:sessions', session)
@@ -273,6 +276,13 @@ def get_users():
 
 def get_nb_users():
     return r_serv_db.hlen('ail:users:all')
+
+def get_nb_active_users():
+    nb = 0
+    for user_id in get_users():
+        if get_user_last_login(user_id):
+            nb += 1
+    return nb
 
 def get_users_meta(users):
     meta = []
@@ -614,7 +624,7 @@ class AILUser(UserMixin):
 #### API ####
 
 def api_get_users_meta():
-    meta = {'users': []}
+    meta = {'users': [], 'active': get_nb_active_users(), 'logged': get_nb_sessions()}
     options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
