@@ -8,6 +8,8 @@ import socket
 from publicsuffixlist import PublicSuffixList
 from urllib.parse import urlparse, urlunparse
 
+ADDED_TLD = {'b32.i2p'}
+
 def _ensure_bytes(binary):
     if isinstance(binary, bytes):
         return binary
@@ -38,6 +40,8 @@ class PSLFaup:
         self._url = None
         self._retval = {}
         self.ip_as_host = ''
+        self.host = None
+        self.tld = None
 
     def _clear(self):
         self.decoded = False
@@ -52,12 +56,12 @@ class PSLFaup:
         """
         self._clear()
         if isinstance(url, bytes) and b'//' not in url[:10]:
-            if b'.onion' in url:
+            if b'.onion' in url or b'.i2p':
                 url = b'http://' + url
             else:
                 url = b'https://' + url
         elif '//' not in url[:10]:
-            if '.onion' in url:
+            if '.onion' in url or '.i2p' in url:
                 url = f'http://{url}'
             else:
                 url = f'https://{url}'
@@ -84,6 +88,7 @@ class PSLFaup:
 
         self.decoded = True
         self._retval = {}
+        self.host = self.get_host()
 
     @property
     def url(self):
@@ -123,6 +128,9 @@ class PSLFaup:
         if not self.decoded or not self._url:
             raise UrlNotDecoded("You must call pslfaup.decode() first")
 
+        if self.host:
+            return self.host
+
         if self._url.hostname is None:
             return None
         elif self._url.hostname.isascii():
@@ -134,8 +142,11 @@ class PSLFaup:
         if not self.decoded or not self._url:
             raise UrlNotDecoded("You must call pslfaup.decode() first")
 
-        if self.get_host() is not None and not self.ip_as_host:
-            return self.psl.privatesuffix(self.get_host())
+        if self.host is not None and not self.ip_as_host:
+            domain = self.host[:-(len(self.get_tld()) + 1)].rsplit('.', 1)[-1]
+            if domain:
+                return f'{domain}.{self.tld}'
+            # return self.psl.privatesuffix(self.host)
         return None
 
     def get_domain_without_tld(self):
@@ -144,26 +155,32 @@ class PSLFaup:
 
         if self.get_tld() is not None and not self.ip_as_host:
             if domain := self.get_domain():
-                return domain.rsplit(self.get_tld(), 1)[0].rstrip('.')
+                return domain.rsplit(self.tld, 1)[0].rstrip('.')
         return None
 
     def get_subdomain(self):
         if not self.decoded or not self._url:
             raise UrlNotDecoded("You must call pslfaup.decode() first")
 
-        if self.get_host() is not None and not self.ip_as_host:
+        if self.host is not None and not self.ip_as_host:
             domain = self.get_domain()
-            host = self.get_host()
-            if domain and host and domain in host:
-                return host.rsplit(domain, 1)[0].rstrip('.') or None
+            if domain and self.host and domain in self.host:
+                return self.host.rsplit(domain, 1)[0].rstrip('.') or None
         return None
 
     def get_tld(self):
-        if not self.decoded or not self._url:
-            raise UrlNotDecoded("You must call pslfaup.decode() first")
+        if self.tld:
+            return self.tld
 
-        if self.get_host() is not None and not self.ip_as_host:
-            return self.psl.publicsuffix(self.get_host())
+        if self.host is not None and not self.ip_as_host:
+            for added_tld in ADDED_TLD:
+                if self.host.endswith(added_tld):
+                    print('added')
+                    self.tld = added_tld
+                    return added_tld
+            print('standard')
+            self.tld = self.psl.publicsuffix(self.host)
+            return self.tld
         return None
 
     def get_port(self):
@@ -198,7 +215,7 @@ class PSLFaup:
         self._retval["domain"] = self.get_domain()
         # self._retval["domain_without_tld"] = self.get_domain_without_tld()
         self._retval["subdomain"] = self.get_subdomain()
-        self._retval["host"] = self.get_host()
+        self._retval["host"] = self.host
         self._retval["port"] = self.get_port()
         self._retval["resource_path"] = self.get_resource_path()
         self._retval["query_string"] = self.get_query_string()
@@ -224,4 +241,4 @@ def unparse_url(url):
 
 
 if __name__ == '__main__':
-    print(unparse_url('TEST.onion'))
+    print(unparse_url('http://www.TEST.github.io'))
