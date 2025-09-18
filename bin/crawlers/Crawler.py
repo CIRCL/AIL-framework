@@ -375,8 +375,8 @@ class Crawler(AbstractModule):
             print('task:   ', task.uuid, 'completed')
             print()
         else:
-            print('capture:', capture.uuid, 'Unsafe Content Filtered')
-            print('task:   ', task.uuid, 'Unsafe Content Filtered')
+            print('capture:', capture.uuid, 'Unsafe Content Filtered or error')
+            print('task:   ', task.uuid, 'Unsafe Content Filtered or error')
             print()
 
         # onion/i2p messages correlation
@@ -421,6 +421,37 @@ class Crawler(AbstractModule):
             item = Item(item_id)
             print(item.id)
 
+            # TITLE
+            signal.alarm(60)
+            try:
+                title_content = crawlers.extract_title_from_html(entries['html'])
+            except TimeoutException:
+                self.logger.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
+                title_content = None
+            else:
+                signal.alarm(0)
+
+            # DOM-HASH
+            dom_hash = DomHashs.create(entries['html'])
+
+            # FILTER I2P 'Website Unknown' and 'Website Unreachable'
+            if self.domain.id.endswith('.i2p'):
+                if dom_hash == '186eff95227efa351e6acfc00a807a7b' and title_content == 'Website Unreachable':
+                    print('I2P Website Unreachable')
+                    return False
+                if dom_hash == 'd71f204a2ee135a45b1e34deb8377094' and title_content == 'Website Unknown':
+                    print('Website Unknown - Website Not Found in Addressbook')
+                    return False
+
+            # DOM-HASH
+            dom_hash.add(self.date.replace('/', ''), item)
+            dom_hash.add_correlation('domain', '', self.domain.id)
+
+            if self.domain.id.endswith('.i2p'):
+                if
+                if title_content == 'Website Unknown' or title_content == 'Website Unreachable':
+                    return False
+
             gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
             # send item to Global
             relay_message = f'crawler {gzip64encoded}'
@@ -436,21 +467,7 @@ class Crawler(AbstractModule):
                 self.root_item = item_id
             parent_id = item_id
 
-            # DOM-HASH
-            dom_hash = DomHashs.create(entries['html'])
-            dom_hash.add(self.date.replace('/', ''), item)
-            dom_hash.add_correlation('domain', '', self.domain.id)
-
             # TITLE
-            signal.alarm(60)
-            try:
-                title_content = crawlers.extract_title_from_html(entries['html'])
-            except TimeoutException:
-                self.logger.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
-                title_content = None
-            else:
-                signal.alarm(0)
-
             if title_content:
                 title = Titles.create_title(title_content)
                 title.add(item.get_date(), item)
