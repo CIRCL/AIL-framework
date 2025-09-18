@@ -431,21 +431,22 @@ class Crawler(AbstractModule):
             else:
                 signal.alarm(0)
 
-            # DOM-HASH
-            dom_hash = DomHashs.create(entries['html'])
+            # DOM-HASH ID
+            dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
             if self.domain.id.endswith('.i2p'):
-                if dom_hash == '186eff95227efa351e6acfc00a807a7b':  # 'Website Unreachable'
+                if dom_hash_id == '186eff95227efa351e6acfc00a807a7b':  # 'Website Unreachable'
                     print(title_content.encode())
                     print('I2P Website Unreachable')
                     return False
-                if dom_hash == 'd71f204a2ee135a45b1e34deb8377094':  # 'Website Unknown'
+                if dom_hash_id == 'd71f204a2ee135a45b1e34deb8377094':  # 'Website Unknown'
                     print(title_content.encode())
                     print('Website Unknown - Website Not Found in Addressbook')
                     return False
 
             # DOM-HASH
+            dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
             dom_hash.add(self.date.replace('/', ''), item)
             dom_hash.add_correlation('domain', '', self.domain.id)
 
