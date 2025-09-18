@@ -141,8 +141,10 @@ class PSLFaup:
     def get_domain(self):
         if not self.decoded or not self._url:
             raise UrlNotDecoded("You must call pslfaup.decode() first")
+        if self.ip_as_host:
+            return self.ip_as_host
 
-        if self.host is not None and not self.ip_as_host:
+        if self.host is not None:
             domain = self.host[:-(len(self.get_tld()) + 1)].rsplit('.', 1)[-1]
             if domain:
                 return f'{domain}.{self.tld}'
