@@ -435,88 +435,90 @@ class Crawler(AbstractModule):
             dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
+            filter_page = False
             if self.domain.id.endswith('.i2p'):
-                if dom_hash_id == '186eff95227efa351e6acfc00a807a7b':  # 'Website Unreachable'
+                if dom_hash_id == '186eff95227efa351e6acfc00a807a7b' or dom_hash_id == '58f5624724ece6452bf2fd50975df06a':  # 'Website Unreachable'
                     print(title_content.encode())
                     print('I2P Website Unreachable')
-                    return False
+                    filter_page = True
                 elif dom_hash_id == 'd71f204a2ee135a45b1e34deb8377094':  # b'Website Unknown'
                     print(title_content.encode())
                     print('Website Unknown - Website Not Found in Addressbook')
-                    return False
+                    filter_page = True
                 elif dom_hash_id == 'a530b30b5921d45f591a0c6a716ffcd9':  # 'Website Unreachable'
                     print(title_content.encode())
                     print('Invalid Destination')
-                    return False
+                    filter_page = True
 
+            if not filter_page:
 
-            # DOM-HASH
-            dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
-            dom_hash.add(self.date.replace('/', ''), item)
-            dom_hash.add_correlation('domain', '', self.domain.id)
+                # DOM-HASH
+                dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
+                dom_hash.add(self.date.replace('/', ''), item)
+                dom_hash.add_correlation('domain', '', self.domain.id)
 
-            gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
-            # send item to Global
-            relay_message = f'crawler {gzip64encoded}'
-            self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
+                gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
+                # send item to Global
+                relay_message = f'crawler {gzip64encoded}'
+                self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
 
-            # Tag # TODO replace me with metadata to tags
-            msg = f'infoleak:submission="crawler"'  # TODO FIXME
-            self.add_message_to_queue(obj=item, message=msg, queue='Tags')
+                # Tag # TODO replace me with metadata to tags
+                msg = f'infoleak:submission="crawler"'  # TODO FIXME
+                self.add_message_to_queue(obj=item, message=msg, queue='Tags')
 
-            # TODO replace me with metadata to add
-            crawlers.create_item_metadata(item_id, last_url, parent_id)
-            if self.root_item is None:
-                self.root_item = item_id
-            parent_id = item_id
+                # TODO replace me with metadata to add
+                crawlers.create_item_metadata(item_id, last_url, parent_id)
+                if self.root_item is None:
+                    self.root_item = item_id
+                parent_id = item_id
 
-            # TITLE
-            if title_content:
-                title = Titles.create_title(title_content)
-                title.add(item.get_date(), item)
-                # Tracker
-                self.tracker_yara.compute_manual(title)
-                # if not title.is_tags_safe():
-                #     unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
-                #     self.domain.add_tag(unsafe_tag)
-                #     item.add_tag(unsafe_tag)
-                self.add_message_to_queue(obj=title, message=self.domain.id, queue='Titles')
+                # TITLE
+                if title_content:
+                    title = Titles.create_title(title_content)
+                    title.add(item.get_date(), item)
+                    # Tracker
+                    self.tracker_yara.compute_manual(title)
+                    # if not title.is_tags_safe():
+                    #     unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                    #     self.domain.add_tag(unsafe_tag)
+                    #     item.add_tag(unsafe_tag)
+                    self.add_message_to_queue(obj=title, message=self.domain.id, queue='Titles')
 
-            # SCREENSHOT
-            if self.screenshot:
-                if 'png' in entries and entries.get('png'):
-                    screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
-                    if screenshot:
-                        if not screenshot.is_tags_safe():
-                            unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
-                            self.domain.add_tag(unsafe_tag)
-                            item.add_tag(unsafe_tag)
-                        # Remove Placeholder pages # TODO Replace with warning list ???
-                        if screenshot.id not in self.placeholder_screenshots:
-                            # Create Correlations
-                            screenshot.add_correlation('item', '', item_id)
-                            screenshot.add_correlation('domain', '', self.domain.id)
-                        self.add_message_to_queue(obj=screenshot, queue='Images')
-            # HAR
-            if self.har:
-                if 'har' in entries and entries.get('har'):
-                    har_id = crawlers.create_har_id(self.date, item_id)
-                    crawlers.save_har(har_id, entries['har'])
-                    for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
-                        print(cookie_name)
-                        cookie = CookiesNames.create(cookie_name)
-                        cookie.add(self.date.replace('/', ''), self.domain)
-                    for etag_content in crawlers.extract_etag_from_har(entries['har']):
-                        print(etag_content)
-                        etag = Etags.create(etag_content)
-                        etag.add(self.date.replace('/', ''), self.domain)
-                    crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
+                # SCREENSHOT
+                if self.screenshot:
+                    if 'png' in entries and entries.get('png'):
+                        screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
+                        if screenshot:
+                            if not screenshot.is_tags_safe():
+                                unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                                self.domain.add_tag(unsafe_tag)
+                                item.add_tag(unsafe_tag)
+                            # Remove Placeholder pages # TODO Replace with warning list ???
+                            if screenshot.id not in self.placeholder_screenshots:
+                                # Create Correlations
+                                screenshot.add_correlation('item', '', item_id)
+                                screenshot.add_correlation('domain', '', self.domain.id)
+                            self.add_message_to_queue(obj=screenshot, queue='Images')
+                # HAR
+                if self.har:
+                    if 'har' in entries and entries.get('har'):
+                        har_id = crawlers.create_har_id(self.date, item_id)
+                        crawlers.save_har(har_id, entries['har'])
+                        for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
+                            print(cookie_name)
+                            cookie = CookiesNames.create(cookie_name)
+                            cookie.add(self.date.replace('/', ''), self.domain)
+                        for etag_content in crawlers.extract_etag_from_har(entries['har']):
+                            print(etag_content)
+                            etag = Etags.create(etag_content)
+                            etag.add(self.date.replace('/', ''), self.domain)
+                        crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
 
-            # FAVICON
-            if entries.get('potential_favicons'):
-                for favicon in entries['potential_favicons']:
-                    fav = Favicons.create(favicon)
-                    fav.add(item.get_date(), item)
+                # FAVICON
+                if entries.get('potential_favicons'):
+                    for favicon in entries['potential_favicons']:
+                        fav = Favicons.create(favicon)
+                        fav.add(item.get_date(), item)
 
         # Next Children
         entries_children = entries.get('children')
