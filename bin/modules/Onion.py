@@ -79,8 +79,6 @@ class Onion(AbstractModule):
 
         # max execution time on regex
         res = self.regex_findall(self.onion_regex, obj.get_id(), content, r_set=True)
-        for r in res:
-            domains.add(r['domain'])
         for x in res:
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
