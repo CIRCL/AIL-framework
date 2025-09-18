@@ -440,10 +440,15 @@ class Crawler(AbstractModule):
                     print(title_content.encode())
                     print('I2P Website Unreachable')
                     return False
-                if dom_hash_id == 'd71f204a2ee135a45b1e34deb8377094':  # 'Website Unknown'
+                elif dom_hash_id == 'd71f204a2ee135a45b1e34deb8377094':  # b'Website Unknown'
                     print(title_content.encode())
                     print('Website Unknown - Website Not Found in Addressbook')
                     return False
+                elif dom_hash_id == 'a530b30b5921d45f591a0c6a716ffcd9':  # 'Website Unreachable'
+                    print(title_content.encode())
+                    print('Invalid Destination')
+                    return False
+
 
             # DOM-HASH
             dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
