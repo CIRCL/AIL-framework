@@ -55,6 +55,8 @@ class Domain(AbstractObject):
     def get_domain_type(self):
         if str(self.id).endswith('.onion'):
             return 'onion'
+        elif str(self.id).endswith('.i2p'):
+            return 'i2p'
         else:
             return 'web'
 
@@ -262,6 +264,9 @@ class Domain(AbstractObject):
         if self.get_domain_type() == 'onion':
             style = 'fas'
             icon = '\uf06e'
+        elif self.get_domain_type() == 'i2p':
+            style = 'fas'
+            icon = '\uf21b'  # TODO change me
         else:
             style = 'fab'
             icon = '\uf13b'
@@ -525,7 +530,7 @@ def _write_in_zip_buffer(zf, path, filename):
 ############################################################################
 
 def get_all_domains_types():
-    return ['onion', 'web']  # i2p
+    return ['i2p', 'onion', 'web']
 
 def sanitize_domains_types(types):
     domains_types = get_all_domains_types()
@@ -628,14 +633,11 @@ def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, do
 def get_domains_by_month(date_month, domains_types, up=True, down=True):
     start = f'{date_month}01'
     end = Date.get_month_last_day(date_month)
-    if 'onion' in domains_types:
-        domains = get_domains_by_daterange(start, end, 'onion', up=up, down=down)
-    else:
-        domains = []
-    if 'web' in domains_types:
-        web = get_domains_by_daterange(start, end, 'web', up=up, down=down)
-        if web:
-            domains.extend(web)
+    domains = []
+    for domain_type in domains_types:
+        doms = get_domains_by_daterange(start, end, domain_type, up=up, down=down)
+        if doms:
+            domains.extend(doms)
     return domains
 
 def get_domain_up_iterator():
@@ -653,7 +655,7 @@ def get_domains_meta(domains):
 # TODO ADD TAGS FILTER
 def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
     if not domain_types:
-        domain_types = ['onion', 'web']
+        domain_types = get_all_domains_types()
     if not tags:
         domains = []
         if not date_from and not date_to:
@@ -683,6 +685,8 @@ def sanitize_domain_name_to_search(name_to_search, domain_type):
         return ""
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
+    elif domain_type == 'ip':
+        r_name = r'[a-z0-9-\.]+'
     else:
         r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name

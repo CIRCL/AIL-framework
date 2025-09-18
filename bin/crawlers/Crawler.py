@@ -379,7 +379,7 @@ class Crawler(AbstractModule):
             print('task:   ', task.uuid, 'Unsafe Content Filtered')
             print()
 
-        # onion messages correlation
+        # onion/i2p messages correlation
         if crawlers.is_domain_correlation_cache(self.original_domain.id):
             crawlers.save_domain_correlation_cache(self.original_domain.was_up(), domain)
 

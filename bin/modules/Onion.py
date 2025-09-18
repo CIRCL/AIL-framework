@@ -45,16 +45,13 @@ class Onion(AbstractModule):
         self.screenshot = config_loader.get_config_boolean('Crawler', 'default_screenshot')
 
         self.onion_regex = r"((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.onion)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
-        # self.i2p_regex = r"((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
+        self.i2p_regex = r"((http|https|ftp)?(?:\://)?([a-zA-Z0-9\.\-]+(\:[a-zA-Z0-9\.&%\$\-]+)*@)*((25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9])\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[1-9]|0)\.(25[0-5]|2[0-4][0-9]|[0-1]{1}[0-9]{2}|[1-9]{1}[0-9]{1}|[0-9])|localhost|([a-zA-Z0-9\-]+\.)*[a-zA-Z0-9\-]+\.i2p)(\:[0-9]+)*(/($|[a-zA-Z0-9\.\,\?\'\\\+&%\$#\=~_\-]+))*)"
         re.compile(self.onion_regex)
-        # re.compile(self.i2p_regex)
+        re.compile(self.i2p_regex)
 
         self.logger.info(f"Module: {self.module_name} Launched")
 
-        # TEMP var: SAVE I2P Domain (future I2P crawler)
-        # self.save_i2p = config_loader.get_config_boolean("Onion", "save_i2p")
-
-    def extract(self, obj, content, tag):
+    def extract(self, obj, content, tag): # TODO add I2P
         extracted = []
         if obj.type == 'item':
             if 'infoleak:submission="crawler"' in obj.get_tags():
@@ -74,6 +71,7 @@ class Onion(AbstractModule):
 
     def compute(self, message):
         onion_urls = []
+        i2p_urls = []
         domains = set()
 
         obj = self.get_obj()
@@ -81,6 +79,8 @@ class Onion(AbstractModule):
 
         # max execution time on regex
         res = self.regex_findall(self.onion_regex, obj.get_id(), content, r_set=True)
+        for r in res:
+            domains.add(r['domain'])
         for x in res:
             # String to tuple
             x = x[2:-2].replace(" '", "").split("',")
@@ -91,7 +91,7 @@ class Onion(AbstractModule):
 
             # TODO Crawl subdomain
             if len(url) >= 62:
-                print(url)
+                # perf
                 if len(url) == 69 and url.endswith(".onion"):
                     domain = url[7:]
                     domains.add(domain)
@@ -103,7 +103,42 @@ class Onion(AbstractModule):
                             domains.add(domain)
                             onion_urls.append(url)
 
-        if onion_urls:
+        res = self.regex_findall(self.i2p_regex, obj.get_id(), content, r_set=True)
+        for x in res:
+            # String to tuple
+            x = x[2:-2].replace(" '", "").split("',")
+            url = x[0]
+            if url.startswith("://"):
+                url = url[3:]
+            url = url.lower()
+
+            # perf
+            if url.endswith('b32.i2p'):
+                b32_url = url
+                if url.startswith('http://'):
+                    b32_url = url[7:]
+                if crawlers.is_valid_i2p_b32_domain(b32_url):
+                    domains.add(b32_url)
+                    i2p_urls.append(b32_url)
+                    continue
+            elif url.endswith('.i2p'):
+                dom_url = url
+                if url.startswith('http://'):
+                    dom_url = url[7:]
+                if '.' not in dom_url[:-4]:
+                    if crawlers.is_valid_i2p_domain(dom_url):
+                        domains.add(dom_url)
+                        i2p_urls.append(dom_url)
+                        continue
+
+            domain = psl_faup.get_domain(url)
+            if domain:
+                if crawlers.is_valid_i2p_domain(domain):
+                    domains.add(domain)
+                    i2p_urls.append(url)
+
+        # Onion + I2P
+        if domains:
             if crawlers.is_crawler_activated():
                 for domain in domains:
                     dom = Domain(domain)
@@ -128,11 +163,12 @@ class Onion(AbstractModule):
                             crawlers.add_domain_correlation_cache(domain, f'chat:{chat_subtype}:{chat_id}')
                             crawlers.add_domain_correlation_cache(domain, self.obj.get_global_id())
             else:
-                print(f'Detected {len(domains)} .onion(s);{self.obj.get_global_id()}')
+                print(f'Detected {len(domains)} .onion/i2p;{self.obj.get_global_id()}')
 
-            # TAG Object
-            tag = 'infoleak:automatic-detection="onion"'
-            self.add_message_to_queue(message=tag, queue='Tags')
+            if onion_urls:
+                # TAG Object
+                tag = 'infoleak:automatic-detection="onion"'
+                self.add_message_to_queue(message=tag, queue='Tags')
 
 
 if __name__ == "__main__":

@@ -175,10 +175,8 @@ class PSLFaup:
         if self.host is not None and not self.ip_as_host:
             for added_tld in ADDED_TLD:
                 if self.host.endswith(added_tld):
-                    print('added')
                     self.tld = added_tld
                     return added_tld
-            print('standard')
             self.tld = self.psl.publicsuffix(self.host)
             return self.tld
         return None

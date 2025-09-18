@@ -195,6 +195,32 @@ def is_valid_onion_domain(domain):
     #         return True
     # return False
 
+def get_reserved_i2p_domains():
+    return {'console.i2p', 'mail.i2p', 'proxy.i2p', 'router.i2p'}
+
+def is_valid_i2p_b32_domain(domain):
+    dom = domain[:-8]
+    # Distinguish old from new flavors by length. Old b32 addresses are always {52 chars}.b32.i2p.
+    # New ones are {56+ chars}.b32.i2p
+    if len(dom) == 52 or 56 >= len(dom) <= 64:
+        return dom.isalnum()
+    else:
+        return False
+
+def is_valid_i2p_domain(domain):
+    if not domain.endswith('.i2p'):
+        return False
+    if domain.endswith('b32.i2p'):
+        return is_valid_i2p_b32_domain(domain)
+    else:
+        if domain in get_reserved_i2p_domains():
+            return False
+        # 67 characters maximum, including the '.i2p'
+        if len(domain) > 67:
+            return False
+        return domain[:-4].replace('-', '').isalnum()
+
+
 def is_valid_domain(domain):
     unpack_domain = psl_faup.get_domain(domain)
     return domain == unpack_domain
@@ -1442,8 +1468,11 @@ class CrawlerSchedule:
             self._set_field('cookiejar', cookiejar)
         if header:
             self._set_field('header', header)
+
+        if url_decoded['domain'].endswith('i2p'):
+            proxy = None
         if proxy:
-            if proxy == 'web':
+            if proxy == 'web' or proxy == 'i2p':
                 proxy = None
             elif proxy == 'force_tor' or proxy == 'tor' or proxy == 'onion':
                 proxy = 'force_tor'
@@ -1782,7 +1811,9 @@ class CrawlerTask:
         har = int(har)
         screenshot = int(screenshot)
 
-        if proxy == 'web':
+        if domain.endswith('i2p'):
+            proxy = None
+        if proxy == 'web' or proxy == 'i2p':
             proxy = None
         elif proxy == 'force_tor' or proxy == 'tor' or proxy == 'onion':
             proxy = 'force_tor'
@@ -1954,7 +1985,7 @@ def api_parse_task_dict_basic(data, user_id):
     proxy = data.get('proxy', None)
     if proxy == 'onion' or proxy == 'tor' or proxy == 'force_tor':
         proxy = 'force_tor'
-    elif proxy == 'web':
+    elif proxy == 'web' or proxy == 'i2p':
         proxy = None
     elif proxy:
         verify = api_verify_proxy(proxy)
@@ -1964,7 +1995,7 @@ def api_parse_task_dict_basic(data, user_id):
     tags = data.get('tags', [])
 
     data = {'depth_limit': depth_limit, 'har': har, 'screenshot': screenshot, 'proxy': proxy, 'tags': tags}
-    if url :
+    if url:
         data['url'] = url
     elif urls:
         data['urls'] = urls
@@ -2087,7 +2118,7 @@ def is_crawler_activated():
     return activate_crawler == 'True'
 
 def get_crawler_all_types():
-    return ['onion', 'web']
+    return ['i2p', 'onion', 'web']
 
 ##-- CRAWLER GLOBAL --##
 
