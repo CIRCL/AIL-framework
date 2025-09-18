@@ -447,11 +447,6 @@ class Crawler(AbstractModule):
             dom_hash.add(self.date.replace('/', ''), item)
             dom_hash.add_correlation('domain', '', self.domain.id)
 
-            if self.domain.id.endswith('.i2p'):
-                if
-                if title_content == 'Website Unknown' or title_content == 'Website Unreachable':
-                    return False
-
             gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
             # send item to Global
             relay_message = f'crawler {gzip64encoded}'
