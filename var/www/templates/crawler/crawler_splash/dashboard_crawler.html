@@ -79,7 +79,7 @@
 									</div>
 									<div class="col-7">
 										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_total">{{ crawlers_latest_stats['web']['crawled'] }}</a> <small>Crawled</small>
-										<span class="badge badge-warning ml-md-3" id="stat_web_queue">{{ crawlers_latest_stats['web']['queue'] }}</span> Queue</small>
+										<span class="badge badge-warning ml-md-3" id="stat_web_queue">{{ crawlers_latest_stats['web']['queue'] }}</span> <small>Queue</small>
 									</div>
 								</div>
 							</div>
