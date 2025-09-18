@@ -436,10 +436,12 @@ class Crawler(AbstractModule):
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
             if self.domain.id.endswith('.i2p'):
-                if dom_hash == '186eff95227efa351e6acfc00a807a7b' and title_content == 'Website Unreachable':
+                if dom_hash == '186eff95227efa351e6acfc00a807a7b':  # 'Website Unreachable'
+                    print(title_content.encode())
                     print('I2P Website Unreachable')
                     return False
-                if dom_hash == 'd71f204a2ee135a45b1e34deb8377094' and title_content == 'Website Unknown':
+                if dom_hash == 'd71f204a2ee135a45b1e34deb8377094':  # 'Website Unknown'
+                    print(title_content.encode())
                     print('Website Unknown - Website Not Found in Addressbook')
                     return False
 
