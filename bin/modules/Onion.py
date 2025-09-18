@@ -142,7 +142,7 @@ class Onion(AbstractModule):
                     dom = Domain(domain)
                     # Domain Crawled today or UP this month
                     if dom.is_down_today() or dom.is_up_this_month():
-                        return None
+                        continue
 
                     task_uuid = crawlers.create_task(domain, parent=obj.get_id(), priority=0, new_task=True,
                                                      har=self.har, screenshot=self.screenshot)
