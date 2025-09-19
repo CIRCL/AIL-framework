@@ -662,7 +662,7 @@ def domains_search_name():
 def domains_search_today():
     dom_types = request.args.get('type')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()
@@ -696,7 +696,7 @@ def domains_search_date():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()

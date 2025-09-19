@@ -30,7 +30,7 @@
         </div>
         <div class="col-6">
           <div class="custom-control custom-switch">
-            <input class="custom-control-input" type="checkbox" name="up" value="True" id="domains_up_id" {% if filter_up is none or filter_up %}checked{% endif %}>
+            <input class="custom-control-input" type="checkbox" name="up" value="True" id="domains_up_id" {% if not filter_up and not filter_down %}checked{% elif filter_up %}checked{% endif %}>
             <label class="custom-control-label" for="domains_up_id">
               <span class="badge badge-success"><i class="fas fa-check-circle"></i> Domains UP </span>
             </label>
