@@ -160,6 +160,25 @@ def delete_obj_correlations(obj_type, subtype, obj_id):
             subtype2, obj2_id = str_obj.split(':', 1)
             delete_obj_correlation(obj_type, subtype, obj_id, correl_type, subtype2, obj2_id)
 
+def get_obj_one_depth_correlations(obj_type, subtype, obj_id, target_types, intermediate_types=set(), start=None, end=None):
+    matches = set()
+    src_obj_correlations = get_correlations(obj_type, subtype, obj_id, unpack=True)
+    for c_type in src_obj_correlations:
+        if not intermediate_types or c_type in intermediate_types:
+            if src_obj_correlations[c_type]:
+                for intermediate_obj_subtype, intermediate_obj_id in src_obj_correlations[c_type]:
+                    intermediate_obj_correlation = get_correlations(c_type, intermediate_obj_subtype, intermediate_obj_id, unpack=True)
+                    for t_type in intermediate_obj_correlation:
+                        if t_type in target_types:
+                            for t_obj_subtype, t_obj_id in intermediate_obj_correlation[t_type]:
+                                if start:
+                                    if t_obj_id.startswith(start):
+                                        matches.add(f'{t_type}:{t_obj_subtype}:{t_obj_id}')
+                                elif end:
+                                    if t_obj_id.endswith(end):
+                                        matches.add(f'{t_type}:{t_obj_subtype}:{t_obj_id}')
+    return matches
+
 # # bypass max result/objects ???
 # def get_correlation_depht(obj_type, subtype, obj_id, filter_types=[], level=1, nb_max=300):
 #     objs = set()
@@ -234,3 +253,7 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
                 next_level = level - 1
                 _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj=obj_str_id)
 
+
+if __name__ == '__main__':
+    r = get_obj_one_depth_correlations('item', '', '', {'domain'}, intermediate_types=set(), end='.onion')
+    print(r)
