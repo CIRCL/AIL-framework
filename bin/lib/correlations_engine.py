@@ -161,7 +161,7 @@ def delete_obj_correlations(obj_type, subtype, obj_id):
             delete_obj_correlation(obj_type, subtype, obj_id, correl_type, subtype2, obj2_id)
 
 def get_obj_one_depth_correlations(obj_type, subtype, obj_id, target_types, intermediate_types=set(), start=None, end=None):
-    matches = set()
+    matches = []
     src_obj_correlations = get_correlations(obj_type, subtype, obj_id, unpack=True)
     for c_type in src_obj_correlations:
         if not intermediate_types or c_type in intermediate_types:
@@ -173,10 +173,10 @@ def get_obj_one_depth_correlations(obj_type, subtype, obj_id, target_types, inte
                             for t_obj_subtype, t_obj_id in intermediate_obj_correlation[t_type]:
                                 if start:
                                     if t_obj_id.startswith(start):
-                                        matches.add(f'{t_type}:{t_obj_subtype}:{t_obj_id}')
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
                                 elif end:
                                     if t_obj_id.endswith(end):
-                                        matches.add(f'{t_type}:{t_obj_subtype}:{t_obj_id}')
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
     return matches
 
 # # bypass max result/objects ???
