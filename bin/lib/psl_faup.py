@@ -145,6 +145,8 @@ class PSLFaup:
             return self.ip_as_host
 
         if self.host is not None:
+            if self.host == 'localhost':
+                return 'localhost'
             domain = self.host[:-(len(self.get_tld()) + 1)].rsplit('.', 1)[-1]
             if domain:
                 return f'{domain}.{self.tld}'
@@ -175,6 +177,8 @@ class PSLFaup:
             return self.tld
 
         if self.host is not None and not self.ip_as_host:
+            if self.host == 'localhost':
+                return None
             for added_tld in ADDED_TLD:
                 if self.host.endswith(added_tld):
                     self.tld = added_tld

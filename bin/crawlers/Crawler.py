@@ -387,6 +387,7 @@ class Crawler(AbstractModule):
         self.root_item = None
 
     def save_capture_response(self, parent_id, entries):
+        filter_page = False
         print(entries.keys())
         if 'error' in entries:
             # TODO IMPROVE ERROR MESSAGE
@@ -402,21 +403,25 @@ class Crawler(AbstractModule):
             current_domain = unpacked_last_url['domain']
             # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
-                self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
-                if not self.root_item:
-                    self.domain = Domain(current_domain)
-                    # Filter Domain
-                    if self.filter_unsafe_onion:
-                        if current_domain.endswith('.onion'):
-                            if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
-                                return False
+                if current_domain == 'localhost':
+                    self.logger.warning('Filter localhost redirection')
+                    filter_page = True
+                else:
+                    self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
+                    if not self.root_item:
+                        self.domain = Domain(current_domain)
+                        # Filter Domain
+                        if self.filter_unsafe_onion:
+                            if current_domain.endswith('.onion'):
+                                if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
+                                    return False
 
         # TODO LAST URL
         # FIXME
         else:
             last_url = f'http://{self.domain.id}'
 
-        if 'html' in entries and entries.get('html'):
+        if 'html' in entries and entries.get('html') and not filter_page:
             item_id = crawlers.create_item_id(self.items_dir, self.domain.id)
             item = Item(item_id)
             print(item.id)
@@ -435,7 +440,6 @@ class Crawler(AbstractModule):
             dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
-            filter_page = False
             if self.domain.id.endswith('.i2p'):
                 if dom_hash_id == '186eff95227efa351e6acfc00a807a7b' or dom_hash_id == '58f5624724ece6452bf2fd50975df06a':  # 'Website Unreachable'
                     print(title_content.encode())
@@ -448,6 +452,9 @@ class Crawler(AbstractModule):
                 elif dom_hash_id == 'a530b30b5921d45f591a0c6a716ffcd9':  # 'Website Unreachable'
                     print(title_content.encode())
                     print('Invalid Destination')
+                    filter_page = True
+                elif dom_hash_id == 'cf312a7eded2d6261712701d7a06f335':  # 'Error: Request Denied'
+                    print('Error: Request Denied')
                     filter_page = True
 
             if not filter_page:
