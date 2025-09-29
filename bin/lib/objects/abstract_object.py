@@ -148,7 +148,7 @@ class AbstractObject(ABC):
 
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
-        if self.type == 'screenshot' and tag not in Tag.is_tags_safe(tag):
+        if self.type == 'screenshot' and not Tag.is_tags_safe(tag):
             domains = self.get_correlation('domain').get('domain', [])
             for domain_id in domains:
                 Tag.add_object_tag(tag, 'domain', domain_id)
