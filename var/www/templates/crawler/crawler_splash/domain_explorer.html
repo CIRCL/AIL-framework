@@ -61,6 +61,8 @@
                         {% set object_name="domain" %}
                         {%if domain_type=='onion'%}
                             {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
+                        {%elif domain_type=='i2p'%}
+                            {% set target_url=url_for('crawler_splash.domains_explorer_i2p') + "?domain_type=i2p" %}
                         {%else%}
                             {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
                         {%endif%}
