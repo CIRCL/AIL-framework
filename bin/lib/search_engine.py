@@ -6,6 +6,7 @@ import logging
 import logging.config
 import sys
 import time
+import uuid
 
 import meilisearch
 
@@ -30,6 +31,11 @@ IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearc
 M_URL = config_loader.get_config_str('Indexer', 'meilisearch_url')
 M_KEY = config_loader.get_config_str('Indexer', 'meilisearch_key')
 config_loader = None
+
+
+def get_obj_uuid5(obj_gid):
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, obj_gid))
+
 
 def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
@@ -174,6 +180,14 @@ def index_domains_descriptions():
     for dom_id in Domains.get_domains_up_by_type('web'):
         index_domain_description(dom_id)
 
+
+def remove_document(index_name, obj_gid):
+    Engine.remove(index_name, get_obj_uuid5(obj_gid))
+
+
+def delete_index(index_name):
+    Engine._delete(index_name)
+    Engine.client.create_index(index_name, {'primaryKey': 'uuid'})
 
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')

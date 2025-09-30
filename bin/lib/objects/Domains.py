@@ -356,6 +356,11 @@ class Domain(AbstractObject):
             description = description.replace("`", ' ')
         return description
 
+    def delete_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        self._delete_field(f'desc:{model}')
+
     ## -Descriptions- ##
 
     ## Search ##
