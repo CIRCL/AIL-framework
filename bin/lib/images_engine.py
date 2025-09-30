@@ -221,12 +221,12 @@ def check_is_image_csam(obj_gid, image_description=False):
             # TODO LOG
             return {"status": "error", "reason": f"ollama requests error: {res.status_code}, {res.text}"}, 400
         else:
-            r = res.json()
+            r = res.json()['response']
             print(r)
             if r:
-                if 'YES' in res:
+                if 'YES' in r:
                     is_csam = True
-                elif 'NO' in res:
+                elif 'NO' in r:
                     is_csam = False
 
     # TODO LOG NONE result
