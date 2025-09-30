@@ -38,7 +38,7 @@ def get_image_obj(obj_gid):
 
 def create_ollama_domain_data(model, descriptions):
     return json.dumps({'model': model,
-                       'prompt': f'From this list of images descriptions, Describe this domain\n\n{descriptions}',
+                       'prompt': f'From this list of images descriptions of one domain, describe this domain.\n\n{descriptions}',
                        'stream': False
                        })
 
@@ -263,6 +263,8 @@ def check_if_domain_csam(domain_id):
 
 
 if __name__ == '__main__':
-    update_domains_descriptions()
+    update_domain_description(Domains.Domain(''), get_default_image_description_model())
+    check_is_image_csam('', image_description=False)
+    # update_domains_descriptions()
     # check_images_csam()
     # _create_image_description()
