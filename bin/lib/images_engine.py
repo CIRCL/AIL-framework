@@ -221,12 +221,12 @@ def check_is_image_csam(obj_gid, image_description=False):
             # TODO LOG
             return {"status": "error", "reason": f"ollama requests error: {res.status_code}, {res.text}"}, 400
         else:
-            r = res.json()['response']
+            r = res.json()['response'].lower()
             print(r)
             if r:
-                if 'YES' in r:
+                if 'yes' in r:
                     is_csam = True
-                elif 'NO' in r:
+                elif 'no' in r:
                     is_csam = False
 
     # TODO LOG NONE result
@@ -264,7 +264,7 @@ def check_if_domain_csam(domain_id):
 
 if __name__ == '__main__':
     # api_get_image_description('')
-    update_domain_description(Domains.Domain(''), get_default_image_description_model())
+    # update_domain_description(Domains.Domain(''), get_default_image_description_model())
     check_is_image_csam('', image_description=False)
     # update_domains_descriptions()
     # check_images_csam()
