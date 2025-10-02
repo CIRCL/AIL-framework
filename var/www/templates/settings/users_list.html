@@ -48,7 +48,12 @@
                     <tbody id="tbody_last_crawled">
                     {% for user in meta['users'] %}
                         <tr>
-                            <td>{{user['id']}}</td>
+                            <td>
+                                {{user['id']}}
+                                {% if user['is_disabled'] %}
+                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {{ user['org_name'] }}<br>
                                 {{user['org']}}
@@ -69,12 +74,16 @@
                             <td>{% if user['last_seen'] %}{{user['last_seen']}}{% else %}-{% endif %}</td>
                             <td>{{user['role']}}</td>
                             <td>
-                                <span id="censored_key_{{loop.index0}}">
-                                    {{user['api_key'][:4]}}**...**{{user['api_key'][-4:]}}
-                                </span>
-                                <span id="uncensored_key_{{loop.index0}}" style="display: none;">
-                                    {{user['api_key']}}
-                                </span>
+                                {% if user['api_key'] %}
+                                    <span id="censored_key_{{loop.index0}}">
+                                        {{user['api_key'][:4]}}**...**{{user['api_key'][-4:]}}
+                                    </span>
+                                    <span id="uncensored_key_{{loop.index0}}" style="display: none;">
+                                        {{user['api_key']}}
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                {% endif %}
                             </td>
                             <td>
                                 <a class="btn btn-outline-info ml-3 px-1 py-0" href="{{ url_for('settings_b.new_token_user', user_id=user['id']) }}">
@@ -110,6 +119,15 @@
                                     <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
+                                    {% if user['is_disabled'] %}
+                                        <a class="btn btn-outline-success ml-3 px-1 py-0" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
+                                            <i class="fas fa-user-slash"></i>
+                                        </a>
+                                    {% endif %}
                                     <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>

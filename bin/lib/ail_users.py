@@ -145,6 +145,7 @@ def _delete_user_token(user_id):
     current_token = get_user_token(user_id)
     if current_token:
         r_serv_db.hdel('ail:users:tokens', current_token)
+        r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'token')
 
 def _set_user_token(user_id, token):
     r_serv_db.hset('ail:users:tokens', token, user_id)
@@ -326,16 +327,7 @@ def update_user_last_seen_api(user_id):
     r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_seen_api', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
 
 def get_disabled_users():
-    return r_serv_db.smembers(f'ail:users:disabled')
-
-def is_user_disabled(user_id):
-    return r_serv_db.sismember(f'ail:users:disabled', user_id)
-
-def disable_user(user_id):
-    r_serv_db.sadd(f'ail:users:disabled', user_id)
-
-def enable_user(user_id):
-    r_serv_db.srem(f'ail:users:disabled', user_id)
+    return r_serv_db.smembers('ail:users:disabled')
 
 def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False, send_email=False):
     # # TODO: check password strength
@@ -506,9 +498,6 @@ class AILUser(UserMixin):
 
     ## SESSION ##
 
-    def is_disabled(self):
-        return is_user_disabled(self.user_id)
-
     def get_session(self):
         return self.id
 
@@ -564,6 +553,9 @@ class AILUser(UserMixin):
         _set_user_token(self.user_id, new_api_key)
         return new_api_key
 
+    def delete_api_key(self):
+        _delete_user_token(self.user_id)
+
     ## OTP ##
 
     def is_2fa_setup(self):
@@ -604,12 +596,28 @@ class AILUser(UserMixin):
     def get_role(self):
         return r_serv_db.hget(f'ail:user:metadata:{self.user_id}', 'role')
 
+    def delete_role(self):
+        for role_id in get_roles():
+            r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
+
     ##  ##
+    def is_disabled(self):
+        return r_serv_db.sismember('ail:users:disabled', self.user_id)
+
+    def enable_user(self):
+        self.new_api_key()
+        set_user_role(self.user_id, self.get_role())
+        r_serv_db.srem('ail:users:disabled', self.user_id)
+
+    def disable_user(self):
+        kill_session_user(self.user_id)
+        self.delete_api_key()
+        self.delete_role()
+        r_serv_db.sadd('ail:users:disabled', self.user_id)
 
     def delete(self):
         kill_session_user(self.user_id)
-        for role_id in get_roles():
-            r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
+        self.delete_role()
         user_token = self.get_api_key()
         if user_token:
             r_serv_db.hdel('ail:users:tokens', user_token)
@@ -625,7 +633,7 @@ class AILUser(UserMixin):
 
 def api_get_users_meta():
     meta = {'users': [], 'active': get_nb_active_users(), 'logged': get_nb_sessions()}
-    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
+    options = {'api_key', 'creator', 'created_at', 'is_disabled', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))
@@ -657,23 +665,23 @@ def api_logout_users(admin_id, ip_address, user_agent):
     access_logger.info('Logout all users', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return kill_sessions(), 200
 
-def api_disable_user(admin_id, user_id): # TODO LOG ADMIN ID
+def api_disable_user(admin_id, user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
     if user.is_disabled():
         return {'status': 'error', 'reason': 'User is already disabled'}, 400
-    print(admin_id)
-    disable_user(user_id)
+    access_logger.info(f'Disable User {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+    return user.disable_user(), 200
 
-def api_enable_user(admin_id, user_id): # TODO LOG ADMIN ID
+def api_enable_user(admin_id, user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
     if not user.is_disabled():
         return {'status': 'error', 'reason': 'User is not disabled'}, 400
-    print(admin_id)
-    enable_user(user_id)
+    access_logger.info(f'Enable User {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+    return user.enable_user(), 200
 
 def api_enable_user_otp(user_id, ip_address):
     user = AILUser(user_id)
@@ -854,10 +862,3 @@ def check_user_role_integrity(user_id):
             return False
     return True
 
-# TODO
-# ACL:
-#       - mass tag correlation graph
-#
-#
-#
-#

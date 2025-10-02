@@ -26,6 +26,7 @@ from lib import ail_queues
 from lib import ail_users
 from lib import d4
 from lib import passivedns
+# from exporter.MailExporter import MailExporterUsers
 from lib.objects import SSHKeys
 from packages import git_status
 
@@ -269,6 +270,30 @@ def user_logout():
 def users_logout():
     admin_id = current_user.get_user_id() # TODO LOGS
     r = ail_users.api_logout_users(admin_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/disable", methods=['GET'])
+@login_required
+@login_admin
+def user_disable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_disable_user(admin_id, user_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/enable", methods=['GET'])
+@login_required
+@login_admin
+def user_enable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_enable_user(admin_id, user_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -560,9 +585,20 @@ def passive_ssh_test():
     else:
         return redirect(url_for('settings_b.passive_ssh'))
 
-# @settings.route("/settings/ail", methods=['GET'])
+# @settings_b.route("/settings/email/users", methods=['GET'])
 # @login_required
 # @login_admin
-# def ail_configs():
-#     return render_template("ail_configs.html", passivedns_enabled=None)
+# def email_users():
+#     if request.method == 'POST':
+#         subject = request.form.get('subject')
+#         content = request.form.get('content')
+#         if not subject or not content:
+#             return create_json_response({'status': 'error', 'reason': 'Missing subject or content'}, 400)
+#         exporter = MailExporterUsers()
+#         exporter.export(ail_users.get_users(), subject, content)
+#         return redirect(url_for('settings_b.email_users', send=True))
+#     else:
+#         send = request.args.get('send')
+#         return render_template("email_users.html", send=send, acl_admin=acl_admin)
+
 
