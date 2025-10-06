@@ -60,13 +60,22 @@
 {#                    <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 400px">#}
                     <div>
                         <a class="btn btn-light border-secondary" style="" href="{{ url_for('chats_explorer.chat_monitoring_request') }}">
-                                <div class="card-body">
-                                    <h4 class="card-title">
-                                        <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 200px">
-                                        <b>Request Chat Monitoring</b>
-                                    </h4>
-                                </div>
+                            <div class="card-body">
+                                <h4 class="card-title">
+                                    <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 200px">
+                                    <b>Request Chat Monitoring</b>
+                                </h4>
+                            </div>
+                        </a>
+                        {% if is_admin %}
+                            <a class="btn btn-light border-secondary" style="" href="{{ url_for('chats_explorer.chat_monitoring_requests') }}">
+                                <span class="fa-stack">
+                                    <i class="fas fa-stack-2x fa-envelope"></i>
+                                    <i class="fas fa-stack-1x fa-comments text-white"></i>
+                                </span>
+                                <span class="badge badge-primary">{{ nb_new_chats_monitoring_requests }}</span>
                             </a>
+                        {% endif %}
                     </div>
                 </div>
 

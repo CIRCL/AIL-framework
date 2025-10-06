@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -527,7 +527,7 @@ def passive_dns_edit():
         password = request.form.get('password')
         res = passivedns.api_edit_passive_dns(user, password)
         if res[1] != 200:
-            return create_json_response(r[0], r[1])
+            return create_json_response(res[0], res[1])
         else:
             return redirect(url_for('settings_b.passive_dns'))
     else:
@@ -567,7 +567,7 @@ def passive_ssh_edit():
         password = request.form.get('password')
         res = SSHKeys.api_edit_passive_ssh(url, user, password)
         if res[1] != 200:
-            return create_json_response(r[0], r[1])
+            return create_json_response(res[0], res[1])
         else:
             return redirect(url_for('settings_b.passive_ssh'))
     else:

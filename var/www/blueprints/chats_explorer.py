@@ -51,7 +51,9 @@ def create_json_response(data, status_code):
 @login_read_only
 def chats_explorer_protocols():
     protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'))
+    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'),
+                           nb_new_chats_monitoring_requests=chats_viewer.get_nb_new_chats_monitoring_requests(),
+                           is_admin=current_user.is_admin())
 
 @chats_explorer.route("chats/explorer/networks", methods=['GET'])
 @login_required
@@ -347,6 +349,39 @@ def chat_monitoring_request():
 def chat_monitoring_requests():
     metas = chats_viewer.get_chats_monitoring_requests_metas()
     return render_template('chat_monitoring_requests.html', metas=metas)
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/done", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_done():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_done_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/reject", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_reject():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_reject_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/delete", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_delete():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_delete_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
 
 #### ####
 
