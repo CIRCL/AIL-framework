@@ -540,8 +540,7 @@ def get_chat_object_messages_meta(c_messages):
                 if meta['forwarded_from'] not in temp_chats:
                     chat = get_obj_chat_from_global_id(meta['forwarded_from'])
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
-                else:
-                    meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+                meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
             if meta['barcodes']:
                 barcodes = []
                 for q in meta['barcodes']:
