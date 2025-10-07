@@ -6,6 +6,7 @@ Base Class for AIL Objects
 ##################################
 # Import External packages
 ##################################
+import json
 import os
 import logging.config
 import sys
@@ -86,6 +87,8 @@ class AbstractObject(ABC):
             dict_meta['link'] = self.get_link()
         if 'uuid' in options:
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
+        if 'custom' in options:
+            dict_meta['custom'] = self.get_custom_meta()
         return dict_meta
 
     def _get_obj_field(self, obj_type, subtype, obj_id, field):
@@ -166,6 +169,32 @@ class AbstractObject(ABC):
         Get Object Content
         """
         pass
+
+    ## Custom Metas ##
+
+    def get_custom_meta(self):
+        custom_metas = r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
+        return custom_metas
+
+    # full_custom_meta: dictionary of custom meta to save
+    # To merge multiple dictionaries: obj.set_custom_meta(None, {'a': 1}, {'b': 2}, {'c': 3}) - only if full_custom_meta is None
+    def set_custom_meta(self, full_custom_meta=None, *custom_metas):
+        if not full_custom_meta:
+            # merge dictionaries
+            full_custom_meta = {}
+            for d in custom_metas:
+                if d:
+                    if isinstance(d, dict):
+                        full_custom_meta.update(d)
+        if full_custom_meta:
+            try:
+                full_custom_meta = json.dumps(full_custom_meta)
+            except Exception as e:
+                raise Exception(f'Invalid JSON/Dictionary {e}')
+            r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom', full_custom_meta)
+
+    def delete_custom_meta(self):
+        r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
 
     ## Duplicates ##
     def get_duplicates(self):

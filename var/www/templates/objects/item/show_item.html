@@ -92,6 +92,36 @@
         </h5>
       </div>
 
+      {% if meta['custom'] %}
+          <div id="accordionCustomMeta" class="mb-3">
+            <div class="card">
+              <div class="card-header py-1" id="headingCustomMeta">
+                <div class="row">
+                  <div class="col-11">
+                    <div class="mt-2">
+                      <h5><i class="fas fa-circle-info"></i> Custom Meta</h5>
+                    </div>
+                  </div>
+                  <div class="col-1">
+                    <button class="btn btn-link py-2 float-right rotate" data-toggle="collapse" data-target="#collapseCustomMeta" aria-expanded="true" aria-controls="collapseCustomMeta">
+                      <i class="fas fa-2x fa-chevron-circle-down"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+{#                TODO  CREATE  OBJ CUSTOM META BLOC  #}
+              <div id="collapseCustomMeta" class="collapse" aria-labelledby="headingCustomMeta" data-parent="#accordionCustomMeta">
+                <div class="card-body">
+                  <pre class="" id="custom_meta">{{ meta['custom'] }}</pre>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+      {% endif %}
+
       {% if meta['father'] %}
         <div class="mt-3">
           Father: <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>

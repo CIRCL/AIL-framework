@@ -74,7 +74,9 @@ def showItem():  # # TODO: support post
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    meta = item.get_meta(options={'content', 'crawler', 'custom', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    if meta.get('custom'):
+        meta['custom'] = json.dumps(json.loads(meta['custom']), indent=2, sort_keys=True)
     if meta['file_name']:
         message = chats_viewer.api_get_message(item.get_message())
         if message[1] == 200:
