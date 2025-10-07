@@ -541,6 +541,12 @@ def get_chat_object_messages_meta(c_messages):
                     chat = get_obj_chat_from_global_id(meta['forwarded_from'])
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
                 meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+            if 'reply_to' in meta:
+                if meta.get('reply_to').get('forwarded_from'):
+                    if meta['reply_to']['forwarded_from'] not in temp_chats:
+                        chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+                        temp_chats[meta['reply_to']['forwarded_from']] = chat.get_meta({'icon'})
+                    meta['reply_to']['forwarded_from'] = temp_chats[meta['reply_to']['forwarded_from']]
             if meta['barcodes']:
                 barcodes = []
                 for q in meta['barcodes']:
@@ -1090,6 +1096,9 @@ def api_get_message(message_id, translation_target=None):
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
+    if meta.get('reply_to').get('forwarded_from'):
+        chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+        meta['reply_to']['forwarded_from'] = chat.get_meta({'icon'})
     barcodes = []
     for q in meta['barcodes']:
         obj = Barcode(q)
