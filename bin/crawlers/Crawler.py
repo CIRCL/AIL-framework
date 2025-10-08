@@ -152,53 +152,6 @@ class Crawler(AbstractModule):
             capture.update(-1)
             self.refresh_lacus_status()
 
-    def update_capture_status(self, capture):
-        try:
-            status = self.lacus.get_capture_status(capture.uuid)
-            print(status)
-            if status == crawlers.CaptureStatus.DONE:
-                return capture
-            elif status == crawlers.CaptureStatus.UNKNOWN:
-                capture_start = capture.get_start_time(r_str=False)
-                if capture_start == 0:
-                    task = capture.get_task()
-                    task.delete()
-                    capture.delete()
-                    self.logger.warning(f'capture UNKNOWN ERROR STATE, {task.uuid} Removed from queue')
-                    return None
-                if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
-                    task = capture.get_task()
-                    task.reset()
-                    capture.delete()
-                    self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
-                else:
-                    capture.update(status)
-            elif status == crawlers.CaptureStatus.QUEUED:
-                capture_start = capture.get_start_time(r_str=False)
-                if int(time.time()) - capture_start > 36000:  # TODO ADD in new crawler config
-                    task = capture.get_task()
-                    task.reset()
-                    capture.delete()
-                    self.logger.warning(
-                        f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Send back in queue, start_time={capture_start}')
-                else:
-                    capture.update(status)
-                print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
-            elif status == crawlers.CaptureStatus.ONGOING:
-                capture.update(status)
-                print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
-            # Invalid State
-            else:
-                task = capture.get_task()
-                task.reset()
-                capture.delete()
-                self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Send back in queue')
-
-        except ConnectionError:
-            self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
-            capture.update(-1)
-            self.refresh_lacus_status()
-
     def get_message(self):
         # Crawler Scheduler
         self.crawler_scheduler.update_queue()
@@ -248,7 +201,51 @@ class Crawler(AbstractModule):
         # Get CrawlerCapture Object
         capture = crawlers.get_crawler_capture()
         if capture:
-            self.update_capture_status(capture)
+            try:
+                status = self.lacus.get_capture_status(capture.uuid)
+                print(status)
+                if status == crawlers.CaptureStatus.DONE:
+                    return capture
+                elif status == crawlers.CaptureStatus.UNKNOWN:
+                    capture_start = capture.get_start_time(r_str=False)
+                    if capture_start == 0:
+                        task = capture.get_task()
+                        task.delete()
+                        capture.delete()
+                        self.logger.warning(f'capture UNKNOWN ERROR STATE, {task.uuid} Removed from queue')
+                        return None
+                    if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
+                        task = capture.get_task()
+                        task.reset()
+                        capture.delete()
+                        self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
+                    else:
+                        capture.update(status)
+                elif status == crawlers.CaptureStatus.QUEUED:
+                    capture_start = capture.get_start_time(r_str=False)
+                    if int(time.time()) - capture_start > 36000:  # TODO ADD in new crawler config
+                        task = capture.get_task()
+                        task.reset()
+                        capture.delete()
+                        self.logger.warning(
+                            f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Send back in queue, start_time={capture_start}')
+                    else:
+                        capture.update(status)
+                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
+                elif status == crawlers.CaptureStatus.ONGOING:
+                    capture.update(status)
+                    print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
+                # Invalid State
+                else:
+                    task = capture.get_task()
+                    task.reset()
+                    capture.delete()
+                    self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Send back in queue')
+
+            except ConnectionError:
+                self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
+                capture.update(-1)
+                self.refresh_lacus_status()
 
         try:
             time.sleep(self.pending_seconds)
