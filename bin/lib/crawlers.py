@@ -1625,6 +1625,7 @@ class CrawlerCapture:
 def create_capture(capture_uuid, task_uuid):
     capture = CrawlerCapture(capture_uuid)
     capture.create(task_uuid)
+    return capture
 
 def get_crawler_capture():
     capture = r_cache.zpopmin('crawler:captures')
