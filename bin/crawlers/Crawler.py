@@ -143,6 +143,15 @@ class Crawler(AbstractModule):
         print(f'domain_url:  {domain_url}')
         print()
 
+    def _update_capture_status(self, capture):
+        try:
+            status = self.lacus.get_capture_status(capture.uuid)
+            capture.update(status)
+        except ConnectionError:
+            self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
+            capture.update(-1)
+            self.refresh_lacus_status()
+
     def update_capture_status(self, capture):
         try:
             status = self.lacus.get_capture_status(capture.uuid)
@@ -283,7 +292,7 @@ class Crawler(AbstractModule):
                                           general_timeout_in_sec=90)  # TODO increase timeout if onion ????
 
         capture = crawlers.create_capture(capture_uuid, task_uuid)
-        self.update_capture_status(capture)
+        self._update_capture_status(capture)
         print(task.uuid, capture_uuid, 'launched')
 
         if self.ail_to_push_discovery:
@@ -306,7 +315,7 @@ class Crawler(AbstractModule):
         return capture_uuid
 
     # CRAWL DOMAIN
-    def compute(self, capture):
+    def compute(self, capture):  # TODO ADD FUNCTION TO MANUALLY IMPORT ???
         print('saving capture', capture.uuid)
 
         task = capture.get_task()
