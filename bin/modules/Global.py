@@ -37,7 +37,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ail_core import get_ail_uuid
+from lib.ail_core import get_objects_tracked
 from lib.ConfigLoader import ConfigLoader
 from lib.data_retention_engine import update_obj_date
 from lib.objects.Items import Item
@@ -138,6 +138,10 @@ class Global(AbstractModule):
             self.add_message_to_queue(obj=self.obj, queue='Images', message=message)
         else:
             self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
+
+        # Trackers
+        if self.obj.type in get_objects_tracked():
+            self.add_message_to_queue(obj=self.obj, queue='Trackers')
 
     def check_filename(self, filename, new_file_content):
         """
