@@ -688,8 +688,7 @@ class Tracker:
                     os.remove(filepath)
 
         # Filters
-        filters = get_objects_tracked()
-        for obj_type in filters:
+        for obj_type in get_objects_tracked():
             r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
             r_tracker.srem(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
 
@@ -1102,7 +1101,7 @@ def api_add_tracker(dict_input, org, user_id):
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             filters = {}
         for obj_type in filters:
             if obj_type not in get_objects_tracked():
@@ -1193,7 +1192,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             if not filters['decoded'] and not filters['item']:
                 filters = {}
         for obj_type in filters:

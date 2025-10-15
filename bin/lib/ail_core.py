@@ -16,18 +16,24 @@ r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
-AIL_OBJECTS = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
-                      'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
-                      'item', 'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
-                      'user-account', 'username'})
+AIL_OBJECTS = {'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
+               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
+               'item', 'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
+               'user-account', 'username'}
 
 AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
 
-# TODO by object TYPE ????
-AIL_OBJECTS_CORRELATIONS_DEFAULT = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
-                                           'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
-                                           'image', 'ip', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot',
-                                           'ssh-key', 'title', 'user-account', 'username'})
+# TODO by object TYPE ???? correlation
+AIL_OBJECTS_CORRELATIONS_DEFAULT = {'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
+                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
+                                    'image', 'ip', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot',
+                                    'ssh-key', 'title', 'user-account', 'username'}
+
+AIL_OBJS_QUEUES = {'barcode', 'decoded', 'image', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
+
+AIL_OBJS_TRACKED = {'barcode', 'decoded', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title'}
+
+AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr'}  # TODO PGP, TITLE
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
@@ -104,13 +110,13 @@ def get_default_correlation_objects():
     return AIL_OBJECTS_CORRELATIONS_DEFAULT
 
 def get_obj_queued():
-    return ['barcode', 'item', 'image', 'message', 'ocr', 'qrcode'] # screenshot ???
+    return AIL_OBJS_QUEUES
 
 def get_objects_tracked():
-    return ['barcode', 'decoded', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title']
+    return AIL_OBJS_TRACKED  # TODO add new test to check if == sorted() return True
 
 def get_objects_retro_hunted():
-    return ['decoded', 'item', 'message', 'ocr']
+    return AIL_OBJS_RETRO_HUNTED
 
 def get_all_objects_with_subtypes_tuple():
     str_objs = []

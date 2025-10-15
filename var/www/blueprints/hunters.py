@@ -172,7 +172,7 @@ def show_tracker():
             new_filter = request.form.get(f'{obj_type}_obj')
             if new_filter:
                 filter_obj_types.append(obj_type)
-        if sorted(filter_obj_types) == Tracker.get_objects_tracked():
+        if sorted(filter_obj_types) == list(Tracker.get_objects_tracked()):
             filter_obj_types = []
     else:
         tracker_uuid = request.args.get('uuid', None)

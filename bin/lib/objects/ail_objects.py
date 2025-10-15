@@ -100,9 +100,9 @@ def sanitize_objs_types(objs, default=False):
             l_types.append(obj)
     if not l_types:
         if default:
-            l_types = get_default_correlation_objects()
+            l_types = list(get_default_correlation_objects())
         else:
-            l_types = get_all_objects()
+            l_types = list(get_all_objects())
     return l_types
 
 
