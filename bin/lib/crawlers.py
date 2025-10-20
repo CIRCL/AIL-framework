@@ -1476,7 +1476,7 @@ def add_lacus_capture_to_import(capture):
 
 # TODO check capture format
 def api_add_lacus_capture_to_import(capture):
-    return add_lacus_capture_to_import(capture), 200
+    return {'uuid': add_lacus_capture_to_import(capture)}, 200
 
 #### Blocklist ####
 
