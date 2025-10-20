@@ -449,20 +449,7 @@ class Crawler(AbstractModule):
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
             if self.domain.id.endswith('.i2p'):
-                if dom_hash_id == '186eff95227efa351e6acfc00a807a7b' or dom_hash_id == '58f5624724ece6452bf2fd50975df06a':  # 'Website Unreachable'
-                    print(title_content.encode())
-                    print('I2P Website Unreachable')
-                    filter_page = True
-                elif dom_hash_id == 'd71f204a2ee135a45b1e34deb8377094':  # b'Website Unknown'
-                    print(title_content.encode())
-                    print('Website Unknown - Website Not Found in Addressbook')
-                    filter_page = True
-                elif dom_hash_id == 'a530b30b5921d45f591a0c6a716ffcd9':  # 'Website Unreachable'
-                    print(title_content.encode())
-                    print('Invalid Destination')
-                    filter_page = True
-                elif dom_hash_id == 'cf312a7eded2d6261712701d7a06f335':  # 'Error: Request Denied'
-                    print('Error: Request Denied')
+                if crawlers.is_filtered_i2p_page(dom_hash_id):
                     filter_page = True
 
             if not filter_page:
@@ -509,7 +496,7 @@ class Crawler(AbstractModule):
                                 # Create Correlations
                                 screenshot.add_correlation('item', '', item_id)
                                 screenshot.add_correlation('domain', '', self.domain.id)
-                            self.add_message_to_queue(obj=screenshot, queue='Images')
+                            # self.add_message_to_queue(obj=screenshot, queue='Images') # TODO screenshot OCR
                 # HAR
                 if self.har:
                     if 'har' in entries and entries.get('har'):

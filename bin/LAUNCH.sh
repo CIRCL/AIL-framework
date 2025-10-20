@@ -197,6 +197,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "FeederImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./FeederImporter.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "CrawlerImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./CrawlerImporter.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
 

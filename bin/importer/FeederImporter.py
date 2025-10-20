@@ -56,7 +56,7 @@ class FeederImporter(AbstractImporter):
         feeders = [f[:-3] for f in os.listdir(feeder_dir) if os.path.isfile(os.path.join(feeder_dir, f))]
         self.feeders = {}
         for feeder in feeders:
-            if feeder == 'abstract_chats_feeder':
+            if feeder.startswith('abstract_'):
                 continue
             print(feeder)
             part = feeder.split('.')[-1]
@@ -103,24 +103,8 @@ class FeederImporter(AbstractImporter):
         if data_obj:
             objs.add(data_obj)
 
-        objs_messages = []
-        for obj in objs:
-            # Text created
-            if obj.type == 'item':
-                if obj.exists():
-                    objs_messages.append({'obj': obj, 'message': feeder_name})
-                # object save on disk as file (Items)
-                else:
-                    gzip64_content = feeder.get_gzip64_content()
-                    relay_message = f'{feeder_name} {gzip64_content}'
-                    objs_messages.append({'obj': obj, 'message': relay_message})
-            elif obj.type == 'image':
-                date = feeder.get_date()
-                objs_messages.append({'obj': obj, 'message': f'{feeder_name} {date}'})
-            else:  # Messages save on DB
-                if obj.exists() and obj.type != 'chat':
-                    objs_messages.append({'obj': obj, 'message': feeder_name})
-        return objs_messages
+        return self.build_queue_messages(objs, feeder)
+
 
 class FeederModuleImporter(AbstractModule):
     def __init__(self):

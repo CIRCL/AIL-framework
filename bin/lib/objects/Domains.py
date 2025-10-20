@@ -480,15 +480,20 @@ class Domain(AbstractObject):
     ############################################################################
     ############################################################################
 
-
-    def create(self, first_seen, last_check, status, tags, languages):
-
-
-        r_crawler.hset(f'domain:meta:{self.id}', 'first_seen', first_seen)
-        r_crawler.hset(f'domain:meta:{self.id}', 'last_check', last_check)
-
-        for language in languages:
-            self.add_language(language)
+    # def create(self, epoch, root_item_id, origin='manual', tags=[]):
+    #
+    #     # UP
+    #     if root_item_id:
+    #         self.add_history(epoch, root_item=root_item_id)
+    #         if origin:
+    #             self.set_last_origin(origin)
+    #     # DOWN
+    #     else:
+    #         self.add_history(epoch)
+    #
+    #     # manually set languages
+    #     # for language in languages:
+    #     #     self.add_language(language)
 
     # add root_item to history
     # if domain down -> root_item = epoch

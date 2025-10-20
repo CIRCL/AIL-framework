@@ -58,6 +58,12 @@ class DefaultFeeder:
     def get_json_meta(self):
         return self.json_data.get('meta')
 
+    def get_meta(self):
+        return self.json_data.get('meta')
+
+    def get_payload(self):
+        return self.json_data.get('data')
+
     def get_uuid(self):
         return self.json_data.get('source_uuid')
 

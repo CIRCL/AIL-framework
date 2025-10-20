@@ -162,6 +162,15 @@ def import_json_item():
     res = api_add_json_feeder_to_queue(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+
+@api_rest.route("api/v1/import/crawler/capture", methods=['POST'])
+@token_required('user')
+def import_crawler_capture():
+    data_json = request.get_json()
+    res = crawlers.api_add_lacus_capture_to_import(data_json)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # # # TODO LIST OBJ TYPES + SUBTYPES
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
