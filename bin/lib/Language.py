@@ -195,6 +195,7 @@ dict_iso_1_to_3 = {
     'ig': 'ibo',
     'is': 'isl',
     'it': 'ita',
+    'iw': 'heb',       # gcld3 use the old language code
     'ja': 'jpn',
     'ja-Latn': 'jpn',  # gcld3 output
     'jv': 'jav',
