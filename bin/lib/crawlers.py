@@ -1468,14 +1468,18 @@ def get_lacus_capture_to_import():
 
 def add_lacus_capture_to_import(capture):
     capture_uuid = generate_uuid()
-    r_db.sadd('importer:lacus:capture')
+    r_db.sadd('importer:lacus:capture', capture_uuid)
     temp_dir = create_tm_dir()
     with open(os.path.join(temp_dir, f'capture_{capture_uuid}.json'), 'w') as f:
         f.write(json.dumps(capture))
     return capture_uuid
 
-# TODO check capture format
+# API
 def api_add_lacus_capture_to_import(capture):
+    if not capture.get('html'):
+        return {'error': 'Missing or empty HTML content'}, 400
+    if not capture.get('last_redirected_url'):
+        return {'error': 'Missing field: last_redirected_url'}, 400
     return {'uuid': add_lacus_capture_to_import(capture)}, 200
 
 #### Blocklist ####
