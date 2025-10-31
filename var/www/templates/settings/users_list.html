@@ -39,8 +39,7 @@
                         <th>Last Login</th>
                         <th>Last Seen</th>
                         <th>Role</th>
-                        <th>Api Key</th>
-                        <th></th>
+                        <th>Last API Access</th>
                         <th>2FA</th>
                         <th>Actions</th>
                     </tr>
@@ -49,7 +48,9 @@
                     {% for user in meta['users'] %}
                         <tr>
                             <td>
-                                {{user['id']}}
+                                <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
+                                    {{user['id']}}
+                                </a>
                                 {% if user['is_disabled'] %}
                                     <span class="badge badge-danger"><b>Disabled</b></span>
                                 {% endif %}
@@ -74,24 +75,11 @@
                             <td>{% if user['last_seen'] %}{{user['last_seen']}}{% else %}-{% endif %}</td>
                             <td>{{user['role']}}</td>
                             <td>
-                                {% if user['api_key'] %}
-                                    <span id="censored_key_{{loop.index0}}">
-                                        {{user['api_key'][:4]}}**...**{{user['api_key'][-4:]}}
-                                    </span>
-                                    <span id="uncensored_key_{{loop.index0}}" style="display: none;">
-                                        {{user['api_key']}}
-                                    </span>
-                                {% else %}
+                                {% if user['last_seen_api'] %}{{user['last_seen_api']}}{% else %}-{% endif %}
+                                {% if user['is_disabled'] %}
+                                    <br>
                                     <span class="badge badge-danger"><b>Disabled</b></span>
                                 {% endif %}
-                            </td>
-                            <td>
-                                <a class="btn btn-outline-info ml-3 px-1 py-0" href="{{ url_for('settings_b.new_token_user', user_id=user['id']) }}">
-                                    <i class="fas fa-random"></i>
-                                </a>
-                                <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key_{{loop.index0}}" onclick="show_api_key({{loop.index0}})">
-                                    <i class="fas fa-eye"></i>
-                                </span>
                             </td>
                             <td>
                                 {% if user['2fa'] %}
@@ -171,13 +159,6 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
-
-function show_api_key(key_id) {
-    $('#censored_key_' + key_id).hide();
-    $('#btn_key_' + key_id).hide();
-    $('#uncensored_key_' + key_id).show();
-}
-
 </script>
 
 </html>

@@ -82,6 +82,19 @@ def user_profile():
                            misps=ail_config.get_user_config_misps(user_id),
                            acl_admin=acl_admin)
 
+@settings_b.route("/settings/user/view", methods=['GET'])
+@login_required
+@login_admin
+def user_view():
+    user_id = request.args.get('user_id')
+    r = ail_users.api_get_user_view(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    meta = r[0]
+    return render_template("view_user.html", meta=meta,
+                           misps=ail_config.get_user_config_misps(user_id),
+                           acl_admin=True)
+
 #### USER OTP ####
 
 @settings_b.route("/settings/user/hotp", methods=['GET'])
