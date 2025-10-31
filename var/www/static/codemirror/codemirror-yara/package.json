@@ -1,0 +1,25 @@
+{
+  "name": "codemirror-yara",
+  "private": true,
+  "version": "0.0.0",
+  "files": [
+    "dist"
+  ],
+  "module": "./dist/codemirror-yara.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/codemirror-yara.es.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.6"
+  },
+  "dependencies": {
+    "codemirror": "^6.0.1"
+  }
+}

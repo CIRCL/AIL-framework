@@ -31,7 +31,7 @@
                     <div class="card-header">
                         <h4 class="card-title">
                             <img src="{{ url_for('static', filename='image/tm.png') }}" style="max-width: 200px">
-                            <b>Request Chat Monitoring</b>
+                            <b>Request Chat Monitoring – <i>Will Be Manually Added by an Admin (Local Instance)</i></b>
                         </h4>
                     </div>
                     <div class="card-body">
@@ -42,7 +42,7 @@
 
                         <form action="{{ url_for('chats_explorer.chat_monitoring_request') }}" method='post'>
 
-                            <label  class="mt-3" for="level_selector">Type</label>
+                            <label  class="mt-3" for="level_selector"><b>Chat Type</b></label>
                             <select class="custom-select" id="level_selector" name="type">
                                 <option value="telegram" selected>Telegram</option>
                                 <option value="discord">Discord</option>

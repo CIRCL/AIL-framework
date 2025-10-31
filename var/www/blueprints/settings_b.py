@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -25,6 +25,9 @@ from lib import ail_config
 from lib import ail_queues
 from lib import ail_users
 from lib import d4
+from lib import passivedns
+# from exporter.MailExporter import MailExporterUsers
+from lib.objects import SSHKeys
 from packages import git_status
 
 # ============ BLUEPRINT ============
@@ -78,6 +81,19 @@ def user_profile():
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
                            misps=ail_config.get_user_config_misps(user_id),
                            acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/view", methods=['GET'])
+@login_required
+@login_admin
+def user_view():
+    user_id = request.args.get('user_id')
+    r = ail_users.api_get_user_view(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    meta = r[0]
+    return render_template("view_user.html", meta=meta,
+                           misps=ail_config.get_user_config_misps(user_id),
+                           acl_admin=True)
 
 #### USER OTP ####
 
@@ -272,6 +288,30 @@ def users_logout():
     else:
         return redirect(url_for('settings_b.users_list'))
 
+@settings_b.route("/settings/user/disable", methods=['GET'])
+@login_required
+@login_admin
+def user_disable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_disable_user(admin_id, user_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/enable", methods=['GET'])
+@login_required
+@login_admin
+def user_enable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_enable_user(admin_id, user_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
 @settings_b.route("/settings/create_user", methods=['GET'])
 @login_required
 @login_admin
@@ -318,6 +358,13 @@ def create_user_post():
     password1 = request.form.get('password1')
     password2 = request.form.get('password2')
     enable_2_fa = request.form.get('enable_2_fa')
+    send_email = request.form.get('send_email')
+
+    if send_email:
+        send_email = True
+    else:
+        send_email = False
+
     if enable_2_fa or ail_users.is_2fa_enabled():
         enable_2_fa = True
     else:
@@ -353,7 +400,7 @@ def create_user_post():
                     edit = True
                 else:
                     edit = False
-                r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa)
+                r = ail_users.api_create_user(admin_id, request.access_route[0], request.user_agent, email, password, org_uuid, role, enable_2_fa, send_email=send_email)
                 if r[1] != 200:
                     return create_json_response(r[0], r[1])
 
@@ -361,7 +408,7 @@ def create_user_post():
                 # qr_code = ail_users.create_qr_code(f'{email} - {password}')
                 return render_template("create_user.html", new_user=new_user, meta={},
                                        all_roles=all_roles, acl_admin=True)
-
+            return None
         else:
             return render_template("create_user.html", all_roles=all_roles, meta={}, acl_admin=True)
     else:
@@ -456,8 +503,10 @@ def delete_org():
 @login_required
 @login_read_only
 def passive_dns():
+    acl_admin = current_user.is_in_role('admin')
+    meta = passivedns.get_passive_dns_meta()
     passivedns_enabled = d4.is_passive_dns_enabled()
-    return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled)
+    return render_template("passive_dns.html", passivedns_enabled=passivedns_enabled, meta=meta, acl_admin=acl_admin)
 
 
 @settings_b.route("/settings/passivedns/change_state", methods=['GET'])
@@ -468,9 +517,101 @@ def passive_dns_change_state():
     passivedns_enabled = d4.change_passive_dns_state(new_state)
     return redirect(url_for('settings_b.passive_dns'))
 
-# @settings.route("/settings/ail", methods=['GET'])
+@settings_b.route("/settings/passivedns/enable", methods=['GET'])
+@login_required
+@login_admin
+def passive_dns_enable():
+    passivedns.enable_passive_dns()
+    return redirect(url_for('settings_b.passive_dns'))
+
+@settings_b.route("/settings/passivedns/disable", methods=['GET'])
+@login_required
+@login_admin
+def passive_dns_disable():
+    passivedns.disable_passive_dns()
+    return redirect(url_for('settings_b.passive_dns'))
+
+@settings_b.route("/settings/passivedns/edit", methods=['GET', 'POST'])
+@login_required
+@login_admin
+def passive_dns_edit():
+    if request.method == 'POST':
+        user = request.form.get('user')
+        password = request.form.get('password')
+        res = passivedns.api_edit_passive_dns(user, password)
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+        else:
+            return redirect(url_for('settings_b.passive_dns'))
+    else:
+        meta = passivedns.get_passive_dns_meta()
+        acl_admin = current_user.is_in_role('admin')
+        return render_template("passive_dns_edit.html", meta=meta, acl_admin=acl_admin)
+
+@settings_b.route("/settings/passivessh", methods=['GET'])
+@login_required
+@login_read_only
+def passive_ssh():
+    acl_admin = current_user.is_in_role('admin')
+    meta = SSHKeys.get_passive_ssh_meta()
+    return render_template("passive_ssh.html", meta=meta, acl_admin=acl_admin)
+
+@settings_b.route("/settings/passivedns/enable", methods=['GET'])
+@login_required
+@login_admin
+def passive_ssh_enable():
+    SSHKeys.enable_passive_ssh()
+    return redirect(url_for('settings_b.passive_ssh'))
+
+@settings_b.route("/settings/passivedns/disable", methods=['GET'])
+@login_required
+@login_admin
+def passive_ssh_disable():
+    SSHKeys.disable_passive_ssh()
+    return redirect(url_for('settings_b.passive_ssh'))
+
+@settings_b.route("/settings/passivedns/edit", methods=['GET', 'POST'])
+@login_required
+@login_admin
+def passive_ssh_edit():
+    if request.method == 'POST':
+        url = request.form.get('url')
+        user = request.form.get('user')
+        password = request.form.get('password')
+        res = SSHKeys.api_edit_passive_ssh(url, user, password)
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+        else:
+            return redirect(url_for('settings_b.passive_ssh'))
+    else:
+        meta = SSHKeys.get_passive_ssh_meta()
+        acl_admin = current_user.is_in_role('admin')
+        return render_template("passive_ssh_edit.html", meta=meta, acl_admin=acl_admin)
+
+@settings_b.route("/settings/passivedns/test", methods=['GET'])
+@login_required
+@login_admin
+def passive_ssh_test():
+    res = SSHKeys.api_test_passive_ssh()
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        return redirect(url_for('settings_b.passive_ssh'))
+
+# @settings_b.route("/settings/email/users", methods=['GET'])
 # @login_required
 # @login_admin
-# def ail_configs():
-#     return render_template("ail_configs.html", passivedns_enabled=None)
+# def email_users():
+#     if request.method == 'POST':
+#         subject = request.form.get('subject')
+#         content = request.form.get('content')
+#         if not subject or not content:
+#             return create_json_response({'status': 'error', 'reason': 'Missing subject or content'}, 400)
+#         exporter = MailExporterUsers()
+#         exporter.export(ail_users.get_users(), subject, content)
+#         return redirect(url_for('settings_b.email_users', send=True))
+#     else:
+#         send = request.args.get('send')
+#         return render_template("email_users.html", send=send, acl_admin=acl_admin)
+
 

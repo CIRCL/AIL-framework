@@ -122,6 +122,13 @@ class Ocr(AbstractDaterangeObject):
         filename = os.path.join(IMAGE_FOLDER, rel_path)
         return os.path.realpath(filename)
 
+    def get_messages(self):
+        messages = []
+        mess = self.get_correlation('message')['message']
+        for m in mess:
+            messages.append(m[1:])
+        return messages
+
     def get_misp_object(self):  # TODO
         obj = MISPObject('instant-message', standalone=True)
         obj_date = self.get_date()

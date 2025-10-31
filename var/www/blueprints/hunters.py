@@ -172,7 +172,7 @@ def show_tracker():
             new_filter = request.form.get(f'{obj_type}_obj')
             if new_filter:
                 filter_obj_types.append(obj_type)
-        if sorted(filter_obj_types) == Tracker.get_objects_tracked():
+        if sorted(filter_obj_types) == list(Tracker.get_objects_tracked()):
             filter_obj_types = []
     else:
         tracker_uuid = request.args.get('uuid', None)
@@ -190,7 +190,8 @@ def show_tracker():
 
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
-                                     'user', 'webhooks', 'nb_objs'})
+                                     'filter_duplicate_notification',
+                                     'user', 'webhooks', 'nb_objs', 'years'})
 
     if meta['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
@@ -224,6 +225,27 @@ def show_tracker():
                             filter_obj_types=filter_obj_types,
                             bootstrap_label=bootstrap_label)
 
+@hunters.route("/tracker/show/stats/year", methods=['GET'])
+@login_required
+@login_read_only
+def tracker_show_stats_year():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+
+    tracker_uuid = request.args.get('uuid', None)
+    year = request.args.get('year')
+
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
+    if res:  # invalid access
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+    stats = Tracker.api_get_nb_year_tracker(tracker_uuid, year)
+    if stats[1] != 200:
+        return create_json_response(stats[0], stats[1])
+    else:
+        return jsonify(stats[0])
+
 def parse_add_edit_request(request_form):
     to_track = request_form.get("tracker")
     tracker_uuid = request_form.get("tracker_uuid")
@@ -233,6 +255,7 @@ def parse_add_edit_request(request_form):
     webhook = request_form.get("webhook", '')
     level = request_form.get("level", 0)
     mails = request_form.get("mails", [])
+    notification_filter_duplicate = request_form.get('notification_filter_duplicate', False)
 
     # TAGS
     tags = request_form.get("tags", [])
@@ -265,6 +288,8 @@ def parse_add_edit_request(request_form):
     # YARA #
     if tracker_type == 'yara':
         yara_default_rule = request_form.get("yara_default_rule")
+        if yara_default_rule == 'Select a default rule':
+            yara_default_rule = None
         yara_custom_rule = request_form.get("yara_custom_rule")
         if yara_custom_rule:
             to_track = yara_custom_rule
@@ -278,6 +303,10 @@ def parse_add_edit_request(request_form):
         mails = mails.split()
     else:
         mails = []
+    if notification_filter_duplicate == 'on':
+        notification_filter_duplicate = True
+    else:
+        notification_filter_duplicate = False
 
     # FILTERS
     filters = {}
@@ -309,6 +338,7 @@ def parse_add_edit_request(request_form):
 
     input_dict = {"tracked": to_track, "type": tracker_type,
                   "tags": tags, "mails": mails, "filters": filters,
+                  "notification_filter_duplicate" : notification_filter_duplicate,
                   "level": level, "description": description, "webhook": webhook}
     if tracker_uuid:
         input_dict['uuid'] = tracker_uuid
@@ -360,7 +390,7 @@ def tracker_edit():
             return create_json_response(res[0], res[1])
 
         tracker = Tracker.Tracker(tracker_uuid)
-        dict_tracker = tracker.get_meta(options={'description', 'level', 'mails', 'filters', 'tags', 'webhooks'})
+        dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks'})
         if dict_tracker['type'] == 'yara':
             if not Tracker.is_default_yara_rule(dict_tracker['tracked']):
                 dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
@@ -487,6 +517,7 @@ def tracker_objects():
     meta['date'] = Date.get_current_utc_full_time()
 
     return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
+                           # ollama_enabled=images_engine.is_ollama_enabled(),
                            chats=chats, messages=messages, bootstrap_label=bootstrap_label)
 
     # TODO
@@ -691,7 +722,7 @@ def retro_hunt_resume_task():
 
 @hunters.route('/retro_hunt/task/delete', methods=['GET'])
 @login_required
-@login_org_admin
+@login_admin
 def retro_hunt_delete_task():
     user_org = current_user.get_org()
     user_id = current_user.get_id()
@@ -701,6 +732,48 @@ def retro_hunt_delete_task():
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('hunters.retro_hunt_all_tasks'))
+
+
+@hunters.route('/retro_hunt/objects/report', methods=['GET'])
+@login_required
+@login_admin
+def retro_hunt_objects_report():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    task_uuid = request.args.get('uuid', None)
+    res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
+    if res:
+        return create_json_response(res[0], res[1])
+    retro_hunt = Tracker.RetroHunt(task_uuid)
+    res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+
+    meta = retro_hunt.get_meta(options={'creator', 'date', 'description', 'progress', 'filters', 'nb_objs', 'tags'})
+    yara_rule_content = Tracker.get_yara_rule_content(meta['rule'])
+    meta['filters'] = json.dumps(meta['filters'], indent=4)
+
+    # tracker = Tracker.Tracker(tracker_uuid)
+    # meta = tracker.get_meta(options={'description', 'sparkline', 'tags', 'nb_objs'})
+
+    chats, messages = chats_viewer.get_message_report(retro_hunt.get_objs())
+    if messages:
+        meta['first_seen'] = messages[0]['full_date']
+        if len(messages) > 1:
+            meta['last_seen'] = messages[-1]['full_date']
+        else:
+            meta['last_seen'] = meta['first_seen']
+
+    meta['date'] = Date.get_current_utc_full_time()
+    meta['type'] = 'retro_hunt'
+
+    # TODO
+    #       - Filter duplicates messages
+    #       - numbers of messages by chats
+
+    return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
+                           chats=chats, messages=messages, bootstrap_label=bootstrap_label, force_full_image=True)
 
 
 ##  - -  ##

@@ -28,6 +28,8 @@
 			<div class="col-12 col-lg-10" id="core_content">
 
                 <h3>AIL Users:</h3>
+                <span>Logged <span class="badge badge-success">{{ meta['logged'] }}</span></span>
+                <span>Active <span class="badge badge-primary">{{ meta['active'] }}</span></span>
                 <table id="tableusers" class="table table-hover table-striped">
                     <thead class="thead-dark">
                     <tr>
@@ -37,8 +39,7 @@
                         <th>Last Login</th>
                         <th>Last Seen</th>
                         <th>Role</th>
-                        <th>Api Key</th>
-                        <th></th>
+                        <th>Last API Access</th>
                         <th>2FA</th>
                         <th>Actions</th>
                     </tr>
@@ -46,7 +47,14 @@
                     <tbody id="tbody_last_crawled">
                     {% for user in meta['users'] %}
                         <tr>
-                            <td>{{user['id']}}</td>
+                            <td>
+                                <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
+                                    {{user['id']}}
+                                </a>
+                                {% if user['is_disabled'] %}
+                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {{ user['org_name'] }}<br>
                                 {{user['org']}}
@@ -67,20 +75,11 @@
                             <td>{% if user['last_seen'] %}{{user['last_seen']}}{% else %}-{% endif %}</td>
                             <td>{{user['role']}}</td>
                             <td>
-                                <span id="censored_key_{{loop.index0}}">
-                                    {{user['api_key'][:4]}}**...**{{user['api_key'][-4:]}}
-                                </span>
-                                <span id="uncensored_key_{{loop.index0}}" style="display: none;">
-                                    {{user['api_key']}}
-                                </span>
-                            </td>
-                            <td>
-                                <a class="btn btn-outline-info ml-3 px-1 py-0" href="{{ url_for('settings_b.new_token_user', user_id=user['id']) }}">
-                                    <i class="fas fa-random"></i>
-                                </a>
-                                <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key_{{loop.index0}}" onclick="show_api_key({{loop.index0}})">
-                                    <i class="fas fa-eye"></i>
-                                </span>
+                                {% if user['last_seen_api'] %}{{user['last_seen_api']}}{% else %}-{% endif %}
+                                {% if user['is_disabled'] %}
+                                    <br>
+                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if user['2fa'] %}
@@ -108,6 +107,15 @@
                                     <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
+                                    {% if user['is_disabled'] %}
+                                        <a class="btn btn-outline-success ml-3 px-1 py-0" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
+                                            <i class="fas fa-user-check"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
+                                            <i class="fas fa-user-slash"></i>
+                                        </a>
+                                    {% endif %}
                                     <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
@@ -134,7 +142,7 @@ $(document).ready(function(){
     $('#tableusers').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 0, "asc" ]]
+        "order": [[ 4, "desc" ]]
     });
 });
 
@@ -151,13 +159,6 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
-
-function show_api_key(key_id) {
-    $('#censored_key_' + key_id).hide();
-    $('#btn_key_' + key_id).hide();
-    $('#uncensored_key_' + key_id).show();
-}
-
 </script>
 
 </html>

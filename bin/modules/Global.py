@@ -31,14 +31,13 @@ import sys
 import time
 
 from hashlib import md5
-from uuid import uuid4
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ail_core import get_ail_uuid
+from lib.ail_core import get_objects_tracked
 from lib.ConfigLoader import ConfigLoader
 from lib.data_retention_engine import update_obj_date
 from lib.objects.Items import Item
@@ -128,17 +127,23 @@ class Global(AbstractModule):
             else:
                 if self.obj.exists():
                     self.add_message_to_queue(obj=self.obj, queue='Item')
+                    self.processed_item += 1
                 else:
                     self.logger.info(f"Empty Item: {message} not processed")
 
         elif self.obj.type == 'message' or self.obj.type == 'ocr':
-            # TODO send to specific object queue => image, ...
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':
             self.add_message_to_queue(obj=self.obj, queue='Image', message=message)
             self.add_message_to_queue(obj=self.obj, queue='Images', message=message)
+        elif self.obj.type == 'title':
+            self.add_message_to_queue(obj=self.obj, queue='Titles', message=message)
         else:
             self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
+
+        # Trackers
+        if self.obj.type in get_objects_tracked():
+            self.add_message_to_queue(obj=self.obj, queue='Trackers')
 
     def check_filename(self, filename, new_file_content):
         """

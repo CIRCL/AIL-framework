@@ -43,24 +43,13 @@ sudo apt-get install build-essential libffi-dev autoconf -qq
 sudo apt-get install p7zip-full -qq # TODO REMOVE ME
 
 # SUBMODULES #
-git submodule update --init
+git submodule update --init --recursive
 
 # REDIS #
-test ! -d redis/ && git clone https://github.com/antirez/redis.git
+test ! -d redis/ && git clone https://github.com/redis/redis.git
 pushd redis/
 git checkout 5.0
 make
-popd
-
-# Faup
-test ! -d faup/ && git clone https://github.com/stricaud/faup.git
-pushd faup/
-test ! -d build && mkdir build
-cd build
-cmake .. && make
-sudo make install
-echo '/usr/local/lib' | sudo tee -a /etc/ld.so.conf.d/faup.conf
-sudo ldconfig
 popd
 
 # tlsh
@@ -82,6 +71,21 @@ make
 sudo make install
 popd
 
+# Yara
+YARA_VERSION="4.3.0"
+mkdir yara_temp
+wget https://github.com/VirusTotal/yara/archive/v${YARA_VERSION}.zip -O yara_temp/yara.zip
+unzip yara_temp/yara.zip -d yara_temp/
+pushd yara_temp/yara-${YARA_VERSION}
+./bootstrap.sh
+./configure
+make
+sudo make install
+make check
+popd
+rm -rf yara_temp
+
+
 # ARDB #
 #test ! -d ardb/ && git clone https://github.com/ail-project/ardb.git
 #pushd ardb/
@@ -91,8 +95,14 @@ popd
 DEFAULT_HOME=$(pwd)
 
 #### KVROCKS ####
+# If we are on debian, we can get the kvrocks deb package:
+#   download the right version from https://github.com/RocksLabs/kvrocks-fpm/releases
+#   then sudo dpkg -i kvrocks_2.11.1-1_amd64.deb   (change the version number to yours)
+
 test ! -d kvrocks/ && git clone https://github.com/apache/incubator-kvrocks.git kvrocks
 pushd kvrocks
+# Build Kvrocks in portable mode
+#export PORTABLE=1
 ./x.py build -j 4
 popd
 

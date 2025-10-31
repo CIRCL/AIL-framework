@@ -15,8 +15,6 @@ import os
 import sys
 import pylibinjection
 
-from datetime import datetime
-from pyfaup.faup import Faup
 from urllib.parse import unquote
 
 
@@ -25,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
+from lib import psl_faup
 
 class LibInjection(AbstractModule):
     """docstring for LibInjection module."""
@@ -32,15 +31,12 @@ class LibInjection(AbstractModule):
     def __init__(self):
         super(LibInjection, self).__init__()
 
-        self.faup = Faup()
-
         self.logger.info(f"Module: {self.module_name} Launched")
 
     def compute(self, message):
         url = message
 
-        self.faup.decode(url)
-        url_parsed = self.faup.get()
+        url_parsed = psl_faup.unparse_url(url)
         # # TODO: # FIXME: remove me
         try:
             resource_path = url_parsed['resource_path'].encode()

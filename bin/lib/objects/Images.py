@@ -18,10 +18,13 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
+from lib.ail_core import get_default_image_description_model
 
 config_loader = ConfigLoader()
+# r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 IMAGE_FOLDER = config_loader.get_files_directory('images')
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -79,11 +82,40 @@ class Image(AbstractDaterangeObject):
             file_content = BytesIO(f.read())
         return file_content
 
+    def get_base64(self):
+        return base64.b64encode(self.get_file_content().read()).decode()
+
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return None
         else:
             return self.get_file_content()
+
+    def get_description_models(self):
+        models = []
+        for key in self._get_fields_keys():
+            if key.startswith('desc:'):
+                model = key[5:]
+                models.append(model)
+
+    def add_description_model(self, model, description):
+        self._set_field(f'desc:{model}', description)
+
+    def get_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        description = self._get_field(f'desc:{model}')
+        if description:
+            description = description.replace("`", ' ')
+        return description
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
 
     def get_misp_object(self):
         obj_attrs = []
@@ -96,13 +128,15 @@ class Image(AbstractDaterangeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['img'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
         if 'content' in options:
             meta['content'] = self.get_content()
+        if 'description' in options:
+            meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

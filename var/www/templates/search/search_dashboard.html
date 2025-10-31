@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_search.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div id="search_crawled">
+                    {% include 'search/block_crawled_search.html' %}
+                </div>
+
+                <div id="search_domains_name">
+                    {% include 'domains/block_domains_name_search.html' %}
+                </div>
+
+                <div id="search_titles">
+                    {% include 'title/block_titles_search.html' %}
+                </div>
+
+                <div id="search_description_images">
+                    {% include 'search/block_description_images_search.html' %}
+                </div>
+
+                <hr class="my-6">
+
+                <div id ="search_chats">
+                    {% include 'search/block_chats_search.html' %}
+                </div>
+
+                <div class="my-4" id="search_usernames">
+                    {% with subtypes=username_subtypes %}
+                        {% include 'username/block_usernames_search.html' %}
+                    {% endwith %}
+                </div>
+
+
+{#            TODO SEARCH CHATS / MESSAGES #}
+
+{#            TODO BUTTON with anchor ??? #}
+
+
+                <div id="search_mails">
+                    {% include 'mail/block_mails_search.html' %}
+                </div>
+
+{#                {% include 'cve/block_cve_search.html' %}#}
+
+                <div id="search_gtrackers">
+                    {% include 'block_passive_ssh_search.html' %}
+                </div>
+
+                <div id="search_gtrackers">
+                    {% include 'gtracker/block_gtrackers_search.html' %}
+                </div>
+
+                <div id="search_filenames">
+                    {% include 'file-name/block_file_name_search.html' %}
+                </div>
+
+
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function(){
+        $("#page-search").addClass("active");
+        $("#nav_explorer_chat").addClass("active");
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+
+</html>

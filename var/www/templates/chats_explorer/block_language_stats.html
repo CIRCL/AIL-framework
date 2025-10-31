@@ -42,5 +42,9 @@ optionlangpie = {
   ]
 };
 langPieChart.setOption(optionlangpie);
+langPieChart.on('click', function (params) {
+    console.log(params.name);
+    window.open('{{ lang_endpoint|safe }}' + params.name)
+});
 
 </script>

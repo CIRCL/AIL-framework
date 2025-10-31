@@ -6,6 +6,7 @@ Base Class for AIL Objects
 ##################################
 # Import External packages
 ##################################
+import json
 import os
 import logging.config
 import sys
@@ -26,7 +27,7 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
-from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language
+from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
@@ -68,6 +69,11 @@ class AbstractObject(ABC):
     def get_global_id(self):
         return f'{self.get_type()}:{self.get_subtype(r_str=True)}:{self.get_id()}'
 
+    def get_uuid5(self, global_id=None):
+        if not global_id:
+            global_id = self.get_global_id()
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, global_id))
+
     def get_last_full_date(self):
         return None
 
@@ -81,7 +87,21 @@ class AbstractObject(ABC):
             dict_meta['link'] = self.get_link()
         if 'uuid' in options:
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
+        if 'custom' in options:
+            dict_meta['custom'] = self.get_custom_meta()
         return dict_meta
+
+    def _get_obj_field(self, obj_type, subtype, obj_id, field):
+        if subtype is None:
+            return r_object.hget(f'meta:{obj_type}:{obj_id}', field)
+        else:
+            return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', field)
+
+    def _exists_field(self, field):
+        if self.subtype is None:
+            return r_object.hexists(f'meta:{self.type}:{self.id}', field)
+        else:
+            return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     def _get_field(self, field):
         if self.subtype is None:
@@ -94,6 +114,18 @@ class AbstractObject(ABC):
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
+
+    def _get_fields_keys(self):
+        if self.subtype is None:
+            return r_object.hkeys(f'meta:{self.type}:{self.id}')
+        else:
+            return r_object.hkeys(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
+
+    def _delete_field(self, field):
+        if self.subtype is None:
+            return r_object.hdel(f'meta:{self.type}:{self.id}', field)
+        else:
+            return r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     ## Queues ##
 
@@ -119,6 +151,10 @@ class AbstractObject(ABC):
 
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
+        if self.type == 'screenshot' and not Tag.is_tag_safe(tag):
+            domains = self.get_correlation('domain').get('domain', [])
+            for domain_id in domains:
+                Tag.add_object_tag(tag, 'domain', domain_id)
 
     def is_tags_safe(self, tags=None):
         if not tags:
@@ -133,6 +169,32 @@ class AbstractObject(ABC):
         Get Object Content
         """
         pass
+
+    ## Custom Metas ##
+
+    def get_custom_meta(self):
+        custom_metas = r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
+        return custom_metas
+
+    # full_custom_meta: dictionary of custom meta to save
+    # To merge multiple dictionaries: obj.set_custom_meta(None, {'a': 1}, {'b': 2}, {'c': 3}) - only if full_custom_meta is None
+    def set_custom_meta(self, full_custom_meta=None, *custom_metas):
+        if not full_custom_meta:
+            # merge dictionaries
+            full_custom_meta = {}
+            for d in custom_metas:
+                if d:
+                    if isinstance(d, dict):
+                        full_custom_meta.update(d)
+        if full_custom_meta:
+            try:
+                full_custom_meta = json.dumps(full_custom_meta)
+            except Exception as e:
+                raise Exception(f'Invalid JSON/Dictionary {e}')
+            r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom', full_custom_meta)
+
+    def delete_custom_meta(self):
+        r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
 
     ## Duplicates ##
     def get_duplicates(self):
@@ -344,11 +406,17 @@ class AbstractObject(ABC):
     def get_languages(self):
         return get_obj_languages(self.type, self.get_subtype(r_str=True), self.id)
 
+    def get_language_objs(self, language):
+        return get_container_language_objs(language, self.get_global_id())
+
     def add_language(self, language):
         return add_obj_language(language, self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
 
     def remove_language(self, language):
         return remove_obj_language(language, self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
+
+    def delete_languages(self):
+        delete_obj_language(self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
 
     def edit_language(self, old_language, new_language):
         if old_language:

@@ -356,6 +356,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     # def get_deleted_messages(self, message_id):
 
+    def get_messages_by_lang(self, language):
+        messages = []
+        for mess in self.get_language_objs(language):
+            messages.append(mess[8:])
+        return messages
+
     def get_participants(self):
         return unpack_correl_objs_id('user-account', self.get_correlation('user-account')['user-account'], r_type='dict')
 

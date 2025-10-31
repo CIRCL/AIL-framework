@@ -68,6 +68,17 @@ config_loader = None
 def get_orgs():
     return r_serv_db.smembers(f'ail:orgs')
 
+def get_nb_orgs():
+    return r_serv_db.scard('ail:orgs')
+
+def get_nb_active_orgs():
+    nb = 0
+    for org_id in get_orgs():
+        org = Organisation(org_id)
+        if org.get_nb_users() > 0:
+            nb += 1
+    return nb
+
 def is_user_in_org(org_uuid, user_id):
     return r_serv_db.sadd(f'ail:org:{org_uuid}:users', user_id)
 
@@ -308,7 +319,7 @@ def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
 #### API ####
 
 def api_get_orgs_meta():
-    meta = {'orgs': []}
+    meta = {'orgs': [], 'active': get_nb_active_orgs()}
     options = {'date_created', 'description', 'name', 'nb_users'}
     for org_uuid in get_orgs():
         org = Organisation(org_uuid)

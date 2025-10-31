@@ -20,6 +20,9 @@
         max-width: 50%;
         filter: blur(5px);
     }
+    .object_full_image {
+        max-width: 50%;
+    }
 </style>
 
 <div class="chat-message-left pb-1" id="{{ message['_id'] }}">
@@ -34,6 +37,14 @@
         </div>
     </div>
     <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-4 pb-4" style="overflow-x: auto">
+        {% if 'protocol' and 'result' in message %}
+            <div class="">
+                {% if message['protocol']['icon'] %}
+                    <i class="{{ message['protocol']['icon']['style'] }} {{ message['protocol']['icon']['icon'] }}"></i>
+                {% endif %}
+                <i>{{ message['protocol']['id'] }}</i>
+            </div>
+        {% endif %}
         {% if 'forwarded_from' in message %}
             <div>
                 <small class="text-secondary"><i>forwarded from:</i></small>
@@ -67,6 +78,23 @@
         </div>
         {% if message['reply_to'] %}
             <div class="flex-shrink-1 bg-white border rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
+                {% if 'forwarded_from' in message['reply_to'] %}
+                    <div>
+                        <small class="text-secondary"><i>forwarded from:</i></small>
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="text-secondary mb-0">
+                                    {% if message['reply_to']['forwarded_from']['icon'] %}
+                                        <a href="{{ url_for('chats_explorer.objects_user_account')}}?subtype={{ message['user-account']['subtype'] }}&id={{ message['user-account']['id'] }}">
+                                            <img src="{{ url_for('objects_image.image', filename=message['reply_to']['forwarded_from']['icon'])}}" class="rounded-circle mr-1" alt="{{ message['reply_to']['forwarded_from']['id'] }}" width="40" height="40" loading="lazy">
+                                        </a>
+                                    {% endif %}
+                                    {% if message['reply_to']['forwarded_from']['name'] %}{{ message['reply_to']['forwarded_from']['name'] }}{% endif %} :  <small><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ message['reply_to']['forwarded_from']['subtype'] }}&id={{ message['reply_to']['forwarded_from']['id'] }}">{{ message['reply_to']['forwarded_from']['id'] }}</a></small>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="font-weight-bold mb-1">
                     {% if message['reply_to']['user-account']['username'] %}
                         {{ message['reply_to']['user-account']['username']['id'] }}
@@ -91,7 +119,7 @@
         {% endif %}
         {% if message['images'] %}
             {% for message_image in message['images'] %}
-                <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}"  loading="lazy">
+                <img class="{% if force_full_image%}object_full_image{% else %}object_image{% endif %} mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}"  loading="lazy">
                 {% if message_image['ocr'] %}
                     <span>
                         <a class="btn btn-info" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>
@@ -126,6 +154,11 @@
                         </span>
 
                     {% endfor %}
+                {% endif %}
+                {% if ollama_enabled %}
+                    {% with ollama_description=message_image['description'], image_gid='image::'+message_image['id'] %}
+                        {% include 'block_img_ollama_small.html' %}
+                    {% endwith %}
                 {% endif %}
             {%  endfor %}
         {% endif %}
@@ -169,7 +202,11 @@
             {%  endfor %}
         {% endif %}
         {% if not message['extracted'] %}
-            <pre class="my-0" style="white-space: pre-wrap;">{{ message['content'] }}</pre>
+            {% if 'result' in message %}
+                <pre class="my-0" style="white-space: pre-wrap;">{{ message['result'] }}</pre>
+            {% else %}
+                <pre class="my-0" style="white-space: pre-wrap;">{{ message['content'] }}</pre>
+            {% endif %}
         {% else %}
             <pre class="my-0" style="white-space: pre-wrap;">{{ message['content'][:message['extracted'][0][0]] }}{% for row in message['extracted'] %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ message['extracted_matches'][r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ message['extracted_matches'][r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ message['extracted_matches'][r[0]]['icon']['icon'] }}</text></g></svg> {{ message['extracted_matches'][r[0]]['subtype'] }}</div>{{ message['extracted_matches'][r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ message['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > message['extracted']|length %}{{ message['content'][message['extracted'][-1][1]:] }}{% else %}{{ message['content'][row[1]:message['extracted'][loop.index][0]] }}{% endif %}{% endfor %}</pre>
         {% endif %}
@@ -204,8 +241,8 @@
                         <span class="">
                             <select id="language_target" name="language_target" class="form-select" aria-label="Message Language" onchange="$('#translation').val('');">
                                     <option selected value="{{ message['language'] }}">{{ message['language'] }}</option>
-                                {% for language in translation_languages %}
-                                    <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                {% for language in all_languages %}
+                                    <option value="{{ language }}">{{ all_languages[language] }}</option>
                                 {% endfor %}
                             </select>
                         </span>

@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_logger
 from lib import ail_orgs
 from lib.ConfigLoader import ConfigLoader
+from exporter import MailExporter
 
 
 # LOGS
@@ -31,6 +32,8 @@ access_logger = ail_logger.get_access_config()
 # Config
 config_loader = ConfigLoader()
 r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
+r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
+r_tracker = config_loader.get_db_conn("Kvrocks_Trackers")
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 
 if config_loader.get_config_boolean('Users', 'force_2fa'):
@@ -48,13 +51,16 @@ regex_password = re.compile(regex_password)
 #### SESSIONS ####
 
 def get_sessions():
-    r_cache.smembers('ail:sessions')
+    return r_cache.hkeys('ail:sessions')
+
+def get_nb_sessions():
+    return r_cache.hlen('ail:sessions')
 
 def exists_session(session):
-    r_cache.hexists('ail:sessions', session)
+    return r_cache.hexists('ail:sessions', session)
 
 def exists_session_user(user_id):
-    r_cache.hexists('ail:sessions:users', user_id)
+    return r_cache.hexists('ail:sessions:users', user_id)
 
 def get_session_user(session):
     return r_cache.hget('ail:sessions', session)
@@ -141,6 +147,7 @@ def _delete_user_token(user_id):
     current_token = get_user_token(user_id)
     if current_token:
         r_serv_db.hdel('ail:users:tokens', current_token)
+        r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'token')
 
 def _set_user_token(user_id, token):
     r_serv_db.hset('ail:users:tokens', token, user_id)
@@ -270,6 +277,16 @@ def disable_user_2fa(user_id):
 def get_users():
     return r_serv_db.hkeys('ail:users:all')
 
+def get_nb_users():
+    return r_serv_db.hlen('ail:users:all')
+
+def get_nb_active_users():
+    nb = 0
+    for user_id in get_users():
+        if get_user_last_login(user_id):
+            nb += 1
+    return nb
+
 def get_users_meta(users):
     meta = []
     for user_id in users:
@@ -312,18 +329,9 @@ def update_user_last_seen_api(user_id):
     r_serv_db.hset(f'ail:user:metadata:{user_id}', 'last_seen_api', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
 
 def get_disabled_users():
-    return r_serv_db.smembers(f'ail:users:disabled')
+    return r_serv_db.smembers('ail:users:disabled')
 
-def is_user_disabled(user_id):
-    return r_serv_db.sismember(f'ail:users:disabled', user_id)
-
-def disable_user(user_id):
-    r_serv_db.sadd(f'ail:users:disabled', user_id)
-
-def enable_user(user_id):
-    r_serv_db.srem(f'ail:users:disabled', user_id)
-
-def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False):
+def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid=None, role=None, otp=False, send_email=False):
     # # TODO: check password strength
     if password:
         new_password = password
@@ -361,9 +369,17 @@ def create_user(user_id, password=None, admin_id=None, chg_passwd=True, org_uuid
         if otp or is_2fa_enabled():
             enable_user_2fa(user_id)
 
+        if send_email:
+            exporter = MailExporter.MailExporterUserCreation()
+            exporter.export(user_id, new_password)
+
 # TODO edit_org
 # TODO LOG
-def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True, role=None):
+def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None, edit_otp=False, otp=True, role=None, send_email=False):
+    if send_email and not password:
+        password = gen_password()
+        chg_passwd = True
+
     if password:
         password_hash = hashing_password(password)
         if chg_passwd:
@@ -374,6 +390,9 @@ def edit_user(admin_id, user_id, password=None, chg_passwd=False, org_uuid=None,
             generate_new_token(user_id)
         else:
             r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'change_passwd')
+        if send_email:
+            exporter = MailExporter.MailExporterUserCreation()
+            exporter.export(user_id, password)
 
     if org_uuid:
         org = ail_orgs.Organisation(org_uuid)
@@ -447,6 +466,19 @@ class AILUser(UserMixin):
     def get_org(self):
         return get_user_org(self.user_id)
 
+    def get_nb_cookiejars(self):
+        return r_crawler.scard(f'cookiejars:user:{self.user_id}')
+
+    def get_nb_trackers(self):
+        return r_tracker.scard(f'user:tracker:{self.user_id}')
+
+    def get_nb_config_misp(self):
+        return r_serv_db.scard(f'ail:user:obj:settings:misp:{self.user_id}')
+
+    # TODO retro hunt
+
+    # TODO def get_nb_investigations(self):
+
     def get_meta(self, options=set()):
         meta = {'id': self.user_id}
         if 'creator' in options:
@@ -477,12 +509,14 @@ class AILUser(UserMixin):
             meta['org'] = self.get_org()
             if 'org_name' in options and meta['org']:
                 meta['org_name'] = ail_orgs.Organisation(self.get_org()).get_name()
+        if 'stats' in options:
+            meta['stats'] = {'cookiejars': self.get_nb_cookiejars(),
+                             'misp': self.get_nb_config_misp(),
+                             'trackers': self.get_nb_trackers()
+                             }
         return meta
 
     ## SESSION ##
-
-    def is_disabled(self):
-        return is_user_disabled(self.user_id)
 
     def get_session(self):
         return self.id
@@ -539,6 +573,9 @@ class AILUser(UserMixin):
         _set_user_token(self.user_id, new_api_key)
         return new_api_key
 
+    def delete_api_key(self):
+        _delete_user_token(self.user_id)
+
     ## OTP ##
 
     def is_2fa_setup(self):
@@ -579,12 +616,28 @@ class AILUser(UserMixin):
     def get_role(self):
         return r_serv_db.hget(f'ail:user:metadata:{self.user_id}', 'role')
 
+    def delete_role(self):
+        for role_id in get_roles():
+            r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
+
     ##  ##
+    def is_disabled(self):
+        return r_serv_db.sismember('ail:users:disabled', self.user_id)
+
+    def enable_user(self):
+        self.new_api_key()
+        set_user_role(self.user_id, self.get_role())
+        r_serv_db.srem('ail:users:disabled', self.user_id)
+
+    def disable_user(self):
+        kill_session_user(self.user_id)
+        self.delete_api_key()
+        self.delete_role()
+        r_serv_db.sadd('ail:users:disabled', self.user_id)
 
     def delete(self):
         kill_session_user(self.user_id)
-        for role_id in get_roles():
-            r_serv_db.srem(f'ail:users:role:{role_id}', self.user_id)
+        self.delete_role()
         user_token = self.get_api_key()
         if user_token:
             r_serv_db.hdel('ail:users:tokens', user_token)
@@ -599,8 +652,8 @@ class AILUser(UserMixin):
 #### API ####
 
 def api_get_users_meta():
-    meta = {'users': []}
-    options = {'api_key', 'creator', 'created_at', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
+    meta = {'users': [], 'active': get_nb_active_users(), 'logged': get_nb_sessions()}
+    options = {'creator', 'created_at', 'is_disabled', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'role', '2fa', 'otp_setup'}
     for user_id in get_users():
         user = AILUser(user_id)
         meta['users'].append(user.get_meta(options=options))
@@ -608,6 +661,14 @@ def api_get_users_meta():
 
 def api_get_user_profile(user_id):
     options = {'api_key', 'role', '2fa', 'org', 'org_name'}
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    meta = user.get_meta(options=options)
+    return meta, 200
+
+def api_get_user_view(user_id):
+    options = {'2fa', 'api_key', 'creator', 'created_at', 'is_disabled', 'is_logged', 'last_edit', 'last_login', 'last_seen', 'last_seen_api', 'org', 'org_name', 'otp_setup', 'role', 'stats'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -632,23 +693,23 @@ def api_logout_users(admin_id, ip_address, user_agent):
     access_logger.info('Logout all users', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return kill_sessions(), 200
 
-def api_disable_user(admin_id, user_id): # TODO LOG ADMIN ID
+def api_disable_user(admin_id, user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
     if user.is_disabled():
         return {'status': 'error', 'reason': 'User is already disabled'}, 400
-    print(admin_id)
-    disable_user(user_id)
+    access_logger.info(f'Disable User {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+    return user.disable_user(), 200
 
-def api_enable_user(admin_id, user_id): # TODO LOG ADMIN ID
+def api_enable_user(admin_id, user_id, ip_address, user_agent):
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
     if not user.is_disabled():
         return {'status': 'error', 'reason': 'User is not disabled'}, 400
-    print(admin_id)
-    enable_user(user_id)
+    access_logger.info(f'Enable User {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+    return user.enable_user(), 200
 
 def api_enable_user_otp(user_id, ip_address):
     user = AILUser(user_id)
@@ -699,19 +760,19 @@ def api_create_user_api_key(user_id, admin_id, ip_address, user_agent):
     access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.new_api_key(), 200
 
-def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp):
+def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp, send_email=False):
     user = AILUser(user_id)
     if not ail_orgs.exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Unknown Organisation'}, 400
     if not exists_role(role):
         return {'status': 'error', 'reason': 'Unknown User Role'}, 400
     if not user.exists():
-        create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp)
+        create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp, send_email=send_email)
         access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
         return user_id, 200
     # Edit
     else:
-        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role)
+        edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role, send_email=send_email)
         access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
         return user_id, 200
 
@@ -829,10 +890,3 @@ def check_user_role_integrity(user_id):
             return False
     return True
 
-# TODO
-# ACL:
-#       - mass tag correlation graph
-#
-#
-#
-#

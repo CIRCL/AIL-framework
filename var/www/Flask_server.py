@@ -25,6 +25,8 @@ from lib import Tag
 from lib import ail_core
 from lib import ail_logger
 from lib import ail_stats
+from lib import passivedns
+from lib.objects import SSHKeys
 
 from packages.git_status import clear_git_meta_cache
 
@@ -41,6 +43,7 @@ from blueprints.languages_ui import languages_ui
 from blueprints.tags_ui import tags_ui
 from blueprints.import_export import import_export
 from blueprints.investigations_b import investigations_b
+from blueprints.search_b import search_b
 from blueprints.objects_item import objects_item
 from blueprints.hunters import hunters
 from blueprints.old_endpoints import old_endpoints
@@ -50,6 +53,8 @@ from blueprints.objects_cve import objects_cve
 from blueprints.objects_decoded import objects_decoded
 from blueprints.objects_subtypes import objects_subtypes
 from blueprints.objects_title import objects_title
+from blueprints.objects_mail import objects_mail
+from blueprints.objects_gtracker import objects_gtracker
 from blueprints.objects_cookie_name import objects_cookie_name
 from blueprints.objects_etag import objects_etag
 from blueprints.objects_hhhash import objects_hhhash
@@ -61,6 +66,8 @@ from blueprints.objects_barcode import objects_barcode
 from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
 from blueprints.objects_file_name import objects_file_name
+from blueprints.objects_ssh import objects_ssh
+from blueprints.objects_ip import objects_ip
 from blueprints.api_rest import api_rest
 
 
@@ -110,10 +117,15 @@ for handler in flask_logger.handlers:
 
 # =========  TLS  =========#
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
-ssl_context.suppress_ragged_eofs = True
-# print(ssl_context.get_ciphers())
+ssl_context = None
+self_signed_certfile = os.path.join(Flask_dir, 'server.crt')
+self_signed_keyfile = os.path.join(Flask_dir, 'server.key')
+
+if os.path.exists(self_signed_certfile) and os.path.exists(self_signed_keyfile):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile=self_signed_certfile, keyfile=self_signed_keyfile)
+    ssl_context.suppress_ragged_eofs = True
+    # print(ssl_context.get_ciphers())
 # =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
@@ -139,6 +151,8 @@ app.register_blueprint(objects_cve, url_prefix=baseUrl)
 app.register_blueprint(objects_decoded, url_prefix=baseUrl)
 app.register_blueprint(objects_subtypes, url_prefix=baseUrl)
 app.register_blueprint(objects_title, url_prefix=baseUrl)
+app.register_blueprint(objects_mail, url_prefix=baseUrl)
+app.register_blueprint(objects_gtracker, url_prefix=baseUrl)
 app.register_blueprint(objects_cookie_name, url_prefix=baseUrl)
 app.register_blueprint(objects_etag, url_prefix=baseUrl)
 app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
@@ -150,6 +164,9 @@ app.register_blueprint(objects_barcode, url_prefix=baseUrl)
 app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(objects_file_name, url_prefix=baseUrl)
+app.register_blueprint(objects_ssh, url_prefix=baseUrl)
+app.register_blueprint(objects_ip, url_prefix=baseUrl)
+app.register_blueprint(search_b, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 
 # =========       =========#
@@ -254,6 +271,8 @@ def _handle_client_error(e):
     if request.path.startswith('/api/'):
         return Response(json.dumps({"status": "error", "reason": "Server Error"}) + '\n', mimetype='application/json'), 500
     else:
+        if current_user:
+            flask_logger.warning(f'User: {current_user.get_user_id()}')
         return e
 
 @login_required
@@ -304,6 +323,13 @@ for taxonomy in default_taxonomies:
 
 # ========== GIT Cache ============
 clear_git_meta_cache()
+
+# Passive SSH
+if not SSHKeys.get_passive_ssh_url():
+    SSHKeys.set_default_passive_ssh()
+# Passive DNS
+if not passivedns.get_passive_dns_url():
+    passivedns.set_default_passive_dns()
 
 # r = [str(p) for p in app.url_map.iter_rules()]
 # for p in r:

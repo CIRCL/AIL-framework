@@ -79,16 +79,11 @@ class Cve(AbstractDaterangeObject):
         meta['tags'] = self.get_tags(r_list=True)
         return meta
 
-    def get_cve_search(self):
+    def get_vulnerability_lookup(self):
         try:
-            response = requests.get(f'https://cvepremium.circl.lu/api/cve/{self.id}', timeout=10)
+            response = requests.get(f'https://vulnerability.circl.lu/api/vulnerability/{self.id}', timeout=10)
             if response.status_code == 200:
                 json_response = response.json()
-                # 'summary'
-                # 'references'
-                # 'last-modified'
-                # 'Published'
-                # 'Modified'
                 return json_response
             else:
                 return {'error': f'{response.status_code}'}

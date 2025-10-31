@@ -120,7 +120,8 @@ def get_correl_match(extract_type, obj, content):
                 sha256_val = sha256(ob[2].encode()).hexdigest()
             value_id = map_value_id.get(sha256_val)
             if not value_id:
-                logger.critical(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
+                # logger.critical(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
+                print(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
                 value_id = 'ERROR'
             extracted.append([ob[0], ob[1], ob[2], f'{extract_type}:{subtype}:{value_id}'])
     return extracted
@@ -145,7 +146,8 @@ def convert_byte_offset_to_string(b_content, offset):
         offset = len(string_chunk) - 1
         return offset
     except UnicodeDecodeError as e:
-        logger.error(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
+        # logger.error(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
+        print(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
         return convert_byte_offset_to_string(b_content, offset - 1)
 
 
@@ -322,7 +324,8 @@ def get_extracted_by_match(extracted):
                         matches[str_obj]['icon'] = ail_objects.get_object_svg(ob_type, subtype, obj_id)
                         matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
                     except TypeError:
-                        logger.critical(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
+                        # logger.critical(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
+                        print(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
                         matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf00d', 'color': 'red', 'radius': 5}
                         matches[str_obj]['link'] = ''
 

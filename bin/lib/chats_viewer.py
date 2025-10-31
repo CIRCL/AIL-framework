@@ -111,10 +111,13 @@ def get_chat_protocols():
 def get_chat_protocols_meta():
     metas = []
     for protocol_id in get_chat_protocols():
-        protocol = ChatProtocol(protocol_id)
-        metas.append(protocol.get_meta(options={'icon'}))
+        metas.append(get_chat_protocol_meta(protocol_id))
     metas = sorted(metas, key=lambda d: d['id'])
     return metas
+
+def get_chat_protocol_meta(protocol_id):
+    protocol = ChatProtocol(protocol_id)
+    return protocol.get_meta(options={'icon'})
 
 class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
     def __init__(self, protocol):
@@ -172,11 +175,15 @@ class ChatServiceInstance:
         network = r_obj.hget(f'chatSerIns:{self.uuid}', 'network')
         if network:
             return network
+        else:
+            return None
 
     def get_address(self): # return objects ????
         address = r_obj.hget(f'chatSerIns:{self.uuid}', 'address')
         if address:
             return address
+        else:
+            return None
 
     def get_meta(self, options=set()):
         meta = {'uuid': self.uuid,
@@ -192,6 +199,8 @@ class ChatServiceInstance:
             for chat_id in self.get_chats_with_messages():
                 meta['chats'].append(
                     Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'}))
+        if 'languages' in options:
+            meta['languages'] = Language.get_container_subtype_languages('chat', self.uuid)
         return meta
 
     def get_nb_chats(self):
@@ -202,6 +211,54 @@ class ChatServiceInstance:
 
     def get_chats_with_messages(self):
         return Chats.Chats().get_ids_with_messages_by_subtype(self.uuid)
+
+    def get_messages_languages(self):
+        languages = {}
+        for chat_id in self.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, self.uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, self.uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', 2)
+                    message = Messages.Message(message_id)
+                    language = message.get_language()
+                    if not language:
+                        continue
+                    if language not in languages:
+                        languages[language] = 1
+                    else:
+                        languages[language] += 1
+            # threads
+            for threads in chat.get_threads():
+                thread = ChatThreads.ChatThread(threads['id'], self.uuid)
+                messages, _ = thread._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', 2)
+                    message = Messages.Message(message_id)
+                    language = message.get_language()
+                    if not language:
+                        continue
+                    if language not in languages:
+                        languages[language] = 1
+                    else:
+                        languages[language] += 1
+            # messages
+            messages, _ = chat._get_messages(nb=-1)
+            for mess in messages:
+                _, _, message_id = mess[0].split(':', 2)
+                message = Messages.Message(message_id)
+                language = message.get_language()
+                if not language:
+                    continue
+                if language not in languages:
+                    languages[language] = 1
+                else:
+                    languages[language] += 1
+
+        return languages
 
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
@@ -234,6 +291,8 @@ def get_chat_service_instance(protocol, network, address):
     instance_uuid = get_chat_service_instance_uuid(protocol, network, address)
     if instance_uuid:
         return ChatServiceInstance(instance_uuid)
+    else:
+        return None
 
 def create_chat_service_instance(protocol, network=None, address=None):
     instance_uuid = get_chat_service_instance_uuid(protocol, network, address)
@@ -285,13 +344,23 @@ def create_chat_service_instance(protocol, network=None, address=None):
 
 # Chat -> subtype=uuid, id = chat id
 
+def get_nb_chats():
+    nb = 0
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            nb += 1
+    return nb
 
-# instance_uuid -> chat id
-
-
-# protocol - uniq ID
-# protocol + network -> uuid ????
-# protocol + network + address -> uuid
+def get_nb_chats_stats():
+    nb = {}
+    for instance_uuid in get_chat_service_instances():
+        chat_instance = ChatServiceInstance(instance_uuid)
+        protocol = chat_instance.get_protocol()
+        if protocol not in nb:
+            nb[protocol] = 0
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            nb[protocol] += 1
+    return nb
 
 #######################################################################################
 
@@ -322,15 +391,18 @@ def get_obj_chat_meta(obj_chat, new_options=set()):
 def get_subchannels_meta_from_global_id(subchannels, translation_target=None):
     meta = []
     for sub in subchannels:
-        _, instance_uuid, sub_id = sub.split(':', 2)
-        subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
-        meta.append(subchannel.get_meta({'nb_messages', 'created_at', 'icon', 'translation'}, translation_target=translation_target))
+        meta.append(get_subchannel_meta_from_global_id(sub, translation_target=translation_target))
     return meta
+
+def get_subchannel_meta_from_global_id(subchannel, translation_target=None):
+    _, instance_uuid, sub_id = subchannel.split(':', 2)
+    subchannel = ChatSubChannels.ChatSubChannel(sub_id, instance_uuid)
+    return subchannel.get_meta({'nb_messages', 'created_at', 'icon', 'translation'}, translation_target=translation_target)
 
 def get_chat_meta_from_global_id(chat_global_id):
     _, instance_uuid, chat_id = chat_global_id.split(':', 2)
     chat = Chats.Chat(chat_id, instance_uuid)
-    return chat.get_meta()
+    return get_obj_chat_meta(chat, new_options={'nb_participants', 'tags_safe'})
 
 def get_threads_metas(threads):
     metas = []
@@ -348,15 +420,13 @@ def get_username_meta_from_global_id(username_global_id):
 def list_messages_to_dict(l_messages_id, translation_target=None):
     options = {'content', 'files', 'files-names', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'translation', 'user-account'}
     meta = {}
-    curr_date = None
     for mess_id in l_messages_id:
         message = Messages.Message(mess_id[1:])
         timestamp = message.get_timestamp()
         date_day = message.get_date()
         date_day = f'{date_day[0:4]}/{date_day[4:6]}/{date_day[6:8]}'
-        if date_day != curr_date:
+        if date_day not in meta:
             meta[date_day] = []
-            curr_date = date_day
         meta_mess = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         meta[date_day].append(meta_mess)
 
@@ -366,6 +436,11 @@ def list_messages_to_dict(l_messages_id, translation_target=None):
         #             tags[tag] = 0
         #         tags[tag] += 1
     # return messages, pagination, tags
+
+    # sort dict by date
+    meta = dict(sorted(meta.items()))
+    for k in meta:
+        meta[k] = sorted(meta[k], key=lambda d: d['full_date'])
     return meta
 
 # TODO Filter
@@ -402,7 +477,7 @@ def get_messages_iterator(filters={}):
                     subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
                     messages, _ = subchannel._get_messages(nb=-1)
                     for mess in messages:
-                        _, _, message_id = mess[0].split(':', )
+                        _, _, message_id = mess[0].split(':', 2)
                         yield Messages.Message(message_id)
                     # threads
 
@@ -411,13 +486,13 @@ def get_messages_iterator(filters={}):
                     thread = ChatThreads.ChatThread(threads['id'], instance_uuid)
                     messages, _ = thread._get_messages(nb=-1)
                     for mess in messages:
-                        message_id, _, message_id = mess[0].split(':', )
+                        message_id, _, message_id = mess[0].split(':', 2)
                         yield Messages.Message(message_id)
 
                 # messages
                 messages, _ = chat._get_messages(nb=-1)
                 for mess in messages:
-                    _, _, message_id = mess[0].split(':', )
+                    _, _, message_id = mess[0].split(':', 2)
                     yield Messages.Message(message_id)
                     # threads ???
 
@@ -465,8 +540,13 @@ def get_chat_object_messages_meta(c_messages):
                 if meta['forwarded_from'] not in temp_chats:
                     chat = get_obj_chat_from_global_id(meta['forwarded_from'])
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
-                else:
-                    meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+                meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+            if 'reply_to' in meta:
+                if meta.get('reply_to').get('forwarded_from'):
+                    if meta['reply_to']['forwarded_from'] not in temp_chats:
+                        chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+                        temp_chats[meta['reply_to']['forwarded_from']] = chat.get_meta({'icon'})
+                    meta['reply_to']['forwarded_from'] = temp_chats[meta['reply_to']['forwarded_from']]
             if meta['barcodes']:
                 barcodes = []
                 for q in meta['barcodes']:
@@ -501,14 +581,14 @@ def get_user_account_chats_meta(user_id, chats, subchannels):
         meta.append(chat_meta)
     return meta
 
-def get_user_account_chat_message(user_id, subtype, chat_id):  # TODO subchannel + threads ...
+def get_user_account_chat_message(user_id, subtype, chat_id, translation_target=None):  # TODO subchannel + threads ...
     meta = {}
     chat = Chats.Chat(chat_id, subtype)
     chat_meta = chat.get_meta(options={'icon', 'info', 'nb_participants', 'tags_safe', 'username'})
     if chat_meta['username']:
         chat_meta['username'] = get_username_meta_from_global_id(chat_meta['username'])
 
-    meta['messages'] = list_messages_to_dict(chat.get_user_messages(user_id), translation_target=None)
+    meta['messages'] = list_messages_to_dict(chat.get_user_messages(user_id), translation_target=translation_target)
     return meta
 
 def get_user_account_nb_all_week_messages(user_id, chats, subchannels):
@@ -640,16 +720,37 @@ def _get_chat_card_meta_options():
 def _get_message_bloc_meta_options():
     return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
 
+def _delete_messages_languages():
+    for message in get_messages_iterator():
+        message.delete_languages()
+
+# TODO
+#   - Messages duplicates
+#   - Number of tracked messages by chat
 def get_message_report(l_mess): # TODO Force language + translation
     translation_target = 'en'
+    translation_target = None
     chats = {}
     messages = []
     mess_options = _get_message_bloc_meta_options()
 
-    l_mess = sorted(l_mess, key=lambda x: x[2])
-
+    l_messages = []
+    l_ocrs = []
     for m in l_mess:
-        message = Messages.Message(m[2])
+        if m[0] == 'message':
+            l_messages.append(m[2])
+        elif m[0] == 'ocr':
+            l_ocrs.append(m[2])
+
+    for o in l_ocrs:
+        ocr = Ocr(o)
+        for m in ocr.get_messages():
+            l_messages.append(m)
+
+    l_messages = sorted(l_messages, key=lambda x: x)
+
+    for m in l_messages:
+        message = Messages.Message(m)
         meta = message.get_meta(options=mess_options, translation_target=translation_target)
         if meta['chat'] not in chats:
             chat = Chats.Chat(meta['chat'], message.get_chat_instance())
@@ -683,6 +784,33 @@ def get_chats_monitoring_requests_metas():
         requests.append(cr.get_meta())
     return requests
 
+def get_new_chats_monitoring_requests():
+    return r_obj.smembers(f'chats:requests:new')
+
+def get_nb_new_chats_monitoring_requests():
+    return r_obj.scard(f'chats:requests:new')
+
+def api_done_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.done(), 200
+
+def api_reject_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.reject(), 200
+
+def api_delete_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.delete(), 200
+
 class ChatsMonitoringRequest:
     def __init__(self, r_uuid):
         self.uuid = r_uuid
@@ -694,7 +822,7 @@ class ChatsMonitoringRequest:
         r_obj.hset(f'chats:request:{self.uuid}', name, value)
 
     def exists(self):
-        r_obj.exists(f'chats:request:{self.uuid}')
+        return r_obj.exists(f'chats:request:{self.uuid}')
 
     def get_meta(self):
         return {'uuid': self.uuid,
@@ -704,9 +832,11 @@ class ChatsMonitoringRequest:
                 'invite': self._get_field('invite'),
                 'username': self._get_field('username'),
                 'description': self._get_field('description'),
-        }
+                'status': self._get_field('status'),
+                }
 
     def create(self, creator, chat_type, invite, username, description):
+        r_obj.sadd(f'chats:requests:new', self.uuid)
         self._set_field('chat_type', chat_type)
         self._set_field('creator', creator)
         self._set_field('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -717,6 +847,20 @@ class ChatsMonitoringRequest:
         if description:
             self._set_field('description', description)
         r_obj.sadd(f'chats:requests', self.uuid)
+
+    def done(self):
+        self._set_field('status', 'done')
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
+    def reject(self):
+        self._set_field('status', 'rejected')
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
+    def delete(self):
+        r_obj.delete(f'chats:request:{self.uuid}')
+        r_obj.srem(f'chats:requests', self.uuid)
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
 
 def create_chat_monitoring_requests(creator, chat_type, invite, username, description):
     r_uuid = generate_uuid()
@@ -814,6 +958,12 @@ def api_get_chat_service_instance(chat_instance_uuid):
     # return chat_instance.get_meta({'chats'}), 200
     return chat_instance.get_meta({'chats_with_messages'}), 200
 
+def api_get_messages_languages(instance_uuid):
+    chat_instance = ChatServiceInstance(instance_uuid)
+    if not chat_instance.exists():
+        return {"status": "error", "reason": "Unknown uuid"}, 404
+    return chat_instance.get_messages_languages(), 200
+
 def api_get_chats_selector():
     selector = []
     for instance_uuid in get_chat_service_instances():
@@ -826,7 +976,6 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    # print(chat.get_obj_language_stats())
     meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
@@ -869,11 +1018,25 @@ def api_get_nb_year_messages(chat_type, chat_instance_uuid, chat_id, year):
     nb = [[date, value] for date, value in nb.items()]
     return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
-def api_get_languages_stats(chat_type, chat_instance_uuid, chat_id):
-    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
-    if not chat.exists():
+def api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=None):
+    meta = {}
+    obj = get_obj_chat(chat_type, instance_uuid, chat_id)
+    if not obj.exists():
+        return {"status": "error", "reason": f"Unknown chat:   {chat_type}:{instance_uuid}:{chat_id}"}, 404
+    meta['chat'] = obj.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    if meta['chat'].get('username'):
+        meta['chat']['username'] = get_username_meta_from_global_id(meta['chat']['username'])
+    meta['messages'] = list_messages_to_dict(obj.get_messages_by_lang(language), translation_target=translation_target)
+    return meta, 200
+
+def api_get_languages_stats(obj_type, chat_instance_uuid, chat_id):
+    if obj_type == 'user-account':
+        obj = UsersAccount.UserAccount(chat_id, chat_instance_uuid)
+    else:
+        obj = get_obj_chat(obj_type, chat_instance_uuid, chat_id)
+    if not obj.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    stats = chat.get_obj_language_stats()
+    stats = obj.get_obj_language_stats()
     langs = []
     for stat in stats:
         langs.append({'name': Language.get_language_from_iso(stat[0]), 'value': int(stat[1])})
@@ -929,10 +1092,14 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
+    if 'reply_to' in meta:
+        if meta['reply_to'].get('forwarded_from'):
+            chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+            meta['reply_to']['forwarded_from'] = chat.get_meta({'icon'})
     barcodes = []
     for q in meta['barcodes']:
         obj = Barcode(q)
@@ -943,6 +1110,17 @@ def api_get_message(message_id, translation_target=None):
         qr = Qrcode(q)
         qrcodes.append({'id': qr.id, 'content': qr.get_content(), 'tags': qr.get_tags()})
     meta['qrcodes'] = qrcodes
+
+    chat_instance = message.get_chat_instance()
+    meta['chat'] = get_chat_meta_from_global_id(f'chat:{chat_instance}:{meta["chat"]}')
+    if meta['chat']['subchannels']:
+        meta['chat']['subchannels'] = get_subchannels_meta_from_global_id(meta['chat']['subchannels'])
+
+
+    if meta['chat']['username']:
+        meta['chat']['username'] = get_username_meta_from_global_id(meta['chat']['username'])
+    meta['protocol'] = get_chat_protocol_meta(meta['protocol'])
+
     return meta, 200
 
 def api_message_detect_language(message_id):
@@ -959,7 +1137,7 @@ def api_manually_translate_message(message_id, source, translation_target, trans
     if translation:
         if len(translation) > 200000: # TODO REVIEW LIMIT
             return {"status": "error", "reason": "Max Size reached"}, 400
-    all_languages = Language.get_translation_languages()
+    all_languages = Language.get_all_languages()
     if source not in all_languages:
         return {"status": "error", "reason": "Unknown source Language"}, 400
     message_language = message.get_language()
@@ -985,13 +1163,23 @@ def api_get_user_account_chat_messages(user_id, instance_uuid, chat_id, translat
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
-    meta = get_user_account_chat_message(user_id, instance_uuid, chat_id)
+    meta = get_user_account_chat_message(user_id, instance_uuid, chat_id, translation_target=translation_target)
     meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
     resp = api_get_chat(chat_id, instance_uuid, translation_target=translation_target, messages=False)
     if resp[1] != 200:
         return resp
     meta['chat'] = resp[0]
     return meta, 200
+
+def api_get_user_account_messages_by_lang(user_id, instance_uuid, language, translation_target=None):
+    meta = {}
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    if not user_account.exists():
+        return {"status": "error", "reason": "Unknown user-account"}, 404
+    meta['user-account'] = user_account.get_meta({'icon', 'info', 'translation', 'username', 'username_meta'}, translation_target=translation_target)
+    meta['messages'] = list_messages_to_dict(user_account.get_messages_by_lang(language), translation_target=translation_target)
+    return meta, 200
+
 
 def api_get_user_account_nb_all_week_messages(user_id, instance_uuid):
     user_account = UsersAccount.UserAccount(user_id, instance_uuid)

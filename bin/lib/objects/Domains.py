@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
 
-from lib.ail_core import paginate_iterator
+from lib.ail_core import paginate_iterator, get_default_image_description_model
 from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_domain, get_item_har
 from lib.data_retention_engine import update_obj_date
 
@@ -55,6 +55,8 @@ class Domain(AbstractObject):
     def get_domain_type(self):
         if str(self.id).endswith('.onion'):
             return 'onion'
+        elif str(self.id).endswith('.i2p'):
+            return 'i2p'
         else:
             return 'web'
 
@@ -220,7 +222,7 @@ class Domain(AbstractObject):
         return ['type', 'first_seen', 'last_check', 'last_origin', 'ports', 'status', 'tags', 'languages']
 
     # options: set of optional meta fields
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), flask_context=False):
         meta = {'type': self.domain_type,  # TODO RENAME ME -> Fix template
                 'id': self.id,
                 'domain': self.id, # TODO Remove me -> Fix templates
@@ -229,14 +231,20 @@ class Domain(AbstractObject):
                 'tags': self.get_tags(r_list=True),
                 'status': self.is_up()
                 }
+        if 'description' in options:
+            meta['description'] = self.get_description()
         if 'last_origin' in options:
             meta['last_origin'] = self.get_last_origin(obj=True)
         if 'languages' in options:
             meta['languages'] = self.get_languages()
         if 'screenshot' in options:
             meta['screenshot'] = self.get_screenshot()
+        if 'img' in options:
+            meta['img'] = self.get_screenshot()
         if 'tags_safe' in options:
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
@@ -256,6 +264,9 @@ class Domain(AbstractObject):
         if self.get_domain_type() == 'onion':
             style = 'fas'
             icon = '\uf06e'
+        elif self.get_domain_type() == 'i2p':
+            style = 'fas'
+            icon = '\uf21b'  # TODO change me
         else:
             style = 'fab'
             icon = '\uf13b'
@@ -315,6 +326,54 @@ class Domain(AbstractObject):
         else:
             return []
 
+    def get_crawled_images_by_epoch(self, epoch=None):
+        images = set()
+        for item_id in self.get_crawled_items_by_epoch(epoch):
+            screenshot = self.get_obj_correlations('item', '', item_id, ['screenshot']).get('screenshot')
+            if screenshot:
+                images.add(screenshot.pop()[1:])
+
+        return images
+
+    ## Descriptions ##
+
+    def get_description_models(self):
+        models = []
+        for key in self._get_fields_keys():
+            if key.startswith('desc:'):
+                model = key[5:]
+                models.append(model)
+
+    def add_description_model(self, model, description):
+        print(f'desc:{model}', description)
+        self._set_field(f'desc:{model}', description)
+
+    def get_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        description = self._get_field(f'desc:{model}')
+        if description:
+            description = description.replace("`", ' ')
+        return description
+
+    def delete_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        self._delete_field(f'desc:{model}')
+
+    ## -Descriptions- ##
+
+    ## Search ##
+
+    def get_search_description_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
+
+    ## -Search- ##
 
     # TODO FIXME
     def get_all_urls(self, date=False, epoch=None):
@@ -421,15 +480,20 @@ class Domain(AbstractObject):
     ############################################################################
     ############################################################################
 
-
-    def create(self, first_seen, last_check, status, tags, languages):
-
-
-        r_crawler.hset(f'domain:meta:{self.id}', 'first_seen', first_seen)
-        r_crawler.hset(f'domain:meta:{self.id}', 'last_check', last_check)
-
-        for language in languages:
-            self.add_language(language)
+    # def create(self, epoch, root_item_id, origin='manual', tags=[]):
+    #
+    #     # UP
+    #     if root_item_id:
+    #         self.add_history(epoch, root_item=root_item_id)
+    #         if origin:
+    #             self.set_last_origin(origin)
+    #     # DOWN
+    #     else:
+    #         self.add_history(epoch)
+    #
+    #     # manually set languages
+    #     # for language in languages:
+    #     #     self.add_language(language)
 
     # add root_item to history
     # if domain down -> root_item = epoch
@@ -476,7 +540,7 @@ def _write_in_zip_buffer(zf, path, filename):
 ############################################################################
 
 def get_all_domains_types():
-    return ['onion', 'web']  # i2p
+    return ['i2p', 'onion', 'web']
 
 def sanitize_domains_types(types):
     domains_types = get_all_domains_types()
@@ -530,6 +594,8 @@ def api_get_domains_by_languages(domains_types, languages, meta=False, page=1):
         domains['list_elem'] = metas
         return domains
 
+def get_nb_domains_up_by_type(domain_type):
+    return r_crawler.scard(f'full_{domain_type}_up')
 
 def get_domains_up_by_type(domain_type):
     return r_crawler.smembers(f'full_{domain_type}_up')
@@ -542,6 +608,13 @@ def get_domains_up_by_date(date, domain_type):
 
 def get_domains_down_by_date(date, domain_type):
     return r_crawler.smembers(f'{domain_type}_down:{date}')
+
+def get_domain_up_by_month(domain_type, month):
+    return r_crawler.smembers(f'month_{domain_type}_up:{month}')
+
+def get_domain_up_previous_month(domain_type):
+    month = Date.get_previous_month()
+    return get_domain_up_by_month(domain_type, month)
 
 def get_domains_by_daterange(date_from, date_to, domain_type, up=True, down=False):
     domains = []
@@ -567,6 +640,21 @@ def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, do
                 date_domains[date] = list(domains)
     return date_domains
 
+def get_domains_by_month(date_month, domains_types, up=True, down=True):
+    start = f'{date_month}01'
+    end = Date.get_month_last_day(date_month)
+    domains = []
+    for domain_type in domains_types:
+        doms = get_domains_by_daterange(start, end, domain_type, up=up, down=down)
+        if doms:
+            domains.extend(doms)
+    return domains
+
+def get_domain_up_iterator():
+    for domain_type in get_all_domains_types():
+        for dom_id in get_domains_up_by_type(domain_type):
+            yield Domain(dom_id)
+
 def get_domains_meta(domains):
     metas = []
     for domain in domains:
@@ -577,7 +665,7 @@ def get_domains_meta(domains):
 # TODO ADD TAGS FILTER
 def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
     if not domain_types:
-        domain_types = ['onion', 'web']
+        domain_types = get_all_domains_types()
     if not tags:
         domains = []
         if not date_from and not date_to:
@@ -607,6 +695,8 @@ def sanitize_domain_name_to_search(name_to_search, domain_type):
         return ""
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
+    elif domain_type == 'ip':
+        r_name = r'[a-z0-9-\.]+'
     else:
         r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name
@@ -753,6 +843,24 @@ class Domains:
         for domain_type in get_all_domains_types():
             nb += r_crawler.scard(f'{domain_type}_up:{date}')
         return nb
+
+#### API ####
+
+def api_get_onions_by_month(date_year_month):
+    if len(date_year_month) == 2:
+        month = int(date_year_month)
+        year = int(Date.get_current_year())
+    elif len(date_year_month) == 6 or len(date_year_month) == 8:
+        year = int(date_year_month[0:4])
+        if year < 2020:
+            return {'error': 'Invalid month date. Format: 202502'}, 400
+        month = int(date_year_month[4:6])
+    else:
+        return {'error': 'Invalid month date. Format: 202502'}, 400
+    if month < 1 or month > 12:
+        return {'error': 'Invalid month date. Format: 202502'}, 400
+    return get_domain_up_by_month('onion', f'{year}{month}'), 200
+
 
 if __name__ == '__main__':
     _rebuild_vanity_clusters()

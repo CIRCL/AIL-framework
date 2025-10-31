@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+
+    <style>
+    .object_image {
+        max-width: 50%;
+        filter: blur(5px);
+    }
+</style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_search.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                {% include 'search/block_description_images_search.html' %}
+
+                <span class="mt-3">
+                    {% include 'objects/image/block_blur_img_slider.html' %}
+                </span>
+
+                {% if result %}
+                    {% set endpoint_url = url_for('search_b.search_description_images') + "?search=" + to_search + "&index=" + search_index %}
+                    {% include 'search/pagination.html' %}
+                {% endif %}
+
+                {% for obj in result %}
+
+                    <div class="card mb-2">
+                        <div class="card-header bg-dark">
+    {#                        TODO URL   #}
+                            <h5 class="text-white text-center">{{ obj['url'] }} &nbsp; <small><a target="_blank" href="{{ obj['link'] }}">{{ obj['id'] }}</a></small></h5>
+                        </div>
+                        <div class="card-body py-1">
+                            <div>
+                                <h5>
+                                    {% for tag in obj['tags'] %}
+                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                    {% endfor %}
+                                </h5>
+                            </div>
+
+                            <pre class="border">{{ obj['result'] }}</pre>
+
+                            <div class="text-center">
+                                {% if obj['tags_safe'] or obj['is_tags_safe'] %}
+                                    {% if obj['type'] == 'image' %}
+                                        <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
+                                    {% elif obj['type'] == 'screenshot' or 'domain' in obj %}
+                                        <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
+                                    {% endif %}
+                                {% else %}
+                                    <span class="my-2 fa-stack fa-2x">
+                                        <i class="fas fa-stack-1x fa-image"></i>
+                                        <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+                {% if result %}
+                    {% include 'search/pagination.html' %}
+                    <br>
+		            <br>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function(){
+        $("#page-search").addClass("active");
+        $("#nav_explorer_chat").addClass("active");
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+</script>
+
+</body>
+
+</html>

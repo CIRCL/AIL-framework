@@ -91,6 +91,11 @@ def login():
                     return render_template("login.html", error=logging_error)
 
             if user.exists() and user.check_password(password):
+                if user.is_disabled():
+                    logging_error = 'User is disabled'
+                    access_logger.info(f'Login fail: User Disabled', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
+                    return render_template("login.html", error=logging_error)
+
                 if not check_user_role_integrity(user.get_user_id()):
                     logging_error = 'Incorrect User ACL, Please contact your administrator'
                     access_logger.info(f'Login fail: Invalid ACL', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})

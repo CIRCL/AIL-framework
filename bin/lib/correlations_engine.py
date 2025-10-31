@@ -49,19 +49,23 @@ CORRELATION_TYPES_BY_OBJ = {
     "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "hhhash", "item", "message", "pgp", "title", "screenshot", "username"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "screenshot", "ssh-key", "title", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
     "file-name": ["chat", "item", "message"],
+    "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
     "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "message", "pgp", "screenshot", "title", "username"],  # chat ???
-    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "ocr", "pgp", "user-account"],
+    "ip": ["ssh-key"],
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "gtracker", "mail", "message", "pgp", "screenshot", "title", "username"],  # chat ???
+    "mail": ["domain", "item", "message"],  # chat ??
+    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
     "pgp": ["chat", "domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
     "screenshot": ["barcode", "domain", "item", "qrcode"],
+    "ssh-key": ["domain", "ip"],
     "title": ["domain", "item"],
     "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
     "username": ["domain", "item", "message", "user-account"],
@@ -156,6 +160,25 @@ def delete_obj_correlations(obj_type, subtype, obj_id):
             subtype2, obj2_id = str_obj.split(':', 1)
             delete_obj_correlation(obj_type, subtype, obj_id, correl_type, subtype2, obj2_id)
 
+def get_obj_one_depth_correlations(obj_type, subtype, obj_id, target_types, intermediate_types=set(), start=None, end=None):
+    matches = []
+    src_obj_correlations = get_correlations(obj_type, subtype, obj_id, unpack=True)
+    for c_type in src_obj_correlations:
+        if not intermediate_types or c_type in intermediate_types:
+            if src_obj_correlations[c_type]:
+                for intermediate_obj_subtype, intermediate_obj_id in src_obj_correlations[c_type]:
+                    intermediate_obj_correlation = get_correlations(c_type, intermediate_obj_subtype, intermediate_obj_id, unpack=True)
+                    for t_type in intermediate_obj_correlation:
+                        if t_type in target_types:
+                            for t_obj_subtype, t_obj_id in intermediate_obj_correlation[t_type]:
+                                if start:
+                                    if t_obj_id.startswith(start):
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
+                                elif end:
+                                    if t_obj_id.endswith(end):
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
+    return matches
+
 # # bypass max result/objects ???
 # def get_correlation_depht(obj_type, subtype, obj_id, filter_types=[], level=1, nb_max=300):
 #     objs = set()
@@ -230,3 +253,7 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
                 next_level = level - 1
                 _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj=obj_str_id)
 
+
+if __name__ == '__main__':
+    r = get_obj_one_depth_correlations('item', '', '', {'domain'}, intermediate_types=set(), end='.onion')
+    print(r)

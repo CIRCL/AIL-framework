@@ -188,6 +188,8 @@ def objects_misp_export_post():
                 misps = ail_config.get_user_misps_selector(user_id)
                 return render_template("export_object.html", object_types=object_types,
                                        misp_url=event['url'], misps=misps)
+        else:
+            return create_json_response({'error': 'Missing misp instance uuid'}, 400)
 
     else:
         event = misp_exporter_objects.create_event(objs, distribution=distribution, threat_level=threat_level, analysis=analysis, info=info, export=export, publish=publish)
@@ -284,6 +286,8 @@ def export_investigation():
                     return create_json_response({"error": e.message}, 400)
                 event_url = event['url']
                 return redirect(url_for('investigations_b.show_investigation', uuid=investigation_uuid, misp_url=event_url))
+        else:
+            return create_json_response({'error': 'Missing misp instance uuid'}, 400)
 
 
 @import_export.route("/thehive/objects/case/export", methods=['POST'])

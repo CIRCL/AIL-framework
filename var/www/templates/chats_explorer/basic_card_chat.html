@@ -51,11 +51,15 @@
                     <span class="badge badge-info" style="font-size: 0.8rem;">
                         <i class="fas fa-hourglass-start"></i>
                     </span>
-                    {{meta["first_seen"][0:4]}}-{{meta["first_seen"][4:6]}}-{{meta["first_seen"][6:8]}}
+                    {% if meta["first_seen"] %}
+                        {{meta["first_seen"][0:4]}}-{{meta["first_seen"][4:6]}}-{{meta["first_seen"][6:8]}}
+                    {% endif %}
                     <span class="badge badge-light mx-1" style="font-size: 1rem;">
                         <i class="far fa-calendar-alt"></i>
                     </span>
-                    {{meta["last_seen"][0:4]}}-{{meta["last_seen"][4:6]}}-{{meta["last_seen"][6:8]}}
+                    {% if meta["last_seen"] %}
+                        {{meta["last_seen"][0:4]}}-{{meta["last_seen"][4:6]}}-{{meta["last_seen"][6:8]}}
+                    {% endif %}
                     <span class="badge badge-secondary" style="font-size: 0.8rem;">
                         <i class="fas fa-hourglass-end"></i>
                     </span>
@@ -92,9 +96,15 @@
             </div>
         </div>
 
-        <div>
-            <pre class="my-0" style="white-space: pre-wrap;">{{ meta['info'] }}</pre>
-        </div>
+        {% if meta['info'] %}
+            <div>
+                <pre class="my-0" style="white-space: pre-wrap;">{{ meta['info'] }}</pre>
+                {% if meta['translation_info'] %}
+                    <hr class="m-1">
+                    <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
+                {% endif %}
+            </div>
+        {% endif %}
 
         <div class="">
             {% for tag in meta['tags'] %}

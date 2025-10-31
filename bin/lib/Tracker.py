@@ -11,6 +11,7 @@ import uuid
 import yara
 import datetime
 import base64
+from hashlib import sha256
 
 import math
 
@@ -103,11 +104,17 @@ class Tracker:
     def exists(self):
         return r_tracker.exists(f'tracker:{self.uuid}')
 
+    def _exists_field(self, field):
+        return r_tracker.hexists(f'tracker:{self.uuid}', field)
+
     def _get_field(self, field):
         return r_tracker.hget(f'tracker:{self.uuid}', field)
 
     def _set_field(self, field, value):
         r_tracker.hset(f'tracker:{self.uuid}', field, value)
+
+    def _delete_field(self, field):
+        r_tracker.hdel(f'tracker:{self.uuid}', field)
 
     def get_date(self):
         return self._get_field('date')
@@ -248,6 +255,39 @@ class Tracker:
 
     ## -ORG- ##
 
+    ## CACHE ##
+
+    def enable_duplicate_notification_filtering(self):
+        self._set_field('duplicate_notification', 'False')
+
+    def disable_duplicate_notification_filtering(self):
+        self._delete_field('duplicate_notification')
+
+    def is_duplicate_notification_filtering_enabled(self):
+        return self._exists_field('duplicate_notification')
+
+    def _is_duplicate_content(self, date, sha_content):
+        return r_cache.sismember(f'tracker:content:{self.uuid}:{date}', sha_content)
+
+    def is_duplicate_content(self, content):
+        sha_content = sha256(content).hexdigest()
+        date = Date.get_current_year()
+        is_duplicate = self._is_duplicate_content(date, sha_content)
+        self._cache_content(date, sha_content)
+        return is_duplicate
+
+    def _cache_content(self, date, sha_content):
+        r_cache.sadd(f'tracker:content:{self.uuid}:{date}', sha_content)
+        if r_cache.ttl(f'tracker:content:{self.uuid}:{date}') == -1:
+            r_cache.expire(f'tracker:content:{self.uuid}:{date}', Date.get_second_until_next_day())
+
+    def cache_content(self, content):
+        content = sha256(content).hexdigest()
+        date = Date.get_current_year()
+        self._cache_content(date, content)
+
+    ## -CACHE- ##
+
     def get_filters(self):
         filters = self._get_field('filters')
         if not filters:
@@ -318,6 +358,26 @@ class Tracker:
             sparkline.append(int(nb_seen_this_day))
         return sparkline
 
+    def get_nb_year(self, year):
+        nb_year = {}
+        nb_max = 0
+        for date in Date.get_year_daterange(year):
+            nb = self.get_nb_objs_by_date(date)
+            if nb:
+                nb_year[f'{date[0:4]}-{date[4:6]}-{date[6:8]}'] = nb
+                nb_max = max(nb_max, nb)
+        return nb_max, nb_year
+
+    def get_years(self):
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        if first_seen and last_seen:
+            first_year = first_seen[:4]
+            last_seen = last_seen[:4]
+            return Date.get_year_range(first_year, last_seen)
+        else:
+            return []
+
     def get_rule(self):
         yar_path = self.get_tracked()
         return yara.compile(filepath=os.path.join(get_yara_rules_dir(), yar_path))
@@ -353,6 +413,10 @@ class Tracker:
             meta['webhook'] = self.get_webhook()
         if 'sparkline' in options:
             meta['sparkline'] = self.get_sparkline(6)
+        if 'years' in options:
+            meta['years'] = self.get_years()
+        if 'filter_duplicate_notification' in options:
+            meta['filter_duplicate_notification'] = self.is_duplicate_notification_filtering_enabled()
         return meta
 
     def _add_to_dashboard(self, obj_type, subtype, obj_id):
@@ -514,7 +578,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None):
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False):
 
         # edit tracker
         old_type = self.get_type()
@@ -583,6 +647,10 @@ class Tracker:
         if nb_old_mails > 0 or mails:
             self._del_mails()
             self._set_mails(mails)
+        if notification_filter_duplicate:
+            self.enable_duplicate_notification_filtering()
+        else:
+            self.disable_duplicate_notification_filtering()
 
         # Filters
         self.del_filters(old_type, old_to_track)
@@ -620,8 +688,7 @@ class Tracker:
                     os.remove(filepath)
 
         # Filters
-        filters = get_objects_tracked()
-        for obj_type in filters:
+        for obj_type in get_objects_tracked():
             r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
             r_tracker.srem(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
 
@@ -898,6 +965,18 @@ def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_r
 
 ## --ACL-- ##
 
+def api_get_nb_year_tracker(tracker_uuid, year):
+    tracker = Tracker(tracker_uuid)
+    if not tracker.exists():
+        return {"status": "error", "reason": "Unknown chat"}, 404
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        year = datetime.datetime.now().year
+    nb_max, nb = tracker.get_nb_year(year)
+    nb = [[date, value] for date, value in nb.items()]
+    return {'max': nb_max, 'nb': nb, 'year': year}, 200
+
 #### FIX DB #### TODO ###################################################################
 def fix_tracker_stats_per_day(tracker_uuid):
     tracker = Tracker(tracker_uuid)
@@ -1022,7 +1101,7 @@ def api_add_tracker(dict_input, org, user_id):
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             filters = {}
         for obj_type in filters:
             if obj_type not in get_objects_tracked():
@@ -1108,11 +1187,12 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     res = verify_mail_list(mails)
     if res:
         return res
+    notification_filter_duplicate = dict_input.get('notification_filter_duplicate', False)
 
     # Filters # TODO MOVE ME
     filters = dict_input.get('filters', {})
     if filters:
-        if filters.keys() == set(get_objects_tracked()) and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
             if not filters['decoded'] and not filters['item']:
                 filters = {}
         for obj_type in filters:
@@ -1142,7 +1222,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
 
     tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
-                 tags=tags, mails=mails, webhook=webhook)
+                 tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate)
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 
@@ -1383,8 +1463,11 @@ def get_yara_rule_content(yara_rule):
     if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
         return ''  # # TODO: throw exception
 
-    with open(filename, 'r') as f:
-        rule_content = f.read()
+    try:
+        with open(filename, 'r') as f:
+            rule_content = f.read()
+    except FileNotFoundError:
+        return 'FileNotFoundError'
     return rule_content
 
 def api_get_default_rule_content(default_yara_rule):
@@ -1739,7 +1822,10 @@ class RetroHunt:
         if not is_default_yara_rule(rule):
             filepath = get_yara_rule_file_by_tracker_name(rule)
             if filepath:
-                os.remove(filepath)
+                try:
+                    os.remove(filepath)
+                except FileNotFoundError:
+                    pass
 
         self.delete_level()
 
@@ -1747,6 +1833,7 @@ class RetroHunt:
         r_tracker.delete(f'retro_hunts:{self.uuid}')
         r_tracker.delete(f'retro_hunt:tags:{self.uuid}')
         r_tracker.delete(f'retro_hunt:mails:{self.uuid}')
+        r_tracker.delete(f'retro_hunt:{self.uuid}')
 
         for obj in self.get_objs():
             self.remove(obj[0], obj[1], obj[2])

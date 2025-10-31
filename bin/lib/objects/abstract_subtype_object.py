@@ -238,13 +238,19 @@ class AbstractSubtypeObjects(ABC):
     def get_nb_by_date_subtype(self, subtype, date):
         return r_object.hlen(f'{self.type}:{subtype}:{date}')
 
+    def get_nb(self):
+        nb = {}
+        for subtype in self.get_subtypes():
+            nb[subtype] = r_object.zcard(f'{self.type}_all:{subtype}')
+        return nb
+
     def get_nb_by_date(self, date):
         nb = 0
         for subtype in self.get_subtypes():
             nb += self.get_nb_by_date_subtype(subtype, date)
         return nb
 
-    def get_ids(self): # TODO FORMAT
+    def get_ids(self):  # TODO FORMAT
         ids = []
         for subtype in get_object_all_subtypes(self.type):
             ids += r_object.zrange(f'{self.type}_all:{subtype}', 0, -1)

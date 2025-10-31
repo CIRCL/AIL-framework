@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>User - AIL-Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+	<!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+
+</head>
+
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'settings/menu_sidebar.html' %}
+
+			<ul class="col-12 col-lg-10" id="core_content">
+
+				<div class="card my-1">
+					<div class="card-header bg-dark text-white">
+						<h4 class="card-title">{{meta['id']}}</h4>
+					</div>
+					<div class="card-body">
+						<div class="container-fluid">
+							<div class="row">
+								<div class="col-12 col-lg-6">
+
+									<table class="table table-hover">
+                                        <tr>
+                                            <th>Created</th>
+                                            <td>{{meta['created_at']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Creator</th>
+                                            <td>{{meta['creator']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Edit</th>
+                                            <td>{{meta['last_edit']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Role</th>
+                                            <td>{{meta['role']}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Org</th>
+                                            <td>
+                                                {{ meta['org_name'] }}<br>
+                                                <a href="{{ url_for('settings_b.organisation', uuid=meta['org']) }}"><small>{{meta['org']}}</small></a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Login</th>
+                                            <td>
+                                                {% if meta['last_login'] %}{{meta['last_login']}}{% else %}-{% endif %}
+                                                {% if meta['is_logged'] %}
+                                                    <i class="fas fa-plug text-success"></i>
+                                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_logout', user_id=meta['id']) }}">
+                                                        <i class="fas fa-sign-out-alt"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last Seen</th>
+                                            <td>{% if meta['last_seen'] %}{{meta['last_seen']}}{% else %}-{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Last API Access</th>
+                                            <td>{% if meta['last_seen_api'] %}{{meta['last_seen_api']}}{% else %}-{% endif %}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>API Key</th>
+                                            <td>
+                                                {% if meta['api_key'] %}
+                                                    <span id="censored_key">
+                                                        {{meta['api_key'][:4]}}**...**{{meta['api_key'][-4:]}}
+                                                    </span>
+                                                    <span id="uncensored_key" style="display: none;">
+                                                        {{meta['api_key']}}
+                                                    </span>
+                                                    <a class="btn btn-outline-info ml-3 px-1 py-0" href="{{ url_for('settings_b.new_token_user', user_id=meta['id']) }}">
+                                                        <i class="fas fa-random"></i>
+                                                    </a>
+                                                    <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key" onclick="show_api_key()">
+                                                        <i class="fas fa-eye"></i>
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>2FA</th>
+                                            <td>
+                                                {% if meta['2fa'] %}
+                                                    {% if meta['otp_setup'] %}
+                                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
+                                                        <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=meta['id']) }}">
+                                                            <i class="fas fa-random"></i> Reset
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="badge badge-warning" style="font-size: 1.0rem;"><b>ENFORCED</b></span>
+                                                    {% endif %}
+                                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=meta['id']) }}">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
+                                                    <a class="btn btn-outline-success px-1 py-0" href="{{ url_for('settings_b.user_otp_enable', user_id=meta['id']) }}">
+                                                        <i class="fas fa-plus"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Disabled</th>
+                                            <td>
+                                                {% if meta['is_disabled'] %}
+                                                    <span class="badge badge-danger" style="font-size: 1.0rem;"><b>YES</b></span>
+                                                    <a class="btn btn-outline-success px-1 py-0" href="{{ url_for('settings_b.user_enable', user_id=meta['id']) }}">
+                                                        <i class="fas fa-user-check"></i> Enable
+                                                    </a>
+                                                {% else %}
+                                                    <span class="badge badge-success" style="font-size: 1.0rem;"><b>NO</b></span>
+                                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_disable', user_id=meta['id']) }}">
+                                                        <i class="fas fa-user-slash"></i> Disable
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+
+
+                                    </table>
+
+								</div>
+								<div class="col-12 col-lg-6">
+
+                                    <div class="d-flex justify-content-start">
+                                        <a class="btn btn-outline-primary ml-3" href="{{ url_for('settings_b.edit_user', user_id=meta['id']) }}">
+                                            <i class="fas fa-pencil-alt"></i> Edit
+                                        </a>
+                                        <a class="btn btn-outline-danger ml-3" href="{{ url_for('settings_b.delete_user', user_id=meta['id']) }}">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </a>
+                                    </div>
+
+									<div class="my-4">
+{#										<a href="{{ url_for('investigations_b.delete_investigation') }}?uuid={{metadata['uuid']}}">#}
+{#											<button type="button" class="btn btn-danger">#}
+{#												<i class="fas fa-trash-alt"></i> <b>Delete</b>#}
+{#												</button>#}
+{#										</a>#}
+{#										<a href="{{ url_for('investigations_b.edit_investigation') }}?uuid={{metadata['uuid']}}">#}
+{#											<button type="button" class="btn btn-info">#}
+{#												<i class="fas fa-pencil-alt"></i> <b>Edit</b>#}
+{#											</button>#}
+{#										</a>#}
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<h3>Stats</h3>
+
+                <div class="pl-4">
+                    <div class="row mt-1">
+                        <div class="col-2">
+                            <i class="fas fa-cookie-bite fa-2x"></i> Cookiejars
+                        </div>
+                        <div class="col-2 pt-1">
+                            <span class="badge badge-primary">{{ meta['stats']['cookiejars'] }}</span>
+                        </div>
+                    </div>
+                    <div class="row mt-1">
+                        <div class="col-2">
+                            <i class="fas fa-ruler-combined fa-2x"></i> Trackers
+                        </div>
+                        <div class="col-2 pt-1">
+                            <span class="badge badge-primary">{{ meta['stats']['trackers'] }}</span>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-2">
+                            <img src="/static/image/misp-logo.png" alt="MISP" style="width:40px;"> Settings
+                        </div>
+                        <div class="col-2 pt-1">
+                            <span class="badge badge-primary">{{ meta['stats']['misp'] }}</span>
+                        </div>
+                    </div>
+                </div>
+
+		</div>
+
+	</div>
+
+</body>
+
+<script>
+$(document).ready(function(){
+	$('#nav_sync').removeClass("text-muted");
+
+  $('#table_org_users').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 0, "asc" ]]
+  });
+
+});
+
+function show_api_key() {
+    $('#censored_key').hide();
+    $('#btn_key').hide();
+    $('#uncensored_key').show();
+}
+</script>

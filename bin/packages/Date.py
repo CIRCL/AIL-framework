@@ -8,8 +8,12 @@ from dateutil.rrule import rrule, MONTHLY
 from dateutil.relativedelta import relativedelta
 
 def convert_date_str_to_datetime(date_str):
-    res =  datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
+    res = datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
     return res
+
+def convert_str_datetime_to_epoch(date_str):
+    dt = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
 
 def get_full_month_str(date_from, date_to):
     # add one day (if last day of the month)
@@ -86,6 +90,11 @@ def get_today_date_str(separator=False):
         return datetime.date.today().strftime("%Y/%m/%d")
     else:
         return datetime.date.today().strftime("%Y%m%d")
+
+def get_second_until_next_day():
+    dt = datetime.datetime.now()
+    tomorrow = dt + datetime.timedelta(days=1)
+    return int((datetime.datetime.combine(tomorrow, datetime.time.min) - dt).seconds)
 
 def get_current_week_day():
     dt = datetime.date.today()
@@ -264,8 +273,46 @@ def sanitise_daterange(date_from, date_to, separator='', date_type='str'):
         date_to = res
     return date_from, date_to
 
+def get_previous_month():
+    now = datetime.date.today()
+    first = now.replace(day=1)
+    last_month = first - datetime.timedelta(days=1)
+    return last_month.strftime("%Y%m")
+
 def get_previous_month_date():
     now = datetime.date.today()
     first = now.replace(day=1)
     last_month = first - datetime.timedelta(days=1)
     return last_month.strftime("%Y%m%d")
+
+def get_month_last_day(date_month):
+    month = int(date_month[4:6]) % 12 + 1
+    return (datetime.date(int(date_month[0:4]), month, 1) - datetime.timedelta(days=1)).strftime("%Y%m%d")
+
+def get_current_month():
+    dt = datetime.date.today()
+    return dt.strftime("%Y%m")
+
+def get_current_year():
+    dt = datetime.date.today()
+    return dt.strftime("%Y")
+
+def get_year_daterange(year):
+    year = int(year)
+    date_from = datetime.date(year, 1, 1)
+    date_to = datetime.date(year, 12, 31)
+    delta = date_to - date_from  # timedelta
+    l_date = []
+    for i in range(delta.days + 1):
+        date = date_from + datetime.timedelta(i)
+        l_date.append(date.strftime('%Y%m%d'))
+    return l_date
+
+def get_year_range(year_start, year_end):
+    if year_start == year_end:
+        return [year_start]
+    else:
+        years = []
+        for i in range(int(year_start), int(year_end) + 1):
+            years.append(i)
+        return years

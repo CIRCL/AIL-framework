@@ -82,7 +82,13 @@
                       <span>Favicon</span>
                   </a>
               </li>
-               <li class="nav-item">
+              <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('objects_gtracker.objects_gtrackers')}}" id="nav_gtracker">
+                      <i class="fab fa-google"></i>
+                      <span>GTracking</span>
+                  </a>
+              </li>
+              <li class="nav-item">
                   <a class="nav-link" href="{{url_for('objects_file_name.objects_files_names')}}" id="nav_file_name">
                       <i class="far fa-file"></i>
                       <span>File Name</span>
@@ -113,6 +119,18 @@
                   </a>
               </li>
               <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('objects_ssh.objects_ssh_keys')}}" id="nav_ssh_key">
+                      <i class="fas fa-terminal"></i>
+                      <span>SSH Key</span>
+                  </a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('objects_ip.objects_ips')}}" id="nav_ip">
+                      <i class="fas fa-server"></i>
+                      <span>IP</span>
+                  </a>
+              </li>
+              <li class="nav-item">
                   <a class="nav-link" href="{{url_for('objects_title.objects_titles')}}" id="nav_title">
                       <i class="fas fa-heading"></i>
                       <span>Title</span>
@@ -136,6 +154,12 @@
       	        <span>Cryptocurrency</span>
       	      </a>
       	    </li>
+            <li class="nav-item">
+                  <a class="nav-link" href="{{url_for('objects_mail.objects_mails')}}" id="nav_mail">
+                      <i class="fas fa-envelope"></i>
+                      <span>Mail</span>
+                  </a>
+            </li>
             <li class="nav-item">
       	      <a class="nav-link" href="{{url_for('objects_subtypes.objects_dashboard_username')}}" id="nav_dashboard_username">
       	        <i class="fas fa-user"></i>

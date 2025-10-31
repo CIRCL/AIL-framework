@@ -10,7 +10,7 @@
 
 <div class="card my-1">
 	<div class="card-header">
-        <h3 class="text-secondary">{% if meta['chat']['name'] %}{{ meta['chat']['name'] }} {% else %} {{ meta['chat']['id'] }}{% endif %} - {% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :</h3> {{ meta["id"] }}
+        <h3 class="text-secondary">{% if 'chat' in meta %}{% if meta['chat']['name'] %}{{ meta['chat']['name'] }} {% else %} {{ meta['chat']['id'] }}{% endif %}{% endif %} - {% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :</h3> {{ meta["id"] }}
         <ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <div class="row">

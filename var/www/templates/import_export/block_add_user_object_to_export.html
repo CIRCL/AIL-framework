@@ -1,4 +1,4 @@
-<a class="btn btn-lg btn-outline-dark" target="_blank" href="{{ url_for('import_export.add_object_id_to_export')}}?type={{obj_type}}{%if obj_subtype%}&subtype={{obj_subtype}}{%endif%}&id={{obj_id}}&lvl={{obj_lvl}}">
+<a class="btn btn-lg btn-outline-dark" target="_blank" href="{{ url_for('import_export.add_object_id_to_export')}}?type={{obj_type}}{%if obj_subtype%}&subtype={{obj_subtype}}{%endif%}&id={{ obj_id | urlencode }}&lvl={{obj_lvl}}">
   Add to
   <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="32">
   Export

@@ -32,14 +32,18 @@ from lib.objects import Etags
 from lib.objects import Favicons
 from lib.objects import FilesNames
 from lib.objects import DomHashs
+from lib.objects import GTrackers
 from lib.objects import HHHashs
 from lib.objects.Items import Item, get_all_items_objects, get_nb_items_objects
 from lib.objects import Images
+from lib.objects import IPAddresses
+from lib.objects import Mails
 from lib.objects import Messages
 from lib.objects import Ocrs
 from lib.objects import Pgps
 from lib.objects import QrCodes
 from lib.objects import Screenshots
+from lib.objects import SSHKeys
 from lib.objects import Titles
 from lib.objects import UsersAccount
 from lib.objects import Usernames
@@ -63,13 +67,17 @@ OBJECTS_CLASS = {
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
+    'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},
     'item': {'obj': Item, 'objs': None}, ####################################################################################################
     'image': {'obj': Images.Image, 'objs': Images.Images},
+    'ip': {'obj': IPAddresses.IP, 'objs': IPAddresses.IPs},
+    'mail': {'obj': Mails.Mail, 'objs': Mails.Mails},
     'message': {'obj': Messages.Message, 'objs': None}, #############################################################
     'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},
     'pgp': {'obj': Pgps.Pgp, 'objs': Pgps.Pgps},
     'qrcode': {'obj': QrCodes.Qrcode, 'objs': QrCodes.Qrcodes},
     'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ####################################################################################################
+    'ssh-key': {'obj': SSHKeys.SSHKey, 'objs': SSHKeys.SSHKeys},
     'title': {'obj': Titles.Title, 'objs': Titles.Titles},
     'user-account': {'obj': UsersAccount.UserAccount, 'objs': UsersAccount.UserAccounts},
     'username': {'obj': Usernames.Username, 'objs': Usernames.Usernames},
@@ -92,9 +100,9 @@ def sanitize_objs_types(objs, default=False):
             l_types.append(obj)
     if not l_types:
         if default:
-            l_types = get_default_correlation_objects()
+            l_types = list(get_default_correlation_objects())
         else:
-            l_types = get_all_objects()
+            l_types = list(get_all_objects())
     return l_types
 
 
@@ -298,7 +306,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
-            meta['cve_search'] = obj.get_cve_search()
+            meta['vulnerability_lookup'] = obj.get_vulnerability_lookup()
         # if obj_type == 'title':
         #     meta['cve_search'] = obj.get_cve_search()
     if subtype == 'bitcoin' and related_btc:
@@ -369,6 +377,8 @@ def obj_iterator(obj_type, filters):
         return get_all_items_objects(filters=filters)
     elif obj_type == 'pgp':
         return Pgps.get_all_pgps_objects(filters=filters)
+    elif obj_type == 'mail':
+        return Mails.Mails().get_iterator()
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
     elif obj_type == 'ocr':
@@ -421,8 +431,8 @@ def get_misp_objects(objs):
     for relation in get_objects_relationships(objs):
         obj_src = misp_objects[relation['src']]
         obj_dest = misp_objects[relation['dest']]
-        # print(relation['src'].get_id(), relation['dest'].get_id())
-        obj_src.add_reference(obj_dest.uuid, relation['relationship'], 'ail correlation')
+        if obj_src and obj_dest:
+            obj_src.add_reference(obj_dest.uuid, relation['relationship'], 'ail correlation')
     return misp_objects.values()
 
 # get misp relationship
@@ -481,6 +491,15 @@ def get_objects_relationship(obj1, obj2):
     elif 'screenshot' in obj_types:
         relationship = 'screenshot-of'
         src, dest = get_relationship_src_dest('screenshot', obj1, obj2)
+    elif 'cookie-name' in obj_types:
+        relationship = 'extracted-from' # TODO ######################################################## set-from
+        src, dest = get_relationship_src_dest('cookie-name', obj1, obj2)
+    elif 'favicon' in obj_types:
+        relationship = 'extracted-from' # TODO ######################################################## seen-from
+        src, dest = get_relationship_src_dest('favicon', obj1, obj2)
+    elif 'dom-hash' in obj_types:
+        relationship = 'extracted-from' # TODO ############################## fingerprint-of     fingerprinted-as
+        src, dest = get_relationship_src_dest('dom-hash', obj1, obj2)
     elif 'domain' in obj_types:
         relationship = 'extracted-from'
         src, dest = get_relationship_src_dest('domain', obj1, obj2)

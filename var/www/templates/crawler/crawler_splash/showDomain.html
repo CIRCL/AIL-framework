@@ -487,6 +487,10 @@
                 </table>
             {%endif%}
 
+            {% with ollama_description=dict_domain['description'], domain_id=dict_domain['domain'] %}
+                {% include 'block_domain_ollama.html' %}
+            {% endwith %}
+
                 </div>
 
 					<div class="col-12 col-xl-6">

@@ -65,6 +65,11 @@ def is_tags_safe(ltags):
         UNSAFE_TAGS = build_unsafe_tags()
     return UNSAFE_TAGS.isdisjoint(ltags)
 
+def is_tag_safe(tag):
+    global UNSAFE_TAGS
+    if UNSAFE_TAGS is None:
+        UNSAFE_TAGS = build_unsafe_tags()
+    return tag not in UNSAFE_TAGS
 
 # - - - UNSAFE TAGS - - - #
 

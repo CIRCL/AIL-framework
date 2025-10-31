@@ -42,7 +42,13 @@
                     {% for module_stats in queues_stats %}
                         <tr>
                             <td>{{ module_stats }}</td>
-                            <td>{{ queues_stats[module_stats]['modules'] | length }}</td>
+                            <td>
+                                {% if queues_stats[module_stats]['modules'] %}
+                                    {{ queues_stats[module_stats]['modules'] | length }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </td>
                             <td>{{ queues_stats[module_stats]['in'] }}</td>
                         </tr>
                     {% endfor %}

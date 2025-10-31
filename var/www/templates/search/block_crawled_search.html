@@ -1,0 +1,42 @@
+<div class="card border-secondary my-2">
+    <div class="card-header text-white bg-dark">
+        <div class="card-title h1"><i class="fas fa-spider"></i> Tor and Web Search:</div>
+    </div>
+    <div class="card-body text-dark">
+        Type:
+        <div class="d-flex my-1">
+            <button class="btn btn-secondary" onclick="change_sector_crawled_type('tor')">
+                <b><i class="fas fa-user-secret"></i> Tor</b>
+            </button>
+            <button class="btn btn-secondary mx-2" onclick="change_sector_crawled_type('web')">
+                <b><i class="fab fa-html5"></i> Web</b>
+            </button>
+            <button class="btn btn-secondary" onclick="change_sector_crawled_type('all')">
+                <b><i class="fas fa-user-secret"></i><i class="fab fa-html5"></i> All</b>
+            </button>
+        </div>
+
+        <form action="{{ url_for('search_b.search_crawled_post') }}" id="search_subtype_onj" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <select class="custom-select col-2" id="search_type_crawled" name="search_type_crawled" value="{% if search_index %}{{ search_index }}{% else %}tor{% endif %}" required>
+                    <option value="tor" {% if search_index == "tor" %}selected{% endif %}>Tor</option>
+                    <option value="web" {% if search_index == "web" %}selected{% endif %}>Web</option>
+                    <option value="all" {% if search_index == "all" %}selected{% endif %}>Tor and Web</option>
+                </select>
+                <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="content to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_search_helper_tooltip(this)" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        var selector_search_crawled = $("#search_type_crawled")
+        function change_sector_crawled_type(crawled_type) {
+            selector_search_crawled.val(crawled_type);
+        }
+    </script>
+</div>

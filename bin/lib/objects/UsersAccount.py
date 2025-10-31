@@ -170,6 +170,12 @@ class UserAccount(AbstractSubtypeObject):
         else:
             return 0
 
+    def get_messages_by_lang(self, language):
+        messages = []
+        for mess in self.get_language_objs(language):
+            messages.append(mess[8:])
+        return messages
+
     def get_meta(self, options=set(), translation_target=None): # TODO Username timeline
         meta = self._get_meta(options=options)
         meta['id'] = self.id

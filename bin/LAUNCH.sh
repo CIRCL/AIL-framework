@@ -114,7 +114,13 @@ function launching_kvrocks {
     echo -e $GREEN"\t* Launching KVROCKS servers"$DEFAULT
 
     sleep 0.1
-    screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    if [ -f "./kvrocks/build/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    elif [ -f "/usr/bin/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; kvrocks -c '$conf_dir'/6383.conf ; read x'
+    else
+        echo -e $RED"\t* KVROCKS is not installed."$DEFAULT
+    fi
 }
 
 function launching_logs {
@@ -191,6 +197,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "FeederImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./FeederImporter.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "CrawlerImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./CrawlerImporter.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
 
@@ -255,6 +263,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "Tools" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Tools.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "TrackingId" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./TrackingId.py; read x"
+    sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "Hosts" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Hosts.py; read x"
     sleep 0.1
@@ -269,8 +279,8 @@ function launching_scripts {
 #    sleep 0.1
 #    screen -S "Script_AIL" -X screen -t "Pasties" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Pasties.py; read x"
 #    sleep 0.1
-#    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Indexer.py; read x"
-#    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Indexer" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Indexer.py; read x"
+    sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "MISP_Thehive_Auto_Push" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./MISP_Thehive_Auto_Push.py; read x"
     sleep 0.1
@@ -597,6 +607,7 @@ function launch_tests() {
   echo -e ""
   echo -e ""
   python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
+  exit $?
 }
 
 function reset_password() {

@@ -54,6 +54,10 @@
 										        </div>
 												<input id="webhook" name="webhook" class="form-control" placeholder="Webhook URL" type="text" {%if dict_tracker%}{%if dict_tracker['webhook']%}value="{{dict_tracker['webhook']}}"{%endif%}{%endif%}>
                                             </div>
+                                            <div class="custom-control custom-switch my-1">
+                                                <input class="custom-control-input" type="checkbox" name="notification_filter_duplicate" id="notification_filter_duplicate" {% if dict_tracker['filter_duplicate_notification'] %}checked=""{% endif %}>
+                                                <label class="custom-control-label" for="notification_filter_duplicate"><i class="fas fa-clone"></i>&nbsp;Notification: Filter Duplicate Content <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Prevent duplicate notifications by filtering matches with identical object content in email and webhook alerts."></i></label>
+                                            </div>
 											<div class="input-group mb-2 mr-sm-2">
                                                 <div class="input-group-prepend">
                                                     <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
@@ -142,7 +146,7 @@
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="qrcode_obj" id="qrcode_obj" {% if not dict_tracker['filters'] or 'qrcode' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode"></i>&nbsp;Qrcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images ans Screenshots"></i></label>
+                                                        <label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode"></i>&nbsp;Qrcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images and Screenshots"></i></label>
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if not dict_tracker['filters'] or 'ocr' in dict_tracker['filters'] %}checked=""{% endif %}>
@@ -277,7 +281,11 @@
 
 										<h6>Custom YARA rules:</h6>
 										<div class="row" id="textarea">
-											<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+											<div class="col-12">
+												<div class="border">
+													<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+												</div>
+											</div>
 										</div>
 									</div>
 
@@ -425,4 +433,28 @@ function get_default_rule_content(selector){
 	}
 }
 
+</script>
+
+<script type="module">
+	import { createYaraEditor } from "{{ url_for('static', filename='js/codemirror-yara.es.js') }}";
+
+	const yaraEditorOptions = {
+		'placeholder': `rule YourYaraRule {
+    meta:
+        author = "Yourself"
+        description = "A description of your rule"
+        reference = "An (optional) reference of your rule"
+    strings:
+        $str1 = "str1" nocase
+        $str2 = "str2" nocase
+        $str3 = "str3" nocase
+    condition:
+        all of them
+}`,
+		codemirror_extensions: []
+	}
+	createYaraEditor(
+		document.getElementById('text_input'),
+		yaraEditorOptions
+	)
 </script>

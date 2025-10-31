@@ -26,6 +26,7 @@ from flask import url_for
 
 config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_obj = config_loader.get_db_conn("Kvrocks_DB")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 # r_content = config_loader.get_db_conn("Kvrocks_Content")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -75,6 +76,10 @@ class Message(AbstractObject):
         c_id = self.id.split('/')
         return c_id[0]
 
+    def get_protocol(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'protocol')
+
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
         Returns content
@@ -122,11 +127,15 @@ class Message(AbstractObject):
         subchannel = self.get_correlation('chat-subchannel')
         if subchannel.get('chat-subchannel'):
             return f'chat-subchannel:{subchannel["chat-subchannel"].pop()}'
+        else:
+            return None
 
     def get_current_thread(self):
         subchannel = self.get_correlation('chat-thread')
         if subchannel.get('chat-thread'):
             return f'chat-thread:{subchannel["chat-thread"].pop()}'
+        else:
+            return None
 
     # children thread
     def get_thread(self):
@@ -148,7 +157,10 @@ class Message(AbstractObject):
         for child in self.get_childrens():
             obj_type, _, obj_id = child.split(':', 2)
             if obj_type == 'image':
-                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id)})
+                image_description = self._get_obj_field('image', None, obj_id, 'desc:qwen2.5vl')
+                if image_description:
+                    image_description = image_description.replace("`", ' ')
+                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id), 'description': image_description})
         return images
 
     def get_barcodes(self):
@@ -170,7 +182,8 @@ class Message(AbstractObject):
             if meta:
                 _, user_account_subtype, user_account_id = user_account.split(':', 2)
                 user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
-        return user_account
+            return user_account
+        return None
 
     def get_files_names(self):
         names = []
@@ -244,6 +257,14 @@ class Message(AbstractObject):
         else:
             return None
 
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_content()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
+
     # def get_ail_2_ail_payload(self):
     #     payload = {'raw': self.get_gzip_content(b64=True)}
     #     return payload
@@ -280,7 +301,7 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, timestamp=None, translation_target=''):
+    def get_meta(self, options=set(), timestamp=None, translation_target=''):
         """
         :type options: set
         :type timestamp: float
@@ -307,6 +328,8 @@ class Message(AbstractObject):
         # optional meta fields
         if 'content' in options:
             meta['content'] = self.get_content()
+        if 'protocol':
+            meta['protocol'] = self.get_protocol()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
             if meta['parent'] and 'parent_meta' in options:
@@ -314,6 +337,8 @@ class Message(AbstractObject):
                 parent_type, _, parent_id = meta['parent'].split(':', 3)
                 if parent_type == 'message':
                     message = Message(parent_id)
+                    if 'content' not in options:
+                        options.add('content')
                     meta['reply_to'] = message.get_meta(options=options, translation_target=translation_target)
         if 'forwarded_from' in options:
             fwd_from = self.get_first_relationship('forwarded_from', 'chat')
@@ -397,6 +422,9 @@ class Message(AbstractObject):
             thread = self.get_current_thread()
             if thread:
                 objs_containers.add(thread)
+            user_account = self.get_user_account()
+            if user_account:
+                objs_containers.add(user_account)
         return objs_containers
 
     #- Language -#

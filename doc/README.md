@@ -1,6 +1,15 @@
 
+<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="150" />
 
-# AIL objects
+- [AIL Objects](#ail_objects)
+- [Feeding AIL](#feeding_ail)
+  - [AIL Feeders](#ail_feeders)
+  - [pystemon](#pystemon)
+- [Trackers](#trackers)
+- [Users Roles](#users_roles)
+
+
+# <a name="ail_objects"></a> AIL objects
 
 AIL is using different types of objects to classify, correlate and describe extracted information:
 
@@ -28,7 +37,7 @@ AIL is using different types of objects to classify, correlate and describe extr
     - jabber: Jabber (XMPP) username handles
 
 
-# AIL Importers
+# <a name="feeding_ail"></a>Feeding AIL - _(AIL Importers)_
 
 AIL Importers play a crucial role in the AIL ecosystem, 
 enabling the import of various types of data into the framework. 
@@ -38,137 +47,18 @@ The modular design of importers allows for easy expansion and customization,
 ensuring that AIL can adapt to new types of data.
 
 Available Importers:
-- [AIL Feeders](#ail-feeders): Extract and feed JSON data from external sources via The API.
+- [**AIL Feeders**](#ail-feeders): Extract and feed JSON data from external sources via The API.
 - ZMQ
-- [pystemon](https://github.com/cvandeplas/pystemon)
+- [pystemon](https://github.com/cvandeplas/pystemon): PasteBin-alike sites
 - File: Import files and directories.
 (Manually Feed File/Dir: [./tool/file_dir_importer.py](./tool/file_dir_importer.py)).
 
-[//]: # (### ZMQ Importer:)
+## <a name="ail_feeders"></a>AIL Feeders
 
-### pystemon:
-
-1. Clone the [pystemon's git repository](https://github.com/cvandeplas/pystemon):
-	```
-	git clone https://github.com/cvandeplas/pystemon.git
- 	```
-    Clone it into the same directory as AIL if you wish to launch it via the AIL launcher.
-
-
-2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
-	- Configure the storage section according to your needs:
-		```
-		storage:  
-			archive:  
-				storage-classname:  FileStorage  
-				save: yes  
-				save-all: yes  
-				dir: "alerts"  
-				dir-all: "archive"  
-				compress: yes
-			
-			redis:  
-				storage-classname:  RedisStorage  
-				save: yes  
-				save-all: yes  
-				server: "localhost"  
-				port: 6379  
-				database: 10  
-				lookup: no
-		```
-	- Adjust the configuration for paste-sites based on your requirements (remember to throttle download and update times).
-   
-3. Install python dependencies inside the virtual environment:
-	```shell
-	cd ail-framework/
-	. ./AILENV/bin/activate
-	cd ../pystemon/
-	pip install -U -r requirements.txt
-	``` 
-4. Edit the configuration file ```ail-framework/configs/core.cfg```:
-	- Modify the "pystemonpath" path accordingly.
-
-5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
-	 - Option 1 (recommended): 
-		``` 
-		 ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
-		 ./ail-framework/bin/LAUNCH.sh -f #starts pystemon and the PystemonImporter.py
-		```
-     - Option 2 (may require two terminal windows): 
-        ``` 
-        ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
-        ./pystemon/pystemon.py
-        ./ail-framework/bin/importer/PystemonImporter.py
-        ```
-
-### File Importer `importer/FileImporter.py`:
-
-Manually import File and Directory with the [./tool/file_dir_importer.py](./tool/file_dir_importer.py) script:
-
-- Import Files:
-  ```shell
-  . ./AILENV/bin/activate
-  cd tools/
-  ./file_dir_importer.py -f MY_FILE_PAT
-  ```
-  
-- Import Dirs:
-  ```shell
-  . ./AILENV/bin/activate
-  cd tools/
-  ./file_dir_importer.py -d MY_DIR_PATH
-  ```
-
-### Create a New Importer:
-
-```python
-from importer.abstract_importer import AbstractImporter
-from modules.abstract_module import AbstractModule
-
-class MyNewImporter(AbstractImporter):
-
-    def __init__(self):
-        super().__init__()
-        # super().__init__(queue=True)   # if it's an one-time run importer
-        self.logger.info(f'Importer {self.name} initialized')
-
-    def importer(self, my_var):
-        # Process my_var and get content to import
-        content = GET_MY_CONTENT_TO_IMPORT
-        # if content is not gzipped and/or not b64 encoded,
-        # set gzipped and/or b64 to False
-        message = self.create_message(item_id, content, b64=False, gzipped=False)
-        return message
-        # if it's an one-time run, otherwise create an AIL Module
-        # self.add_message_to_queue(message)
-
-class MyNewModuleImporter(AbstractModule):
-    def __init__(self):
-        super().__init__()
-        # init module ...
-        self.importer = MyNewImporter()
-
-    def get_message(self):
-        return self.importer.importer()
-
-    def compute(self, message):
-        self.add_message_to_queue(message)
-
-if __name__ == '__main__':
-    module = MyNewModuleImporter()
-    module.run()
-
-    # if it's an one-time run:
-    # importer = MyImporter()
-    # importer.importer(my_var)
-```
-
-## AIL Feeders
-
-AIL Feeders are a special type of Importer within AIL, specifically designed 
+Feeders are a special type of Importer within AIL, specifically designed 
 to *extract* and *feed* data from external sources into the framework.
 
-- **Extract Data**: AIL Feeders extract data from external sources, such as APK files, 
+- **Extract Data**: Feeders extract data from external sources, such as APK files, 
 certificate transparency logs, GitHub archives, repositories, ActivityPub sources, 
 leaked files, Atom/RSS feeds, JSON logs, Discord, and Telegram, ...
 - **Run Independently**: Feeders can run on separate systems or infrastructure, 
@@ -180,6 +70,9 @@ for ingestion and further analysis within the AIL framework.
 
 [//]: # (- Customize medata parsing)
 
+### AIL Chats Feeders List:
+- [ail-feeder-discord](https://github.com/ail-project/ail-feeder-discord) Discord Feeder.
+- [ail-feeder-telegram](https://github.com/ail-project/ail-feeder-telegram) Telegram Feeder.
 
 ### AIL Feeders List:
 - [ail-feeder-apk](https://github.com/ail-project/ail-feeder-apk): Pushes annotated APK to an AIL instance for yara detection.
@@ -190,13 +83,9 @@ from GHArchive, collect and feed AIL
 - [ail-feeder-activity-pub](https://github.com/ail-project/ail-feeder-activity-pub) ActivityPub feeder.
 - [ail-feeder-leak](https://github.com/ail-project/ail-feeder-leak): Automates the process of feeding files to AIL, using data chunking to handle large files.
 - [ail-feeder-atom-rss](https://github.com/ail-project/ail-feeder-atom-rss) Atom and RSS feeder for AIL.
-- [ail-feeder-jsonlogs](https://github.com/ail-project/ail-feeder-jsonlogs) Aggregate JSON log lines and pushes them  to AIL. 
+- [ail-feeder-jsonlogs](https://github.com/ail-project/ail-feeder-jsonlogs) Aggregate JSON log lines and pushes them  to AIL.
 
-### AIL Chats Feeders List:
-- [ail-feeder-discord](https://github.com/ail-project/ail-feeder-discord) Discord Feeder.
-- [ail-feeder-telegram](https://github.com/ail-project/ail-feeder-telegram) Telegram Channels and User Feeder.
-
-### Chats Message
+#### Chats Message
 
 Overview of the JSON fields used by the Chat feeder.
 
@@ -323,26 +212,198 @@ for elem in sys.stdin:
     pyail.feed_json_item(content , meta, feeder_name, feeder_uuid)
 ```
 
-# AIL ROLES
+[//]: # (### ZMQ Importer:)
 
-| **Functionality**                                  | **Read-Only**    | **No-API User**    | **User**         | **Administrator** |
-|----------------------------------------------------|------------------|--------------------|------------------|-------------------|
-| **Submit texts or images**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
-| **Tag objects**                                    | ❌                | ✔ (UI only)       | ✔                | ✔                 |
-| **Submit an URL to crawl**                         | ❌                | ✔ (UI only)       | ✔                | ✔                 |
-| **Create a crawler scheduler**                     | ❌                | ❌                | ✔               | ✔                 |
-| **Create a tracker**                               | ❌                | Own only (UI)      | Own & Organization | Full              |
-| **Edit or delete a tracker**                       | ❌                | Own only (UI)      | Own               | Full              |
-| **Create an investigation**                        | ❌                | Own only (UI)      | Own & Organization | Full              |
-| **Add objects to organization's investigation**    | ❌                | ❌                 | ✔                | ✔                 |
-| **Edit organization's investigation**              | ❌                | ❌                 | ❌               | ✔                 |
-| **Delete organization's investigation**            | ❌                | ❌                 | ❌               | ✔                 |
-| **Export objects or investigations**               | ❌                | Own only (UI)      | Own & Organization | Full              |
-| **View objects, investigations, trackers**         | ✔                | ✔                 | ✔                | ✔                 |
-| **Complex Search**                                 | ❌                | ❌                 | ✔                | ✔                 |
-| **Retro Hunt**                                     | ❌                | ❌                 | ✔                | ✔                 |
-| **Access API**                                     | ❌                | ❌                 | ✔                | ✔                 |
-| **Manage users and roles**                         | ❌                | ❌                 | ❌               | ✔                 |
+### <a name="pystemon"></a>pystemon:
+
+1. Clone the [pystemon's git repository](https://github.com/cvandeplas/pystemon):
+	```
+	git clone https://github.com/cvandeplas/pystemon.git
+ 	```
+    Clone it into the same directory as AIL if you wish to launch it via the AIL launcher.
+
+
+2. Edit configuration file for pystemon ```pystemon/pystemon.yaml```: 
+	- Configure the storage section according to your needs:
+		```
+		storage:  
+			archive:  
+				storage-classname:  FileStorage  
+				save: yes  
+				save-all: yes  
+				dir: "alerts"  
+				dir-all: "archive"  
+				compress: yes
+			
+			redis:  
+				storage-classname:  RedisStorage  
+				save: yes  
+				save-all: yes  
+				server: "localhost"  
+				port: 6379  
+				database: 10  
+				lookup: no
+		```
+	- Adjust the configuration for paste-sites based on your requirements (remember to throttle download and update times).
+   
+3. Install python dependencies inside the virtual environment:
+	```shell
+	cd ail-framework/
+	. ./AILENV/bin/activate
+	cd ../pystemon/
+	pip install -U -r requirements.txt
+	``` 
+4. Edit the configuration file ```ail-framework/configs/core.cfg```:
+	- In the ``Pystemon`` section, update the ``dir`` parameter so it points to the directory where Pystemon stores its pastes. 
+
+5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
+	 - Option 1 (recommended): 
+		``` 
+		 ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
+		 ./ail-framework/bin/LAUNCH.sh -f #starts pystemon and the PystemonImporter.py
+		```
+     - Option 2 (may require two terminal windows): 
+        ``` 
+        ./ail-framework/bin/LAUNCH.sh -l #starts ail-framework
+        ./pystemon/pystemon.py
+        ./ail-framework/bin/importer/PystemonImporter.py
+        ```
+
+### File Importer `importer/FileImporter.py`:
+
+Manually import File and Directory with the [./tool/file_dir_importer.py](./tool/file_dir_importer.py) script:
+
+- Import Files:
+  ```shell
+  . ./AILENV/bin/activate
+  cd tools/
+  ./file_dir_importer.py -f MY_FILE_PAT
+  ```
+  
+- Import Dirs:
+  ```shell
+  . ./AILENV/bin/activate
+  cd tools/
+  ./file_dir_importer.py -d MY_DIR_PATH
+  ```
+
+### Create a New Importer:
+
+```python
+from importer.abstract_importer import AbstractImporter
+from modules.abstract_module import AbstractModule
+
+class MyNewImporter(AbstractImporter):
+
+    def __init__(self):
+        super().__init__()
+        # super().__init__(queue=True)   # if it's an one-time run importer
+        self.logger.info(f'Importer {self.name} initialized')
+
+    def importer(self, my_var):
+        # Process my_var and get content to import
+        content = GET_MY_CONTENT_TO_IMPORT
+        # if content is not gzipped and/or not b64 encoded,
+        # set gzipped and/or b64 to False
+        message = self.create_message(item_id, content, b64=False, gzipped=False)
+        return message
+        # if it's an one-time run, otherwise create an AIL Module
+        # self.add_message_to_queue(message)
+
+class MyNewModuleImporter(AbstractModule):
+    def __init__(self):
+        super().__init__()
+        # init module ...
+        self.importer = MyNewImporter()
+
+    def get_message(self):
+        return self.importer.importer()
+
+    def compute(self, message):
+        self.add_message_to_queue(message)
+
+if __name__ == '__main__':
+    module = MyNewModuleImporter()
+    module.run()
+
+    # if it's an one-time run:
+    # importer = MyImporter()
+    # importer.importer(my_var)
+```
+
+
+# Trackers:   
+
+Trackers are user-defined rules or patterns that automatically detect, tag and notify about relevant information collected by AIL.
+
+### Trackers types
+#### YARA rules:
+- It’s an improved grep to create pattern matching rule to search for strings, binary patterns, regular expressions;
+- A YARA rule can be contextualised with metadata and tags describing a specific set of pattern matching rules.
+- Easier definition of conditions compared to regex.
+
+##### YARA Rule Examples:
+
+Tracking Mails domains name:
+```
+rule mail_proton : credential_leak 
+{
+    meta:                                        
+        description = "Search for a specific mail domain name"
+    strings: 
+        $a = "@protonmail.com" nocase
+    condition:
+        $a
+}
+```
+
+Finding list of credentials for Disney Plus:
+```
+rule disney_plus : credential_leak 
+{
+    meta:                                        
+        description = "Finding list of credentials for Disney Plus"
+    strings: 
+        $a = "gmail.com:"
+        $b = "DISNEY_PLUS"
+        $c = "Disney Plus"
+    condition:
+        $a and ($b or $c) 
+}
+```
+
+
+#### Regex:
+- A regex is a sequence of characters that specifies a search pattern
+- They can be used to match, locate extract and replace text
+#### Typo Squatting:
+- Typosquatted domains are deceptive domains registered to resemble a domain name using common mispellings, keyboard-proximity error, swapped or omitted characters. 
+- Generate a list of potential typo squatting domains for a given domain.
+
+### How to create a tracker
+
+A new tracker can be created from the Leak Hunter section in the UI.
+
+# <a name="users_roles"></a> Users ROLES
+
+| **Functionality**                               | **Read-Only** | **No-API User** | **User**           | **Administrator** |
+|-------------------------------------------------|---------------|-----------------|--------------------|-------------------|
+| **Submit texts or images**                      | ❌             | ✔ (UI only)     | ✔                  | ✔                 |
+| **Tag objects**                                 | ❌             | ✔ (UI only)     | ✔                  | ✔                 |
+| **Submit an URL to crawl**                      | ❌             | ✔ (UI only)     | ✔                  | ✔                 |
+| **Create a crawler scheduler**                  | ❌             | ❌               | ✔                  | ✔                 |
+| **Create a tracker**                            | ❌             | Own only (UI)   | Own & Organization | Full              |
+| **Edit or delete a tracker**                    | ❌             | Own only (UI)   | Own                | Full              |
+| **Create an investigation**                     | ❌             | Own only (UI)   | Own & Organization | Full              |
+| **Add objects to organization's investigation** | ❌             | ❌               | ✔                  | ✔                 |
+| **Edit organization's investigation**           | ❌             | ❌               | ❌                  | ✔                 |
+| **Delete organization's investigation**         | ❌             | ❌               | ❌                  | ✔                 |
+| **Export objects or investigations**            | ❌             | Own only (UI)   | Own & Organization | Full              |
+| **View objects, investigations, trackers**      | ✔             | ✔               | ✔                  | ✔                 |
+| **Complex Search**                              | ❌             | ❌               | ✔                  | ✔                 |
+| **Retro Hunt**                                  | ❌             | ❌               | ✔                  | ✔                 |
+| **Access API**                                  | ❌             | ❌               | ✔                  | ✔                 |
+| **Manage users and roles**                      | ❌             | ❌               | ❌                  | ✔                 |
 
 # AIL SYNC
 

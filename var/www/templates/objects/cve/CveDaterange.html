@@ -75,17 +75,7 @@
 					<div class="col-xl-10">
 						<div class="mt-1" id="barchart_type"></div>
 
-                        <div class="card border-secondary my-2">
-                            <div class="card-body text-dark">
-                                <h5 class="card-title">Search CVE by name:</h5>
-                                <form action="{{ url_for('objects_cve.objects_cve_search') }}" id="search_subtype_onj" method='post'>
-                                    <div class="input-group mb-1">
-                                        <input type="text" class="form-control col-8" name="object_id" value="" placeholder="CVE ID" required>
-                                        <button class="btn btn-primary input-group-addon search-obj col-2"><i class="fas fa-search"></i></button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                        {% include 'block_cve_search.html' %}
                     </div>
 
 

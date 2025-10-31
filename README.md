@@ -43,7 +43,7 @@ resulting in enhanced performance and speed improvements.
 - **Database Upgrade**: The database has been migrated from ARDB to Kvrocks.
 - **New Correlation Engine**: AIL v5.0 introduces a new powerful correlation engine with two new correlation types: CVE and Title.
 - **Enhanced Logging**: The logging system has been improved to provide better troubleshooting capabilities.
-- **Tagging Support**: [AIL objects](./doc/README.md#ail-objects) now support tagging, 
+- **Tagging Support**: [AIL objects](./doc/README.md#ail_objects) now support tagging, 
 allowing users to categorize and label extracted information for easier analysis and organization.
 - **Trackers**: Improved objects filtering, PGP and decoded tracking added.
 - **UI Content Visualization**: The user interface has been upgraded to visualize extracted and tracked information.
@@ -89,6 +89,20 @@ Allow easy creation and customization by extending an abstract class.
 - Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
 - Crawler scheduler to trigger crawling on demand or at regular intervals for URLs or Tor hidden services
 
+### Trackers:
+Trackers are user-defined rules or patterns that automatically detect, tag and notify about relevant information collected by AIL.
+
+Trackers types: [Documentation](/doc/README.md#trackers)
+- word or set of words
+- YARA rules
+- Regex
+- Typo Squatting
+
+![tracker-create](./doc/screenshots/tracker_create.png "AIL framework create tracker")
+
+![tracker-yara](./doc/screenshots/tracker_yara.png "AIL framework Yara tracker")
+
+![retro-hunt](./doc/screenshots/retro_hunt.png "AIL framework Retro Hunt")
 
 ## Installation
 
@@ -96,6 +110,7 @@ To install the AIL framework, run the following commands:
 ```bash
 # Clone the repo first
 git clone https://github.com/ail-project/ail-framework.git
+git submodule update --init --recursive
 cd ail-framework
 
 # For Debian and Ubuntu based distributions
@@ -112,7 +127,7 @@ The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu 
 Requirement:
 - Python 3.8+
 
-## Installation Notes
+### Installation Notes
 
 For Lacus Crawler and LibreTranslate installation instructions (if you want to use those features), refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
 
@@ -136,6 +151,9 @@ The default credentials for the web interface are located in the ``DEFAULT_PASSW
 
 CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://github.com/ail-project/ail-training](https://github.com/ail-project/ail-training).
 
+## Documentation
+
+The documentation is available in [doc/README.md](doc/README.md)
 
 ## API
 
@@ -206,12 +224,6 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ![ui_submit](./doc/screenshots/ui_submit.png?raw=true "AIL framework UI importer")
 
 ### Trackers
-
-![tracker-create](./doc/screenshots/tracker_create.png?raw=true "AIL framework create tracker")
-
-![tracker-yara](./doc/screenshots/tracker_yara.png?raw=true "AIL framework Yara tracker")
-
-![retro-hunt](./doc/screenshots/retro_hunt.png?raw=true "AIL framework Retro Hunt")
 
 ## License
 

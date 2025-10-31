@@ -235,7 +235,7 @@ def _sort_version_tags(versions, current_version):
                             continue
                     sorted_versions.append(f'v{version}.{subversion}.{sub_release}')
             else:
-                if curr_version != version and subversion != curr_subversion:
+                if curr_version <= version and subversion > curr_subversion:
                     sorted_versions.append(f'v{version}.{subversion}')
     if sorted_versions[0] == current_version:
         sorted_versions = sorted_versions[1:]

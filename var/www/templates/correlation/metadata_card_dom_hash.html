@@ -54,7 +54,7 @@
 					Tags:
 					{% for tag in dict_object["metadata"]['tags'] %}
 						<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-						data-tagid="{{ tag }}" data-objtype="domhash" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
+						data-tagid="{{ tag }}" data-objtype="dom-hash" data-objsubtype="" data-objid="{{ dict_object["correlation_id"] }}">
 							{{ tag }}
 						</button>
 					{%  endfor %}

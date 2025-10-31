@@ -142,6 +142,16 @@
 						{% include 'correlation/metadata_card_item.html' %}
                     {% elif dict_object["object_type"] == "favicon" %}
 						{% include 'correlation/metadata_card_favicon.html' %}
+                    {% elif dict_object["object_type"] == "gtracker" %}
+						{% include 'correlation/metadata_card_gtracker.html' %}
+                    {% elif dict_object["object_type"] == "file-name" %}
+						{% include 'correlation/metadata_card_filename.html' %}
+                    {% elif dict_object["object_type"] == "mail" %}
+						{% include 'correlation/metadata_card_mail.html' %}
+                    {% elif dict_object["object_type"] == "ssh-key" %}
+						{% include 'correlation/metadata_card_ssh_key.html' %}
+                    {% elif dict_object["object_type"] == "ip" %}
+						{% include 'correlation/metadata_card_ip.html' %}
 					{% endif %}
 
 					<div class="row">
@@ -272,6 +282,10 @@
                                                 <label class="form-check-label" for="favicon_Check">Favicon</label>
                                             </div>
                                             <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="gtracker_Check" name="gtracker_Check" {%if "gtracker" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="gtracker_Check">G tracking</label>
+                                            </div>
+                                            <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="domhash_Check" name="domhash_Check" {%if "dom-hash" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="domhash_Check">DomHash</label>
                                             </div>
@@ -298,6 +312,18 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="item_Check" name="item_Check" {%if "item" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="item_Check">Item</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="mail_Check" name="mail_Check" {%if "mail" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="mail_Check">Mail</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="ssh-key_Check" name="ssh-key_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="ssh-key_Check">SSH Key</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="ip_Check" name="ip_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="ip_Check">IP</label>
                                             </div>
 
                                             <hr>
@@ -450,13 +476,13 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
+		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] | urlencode }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{dict_object["correlation_id"]}}");
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{ dict_object["correlation_id"] | urlencode }}");
 		{% elif dict_object["object_type"] == "decoded" %}
-			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_decoded.graphline_json') }}?id={{dict_object["correlation_id"]}}");
+			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_decoded.graphline_json') }}?id={{ dict_object["correlation_id"] | urlencode }}");
 		{% elif dict_object["object_type"] == "cve" %}
-            all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_cve.objects_cve_graphline_json') }}?id={{dict_object["correlation_id"]}}");
+            all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_cve.objects_cve_graphline_json') }}?id={{ dict_object["correlation_id"] | urlencode }}");
         {% endif %}
 		all_graph.onResize();
 });

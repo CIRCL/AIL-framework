@@ -32,37 +32,54 @@
 				{% include 'crawler/crawler_disabled.html' %}
 
 				<div class="row">
-					<div class="col-xl-6">
+					<div class="col-xl-4">
 
 						<div class="card mt-1 mb-1">
 						  <div class="card-header text-white bg-dark">
 								<h5><a class="text-info" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=onion"><i class="fas fa-user-secret"></i> Onions Crawlers</a></h5>
 								<div class="row">
-									<div class="col-6">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_domain_up">{{ crawlers_latest_stats['onion']['up'] }}</a> UP
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ crawlers_latest_stats['onion']['down'] }}</a> DOWN
+									<div class="col-5">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_domain_up">{{ crawlers_latest_stats['onion']['up'] }}</a> <small>UP</small>
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ crawlers_latest_stats['onion']['down'] }}</a> <small>DOWN</small>
 									</div>
-									<div class="col-6">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_total">{{ crawlers_latest_stats['onion']['crawled'] }}</a> Crawled
-										<span class="badge badge-warning ml-md-3" id="stat_onion_queue">{{ crawlers_latest_stats['onion']['queue'] }}</span> Queue
+									<div class="col-7">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_total">{{ crawlers_latest_stats['onion']['crawled'] }}</a> <small>Crawled</small>
+										<span class="badge badge-warning ml-md-3" id="stat_onion_queue">{{ crawlers_latest_stats['onion']['queue'] }}</span> <small>Queue</small>
 									</div>
 								</div>
 							</div>
 						</div>
 
 					</div>
-					<div class="col-xl-6">
+                    <div class="col-xl-4">
+						<div class="card mt-1 mb-1">
+							<div class="card-header text-white bg-dark">
+								<h5><a class="text-info" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=i2p"><i class="fas fa-user-secret"></i> I2P Crawlers</a></h5>
+								<div class="row">
+									<div class="col-5">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_i2p_domain_up">{{ crawlers_latest_stats['i2p']['up'] }}</a> <small>UP</small>
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_i2p_domain_down">{{ crawlers_latest_stats['i2p']['down'] }}</a> <small>DOWN</small>
+									</div>
+									<div class="col-7">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_i2p_total">{{ crawlers_latest_stats['i2p']['crawled'] }}</a> <small>Crawled</small>
+										<span class="badge badge-warning ml-md-3" id="stat_i2p_queue">{{ crawlers_latest_stats['i2p']['queue'] }}</span> <small>Queue</small>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-xl-4">
 						<div class="card mt-1 mb-1">
 							<div class="card-header text-white bg-dark">
 								<h5><a class="text-info" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=web"><i class="fab fa-html5"></i> Web Crawlers</a></h5>
 								<div class="row">
-									<div class="col-6">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_domain_up">{{ crawlers_latest_stats['web']['up'] }}</a> UP
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_web_domain_down">{{ crawlers_latest_stats['web']['down'] }}</a> DOWN
+									<div class="col-5">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_domain_up">{{ crawlers_latest_stats['web']['up'] }}</a> <small>UP</small>
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_web_domain_down">{{ crawlers_latest_stats['web']['down'] }}</a> <small>DOWN</small>
 									</div>
-									<div class="col-6">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_total">{{ crawlers_latest_stats['web']['crawled'] }}</a> Crawled
-										<span class="badge badge-warning ml-md-3" id="stat_web_queue">{{ crawlers_latest_stats['web']['queue'] }}</span> Queue
+									<div class="col-7">
+										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_total">{{ crawlers_latest_stats['web']['crawled'] }}</a> <small>Crawled</small>
+										<span class="badge badge-warning ml-md-3" id="stat_web_queue">{{ crawlers_latest_stats['web']['queue'] }}</span> <small>Queue</small>
 									</div>
 								</div>
 							</div>

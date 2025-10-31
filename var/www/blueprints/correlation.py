@@ -26,6 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects import ail_objects
 from lib import chats_viewer
 from lib import Tag
+from lib import images_engine
 
 bootstrap_label = Flask_config.bootstrap_label
 vt_enabled = Flask_config.vt_enabled
@@ -97,7 +98,8 @@ def show_correlation():
         filter_types = ",".join(filter_types)
 
         # redirect to keep history and bookmark
-        return redirect(url_for('correlation.show_correlation', type=object_type, subtype=subtype, id=obj_id, mode=mode,
+        return redirect(url_for('correlation.show_correlation', type=object_type,
+                                subtype=subtype, id=obj_id, mode=mode,
                                 max_nodes=max_nodes, level=level, filter=filter_types))
 
     # request.method == 'GET'
@@ -125,13 +127,14 @@ def show_correlation():
             dict_object = {"type": obj_type,
                            "id": obj_id,
                            "object_type": obj_type,
+                           "gid": ail_objects.get_obj_global_id(obj_type, subtype, obj_id),
                            "max_nodes": max_nodes, "mode": mode, "level": level,
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "hidden": objs_hidden, "hidden_str": ",".join(objs_hidden),
 
                            "correlation_id": obj_id,
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
-                                                                   options={'tags'}, flask_context=True),
+                                                                   options={'tags', 'description'}, flask_context=True),
                            "nb_correl": ail_objects.get_obj_nb_correlations(obj_type, subtype, obj_id)
                            }
             if subtype:
@@ -141,9 +144,11 @@ def show_correlation():
                 dict_object["subtype"] = ''
             dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
             dict_object["metadata_card"]['tags_safe'] = True
+
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
+                                   ollama_enabled=images_engine.is_ollama_enabled(),
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
 
 @correlation.route('/correlation/get/description')

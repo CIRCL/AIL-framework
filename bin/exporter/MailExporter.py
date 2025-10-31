@@ -29,6 +29,7 @@ from lib import ail_logger
 from lib import ail_users
 from exporter.abstract_exporter import AbstractExporter
 from lib.ConfigLoader import ConfigLoader
+from exporter import default_mail_template
 # from lib.objects.abstract_object import AbstractObject
 # from lib.Tracker import Tracker
 
@@ -147,3 +148,12 @@ class MailExporterTracker(MailExporter):
             if ail_users.exists_user(mail):
                 body = ail_link + body
             self._export(mail, subject, body)
+
+class MailExporterUserCreation(MailExporter):
+    def __init__(self, host=None, port=None, password=None, user='', sender=''):
+        super().__init__(host=host, port=port, password=password, user=user, sender=sender)
+
+    def export(self, user_id, password):
+        subject = default_mail_template.default_subject
+        body = default_mail_template.get_default_template(user_id, password)
+        self._export(user_id, subject, body)

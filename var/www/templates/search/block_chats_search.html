@@ -1,0 +1,42 @@
+<div class="card border-secondary my-2">
+    <div class="card-header text-white bg-dark">
+        <div class="card-title h1"><i class="fas fa-comments"></i> Chats Search:</div>
+    </div>
+    <div class="card-body text-dark">
+        Type:
+        <div class="d-flex my-1">
+            {% for p in protocols %}
+                <button class="btn btn-secondary mr-1" onclick="change_sector_chats_type('{{ p['id'] }}')">
+                    <b>{% if p['icon'] %}<i class="{{ p['icon']['style'] }} {{ p['icon']['icon'] }}"></i>{% endif %} {{ p['id'] }}</b>
+                </button>
+            {% endfor %}
+            <button class="btn btn-secondary" onclick="change_sector_chats_type('all')">
+                <b><i class="fas fa-comments"></i> All Chats</b>
+            </button>
+        </div>
+
+        <form action="{{ url_for('search_b.search_chats_post') }}" id="search_subtype_onj" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <select class="custom-select col-2" id="search_type_chats" name="search_type_chats" value="{% if search_index %}{{ search_index }}{% else %}tor{% endif %}" required>
+                    {% for p in protocols %}
+                        <option value="{{ p['id'] }}" {% if search_index == p['id'] %}selected{% endif %}>{{ p['id'] }}</option>
+                    {% endfor %}
+                        <option value="all" {% if search_index == "all" %}selected{% endif %}>All chats</option>
+                </select>
+                <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="content to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_search_helper_tooltip(this)" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        var selector_search_chats = $("#search_type_chats")
+        function change_sector_chats_type(crawled_type) {
+            selector_search_chats.val(crawled_type);
+        }
+    </script>
+</div>

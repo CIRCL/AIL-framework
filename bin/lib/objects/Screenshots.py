@@ -17,11 +17,14 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
+from lib.ail_core import get_default_image_description_model
 # from lib import data_retention_engine
 
 config_loader = ConfigLoader()
+# r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -89,8 +92,34 @@ class Screenshot(AbstractObject):
             file_content = BytesIO(f.read())
         return file_content
 
+    def get_base64(self):
+        return base64.b64encode(self.get_file_content().read()).decode('utf-8')
+
     def get_content(self):
         return self.get_file_content()
+
+    def get_description_models(self):
+        models = []
+        for key in self._get_fields_keys():
+            if key.startswith('desc:'):
+                model = key[5:]
+                models.append(model)
+
+    def add_description_model(self, model, description):
+        self._set_field(f'desc:{model}', description)
+
+    def get_description(self, model=None):
+        if not model:
+            model = get_default_image_description_model()
+        return self._get_field(f'desc:{model}')
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+        else:
+            return None
 
     def get_misp_object(self):
         obj_attrs = []
@@ -103,12 +132,16 @@ class Screenshot(AbstractObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), flask_context=False):
         meta = self.get_default_meta()
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
+        if 'description' in options:
+            meta['description'] = self.get_description()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
 def get_screenshot_dir():

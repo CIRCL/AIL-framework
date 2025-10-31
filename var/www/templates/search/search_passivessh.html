@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Search</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_search.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                {% include 'search/block_passive_ssh_search.html' %}
+
+{#                {% if result %}#}
+{#                    {% set endpoint_url = url_for('search_b.search_crawled') + "?search=" + to_search + "&index=" + search_index %}#}
+{#                    {% include 'search/pagination.html' %}#}
+{#                {% endif %}#}
+
+
+                {% if result %}
+                    <div class="position-relative mb-3">
+                      <button class="btn btn-outline-primary position-absolute" style="top: 10px; right: 10px;" onclick="copyToClipboard('resultOutput')">
+                        <i class="fa-regular fa-clipboard"></i> Copy
+                      </button>
+
+                      <pre id="resultOutput" class="border bg-light p-3 text-monospace">{{ result }}</pre>
+                    </div>
+                {% endif %}
+
+
+
+{#                {% if result %}#}
+{#                    {% include 'search/pagination.html' %}#}
+{#                    <br>#}
+{#		            <br>#}
+{#                {% endif %}#}
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function(){
+        $("#page-search").addClass("active");
+  });
+
+function toggle_sidebar(){
+	if($('#nav_menu').is(':visible')){
+		$('#nav_menu').hide();
+		$('#side_menu').removeClass('border-right')
+		$('#side_menu').removeClass('col-lg-2')
+		$('#core_content').removeClass('col-lg-10')
+	}else{
+		$('#nav_menu').show();
+		$('#side_menu').addClass('border-right')
+		$('#side_menu').addClass('col-lg-2')
+		$('#core_content').addClass('col-lg-10')
+	}
+}
+
+function copyToClipboard(elementId) {
+    const el = document.getElementById(elementId);
+    const text = el.innerText;
+
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+}
+</script>
+
+</body>
+
+</html>

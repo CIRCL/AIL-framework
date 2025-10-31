@@ -146,6 +146,22 @@ def add_crawler_capture():
     dict_res = {'url': data['url']}
     return create_json_response(dict_res, 200)
 
+@api_rest.route("api/v1/onions/up/month/<path:date_year_month>", methods=['GET'])
+@token_required('admin')
+def get_onions_up_month(date_year_month):
+    res = Domains.api_get_onions_by_month(date_year_month)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+@api_rest.route("api/v1/cookiejar/import", methods=['POST'])
+@token_required('user')
+def cookiejar_import():  # TODO ONLY LACUS OR HAR
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
+
+    res = crawlers.api_import_lacus_cookiejar(user_org, user_id, data)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
 @api_rest.route("api/v1/lacus/capture/import", methods=['POST'])
 @token_required('user')
 def lacus_capture_import():  # TODO ONLY LACUS OR HAR
@@ -171,6 +187,15 @@ def import_json_item():
     data_json = request.get_json()
     res = api_add_json_feeder_to_queue(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
+@api_rest.route("api/v1/import/crawler/capture", methods=['POST'])
+@token_required('user')
+def import_crawler_capture():
+    data_json = request.get_json()
+    res = crawlers.api_add_lacus_capture_to_import(data_json)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # # # TODO LIST OBJ TYPES + SUBTYPES

@@ -60,10 +60,10 @@ class CEDetector(AbstractModule):
                 words.add(word[0])
         return words
 
-    def compute(self, message):  # TODO LIMIT TO DARKWEB ???
+    def compute(self, message):
         to_tag = False
         content = self.obj.get_content().lower()
-        # print(content)
+        domain_id = message
 
         is_csam = False
         is_child_word = False
@@ -91,10 +91,15 @@ class CEDetector(AbstractModule):
             print(f'CSAM DETECTED    {content}')
             # print()
             self.add_message_to_queue(message=self.ce_tag, queue='Tags')
-            # Domains
-            for dom in self.obj.get_correlation('domain').get('domain', []):
-                domain = Domain(dom[1:])
+            # Domain
+            if domain_id:
+                domain = Domain(domain_id)
                 self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
+            # Domains
+            else:
+                for dom in self.obj.get_correlation('domain').get('domain', []):
+                    domain = Domain(dom[1:])
+                    self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
 
         return to_tag
 

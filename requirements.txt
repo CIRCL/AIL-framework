@@ -3,7 +3,7 @@ pylacus
 pymisp>=2.4.144
 d4-pyclient>=0.1.6
 
-thehive4py
+thehive4py<2.0
 git+https://github.com/MISP/PyTaxonomies
 git+https://github.com/MISP/PyMISPGalaxies
 
@@ -11,6 +11,7 @@ git+https://github.com/MISP/PyMISPGalaxies
 redis>4.4.4
 python-magic>0.4.15
 yara-python>4.0.2
+pyfaup-rs
 
 # AIL Sync
 websockets>9.0
@@ -41,7 +42,7 @@ scrapy-splash>=0.7.2
 # Languages
 gcld3
 libretranslatepy
-lexilang
+git+https://github.com/ail-project/LexiLang
 
 # Demoji
 git+https://github.com/ail-project/demoji
@@ -63,7 +64,7 @@ pybgpranking
 DomainClassifier
 
 # Indexer
-whoosh>=2.7.4
+meilisearch
 
 # LibInjection bindings
 #pylibinjection>=0.2.4
@@ -96,10 +97,12 @@ coverage>=5.5
 # # # #
 PySocks>=1.7.1
 pycountry>=20.7.3
-https://github.com/saffsd/langid.py/archive/master.zip
 
+idna
+publicsuffixlist
 requests
 
+chardet
 
 ##### Old packages
 # texttable

@@ -91,6 +91,7 @@ class Categ(AbstractModule):
 
             if obj.type == 'message' or obj.type == 'ocr' or obj.type == 'qrcode':
                 self.add_message_to_queue(message='0', queue=categ)
+                categ_found.append(categ)
             else:
 
                 found = set(re.findall(pattern, content))

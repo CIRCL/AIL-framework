@@ -80,6 +80,11 @@ minute_processed_paste = 10
 #Maximum line length authorized to make a diff between duplicates
 DiffMaxLineLength = 10000
 
+##### Images #####
+[Images]
+ollama_url = http://127.0.0.1:11434
+ollama_enabled = True
+
 ##### Users #####
 [Users]
 force_2fa = False
@@ -213,6 +218,11 @@ host = localhost
 port = 6383
 password = ail_rels
 
+[Kvrocks_Searchs]
+host = localhost
+port = 6383
+password = ail_searchs
+
 [Kvrocks_Timeline]
 host = localhost
 port = 6383
@@ -251,11 +261,9 @@ dns = 8.8.8.8
 
 # Indexer configuration
 [Indexer]
-type = whoosh
-path = indexdir
-register = indexdir/all_index.txt
-#size in Mb
-index_max_size = 2000
+meilisearch = False
+meilisearch_url = http://localhost:7700
+meilisearch_key = ailmeilisearchpassword
 
 [ailleakObject]
 maxDuplicateToPushToMISP=10

@@ -31,6 +31,8 @@ from lib.objects import Domains
 from lib.objects.Items import Item
 from lib.objects.Titles import Title
 from lib import Tag
+from lib import search_engine
+from lib import images_engine
 
 from packages import Date
 
@@ -103,7 +105,7 @@ def manual():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
-    crawlers_types = crawlers.get_crawler_all_types()
+    crawlers_types = ['onion', 'web']
     proxies = []  # TODO HANDLE PROXIES
     return render_template("crawler_manual.html",
                            is_manager_connected=crawlers.get_lacus_connection_metadata(),
@@ -217,6 +219,7 @@ def send_to_spider():
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
 
+# Send Unknown onion to crawler
 @crawler_splash.route("/crawlers/domain_discovery", methods=['GET'])
 @login_required
 @login_user_no_api
@@ -404,7 +407,7 @@ def showDomain():
     if not domain.exists():
         abort(404)
 
-    dict_domain = domain.get_meta(options=['last_origin', 'languages'])
+    dict_domain = domain.get_meta(options={'description', 'last_origin', 'languages'})
     dict_domain['domain'] = domain.id
     if domain.was_up():
         dict_domain = {**dict_domain, **domain.get_correlations(filter_types=['cryptocurrency', 'decoded', 'pgp', 'screenshot', 'title'], unpack=True)}
@@ -452,6 +455,7 @@ def showDomain():
 
     return render_template("showDomain.html",
                            dict_domain=dict_domain, bootstrap_label=bootstrap_label,
+                           ollama_enabled=images_engine.is_ollama_enabled(),
                            modal_add_tags=Tag.get_modal_add_tags(dict_domain['domain'], object_type="domain"))
 
 
@@ -479,6 +483,7 @@ def crawlers_domain_download():
 @login_read_only
 def domains_explorer_post_filter():
     domain_onion = request.form.get('domain_onion_switch')
+    domain_i2p = request.form.get('domain_i2p_switch')
     domain_regular = request.form.get('domain_regular_switch')
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -490,7 +495,7 @@ def domains_explorer_post_filter():
         date_from = None
         date_to = None
 
-    if domain_onion and domain_regular:
+    if domain_onion and domain_regular and domain_i2p:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
         else:
@@ -500,6 +505,11 @@ def domains_explorer_post_filter():
             return redirect(url_for('crawler_splash.domains_explorer_web', date_from=date_from, date_to=date_to))
         else:
             return redirect(url_for('crawler_splash.domains_explorer_web'))
+    elif domain_i2p:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_i2p', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_i2p'))
     else:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_onion', date_from=date_from, date_to=date_to))
@@ -519,7 +529,7 @@ def domains_explorer_all():
     except:
         page = 1
 
-    dict_data = Domains.get_domains_up_by_filers(['onion', 'web'], page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers(Domains.get_all_domains_types(), page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
 
 
@@ -539,6 +549,21 @@ def domains_explorer_onion():
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
                            domain_type='onion')
 
+@crawler_splash.route('/domains/explorer/i2p', methods=['GET'])
+@login_required
+@login_read_only
+def domains_explorer_i2p():
+    page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domains.get_domains_up_by_filers(['i2p'], page=page, date_from=date_from, date_to=date_to)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
+                           domain_type='i2p')
 
 @crawler_splash.route('/domains/explorer/web', methods=['GET'])
 @login_required
@@ -596,6 +621,7 @@ def domains_search_languages_get():
 @login_required
 @login_user
 def domains_search_name():
+    user_id = current_user.get_user_id()
     name = request.args.get('name')
     page = request.args.get('page')
     try:
@@ -605,7 +631,9 @@ def domains_search_name():
 
     if not name:
         return create_json_response({'error': 'Mandatory args name not provided'}, 400)
-    name = crawlers.api_get_domain_from_url(name)
+    url_name = crawlers.api_get_domain_from_url(name)
+    if url_name:
+        name = url_name
 
     domains_types = request.args.getlist('domain_types')
     if domains_types:
@@ -621,6 +649,7 @@ def domains_search_name():
         else:
             send_to_crawler = False
 
+    search_engine.log(user_id, 'domain_name', name)
     l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
     return render_template("domains/domains_result_list.html", template_folder='../../',
                            l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
@@ -633,7 +662,7 @@ def domains_search_name():
 def domains_search_today():
     dom_types = request.args.get('type')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()
@@ -667,7 +696,7 @@ def domains_search_date():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()

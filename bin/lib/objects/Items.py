@@ -238,6 +238,13 @@ class Item(AbstractObject):
     def is_crawled(self):
         return self.id.startswith('crawled')
 
+    def is_onion(self):
+        is_onion = False
+        if len(self.id) > 62:
+            if is_crawled(self.id) and self.id[-42:-36] == '.onion':
+                is_onion = True
+        return is_onion
+
     # if is_crawled
     def get_domain(self):
         return self.id[19:-36]
@@ -269,7 +276,7 @@ class Item(AbstractObject):
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self.get_default_meta(tags=True, options=options)
         meta['date'] = self.get_date(separator=True)
         meta['source'] = self.get_source()
         # optional meta fields
@@ -279,6 +286,8 @@ class Item(AbstractObject):
             if self.is_crawled():
                 tags = meta.get('tags')
                 meta['crawler'] = self.get_meta_crawler(tags=tags)
+        if 'url' in options:
+            meta['url'] = self.get_url()
         if 'duplicates' in options:
             meta['duplicates'] = self.get_duplicates()
         if 'file_name' in options:
@@ -312,6 +321,10 @@ class Item(AbstractObject):
             crawler['domain'] = self.get_domain()
             crawler['har'] = self.get_har()
             crawler['screenshot'] = self.get_screenshot()
+            if crawler['screenshot']:
+                crawler['screenshot_id'] = crawler['screenshot'].replace('/', '')
+            else:
+                crawler['screenshot_id'] = None
             crawler['url'] = self.get_url()
 
             domain_tags = self.get_obj_tags('domain', '', crawler['domain'], r_list=True)
@@ -335,12 +348,16 @@ class Item(AbstractObject):
     # TODO RENAME ME
     def get_languages(self, min_len=600, num_langs=3, min_proportion=0.2, min_probability=0.7, force_gcld3=False):
         ld = LanguagesDetector(nb_langs=num_langs, min_proportion=min_proportion, min_probability=min_probability, min_len=min_len)
-        return ld.detect(self.get_content(), force_gcld3=force_gcld3)
+        return ld.detect(self.get_content(), force_gcld3=force_gcld3, iso3=False)
 
     def get_mimetype(self, content=None):
         if not content:
             content = self.get_content()
         return magic.from_buffer(content, mime=True)
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': self.get_html2text_content()}
 
     ############################################################################
     ############################################################################
@@ -882,12 +899,16 @@ def create_item(obj_id, obj_metadata, io_content):
 
 
 # if __name__ == '__main__':
-#     content = 'test file content'
-#     duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
-#
+    # content = 'test file content'
+    # duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
+
     # item = Item('tests/2020/01/02/test_save.gz')
-#     item.create(content, _save=False)
-#     filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
-#     gen = get_all_items_objects(filters=filters)
-#     for obj_id in gen:
-#         print(obj_id.id)
+    # item.create(content, _save=False)
+    # filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
+    # gen = get_all_items_objects(filters=filters)
+    # for obj_id in gen:
+    #     print(obj_id.id)
+    # obj = Item('')
+    # obj.set_custom_meta({"a": 1, "c": {"tests": "3"}})
+    # obj.set_custom_meta(None, {'a': 1}, {'b': 2}, {'c': 3})
+    # print(obj.get_custom_meta())
