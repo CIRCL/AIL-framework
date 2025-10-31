@@ -83,6 +83,11 @@ class Tracker_Term(AbstractModule):
         if obj_type not in self.tracked_words and obj_type not in self.tracked_sets:
             return None
 
+        # Ensure only string content is processed
+        if self.obj.type == 'decoded':
+            if not self.obj.get_mimetype().startswith('text/'):
+                return None
+
         content = obj.get_content()
 
         signal.alarm(self.max_execution_time)

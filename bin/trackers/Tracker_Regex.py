@@ -64,6 +64,11 @@ class Tracker_Regex(AbstractModule):
         if obj_type not in self.tracked_regexs:
             return None
 
+        # Ensure only string content is processed
+        if self.obj.type == 'decoded':
+            if not self.obj.get_mimetype().startswith('text/'):
+                return None
+
         content = obj.get_content()
 
         for dict_regex in self.tracked_regexs[obj_type]:
