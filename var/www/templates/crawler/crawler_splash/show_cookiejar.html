@@ -49,12 +49,6 @@
 							Edit Description <i class="fas fa-pencil-alt"></i>
 						</button>
 
-						<a href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_add')}}?uuid={{cookiejar_metadata['uuid']}}">
-							<button class="btn btn-primary">
-								Add Cookies <i class="fas fa-cookie"></i>
-							</button>
-                        </a>
-
 						<span class="mt-1" id="description-edit-block">
 							<div class="input-group">
 								<input class="form-control" type="text" id="input-description" value="{{cookiejar_metadata['description']}}">
@@ -69,9 +63,44 @@
 					</div>
 				</div>
 
-				{% with l_elem=cookiejar_metadata['cookies'] %}
-                    {% include 'crawler/crawler_splash/cookies_card_block.html' %}
-                {% endwith %}
+                <div class="card mb-3 mt-1">
+                    <div class="card-header text-white bg-dark">
+						<div class="row">
+							<div class="col-8">
+		                        <h5 class="card-title"><i class="fas fa-cookie"></i> Cookies</h5>
+							</div>
+						</div>
+                    </div>
+                    <div class="card-body">
+                        <a href="{{ url_for('crawler_splash.crawler_cookiejar_cookie_add')}}?uuid={{cookiejar_metadata['uuid']}}">
+							<button class="btn btn-primary">
+								Add Cookies <i class="fas fa-cookie"></i>
+							</button>
+                        </a>
+
+                        {% with l_elem=cookiejar_metadata['cookies'] %}
+                            {% include 'crawler/crawler_splash/cookies_card_block.html' %}
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <div class="card mb-3 mt-1">
+                    <div class="card-header text-white bg-dark">
+						<div class="row">
+							<div class="col-8">
+		                        <h5 class="card-title"><i class="fas fa-floppy-disk"></i> Local Storage</h5>
+							</div>
+                            <div class="col-4">
+                                <a class="btn btn-danger float-right" href="{{ url_for('crawler_splash.crawler_cookiejar_local_storage_delete') }}?uuid={{cookiejar_metadata['uuid']}}">
+		                            <i class="fas fa-trash-alt"></i>
+		                        </a>
+							</div>
+						</div>
+                    </div>
+                    <div class="card-body">
+                        <pre>{{ cookiejar_metadata['local_storage'] }}</pre>
+                    </div>
+                </div>
 
 			</div>
 		</div>

@@ -887,6 +887,20 @@ def crawler_cookiejar_cookie_delete():
         cookiejar_uuid = res[0]['cookiejar_uuid']
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
 
+@crawler_splash.route('/crawler/cookiejar/local_storage/delete', methods=['GET'])
+@login_required
+@login_user_no_api
+def crawler_cookiejar_local_storage_delete():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    cookiejar_uuid = request.args.get('uuid')
+
+    res = crawlers.api_delete_cookiejar_local_storage(user_org, user_id, user_role, cookiejar_uuid)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
+
 
 @crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
 @login_required
@@ -983,7 +997,7 @@ def crawler_cookiejar_cookie_add():
 def crawler_cookiejar_cookie_manual_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
     name = request.form.get('name')
     value = request.form.get('value')
@@ -1002,7 +1016,7 @@ def crawler_cookiejar_cookie_manual_add_post():
     if secure:
         cookie_dict['secure'] = True
 
-    res = crawlers.api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict)
+    res = crawlers.api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
 
@@ -1015,20 +1029,20 @@ def crawler_cookiejar_cookie_manual_add_post():
 def crawler_cookiejar_cookie_json_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
 
     if 'file' in request.files:
         file = request.files['file']
         json_cookies = file.read().decode()
         if json_cookies:
-            res = crawlers.api_import_cookies_from_json(user_org, user_id, is_admin, cookiejar_uuid, json_cookies)
+            res = crawlers.api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, json_cookies)
             if res[1] != 200:
                 return create_json_response(res[0], res[1])
 
             return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
-    return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
+    return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', uuid=cookiejar_uuid))
 
 
 # --- Cookiejar ---#

@@ -810,11 +810,15 @@ class Cookiejar:
     def exists_local_storage(self): # TODO SPLIT in multiple directory ?????
         return os.path.isfile(self.get_local_storage_file())
 
-    def get_local_storage(self):
+    def get_local_storage(self, r_json=False):
         try:
             with gzip.open(self.get_local_storage_file()) as f:
                 try:
-                    return json.loads(f.read())
+                    storage = json.loads(f.read())
+                    if r_json:
+                        return json.dumps(storage, indent=2)
+                    else:
+                        return storage
                 except json.decoder.JSONDecodeError:
                     return {}
         except Exception as e:
@@ -825,7 +829,13 @@ class Cookiejar:
         with gzip.open(self.get_local_storage_file(), 'w+') as f:
             f.write(json.dumps(storage).encode())
 
-    def get_meta(self, level=False, nb_cookies=False, cookies=False, r_json=False):
+    def delete_local_storage(self):
+        try:
+            os.remove(self.get_local_storage_file())
+        except Exception as e:
+            print(e)
+
+    def get_meta(self, level=False, nb_cookies=False, cookies=False, local_storage=False, r_json=False):
         meta = {'uuid': self.uuid,
                 'date': self.get_date(),
                 'description': self.get_description(),
@@ -838,6 +848,8 @@ class Cookiejar:
             meta['nb_cookies'] = self.get_nb_cookies()
         if cookies:
             meta['cookies'] = self.get_cookies(r_json=r_json)
+        if local_storage:
+            meta['local_storage'] = self.get_local_storage(r_json=r_json)
         return meta
 
     def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, text=None):
@@ -889,6 +901,7 @@ class Cookiejar:
     def delete(self):
         for cookie_uuid in self.get_cookies_uuid():
             self.delete_cookie(cookie_uuid)
+        self.delete_local_storage()
         r_crawler.srem(f'cookiejars:user:{self.get_user()}', self.uuid)
         r_crawler.srem('cookiejars:global', self.uuid)
         r_crawler.srem('cookiejars:all', self.uuid)
@@ -942,6 +955,18 @@ def api_edit_cookiejar_description(user_org, user_id, user_role, cookiejar_uuid,
     cookiejar.set_description(description)
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
+def api_delete_cookiejar_local_storage(user_org, user_id, user_role, cookiejar_uuid):
+    resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
+    if resp:
+        return resp
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if not cookiejar.exists():
+        return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+    if not cookiejar.exists_local_storage():
+        return {'error': 'local storage do not exists', 'cookiejar_uuid': cookiejar_uuid}, 404
+    cookiejar.delete_local_storage()
+    return {'cookiejar_uuid': cookiejar_uuid}, 200
+
 def api_delete_cookiejar(user_org, user_id, user_role, cookiejar_uuid):
     resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'delete')
     if resp:
@@ -955,7 +980,7 @@ def api_get_cookiejar(user_org, user_id, user_role, cookiejar_uuid):
     if resp:
         return resp
     cookiejar = Cookiejar(cookiejar_uuid)
-    meta = cookiejar.get_meta(level=True, cookies=True, r_json=True)
+    meta = cookiejar.get_meta(level=True, cookies=True, local_storage=True, r_json=True)
     return meta, 200
 
 ####  ACL  ####
@@ -1128,6 +1153,8 @@ def api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
     resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
     if resp:
         return resp
+    if not cookie_dict:
+        return {'error': 'no cookies provided'}, 400
     if 'name' not in cookie_dict or 'value' not in cookie_dict or not cookie_dict['name'] or not cookie_dict['value']:
         return {'error': 'cookie name or value not provided'}, 400
     cookiejar = Cookiejar(cookiejar_uuid)
