@@ -168,7 +168,7 @@ class Mixer(AbstractModule):
 
         # No Filtering
         # else:
-        if self.obj.type != 'domain' and self.obj.type == 'title':
+        if self.obj.type != 'domain' and self.obj.type != 'title':
             self.increase_stat_processed(feeder_name)
         self.add_message_to_queue(obj=self.obj, message=gzip64encoded)
 
