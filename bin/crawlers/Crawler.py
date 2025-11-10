@@ -281,6 +281,7 @@ class Crawler(AbstractModule):
                                           user_agent=task.get_user_agent(),
                                           proxy=task.get_proxy(),
                                           cookies=task.get_cookies(),
+                                          storage=task.get_local_storage(),
                                           with_favicon=True,
                                           force=force,
                                           general_timeout_in_sec=90)  # TODO increase timeout if onion ????

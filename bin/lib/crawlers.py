@@ -2124,6 +2124,14 @@ class CrawlerTask:
         else:
             return []
 
+    def get_local_storage(self):
+        cookiejar = self.get_cookiejar()
+        if cookiejar:
+            cookiejar = Cookiejar(cookiejar)
+            return cookiejar.get_local_storage()
+        else:
+            return None
+
     def get_header(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'header')
 
