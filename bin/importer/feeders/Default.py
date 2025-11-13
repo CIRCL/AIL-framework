@@ -61,6 +61,9 @@ class DefaultFeeder:
     def get_meta(self):
         return self.json_data.get('meta')
 
+    def get_meta_field(self, field, default=None):
+        return self.json_data.get('meta', {}).get(field, default)
+
     def get_payload(self):
         return self.json_data.get('data')
 
@@ -77,7 +80,7 @@ class DefaultFeeder:
         return self.json_data.get('data')
 
     def get_obj_type(self):
-        meta = self.get_json_meta()
+        meta = self.get_meta()
         return meta.get('type', 'item')
 
     ## OVERWRITE ME ##

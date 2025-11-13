@@ -124,7 +124,12 @@
 
       {% if meta['father'] %}
         <div class="mt-3">
-          Father: <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>
+            Father:
+            {% if meta['source'] == 'pdf' %}
+                <a href="{{ url_for('objects_pdf.pdf_view')}}?id={{meta['father'][5:]}}" target="_blank"><i class="far fa-file-pdf fa-3x" style="color: Red;"></i> {{meta['father'][5:]}}</a>
+            {% else %}
+                <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>
+            {% endif %}
         </div>
       {% endif %}
 

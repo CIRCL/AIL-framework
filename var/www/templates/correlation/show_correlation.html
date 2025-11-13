@@ -136,6 +136,8 @@
 						{% include 'objects/ocr/card_ocr.html' %}
                     {% elif dict_object["object_type"] == "barcode" %}
 						{% include 'objects/barcode/card_barcode.html' %}
+                    {% elif dict_object["object_type"] == "pdf" %}
+						{% include 'objects/pdf/card_pdf.html' %}
                     {% elif dict_object["object_type"] == "qrcode" %}
 						{% include 'objects/qrcode/card_qrcode.html' %}
 					{% elif dict_object["object_type"] == "item" %}
@@ -346,6 +348,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="file-name_Check" name="file-name_Check" {%if "file-name" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="file-name_Check">File Name</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="pdf_Check" name="pdf_Check" {%if "pdf" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="pdf_Check">PDF</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="image_Check" name="image_Check" {%if "image" in dict_object["filter"]%}checked{%endif%}>

@@ -5,6 +5,7 @@ pastes = PASTES
 hash = HASHS
 crawled = crawled
 har = CRAWLED_SCREENSHOT
+files = FILES
 screenshot = CRAWLED_SCREENSHOT/screenshot
 cookiejar_local_storage = CRAWLED_SCREENSHOT/cookiejar_local_storage
 images = IMAGES

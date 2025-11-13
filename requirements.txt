@@ -35,6 +35,10 @@ textblob>=0.15.3
 html2text>=2020.1.16
 beautifulsoup4>4.8.2
 
+# PDF
+pymupdf
+pymupdf4llm
+
 # Crawler
 scrapy>2.0.0
 scrapy-splash>=0.7.2

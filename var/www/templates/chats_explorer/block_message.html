@@ -169,7 +169,11 @@
                         <i class="far fa-file fa-3x"></i> {{ file_name }}
                         {% for obj in message['files'][file_name] %}
                             <br>
-                            <a href="{{ url_for('objects_item.showItem') }}?id={{ obj['obj'] }}"><i class="far fa-file"></i> {{ loop.index }}</a>
+                            {% if obj['type'] == 'pdf' %}
+                                <a href="{{ url_for('objects_pdf.pdf_view') }}?id={{ obj['id'] }}"><i class="far fa-file-pdf"></i> {{ loop.index }}</a>
+                            {% else %}
+                                <a href="{{ url_for('objects_item.showItem') }}?id={{ obj['id'] }}"><i class="far fa-file"></i> {{ loop.index }}</a>
+                            {% endif %}
                             {% if obj['tags'] %}
                                 <div>
                                     {% for tag in obj['tags'] %}
@@ -180,9 +184,17 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <a href="{{ url_for('objects_item.showItem') }}?id={{ message['files'][file_name][0]['obj'] }}">
+                    {% if message['files'][file_name][0]['type'] == 'pdf' %}
+                        <a href="{{ url_for('objects_pdf.pdf_view') }}?id={{ message['files'][file_name][0]['id'] }}">
+                    {% else %}
+                        <a href="{{ url_for('objects_item.showItem') }}?id={{ message['files'][file_name][0]['id'] }}">
+                    {% endif %}
                         <div class="flex-shrink-1 bg-white border-primary text-primary rounded py-2 px-3 ml-4 mb-3" style="overflow-x: auto">
-                            <i class="far fa-file fa-3x"></i> {{ file_name }}
+                            {% if message['files'][file_name][0]['type'] == 'pdf' %}
+                                <i class="far fa-file-pdf fa-3x" style="color: Red;"></i> {{ file_name }}
+                            {% else %}
+                                <i class="far fa-file fa-3x"></i> {{ file_name }}
+                            {% endif %}
                             {% if message['files'][file_name][0]['tags'] %}
                                 <div>
                                     {% for tag in message['files'][file_name][0]['tags'] %}

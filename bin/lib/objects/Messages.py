@@ -202,18 +202,30 @@ class Message(AbstractObject):
         files = {}
         nb_files = 0
         s_files = set()
+        # TODO PERF
         for file_name in file_names:
+            # item
             for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
                 if file_name not in files:
                     files[file_name] = []
-                files[file_name].append({'obj': it[1:], 'tags': self.get_obj_tags('item', '', it[1:])})
+                files[file_name].append({'type': 'item', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('item', '', it[1:])})
+                s_files.add(it[1:])
+                nb_files += 1
+            # pdf
+            for it in self.get_correlation_iter('file-name', '', file_name, 'pdf'):
+                if file_name not in files:
+                    files[file_name] = []
+                files[file_name].append({'type': 'pdf', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('pdf', '', it[1:])})
                 s_files.add(it[1:])
                 nb_files += 1
         if nb_files < self.get_nb_files():
             files['undefined'] = []
             for f in self.get_correlation('item').get('item'):
                 if f[1:] not in s_files:
-                    files['undefined'].append({'obj': f[1:], 'tags': self.get_obj_tags('item', '', f[1:])})
+                    files['undefined'].append({'type': 'item', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('item', '', f[1:])})
+            for f in self.get_correlation('pdf').get('pdf'):
+                if f[1:] not in s_files:
+                    files['undefined'].append({'type': 'pdf', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('pdf', '', f[1:])})
         return files
 
     def get_reactions(self):

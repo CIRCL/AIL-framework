@@ -89,6 +89,8 @@ class AbstractObject(ABC):
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
         if 'custom' in options:
             dict_meta['custom'] = self.get_custom_meta()
+        if 'svg_icon' in options:
+            dict_meta['svg_icon'] = self.get_svg_icon()
         return dict_meta
 
     def _get_obj_field(self, obj_type, subtype, obj_id, field):

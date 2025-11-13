@@ -12,6 +12,8 @@ import os
 import sys
 import time
 
+import pymupdf4llm
+
 from abc import ABC
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -26,6 +28,7 @@ from lib.objects import ChatThreads
 from lib.objects import Images
 from lib.objects import Items
 from lib.objects import Messages
+from lib.objects import PDFs
 from lib.objects import FilesNames
 # from lib.objects import Files
 from lib.objects import UsersAccount
@@ -168,6 +171,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             instance_name = get_chat_instance_name(self.get_chat_instance_uuid())
             item_id = f'{instance_name}/{d[0:4]}/{d[4:6]}/{d[6:8]}/{self.json_data["data-sha256"]}.gz'
             self.obj = Items.Item(item_id)
+        elif obj_type == 'pdf':
+            self.obj = PDFs.PDF(self.json_data['data-sha256'])
         else:
             obj_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, thread_id=thread_id)
             self.obj = Messages.Message(obj_id)
@@ -437,6 +442,34 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     media_name = self.get_media_name()
                     if media_name:
                         FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+
+                elif self.obj.type == 'pdf':
+                    # content
+                    if not self.obj.exists():
+                        obj = PDFs.create(self.obj.id, self.get_message_content())
+                        obj.set_parent(obj_global_id=message.get_global_id())
+
+                        pdf_meta = self.get_meta_field('file_metadata')
+                        if pdf_meta:
+                            print(pdf_meta)
+                            pass # TODO
+
+                        md_content = pymupdf4llm.to_markdown(obj.get_filepath())
+                        item_id = f'pdf/{date[0:4]}/{date[4:6]}/{date[6:8]}/{obj.id}.gz'
+                        item = Items.Item(item_id)
+                        if not item.exists():
+                            item.create(md_content, content_type='str')
+                            objs.add(item)
+                            print(item_id)
+                        obj.add_children('item', '', item_id)
+                        obj.add_correlation('item', '', item_id)
+
+                    self.obj.add(date, message)
+
+                    # FILENAME
+                    media_name = self.get_media_name()
+                    if media_name:
+                        FilesNames.FilesNames().create(media_name, date, message, file_obj=self.obj)
 
                 elif self.obj.type == 'item':
                     obj = self.obj
