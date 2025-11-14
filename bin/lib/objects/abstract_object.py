@@ -89,42 +89,46 @@ class AbstractObject(ABC):
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
         if 'custom' in options:
             dict_meta['custom'] = self.get_custom_meta()
+        if 'file-meta' in options:
+            dict_meta['file-meta'] = self.get_file_meta()
+        if 'investigations' in options:
+            dict_meta['investigations'] = self.get_investigations()
         if 'svg_icon' in options:
             dict_meta['svg_icon'] = self.get_svg_icon()
         return dict_meta
 
     def _get_obj_field(self, obj_type, subtype, obj_id, field):
-        if subtype is None:
+        if not subtype:
             return r_object.hget(f'meta:{obj_type}:{obj_id}', field)
         else:
             return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', field)
 
     def _exists_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hexists(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     def _get_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hget(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     def _set_field(self, field, value):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
 
     def _get_fields_keys(self):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hkeys(f'meta:{self.type}:{self.id}')
         else:
             return r_object.hkeys(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
 
     def _delete_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hdel(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
@@ -175,7 +179,7 @@ class AbstractObject(ABC):
     ## Custom Metas ##
 
     def get_custom_meta(self):
-        custom_metas = r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
+        custom_metas = self._get_field('custom')
         return custom_metas
 
     # full_custom_meta: dictionary of custom meta to save
@@ -193,10 +197,30 @@ class AbstractObject(ABC):
                 full_custom_meta = json.dumps(full_custom_meta)
             except Exception as e:
                 raise Exception(f'Invalid JSON/Dictionary {e}')
-            r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom', full_custom_meta)
+            self._set_field('custom', full_custom_meta)
 
     def delete_custom_meta(self):
-        r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'custom')
+        self._delete_field('custom')
+
+    ## File-Meta ##
+
+    def get_file_meta(self):
+        file_meta = self._get_field('file-meta')
+        if file_meta:
+            return json.loads(file_meta)
+        return None
+
+    def set_file_meta(self, file_meta):
+        try:
+            file_meta = json.dumps(file_meta)
+        except Exception as e:
+            raise Exception(f'Invalid JSON/Dictionary {e}')
+        self._set_field('file-meta', file_meta)
+
+    def delete_file_meta(self):
+        self._delete_field('file-meta')
+
+    ## -File-Meta- ##
 
     ## Duplicates ##
     def get_duplicates(self):

@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from importer.feeders.Default import DefaultFeeder
 from lib.ail_core import get_chat_instance_name
+from lib.objects import Authors
 from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
 from lib.objects import ChatThreads
@@ -451,8 +452,12 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
                         pdf_meta = self.get_meta_field('file_metadata')
                         if pdf_meta:
+                            obj.set_file_meta(pdf_meta)
                             print(pdf_meta)
-                            pass # TODO
+                            if 'Author' in pdf_meta:
+                                print(pdf_meta['Author'])
+                                author = Authors.create(pdf_meta['Author'], obj)
+                                author.add(date, obj)
 
                         md_content = pymupdf4llm.to_markdown(obj.get_filepath())
                         item_id = f'pdf/{date[0:4]}/{date[4:6]}/{date[6:8]}/{obj.id}.gz'

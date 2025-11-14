@@ -7,17 +7,16 @@
 
 {% include 'modals/edit_tag.html' %}
 
+<style>
+    .object_image {
+        filter: blur(5px);
+    }
+</style>
+
 <div class="card my-1">
 	<div class="card-header">
-		<div class="py-1 my-1 bg-white">PDF original SHA-256: {{ meta["id"] }}</div>
-        <div class="mb-2">
-            <a href="{{ url_for('objects_item.showItem')}}?id={{ meta['markdown_id'] }}">
-                <button class="btn btn-primary"><i class="far fa-m"></i><i class="far fa-d"></i> PDF Markdown</button>
-            </a>
-            <a target="_blank" href="{{ url_for('objects_pdf.pdf_pdfa', pdf_id=meta['id']) }}">
-                <button class="btn btn-primary"><i class="far fa-file-pdf" style="color: Red;"></i> Open PDF (A)</button>
-            </a>
-        </div>
+        <small>{{ meta["id"] }} :</small>
+		<div class="py-1 my-1 bg-white">{{ meta["content"] }}</div>
 		<ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <table class="table">
@@ -39,28 +38,10 @@
                 </table>
             </li>
             <li class="list-group-item py-0">
-                <h5><i class="far fa-file"></i> File Names:</h5>
-                <ul>
-                {% for file_name in meta['file-names'] %}
-                    <li>{{ file_name }}</li>
-                {% endfor %}
-                </ul>
+
+
             </li>
-            {% if 'file-meta' in meta %}
-                <li class="list-group-item py-0">
-                    <h5>File Metadata:</h5>
-                    <table class="table table-borderless">
-                        <tbody style="font-size: 15px;">
-                        {% for f_meta in meta['file-meta'] %}
-                            <tr>
-                                <td><b>{{ f_meta }}:</b></td>
-                                <td>{{ meta['file-meta'][f_meta] }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </li>
-            {% endif %}
+
 			<li class="list-group-item py-0">
 				<div class="my-2">
 					Tags:
@@ -78,7 +59,7 @@
 			</li>
 		</ul>
 
-		{% with obj_type='pdf', obj_id=meta['id'], obj_subtype='' %}
+		{% with obj_type='author', obj_id=meta['id'], obj_subtype='' %}
 			{% include 'modals/investigations_register_obj.html' %}
 		{% endwith %}
 		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
@@ -87,9 +68,9 @@
 
         <span class="mb-2 float-right">
             {% if is_correlation %}
-{#                <a href="{{ url_for('objects_pdf.object_pdf')}}?id={{ meta['id'] }}">#}
-{#                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>#}
-{#                </a>#}
+                <a href="{{ url_for('objects_author.object_author')}}?id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>
+                </a>
             {% else %}
                 <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
                     <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;

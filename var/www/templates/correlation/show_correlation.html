@@ -138,6 +138,8 @@
 						{% include 'objects/barcode/card_barcode.html' %}
                     {% elif dict_object["object_type"] == "pdf" %}
 						{% include 'objects/pdf/card_pdf.html' %}
+                    {% elif dict_object["object_type"] == "author" %}
+						{% include 'objects/author/card_author.html' %}
                     {% elif dict_object["object_type"] == "qrcode" %}
 						{% include 'objects/qrcode/card_qrcode.html' %}
 					{% elif dict_object["object_type"] == "item" %}
@@ -306,6 +308,10 @@
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="pgp_Check" name="pgp_Check" {%if "pgp" in dict_object["filter"]%}checked{%endif%}>
                                                 <label class="form-check-label" for="pgp_Check">PGP</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="True" id="author_Check" name="author_Check" {%if "author" in dict_object["filter"]%}checked{%endif%}>
+                                                <label class="form-check-label" for="author_Check">Author</label>
                                             </div>
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="domain_Check" name="domain_Check" {%if "domain" in dict_object["filter"]%}checked{%endif%}>

@@ -16,7 +16,7 @@ r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
-AIL_OBJECTS = {'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
+AIL_OBJECTS = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
                'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
                'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
                'user-account', 'username'}
@@ -24,7 +24,7 @@ AIL_OBJECTS = {'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name
 AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
 
 # TODO by object TYPE ???? correlation
-AIL_OBJECTS_CORRELATIONS_DEFAULT = {'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
+AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
                                     'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
                                     'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'screenshot',
                                     'ssh-key', 'title', 'user-account', 'username'}

@@ -41,6 +41,7 @@ config_loader = None
 ##################################
 
 CORRELATION_TYPES_BY_OBJ = {
+    "author": ["pdf"],
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
     "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "image", "message", "ocr", "pgp", "user-account"],
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
@@ -62,7 +63,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "mail": ["domain", "item", "message"],  # chat ??
     "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pdf", "pgp", "user-account"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
-    "pdf": ["chat", "file-name", "item", "message"],
+    "pdf": ["author", "chat", "file-name", "item", "message"],
     "pgp": ["chat", "domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
     "screenshot": ["barcode", "domain", "item", "qrcode"],

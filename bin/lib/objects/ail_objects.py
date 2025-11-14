@@ -19,6 +19,7 @@ from lib import Tag
 
 from lib import chats_viewer
 
+from lib.objects import Authors
 from lib.objects import BarCodes
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -54,6 +55,7 @@ from lib.objects import Usernames
 # config_loader = None
 # TODO INIT objs classes ????
 OBJECTS_CLASS = {
+    'author': {'obj': Authors.Author, 'objs': Authors.Authors},
     'barcode': {'obj': BarCodes.Barcode, 'objs': BarCodes.Barcodes},
     'chat': {'obj': Chats.Chat, 'objs': Chats.Chats},
     'chat-subchannel': {'obj': ChatSubChannels.ChatSubChannel, 'objs': None}, ######   ######

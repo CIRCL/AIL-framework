@@ -67,6 +67,7 @@ from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
 from blueprints.objects_file_name import objects_file_name
 from blueprints.objects_pdf import objects_pdf
+from blueprints.objects_author import objects_author
 from blueprints.objects_ssh import objects_ssh
 from blueprints.objects_ip import objects_ip
 from blueprints.api_rest import api_rest
@@ -166,6 +167,7 @@ app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(objects_file_name, url_prefix=baseUrl)
 app.register_blueprint(objects_pdf, url_prefix=baseUrl)
+app.register_blueprint(objects_author, url_prefix=baseUrl)
 app.register_blueprint(objects_ssh, url_prefix=baseUrl)
 app.register_blueprint(objects_ip, url_prefix=baseUrl)
 app.register_blueprint(search_b, url_prefix=baseUrl)
