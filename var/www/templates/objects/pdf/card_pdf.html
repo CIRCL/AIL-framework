@@ -9,15 +9,22 @@
 
 <div class="card my-1">
 	<div class="card-header">
-		<div class="py-1 my-1 bg-white">PDF original SHA-256: {{ meta["id"] }}</div>
-        <div class="mb-2">
+        <div class=""><b>PDF original SHA-256:</b> {{ meta["id"] }}</div>
+        <div class="my-3">
             <a href="{{ url_for('objects_item.showItem')}}?id={{ meta['markdown_id'] }}">
-                <button class="btn btn-primary"><i class="far fa-m"></i><i class="far fa-d"></i> PDF Markdown</button>
+                <button class="btn btn-primary"><i class="fa-border fa-2x bg-white text-primary" style="--fa-border-padding: .1em .20em .10em;"><i class="far fa-m"></i><i class="far fa-d"></i></i> PDF Markdown</button>
             </a>
             <a target="_blank" href="{{ url_for('objects_pdf.pdf_pdfa', pdf_id=meta['id']) }}">
-                <button class="btn btn-primary"><i class="far fa-file-pdf" style="color: Red;"></i> Open PDF (A)</button>
+                <button class="btn btn-primary"><i class="far fa-file-pdf fa-2x fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i> Open PDF (A)</button>
             </a>
         </div>
+        {% if translation_languages %}
+            <div class="mb-2">
+                {% with translate_url=url_for('objects_pdf.pdf_translate'), obj_id=meta['id'], translation_name="Translate PDF" %}
+                    {% include 'chats_explorer/block_translation_post.html' %}
+                {% endwith %}
+            </div>
+        {% endif %}
 		<ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <table class="table">
@@ -47,19 +54,21 @@
                 </ul>
             </li>
             {% if 'file-meta' in meta %}
-                <li class="list-group-item py-0">
-                    <h5>File Metadata:</h5>
-                    <table class="table table-borderless">
-                        <tbody style="font-size: 15px;">
-                        {% for f_meta in meta['file-meta'] %}
-                            <tr>
-                                <td><b>{{ f_meta }}:</b></td>
-                                <td>{{ meta['file-meta'][f_meta] }}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </li>
+                {% if meta['file-meta'] %}
+                    <li class="list-group-item py-0">
+                        <h5>File Metadata:</h5>
+                        <table class="table table-borderless table-sm">
+                            <tbody style="font-size: 15px;">
+                            {% for f_meta in meta['file-meta'] %}
+                                <tr>
+                                    <td><b>{{ f_meta }}:</b></td>
+                                    <td>{{ meta['file-meta'][f_meta] }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </li>
+                {% endif %}
             {% endif %}
 			<li class="list-group-item py-0">
 				<div class="my-2">

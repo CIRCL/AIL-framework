@@ -2,9 +2,10 @@
 # -*-coding:UTF-8 -*
 
 '''
-    Blueprint Flask: crawler splash endpoints: dashboard, onion crawler ...
+    Blueprint PDF
 '''
 
+import io
 import os
 import sys
 import json
@@ -20,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects import PDFs
+from lib import Language
 from lib import Tag
 from packages import Date
 
@@ -46,6 +48,21 @@ def pdf_pdfa(pdf_id):
     pdf = PDFs.PDF(pdf_id)
     return send_from_directory(PDFs.PDF_FOLDER, pdf.get_rel_path(), as_attachment=False, mimetype='pdf')
 
+@objects_pdf.route('/pdf/translate', methods=['POST'])
+@login_required
+@login_read_only
+@no_cache
+def pdf_translate():
+    obj_id = request.form.get('id')
+    source = request.form.get('source')
+    target = request.form.get('target')
+    print(obj_id, source, target)
+    r = PDFs.api_get_translation(obj_id, source, target)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    print(type(r[0]))
+    return send_file(io.BytesIO(r[0]), as_attachment=True, download_name=f'{obj_id}.pdf')
+
 
 @objects_pdf.route("/pdf/view", methods=['GET'])
 @login_required
@@ -58,6 +75,7 @@ def pdf_view():
     meta = r[0]
     return render_template("ShowPDF.html",
                            ail_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
+                           translation_languages=Language.get_translation_languages(),
                            meta=meta)
 
 

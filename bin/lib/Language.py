@@ -761,6 +761,9 @@ def get_translation_languages():
 def ping_libretranslate():
     return LanguageTranslator().ping()
 
+def translate(content, source, target="eng"):
+    return LanguageTranslator().translate(content, source=source, target=target)
+
 
 if __name__ == '__main__':
     # t_content = ''

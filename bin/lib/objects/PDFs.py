@@ -4,10 +4,10 @@
 import base64
 import os
 import sys
+import pymupdf
+import html2text
 
-from hashlib import sha256
 from io import BytesIO
-
 from flask import url_for
 from pymisp import MISPObject
 
@@ -17,12 +17,13 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
+from lib import Language
 # from lib.ail_core import get_default_image_description_model
 
 config_loader = ConfigLoader()
-# r_cache = config_loader.get_redis_conn("Redis_Cache")
+r_cache = config_loader.get_redis_conn("Redis_Cache", decode_responses=False)
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
-PDF_FOLDER = os.path.join(config_loader.get_files_directory('files'), 'pdf')  # TODO check PDF creation
+PDF_FOLDER = os.path.join(config_loader.get_files_directory('files'), 'pdf')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
@@ -49,11 +50,11 @@ class PDF(AbstractDaterangeObject):
     def exists(self):
         return os.path.isfile(self.get_filepath())
 
-    def get_link(self, flask_context=False):  # TODO ######################################################################
+    def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('correlation.show_correlation', type=self.type, id=self.id)
+            url = url_for('objects_pdf.pdf_view', id=self.id)
         else:
-            url = f'/correlation/show?type={self.type}&id={self.id}'
+            url = f'/pdf/view?id={self.id}'
         return url
 
     def get_svg_icon(self):
@@ -116,6 +117,33 @@ class PDF(AbstractDaterangeObject):
             meta['markdown_id'] = self.get_markdown_id()
         return meta
 
+    def translate(self, source, target):  # TODO harmonize
+        g_id = self.get_global_id()
+        translated = r_cache.get(f'translation:{source}:{target}:{g_id}:pdf')
+        if translated:
+            r_cache.expire(f'translation:{source}:{target}:{g_id}:pdf', 300)
+            return translated
+
+        doc = pymupdf.open(self.get_filepath())
+        ocg_xref = doc.add_ocg("Translated", on=True)
+        h = html2text.HTML2Text()
+        h.ignore_links = True
+        for page in doc:
+            blocks = page.get_text('blocks', flags=pymupdf.TEXT_DEHYPHENATE)
+            for block in blocks:
+                bbox = block[:4]
+                original = block[4]
+                _, translated = Language.translate(original, source=source, target=target)
+                page.draw_rect(bbox, color=None, fill=pymupdf.pdfcolor['white'], oc=ocg_xref)
+                # html2text change new lines and list numbers
+                translated = translated.replace('\n', '\\n')
+                translated = h.handle(translated.strip()).replace('\\n', '<br>').replace('\n', ' ').replace('\\.', '.')
+                page.insert_htmlbox(bbox, translated, oc=ocg_xref)
+        translated = doc.tobytes(garbage=0, deflate=True)
+        r_cache.set(f'translation:{source}:{target}:{g_id}:pdf', translated)
+        r_cache.expire(f'translation:{source}:{target}:{g_id}:pdf', 300)
+        return translated
+
     def create(self, content):
         filepath = self.get_filepath()
         dirname = os.path.dirname(filepath)
@@ -156,6 +184,11 @@ def api_get_meta(obj_id, options=set(), flask_context=False):
         return {'error': 'PDF Not Found'}, 400
     return obj.get_meta(options=options, flask_context=flask_context), 200
 
+def api_get_translation(obj_id, source, target):  # TODO check source, target
+    obj = PDF(obj_id)
+    if not obj.exists():
+        return {'error': 'PDF Not Found'}, 404
+    return obj.translate(source, target), 200
 
 class PDFs(AbstractDaterangeObjects):
     """
@@ -170,11 +203,11 @@ class PDFs(AbstractDaterangeObjects):
     def get_icon(self):
         return {'fas': 'far', 'icon': 'file-pdf'}
 
-    def get_link(self, flask_context=False):  # TODO ####################################################################
+    def get_link(self, flask_context=False):
         if flask_context:
-            url = url_for('objects_image.objects_images')
+            url = url_for('objects_pdf.objects_pdfs')
         else:
-            url = f'{baseurl}/objects/images'
+            url = f'{baseurl}/objects/pdfs'
         return url
 
     def sanitize_id_to_search(self, name_to_search):
@@ -182,4 +215,5 @@ class PDFs(AbstractDaterangeObjects):
 
 
 # if __name__ == '__main__':
-#     pass
+#     pdf.translate()
+#     print(time.time() - t)
