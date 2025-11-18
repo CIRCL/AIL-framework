@@ -96,9 +96,9 @@
 
         <span class="mb-2 float-right">
             {% if is_correlation %}
-{#                <a href="{{ url_for('objects_pdf.object_pdf')}}?id={{ meta['id'] }}">#}
-{#                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>#}
-{#                </a>#}
+                <a href="{{ url_for('objects_pdf.pdf_view')}}?id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>
+                </a>
             {% else %}
                 <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
                     <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
