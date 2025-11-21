@@ -606,7 +606,7 @@ function launch_tests() {
   echo -e $GREEN"\t* Flask:   $isflasked"$DEFAULT
   echo -e ""
   echo -e ""
-  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
+  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules test_api_crawler
   exit $?
 }
 

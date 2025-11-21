@@ -17,9 +17,27 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    strategy:
-       matrix:
-         python-version: ['3.7', '3.8', '3.9', '3.10']
+    # TODO: Matrix strategy for Python versions is defined but never used.
+    # Currently all jobs use the same system Python, making this redundant.
+    # Either add 'actions/setup-python' to use matrix.python-version, or remove the matrix.
+    # 
+    # To enable multi-version Python testing:
+    # 
+    # Step 1: Uncomment the matrix below (defines the Python versions to test):
+    # strategy:
+    #    matrix:
+    #      python-version: ['3.7', '3.8', '3.9', '3.10']
+    # 
+    # Step 2: Add this step after checkout (before "Free up disk space"):
+    #      - name: Set up Python ${{ matrix.python-version }}
+    #        uses: actions/setup-python@v4
+    #        with:
+    #          python-version: ${{ matrix.python-version }}
+    # 
+    # ORIGINAL (commented out - not used, makes tests 4x slower with no benefit):
+    # strategy:
+    #    matrix:
+    #      python-version: ['3.7', '3.8', '3.9', '3.10']
 
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -30,6 +48,26 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 500
 
+      # ---------------------------------------------
+      # NEW STEP: clean up disk BEFORE installing deps
+      # ---------------------------------------------
+      - name: Free up disk space
+        run: |
+          echo "Disk usage BEFORE cleanup:"
+          df -h
+          # Safe: Clear APT cache and lists (can be regenerated)
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          # Probably safe: Remove tools AIL doesn't need (check if exist first)
+          [ -d /usr/share/dotnet ] && sudo rm -rf /usr/share/dotnet || true
+          [ -d /opt/ghc ] && sudo rm -rf /opt/ghc || true
+          [ -d /usr/local/lib/android ] && sudo rm -rf /usr/local/lib/android || true
+          # Risky but needed: Remove hosted tool cache (contains Python, Node, etc.)
+          # AIL workflow uses system Python, so this should be safe
+          [ -d /opt/hostedtoolcache ] && sudo rm -rf /opt/hostedtoolcache || true
+          echo "Disk usage AFTER cleanup:"
+          df -h
+      # ---------------------------------------------
 
       # Runs a single command using the runners shell
       - name: Install AIL
