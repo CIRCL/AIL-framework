@@ -411,7 +411,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             media_name = self.get_media_name()
             if media_name:
                 print(media_name)
-                FilesNames.FilesNames().create(media_name, date, obj)
+                f = FilesNames.FilesNames().create(media_name, date, obj)
+                objs.add(f)
 
             for reaction in self.get_reactions():
                 obj.add_reaction(reaction['reaction'], int(reaction['count']))
@@ -442,7 +443,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     # FILENAME
                     media_name = self.get_media_name()
                     if media_name:
-                        FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+                        f = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+                        objs.add(f)
 
                 elif self.obj.type == 'pdf':
                     # content
@@ -474,7 +476,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     # FILENAME
                     media_name = self.get_media_name()
                     if media_name:
-                        FilesNames.FilesNames().create(media_name, date, message, file_obj=self.obj)
+                        f = FilesNames.FilesNames().create(media_name, date, message, file_obj=self.obj)
+                        objs.add(f)
 
                 elif self.obj.type == 'item':
                     obj = self.obj
@@ -485,8 +488,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     # FILENAME
                     media_name = self.get_media_name()
                     if media_name:
-                        file_name = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+                        f = file_name = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
                         file_name.add_correlation('item', '', obj.id)
+                        objs.add(f)
 
         for obj in objs:  # TODO PERF avoid parsing metas multiple times
 

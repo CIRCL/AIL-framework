@@ -131,7 +131,7 @@ class Global(AbstractModule):
                 else:
                     self.logger.info(f"Empty Item: {message} not processed")
 
-        elif self.obj.type == 'message' or self.obj.type == 'ocr':
+        elif self.obj.type == 'message' or self.obj.type == 'ocr':  # TODO TO Configure in ail_core
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':
             self.add_message_to_queue(obj=self.obj, queue='Image', message=message)
