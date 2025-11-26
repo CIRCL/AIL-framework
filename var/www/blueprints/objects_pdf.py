@@ -69,7 +69,7 @@ def pdf_translate():
 @login_read_only
 def pdf_view():
     obj_id = request.args.get('id')
-    r = PDFs.api_get_meta(obj_id, options={'file-meta', 'file-names', 'markdown_id', 'svg_icon'}, flask_context=True)
+    r = PDFs.api_get_meta(obj_id, options={'author', 'file-meta', 'file-names', 'markdown_id', 'svg_icon'}, flask_context=True)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     meta = r[0]

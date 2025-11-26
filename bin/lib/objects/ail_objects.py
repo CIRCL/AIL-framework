@@ -321,6 +321,7 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
         meta["vt"] = obj.get_meta_vt()
         meta["vt"]["status"] = obj.is_vt_enabled()
     if obj.get_type() == 'pdf':
+        meta['author'] = obj.get_author()
         meta["file-names"] = obj.get_file_names()
         meta["markdown_id"] = obj.get_markdown_id()
     # TAGS MODAL

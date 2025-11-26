@@ -86,6 +86,9 @@ class PDF(AbstractDaterangeObject):
     def get_markdown_id(self):
         return self.get_correlation('item').get('item', []).pop()[1:]
 
+    def get_author(self):
+        return self.get_correlation('author').get('author', []).pop()[1:]
+
     def get_file_names(self):
         file_names = []
         for f in self.get_correlation('file-name').get('file-name', []):
@@ -111,6 +114,8 @@ class PDF(AbstractDaterangeObject):
             meta['content'] = self.get_content()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'author' in options:
+            meta['author'] = self.get_author()
         if 'file-names' in options:
             meta['file-names'] = self.get_file_names()
         if 'markdown_id' in options:
