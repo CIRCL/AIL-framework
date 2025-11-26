@@ -70,11 +70,11 @@ class Tracker_Regex(AbstractModule):
                 return None
 
         content = obj.get_content()
-
-        for dict_regex in self.tracked_regexs[obj_type]:
-            matches = self.regex_finditer(dict_regex['regex'], obj_id, content)
-            if matches:
-                self.new_tracker_found(dict_regex['tracked'], 'regex', obj, matches)
+        if content:
+            for dict_regex in self.tracked_regexs[obj_type]:
+                matches = self.regex_finditer(dict_regex['regex'], obj_id, content)
+                if matches:
+                    self.new_tracker_found(dict_regex['tracked'], 'regex', obj, matches)
 
     def extract_matches(self, re_matches, limit=500, lines=5):
         matches = []

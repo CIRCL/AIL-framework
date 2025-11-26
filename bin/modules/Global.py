@@ -138,8 +138,11 @@ class Global(AbstractModule):
             self.add_message_to_queue(obj=self.obj, queue='Images', message=message)
         elif self.obj.type == 'title':
             self.add_message_to_queue(obj=self.obj, queue='Titles', message=message)
+        elif self.obj.type == 'file-name':
+            pass
         else:
             self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
+            return None
 
         # Trackers
         if self.obj.type in get_objects_tracked():
