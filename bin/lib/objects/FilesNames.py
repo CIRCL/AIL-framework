@@ -16,6 +16,7 @@ from lib.objects.abstract_daterange_object import AbstractDaterangeObject, Abstr
 
 config_loader = ConfigLoader()
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
