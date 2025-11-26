@@ -36,6 +36,9 @@ pip install -U git+https://github.com/ail-project/LexiLang
 echo -e $GREEN"Updating python pyail."$DEFAULT
 pip install -U pyail
 
+echo -e $GREEN"Updating python pylacus."$DEFAULT
+pip install -U pylacus
+
 echo -e $GREEN"Installing pyfaup-rs."$DEFAULT
 pip install -U pyfaup-rs
 
