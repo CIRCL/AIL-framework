@@ -131,9 +131,12 @@ class Decoded(AbstractDaterangeObject):
             else:
                 return b''
         if r_type == 'str':
-            with open(filepath, 'r') as f:
-                content = f.read()
-            return content
+            try:
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                return content
+            except UnicodeDecodeError:
+                return ''
         elif r_type == 'bytes':
             with open(filepath, 'rb') as f:
                 content = f.read()

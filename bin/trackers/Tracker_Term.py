@@ -89,32 +89,32 @@ class Tracker_Term(AbstractModule):
                 return None
 
         content = obj.get_content()
+        if content:
+            signal.alarm(self.max_execution_time)
 
-        signal.alarm(self.max_execution_time)
+            dict_words_freq = None
+            try:
+                dict_words_freq = Tracker.get_text_word_frequency(content)
+            except TimeoutException:
+                self.logger.warning(f"{self.obj.get_global_id()} processing timeout")
+            else:
+                signal.alarm(0)
 
-        dict_words_freq = None
-        try:
-            dict_words_freq = Tracker.get_text_word_frequency(content)
-        except TimeoutException:
-            self.logger.warning(f"{self.obj.get_global_id()} processing timeout")
-        else:
-            signal.alarm(0)
+            if dict_words_freq:
 
-        if dict_words_freq:
-
-            # check solo words
-            for word in self.tracked_words[obj_type]:
-                if word in dict_words_freq:
-                    self.new_tracker_found(word, 'word', obj)
-
-            # check words set
-            for tracked_set in self.tracked_sets[obj_type]:
-                nb_uniq_word = 0
-                for word in tracked_set['words']:
+                # check solo words
+                for word in self.tracked_words[obj_type]:
                     if word in dict_words_freq:
-                        nb_uniq_word += 1
-                if nb_uniq_word >= tracked_set['nb']:
-                    self.new_tracker_found(tracked_set['tracked'], 'set', obj)
+                        self.new_tracker_found(word, 'word', obj)
+
+                # check words set
+                for tracked_set in self.tracked_sets[obj_type]:
+                    nb_uniq_word = 0
+                    for word in tracked_set['words']:
+                        if word in dict_words_freq:
+                            nb_uniq_word += 1
+                    if nb_uniq_word >= tracked_set['nb']:
+                        self.new_tracker_found(tracked_set['tracked'], 'set', obj)
 
     def new_tracker_found(self, tracker_name, tracker_type, obj):  # TODO FILTER
         obj_id = obj.get_id()
