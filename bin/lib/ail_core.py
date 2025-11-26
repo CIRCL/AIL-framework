@@ -115,6 +115,9 @@ def get_obj_queued():
 def get_objects_tracked():
     return AIL_OBJS_TRACKED  # TODO add new test to check if == sorted() return True
 
+def is_tracked_object(obj_type):
+    return obj_type in AIL_OBJS_TRACKED
+
 def get_objects_retro_hunted():
     return AIL_OBJS_RETRO_HUNTED
 

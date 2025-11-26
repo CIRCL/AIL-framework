@@ -274,6 +274,10 @@
                                                 <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text that has been processed by AIL. It can include various types of extracted information"></i></label>
                                         </div>
                                         <div class="custom-control custom-switch mt-1">
+                                            <input class="custom-control-input" type="checkbox" name="file-name_obj" id="file-name_obj" {% if 'file-name' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
+                                                <label class="custom-control-label" for="file-name_obj"><i class="far fa-file"></i>&nbsp;File Name <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="File Name of file from chats/messages"></i></label>
+                                        </div>
+                                        <div class="custom-control custom-switch mt-1">
                                             <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" {% if 'pgp' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
                                             <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="PGP key/block metadata"></i></label>
                                         </div>

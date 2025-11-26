@@ -37,7 +37,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ail_core import get_objects_tracked
+from lib.ail_core import is_tracked_object
 from lib.ConfigLoader import ConfigLoader
 from lib.data_retention_engine import update_obj_date
 from lib.objects.Items import Item
@@ -140,12 +140,14 @@ class Global(AbstractModule):
             self.add_message_to_queue(obj=self.obj, queue='Titles', message=message)
         elif self.obj.type == 'file-name':
             pass
+        elif self.obj.type == 'pdf':
+            return None
         else:
             self.logger.critical(f"Empty obj: {self.obj} {message} not processed")
             return None
 
         # Trackers
-        if self.obj.type in get_objects_tracked():
+        if is_tracked_object(self.obj.type):
             self.add_message_to_queue(obj=self.obj, queue='Trackers')
 
     def check_filename(self, filename, new_file_content):

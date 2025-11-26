@@ -225,9 +225,8 @@ def _get_dir_source_name(directory, source_name=None, l_sources_name=set(), filt
     # empty directory
     if not l_dir:
         if source_name:
-            return l_sources_name.add(source_name)
-        else:
-            return l_sources_name
+            l_sources_name.add(source_name)
+        return l_sources_name
     else:
         for src_name in l_dir:
             if len(src_name) == 4 and source_name:

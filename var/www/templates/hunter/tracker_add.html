@@ -145,6 +145,10 @@
                                                         <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Message <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Messages from Chats"></i></label>
                                                     </div>
                                                     <div class="custom-control custom-switch mt-1">
+                                                        <input class="custom-control-input" type="checkbox" name="file-name_obj" id="file-name_obj" {% if not dict_tracker['filters'] or 'file-name' in dict_tracker['filters'] %}checked=""{% endif %}>
+                                                        <label class="custom-control-label" for="file-name_obj"><i class="far fa-file"></i>&nbsp;File Name <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="File name of Files from chats/messages"></i></label>
+                                                    </div>
+                                                    <div class="custom-control custom-switch mt-1">
                                                         <input class="custom-control-input" type="checkbox" name="qrcode_obj" id="qrcode_obj" {% if not dict_tracker['filters'] or 'qrcode' in dict_tracker['filters'] %}checked=""{% endif %}>
                                                         <label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode"></i>&nbsp;Qrcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images and Screenshots"></i></label>
                                                     </div>
