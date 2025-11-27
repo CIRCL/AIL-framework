@@ -18,6 +18,7 @@ import json
 from unittest.mock import patch, MagicMock
 
 sys.path.append(os.environ['AIL_BIN'])
+sys.path.append(os.environ['AIL_FLASK'])
 ##################################
 # Import Project packages
 ##################################
@@ -99,10 +100,10 @@ class TestApiCrawler(unittest.TestCase):
 
     # ==================== POST /api/v1/add/crawler/task ====================
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
-    @patch('var/www/blueprints/api_rest.ail_api.is_user_in_role')
-    @patch('var/www/blueprints/api_rest.ail_api.get_basic_user_meta')
-    @patch('var/www/blueprints/api_rest.crawlers.api_add_crawler_task')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.is_user_in_role')
+    @patch('blueprints.api_rest.ail_api.get_basic_user_meta')
+    @patch('blueprints.api_rest.crawlers.api_add_crawler_task')
     def test_add_crawler_task_success(self, mock_add_task, mock_get_meta, mock_is_role, mock_auth):
         """
         Test successful crawler task addition.
@@ -131,12 +132,12 @@ class TestApiCrawler(unittest.TestCase):
         call_args = mock_add_task.call_args
         self.assertEqual(call_args[0][0], self.test_data, "Should pass request data to crawler")
         self.assertEqual(call_args[0][1], 'test_org', "Should pass user org to crawler")
-        self.assertEqual(call_args[0][2], 'test_user_id', "Should pass user_id to crawler")
+        self.assertEqual(call_args.kwargs["user_id"], 'test_user_id', "Should pass user_id to crawler")
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
-    @patch('var/www/blueprints/api_rest.ail_api.is_user_in_role')
-    @patch('var/www/blueprints/api_rest.ail_api.get_basic_user_meta')
-    @patch('var/www/blueprints/api_rest.crawlers.api_add_crawler_task')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.is_user_in_role')
+    @patch('blueprints.api_rest.ail_api.get_basic_user_meta')
+    @patch('blueprints.api_rest.crawlers.api_add_crawler_task')
     def test_add_crawler_task_error_from_crawler(self, mock_add_task, mock_get_meta, mock_is_role, mock_auth):
         """
         Test crawler task addition when crawler returns an error.
@@ -187,9 +188,9 @@ class TestApiCrawler(unittest.TestCase):
         
         Verifies that requests without required 'url' field are handled appropriately.
         """
-        with patch('var/www/blueprints/api_rest.ail_api.authenticate_user') as mock_auth, \
-             patch('var/www/blueprints/api_rest.ail_api.is_user_in_role') as mock_is_role, \
-             patch('var/www/blueprints/api_rest.ail_api.get_basic_user_meta') as mock_get_meta:
+        with patch('blueprints.api_rest.ail_api.authenticate_user') as mock_auth, \
+             patch('blueprints.api_rest.ail_api.is_user_in_role') as mock_is_role, \
+             patch('blueprints.api_rest.ail_api.get_basic_user_meta') as mock_get_meta:
             
             # Mock authentication
             mock_auth.return_value = ({'status': 'success'}, 200)
@@ -224,7 +225,7 @@ class TestApiCrawler(unittest.TestCase):
         # Should return 400 Bad Request for invalid JSON
         self.assertIn(response.status_code, [400, 415], "Should return error for invalid JSON")
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
     def test_add_crawler_task_invalid_token(self, mock_auth):
         """
         Test crawler task addition with invalid token.
@@ -243,8 +244,8 @@ class TestApiCrawler(unittest.TestCase):
         self.assertEqual(response_data.get('status'), 'error', "Response should indicate error status")
         self.assertIn('token', response_data.get('reason', '').lower(), "Error message should mention token")
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
-    @patch('var/www/blueprints/api_rest.ail_api.is_user_in_role')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.is_user_in_role')
     def test_add_crawler_task_wrong_role(self, mock_is_role, mock_auth):
         """
         Test crawler task addition with insufficient user role.
@@ -266,10 +267,10 @@ class TestApiCrawler(unittest.TestCase):
 
     # ==================== POST /api/v1/add/crawler/capture ====================
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
-    @patch('var/www/blueprints/api_rest.ail_api.is_user_in_role')
-    @patch('var/www/blueprints/api_rest.ail_api.get_user_from_token')
-    @patch('var/www/blueprints/api_rest.crawlers.api_add_crawler_capture')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.is_user_in_role')
+    @patch('blueprints.api_rest.ail_api.get_user_from_token')
+    @patch('blueprints.api_rest.crawlers.api_add_crawler_capture')
     def test_add_crawler_capture_success(self, mock_add_capture, mock_get_user, mock_is_role, mock_auth):
         """
         Test successful crawler capture addition.
@@ -299,10 +300,10 @@ class TestApiCrawler(unittest.TestCase):
         self.assertEqual(call_args[0][0], self.test_data, "Should pass request data to crawler")
         self.assertEqual(call_args[0][1], 'test_user_id', "Should pass user_id to crawler")
 
-    @patch('var/www/blueprints/api_rest.ail_api.authenticate_user')
-    @patch('var/www/blueprints/api_rest.ail_api.is_user_in_role')
-    @patch('var/www/blueprints/api_rest.ail_api.get_user_from_token')
-    @patch('var/www/blueprints/api_rest.crawlers.api_add_crawler_capture')
+    @patch('blueprints.api_rest.ail_api.authenticate_user')
+    @patch('blueprints.api_rest.ail_api.is_user_in_role')
+    @patch('blueprints.api_rest.ail_api.get_user_from_token')
+    @patch('blueprints.api_rest.crawlers.api_add_crawler_capture')
     def test_add_crawler_capture_error_from_crawler(self, mock_add_capture, mock_get_user, mock_is_role, mock_auth):
         """
         Test crawler capture addition when crawler returns an error.
