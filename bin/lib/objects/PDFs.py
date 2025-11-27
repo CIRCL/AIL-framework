@@ -24,7 +24,7 @@ config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache", decode_responses=False)
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 PDF_FOLDER = os.path.join(config_loader.get_files_directory('files'), 'pdf')
-PDF_MAX_SIZE = config_loader.get_config_int('Directories', 'config_loader')  # bytes
+PDF_MAX_SIZE = config_loader.get_config_int('Directories', 'max_pdf_size')  # bytes
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
