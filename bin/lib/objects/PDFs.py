@@ -87,7 +87,10 @@ class PDF(AbstractDaterangeObject):
         return self.get_correlation('item').get('item', []).pop()[1:]
 
     def get_author(self):
-        return self.get_correlation('author').get('author', []).pop()[1:]
+        author = self.get_correlation('author').get('author', [])
+        if author:
+            return author.pop()[1:]
+        return None
 
     def get_file_names(self):
         file_names = []
