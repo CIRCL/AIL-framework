@@ -171,12 +171,12 @@ class AbstractModule(ABC):
                     # LOG ERROR
                     trace = traceback.format_tb(err.__traceback__)
                     trace = ''.join(trace)
-                    self.logger.critical(f"Error in module {self.module_name}: {__name__} : {err}")
                     if message:
                         self.logger.critical(f"Module {self.module_name} input message: {message}")
                     if self.obj:
                         self.logger.critical(f"{self.module_name} Obj: {self.obj.get_global_id()}")
                     self.logger.critical(trace)
+                    self.logger.critical(f"Error in module {self.module_name}: {__name__} : {err}")
 
                     if isinstance(err, ModuleQueueError):
                         self.queue.error()

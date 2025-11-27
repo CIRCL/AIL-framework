@@ -450,6 +450,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                     # content
                     if not self.obj.exists():
                         obj = PDFs.create(self.obj.id, self.get_message_content())
+                        if not obj:
+                            raise Exception('PDF not created, Size limit reached')
                         obj.set_parent(obj_global_id=message.get_global_id())
 
                         pdf_meta = self.get_meta_field('file_metadata')

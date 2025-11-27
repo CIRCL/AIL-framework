@@ -24,6 +24,7 @@ config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache", decode_responses=False)
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 PDF_FOLDER = os.path.join(config_loader.get_files_directory('files'), 'pdf')
+PDF_MAX_SIZE = config_loader.get_config_int('Directories', 'config_loader')  # bytes
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
@@ -176,7 +177,7 @@ def get_all_pdfs_objects(filters={}):
         yield PDF(obj_id)
 
 # obj_id -> original pdf sha256
-def create(obj_id, content, size_limit=10000000, b64=False, force=False):
+def create(obj_id, content, size_limit=PDF_MAX_SIZE, b64=False, force=False):
     size = (len(content)*3) / 4
     if size <= size_limit or size_limit < 0 or force:
         if b64:
