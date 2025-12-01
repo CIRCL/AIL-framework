@@ -97,6 +97,7 @@ class Image(AbstractDaterangeObject):
             if key.startswith('desc:'):
                 model = key[5:]
                 models.append(model)
+        return models
 
     def add_description_model(self, model, description):
         self._set_field(f'desc:{model}', description)
