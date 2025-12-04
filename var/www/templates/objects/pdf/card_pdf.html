@@ -59,12 +59,14 @@
                 </ul>
             </li>
             {% if 'author' in meta %}
-            <li class="list-group-item py-0">
-                <h5><i class="fas fa-user-pen"></i> Author:</h5>
-                <ul>
-                    <li>{{ meta['author'] }}</li>
-                </ul>
-            </li>
+                {% if meta['author'] %}
+                    <li class="list-group-item py-0">
+                        <h5><i class="fas fa-user-pen"></i> Author:</h5>
+                        <ul>
+                            <li>{{ meta['author'] }}</li>
+                        </ul>
+                    </li>
+                {% endif %}
             {% endif %}
             {% if 'file-meta' in meta %}
                 {% if meta['file-meta'] %}
