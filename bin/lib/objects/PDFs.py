@@ -298,7 +298,7 @@ class PDF(AbstractDaterangeObject):
         # Save translated PDF
         # translated = doc.tobytes(garbage=0, deflate=True)
         filename = f'{target}_{int(time.time())}_{self.id}.pdf'
-        doc.save(os.path.join(PDF_TRANSLATED_DIR, filename), garbage=0, deflate=True)
+        doc.ez_save(os.path.join(PDF_TRANSLATED_DIR, filename))
         # doc.subset_fonts()  ???? reduce size ???
         # doc.ez_save("orca-korean.pdf")
 
