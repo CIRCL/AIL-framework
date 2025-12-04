@@ -201,6 +201,8 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Translation" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./Translation.py; read x"
+    sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
     sleep 0.1

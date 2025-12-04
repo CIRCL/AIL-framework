@@ -5,6 +5,7 @@ import os
 import re
 import logging.config
 import sys
+import time
 import html2text
 
 import gcld3
@@ -17,7 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_object_all_subtypes
+from lib.ail_core import get_object_all_subtypes, generate_uuid
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 logger = logging.getLogger()
@@ -320,6 +321,10 @@ def get_iso_from_languages(l_languages, sort=False):
         l_iso = sorted(l_iso)
     return l_iso
 
+def exists_lang_iso_target_source(source, target):
+    if source not in dict_iso_languages or target not in dict_iso_languages:
+        return False
+    return True
 
 def get_translator_instance():
     return TRANSLATOR_URL
@@ -566,8 +571,21 @@ def _get_obj_translation(obj_global_id, language, source=None, content=None, fie
 def get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
     return _get_obj_translation(obj_global_id, language, source=source, content=content, field=field, objs_containers=objs_containers)
 
+def get_obj_translated_languages(obj_gid):
+    return r_lang.hkeys(f'tr:{obj_gid}:')
 
-# TODO Force to edit ????
+def get_obj_translated(obj_gid, language_name=False):
+    translation = r_lang.hgetall(f'tr:{obj_gid}:')
+    if not language_name:
+        return translation
+    else:
+        translated = {}
+        for lang_code in translation:
+            translated[get_language_from_iso(lang_code)] = translation[lang_code]
+        return translated
+
+def exists_object_translation_language(obj_gid, target):
+    return r_lang.hexists(f'tr:{obj_gid}:', target)
 
 def set_obj_translation(obj_global_id, language, translation, field=''):
     r_cache.delete(f'translation:{language}:{obj_global_id}:')
@@ -699,7 +717,7 @@ class LanguageTranslator:
             # print('##############################################################')
             return language[0]
 
-    def translate(self, content, source=None, target="eng"):
+    def translate(self, content, source=None, target="eng", filter_same_content=True):
         # print(source, target)
         l_languages = get_translation_languages()
         if source:
@@ -728,10 +746,13 @@ class LanguageTranslator:
                         try:
                             # print(source_iso1, target_iso1)
                             translation = self.lt.translate(content, source_iso1, target_iso1)
+                            # Fix libretranslate dot panic
+                            if translation.endswith('........'):
+                                translation = translation.replace('........', '.')
                         except Exception as e:
                             logger.error(f'Libretranslate Translation: {e}')
                             translation = None
-                        if translation == content:
+                        if translation == content and filter_same_content:
                             # print('EQUAL')
                             translation = None
         return source, translation
@@ -761,8 +782,158 @@ def get_translation_languages():
 def ping_libretranslate():
     return LanguageTranslator().ping()
 
-def translate(content, source, target="eng"):
-    return LanguageTranslator().translate(content, source=source, target=target)
+def translate(content, source, target="eng", filter_same_content=False):
+    return LanguageTranslator().translate(content, source=source, target=target, filter_same_content=filter_same_content)
+
+## Translation Task ##
+
+def get_translation_tasks():
+    return r_lang.smembers('tasks:translation')
+
+def is_translation_task_running(task_uuid):
+    start = r_lang.hget(f'task:tr:{task_uuid[0]}', 'start')
+    if start:
+        start = int(start)
+        if start + 3600 < int(time.time()):
+            return False
+        else:
+            return True
+    else:
+        return False
+
+def _get_translation_task_to_launch(i_task_uuid):
+    task_uuid = None
+    for task_uuid in r_lang.smembers('tasks:translation'):
+        if task_uuid != i_task_uuid:
+            if not is_translation_task_running(task_uuid):
+                return task_uuid
+    return task_uuid
+
+def get_translation_task_to_launch():
+    task_uuid = r_lang.srandmember('tasks:translation')
+    if task_uuid:
+        task_uuid = task_uuid[0]
+        if not is_translation_task_running(task_uuid):
+            return task_uuid
+        else:
+            return _get_translation_task_to_launch(task_uuid)
+    else:
+        return None
+
+class TranslationTask:
+    def __init__(self, task_uuid):
+        self.uuid = task_uuid
+
+    def exists(self):
+        return r_lang.exists(f'task:tr:{self.uuid}')
+
+    def _get_field(self, field):
+        return r_lang.hget(f'task:tr:{self.uuid}', field)
+
+    def _set_field(self, field, value):
+        r_lang.hset(f'task:tr:{self.uuid}', field, value)
+
+    def get_source(self):
+        return self._get_field('source')
+
+    def get_target(self):
+        return self._get_field('target')
+
+    def get_progress(self):
+        return self._get_field('progress')
+
+    def update_time(self):
+        return self._set_field('time', int(time.time()))
+
+    def update_progress(self, done, total):
+        if done < 0:
+            done = 1
+        progress = int(done * 100 / total)
+        if progress == 100:
+            progress = 99
+        self._set_field('progress', progress)
+        self.update_time()
+
+    def get_object(self):
+        return self._get_field('object')
+
+    def create(self, obj_gid, source, target):
+        r_lang.sadd('tasks:translation', self.uuid)
+        r_lang.sadd(f'tasks:translation:obj:{obj_gid}', self.uuid)
+        self._set_field('object', obj_gid)
+        self._set_field('source', source)
+        self._set_field('target', target)
+        self._set_field('progress', 0)
+
+    def start(self):
+        self._set_field('progress', 0)
+        self._set_field('start', int(time.time()))
+
+    # set as filename for pdf
+    def complete(self, translation):
+        set_obj_translation(self.get_object(), self.get_target(), translation)
+        self.delete()
+
+    def delete(self):
+        r_lang.srem('tasks:translation', self.uuid)
+        r_lang.srem(f'tasks:translation:obj:{self.get_object()}', self.uuid)
+        r_lang.delete(f'task:tr:{self.uuid}')
+
+def exists_task(obj_gid, source, target):
+    task_uuid = False
+    for task_uuid in get_object_tasks_uuid(obj_gid):
+        task = TranslationTask(task_uuid)
+        if task.get_source() == source and task.get_target() == target:
+            task_uuid = task.uuid
+            break
+    return task_uuid
+
+def create_translation_task(obj_gid, source, target, force=False):
+    task_uuid = exists_task(obj_gid, source, target)
+    if task_uuid:
+        if force:
+            task = TranslationTask(task_uuid)
+            task.delete()
+        else:
+            return task_uuid
+    task = TranslationTask(generate_uuid())
+    task.create(obj_gid, source, target)
+    return task.uuid
+
+def get_object_tasks_uuid(obj_gid):
+    return r_lang.smembers(f'tasks:translation:obj:{obj_gid}')
+
+def get_object_tasks(obj_gid, language_name=False):
+    tasks = {}
+    for task_uuid in get_object_tasks_uuid(obj_gid):
+        task = TranslationTask(task_uuid)
+        target = task.get_target()
+        if language_name:
+            target = get_language_from_iso(target)
+        tasks[task_uuid] = {'progress': task.get_progress(), 'target': target}
+    return tasks
+
+def api_get_translation_task_progress(task_uuid):
+    task = TranslationTask(task_uuid)
+    if not task.exists():
+        return {'error': 'Unknown translation task'}, 404
+    return task.get_progress(), 200
+
+def api_get_object_translation_tasks_progress(tasks_uuid):
+    tasks = {}
+    for task_uuid in tasks_uuid:
+        task = TranslationTask(task_uuid)
+        if not task.exists():
+            return {'error': 'Unknown translation task'}, 404
+        tasks[task_uuid] = task.get_progress()
+    return tasks, 200
+
+
+def api_delete_translation_task(task_uuid):
+    task = TranslationTask(task_uuid)
+    if not task.exists():
+        return {'error': 'Unknown translation task'}, 404
+    return task.delete(), 200
 
 
 if __name__ == '__main__':

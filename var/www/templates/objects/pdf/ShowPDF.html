@@ -43,9 +43,29 @@
 
 <script>
     var chart = {};
+    var to_refresh;
+    var tasks_uuid = new Set();
     $(document).ready(function(){
         $("#page-Decoded").addClass("active");
         $("#nav_chat").addClass("active");
+
+        {% if meta['translated'] %}
+            {% if meta['translated']['task'] %}
+            $( window ).on("focus", function() {
+                to_refresh = true
+                refresh_progress_status();
+                progress_interval = setInterval(function(){
+                    refresh_progress_status()
+                }, 5000);
+            });
+            $( window ).on("blur", function() {
+                to_refresh = false
+            });
+            to_refresh = true
+            refresh_progress_status();
+            {% endif %}
+        {% endif %}
+
   });
 
 function toggle_sidebar(){
@@ -61,6 +81,49 @@ function toggle_sidebar(){
 		$('#core_content').addClass('col-lg-10')
 	}
 }
+
+{% if meta['translated'] %}
+    {% if meta['translated']['task'] %}
+    function refresh_progress_status(){
+
+      $.getJSON("{{ url_for('objects_pdf.pdf_translated_progress', id=meta['id']) }}", function(data){
+        if(! jQuery.isEmptyObject(data)){
+            for (const [task_uuid, value] of Object.entries(data)) {
+                let progress_id = "#tr_progress_" + task_uuid
+                $(progress_id).attr('aria-valuenow', value).width(value+'%').text(value+'%');
+                tasks_uuid.add(task_uuid)
+            }
+
+            for (const task_uuid of tasks_uuid) {
+              if (!(task_uuid in data)) {
+                  location.reload();
+              }
+            }
+        } else {
+          for (const task_uuid of tasks_uuid) {
+              location.reload();
+            }
+          to_refresh = false
+          clearInterval(progress_interval);
+        }
+      });
+
+      if (! to_refresh) {
+          to_refresh = false
+          clearInterval(progress_interval);
+      }
+
+    }
+
+    refresh_progress_status();
+    //Interval
+    var progress_interval = setInterval(function(){
+        refresh_progress_status()
+    }, 5000);
+    {% endif %}
+{% endif %}
+
+
 </script>
 
 </body>

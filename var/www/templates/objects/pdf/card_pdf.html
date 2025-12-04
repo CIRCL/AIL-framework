@@ -20,7 +20,12 @@
         </div>
         {% if translation_languages %}
             <div class="mb-2">
-                {% with translate_url=url_for('objects_pdf.pdf_translate'), obj_id=meta['id'], translation_name="Translate PDF" %}
+                {% if 'translated' in meta %}
+                    {% set translated=meta['translated'] %}
+                {% else %}
+                    {% set translated=none %}
+                {% endif %}
+                {% with translate_url=url_for('objects_pdf.pdf_translate'), obj_id=meta['id'], translation_name="Translate PDF", translated=translated %}
                     {% include 'chats_explorer/block_translation_post.html' %}
                 {% endwith %}
             </div>

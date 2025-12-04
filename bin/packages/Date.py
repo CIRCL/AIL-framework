@@ -105,6 +105,9 @@ def get_current_utc_full_time():
     timestamp = datetime.datetime.fromtimestamp(time.time())
     return timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
+def get_date_from_timestamp(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y%m%d')
+
 def get_month_dates(date=None):
     if date:
         date = convert_date_str_to_datetime(date)

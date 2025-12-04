@@ -8,6 +8,8 @@ har = CRAWLED_SCREENSHOT
 files = FILES
 # size in bytes
 max_pdf_size = 100000000
+translated_pdf = temp/pdf
+pdf_translation_ttl = 30
 screenshot = CRAWLED_SCREENSHOT/screenshot
 cookiejar_local_storage = CRAWLED_SCREENSHOT/cookiejar_local_storage
 images = IMAGES

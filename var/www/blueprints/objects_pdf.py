@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
-'''
+"""
     Blueprint PDF
-'''
+"""
 
-import io
+# import io
 import os
 import sys
 import json
@@ -31,10 +31,11 @@ objects_pdf = Blueprint('objects_pdf', __name__, template_folder=os.path.join(os
 # ============ VARIABLES ============
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
+# ============ FUNCTIONS ============
 def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
-# ============ FUNCTIONS ============
+# ============= ROUTES ==============
 @objects_pdf.route('/pdf/pdfa/<string:pdf_id>')
 @login_required
 @login_read_only
@@ -56,20 +57,54 @@ def pdf_translate():
     obj_id = request.form.get('id')
     source = request.form.get('source')
     target = request.form.get('target')
-    print(obj_id, source, target)
-    r = PDFs.api_get_translation(obj_id, source, target)
+    r = PDFs.api_create_translation_task(obj_id, source, target)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
-    print(type(r[0]))
-    return send_file(io.BytesIO(r[0]), as_attachment=True, download_name=f'{obj_id}.pdf')
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return create_json_response({'error': 'No Referrer'}, 400)
+    # return redirect(url_for('objects_pdf.pdf_view', id=obj_id, task_uuid=r[0]))
+    # return send_file(io.BytesIO(r[0]), as_attachment=True, download_name=f'{obj_id}.pdf')
 
+@objects_pdf.route("/pdf/translated", methods=['GET'])
+@login_required
+@login_read_only
+def pdf_translated():
+    filename = request.args.get('filename')
+    r = PDFs.api_exists_translation_file(filename)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    return send_from_directory(PDFs.PDF_TRANSLATED_DIR, r[0], as_attachment=False, mimetype='pdf')
+
+@objects_pdf.route("/pdf/translate/task/delete", methods=['GET'])
+@login_required
+@login_read_only
+def pdf_translate_task_delete():
+    task_uuid = request.args.get('uuid')
+    r = Language.api_delete_translation_task(task_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return create_json_response({'error': 'No Referrer'}, 400)
+
+@objects_pdf.route("/pdf/translated/progress", methods=['GET'])
+@login_required
+@login_read_only
+def pdf_translated_progress():
+    obj_id = request.args.get('id')
+    r = PDFs.api_get_translations_progress(obj_id)
+    return create_json_response(r[0], r[1])
 
 @objects_pdf.route("/pdf/view", methods=['GET'])
 @login_required
 @login_read_only
 def pdf_view():
     obj_id = request.args.get('id')
-    r = PDFs.api_get_meta(obj_id, options={'author', 'file-meta', 'file-names', 'markdown_id', 'svg_icon'}, flask_context=True)
+    r = PDFs.api_get_meta(obj_id, options={'author', 'file-meta', 'file-names', 'markdown_id', 'translated', 'svg_icon'}, flask_context=True)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     meta = r[0]
@@ -119,6 +154,3 @@ def objects_pdfs_range_json():
     date_from = date['date_from']
     date_to = date['date_to']
     return jsonify(PDFs.PDFs().api_get_chart_nb_by_daterange(date_from, date_to))
-
-# ============= ROUTES ==============
-
