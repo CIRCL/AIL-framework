@@ -330,9 +330,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta.get('icon'):
             img = Images.create(meta['icon'], b64=True)
-            img.add(date, user_account)
-            user_account.set_icon(img.get_global_id())
-            new_objs.add(img)
+            if img:
+                img.add(date, user_account)
+                user_account.set_icon(img.get_global_id())
+                new_objs.add(img)
 
         if meta.get('info'):
             user_account.set_info(meta['info'])
