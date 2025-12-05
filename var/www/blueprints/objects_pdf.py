@@ -47,7 +47,7 @@ def pdf_pdfa(pdf_id):
         abort(404)
     pdf_id = pdf_id.replace('/', '')
     pdf = PDFs.PDF(pdf_id)
-    return send_from_directory(PDFs.PDF_FOLDER, pdf.get_rel_path(), as_attachment=False, mimetype='pdf')
+    return send_from_directory(PDFs.PDF_FOLDER, pdf.get_rel_path(), as_attachment=False, mimetype='pdf', download_name=f'{pdf_id}.pdf')
 
 @objects_pdf.route('/pdf/translate', methods=['POST'])
 @login_required
