@@ -31,7 +31,7 @@ PDF_FOLDER = os.path.join(config_loader.get_files_directory('files'), 'pdf')
 PDF_MAX_SIZE = config_loader.get_config_int('Directories', 'max_pdf_size')  # bytes
 PDF_TRANSLATED_DIR = config_loader.get_files_directory('translated_pdf')
 if not os.path.isdir(PDF_TRANSLATED_DIR):
-    os.mkdir(PDF_TRANSLATED_DIR)
+    os.makedirs(PDF_TRANSLATED_DIR)
 PDF_TRANSLATED_TTL = config_loader.get_config_int('Directories', 'pdf_translation_ttl')
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
