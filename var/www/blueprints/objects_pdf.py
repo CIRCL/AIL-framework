@@ -57,7 +57,7 @@ def pdf_translate():
     obj_id = request.form.get('id')
     source = request.form.get('source')
     target = request.form.get('target')
-    r = PDFs.api_create_translation_task(obj_id, source, target)
+    r = PDFs.api_create_translation_task(obj_id, source, target, force=True)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:

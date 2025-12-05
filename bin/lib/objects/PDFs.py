@@ -165,7 +165,7 @@ class PDF(AbstractDaterangeObject):
         # p = 0
         for page in doc:
             # p += 1
-            # if p != 3:
+            # if p != 31:
             #     continue
             tabs = page.find_tables()  # detect the tables
             tabs_extracted = {}
@@ -173,24 +173,38 @@ class PDF(AbstractDaterangeObject):
             for tab in tabs:
                 # print(tab)
                 rows_text = tab.extract()
-                tabs_extracted[str(tab.bbox)] = rows_text
-                current_row = 0
-                # table coord -> tab.bbox
-                for row in tab.rows:
-                    i = 0
-                    for cell in row.cells:
-                        if cell:
-                            original = rows_text[current_row][i]
-                            if original:
-                                _, translated = Language.translate(original.strip(), source=source, target=target, filter_same_content=False)
-                                if translated:
-                                    translated = translated.strip()
-                                if translated:
-                                    translated = translated.replace('\n', '\\n')
-                                    translated = h.handle(translated.strip()).replace('\\n', '<br>').replace('\n', ' ').replace('\\.', '.')
-                                    html_box_tables.append((cell, translated))
-                        i += 1
-                    current_row += 1
+                # check if is a real table
+                nb_cell = 0
+                none_column = False
+                for column in rows_text:
+                    nb_column = 0
+                    for v in column:
+                        if v:
+                            nb_column += 1
+                    if nb_column < 1:
+                        none_column = True
+                        break
+                    else:
+                        nb_cell += nb_column
+                if nb_cell > 1 and not none_column:
+                    tabs_extracted[str(tab.bbox)] = rows_text
+                    current_row = 0
+                    # table coord -> tab.bbox
+                    for row in tab.rows:
+                        i = 0
+                        for cell in row.cells:
+                            if cell:
+                                original = rows_text[current_row][i]
+                                if original:
+                                    _, translated = Language.translate(original.strip(), source=source, target=target, filter_same_content=False)
+                                    if translated:
+                                        translated = translated.strip()
+                                    if translated:
+                                        translated = translated.replace('\n', '\\n')
+                                        translated = h.handle(translated.strip()).replace('\\n', '<br>').replace('\n', ' ').replace('\\.', '.')
+                                        html_box_tables.append((cell, translated))
+                            i += 1
+                        current_row += 1
                 # TODO TAB HEADERS
                 # print(tab.header.external)
                 # if tab.header.external:
@@ -212,17 +226,18 @@ class PDF(AbstractDaterangeObject):
                     if tabs and original:
                         l_overlapp = []
                         for tab in tabs:
-                            # tab y <=
-                            # text in table
-                            if tab.bbox[1] <= bbox[1] and bbox[3] <= tab.bbox[3] + 2:
-                                is_overlapping = True
-                                break
-                            if is_bboxs_overlapping(tab.bbox, bbox):
-                                l_overlapp.append(tab)
+                            if str(tab.bbox) in tabs_extracted:
+                                # tab y <=
+                                # text in table
+                                if tab.bbox[1] <= bbox[1] and bbox[3] <= tab.bbox[3] + 2:
+                                    is_overlapping = True
+                                    break
+                                if is_bboxs_overlapping(tab.bbox, bbox):
+                                    l_overlapp.append(tab)
                         if len(l_overlapp) == 1:
                             tab = l_overlapp[0]
                             # filter start + end
-                            if tab.bbox[1] > bbox[1] and tab.bbox[3] < bbox[3] - 2:
+                            if tab.bbox[1] > bbox[1] + 2 and tab.bbox[3] < bbox[3] - 2:
                                 pass
 
                             # Text start
@@ -295,6 +310,8 @@ class PDF(AbstractDaterangeObject):
             print(done)
             task.update_progress(done, total)
 
+        print(task)
+
         # Save translated PDF
         # translated = doc.tobytes(garbage=0, deflate=True)
         filename = f'{target}_{int(time.time())}_{self.id}.pdf'
@@ -304,6 +321,13 @@ class PDF(AbstractDaterangeObject):
 
         task.complete(filename)
         return filename
+
+    def delete_translated(self, target):
+        obj_gid = self.get_global_id()
+        filename = Language.get_object_translation_language(obj_gid, target)
+        if filename:
+            Language.delete_obj_translation(obj_gid, target)
+            os.remove(os.path.join(PDF_TRANSLATED_DIR, filename))
 
     def create(self, content):
         filepath = self.get_filepath()
@@ -380,7 +404,10 @@ def api_create_translation_task(obj_id, source, target, force=False):
         return {'error': 'Invalid Language code'}, 400
     obj_gid = obj.get_global_id()
     if Language.exists_object_translation_language(obj_gid, target):
-        return {'error': 'Already Translated'}, 400
+        if force:
+            obj.delete_translated(target)
+        else:
+            return {'error': 'Already Translated'}, 400
     task_uuid = Language.create_translation_task(obj_gid, source, target, force=force)
     return task_uuid, 200
 

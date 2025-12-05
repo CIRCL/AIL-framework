@@ -66,7 +66,7 @@ class Translation(AbstractModule):
                     # Wait before next process
                     time.sleep(self.pending_seconds)
             else:
-                time.sleep(30)
+                time.sleep(10)
 
 
 if __name__ == '__main__':

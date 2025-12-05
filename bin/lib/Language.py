@@ -587,6 +587,9 @@ def get_obj_translated(obj_gid, language_name=False):
 def exists_object_translation_language(obj_gid, target):
     return r_lang.hexists(f'tr:{obj_gid}:', target)
 
+def get_object_translation_language(obj_gid, target):
+    return r_lang.hget(f'tr:{obj_gid}:', target)
+
 def set_obj_translation(obj_global_id, language, translation, field=''):
     r_cache.delete(f'translation:{language}:{obj_global_id}:')
     return r_lang.hset(f'tr:{obj_global_id}:{field}', language, translation)
