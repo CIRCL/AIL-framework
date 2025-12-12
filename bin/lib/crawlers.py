@@ -115,9 +115,12 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
     del meta['type']
     del meta['status']
     meta['titles'] = []
-    for h in dom.get_correlation('title').get('title', []):
-        t = Titles.Title(h[1:])
-        meta['titles'].append(t.get_content())
+    if not Tag.is_tags_safe(tags):
+        meta['titles'].append("Redacted")
+    else:
+        for h in dom.get_correlation('title').get('title', []):
+            t = Titles.Title(h[1:])
+            meta['titles'].append(t.get_content())
     return meta
 
 def api_get_domain_from_url(url):
