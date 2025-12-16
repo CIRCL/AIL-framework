@@ -216,7 +216,7 @@ def show_tracker():
     if date_from:
         date_from, date_to = Date.sanitise_daterange(date_from, date_to)
         objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types)
-        meta['objs'] = ail_objects.get_objects_meta(objs, options={'last_full_date'}, flask_context=True)
+        meta['objs'] = ail_objects.get_objects_meta(objs, options={'last_full_date', 'pdf'}, flask_context=True)
     else:
         date_from = ''
         date_to = ''

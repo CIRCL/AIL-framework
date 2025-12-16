@@ -60,10 +60,17 @@ class FileName(AbstractDaterangeObject):
                 obj_attr.add_tag(tag)
         return obj
 
+    def get_pdf(self):
+        pdfs = self.get_correlation('pdf').get('pdf', set())
+        if len(pdfs) == 1:
+            return pdfs.pop()[1:]
+
     def get_meta(self, options=set()):
         meta = self._get_meta(options=options)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
+        if 'pdf' in options:
+            meta['pdf'] = self.get_pdf()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
