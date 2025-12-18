@@ -259,9 +259,11 @@ class PDF(AbstractDaterangeObject):
                                     if original.endswith(tab_extract):
                                         is_overlapping = True
                                     else:
-                                        original = original.rsplit(tab_extract, 1)[1]
-                                        y1 = tab.bbox[3] + 1
-                                        bbox = (bbox[0], y1, bbox[2], bbox[3])
+                                        original = original.rsplit(tab_extract, 1)
+                                        if len(original) == 2:
+                                            original = original[1]
+                                            y1 = tab.bbox[3] + 1
+                                            bbox = (bbox[0], y1, bbox[2], bbox[3])
                             else:
                                 is_overlapping = True
 
