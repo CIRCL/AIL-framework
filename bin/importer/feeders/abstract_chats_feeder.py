@@ -197,10 +197,11 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta_chat.get('icon'):
             img = Images.create(meta_chat['icon'], b64=True)
-            img.add(date, chat)
-            chat.set_icon(img.get_global_id())
-            if new_objs:
-                new_objs.add(img)
+            if img:
+                img.add(date, chat)
+                chat.set_icon(img.get_global_id())
+                if new_objs:
+                    new_objs.add(img)
 
         if meta_chat.get('username'):
             username = Username(meta_chat['username'], self.get_chat_protocol())
@@ -231,9 +232,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta.get('icon'):
             img = Images.create(meta['icon'], b64=True)
-            img.add(date, chat)
-            chat.set_icon(img.get_global_id())
-            new_objs.add(img)
+            if img:
+                img.add(date, chat)
+                chat.set_icon(img.get_global_id())
+                new_objs.add(img)
 
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())
@@ -370,9 +372,10 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
         if meta.get('icon'):
             img = Images.create(meta['icon'], b64=True)
-            img.add(date, user_account)
-            user_account.set_icon(img.get_global_id())
-            new_objs.add(img)
+            if img:
+                img.add(date, user_account)
+                user_account.set_icon(img.get_global_id())
+                new_objs.add(img)
 
         if meta.get('info'):
             user_account.set_info(meta['info'])
@@ -438,14 +441,15 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
 
                 if self.obj.type == 'image':
                     obj = Images.create(self.get_message_content())
-                    obj.add(date, message)
-                    obj.set_parent(obj_global_id=message.get_global_id())
+                    if obj:
+                        obj.add(date, message)
+                        obj.set_parent(obj_global_id=message.get_global_id())
 
-                    # FILENAME
-                    media_name = self.get_media_name()
-                    if media_name:
-                        f = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
-                        objs.add(f)
+                        # FILENAME
+                        media_name = self.get_media_name()
+                        if media_name:
+                            f = FilesNames.FilesNames().create(media_name, date, message, file_obj=obj)
+                            objs.add(f)
 
                 elif self.obj.type == 'pdf':
                     # content
