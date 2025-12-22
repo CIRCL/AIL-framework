@@ -252,14 +252,27 @@
                                     </ul>
 
 									<ul class="list-group">
-  									<li class="list-group-item list-group-item-info">Select Correlation</li>
+  									<li class="list-group-item list-group-item-info">
+                                        Select Correlation:
+                                        <div>
+                                            <span class="">
+                                                <button class="btn btn-sm btn-info px-1 py-0" onclick="select_object_type_selector();" title="Select All Object Types">
+                                                    <i class="fa-solid fa-square-check"></i>
+                                                </button>
+                                            </span>
+                                            <span class="">
+                                                <button class="btn btn-sm btn-info px-1 py-0" onclick="unselect_object_type_selector();" title="Clear All Object Types">
+                                                    <i class="fa-solid fa-eraser"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </li>
                                     <form action="{{ url_for('correlation.show_correlation') }}" method="post">
-									<li class="list-group-item text-left">
+									<li class="list-group-item text-left" id="correlation_type_selector">
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">
                                             <input type="hidden" id="subtype" name="subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
-
 
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" value="True" id="cookie-name_Check" name="cookie-name_Check" {%if "cookie-name" in dict_object["filter"]%}checked{%endif%}>
@@ -396,9 +409,20 @@
 
                                         <div class="form-group">
                                             <label for="max_nb_nodes_in">Correlation Depth:</label>
-                                            <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
+                                            <div class="row">
+                                                <div class="col-xl-3">
+                                                    <div class="btn btn-sm btn-info px-1 py-1" onclick="set_level_zero();" title="Show Direct Correlations (Level 0)">
+                                                        <div class="d-flex align-items-center">
+                                                            <svg width="32" height="32" viewBox="0 0 32 32"><g fill="none"><path fill="#bebebe" d="M23.958 2H8.042A3.046 3.046 0 0 0 5 5.05v21.9A3.046 3.046 0 0 0 8.042 30h15.916A3.046 3.046 0 0 0 27 26.95V5.05A3.046 3.046 0 0 0 23.958 2"/><path fill="#636363" d="M7 7.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 7 7.25m.75 8a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zm14 0a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zm0-8.75a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zM7 25.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75m14.75-.75a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5z"/><path fill="#d3d3d3" d="M12.5 9a3.5 3.5 0 1 1 7 0v14a3.5 3.5 0 1 1-7 0z"/><path fill="#635994" d="M13.5 9a2.5 2.5 0 0 1 5 0v14a2.5 2.5 0 0 1-5 0z"/><path fill="#00a6ed" d="M11 12a2 2 0 0 1 2-2h6a2 2 0 1 1 0 4h-6a2 2 0 0 1-2-2"/></g></svg>
+                                                            <i class="fa-solid fa-0"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-9">
+                                                    <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
+                                                </div>
+                                            </div>
                                         </div>
-
 
                                     </li>
                                     <li class="list-group-item text-left">
@@ -534,6 +558,19 @@ function SubmitAddTags() {
 	$('#ltagsgalaxies').val(tagsgalaxy);
 	return true;
 }
+
+function set_level_zero() {
+    document.getElementById('level').value = 0;
+}
+
+function select_object_type_selector() {
+    document.querySelectorAll('#correlation_type_selector input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
+function unselect_object_type_selector() {
+    document.querySelectorAll('#correlation_type_selector input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
 </script>
 
 <script>
