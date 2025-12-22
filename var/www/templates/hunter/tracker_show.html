@@ -363,9 +363,11 @@
 										{{ object['id']}}
 									</a>
                                     {% if 'pdf' in object %}
-                                        <a target="_blank" href="{{ url_for('objects_pdf.pdf_view', id=object['pdf']) }}">
-                                            <button class="btn btn-sm btn-outline-dark"><i class="far fa-file-pdf fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i></button>
-                                        </a>
+                                        {% if object['pdf'] %}
+                                            <a target="_blank" href="{{ url_for('objects_pdf.pdf_view', id=object['pdf']) }}">
+                                                <button class="btn btn-sm btn-outline-dark"><i class="far fa-file-pdf fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i></button>
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                     {% if object['tags'] %}
                                         <div>
