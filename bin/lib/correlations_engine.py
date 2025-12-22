@@ -232,6 +232,8 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
     obj_correlations = get_correlations(obj_type, subtype, obj_id, filter_types=filter_types)
     # print(obj_correlations)
+
+    # add direct correlation
     for correl_type in obj_correlations:
         for str_obj in obj_correlations[correl_type]:
             subtype2, obj2_id = str_obj.split(':', 1)
@@ -247,10 +249,14 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
             if len(nodes) > max_nodes != 0:
                 meta['complete'] = False
-                break
+                return None
             nodes.add(obj2_str_id)
             links.add((obj_str_id, obj2_str_id))
 
+    # level + 1
+    for correl_type in obj_correlations:
+        for str_obj in obj_correlations[correl_type]:
+            subtype2, obj2_id = str_obj.split(':', 1)
             if level > 0:
                 next_level = level - 1
                 _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj=obj_str_id)
