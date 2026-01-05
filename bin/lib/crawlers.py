@@ -79,11 +79,14 @@ config_loader = None
 
 def api_get_onion_lookup(domain):  # TODO check if object process done ???
     domain = domain.lower().strip()
-    parts = domain.split('.onion')
-    # if len(parts) > 1:
-    #     for word in [part + '.onion' for part in parts[:-1]] + [parts[-1]]:
-    #         if len(word) >= 32 and word.endswith('.onion'):
-    #             api_get_onion_lookup(word)
+    words = domain.split()
+    if len(words) > 1:
+        for word in words:
+            if '.onion' in word:
+                domain = word
+    
+    if '.onion' not in domain:
+        return {'error': 'Invalid Onion Domain', 'domain': domain}, 404
 
     url_unpack = unpack_url(domain)
     if not url_unpack:
