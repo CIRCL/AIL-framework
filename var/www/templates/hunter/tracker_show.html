@@ -216,9 +216,11 @@
                                 <a href="{{ url_for('hunters.tracker_edit') }}?uuid={{ meta['uuid'] }}" class="mx-2" style="font-size: 15px">
                                     <button class='btn btn-info'>Edit Tracker <i class="fas fa-pencil-alt"></i></button>
                                 </a>
-                                <a href="{{ url_for('hunters.retro_hunt_add_task') }}?tracker_uuid={{ meta['uuid'] }}" class="mx-2" style="font-size: 15px">
-                                    <button class='btn btn-secondary'><i class="fas fa-plus"></i> Retro Hunt <i class="fas fa-meteor"></i></button>
-                                </a>
+                                {% if meta['type'] == 'yara' %}
+                                    <a href="{{ url_for('hunters.retro_hunt_add_task') }}?tracker_uuid={{ meta['uuid'] }}" class="mx-2" style="font-size: 15px">
+                                        <button class='btn btn-secondary'><i class="fas fa-plus"></i> Retro Hunt <i class="fas fa-meteor"></i></button>
+                                    </a>
+                                {% endif %}
                             </div>
 
                         </div>
