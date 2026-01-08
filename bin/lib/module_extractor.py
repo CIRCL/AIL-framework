@@ -234,13 +234,13 @@ def get_tracker_match(user_org, user_id, obj, content, priority=None, match_uuid
         if priority:
             if priority in trackers_uuids:
                 extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content, priority=priority)
-                extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content, priority=priority)
+                extracted_retro_yara = _extract_retro_hunts(retro_hunts_uuids, user_org, content, priority=priority)
             else:
-                extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content, priority=priority)
+                extracted_retro_yara = _extract_retro_hunts(retro_hunts_uuids, user_org, content, priority=priority)
                 extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content)
         else:
             extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content)
-            extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content)
+            extracted_retro_yara = _extract_retro_hunts(retro_hunts_uuids, user_org, content)
         if extracted_yara and extracted_retro_yara:
             extracted_yara[0:0] = extracted_retro_yara
         elif extracted_retro_yara:
