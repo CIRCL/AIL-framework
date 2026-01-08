@@ -58,7 +58,7 @@
                                         <div class="input-group-prepend">
                                             <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
                                         </div>
-                                        <textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3"></textarea>
+                                        <textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3">{% if new_description %}{{ new_description }}{% endif %}</textarea>
                                     </div>
 
                                     <div class="card my-4">
@@ -75,15 +75,15 @@
 {#                                                        <label class="custom-control-label" for="crypto_obj"><i class="fas fa-coins"></i>&nbsp;Cryptocurrency</label>#}
 {#                                                    </div>#}
                                             <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj">
+                                                <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if 'decoded' in new_filters %}checked=""{% endif %}>
                                                 <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded</label>
                                             </div>
                                             <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" checked="">
+                                                <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if 'message' in new_filters %}checked=""{% endif %}>
                                                 <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Messages</label>
                                             </div>
                                             <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" checked="">
+                                                <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if 'ocr' in new_filters %}checked=""{% endif %}>
                                                 <label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand"></i>&nbsp;Ocrs</label>
                                             </div>
 {#                                                    <div class="custom-control custom-switch mt-1">#}
@@ -91,7 +91,7 @@
 {#                                                        <label class="custom-control-label" for="domain_obj"><i class="fas fa-spider"></i>&nbsp;Domain</label>#}
 {#                                                    </div>#}
                                             <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" checked="">
+                                                <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if 'item' in new_filters %}checked=""{% endif %}>
                                                 <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item</label>
                                             </div>
                                             <div class="card border-dark mb-4" id="sources_item_div">
@@ -181,8 +181,8 @@
 
                                     <label  class="mt-3" for="level_selector">View Level</label>
                                     <select class="custom-select" id="level_selector" name="level">
-                                        <option value="1" selected><i class="fas fa-users"></i> Global</option>
-                                        <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
+                                        <option value="1" {% if new_level %}{% if new_level == 1 %}selected{% endif %}{% else %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+                                        <option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
                                     </select>
 
                                 </div>
@@ -212,7 +212,7 @@
 
                                 <h6>Custom YARA rules:</h6>
                                 <div class="row" id="textarea">
-                                    <textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
+                                    <textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{% if new_rule %}{{ new_rule }}{% endif %}</textarea>
                                 </div>
                             </div>
 

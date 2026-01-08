@@ -382,6 +382,19 @@ class Tracker:
         yar_path = self.get_tracked()
         return yara.compile(filepath=os.path.join(get_yara_rules_dir(), yar_path))
 
+    def get_rule_content(self):
+        yar_path = self.get_tracked()
+        yara_dir = get_yara_rules_dir()
+        filename = os.path.join(yara_dir, yar_path)
+        filename = os.path.realpath(filename)
+        if not os.path.commonprefix([filename, yara_dir]) == yara_dir:
+            return ''
+        if not os.path.isfile(filename):
+            return ''
+        with open(filename, 'r') as f:
+            rule_content = f.read()
+        return rule_content
+
     def get_meta(self, options):
         if not options:
             options = set()

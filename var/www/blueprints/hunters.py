@@ -698,10 +698,32 @@ def retro_hunt_add_task():
             ## TODO: use modal
             return create_json_response(res[0], res[1])
     else:
+        tracker_uuid = request.args.get('tracker_uuid')
+        if tracker_uuid:
+            user_org = current_user.get_org()
+            user_id = current_user.get_user_id()
+            user_role = current_user.get_role()
+            res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
+            if res:  # invalid access
+                return create_json_response(res[0], res[1])
+
+            tracker = Tracker.Tracker(tracker_uuid)
+            new_description = tracker.get_description()
+            new_level = tracker.get_level()
+            new_rule = tracker.get_rule_content()
+            new_filters = tracker.get_filters()
+        else:
+            new_description = None
+            new_level = None
+            new_rule = None
+            new_filters = {'message', 'ocr', 'item'}
+
         return render_template("add_retro_hunt_task.html",
                                all_yara_files=Tracker.get_all_default_yara_files(),
                                tags_selector_data=Tag.get_tags_selector_data(),
-                               items_sources=item_basic.get_all_items_sources(r_list=True))
+                               items_sources=item_basic.get_all_items_sources(r_list=True),
+                               new_description=new_description, new_level=new_level, new_rule=new_rule,
+                               new_filters=new_filters)
 
 @hunters.route('/retro_hunt/task/pause', methods=['GET'])
 @login_required
