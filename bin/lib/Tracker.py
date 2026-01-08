@@ -731,6 +731,9 @@ def _re_create_tracker(tracker_type, tracker_uuid, to_track, org, user_id, level
     create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
                    tags=tags, mails=mails, webhook=webhook, tracker_uuid=tracker_uuid)
 
+def is_tracker(tracker_uuid):
+    return Tracker(tracker_uuid).exists()
+
 def get_trackers_types():
     return ['word', 'set', 'regex', 'typosquatting', 'yara']
 

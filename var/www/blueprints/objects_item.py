@@ -70,6 +70,8 @@ def screenshot(filename):
 def showItem():  # # TODO: support post
     user_org = current_user.get_org()
     item_id = request.args.get('id')
+    match_uuid = request.args.get('match_uuid')
+
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
 
@@ -112,7 +114,7 @@ def showItem():  # # TODO: support post
     else:
         meta['investigations'] = []
 
-    extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'])
+    extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'], match_uuid=match_uuid)
     extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,

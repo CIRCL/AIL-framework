@@ -223,7 +223,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{{ object['link'] }}">
+                                                <a href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}">
                                                     {{ object['id']}}
                                                 </a>
                                                 <div>

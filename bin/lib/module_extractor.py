@@ -37,7 +37,7 @@ config_loader = ConfigLoader()
 r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 
-r_key = regex_helper.generate_redis_cache_key('extractor')
+r_key = regex_helper.generate_redis_cache_key('extractor')  # TODO MOVE IN extractor function
 
 
 # SIGNAL ALARM
@@ -121,7 +121,7 @@ def get_correl_match(extract_type, obj, content):
             value_id = map_value_id.get(sha256_val)
             if not value_id:
                 # logger.critical(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
-                print(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
+                # print(f'Error module extractor: {sha256_val}\n{extract_type}\n{subtype}\n{value_id}\n{map_value_id}\n{objs}')
                 value_id = 'ERROR'
             extracted.append([ob[0], ob[1], ob[2], f'{extract_type}:{subtype}:{value_id}'])
     return extracted
@@ -147,18 +147,14 @@ def convert_byte_offset_to_string(b_content, offset):
         return offset
     except UnicodeDecodeError as e:
         # logger.error(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
-        print(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
+        # print(f'Yara offset converter error, {str(e)}\n{offset}/{len(b_content)}')
         return convert_byte_offset_to_string(b_content, offset - 1)
 
 
-# TODO RETRO HUNTS
-# TODO TRACKER TYPE IN UI
-def get_tracker_match(user_org, user_id, obj, content):
+def _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content, priority=None):
     extracted = []
     extracted_yara = []
-    obj_gid = obj.get_global_id()
-    trackers = Tracker.get_obj_trackers(obj.type, obj.get_subtype(r_str=True), obj.id)
-    for tracker_uuid in trackers:
+    for tracker_uuid in trackers_uuids:
         tracker = Tracker.Tracker(tracker_uuid)
         if not tracker.check_level(user_org, user_id):
             continue
@@ -174,9 +170,8 @@ def get_tracker_match(user_org, user_id, obj, content):
             rule = tracker.get_rule()
             rule.match(data=content.encode(), callback=_get_yara_match,
                        which_callbacks=yara.CALLBACK_MATCHES, timeout=5)
-            yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
+            yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')  # set in _get_yara_match callback
             r_cache.delete(f'extractor:yara:match:{r_key}')
-            extracted = []
             for match in yara_match:
                 start, end, value = match.split(':', 2)
                 extracted_yara.append([int(start), int(end), value, f'tracker:{tracker.uuid}'])
@@ -193,10 +188,12 @@ def get_tracker_match(user_org, user_id, obj, content):
                 # print(regex_match)
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
+    return extracted, extracted_yara
 
-    # Retro Hunt
-    retro_hunts = Tracker.get_obj_retro_hunts(obj.type, obj.get_subtype(r_str=True), obj.id)
-    for retro_uuid in retro_hunts:
+
+def _extract_retro_hunts(retro_hunts_uuids, user_org, content, priority=None):
+    extracted_yara = []
+    for retro_uuid in retro_hunts_uuids:
         retro_hunt = Tracker.RetroHunt(retro_uuid)
         if not retro_hunt.check_level(user_org):
             continue
@@ -209,12 +206,45 @@ def get_tracker_match(user_org, user_id, obj, content):
 
         rule.match(data=content.encode(), callback=_get_yara_match,
                    which_callbacks=yara.CALLBACK_MATCHES, timeout=5)
-        yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')
+        yara_match = r_cache.smembers(f'extractor:yara:match:{r_key}')  # set in _get_yara_match callback
         r_cache.delete(f'extractor:yara:match:{r_key}')
-        extracted = []
         for match in yara_match:
             start, end, value = match.split(':', 2)
             extracted_yara.append([int(start), int(end), value, f'retro_hunt:{retro_hunt.uuid}'])
+    return extracted_yara
+
+
+# TODO TRACKER TYPE IN UI
+def get_tracker_match(user_org, user_id, obj, content, priority=None, match_uuid=None):
+    obj_gid = obj.get_global_id()
+
+    if match_uuid:
+        extracted = []
+        if Tracker.is_tracker(match_uuid):
+            extracted, extracted_yara = _get_trackers_match([match_uuid], user_org, user_id, obj_gid, content)
+        # retro_hunt
+        else:
+            extracted_yara = _extract_retro_hunts([match_uuid], user_org, content)
+
+    else:
+        trackers_uuids = Tracker.get_obj_trackers(obj.type, obj.get_subtype(r_str=True), obj.id)
+        retro_hunts_uuids = Tracker.get_obj_retro_hunts(obj.type, obj.get_subtype(r_str=True), obj.id)
+
+        # check if priority is tracker or retro
+        if priority:
+            if priority in trackers_uuids:
+                extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content, priority=priority)
+                extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content, priority=priority)
+            else:
+                extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content, priority=priority)
+                extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content)
+        else:
+            extracted, extracted_yara = _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content)
+            extracted_retro_yara = _extract_retro_hunts(user_org, retro_hunts_uuids, content)
+        if extracted_yara and extracted_retro_yara:
+            extracted_yara[0:0] = extracted_retro_yara
+        elif extracted_retro_yara:
+            extracted_yara = extracted_retro_yara
 
     # Convert byte offset to string offset
     if extracted_yara:
@@ -226,14 +256,13 @@ def get_tracker_match(user_org, user_id, obj, content):
                 start = convert_byte_offset_to_string(b_content, yara_m[0])
                 end = convert_byte_offset_to_string(b_content, yara_m[1])
                 extracted.append([int(start), int(end), yara_m[2], yara_m[3]])
-
     return extracted
+
 
 # Type:subtype:id
 # tag:iban
 # tracker:uuid
-# def extract(obj_id, content=None):
-def extract(user_id, obj_type, subtype, obj_id, content=None):
+def extract(user_id, obj_type, subtype, obj_id, content=None, priority=None, match_uuid=None):
     obj = ail_objects.get_object(obj_type, subtype, obj_id)
     if not obj.exists():
         return []
@@ -252,7 +281,7 @@ def extract(user_id, obj_type, subtype, obj_id, content=None):
     try:
         if not content:
             content = obj.get_content()
-        extracted = get_tracker_match(user_org, user_id, obj, content)
+        extracted = get_tracker_match(user_org, user_id, obj, content, match_uuid=match_uuid)
         # print(item.get_tags())
         for tag in obj.get_tags():
             if MODULES.get(tag):
@@ -325,7 +354,7 @@ def get_extracted_by_match(extracted):
                         matches[str_obj]['link'] = ail_objects.get_object_link(ob_type, subtype, obj_id)
                     except TypeError:
                         # logger.critical(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
-                        print(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
+                        # print(f'module extractor invalid object: {ob_type} : {subtype} : {obj_id}')
                         matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf00d', 'color': 'red', 'radius': 5}
                         matches[str_obj]['link'] = ''
 

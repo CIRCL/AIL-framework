@@ -351,7 +351,7 @@
 									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
 										{% include 'objects/obj_svg_block.html' %}
 									{% endwith %}
-									{{ object['type']}}
+									{{ object['type'] }}
 								</td>
 								<td>
 									{% if object['subtype'] %}
@@ -359,7 +359,7 @@
 									{% endif %}
 								</td>
 								<td>
-									<a href="{{ object['link'] }}">
+									<a href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ meta['uuid'] }}{% endif %}">
 										{{ object['id']}}
 									</a>
                                     {% if 'pdf' in object %}
