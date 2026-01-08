@@ -282,19 +282,20 @@ def extract(user_id, obj_type, subtype, obj_id, content=None, priority=None, mat
         if not content:
             content = obj.get_content()
         extracted = get_tracker_match(user_org, user_id, obj, content, match_uuid=match_uuid)
-        # print(item.get_tags())
-        for tag in obj.get_tags():
-            if MODULES.get(tag):
-                # print(tag)
-                module = MODULES.get(tag)
-                matches = module.extract(obj, content, tag)
+        if not match_uuid:
+            # print(item.get_tags())
+            for tag in obj.get_tags():
+                if MODULES.get(tag):
+                    # print(tag)
+                    module = MODULES.get(tag)
+                    matches = module.extract(obj, content, tag)
+                    if matches:
+                        extracted = extracted + matches
+
+            for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
+                matches = get_correl_match(obj_t, obj, content)
                 if matches:
                     extracted = extracted + matches
-
-        for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
-            matches = get_correl_match(obj_t, obj, content)
-            if matches:
-                extracted = extracted + matches
 
         # SORT By Start Pos
         if extracted:
