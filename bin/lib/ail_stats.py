@@ -45,6 +45,9 @@ config_loader = None
 def get_feeders():
     return r_stats.smembers(f'feeders:name')
 
+def reset_feeders_names():
+    r_stats.delete(f'feeders:name')
+
 def get_current_feeder_timestamp(timestamp):
     return int(timestamp - (timestamp % 30))
 
