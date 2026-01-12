@@ -57,6 +57,8 @@ class Mail(AbstractModule):
         self.mail_item_allowed_sources = {"crawled", "submitted", "telegram"}
 
     def is_banned_source(self, source):
+        if not source:
+            return False
         if source.startswith('alerts/') or source.startswith('archive/'):
             return True
         else:
