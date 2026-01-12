@@ -184,6 +184,12 @@ def get_chat_instance_name(chat_instance):
     else:
         return chat_instance
 
+def get_chat_instance_uuid(chat_name):
+    if chat_name == 'telegram':
+        return '00098785-7e70-5d12-a120-c5cdc1252b2b'
+    elif chat_name == 'discord':
+        return 'd2426e3f-22f3-5a57-9a98-d2ae9794e683'
+
 ####    Redis     ####
 
 def _parse_zscan(response):

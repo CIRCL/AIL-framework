@@ -17,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_core import generate_uuid
+from lib.ail_core import generate_uuid, get_chat_instance_uuid
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -466,7 +466,22 @@ def get_messages_iterator(filters={}):
             for message_id in Tag.get_objs_by_date('message', tags, date):
                 yield Messages.Message(message_id)
     else:
-        for instance_uuid in get_chat_service_instances():
+        if 'sources' in filters:
+            if filters['sources']:
+                instance_uuids = []
+                sources = filters['sources']
+                for source in sources:
+                    instance_uuid = get_chat_instance_uuid(source)
+                    if instance_uuid:
+                        instance_uuids.append(instance_uuid)
+                    else:
+                        instance_uuids.append(source)
+            else:
+                instance_uuids = get_chat_service_instances()
+        else:
+            instance_uuids = get_chat_service_instances()
+        instance_uuids = sorted(instance_uuids)
+        for instance_uuid in instance_uuids:
 
             for chat_id in ChatServiceInstance(instance_uuid).get_chats():
                 chat = Chats.Chat(chat_id, instance_uuid)
