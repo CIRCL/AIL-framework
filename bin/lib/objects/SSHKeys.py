@@ -248,11 +248,14 @@ def get_passive_ssh_session():
 
 def _get_passive_ssh_result(path):
     s = get_passive_ssh_session()
-    res = s.get(f'{get_passive_ssh_url()}{path}')
+    try:
+        res = s.get(f'{get_passive_ssh_url()}{path}')
+    except requests.exceptions.ConnectionError:
+        return None, 503
     if res.status_code != 200:
         # TODO LOG
         if res.status_code != 404:
-            print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
+            print(f" PassiveSSH requests error: {res.text}, {res.status_code}")
         # set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
         return res.text, res.status_code
     else:
