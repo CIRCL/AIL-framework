@@ -61,6 +61,8 @@ class Global(AbstractModule):
         # # TODO: rename PASTE => ITEM
         self.ITEMS_FOLDER = os.path.join(os.environ['AIL_HOME'], config_loader.get_config_str("Directories", "pastes")) + '/'
         self.ITEMS_FOLDER = os.path.join(os.path.realpath(self.ITEMS_FOLDER), '')
+        if self.ITEMS_FOLDER.endswith('/'):
+            self.ITEMS_FOLDER = self.ITEMS_FOLDER[:-1]
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 0.5
@@ -87,8 +89,14 @@ class Global(AbstractModule):
                 filename = os.path.join(self.ITEMS_FOLDER, self.obj.id)
                 filename = os.path.realpath(filename)
 
+                try:
+                    common_path = os.path.commonpath([filename, self.ITEMS_FOLDER])
+                except ValueError:
+                    self.logger.warning(f'Global; Path traversal detected {filename}')
+                    return None
+
                 # Incorrect filename
-                if not os.path.commonprefix([filename, self.ITEMS_FOLDER]) == self.ITEMS_FOLDER:
+                if not common_path == self.ITEMS_FOLDER:
                     self.logger.warning(f'Global; Path traversal detected {filename}')
                     print(f'Global; Path traversal detected {filename}')
 
@@ -102,7 +110,7 @@ class Global(AbstractModule):
                         filename = self.check_filename(filename, new_file_content)
 
                         if filename:
-                            new_obj_id = filename.replace(self.ITEMS_FOLDER, '', 1)
+                            new_obj_id = filename.replace(f'{self.ITEMS_FOLDER}/', '', 1)
                             new_obj = Item(new_obj_id)
                             new_obj.sanitize_id()
                             self.set_obj(new_obj)

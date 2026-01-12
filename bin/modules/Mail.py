@@ -24,6 +24,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages        #
 ##################################
 from modules.abstract_module import AbstractModule
+from lib import correlations_engine
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Mails
 # from lib import Statistics
@@ -50,9 +51,16 @@ class Mail(AbstractModule):
         self.email_regex = r"[\w._+-]+@[\w.-]+\.\w{2,63}"
         re.compile(self.email_regex)
 
-        self.mail_correlation = {"domain", "item", "message"}
+        self.mail_correlation = set(correlations_engine.get_obj_correl_types('mail'))
+
         # self.mail_item_banned_sources = {"alerts/gist.github.com", "archive/gist.github.com"}
         self.mail_item_allowed_sources = {"crawled", "submitted", "telegram"}
+
+    def is_banned_source(self, source):
+        if source.startswith('alerts/') or source.startswith('archive/'):
+            return True
+        else:
+            return False
 
     def is_mxdomain_in_cache(self, mxdomain):
         return self.r_cache.exists(f'mxdomain:{mxdomain}')
@@ -177,8 +185,9 @@ class Mail(AbstractModule):
                 nb_mails = len(mxdomains_email[domain_mx])
                 num_valid_email += nb_mails
 
+                # create correlation + Mail object
                 if self.obj.type in self.mail_correlation:
-                    if source in self.mail_item_allowed_sources or source is None:
+                    if not self.is_banned_source(source) or source is None:
                         to_tag = True
                         for vmail in mxdomains_email[domain_mx]:
                             if vmail:
