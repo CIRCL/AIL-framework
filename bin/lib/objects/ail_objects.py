@@ -229,7 +229,7 @@ def download_objects(objects):
             filename = obj.get_global_id()
             if obj.type == 'item':
                 if filename.endswith('.gz'):
-                    filename = filename[-3]
+                    filename = filename[:-3]
             content = obj.get_content(r_type='bytes')
             if content:
                 zf.writestr(filename, BytesIO(content).getvalue())
