@@ -227,6 +227,9 @@ def download_objects(objects):
     with zipfile.ZipFile(zip_buffer, "a") as zf:
         for obj in get_objects(objects):
             filename = obj.get_global_id()
+            if obj.type == 'item':
+                if filename.endswith('.gz'):
+                    filename = filename[-3]
             content = obj.get_content(r_type='bytes')
             if content:
                 zf.writestr(filename, BytesIO(content).getvalue())
