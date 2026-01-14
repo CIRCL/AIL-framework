@@ -26,3 +26,24 @@
   line-height: 1.5em;
   transition: max-height 0.3s ease-in-out;
 }
+
+#sticky_btn_up {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  background-color: grey;
+  color: white;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 50%;
+  font-size: 26px;
+  line-height: 0;
+}
+
+#sticky_btn_up:hover {
+  background-color: #555;
+}

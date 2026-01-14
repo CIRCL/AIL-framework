@@ -163,3 +163,16 @@ function show_text_tooltip(container, text) {
     }
 
 }
+
+function sticky_btn_up_scroll(sticky_btn_up) {
+  if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
+    sticky_btn_up.style.display = "block";
+  } else {
+    sticky_btn_up.style.display = "none";
+  }
+}
+
+function goToTop() {
+  document.body.scrollTop = 0; // For Safari
+  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}

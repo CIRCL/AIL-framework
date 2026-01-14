@@ -44,6 +44,8 @@
 <body>
   {% include 'nav_bar.html' %}
 
+   <button onclick="goToTop()" id="sticky_btn_up" title="Go to top"><i class="fas fa-circle-chevron-up"></i></button>
+
   <div class="card my-2 mx-2">
     <div class="card-header bg-dark">
       <h3 class="text-white text-center" >{{ meta['name'] }}</h3>
@@ -641,6 +643,9 @@
             boundary:'window',
         });
     });
+
+    let sticky_up_btn = document.getElementById("sticky_btn_up");
+    window.onscroll = function() {sticky_btn_up_scroll(sticky_up_btn)};
 
     let text_wrapped = false;
     function wrap_content() {
