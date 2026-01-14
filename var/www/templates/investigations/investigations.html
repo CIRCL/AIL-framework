@@ -74,7 +74,7 @@
 					<i class="fas fa-microscope"></i> Global Investigations:
 				</h3>
 
-				<table id="table_investigation" class="table table-striped border-primary">
+				<table id="table_investigation_global" class="table table-striped border-primary">
                     <thead class="bg-dark text-white">
                     <tr>
                         <th>Name</th>
@@ -130,6 +130,11 @@ $(document).ready(function(){
 	$("#nav_investigation_dashboard").addClass("active");
 
   $('#table_investigation').DataTable({
+        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "iDisplayLength": 10,
+        "order": [[ 2, "desc" ]]
+  });
+  $('#table_investigation_global').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
         "order": [[ 2, "desc" ]]
