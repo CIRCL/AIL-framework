@@ -261,12 +261,12 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
             return True
         # edit + delete
         else:   # TODO allow user to edit same org global
-            if user_role == 'org_admin':
-                creator_org = obj.get_creator_org()
-                if user_org == creator_org:
-                    return True
-                else:
-                    return False
+            # if user_role == 'org_admin':
+            creator_org = obj.get_creator_org()
+            if user_org == creator_org:
+                return True
+            else:
+                return False
             else:
                 return False  # TODO allow user (creator) to edit global tracker ????
     # Organization
