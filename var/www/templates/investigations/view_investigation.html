@@ -156,6 +156,11 @@
 
                                             </div>
                                         </div>
+                                        <a href="{{ url_for('investigations_b.investigation_download') }}?uuid={{metadata['uuid']}}">
+											<button type="button" class="btn btn-info">
+												<i class="fas fa-download"></i> Download
+											</button>
+										</a>
 									</div>
 
 									{% if misp_url %}

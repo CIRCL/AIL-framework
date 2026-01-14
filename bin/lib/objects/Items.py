@@ -5,7 +5,6 @@ import base64
 import gzip
 import magic
 import os
-import re
 import sys
 import html2text
 

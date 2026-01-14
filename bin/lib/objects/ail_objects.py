@@ -2,6 +2,9 @@
 # -*-coding:UTF-8 -*
 import os
 import sys
+import zipfile
+
+from io import BytesIO
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -199,12 +202,7 @@ def get_nb_objects_dashboard(date, flask_context=True):
     return objs
 
 
-#########################################################################################
-#########################################################################################
-#########################################################################################
-
-
-def get_objects(objects): # TODO RENAME ME
+def get_objects(objects):
     objs = set()
     for obj in objects:
         if isinstance(obj, dict):
@@ -221,6 +219,19 @@ def get_objects(objects): # TODO RENAME ME
     for obj in objs:
         ail_objects.append(get_object(obj[0], obj[1], obj[2]))
     return ail_objects
+
+
+def download_objects(objects):
+    # zip buffer
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "a") as zf:
+        for obj in get_objects(objects):
+            filename = obj.get_global_id()
+            content = obj.get_content(r_type='bytes')
+            if content:
+                zf.writestr(filename, BytesIO(content).getvalue())
+    zip_buffer.seek(0)
+    return zip_buffer
 
 
 def get_obj_global_id(obj_type, subtype, obj_id):

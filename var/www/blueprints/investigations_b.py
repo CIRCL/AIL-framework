@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -198,6 +198,26 @@ def delete_investigation():
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard'))
+
+
+@investigations_b.route("/investigation/download", methods=['GET'])
+@login_required
+@login_user_no_api
+def investigation_download():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    investigation_uuid = request.args.get('uuid')
+    input_dict = {"uuid": investigation_uuid}
+    res = Investigations.api_download_investigation(user_org, user_id, user_role, input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+
+    zip_file = ail_objects.download_objects(res[0]['objs'])
+    if not zip_file:
+        abort(404)
+    return send_file(zip_file, download_name=res[0]['filename'], as_attachment=True)
+
 
 @investigations_b.route("/investigation/object/register", methods=['GET'])
 @login_required

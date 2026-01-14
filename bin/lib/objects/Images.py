@@ -88,6 +88,12 @@ class Image(AbstractDaterangeObject):
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return None
+        elif r_type == 'bytes':
+            filepath = self.get_filepath()
+            with open(filepath, 'rb') as f:
+                file_content = f.read()
+            return file_content
+        # io
         else:
             return self.get_file_content()
 

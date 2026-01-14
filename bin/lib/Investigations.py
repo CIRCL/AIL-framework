@@ -601,6 +601,26 @@ def api_delete_investigation(user_org, user_id, user_role, json_dict):
     res = investigation.delete()
     return res, 200
 
+def api_download_investigation(user_org, user_id, user_role, json_dict):
+    investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
+    if not is_valid_uuid_v4(investigation_uuid):
+        return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
+    investigation_uuid = sanityze_uuid(investigation_uuid)
+    if not exists_investigation(investigation_uuid):
+        return {"status": "error", "reason": "Investigation not found"}, 404
+    investigation = Investigation(investigation_uuid)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+    description = investigation.get_info()
+    if description:
+        filename = description.replace('_', '').replace('/', '')
+    else:
+        filename = ''
+    filename = f'{filename}_{investigation.get_uuid()}.zip'
+    res = {'filename': filename, 'objs': investigation.get_objects()}
+    return res, 200
+
 def api_register_object(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
     if not is_valid_uuid_v4(investigation_uuid):
