@@ -267,7 +267,7 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
                 return True
             else:
                 return False
-            else:
+            # else:
                 return False  # TODO allow user (creator) to edit global tracker ????
     # Organization
     elif level == 2:
