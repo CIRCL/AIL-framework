@@ -435,6 +435,8 @@ class Crawler(AbstractModule):
             item = Item(item_id)
             print(item.id)
 
+            is_valid_html = True
+
             # TITLE
             signal.alarm(60)
             try:
@@ -442,22 +444,26 @@ class Crawler(AbstractModule):
             except TimeoutException:
                 self.logger.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
                 title_content = None
+                is_valid_html = False
             else:
                 signal.alarm(0)
 
             # DOM-HASH ID
-            signal.alarm(60)
-            try:
-                dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
-            except TimeoutException:
-                self.logger.warning(f'BeautifulSoup HTML parser for domhash timeout: {item_id}')
-                dom_hash_id = None
-            except ValueError as e:
-                signal.alarm(0)
-                self.logger.warning(f'BeautifulSoup HTML invalid: {str(e)} {item_id}')
-                dom_hash_id = None
+            if is_valid_html:
+                signal.alarm(60)
+                try:
+                    dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
+                except TimeoutException:
+                    self.logger.warning(f'BeautifulSoup HTML parser for domhash timeout: {item_id}')
+                    dom_hash_id = None
+                except ValueError as e:
+                    signal.alarm(0)
+                    self.logger.warning(f'BeautifulSoup HTML invalid: {str(e)} {item_id}')
+                    dom_hash_id = None
+                else:
+                    signal.alarm(0)
             else:
-                signal.alarm(0)
+                dom_hash_id = None
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
             if self.domain.id.endswith('.i2p') and dom_hash_id:
