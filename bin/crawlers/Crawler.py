@@ -446,19 +446,31 @@ class Crawler(AbstractModule):
                 signal.alarm(0)
 
             # DOM-HASH ID
-            dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
+            signal.alarm(60)
+            try:
+                dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
+            except TimeoutException:
+                self.logger.warning(f'BeautifulSoup HTML parser for domhash timeout: {item_id}')
+                dom_hash_id = None
+            except ValueError as e:
+                signal.alarm(0)
+                self.logger.warning(f'BeautifulSoup HTML invalid: {str(e)} {item_id}')
+                dom_hash_id = None
+            else:
+                signal.alarm(0)
 
             # FILTER I2P 'Website Unknown' and 'Website Unreachable'
-            if self.domain.id.endswith('.i2p'):
+            if self.domain.id.endswith('.i2p') and dom_hash_id:
                 if crawlers.is_filtered_i2p_page(dom_hash_id):
                     filter_page = True
 
             if not filter_page:
 
                 # DOM-HASH
-                dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
-                dom_hash.add(self.date.replace('/', ''), item)
-                dom_hash.add_correlation('domain', '', self.domain.id)
+                if dom_hash_id:
+                    dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
+                    dom_hash.add(self.date.replace('/', ''), item)
+                    dom_hash.add_correlation('domain', '', self.domain.id)
 
                 gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
                 # send item to Global
