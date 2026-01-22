@@ -425,9 +425,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         else:  # IMAGE + ITEM
             chat_id = self.get_chat_id()
             thread_id = self.get_thread_id()
-            channel_id = self.get_subchannel_id()
             message_id = self.get_message_id()
-            message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, channel_id=channel_id, thread_id=thread_id)
+            message_id = Messages.create_obj_id(self.get_chat_instance_uuid(), chat_id, message_id, timestamp, thread_id=thread_id)
             message = Messages.Message(message_id)
             # create empty message if message don't exist
             if not message.exists():

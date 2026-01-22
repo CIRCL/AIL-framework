@@ -454,13 +454,9 @@ class Message(AbstractObject):
     def delete(self):
         pass
 
-def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None, thread_id=None): # TODO CHECK COLLISIONS
+def create_obj_id(chat_instance, chat_id, message_id, timestamp, thread_id=None):
     timestamp = int(timestamp)
-    if channel_id and thread_id:
-        return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
-    elif channel_id:
-        return f'{chat_instance}/{timestamp}/{channel_id}/{chat_id}/{message_id}'
-    elif thread_id:
+    if thread_id:
         return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
     else:
         return f'{chat_instance}/{timestamp}/{chat_id}/{message_id}'
