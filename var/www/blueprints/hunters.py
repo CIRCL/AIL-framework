@@ -200,7 +200,7 @@ def show_tracker():
     tracker = Tracker.Tracker(tracker_uuid)
     meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
                                      'filter_duplicate_notification',
-                                     'user', 'webhooks', 'nb_objs', 'years'})
+                                     'user', 'webhooks', 'nb_objs', 'objs_stats', 'years'})
 
     if meta['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
@@ -216,7 +216,14 @@ def show_tracker():
     if date_from:
         date_from, date_to = Date.sanitise_daterange(date_from, date_to)
         objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types)
-        meta['objs'] = ail_objects.get_objects_meta(objs, options={'last_full_date', 'pdf'}, flask_context=True)
+        meta['objs'] = []
+        options = {'last_full_date', 'pdf'}
+        for obj_gid in objs:
+            obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
+            obj_meta = ail_objects.get_object_meta(obj_type, obj_subtype, obj_id, options=options, flask_context=True)
+            obj_meta['tracker_status'] = tracker.get_obj_status(obj_gid)
+            obj_meta['gid'] = obj_gid
+            meta['objs'].append(obj_meta)
     else:
         date_from = ''
         date_to = ''
@@ -500,6 +507,77 @@ def tracker_object_remove():
             return redirect(request.referrer)
         else:
             return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
+@hunters.route('/tracker/object/status/done', methods=['GET'])
+@login_required
+@login_user_no_api
+def tracker_object_status_done():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_tracker_object_status_done({'uuid': tracker_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
+@hunters.route('/tracker/object/status/unread', methods=['GET'])
+@login_required
+@login_user_no_api
+def tracker_object_status_unread():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_tracker_object_status_unread({'uuid': tracker_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
+
+@hunters.route('/tracker/object/status/reject', methods=['GET'])
+@login_required
+@login_user_no_api
+def tracker_object_status_reject():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_tracker_object_status_reject({'uuid': tracker_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
+@hunters.route('/tracker/object/status/read', methods=['POST'])
+@login_required
+@login_user_no_api
+def tracker_object_status_read():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    tracker_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_tracker_object_status_read({'uuid': tracker_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    return create_json_response(res[0], res[1])
 
 
 @hunters.route('/tracker/objects', methods=['GET'])

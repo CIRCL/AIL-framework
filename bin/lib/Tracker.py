@@ -416,6 +416,12 @@ class Tracker:
             meta['description'] = self.get_description()
         if 'nb_objs' in options:
             meta['nb_objs'] = self.get_nb_objs()
+        if 'objs_stats' in options:
+            if 'nb_objs' in meta:
+                total = meta['nb_objs']
+            else:
+                total = None
+            meta['objs_stats'] = self.get_objs_stats(total=total)
         if 'tags' in options:
             meta['tags'] = self.get_tags()
         if 'filters' in options:
@@ -456,6 +462,12 @@ class Tracker:
                 objs[obj_type] = nb
         return objs
 
+    def get_nb_total_objs(self):
+        nb = 0
+        for obj_type in get_objects_tracked():
+            nb += self.get_nb_objs_by_type(obj_type)
+        return nb
+
     def get_objs(self):
         objs = []
         for obj_type in get_objects_tracked():
@@ -488,6 +500,9 @@ class Tracker:
     def get_obj_dates(self, obj_type, subtype, obj_id):
         return r_tracker.smembers(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}')
 
+    def is_tracked_obj(self, obj_gid):
+        return r_tracker.sismember(f'obj:trackers:{obj_gid}', self.uuid)
+
     # - TODO Data Retention TO Implement - #
     # Or Daily/Monthly Global DB Cleanup:
     #    Iterate on each tracker:
@@ -516,14 +531,94 @@ class Tracker:
     def remove(self, obj_type, subtype, obj_id):
         if not subtype:
             subtype = ''
+        obj_gid = f'{obj_type}:{subtype}:{obj_id}'
 
         for date in self.get_obj_dates(obj_type, subtype, obj_id):
-            r_tracker.srem(f'tracker:objs:{self.uuid}:{date}', f'{obj_type}:{subtype}:{obj_id}')
+            r_tracker.srem(f'tracker:objs:{self.uuid}:{date}', obj_gid)
             r_tracker.srem(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}', date)
 
         r_tracker.srem(f'obj:trackers:{obj_type}:{subtype}:{obj_id}', self.uuid)
         r_tracker.srem(f'tracker:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
+        # obj status
+        self.delete_obj_status(obj_gid)
+
         self.update_daterange()
+
+    def get_nb_objs_read(self):
+        return r_tracker.scard(f'tracker:objs:read:{self.uuid}')
+
+    def get_objs_done(self):
+        return r_tracker.smembers(f'tracker:objs:done:{self.uuid}')
+
+    def get_nb_objs_done(self):
+        return r_tracker.scard(f'tracker:objs:done:{self.uuid}')
+
+    def get_objs_rejected(self):
+        return r_tracker.smembers(f'tracker:objs:fp:{self.uuid}')
+
+    def get_nb_objs_rejected(self):
+        return r_tracker.scard(f'tracker:objs:fp:{self.uuid}')
+
+    def get_objs_stats(self, total=None):
+        done = self.get_nb_objs_done()
+        fp = self.get_nb_objs_rejected()
+        read = self.get_nb_objs_read()
+        if total:
+            nb = 0
+            for nb_obj in total:
+                nb += total[nb_obj]
+        else:
+            nb = self.get_nb_total_objs()
+        unread = nb - done - fp - read
+        return {'done': done, 'fp': fp, 'read': read, 'unread': unread}
+
+    def is_obj_read(self, obj_gid):
+        return r_tracker.sismember(f'tracker:objs:read:{self.uuid}', obj_gid)
+
+    def is_obj_done(self, obj_gid):
+        return r_tracker.sismember(f'tracker:objs:done:{self.uuid}', obj_gid)
+
+    def is_obj_rejected(self, obj_gid):
+        return r_tracker.sismember(f'tracker:objs:fp:{self.uuid}', obj_gid)
+
+    def get_obj_status(self, obj_gid):
+        if self.is_obj_read(obj_gid):
+            return 'read'
+        elif self.is_obj_done(obj_gid):
+            return 'done'
+        elif self.is_obj_rejected(obj_gid):
+            return 'rejected'
+        else:
+            return 'unread'
+
+    def obj_read(self, obj_gid):
+        self.obj_undone(obj_gid)
+        self.obj_unreject(obj_gid)
+        r_tracker.sadd(f'tracker:objs:read:{self.uuid}', obj_gid)
+
+    def obj_unread(self, obj_gid):
+        r_tracker.srem(f'tracker:objs:read:{self.uuid}', obj_gid)
+
+    def obj_done(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_unreject(obj_gid)
+        r_tracker.sadd(f'tracker:objs:done:{self.uuid}', obj_gid)
+
+    def obj_undone(self, obj_gid):
+        r_tracker.srem(f'tracker:objs:done:{self.uuid}', obj_gid)
+
+    def obj_reject(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_undone(obj_gid)
+        r_tracker.sadd(f'tracker:objs:fp:{self.uuid}', obj_gid)
+
+    def obj_unreject(self, obj_gid):
+        r_tracker.srem(f'tracker:objs:fp:{self.uuid}', obj_gid)
+
+    def delete_obj_status(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_undone(obj_gid)
+        self.obj_unreject(obj_gid)
 
     # TODO escape custom tags
     # TODO escape mails ????
@@ -730,6 +825,10 @@ class Tracker:
         ail_orgs.remove_obj_to_org(self.get_org(), 'tracker', self.uuid)
         # meta
         r_tracker.delete(f'tracker:{self.uuid}')
+        # objs status
+        r_tracker.delete(f'tracker:objs:read:{self.uuid}')
+        r_tracker.delete(f'tracker:objs:done:{self.uuid}')
+        r_tracker.delete(f'tracker:objs:fp:{self.uuid}')
         trigger_trackers_refresh(tracker_type)
 
 
@@ -932,6 +1031,9 @@ def is_obj_tracked(obj_type, subtype, obj_id):
 def get_obj_trackers(obj_type, subtype, obj_id):
     return r_tracker.smembers(f'obj:trackers:{obj_type}:{subtype}:{obj_id}')
 
+def set_obj_tracker_read(tracker_uuid, obj_gid):
+    r_tracker.sadd(f'tracker:objs:read:{tracker_uuid}', obj_gid)
+
 def delete_obj_trackers(obj_type, subtype, obj_id):
     for tracker_uuid in get_obj_trackers(obj_type, subtype, obj_id):
         tracker = Tracker(tracker_uuid)
@@ -1081,8 +1183,9 @@ def api_validate_tracker_to_add(to_track, tracker_type, nb_words=1):
             return {"status": "error", "reason": "Invalid domain name"}, 400
 
     elif tracker_type == 'yara_custom':
-        if not is_valid_yara_rule(to_track):
-            return {"status": "error", "reason": "Invalid custom Yara Rule"}, 400
+        valid_yara_rule, error = is_valid_yara_rule(to_track)
+        if not valid_yara_rule:
+            return {"status": "error", "reason": f"Invalid Yara Rule: {error}"}, 400
     elif tracker_type == 'yara_default':
         if not is_valid_default_yara_rule(to_track):
             return {"status": "error", "reason": "The Yara Rule doesn't exist"}, 400
@@ -1282,6 +1385,54 @@ def api_tracker_remove_object(data, user_org, user_id, user_role):
         return {"status": "error", "reason": "Invalid Object"}, 400
     return tracker.remove(obj_type, subtype, obj_id), 200
 
+def api_tracker_object_status_done(data, user_org, user_id, user_role):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    if not tracker.is_tracked_obj(object_gid):
+        return {"status": "error", "reason": "Not Tracked Object"}, 404
+    return tracker.obj_done(object_gid), 200
+
+def api_tracker_object_status_reject(data, user_org, user_id, user_role):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    if not tracker.is_tracked_obj(object_gid):
+        return {"status": "error", "reason": "Not Tracked Object"}, 404
+    return tracker.obj_reject(object_gid), 200
+
+def api_tracker_object_status_unread(data, user_org, user_id, user_role):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    if not tracker.is_tracked_obj(object_gid):
+        return {"status": "error", "reason": "Not Tracked Object"}, 404
+    return tracker.delete_obj_status(object_gid), 200
+
+def api_tracker_object_status_read(data, user_org, user_id, user_role):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    tracker = Tracker(tracker_uuid)
+    object_gid = data.get('gid')
+    if not tracker.is_tracked_obj(object_gid):
+        return {"status": "error", "reason": "Not Tracked Object"}, 404
+    return tracker.obj_read(object_gid), 200
+
 ## -- CREATE TRACKER -- ##
 
 ####################
@@ -1411,9 +1562,9 @@ def reload_yara_rules():
 def is_valid_yara_rule(yara_rule):
     try:
         yara.compile(source=yara_rule)
-        return True
-    except:
-        return False
+        return True, None
+    except Exception as e:
+        return False, str(e)
 
 def is_default_yara_rule(tracked_yara_name):
     yara_dir = get_yara_rules_dir()
@@ -2000,8 +2151,9 @@ def api_resume_retro_hunt_task(user_org, user_id, user_role, task_uuid):
 
 def api_validate_rule_to_add(rule, rule_type):
     if rule_type == 'yara_custom':
-        if not is_valid_yara_rule(rule):
-            return {"status": "error", "reason": "Invalid custom Yara Rule"}, 400
+        valid_yara_rule, error = is_valid_yara_rule(rule)
+        if not valid_yara_rule:
+            return {"status": "error", "reason": f"Invalid Yara Rule: {e}"}, 400
     elif rule_type == 'yara_default':
         if not is_valid_default_yara_rule(rule):
             return {"status": "error", "reason": "The Yara Rule doesn't exist"}, 400

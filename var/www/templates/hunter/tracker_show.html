@@ -206,6 +206,42 @@
                                         {%endfor%}
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td class="text-right"><b>Objects Done</b></td>
+                                    <td>
+                                        <h4><span class="badge badge-success">
+                                            <i class="fa-solid fa-check-to-slot"></i>
+                                            <span class="badge badge-light">{{ meta['objs_stats']['done'] }}</span>
+                                        </span></h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Objects Rejected</b></td>
+                                    <td>
+                                        <h4><span class="badge badge-danger">
+                                            <i class="fa-solid fa-xmark"></i>
+                                            <span class="badge badge-light">{{ meta['objs_stats']['fp'] }}</span>
+                                        </span></h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Objects Read</b></td>
+                                    <td>
+                                        <h4><span class="badge badge-info">
+                                            <i class="fa-solid fa-eye"></i>
+                                            <span class="badge badge-light">{{ meta['objs_stats']['read']}}</span>
+                                        </span></h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-right"><b>Objects Unread</b></td>
+                                    <td>
+                                        <h4><span class="badge badge-warning">
+                                            <i class="fa-regular fa-eye-slash"></i>
+                                            <span class="badge badge-light">{{ meta['objs_stats']['unread'] }}</span>
+                                        </span></h4>
+                                    </td>
+                                </tr>
                                 </tbody>
                             </table>
 
@@ -345,6 +381,7 @@
                             <th>Type</th>
 			      	        <th></th>
 							<th>Id</th>
+                            <th></th>
 				     	    <th>Last Date</th>
 							<th></th>
 				   	    </tr>
@@ -364,7 +401,7 @@
 									{% endif %}
 								</td>
 								<td>
-									<a href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ meta['uuid'] }}{% endif %}">
+									<a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ meta['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
 										{{ object['id']}}
 									</a>
                                     {% if 'pdf' in object %}
@@ -382,6 +419,21 @@
                                         </div>
                                     {% endif %}
 								</td>
+                                <td class="text-center">
+									{% if object['tracker_status'] == 'read' %}
+                                        <i class="fa-solid fa-eye" title="read"></i>
+                                        <span hidden>read</span>
+                                    {% elif object['tracker_status'] == 'done' %}
+                                        <i class="text-success fa-solid fa-check-to-slot" title="done"></i>
+                                        <span hidden>done</span>
+                                    {% elif object['tracker_status'] == 'rejected' %}
+                                        <i class="text-danger fa-solid fa-xmark" title="rejected (false positive)"></i>
+                                        <span hidden>rejected</span>
+                                    {% else %}
+                                        <i class="fa-regular fa-eye-slash" title="unread"></i>
+                                        <span hidden>unread</span>
+									{% endif %}
+								</td>
 
 								<td>
 									{% if object['last_full_date'] %}
@@ -389,7 +441,39 @@
 									{% endif %}
 								</td>
 								<td class="text-right">
-                                    <button class="btn btn-outline-danger py-0 px-1"
+                                    {% if object['tracker_status'] == 'read' %}
+                                        <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.tracker_object_status_done', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                        </a>
+                                        <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.tracker_object_status_reject', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                        </a>
+                                        <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.tracker_object_status_unread', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                        </a>
+                                    {% elif object['tracker_status'] == 'done' %}
+                                        <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.tracker_object_status_reject', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                        </a>
+                                        <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.tracker_object_status_unread', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                        </a>
+                                    {% elif object['tracker_status'] == 'rejected' %}
+                                        <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.tracker_object_status_done', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                        </a>
+                                        <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.tracker_object_status_unread', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.tracker_object_status_done', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                        </a>
+                                        <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.tracker_object_status_reject', uuid=meta['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                        </a>
+                                    {% endif %}
+                                    <button class="btn btn-outline-danger py-0 px-1" title="Remove object from traker"
                                             data-toggle="modal" data-target="#modal_tracker_remove_object"
                                             data-tracker_uuid="{{ meta['uuid'] }}" data-obj_gid="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
                                             <i class="fas fa-trash-alt"></i></button>
@@ -449,7 +533,7 @@
         $('#myTable_').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
-            "order": [[3, "desc"]]
+            "order": [[4, "desc"]]
         });
 
         sparkline("sparkline", {{ meta['sparkline'] }}, {});
@@ -460,6 +544,17 @@
             }
         );
 
+    });
+
+    // track viewed objects
+    const obj_links = document.querySelectorAll("a.obj-link");
+    obj_links.forEach(obj_link => {
+        obj_link.addEventListener("click", function () {
+            const objectGID = obj_link.dataset.objectId;
+            navigator.sendBeacon("{{ url_for('hunters.tracker_object_status_read') }}?uuid={{ meta['uuid'] }}&gid=" + objectGID);
+            const row = obj_link.closest("tr");
+            row.children[3].innerHTML = '<i class="fa-solid fa-eye"></i><span hidden>read</span>';
+        });
     });
 
     function toggle_sidebar() {
