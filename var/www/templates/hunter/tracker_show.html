@@ -406,7 +406,7 @@
 									</a>
                                     {% if 'pdf' in object %}
                                         {% if object['pdf'] %}
-                                            <a target="_blank" href="{{ url_for('objects_pdf.pdf_view', id=object['pdf']) }}">
+                                            <a class="obj-link" target="_blank" href="{{ url_for('objects_pdf.pdf_view', id=object['pdf']) }}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
                                                 <button class="btn btn-sm btn-outline-dark"><i class="far fa-file-pdf fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i></button>
                                             </a>
                                         {% endif %}
@@ -549,7 +549,7 @@
     // track viewed objects
     const obj_links = document.querySelectorAll("a.obj-link");
     obj_links.forEach(obj_link => {
-        obj_link.addEventListener("click", function () {
+        obj_link.addEventListener("mousedown", function () {
             const objectGID = obj_link.dataset.objectId;
             navigator.sendBeacon("{{ url_for('hunters.tracker_object_status_read') }}?uuid={{ meta['uuid'] }}&gid=" + objectGID);
             const row = obj_link.closest("tr");
