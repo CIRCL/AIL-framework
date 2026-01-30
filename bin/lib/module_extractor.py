@@ -228,7 +228,7 @@ def get_tracker_match(user_org, user_id, obj, content, priority=None, match_uuid
 
     else:
         trackers_uuids = Tracker.get_obj_trackers(obj.type, obj.get_subtype(r_str=True), obj.id)
-        retro_hunts_uuids = Tracker.get_obj_retro_hunts(obj.type, obj.get_subtype(r_str=True), obj.id)
+        retro_hunts_uuids = Tracker.get_obj_retro_hunts(obj_gid)
 
         # check if priority is tracker or retro
         if priority:

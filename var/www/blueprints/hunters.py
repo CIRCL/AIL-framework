@@ -664,14 +664,19 @@ def retro_hunt_show_task():
     if res:
         return res
 
-    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'org', 'org_name', 'progress', 'filters', 'nb_objs', 'tags'})
+    dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'org', 'org_name', 'progress', 'filters', 'nb_objs', 'objs_stats','tags'})
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 
+    dict_task['objs'] = []
     if objs:
-        dict_task['objs'] = ail_objects.get_objects_meta(retro_hunt.get_objs(), options={'last_full_date'}, flask_context=True)
-    else:
-        dict_task['objs'] = []
+        options = {'last_full_date', 'pdf'}
+        for ob in retro_hunt.get_objs():
+            obj_type, obj_subtype, obj_id = ob
+            obj_meta = ail_objects.get_object_meta(obj_type, obj_subtype, obj_id, options=options, flask_context=True)
+            obj_meta['gid'] = f'{obj_type}:{obj_subtype}:{obj_id}'
+            obj_meta['tracker_status'] = retro_hunt.get_obj_status(obj_meta['gid'])
+            dict_task['objs'].append(obj_meta)
 
     return render_template("show_retro_hunt.html", dict_task=dict_task,
                            rule_content=rule_content,
@@ -884,5 +889,94 @@ def retro_hunt_objects_report():
     return render_template("messages_report.html", meta=meta, yara_rule_content=yara_rule_content,
                            chats=chats, messages=messages, bootstrap_label=bootstrap_label, force_full_image=True)
 
+
+@hunters.route('/retro_hunt/object/status/done', methods=['GET'])
+@login_required
+@login_user_no_api
+def retro_hunt_object_status_done():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    retro_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_retro_hunt_object_status_done({'uuid': retro_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.retro_hunt_show_task', uuid=retro_uuid))
+
+@hunters.route('/retro_hunt/object/status/unread', methods=['GET'])
+@login_required
+@login_user_no_api
+def retro_hunt_object_status_unread():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    retro_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_retro_hunt_object_status_unread({'uuid': retro_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.retro_hunt_show_task', uuid=retro_uuid))
+
+
+@hunters.route('/retro_hunt/object/status/reject', methods=['GET'])
+@login_required
+@login_user_no_api
+def retro_hunt_object_status_reject():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    retro_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_retro_hunt_object_status_reject({'uuid': retro_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.retro_hunt_show_task', uuid=retro_uuid))
+
+@hunters.route('/retro_hunt/object/status/read', methods=['POST'])
+@login_required
+@login_user_no_api
+def retro_hunt_object_status_read():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    retro_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+
+    res = Tracker.api_retro_hunt_object_status_read({'uuid': retro_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    return create_json_response(res[0], res[1])
+
+@hunters.route('/retro_hunt/object/remove', methods=['GET'])
+@login_required
+@login_user_no_api
+def retro_hunt_object_remove():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+    retro_uuid = request.args.get('uuid')
+    object_global_id = request.args.get('gid')
+    res = Tracker.api_retro_hunt_remove_object({'uuid': retro_uuid, 'gid': object_global_id}, user_org, user_id, user_role)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    else:
+        if request.referrer:
+            return redirect(request.referrer)
+        else:
+            return redirect(url_for('hunters.retro_hunt_show_task', uuid=retro_uuid))
 
 ##  - -  ##

@@ -2,7 +2,6 @@
 # -*-coding:UTF-8 -*
 import json
 import os
-import logging
 import logging.config
 import re
 import sys
@@ -1827,6 +1826,12 @@ class RetroHunt:
             meta['nb_match'] = self.get_nb_match()
         if 'nb_objs' in options:
             meta['nb_objs'] = self.get_nb_objs()
+        if 'objs_stats' in options:
+            if 'nb_objs' in meta:
+                total = meta['nb_objs']
+            else:
+                total = None
+            meta['objs_stats'] = self.get_objs_stats(total=total)
         if 'org' in options:
             meta['org'] = self.get_org()
             if 'org_name' in options:
@@ -1912,6 +1917,12 @@ class RetroHunt:
                 objs[obj_type] = nb
         return objs
 
+    def get_nb_total_objs(self):
+        nb = 0
+        for obj_type in get_objects_retro_hunted():
+            nb += self.get_nb_objs_by_type(obj_type)
+        return nb
+
     def get_objs(self):
         objs = []
         for obj_type in get_objects_retro_hunted():
@@ -1920,6 +1931,9 @@ class RetroHunt:
                 objs.append((obj_type, subtype, obj_id))
         return objs
 
+    def is_retro_hunted_obj(self, obj_gid):
+        return r_tracker.sismember(f'obj:retro_hunts:{obj_gid}', self.uuid)
+
     def add(self, obj_type, subtype, obj_id):
         # match by object type:
         r_tracker.sadd(f'retro_hunt:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
@@ -1927,12 +1941,91 @@ class RetroHunt:
         r_tracker.sadd(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}', self.uuid)
         self._incr_nb_match()
 
-    def remove(self, obj_type, subtype, obj_id):
+    def remove(self, obj_gid):
+        obj_type, subtype, obj_id = obj_gid.split(':', 2)
         # match by object type:
         r_tracker.srem(f'retro_hunt:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
         # MAP object -> retro hunt
-        r_tracker.srem(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}', self.uuid)
+        r_tracker.srem(f'obj:retro_hunts:{obj_gid}', self.uuid)
+        # obj status
+        self.delete_obj_status(obj_gid)
         self._decr_nb_match()
+
+    def get_nb_objs_read(self):
+        return r_tracker.scard(f'retro_hunt:objs:read:{self.uuid}')
+
+    def get_objs_done(self):
+        return r_tracker.smembers(f'retro_hunt:objs:done:{self.uuid}')
+
+    def get_nb_objs_done(self):
+        return r_tracker.scard(f'retro_hunt:objs:done:{self.uuid}')
+
+    def get_objs_rejected(self):
+        return r_tracker.smembers(f'retro_hunt:objs:fp:{self.uuid}')
+
+    def get_nb_objs_rejected(self):
+        return r_tracker.scard(f'retro_hunt:objs:fp:{self.uuid}')
+
+    def get_objs_stats(self, total=None):
+        done = self.get_nb_objs_done()
+        fp = self.get_nb_objs_rejected()
+        read = self.get_nb_objs_read()
+        if total:
+            nb = 0
+            for nb_obj in total:
+                nb += total[nb_obj]
+        else:
+            nb = self.get_nb_total_objs()
+        unread = nb - done - fp - read
+        return {'done': done, 'fp': fp, 'read': read, 'unread': unread}
+
+    def is_obj_read(self, obj_gid):
+        return r_tracker.sismember(f'retro_hunt:objs:read:{self.uuid}', obj_gid)
+
+    def is_obj_done(self, obj_gid):
+        return r_tracker.sismember(f'retro_hunt:objs:done:{self.uuid}', obj_gid)
+
+    def is_obj_rejected(self, obj_gid):
+        return r_tracker.sismember(f'retro_hunt:objs:fp:{self.uuid}', obj_gid)
+
+    def get_obj_status(self, obj_gid):
+        if self.is_obj_read(obj_gid):
+            return 'read'
+        elif self.is_obj_done(obj_gid):
+            return 'done'
+        elif self.is_obj_rejected(obj_gid):
+            return 'rejected'
+        else:
+            return 'unread'
+
+    def obj_read(self, obj_gid):
+        self.obj_undone(obj_gid)
+        self.obj_unreject(obj_gid)
+        r_tracker.sadd(f'retro_hunt:objs:read:{self.uuid}', obj_gid)
+
+    def obj_unread(self, obj_gid):
+        r_tracker.srem(f'retro_hunt:objs:read:{self.uuid}', obj_gid)
+
+    def obj_done(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_unreject(obj_gid)
+        r_tracker.sadd(f'retro_hunt:objs:done:{self.uuid}', obj_gid)
+
+    def obj_undone(self, obj_gid):
+        r_tracker.srem(f'retro_hunt:objs:done:{self.uuid}', obj_gid)
+
+    def obj_reject(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_undone(obj_gid)
+        r_tracker.sadd(f'retro_hunt:objs:fp:{self.uuid}', obj_gid)
+
+    def obj_unreject(self, obj_gid):
+        r_tracker.srem(f'retro_hunt:objs:fp:{self.uuid}', obj_gid)
+
+    def delete_obj_status(self, obj_gid):
+        self.obj_unread(obj_gid)
+        self.obj_undone(obj_gid)
+        self.obj_unreject(obj_gid)
 
     def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending'):
         if self.exists():
@@ -1976,6 +2069,10 @@ class RetroHunt:
                 r_tracker.srem(f'retro_hunt:objs:{self.uuid}:{obj_type}', f'{subtype}:{obj_id}')
                 # MAP object -> retro hunt
                 r_tracker.srem(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}', self.uuid)
+        # objs status
+        r_tracker.delete(f'retro_hunts:objs:read:{self.uuid}')
+        r_tracker.delete(f'retro_hunts:objs:done:{self.uuid}')
+        r_tracker.delete(f'retro_hunts:objs:fp:{self.uuid}')
 
     def delete(self):
         if self.is_running() and self.get_state() not in ['completed', 'paused']:
@@ -2092,13 +2189,13 @@ def get_retro_hunt_metas(trackers_uuid):
 def is_obj_retro_hunted(obj_type, subtype, obj_id):
     return r_tracker.exists(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}')
 
-def get_obj_retro_hunts(obj_type, subtype, obj_id):
-    return r_tracker.smembers(f'obj:retro_hunts:{obj_type}:{subtype}:{obj_id}')
+def get_obj_retro_hunts(obj_gid):
+    return r_tracker.smembers(f'obj:retro_hunts:{obj_gid}')
 
-def delete_obj_retro_hunts(obj_type, subtype, obj_id):
-    for retro_uuid in get_obj_retro_hunts(obj_type, subtype, obj_id):
+def delete_obj_retro_hunts(obj_gid):
+    for retro_uuid in get_obj_retro_hunts(obj_gid):
         retro_hunt = RetroHunt(retro_uuid)
-        retro_hunt.remove(obj_type, subtype, obj_id)
+        retro_hunt.remove(obj_gid)
 
 ####  ACL  ####
 
@@ -2153,7 +2250,7 @@ def api_validate_rule_to_add(rule, rule_type):
     if rule_type == 'yara_custom':
         valid_yara_rule, error = is_valid_yara_rule(rule)
         if not valid_yara_rule:
-            return {"status": "error", "reason": f"Invalid Yara Rule: {e}"}, 400
+            return {"status": "error", "reason": f"Invalid Yara Rule: {error}"}, 400
     elif rule_type == 'yara_default':
         if not is_valid_default_yara_rule(rule):
             return {"status": "error", "reason": "The Yara Rule doesn't exist"}, 400
@@ -2255,6 +2352,61 @@ def api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid):
         return {"status": "error", "reason": "You can't delete a running task"}, 400
     else:
         return retro_hunt.delete(), 200
+
+def api_retro_hunt_object_status_done(data, user_org, user_id, user_role):
+    retro_uuid = data.get('uuid')
+    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+    retro_hunt = RetroHunt(retro_uuid)
+    object_gid = data.get('gid')
+    if not retro_hunt.is_retro_hunted_obj(object_gid):
+        return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
+    return retro_hunt.obj_done(object_gid), 200
+
+def api_retro_hunt_object_status_reject(data, user_org, user_id, user_role):
+    retro_uuid = data.get('uuid')
+    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+    retro_hunt = RetroHunt(retro_uuid)
+    object_gid = data.get('gid')
+    if not retro_hunt.is_retro_hunted_obj(object_gid):
+        return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
+    return retro_hunt.obj_reject(object_gid), 200
+
+def api_retro_hunt_object_status_unread(data, user_org, user_id, user_role):
+    retro_uuid = data.get('uuid')
+    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+    retro_hunt = RetroHunt(retro_uuid)
+    object_gid = data.get('gid')
+    if not retro_hunt.is_retro_hunted_obj(object_gid):
+        return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
+    return retro_hunt.delete_obj_status(object_gid), 200
+
+def api_retro_hunt_object_status_read(data, user_org, user_id, user_role):
+    retro_uuid = data.get('uuid')
+    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+    retro_hunt = RetroHunt(retro_uuid)
+    object_gid = data.get('gid')
+    if not retro_hunt.is_retro_hunted_obj(object_gid):
+        return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
+    return retro_hunt.obj_read(object_gid), 200
+
+def api_retro_hunt_remove_object(data, user_org, user_id, user_role):
+    retro_uuid = data.get('uuid')
+    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+    retro_hunt = RetroHunt(retro_uuid)
+    object_gid = data.get('gid')
+    if not retro_hunt.is_retro_hunted_obj(object_gid):
+        return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
+    return retro_hunt.remove(object_gid), 200
 
 ################################################################################
 ################################################################################
