@@ -43,17 +43,17 @@ config_loader = None
 CORRELATION_TYPES_BY_OBJ = {
     "author": ["pdf"],
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
-    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "file-name", "image", "message", "ocr", "pdf", "pgp", "user-account"],
+    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "file-name", "image", "message", "ocr", "pdf", "pgp", "qrcode", "user-account"],
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
     "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"],
     "cookie-name": ["domain"],
     "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "screenshot", "ssh-key", "title", "username"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "qrcode", "screenshot", "ssh-key", "title", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
-    "favicon": ["domain", "pdf", "item"],  # TODO Decoded
+    "favicon": ["domain", "item"],  # TODO Decoded
     "file-name": ["chat", "item", "message", "pdf"],
     "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
@@ -61,7 +61,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "ip": ["ssh-key"],
     "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "gtracker", "mail", "message", "pdf", "pgp", "screenshot", "title", "username"],  # chat ???
     "mail": ["domain", "item", "message"],  # chat ??
-    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pdf", "pgp", "user-account"],
+    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pdf", "pgp", "qrcode", "user-account", "username"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
     "pdf": ["author", "chat", "file-name", "item", "message"],
     "pgp": ["chat", "domain", "item", "message", "ocr"],
@@ -72,6 +72,14 @@ CORRELATION_TYPES_BY_OBJ = {
     "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
     "username": ["domain", "item", "message", "user-account"],
 }
+
+def debug_correlation_asymmetries():
+    missing = []
+    for k, values in CORRELATION_TYPES_BY_OBJ.items():
+        for v in values:
+            if k not in CORRELATION_TYPES_BY_OBJ.get(v, []):
+                missing.append((k, v))
+    return missing
 
 def get_obj_correl_types(obj_type):
     return CORRELATION_TYPES_BY_OBJ.get(obj_type)
@@ -263,5 +271,5 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
 
 if __name__ == '__main__':
-    r = get_obj_one_depth_correlations('item', '', '', {'domain'}, intermediate_types=set(), end='.onion')
+    r = debug_correlation_asymmetries()
     print(r)
