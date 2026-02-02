@@ -37,7 +37,6 @@
 				<table id="table_investigation" class="table table-striped border-primary">
                     <thead class="bg-dark text-white">
                     <tr>
-                        <th>Name</th>
                         <th>Info</th>
                         {% if is_admin %}<th>Org</th>{% endif %}
                         <th>Date</th>
@@ -58,7 +57,6 @@
                                     </div>
                                 </a>
                             </td>
-                            <td>{{ dict_investigation['info']}}</td>
                             {% if is_admin %}
                                 <td>
                                     {{ dict_investigation['org_name']}}<span hidden>{{ dict_investigation['org'] }}</span>
@@ -72,6 +70,8 @@
                     </tbody>
                 </table>
 
+                <hr>
+
                 <h3 class="mt-2 text-secondary">
 					<i class="fas fa-microscope"></i> Global Investigations:
 				</h3>
@@ -79,11 +79,10 @@
 				<table id="table_investigation_global" class="table table-striped border-primary">
                     <thead class="bg-dark text-white">
                     <tr>
-                        <th>Name</th>
+                        <th>Info</th>
                         <th>Org</th>
                         <th>Date</th>
                         <th>last modified</th>
-                        <th>Info</th>
                         <th>Nb Objects</th>
                     </tr>
                     </thead>
@@ -107,7 +106,6 @@
                             </td>
                             <td>{{ dict_investigation['date']}}</td>
                             <td>{{ dict_investigation['last_change']}}</td>
-                            <td>{{ dict_investigation['info']}}</td>
                             <td>{{ dict_investigation['nb_objects']}}</td>
                         </tr>
                     {% endfor %}
@@ -134,7 +132,7 @@ $(document).ready(function(){
   $('#table_investigation').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 3, "desc" ]]
+        "order": [[ 2, "desc" ]]
   });
   $('#table_investigation_global').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
