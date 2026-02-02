@@ -371,6 +371,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     def get_user_messages(self, user_id):
         return self.get_correlation_iter('user-account', self.subtype, user_id, 'message')
 
+    def _delete_chat(self):
+        self._delete_daterange()
+        self._delete_object()
+        # TODO REMOVE MESSAGE+icons objects?
+        r_object.delete(f'messages:{self.type}:{self.subtype}:{self.id}')
+
 # TODO move me to abstract subtype
 class AbstractChatObjects(AbstractSubtypeObjects, ABC):
 

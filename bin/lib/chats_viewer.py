@@ -916,6 +916,59 @@ def fix_chats_with_messages():
                     chat.add_chat_with_messages()
                     break
 
+
+def fix_message_forum_pdf_and_image_message_id(chat, message_id):
+    ms = message_id.split('/')
+    if len(ms) == 5:
+        # check if is not thread
+        if ms[3] == chat.id:
+            channel_id = ms[2]
+
+            ## Message ##
+            new_message_id = f'{ms[0]}/{ms[1]}/{ms[3]}/{ms[4]}'
+            old_message = Messages.Message(message_id)
+            new_message = Messages.Message(new_message_id)
+            if not new_message.exists():
+                pass
+                # new_message.create('') # TODO create empty message
+                # # TODO get chat ID
+                # # TODO get subchannel ID
+                # # TODO add message to channel ID
+                # # TODO copy reactions
+                #
+                # # TODO correlation: -> copy correlation ????
+                # #       - subchannel
+                # #       - user account
+                # #       - filename
+                # #       - ocr
+
+            # re-create correlation message -> pdf + image
+            else: # TODO create if don't exists
+                for c in old_message.get_correlation('image').get('image', []):
+                    new_message.add_correlation('image', '', c[1:])
+                for c in old_message.get_correlation('pdf').get('pdf', []):
+                    new_message.add_correlation('pdf', '', c[1:])
+                ## -Message- ##
+
+            invalid_chat = Chats.Chat(channel_id, chat.subtype)
+            invalid_chat.delete()
+
+# delete invalid chat correlation
+# rename message ID ???
+def fix_forum_pdf_and_image_message():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', )
+                    fix_message_forum_pdf_and_image_message_id(chat, message_id)
+
+
 #### API ####
 
 def get_chat_user_account_label(chat_gid):

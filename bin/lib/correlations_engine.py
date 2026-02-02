@@ -43,7 +43,7 @@ config_loader = None
 CORRELATION_TYPES_BY_OBJ = {
     "author": ["pdf"],
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
-    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "image", "message", "ocr", "pgp", "user-account"],
+    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "file-name", "image", "message", "ocr", "pdf", "pgp", "user-account"],
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
     "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"],
     "cookie-name": ["domain"],

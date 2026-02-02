@@ -452,6 +452,8 @@ class Message(AbstractObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        # TODO remove from chat - subchannel - thread
+        #   zset timestamp
         pass
 
 def create_obj_id(chat_instance, chat_id, message_id, timestamp, thread_id=None):

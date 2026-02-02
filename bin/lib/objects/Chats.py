@@ -43,8 +43,7 @@ class Chat(AbstractChatObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
-        # # TODO:
-        pass
+        self._delete_chat()
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -265,6 +264,6 @@ def get_all_by_subtype(subtype):
 
 
 if __name__ == '__main__':
-    chat = Chat('test', 'telegram')
-    r = chat.get_messages()
+    chat = Chat('2', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+    r = chat.delete()
     print(r)

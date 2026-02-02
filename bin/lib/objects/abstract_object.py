@@ -28,7 +28,7 @@ from lib.correlations_engine import get_nb_correlations, get_correlations, add_o
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
 from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs
-from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
+from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers, is_obj_retro_hunted, get_obj_retro_hunts, delete_obj_retro_hunts
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 
@@ -132,6 +132,12 @@ class AbstractObject(ABC):
             return r_object.hdel(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
+
+    def _delete_metas(self):
+        if not self.subtype:
+            return r_object.delete(f'meta:{self.type}:{self.id}')
+        else:
+            return r_object.delete(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
 
     ## Queues ##
 
@@ -266,18 +272,41 @@ class AbstractObject(ABC):
     def delete_trackers(self):
         return delete_obj_trackers(self.type, self.subtype, self.id)
 
+    ## Retro Hunts ##
+
+    def is_retro_hunted(self):
+        return is_obj_retro_hunted(self.type, self.subtype, self.id)
+
+    def get_retro_hunts(self):
+        return get_obj_retro_hunts(self.get_global_id())
+
+    def delete_retro_hunts(self):
+        return delete_obj_retro_hunts(self.get_global_id())
+
     ## -Trackers- ##
 
-    def _delete(self):
+    def _delete_object(self, meta=True):
         # DELETE TAGS
         Tag.delete_object_tags(self.type, self.get_subtype(r_str=True), self.id)
         # remove from tracker
         self.delete_trackers()
-        # remove from retro hunt currently item only TODO
+        # remove from retro hunt
+        self.delete_retro_hunts()
         # remove from investigations
         self.delete_investigations()
         # Delete Correlations
         delete_obj_correlations(self.type, self.get_subtype(r_str=True), self.id)
+        # custom meta
+        self.delete_custom_meta()
+        # langs
+        self.delete_translations()
+        self.delete_languages()
+        # Delete obj metas
+        if meta:
+            self._delete_metas()
+
+    def _delete(self, meta=True):
+        self._delete_object(meta=meta)
 
     @abstractmethod
     def delete(self):
@@ -466,6 +495,10 @@ class AbstractObject(ABC):
 
     def delete_translation(self, language, field=''):
         return delete_obj_translation(self.get_global_id(), language, field=field)
+
+    def delete_translations(self):  # TODO handle field deletion
+        for language in self.get_languages():
+            self.delete_translation(language)
 
     def translate(self, content=None, field='', source=None, target='en'):
         global_id = self.get_global_id()
