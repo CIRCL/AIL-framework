@@ -25,7 +25,10 @@
         <a class="nav-link" id="page-Crawler" href="{{ url_for('crawler_splash.crawlers_dashboard') }}" tabindex="-1" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
       </li>
       <li class="nav-item mr-3">
-        <a class="nav-link" id="page-Decoded" href="{{ url_for('investigations_b.investigations_dashboard') }}" aria-disabled="true"><i class="fas fa-cube"></i> Objects</a>
+        <a class="nav-link" id="page-Decoded" href="{{ url_for('dashboard.objects_dashboard') }}" aria-disabled="true"><i class="fas fa-cube"></i> Objects</a>
+      </li>
+      <li class="nav-item mr-3">
+        <a class="nav-link" id="page-investigation" href="{{ url_for('investigations_b.investigations_dashboard') }}" aria-disabled="true"><i class="fas fa-microscope"></i> Investigations</a>
       </li>
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-search" href="{{ url_for('search_b.search_dashboard') }}" aria-disabled="true"><i class="fas fa-search"></i> Search</a>

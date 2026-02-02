@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>AIL Framework</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+
+    <style>
+        .popover {
+      max-width: none;
+      width: 500px;
+    }
+        .icon-button {
+      position: relative;
+      display: inline-block;
+      border: none;
+      background: none;
+      {#padding: 0;#}
+      margin: 0;
+      cursor: pointer;
+      outline: inherit;
+	    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+
+    .icon-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      font-size: 14px;
+      background: forestgreen;
+    }
+  </style>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_objects.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="row">
+                    <div class="col-12 col-xl-6">
+                        <div class="text-center mt-4">
+                            <a class="btn btn-dark border-secondary" href="{{url_for('chats_explorer.chats_explorer_protocols')}}">
+                                <div class="card-body">
+                                    <h2 class="card-title">
+                                        <i class="far fa-comments fa-2x "></i>
+                                        <b>Chats Explorer</b>
+                                    </h2>
+                                    <i class="fab fa-discord fa-2x"></i>
+                                    <i class="fab fa-telegram fa-2x"></i>
+                                    <i class="fas fa-comment-dots fa-2x"></i>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-xl-6">
+
+                        <h3 class="text-center mt-1 mb-4" id="current_date"></h3>
+
+                        <div class="row">
+
+                            {% for obj_type in nb_objects %}
+                                <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
+                                    {% with type=obj_type, name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon']['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
+                                        {% include 'objects/block_obj_button.html' %}
+                                    {% endwith %}
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+                </div>
+
+		</div>
+
+
+
+	</div>
+
+<script>
+    $(document).ready(function(){
+        $("#page-Decoded").addClass("active");
+        updateDate();
+    });
+
+    var btn_selector = {
+    {% for obj_type in nb_objects %}
+        '{{ obj_type }}': $("#obj_btn_{{ obj_type }}"),
+    {% endfor %}
+    }
+</script>
+
+<script>
+
+function updateDate() {
+    let d = new Date();
+    let day = d.getUTCDate();
+    if (day < 10) {
+        day = "0" + day;
+    }
+    let month = d.getUTCMonth() + 1
+    if (month < 10) {
+        month = "0" + month;
+    }
+    let current_date = d.getUTCFullYear() + ' - ' + month + ' - ' + day;
+    $('#current_date').text(current_date)
+}
+
+function updateNbObjects(data) {
+    for (const obj_type in data) {
+        btn_selector[obj_type].text(data[obj_type]);
+    }
+}
+
+// WebSocket
+var socket = new WebSocket("wss://" + window.location.host + "/ws/dashboard");
+socket.wsocket = function(event) {
+    console.log("WebSocket connection opened:", event);
+};
+socket.onmessage = function(event) {
+    $("[data-toggle='popover']").popover('destroy');
+    let data = JSON.parse(event.data);
+    updateNbObjects(data['objs']);
+    updateDate();
+};
+socket.onerror = function(error) {
+    console.error('WebSocket error:', error);
+};
+socket.onclose = function(event) {
+    console.log('WebSocket connection closed:', event);
+};
+
+
+</script>
+
+</body>
+</html>

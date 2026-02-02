@@ -58,7 +58,7 @@ def investigations_dashboard():
 def investigations_admin():
     inv_org = Investigations.get_orgs_investigations_meta(r_str=True)
     return render_template("investigations.html", bootstrap_label=bootstrap_label,
-                           inv_global=[], inv_org=inv_org)
+                           inv_global=[], inv_org=inv_org, is_admin=True)
 
 
 @investigations_b.route("/investigation", methods=['GET'])  # # FIXME: add /view ????

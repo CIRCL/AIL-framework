@@ -51,6 +51,8 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 
+#### SCREENSHOTS ####
+
 @objects_item.route('/screenshot/<path:filename>')
 @login_required
 @login_read_only
@@ -63,6 +65,8 @@ def screenshot(filename):
     filename = filename.replace('/', '')
     s = Screenshot(filename)
     return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
+
+## --SCREENSHOTS-- ##
 
 @objects_item.route("/object/item")
 @login_required

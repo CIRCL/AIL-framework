@@ -81,7 +81,7 @@ def get_feeders_dashboard_full():
 
 def get_feeders_dashboard():
     timestamp = get_current_feeder_timestamp(int(time.time()))
-    print(timestamp)
+    # print(timestamp)
 
     f_dashboard = {}
     t_feeders = get_feeders_by_time(timestamp)

@@ -26,22 +26,22 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_investigations.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
 				<h3 class="mt-2 text-secondary">
-					<i class="fas fa-microscope"></i> Organisation Investigations:
+					<i class="fas fa-microscope"></i> My Organisation:
 				</h3>
 
 				<table id="table_investigation" class="table table-striped border-primary">
                     <thead class="bg-dark text-white">
                     <tr>
                         <th>Name</th>
-                        <th>Org</th>
+                        <th>Info</th>
+                        {% if is_admin %}<th>Org</th>{% endif %}
                         <th>Date</th>
                         <th>last modified</th>
-                        <td>Info</td>
                         <th>Nb Objects</th>
                     </tr>
                     </thead>
@@ -58,12 +58,14 @@
                                     </div>
                                 </a>
                             </td>
-                            <td>
-                                {{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}
-                            </td>
+                            <td>{{ dict_investigation['info']}}</td>
+                            {% if is_admin %}
+                                <td>
+                                    {{ dict_investigation['org_name']}}<span hidden>{{ dict_investigation['org'] }}</span>
+                                </td>
+                            {% endif %}
                             <td>{{ dict_investigation['date']}}</td>
                             <td>{{ dict_investigation['last_change']}}</td>
-                            <td>{{ dict_investigation['info']}}</td>
                             <td>{{ dict_investigation['nb_objects']}}</td>
                         </tr>
                     {% endfor %}
@@ -81,7 +83,7 @@
                         <th>Org</th>
                         <th>Date</th>
                         <th>last modified</th>
-                        <td>Info</td>
+                        <th>Info</th>
                         <th>Nb Objects</th>
                     </tr>
                     </thead>
@@ -100,7 +102,7 @@
                             </td>
                             <td>
                                 {% if dict_investigation['org'] %}
-                                    {{ dict_investigation['org_name']}}<br>{{ dict_investigation['org'] }}
+                                    {{ dict_investigation['org_name']}}<span hidden>{{ dict_investigation['org'] }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ dict_investigation['date']}}</td>
@@ -112,7 +114,7 @@
                     </tbody>
                 </table>
 
-                <a class="btn btn-primary mt-2" href="{{ url_for('investigations_b.add_investigation') }}">
+                <a class="btn btn-primary my-2" href="{{ url_for('investigations_b.add_investigation') }}">
                     <i class="fas fa-plus"></i> Create Investigation
                 </a>
 
@@ -125,19 +127,19 @@
 
 <script>
 $(document).ready(function(){
-	$("#page-Decoded").addClass("active");
+	$("#page-investigation").addClass("active");
 	$('#nav_investigation').removeClass("text-muted");
 	$("#nav_investigation_dashboard").addClass("active");
 
   $('#table_investigation').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 2, "desc" ]]
+        "order": [[ 3, "desc" ]]
   });
   $('#table_investigation_global').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 2, "desc" ]]
+        "order": [[ 3, "desc" ]]
   });
 
 });
