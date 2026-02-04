@@ -201,6 +201,15 @@ def get_nb_objects_dashboard(date, flask_context=True):
             objs[obj_type]['link'] = objs_class.get_link(flask_context=flask_context)
     return objs
 
+def get_nb_objects(obj_type):
+    if OBJECTS_CLASS[obj_type].get('objs'):
+        return OBJECTS_CLASS[obj_type]['objs']().get_nb()
+    elif obj_type == 'chat':
+        return chats_viewer.get_nb_chats_stats()
+    # 'item'
+    # 'screenshot'
+    # 'message'
+    return None
 
 def get_objects(objects):
     objs = set()

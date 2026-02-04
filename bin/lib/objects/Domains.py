@@ -844,6 +844,12 @@ class Domains:
             nb += r_crawler.scard(f'{domain_type}_up:{date}')
         return nb
 
+    def get_nb(self):
+        nb = {}
+        for domain_type in get_all_domains_types():
+            nb[domain_type] = get_nb_domains_up_by_type(domain_type)
+        return nb
+
 #### API ####
 
 def api_get_onions_by_month(date_year_month):
