@@ -211,11 +211,13 @@ class MeiliSearch:
         timestamp = message.get_timestamp()
         chat_instance = message.get_chat_instance()
         chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
-        _, user_account_subtype, user_account_id = message.get_user_account().split(':', 2)
-        user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype)
         self.index_obj(index, chat, timestamp)
-        self.index_obj(index, user_account, timestamp)
         self.index_obj(index, message, timestamp)
+        user_account = message.get_user_account()
+        if user_account:
+            _, user_account_subtype, user_account_id = user_account.split(':', 2)
+            user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype)
+            self.index_obj(index, user_account, timestamp)
 
 
 if IS_MEILISEARCH_ENABLED:
