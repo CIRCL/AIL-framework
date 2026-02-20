@@ -211,7 +211,7 @@ class MeiliSearch:
         timestamp = message.get_timestamp()
         chat_instance = message.get_chat_instance()
         chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
-        _, user_account_subtype, user_account_id = message.get_user_account().split(':')
+        _, user_account_subtype, user_account_id = message.get_user_account().split(':', 2)
         user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype)
         self.index_obj(index, chat, timestamp)
         self.index_obj(index, user_account, timestamp)
@@ -321,9 +321,8 @@ def index_domains_descriptions():
 
 ## TITLE ##  # TODO update only
 
-def index_title(title_id):
+def index_title(obj):
     index = 'title'
-    obj = Titles.Title(title_id)
     document = obj.get_search_document()
     if document:
         Engine.update(index, document)
@@ -339,9 +338,8 @@ def index_titles():
 
 ## FILENAME ##  # TODO update only
 
-def index_file_name(obj_id):
+def index_file_name(obj):
     index = 'filename'
-    obj = FilesNames.FileName(obj_id)
     document = obj.get_search_document()
     if document:
         Engine.update(index, document)

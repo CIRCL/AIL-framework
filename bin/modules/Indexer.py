@@ -38,6 +38,7 @@ class Indexer(AbstractModule):
         self.is_enabled_meilisearch = search_engine.is_meilisearch_enabled()
         if self.is_enabled_meilisearch:
             search_engine.Engine.init()
+            print('indexer ready')
 
     # TODO send timestamp in queue ???? -> item
     # TODO UPDATE ONLY LAST SEEN ON UPDATE ->     # title  # filename
