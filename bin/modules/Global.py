@@ -128,6 +128,9 @@ class Global(AbstractModule):
                             self.add_message_to_queue(obj=self.obj, queue='Item')
                             self.processed_item += 1
 
+                            if self.obj.is_crawled():
+                                self.add_message_to_queue(obj=self.obj, queue='Indexers')
+
                             print(self.obj.id)
                             if r_result:
                                 return self.obj.id
@@ -136,18 +139,25 @@ class Global(AbstractModule):
                 if self.obj.exists():
                     self.add_message_to_queue(obj=self.obj, queue='Item')
                     self.processed_item += 1
+
+                    if self.obj.is_crawled():
+                        self.add_message_to_queue(obj=self.obj, queue='Indexers')
                 else:
                     self.logger.info(f"Empty Item: {message} not processed")
 
-        elif self.obj.type == 'message' or self.obj.type == 'ocr':  # TODO TO Configure in ail_core
+        elif self.obj.type == 'message':
+            self.add_message_to_queue(obj=self.obj, queue='Item')
+            self.add_message_to_queue(obj=self.obj, queue='Indexers')
+        elif self.obj.type == 'ocr':
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':
             self.add_message_to_queue(obj=self.obj, queue='Image', message=message)
             self.add_message_to_queue(obj=self.obj, queue='Images', message=message)
         elif self.obj.type == 'title':
             self.add_message_to_queue(obj=self.obj, queue='Titles', message=message)
+            self.add_message_to_queue(obj=self.obj, queue='Indexers', message=message)
         elif self.obj.type == 'file-name':
-            pass
+            self.add_message_to_queue(obj=self.obj, queue='Indexers', message=message)
         elif self.obj.type == 'pdf':
             return None
         else:

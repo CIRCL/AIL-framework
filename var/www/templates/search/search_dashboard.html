@@ -9,6 +9,7 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    {% include 'objects/block_obj_css.html' %}
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -18,96 +19,535 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 
+    <style>
+    .scope-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .scope-icon img {
+      max-width: 16px;
+      max-height: 16px;
+      display: block;
+    }
+
+    .scope-icon i {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .scope-icon img,
+    .scope-icon i {
+      opacity: 0.75;
+    }
+
+    label:hover .scope-icon img,
+    label:hover .scope-icon i {
+      opacity: 1;
+    }
+    </style>
+
 </head>
 <body>
 
 	{% include 'nav_bar.html' %}
 
-	<div class="container-fluid">
-		<div class="row">
 
-			{% include 'sidebars/sidebar_search.html' %}
+<form method="GET" action="{{ url_for('search_b.search_dashboard') }}" id="searchForm", onsubmit="combineScopes()">
 
-			<div class="col-12 col-lg-10" id="core_content">
+  <div class="container-fluid">
+    <div class="row">
 
-                <div id="search_crawled">
-                    {% include 'search/block_crawled_search.html' %}
-                </div>
+      <!-- =======================
+           SIDEBAR (filters only)
+           ======================= -->
+      <aside class="col-md-3 col-xl-2 border-right bg-light py-3"
+             style="min-height: 100vh; position: sticky; top: 0;">
 
-                <div id="search_domains_name">
-                    {% include 'domains/block_domains_name_search.html' %}
-                </div>
+        <h6 class="text-uppercase text-muted mb-3">Search scope</h6>
 
-                <div id="search_titles">
-                    {% include 'title/block_titles_search.html' %}
-                </div>
+        <div class="mb-2">
+          <a href="#" class="small" onclick="setAllScopes(true); return false;">All</a>
+          <span class="text-muted mx-1">·</span>
+          <a href="#" class="small" onclick="setAllScopes(false); return false;">None</a>
+        </div>
 
-                <div id="search_description_images">
-                    {% include 'search/block_description_images_search.html' %}
-                </div>
-
-                <hr class="my-6">
-
-                <div id ="search_chats">
-                    {% include 'search/block_chats_search.html' %}
-                </div>
-
-                <div class="my-4" id="search_usernames">
-                    {% with subtypes=username_subtypes %}
-                        {% include 'username/block_usernames_search.html' %}
-                    {% endwith %}
-                </div>
-
-
-{#            TODO SEARCH CHATS / MESSAGES #}
-
-{#            TODO BUTTON with anchor ??? #}
-
-
-                <div id="search_mails">
-                    {% include 'mail/block_mails_search.html' %}
-                </div>
-
-{#                {% include 'cve/block_cve_search.html' %}#}
-
-                <div id="search_gtrackers">
-                    {% include 'block_passive_ssh_search.html' %}
-                </div>
-
-                <div id="search_gtrackers">
-                    {% include 'gtracker/block_gtrackers_search.html' %}
-                </div>
-
-                <div id="search_filenames">
-                    {% include 'file-name/block_file_name_search.html' %}
-                </div>
-
-
-
+        <!-- CHATS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted"><i class="far fa-comments"></i> Chats</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('chats', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('chats', false); return false;">None</a>
             </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item chats" type="checkbox" id="scope_discord"
+                   name="scope" value="cdiscord"
+                   {% if "cdiscord" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_discord">
+                <span class="scope-icon mr-2">
+                    <i class="fab fa-discord"></i>
+                </span>
+
+                Discord
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item chats" type="checkbox" id="scope_matrix"
+                   name="scope" value="cmatrix"
+                   {% if "cmatrix" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_matrix">
+                <span class="scope-icon mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 256 256"><path fill="currentColor" d="M72 216a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V40a8 8 0 0 1 8-8h24a8 8 0 0 1 0 16H48v160h16a8 8 0 0 1 8 8M216 32h-24a8 8 0 0 0 0 16h16v160h-16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-32 88a32 32 0 0 0-56-21.13a31.93 31.93 0 0 0-40.71-6.15A8 8 0 0 0 72 96v64a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0Z"/></svg>
+                </span>
+
+                Matrix
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item chats" type="checkbox" id="scope_telegram"
+                   name="scope" value="ctelegram"
+                   {% if "ctelegram" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_telegram">
+                <span class="scope-icon mr-2">
+                    <i class="fab fa-telegram"></i>
+                </span>
+
+                Telegram
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- CRAWLED DOMAINS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted"><i class="fas fa-spider"></i> Crawled domains</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('domains', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('domains', false); return false;">None</a>
+            </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_web"
+                   name="scope" value="web"
+                   {% if "web" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_web">
+                <span class="scope-icon mr-2">
+                  <i class="fab fa-html5"></i>
+                </span>
+
+                Web (clearnet)
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_onion"
+                   name="scope" value="onion"
+                   {% if "onion" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_onion">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-user-secret"></i>
+                </span>
+
+                Tor (.onion)
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_i2p"
+                   name="scope" value="i2p"
+                   {% if "i2p" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_i2p">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-user-secret"></i>
+                </span>
+
+                I2P
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- HTML TITLES -->
+        <div class="mb-3">
+          <strong class="small text-uppercase text-muted">Web pages</strong>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_html_titles"
+                   name="scope" value="title"
+                   {% if "title" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_html_titles">
+                <span class="scope-icon mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10.5 20V7H5V4h14v3h-5.5v13z"/></svg>
+                </span>
+
+                Titles
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- FILENAMES -->
+        <div class="mb-3">
+          <strong class="small text-uppercase text-muted">Files</strong>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_filenames"
+                   name="scope" value="filename"
+                   {% if "filename" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_filenames">
+                <span class="scope-icon mr-2">
+                    <i class="far fa-file"></i>
+                </span>
+
+                Filenames
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- AI DESCRIPTIONS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted">AI descriptions</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('ai_description', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('ai_description', false); return false;">None</a>
+            </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_images"
+                   name="scope" value="desc-img"
+                   {% if "desc-img" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_ai_description_images">
+                <span class="scope-icon mr-2">
+                    <i class="far fa-image"></i>
+                </span>
+
+                Images
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_screenshots"
+                   name="scope" value="desc-screen"
+                   {% if "desc-screen" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_ai_description_screenshots">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-image"></i>
+                </span>
+
+                Screenshots
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_domains"
+                   name="scope" value="desc-dom"
+                   {% if "desc-dom" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label" for="scope_ai_description_domains">Domains</label>
+          </div>
+        </div>
+
+        <div class="text-muted small mt-3">
+          Tip: If no scope is selected, treat it as “All”.
+        </div>
+
+      </aside>
+
+      <!-- =======================
+           SEARCH BAR
+           ======================= -->
+      <main class="col-md-9 col-xl-10 py-3">
+
+        <div class="row align-items-center mt-2">
+          <div class="col">
+            <div class="input-group input-group-lg">
+              <input type="text"
+                     class="form-control"
+                     name="q"
+                     value="{{ request.args.get('q','') }}"
+                     placeholder="Search chats, domains, titles, filenames…">
+
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search"></i> Search
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <span class="col-auto text-center mt-1">
+            <i class="fa-solid fa-circle-info fa-2x"
+               style="color: #c0bfbc; cursor: help;"
+               onmouseenter="show_search_helper_tooltip(this)"
+               onmouseleave="hide_obj_tooltip(this)">
+            </i>
+          </span>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between my-2 flex-wrap">
+
+          <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" role="group" aria-label="Sort order">
+            <label class="btn btn-outline-secondary {% if sort == 'recent' %}active{% endif %}">
+              <input type="radio" name="sort" value="recent" autocomplete="off"
+                     {% if sort == 'recent' or not sort %}checked{% endif %}>
+              Most recent
+            </label>
+
+            <label class="btn btn-outline-secondary {% if sort == 'best' %}active{% endif %}">
+              <input type="radio" name="sort" value="best" autocomplete="off"
+                     {% if sort == 'best' %}checked{% endif %}>
+              Best match
+            </label>
+          </div>
+
+          <!-- MORE FILTERS -->
+          <div class="mt-2 mt-sm-0 d-flex align-items-center">
+            <a class="btn btn-sm btn-link p-0 mr-3"
+               data-toggle="collapse"
+               href="#moreFilters"
+               role="button"
+               aria-controls="moreFilters">
+              More filters <i class="fa-solid fa-chevron-down ml-1"></i>
+            </a>
+
+            <a class="btn btn-sm btn-outline-primary"
+               href="{{ url_for('search_b.search_advanced') }}">
+              <i class="fa-solid fa-sliders mr-1"></i>
+              Advanced search
+              <span class="text-dark">
+                <i class="fas fa-envelope"></i>
+                <i class="fa-solid fa-at"></i>
+                <i class="fas fa-user"></i>
+              </span>
+              <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:25px;">
+            </a>
+          </div>
 
         </div>
+
+        <div class="collapse mt-2 {% if request.args.get('from') or request.args.get('to') %}show{% endif %}" id="moreFilters">
+          <div class="card card-body">
+
+            <div class="form-row align-items-end">
+              <div class="col-md-4">
+                <label class="small text-muted mb-1" for="last_seen_from">Last seen (from)</label>
+                <input type="date" class="form-control"
+                       id="last_seen_from"
+                       name="from"
+                       value="{{ request.args.get('from','') }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="small text-muted mb-1" for="last_seen_to">Last seen (to)</label>
+                <input type="date" class="form-control"
+                       id="last_seen_to"
+                       name="to"
+                       value="{{ request.args.get('to','') }}">
+              </div>
+
+              <div class="col-md-4">
+                <div class="custom-control custom-checkbox mb-1">
+                  <input type="checkbox" class="custom-control-input"
+                         id="use_last_seen"
+                         name="use_last_seen" value="1"
+                         {% if request.args.get('use_last_seen') %}checked{% endif %}>
+                </div>
+                <small class="text-muted">Off by default</small>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <input type="hidden" name="scopes" id="scopes">
+
+</form>
+
+{#        <small class="text-muted d-block mt-2">#}
+{#          Examples: <code>@username</code>, <code>example.onion</code>, <code>invoice.pdf</code>, <code>ransomware</code>#}
+{#        </small>#}
+
+        <!-- Optional: show selected scopes as chips -->
+        {% if selected_scopes and selected_scopes|length < all_scopes|length %}
+          <div class="mt-3">
+            <span class="text-muted mr-2">Searching in:</span>
+            {% for s in selected_scopes %}
+              <span class="badge badge-secondary mr-1 mb-1">{{ scope_human[s] }}</span>
+            {% endfor %}
+            <a class="small ml-2" href="{{ url_for('search_b.search_dashboard', q=request.args.get('q','')) }}">Reset</a>
+          </div>
+        {% endif %}
+
+
+    {% if result %}
+            {% set endpoint_url = url_for('search_b.search_dashboard') + "?q=" + to_search + "&sort=" + sort %}
+            {% if last_seen_from %}
+                {% set endpoint_url = endpoint_url + "&from=" + last_seen_from %}
+            {% endif %}
+            {% if last_seen_to %}
+                {% set endpoint_url = endpoint_url + "&to=" + last_seen_to %}
+            {% endif %}
+            {% if indexes_str %}
+                {% set endpoint_url = endpoint_url + "&scopes=" + indexes_str %}
+            {% endif %}
+            {% include 'search/pagination.html' %}
+            <div class="sticky-top mb-2" style="top: 1px; z-index: 1020;">
+                {% include 'objects/image/block_blur_img_slider.html' %}
+            </div>
+
+        <!-- RESULTS -->
+        {% for obj in result %}
+            {% if obj.type == 'message' %}
+                {% with message=obj %}
+                    {% include 'chats_explorer/block_message.html' %}
+                {% endwith %}
+            {% elif obj.type == 'domain' or obj.type == 'image' or obj.type == 'screenshot' %}
+                <div class="card mb-2">
+                    <div class="card-header bg-dark">
+    {#                TODO URL   #}
+                        <h5 class="text-white text-center">{{ obj['url'] }} &nbsp; <small><a target="_blank" href="{{ obj['link'] }}">{{ obj['id'] }}</a></small></h5>
+                    </div>
+                    <div class="card-body py-1">
+                        <div>
+                            <h5>
+                                {% for tag in obj['tags'] %}
+                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                {% endfor %}
+                            </h5>
+                        </div>
+
+                        <pre class="border">{{ obj['result'] }}</pre>
+
+                        <div class="text-center">
+                            {% if obj['tags_safe'] or obj['is_tags_safe'] %}
+                                {% if obj['type'] == 'image' %}
+                                    <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
+                                {% elif obj['type'] == 'screenshot' or 'domain' in obj %}
+                                    <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
+                                {% endif %}
+                            {% else %}
+                                <span class="my-2 fa-stack fa-2x">
+                                    <i class="fas fa-stack-1x fa-image"></i>
+                                    <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+{#                TODO MODIFY ME TO SHOW ALL DOMAINS  that matches "domains_items" #}
+            {% elif obj.type == 'item' %}
+                <div class="card mb-2">
+                    <div class="card-header bg-dark">
+    {#                   TODO URL   #}
+                        <h5 class="text-white text-center">{{ obj['url'] }} &nbsp; <small><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{ obj['id'] }}">{{ obj['id'] }}</a></small></h5>
+                    </div>
+                    <div class="card-body py-1">
+                        <div>
+                            <h5>
+                                {% for tag in obj['tags'] %}
+                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                {% endfor %}
+                            </h5>
+                        </div>
+
+                        <pre class="border">{{ obj['result'] }}</pre>
+
+                    </div>
+                </div>
+            {% elif obj.type == 'title' %}
+                {% include 'objects/title/block_title.html' %}
+            {% elif obj.type == 'file-name' %}
+                {% include 'objects/file-name/block_file_name.html' %}
+            {% elif obj.type == 'user-account' %}
+                {% include 'chats_explorer/block_user_account.html' %}
+            {% elif obj.type == 'chat' %}
+                {% include 'chats_explorer/block_chat.html' %}
+            {% else %}
+                {{ obj }}
+            {% endif %}
+
+        {% endfor %}
+
+            {% include 'search/pagination.html' %}
+    {% endif %}
+
+
+      </main>
+
     </div>
+  </div>
+
 
 <script>
-    $(document).ready(function(){
-        $("#page-search").addClass("active");
-        $("#nav_explorer_chat").addClass("active");
+$(document).ready(function(){
+    $("#page-search").addClass("active");
+});
+
+
+  function setAllScopes(on) {
+    document.querySelectorAll('.scope-item').forEach(cb => cb.checked = on);
+  }
+
+  function toggleGroup(groupClass, on) {
+    document.querySelectorAll('.scope-item.' + groupClass).forEach(cb => cb.checked = on);
+  }
+
+  {% if not selected_scopes %}
+    setAllScopes(true);
+  {% endif %}
+
+  function combineScopes() {
+    const scopes = Array.from(
+      document.querySelectorAll('input[name="scope"]:checked')
+    ).map(i => i.value);
+
+    document.getElementById('scopes').value = scopes.join(',');
+    document.querySelectorAll('input[name="scope"]').forEach(i => i.disabled = true);
+
+    // avoid empty last_seen_from / last_seen_to
+    const last_seen_from = document.getElementById('last_seen_from');
+    if (!last_seen_from.value) {
+        last_seen_from.disabled = true;
+    }
+    const last_seen_to = document.getElementById('last_seen_to');
+    if (!last_seen_to.value) {
+        last_seen_to.disabled = true;
+    }
+
+  }
+
+
+  $('#moreFilters').on('show.bs.collapse', function () {
+  $(this).prev().find('.fa-chevron-down')
+    .removeClass('fa-chevron-down')
+    .addClass('fa-chevron-up');
+  });
+  $('#moreFilters').on('hide.bs.collapse', function () {
+    $(this).prev().find('.fa-chevron-up')
+      .removeClass('fa-chevron-up')
+      .addClass('fa-chevron-down');
   });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 </body>

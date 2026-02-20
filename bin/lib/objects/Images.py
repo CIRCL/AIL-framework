@@ -5,6 +5,7 @@ import base64
 import magic
 import os
 import sys
+import time
 
 from hashlib import sha256
 from io import BytesIO
@@ -120,7 +121,7 @@ class Image(AbstractDaterangeObject):
         global_id = self.get_global_id()
         content = self.get_description()
         if content:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
         else:
             return None
 
@@ -155,6 +156,7 @@ class Image(AbstractDaterangeObject):
             os.makedirs(dirname)
         with open(filepath, 'wb') as f:
             f.write(content)
+        # self._create()  TODO ??? NEEDED FOR NB IMAGES
 
 def get_screenshot_dir():
     return IMAGE_FOLDER

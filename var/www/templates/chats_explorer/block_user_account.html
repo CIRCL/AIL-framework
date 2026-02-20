@@ -1,0 +1,76 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+  <a href="{{ obj['link'] }}" class="text-decoration-none text-body">
+    <div class="card-body py-2 px-3">
+      <div class="d-flex align-items-center">
+
+        <!-- Avatar -->
+        <div class="mr-3 d-flex align-items-center justify-content-center" style="width:80px; height:80px;">
+          {% if obj["tags_safe"] %}
+            {% if obj['icon'] %}
+              <img src="{{ url_for('objects_image.image', filename=obj['icon'])}}"
+                   alt="User avatar"
+                   class="obj-avatar object_image"
+                   loading="lazy"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+              <div class="obj-avatar-fallback text-muted" style="display:none;">
+                <i class="far fa-user"></i>
+              </div>
+            {% else %}
+              <div class="obj-avatar-fallback text-muted">
+
+              </div>
+            {% endif %}
+          {% else %}
+            <span class="fa-stack fa-2x">
+              <i class="fas fa-stack-1x fa-image"></i>
+              <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-grow-1">
+
+          <!-- RESULT -->
+          <div class="mb-2 font-weight-normal block-obj-result">
+            {{ obj['result'] }}
+          </div>
+
+          <!-- USER INFO -->
+          <div class="small text-muted">
+            ID: <span class="text-dark">{{ obj['id'] }}</span>
+
+            {% if obj.get('username') and obj['username'].get('id') %}
+              · @{{ obj['username']['id'] }}
+              {% if obj['username'].get('subtype') %}
+                <span class="text-muted">({{ obj['username']['subtype'] }})</span>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          {% if obj.get('info') %}
+            <div class="mt-1 text-muted block-obj-info">
+              {{ obj['info'] }}
+            </div>
+          {% endif %}
+
+          <div class="text-muted block-obj-meta mt-1">
+            Chats <strong>{{ obj['nb_chats'] }}</strong> ·
+            {{ obj['first_seen'] }} → {{ obj['last_seen'] }}
+          </div>
+
+        </div>
+
+        <!-- Right column -->
+        <div class="obj-type-col text-right ml-3">
+          <div class="obj-type-label">
+            <div>{{ obj['type'] }}</div>
+            <div>{{ obj['protocol'] }}</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </a>
+</div>
+

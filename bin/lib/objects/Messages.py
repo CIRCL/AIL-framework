@@ -269,11 +269,13 @@ class Message(AbstractObject):
         else:
             return None
 
-    def get_search_document(self):
+    def get_search_document(self, timestamp=None):
+        if not timestamp:
+            timestamp = self.get_timestamp()
         global_id = self.get_global_id()
         content = self.get_content()
         if content:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
         else:
             return None
 

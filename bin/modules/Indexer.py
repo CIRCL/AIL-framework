@@ -13,7 +13,6 @@ AIL Indexer
 ##################################
 import os
 import sys
-import time
 
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -21,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib.ConfigLoader import ConfigLoader
+# from lib.ConfigLoader import ConfigLoader
 from lib import search_engine
 
 
@@ -35,16 +34,29 @@ class Indexer(AbstractModule):
         Init Instance
         """
         super(Indexer, self).__init__()
-
-        config_loader = ConfigLoader()
-
+        # config_loader = ConfigLoader()
         self.is_enabled_meilisearch = search_engine.is_meilisearch_enabled()
+        if self.is_enabled_meilisearch:
+            search_engine.Engine.init()
 
-    def compute(self, message):
+    # TODO send timestamp in queue ???? -> item
+    # TODO UPDATE ONLY LAST SEEN ON UPDATE ->     # title  # filename
+    def compute(self, message):  # crawled item - message - titles - file-name
         obj = self.get_obj()
         if self.is_enabled_meilisearch and obj:
             if self.obj.type == 'message':
-                search_engine.index_message(obj)
+                # index Message + Chat + UserAccount
+                search_engine.Engine.index_chat_message(message)
+
+            elif self.obj.type == 'item':
+                if self.obj.is_crawled():
+                    search_engine.index_crawled_item(obj)
+
+            elif self.obj.type == 'file-name':
+                search_engine.index_file_name(obj)
+
+            elif self.obj.type == 'title':
+                search_engine.index_title(obj)
 
 
 if __name__ == '__main__':

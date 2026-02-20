@@ -2,19 +2,19 @@
     <div class="card-body py-2">
         <div class="row">
             <div class="col-md-3 text-center px-0">
-                <button class="btn btn-sm btn-secondary" onclick="blur_slider.val(0);blur_images();">
+                <button class="btn btn-sm btn-secondary" type="button" onclick="blur_slider.val(0);blur_images();">
                     <i class="fas fa-eye-slash"></i>
                     <span class="label-icon">Hide</span>
                 </button>
             </div>
             <div class="col-md-6 text-center pl-0 pt-1">
-                <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider" onchange="blur_images();">
+                <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider" oninput="blur_images();">
                 <div class="text-center text-danger" id="unblur_unsafe_warning" style="display: none"><i class="fa-solid fa-warning fa-2x"></i><b> Unsafe Content</b></div>
             </div>
             <div class="col-md-3 text-center">
-                <button class="btn btn-sm btn-secondary" id="btn_unblur_img" onclick="blur_slider.val(15);blur_images();">
+                <button class="btn btn-sm btn-secondary" type="button" id="btn_unblur_img" onclick="blur_slider.val(15);blur_images();">
                     <i class="fas fa-image"></i>
-                    <span class="label-icon">Full</span>
+                    <span class="label-icon">Reveal</span>
                 </button>
             </div>
         </div>

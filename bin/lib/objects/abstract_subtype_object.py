@@ -73,6 +73,16 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         else:
             return last_seen
 
+    def get_first_seen_timestamp(self):
+        first_seen = self.get_first_seen()
+        if first_seen:
+            return Date.convert_str_date_to_epoch(first_seen)
+
+    def get_last_seen_timestamp(self):
+        last_seen = self.get_last_seen()
+        if last_seen:
+            return Date.convert_str_date_to_epoch(last_seen)
+
     def get_nb_seen(self):
         nb = r_object.zscore(f'{self.type}_all:{self.subtype}', self.id)
         if not nb:
@@ -286,6 +296,11 @@ class AbstractSubtypeObjects(ABC):
 
     def get_id_iterators_by_subtype(self, subtype):
         return zscan_iter(r_object, f'{self.type}_all:{subtype}')
+
+    def get_iterator(self):
+        for subtype in get_object_all_subtypes(self.type):
+            for obj_id in self.get_id_iterators_by_subtype(subtype):
+                yield self.obj_class(obj_id[0], subtype)
 
     def get_metas(self, subtype, obj_ids, options=set()):
         dict_obj = {}

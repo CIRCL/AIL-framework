@@ -517,6 +517,9 @@ class AbstractObject(ABC):
     def is_children(self):
         return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
 
+    def get_obj_parent(self, obj_type, subtype, obj_id):
+        return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', 'parent')
+
     def get_parent(self):
         return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
 

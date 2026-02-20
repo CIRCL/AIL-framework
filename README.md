@@ -230,11 +230,11 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
 ```
     Copyright (C) 2014 Jules Debra
     Copyright (c) 2021 Olivier Sagit
-    Copyright (C) 2014-2024 CIRCL - Computer Incident Response Center Luxembourg (c/o smile, security made in Lëtzebuerg, Groupement d'Intérêt Economique)
+    Copyright (C) 2014-2026 CIRCL - Computer Incident Response Center Luxembourg
     Copyright (c) 2014-2024 Raphaël Vinot
-    Copyright (c) 2014-2024 Alexandre Dulaunoy
+    Copyright (c) 2014-2026 Alexandre Dulaunoy
     Copyright (c) 2016-2024 Sami Mokaddem
-    Copyright (c) 2018-2024 Thirion Aurélien
+    Copyright (c) 2018-2026 Thirion Aurélien
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by

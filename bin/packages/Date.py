@@ -15,6 +15,10 @@ def convert_str_datetime_to_epoch(date_str):
     dt = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=datetime.timezone.utc)
     return int(dt.timestamp())
 
+def convert_str_date_to_epoch(date_str):
+    dt = datetime.datetime.strptime(date_str.replace('-', ''), "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
+
 def get_full_month_str(date_from, date_to):
     # add one day (if last day of the month)
     date_to = date_to + relativedelta(days=+1)

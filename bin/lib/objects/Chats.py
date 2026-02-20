@@ -5,7 +5,6 @@ import os
 import sys
 
 from datetime import datetime
-
 from flask import url_for
 # from pymisp import MISPObject
 
@@ -59,13 +58,26 @@ class Chat(AbstractChatObject):
                 username = username.split(':', 2)[2]
                 return f'https://t.me/{username}'
 
-    def get_chat_instance(self):
-        if self.subtype == '00098785-7e70-5d12-a120-c5cdc1252b2b':
-            return 'telegram'
-        elif self.subtype == 'd2426e3f-22f3-5a57-9a98-d2ae9794e683':
-            return 'discord'
+    def get_search_document(self, timestamp=None):
+        if not timestamp:
+            timestamp = self.get_last_seen_timestamp()
+        global_id = self.get_global_id()
+        username = self.get_username()
+        if not username:
+            username = ''
         else:
-            return self.subtype
+            username = username.split(':', 2)[2]
+        name = self.get_name()
+        if not name:
+            name = ''
+        description = self.get_info()
+        if not description:
+            description = ''
+        content = f'{self.id} {username} {name} {description}'
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
+        else:
+            return None
 
     def get_svg_icon(self):  # TODO
         # if self.subtype == 'telegram':
@@ -115,6 +127,8 @@ class Chat(AbstractChatObject):
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'origin_link' in options:
             meta['origin_link'] = self.get_origin_link()
+        if 'protocol' in options:
+            meta['protocol'] = self.get_protocol()
         return meta
 
     def get_misp_object(self):

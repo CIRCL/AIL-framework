@@ -1,0 +1,48 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+    <a href="{{ obj['link'] }}" class="text-decoration-none text-body">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center">
+
+                <!-- icon -->
+                <div class="mr-3 text-muted d-flex align-items-center justify-content-center"
+                     style="width:42px; height:42px; font-size:1.45rem;">
+                    <i class="far fa-file" style="opacity:0.85;"></i>
+                </div>
+
+                <!-- main content -->
+                <div class="flex-grow-1">
+
+                    <!-- filename -->
+                    <div class="h5 mb-1 font-weight-normal">
+                        {{ obj['result'] | safe }}
+                    </div>
+
+                    <!-- metadata -->
+                    <div class="text-muted block-obj-meta">
+                        Seen <strong>{{ obj['nb_seen'] }}</strong> times ·
+                        First: {{ obj['first_seen'] }} ·
+                        Last: {{ obj['last_seen'] }}
+                    </div>
+
+                    <!-- tags -->
+                    {% if obj['tags'] %}
+                    <div class="mt-1">
+                        {% for tag in obj['tags'] %}
+                            <span class="badge badge-light border mr-1">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- RIGHT COLUMN : TYPE -->
+                <div class="obj-type-col text-right ml-3">
+                    <div class="obj-type-label">
+                        {{ obj['type'] }}{% if obj['subtype'] %}/{{ obj['subtype'] }}{% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </a>
+</div>

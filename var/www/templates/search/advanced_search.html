@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Advanced Search</title>
+	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+
+  <!-- Core CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+
+  <!-- JS -->
+	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
+
+</head>
+<body>
+
+	{% include 'nav_bar.html' %}
+
+	<div class="container-fluid">
+		<div class="row">
+
+			{% include 'sidebars/sidebar_advanced_search.html' %}
+
+			<div class="col-12 col-lg-10" id="core_content">
+
+                <div id="search_mails">
+                    {% include 'mail/block_mails_search.html' %}
+                </div>
+
+                <div id="search_domains_name">
+                    {% include 'domains/block_domains_name_search.html' %}
+                </div>
+
+                <div class="" id="search_usernames">
+                    {% with subtypes=username_subtypes %}
+                        {% include 'username/block_usernames_search.html' %}
+                    {% endwith %}
+                </div>
+
+
+{#                {% include 'cve/block_cve_search.html' %}#}
+
+                <div id="search_passive_ssh">
+                    {% include 'block_passive_ssh_search.html' %}
+                </div>
+
+                <div id="search_gtrackers">
+                    {% include 'gtracker/block_gtrackers_search.html' %}
+                </div>
+
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    $(document).ready(function(){
+        //$("#page-search").addClass("active");
+  });
+
+</script>
+
+</body>
+
+</html>

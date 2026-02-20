@@ -5,6 +5,7 @@ import base64
 import os
 import re
 import sys
+import time
 
 from hashlib import sha256
 from io import BytesIO
@@ -118,7 +119,7 @@ class Screenshot(AbstractObject):
         global_id = self.get_global_id()
         content = self.get_description()
         if content:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
         else:
             return None
 

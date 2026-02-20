@@ -126,8 +126,12 @@ def get_global_stats():
              'users': ail_users.get_nb_users(),
              'objs': {},
              }
-    for obj_type in ail_core.get_all_objects():
+    for obj_type in sorted(ail_core.get_all_objects()):
         nb = ail_objects.get_nb_objects(obj_type)
         if nb:
             stats['objs'][obj_type] = nb
     return stats
+
+if __name__ == '__main__':
+    print(get_global_stats())
+

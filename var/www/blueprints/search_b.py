@@ -22,13 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib import search_engine
-from lib import chats_viewer
-from lib import images_engine
 from lib.objects import SSHKeys
-# from lib import Language
-# from lib import Tag
-# from lib import module_extractor
-# from lib.objects import ail_objects
 
 logger = logging.getLogger()
 
@@ -48,126 +42,57 @@ def log(user_id, index, to_search):
 
 # ============= ROUTES ==============
 
-# @chats_explorer.route("/chats/explorer", methods=['GET'])
-# @login_required
-# @login_read_only
-# def chats_explorer_dashboard():
-#     return
-
 @search_b.route("search", methods=['GET'])
 @login_required
 @login_read_only
 def search_dashboard():
-    protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('search_dashboard.html', protocols=protocols,
+    user_id = current_user.get_user_id()
+    search = request.args.get('q')
+    indexes = request.args.get('scopes')
+    if indexes:
+        indexes_str = indexes
+        indexes = indexes.split(',')
+    else:
+        indexes = []
+        indexes_str = None
+
+    last_seen_from = request.args.get('from')
+    last_seen_to = request.args.get('to')
+
+    page = request.args.get('page', 1)
+
+    sort = request.args.get('sort', 'recent')
+
+    # selected_scopes -> scope_human
+
+    if search:
+        r = search_engine.api_search({'indexes': indexes, 'search': search, 'page': page, 'user_id': user_id,
+                                      'from': last_seen_from, 'to': last_seen_to, 'sort': sort})
+        if r[1] != 200:
+            return create_json_response(r[0], r[1])
+        result, pagination = r[0]
+    else:
+        result = None
+        pagination = None
+
+    return render_template('search_dashboard.html',
+                           bootstrap_label=bootstrap_label,
+                           indexes_str=indexes_str,
+                           selected_scopes=indexes,
+                           to_search=search,
+                           sort=sort,
+                           last_seen_from=last_seen_from,
+                           last_seen_to=last_seen_to,
+                           result=result, pagination=pagination)
+
+# username_subtypes=ail_core.get_object_all_subtypes('username')
+
+@search_b.route("/search/advanced", methods=['GET'])
+@login_required
+@login_read_only
+def search_advanced():
+    return render_template('advanced_search.html',
                            username_subtypes=ail_core.get_object_all_subtypes('username'))
-
-
-@search_b.route("/search/crawled/post", methods=['POST'])
-@login_required
-@login_read_only
-def search_crawled_post():
-    to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type_crawled')
-    page = request.form.get('page', 1)
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    return redirect(
-        url_for('search_b.search_crawled', search=to_search, page=page, index=search_type))
-
-
-@search_b.route("/search/crawled", methods=['GET'])
-@login_required
-@login_read_only
-def search_crawled():
-    user_id = current_user.get_user_id()
-    search = request.args.get('search')
-    index = request.args.get('index', 'tor')
-    page = request.args.get('page', 1)
-
-    r = search_engine.api_search_crawled({'index': index, 'search': search, 'page': page, 'user_id': user_id})
-    if r[1] != 200:
-        return create_json_response(r[0], r[1])
-
-    result, pagination = r[0]
-
-    # TODO icon eye + correlation
-
-    return render_template("search_crawled.html", to_search=search, search_index=index,
-                           bootstrap_label=bootstrap_label,
-                           result=result, pagination=pagination)
-
-@search_b.route("/search/chats/post", methods=['POST'])
-@login_required
-@login_read_only
-def search_chats_post():
-    to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type_chats')
-    page = request.form.get('page', 1)
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    return redirect(url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
-
-
-@search_b.route("/search/chats", methods=['GET'])
-@login_required
-@login_read_only
-def search_chats():
-    user_id = current_user.get_user_id()
-    search = request.args.get('search')
-    index = request.args.get('index', 'telegram')
-    page = request.args.get('page', 1)
-
-    r = search_engine.api_search_chats({'index': index, 'search': search, 'page': page, 'user_id': user_id})
-    if r[1] != 200:
-        return create_json_response(r[0], r[1])
-
-    result, pagination = r[0]
-
-    protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template("search_chats.html", protocols=protocols,
-                           to_search=search, search_index=index,
-                           ollama_enabled=images_engine.is_ollama_enabled(),
-                           bootstrap_label=bootstrap_label,
-                           result=result, pagination=pagination)
-
-@search_b.route("/search/description/images/post", methods=['POST'])
-@login_required
-@login_read_only
-def search_description_images_post():
-    to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type_description_images')
-    page = request.form.get('page', 1)
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    return redirect(url_for('search_b.search_description_images', search=to_search, page=page, index=search_type))
-
-
-@search_b.route("/search/description/images", methods=['GET'])
-@login_required
-@login_read_only
-def search_description_images():
-    user_id = current_user.get_user_id()
-    search = request.args.get('search')
-    index = request.args.get('index', 'domain')
-    page = request.args.get('page', 1)
-
-    r = search_engine.api_search_images({'index': index, 'search': search, 'page': page, 'user_id': user_id})
-    if r[1] != 200:
-        return create_json_response(r[0], r[1])
-
-    result, pagination = r[0]
-    return render_template("search_description_images.html",
-                           to_search=search, search_index=index,
-                           ollama_enabled=images_engine.is_ollama_enabled(),
-                           bootstrap_label=bootstrap_label,
-                           result=result, pagination=pagination)
 
 @search_b.route("/search/passivessh/host/ssh", methods=['GET', 'POST'])
 @login_required

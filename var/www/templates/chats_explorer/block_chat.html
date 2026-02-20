@@ -1,0 +1,79 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+  <a href="{{ obj['link'] }}" class="text-decoration-none text-body">
+    <div class="card-body py-2 px-3">
+      <div class="d-flex align-items-center">
+
+        <!-- Chat avatar -->
+        <div class="mr-3 d-flex align-items-center justify-content-center" style="width:80px; height:80px;">
+          {% if obj["tags_safe"] %}
+            {% if obj['img'] %}
+              <img
+                src="{{ url_for('objects_image.image', filename=obj['img'])}}"
+                alt="Chat icon"
+                class="obj-avatar object_image"
+                loading="lazy"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              >
+              <div class="obj-avatar-fallback text-muted" style="display:none;">
+                <i class="fas fa-user-circle"></i>
+              </div>
+            {% else %}
+              <div class="obj-avatar-fallback text-muted">
+
+              </div>
+            {% endif %}
+          {% else %}
+              <span class="fa-stack fa-2x">
+                <i class="fas fa-stack-1x fa-image"></i>
+                <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
+              </span>
+          {% endif %}
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-grow-1">
+
+          <!-- Highlighted match -->
+          <div class="mb-1 font-weight-normal result-main">
+            {{ obj['result'] }}
+          </div>
+
+          <!-- Chat details -->
+          <div class="small text-muted">
+            ID: <span class="text-dark">{{ obj['id'] }}</span>
+            · Created: {{ obj['created_at'] }}
+            · Subchannels: {{ obj['nb_subchannels'] }}
+          </div>
+
+          <!-- Activity -->
+          <div class="text-muted block-obj-meta mt-1">
+            Users <strong>{{ obj['nb_participants'] }}</strong> ·
+            {{ obj['first_seen'] }} → {{ obj['last_seen'] }}
+          </div>
+
+          <!-- Tags -->
+          {% if obj['tags'] %}
+          <div class="mt-1">
+            {% for tag in obj['tags'] %}
+              <span class="badge badge-light border mr-1">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- Right column type -->
+        <div class="obj-type-col text-right ml-3">
+          <div class="obj-type-label">
+            <div>{{ obj['type'] }}</div>
+            <div>
+                {{ obj['protocol'] }}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </a>
+</div>
+

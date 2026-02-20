@@ -24,10 +24,6 @@ baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
-################################################################################
-################################################################################
-################################################################################
-
 class UserAccount(AbstractSubtypeObject):
     """
     AIL User Object. (strings)
@@ -103,6 +99,24 @@ class UserAccount(AbstractSubtypeObject):
     def set_info(self, info):
         return self._set_field('info', info)
 
+    def get_search_document(self, timestamp=None):
+        if not timestamp:
+            timestamp = self.get_last_seen_timestamp()
+        global_id = self.get_global_id()
+        username = self.get_username()
+        if not username:
+            username = ''
+        else:
+            username = username.split(':', 2)[2]
+        description = self.get_info()
+        if not description:
+            description = ''
+        content = f'{self.id} {username} {description}'
+        if content and timestamp:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
+        else:
+            return None
+
     # def get_created_at(self, date=False):
     #     created_at = self._get_field('created_at')
     #     if date and created_at:
@@ -117,9 +131,15 @@ class UserAccount(AbstractSubtypeObject):
     #                               - subchannel
     #                               - thread
 
+    def get_protocol(self):
+        return ail_core.get_chat_protocol(self.subtype)
+
     def get_chats(self):
         chats = self.get_correlation('chat')['chat']
         return chats
+
+    def get_nb_chats(self):
+        return self.get_nb_correlation('chat')
 
     def get_chat_subchannels(self):
         chats = self.get_correlation('chat-subchannel')['chat-subchannel']
@@ -202,12 +222,18 @@ class UserAccount(AbstractSubtypeObject):
         #     meta['created_at'] = self.get_created_at(date=True)
         if 'chats' in options:
             meta['chats'] = self.get_chats()
+        if 'nb_chats' in options:
+            meta['nb_chats'] = self.get_nb_chats()
         if 'subchannels' in options:
             meta['subchannels'] = self.get_chat_subchannels()
         if 'threads' in options:
             meta['threads'] = self.get_chat_threads()
         if 'years' in options:
             meta['years'] = self.get_years()
+        if 'protocol' in options:
+            meta['protocol'] = self.get_protocol()
+        if 'tags_safe' in options:
+            meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
 
     def get_misp_object(self):

@@ -843,7 +843,6 @@ def _create_roles():
     r_serv_db.sadd('ail:roles', 'read_only')
     r_serv_db.sadd('ail:roles', 'user')
     r_serv_db.sadd('ail:roles', 'user_no_api')
-    r_serv_db.sadd('ail:roles', 'contributor')
 
 def get_default_role():
     return 'read_only'

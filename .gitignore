@@ -55,10 +55,12 @@ configs/d4client_passiveDNS_conf/uuid
 # Trackers
 bin/trackers/yara/custom-rules/*
 
+# Tools
+tools
+
 # Helper
 tools/gen_cert/rootCA.*
 tools/gen_cert/server.*
-
 
 # Pystemon archives
 pystemon/archives

@@ -100,22 +100,11 @@ class Username(AbstractSubtypeObject):
     ############################################################################
     ############################################################################
 
-def get_all_subtypes():
-    #return ail_core.get_object_all_subtypes(self.type)
-    return ['telegram', 'twitter', 'jabber']
-
-def get_all_usernames():
-    users = {}
-    for subtype in get_all_subtypes():
-        users[subtype] = get_all_usernames_by_subtype(subtype)
-    return users
-
 def get_all_usernames_by_subtype(subtype):
     return get_all_id('username', subtype)
 
 # TODO FILTER NAME + Key + mail
 def sanitize_username_name_to_search(name_to_search, subtype): # TODO FILTER NAME
-
     return name_to_search
 
 def search_usernames_by_name(name_to_search, subtype, r_pos=False):

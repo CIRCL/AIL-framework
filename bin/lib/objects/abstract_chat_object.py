@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects
-from lib.ail_core import unpack_correl_objs_id, zscan_iter ################
+from lib.ail_core import unpack_correl_objs_id, zscan_iter, get_chat_protocol
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
 from packages import Date
@@ -54,9 +54,11 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     # last imported/updated
 
     # TODO get instance
-    # TODO get protocol
     # TODO get network
     # TODO get address
+
+    def get_protocol(self):
+        return get_chat_protocol(self.subtype)
 
     def get_chat(self):  # require ail object TODO ##
         if self.type != 'chat':

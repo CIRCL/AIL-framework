@@ -72,6 +72,16 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return last_seen
 
+    def get_first_seen_timestamp(self):
+        first_seen = self._get_field('first_seen')
+        if first_seen:
+            return Date.convert_str_date_to_epoch(first_seen)
+
+    def get_last_seen_timestamp(self):
+        last_seen = self._get_field('last_seen')
+        if last_seen:
+            return Date.convert_str_date_to_epoch(last_seen)
+
     def get_nb_seen(self): # TODO REPLACE ME -> correlation image chats
         return self.get_nb_correlation('item') + self.get_nb_correlation('message')
 
@@ -120,6 +130,14 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         for date in Date.get_previous_date_list(6):
             sparkline.append(self.get_nb_seen_by_date(date))
         return sparkline
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_content()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'first': int(self.get_first_seen_timestamp()), 'last': int(self.get_last_seen_timestamp())}
+        else:
+            return None
 
     def get_content(self, r_type='str'):
         if r_type == 'str':

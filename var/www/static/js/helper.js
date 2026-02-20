@@ -130,7 +130,7 @@ function show_search_helper_tooltip(container) {
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of 10 words can be used in a search query.</li></ul></div>";
+        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of <b>10 words</b> can be used in a search query.</li></ul></div>";
 
         container.popover({
             content: c_helper,

@@ -1,7 +1,7 @@
 <div class="my-2">
 	<div class="d-flex justify-content-center">
 		<nav class="mt-2" aria-label="...">
-			<ul class="pagination">
+			<ul class="pagination mb-2">
 				<li class="page-item {% if pagination['page']==1 %}disabled{%endif%}">
 					<a class="page-link" href="{{ endpoint_url }}&page={{pagination['page']-1}}">Previous</a>
 				</li>
@@ -43,6 +43,5 @@
 				<span class="badge badge-light">{{ pagination['total'] }}</span>
 			 </span>
 		</div>
-		<br>
 	{%endif%}
 </div>

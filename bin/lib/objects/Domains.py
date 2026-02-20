@@ -32,10 +32,9 @@ r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
+def _get_item_domain(item_id):
+    return item_id[19:-36]
 
-################################################################################
-################################################################################
-################################################################################
 
 class Domain(AbstractObject):
     """
@@ -207,6 +206,35 @@ class Domain(AbstractObject):
             history.append(dict_history)
         return history
 
+    def get_timestamps_up(self):
+        history_tuple = r_crawler.zrange(f'domain:history:{self.id}', 0, -1, withscores=True)
+        timestamps = []
+        if history_tuple:
+            for root_id, epoch in history_tuple:
+                try:
+                    int(root_id)
+                except ValueError:
+                    timestamps.append(epoch)
+        return timestamps
+
+    # retrieve timestamp from item id
+    def get_item_timestamp(self, item_id):
+        # check if item is crawling root
+        timestamp = r_crawler.zscore(f'domain:history:{self.id}', item_id)
+        if timestamp:
+            return timestamp
+        else:
+            parent_id = self.get_obj_parent('item', '', item_id)
+            parent_domain = _get_item_domain(parent_id)
+            if parent_id and parent_domain == self.id:
+                return self.get_item_timestamp(parent_id)
+        return None
+
+        # check if item is core
+
+        # else get father
+
+
     # TODO ADD RANDOM OPTION
     def get_screenshot(self):
         last_item = self.get_last_item_root()
@@ -369,7 +397,7 @@ class Domain(AbstractObject):
         global_id = self.get_global_id()
         content = self.get_description()
         if content:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
         else:
             return None
 

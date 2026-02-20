@@ -168,8 +168,8 @@ class ChatServiceInstance:
     def exists(self):
         return r_obj.exists(f'chatSerIns:{self.uuid}')
 
-    def get_protocol(self): # return objects ????
-        return r_obj.hget(f'chatSerIns:{self.uuid}', 'protocol')
+    def get_protocol(self):
+        return r_db.hget(f'chatSerIns:{self.uuid}', 'protocol')
 
     def get_network(self): # return objects ????
         network = r_obj.hget(f'chatSerIns:{self.uuid}', 'network')
@@ -361,6 +361,11 @@ def get_nb_chats_stats():
         for chat_id in ChatServiceInstance(instance_uuid).get_chats():
             nb[protocol] += 1
     return nb
+
+def get_chats_iterator():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            yield Chats.Chat(chat_id, instance_uuid)
 
 #######################################################################################
 
@@ -1037,7 +1042,7 @@ def api_get_chats_selector():
     for instance_uuid in get_chat_service_instances():
         for chat_id in ChatServiceInstance(instance_uuid).get_chats():
             chat = Chats.Chat(chat_id, instance_uuid)
-            selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_chat_instance()}: {chat.get_label()}'})
+            selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_protocol()}: {chat.get_label()}'})
     return selector
 
 def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True, message=None, heatmap=False):

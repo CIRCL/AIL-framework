@@ -21,7 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from importer.feeders.Default import DefaultFeeder
-from lib.ail_core import get_chat_instance_name
+from lib.ail_core import get_chat_protocol
 from lib.objects import Authors
 from lib.objects.Chats import Chat
 from lib.objects import ChatSubChannels
@@ -169,8 +169,8 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
             self.obj = Images.Image(self.json_data['data-sha256'])
         elif obj_type == 'text':
             d = self.get_date()
-            instance_name = get_chat_instance_name(self.get_chat_instance_uuid())
-            item_id = f'{instance_name}/{d[0:4]}/{d[4:6]}/{d[6:8]}/{self.json_data["data-sha256"]}.gz'
+            protocol_name = get_chat_protocol(self.get_chat_instance_uuid())
+            item_id = f'{protocol_name}/{d[0:4]}/{d[4:6]}/{d[6:8]}/{self.json_data["data-sha256"]}.gz'
             self.obj = Items.Item(item_id)
         elif obj_type == 'pdf':
             self.obj = PDFs.PDF(self.json_data['data-sha256'])

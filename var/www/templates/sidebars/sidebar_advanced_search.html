@@ -6,12 +6,11 @@
     </button>
 
     <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
-
         <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100 mb-4">
             <li class="nav-item">
-                <a class="nav-link" href="#search_crawled">
-                    <i class="fas fa-spider"></i>
-                    <span>Tor and Web Search</span>
+                <a class="nav-link" href="#search_mails">
+                    <i class="fas fa-envelope"></i>
+                    <span>Mail Search</span>
                 </a>
             </li>
 
@@ -24,20 +23,6 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#search_titles">
-                    <i class="fas fa-heading"></i>
-                    <span>Title Search</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a class="nav-link" href="#search_chats">
-                    <i class="fas fa-comments"></i>
-                    <span>Chats Search</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
                 <a class="nav-link" href="#search_usernames">
                     <i class="fas fa-user"></i>
       	            <span>Username Search</span>
@@ -45,12 +30,11 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#search_mails">
-                    <i class="fas fa-envelope"></i>
-                    <span>Mail Search</span>
-                </a>
+                <a class="nav-link" href="#search_passive_ssh">
+                    <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:20px;">
+      	            <span>Passive SSH Search</span>
+      	        </a>
             </li>
-
 
             <li class="nav-item">
                 <a class="nav-link" href="#search_gtrackers">
@@ -59,21 +43,12 @@
                 </a>
             </li>
 
-            <li class="nav-item">
-                <a class="nav-link" href="#search_filenames">
-                    <i class="far fa-file"></i>
-                    <span>File Name Search</span>
-                </a>
-            </li>
+        </ul>
 
-          </ul>
+    </nav>
+</div>
 
-
-
-      	</nav>
-      </div>
-
-      <script>
+<script>
       function toggle_sidebar(){
       	if($('#nav_menu').is(':visible')){
       		$('#nav_menu').hide();
@@ -87,4 +62,4 @@
       		$('#core_content').addClass('col-lg-10')
       	}
       }
-      </script>
+</script>
