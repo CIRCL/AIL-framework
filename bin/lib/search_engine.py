@@ -173,7 +173,8 @@ class MeiliSearch:
         self.client.index(index).delete_document(doc_id)
 
     def _delete(self, index):
-        self.client.index(index).delete_all_documents()
+        # self.client.index(index).delete_all_documents()
+        self.client.delete_index(index)
 
     def _delete_all(self):
         indexes = self.client.get_indexes()
