@@ -42,21 +42,20 @@ class Indexer(AbstractModule):
     # TODO send timestamp in queue ???? -> item
     # TODO UPDATE ONLY LAST SEEN ON UPDATE ->     # title  # filename
     def compute(self, message):  # crawled item - message - titles - file-name
-        obj = self.get_obj()
-        if self.is_enabled_meilisearch and obj:
+        if self.is_enabled_meilisearch and self.obj:
             if self.obj.type == 'message':
                 # index Message + Chat + UserAccount
-                search_engine.Engine.index_chat_message(message)
+                search_engine.Engine.index_chat_message(self.obj)
 
             elif self.obj.type == 'item':
                 if self.obj.is_crawled():
-                    search_engine.index_crawled_item(obj)
+                    search_engine.index_crawled_item(self.obj)
 
             elif self.obj.type == 'file-name':
-                search_engine.index_file_name(obj)
+                search_engine.index_file_name(self.obj)
 
             elif self.obj.type == 'title':
-                search_engine.index_title(obj)
+                search_engine.index_title(self.obj)
 
 
 if __name__ == '__main__':
