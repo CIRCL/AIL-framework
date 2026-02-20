@@ -157,6 +157,14 @@ class MeiliSearch:
         #     "exactness"
         self.client.index(index_name).update_ranking_rules(
             ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'])
+        # fix issue attributesToSearchOn fails on never-populated index
+        # https://github.com/meilisearch/meilisearch/issues/5921
+        dummy_document = {'uuid': 'dummy', 'content': 'dummy', 'last': 0, 'id': 'dummy'}
+        if index_name not in MESSAGES_INDEXES:
+            dummy_document['first'] = 0
+        self.add(index_name, dummy_document)
+        self.remove(index_name, 'dummy')
+
 
     def setup_indexes_searchable_filterable_sortable(self):
         for index_name in get_indexes_names():
