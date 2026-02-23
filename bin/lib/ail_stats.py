@@ -53,7 +53,7 @@ def get_feeders_dashboard_full():
     # print(timestamp)
     f_dashboard = {}
 
-    feeders = get_feeders()
+    feeders = sorted(get_feeders())
     d_time = []
     for i in range(timestamp - 30*20, timestamp + 30, 30):
         t_feeders = get_feeders_by_time(i)

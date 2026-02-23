@@ -143,6 +143,9 @@ block-obj {
     word-break: break-word;
     overflow-wrap: anywhere;
     line-height: 1.25rem;
+    /* ~5-6 lines */
+    /*max-height: 7rem;
+    overflow: hidden;*/
 }
 
 .block-obj-info {
@@ -167,5 +170,35 @@ block-obj {
   color: #495057;
   font-weight: 600;
   letter-spacing: .3px;
+}
+
+.domain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.domain-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #c9ced4;
+  border-radius: 999px;
+  background: #fff;
+  color: #495057;
+  font-size: 0.78rem;
+  text-decoration: none;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.domain-chip:hover {
+  text-decoration: none;
+  border-color: #9aa2aa;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+
+.crawled-item-url {
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 </style>

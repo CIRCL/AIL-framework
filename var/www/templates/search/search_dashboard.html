@@ -426,24 +426,7 @@
                 {% include 'crawler/block_domain_description.html' %}
 {#                TODO MODIFY ME TO SHOW ALL DOMAINS  that matches "domains_items" #}
             {% elif obj.type == 'item' %}
-                <div class="card mb-2">
-                    <div class="card-header bg-dark">
-    {#                   TODO URL   #}
-                        <h5 class="text-white text-center">{{ obj['url'] }} &nbsp; <small><a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{ obj['id'] }}">{{ obj['id'] }}</a></small></h5>
-                    </div>
-                    <div class="card-body py-1">
-                        <div>
-                            <h5>
-                                {% for tag in obj['tags'] %}
-                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                {% endfor %}
-                            </h5>
-                        </div>
-
-                        <pre class="border">{{ obj['result'] }}</pre>
-
-                    </div>
-                </div>
+                {% include 'objects/item/block_crawled_result.html' %}
             {% elif obj.type == 'title' %}
                 {% include 'objects/title/block_title.html' %}
             {% elif obj.type == 'file-name' %}

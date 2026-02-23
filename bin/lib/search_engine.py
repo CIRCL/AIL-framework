@@ -486,7 +486,9 @@ def api_search(data):
                 #
                 domains_items = get_crawled_content_domains_items(index, res['uuid'])
                 obj = Items.Item(domains_items[next(iter(domains_items))])
-                meta = obj.get_meta(options={'url', 'crawler'})
+                meta = obj.get_meta(options={'link', 'crawler'})
+                # TODO change default separator
+                meta['date'] = meta['date'].replace('/', '-')
                 meta['domains_items'] = domains_items
             else:
                 obj_type, subtype, obj_id = res['id'].split(':', 2)

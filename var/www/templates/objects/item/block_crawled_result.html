@@ -1,0 +1,92 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+
+  <!-- Primary link: open the "main" -->
+  <a href="{{ obj['link'] }}"
+     class="text-decoration-none text-body">
+
+    <!-- HEADER -->
+    <div class="card-body pb-2 pt-2 px-3 d-flex align-items-start">
+
+      <div class="flex-grow-1" style="min-width:0;">
+
+        <div class="mb-1 block-obj-result">
+          {{ obj['result'] }}
+        </div>
+
+        <div class="small text-muted">
+          <i class="fas fa-link text-muted mr-1"></i>
+          <span class="text-dark">{{ obj['crawler']['domain'] }}</span>
+          <span class="text-muted">·</span>
+          <span class="crawled-item-url">{{ obj['crawler']['url'] }}</span>
+        </div>
+
+        <div class="text-muted block-obj-meta">
+          Date: <span class="text-dark">{{ obj['date'] }}</span>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="obj-type-col text-right ml-3">
+        <div class="obj-type-label">{{ obj['type'] }}</div>
+      </div>
+
+    </div>
+
+    {% if obj['crawler']['screenshot_id'] %}
+      <div class="image-preview-wrap">
+      {% if obj['crawler']['is_tags_safe'] %}
+          <img
+            src="{{ url_for('objects_item.screenshot', filename=obj['crawler']['screenshot_id']) }}"
+            alt="Page screenshot"
+            class="image-preview object_image"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          >
+          <div class="image-preview-fallback text-muted" style="display:none;">
+            <i class="far fa-image"></i> Unable to load screenshot
+          </div>
+      {% else %}
+        <span class="fa-stack fa-3x">
+          <i class="fas fa-stack-1x fa-image"></i>
+          <i class="fas fa-stack-2x fa-ban" style="color:#dc3545"></i>
+        </span>
+        <div class="small mt-2 text-center">
+          <div class="text-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            Image not displayed
+          </div>
+          <div class="text-muted mt-1">
+            This image was flagged for potentially unsafe or violent content.
+          </div>
+        </div>
+      {% endif %}
+      </div>
+    {% endif %}
+
+  </a>
+
+  <!-- FOOTER: clickable domains -->
+  {% if obj.get('domains_items') and obj['domains_items']|length > 1 %}
+  <div class="card-body pt-2 pb-2 px-3">
+
+    <div class="small text-muted mb-1">
+      Also seen on {{ obj['domains_items']|length }} Domain{% if obj['domains_items']|length != 1 %}s{% endif %}:
+    </div>
+
+    <div class="domain-chips">
+      {% for domain, item_id in obj['domains_items'].items() %}
+        {% if domain != obj['crawler']['domain'] %}
+          <a class="domain-chip"
+             href="{{ url_for('objects_item.showItem', id=item_id) }}"
+             title="View this matching content as observed on {{ domain }}">
+            {{ domain }}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+  </div>
+  {% endif %}
+
+</div>
