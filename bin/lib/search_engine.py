@@ -455,6 +455,9 @@ def api_search(data):
     if r[1] != 200:
         return r
 
+    if not indexes:
+        indexes = get_indexes_names()
+
     sort = data.get("sort", "recent")
     if sort != "best" and sort != "recent":
         return {"status": "error", "reason": "Invalid sort"}, 400

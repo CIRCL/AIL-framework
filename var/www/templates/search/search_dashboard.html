@@ -418,7 +418,7 @@
         {% for obj in result %}
             {% if obj.type == 'message' %}
                 {% with message=obj %}
-                    {% include 'chats_explorer/block_message.html' %}
+                    {% include 'chats_explorer/block_message_search.html' %}
                 {% endwith %}
             {% elif obj.type == 'image' or obj.type == 'screenshot' %}
                 {% include 'objects/image/block_img_description.html' %}
@@ -443,7 +443,7 @@
 
             {% include 'search/pagination.html' %}
 
-    {% elif request.args.get('q','') %}
+    {% elif request.args.get('q','') and request.args.get('scopes','') %}
         <div class="text-muted d-block my-4">
           No Results
         </div>

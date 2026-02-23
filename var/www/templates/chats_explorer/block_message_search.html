@@ -1,0 +1,65 @@
+<a href="{{ message['link'] }}"
+   class="card mb-3 shadow-sm border-0 block-obj text-body text-decoration-none"
+   id="{{ message['_id'] }}">
+
+  <div class="card-body py-2 px-3">
+    <div class="chat-message-left">
+
+      <div class="d-flex flex-column align-items-center">
+        <img
+          src="{% if message['user-account']['icon'] %}{{ url_for('objects_image.image', filename=message['user-account']['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
+          class="obj-avatar object_image"
+          alt="{{ message['user-account']['id'] }}"
+          loading="lazy">
+
+        <div class="text-center mt-1">
+          <div class="text-muted small text-nowrap">{{ message['date'] }}</div>
+          <div class="text-muted small text-nowrap" style="font-size: 90%">{{ message['hour'] }}</div>
+        </div>
+      </div>
+
+      <div class="flex-grow-1 ml-3">
+
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="font-weight-bold mb-1">
+            {% if message['user-account']['username'] %}
+              {{ message['user-account']['username']['id'] }}
+            {% else %}
+              {{ message['user-account']['id'] }}
+            {% endif %}
+          </div>
+
+          <div class="obj-type-col text-right ml-3">
+            <div class="obj-type-label">
+              {{ message['type'] }}
+            </div>
+          </div>
+        </div>
+
+        {% if message.get('protocol') %}
+          <div class="text-muted small mb-2">
+            {% if message['protocol'].get('icon') %}
+              <i class="{{ message['protocol']['icon']['style'] }} {{ message['protocol']['icon']['icon'] }}"></i>
+            {% endif %}
+            <span class="ml-1">{{ message['protocol']['id'] }}</span>
+            <span class="ml-2 text-muted">·</span>
+            <span class="ml-2">{{ message['full_date'] }}</span>
+          </div>
+        {% endif %}
+
+        <div class="block-obj-result">
+          <pre class="message-pre">{% if 'result' in message %}{{ message['result'] }}{% else %}{{ message['content'] }}{% endif %}</pre>
+        </div>
+
+        {% if message.get('tags') and message['tags'] %}
+          <div class="mt-2">
+            {% for tag in message['tags'] %}
+              <span class="badge badge-light border mr-1">{{ tag }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</a>
