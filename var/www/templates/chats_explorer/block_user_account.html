@@ -42,9 +42,6 @@
 
             {% if obj.get('username') and obj['username'].get('id') %}
               · @{{ obj['username']['id'] }}
-              {% if obj['username'].get('subtype') %}
-                <span class="text-muted">({{ obj['username']['subtype'] }})</span>
-              {% endif %}
             {% endif %}
           </div>
 
@@ -56,7 +53,7 @@
 
           <div class="text-muted block-obj-meta mt-1">
             Chats <strong>{{ obj['nb_chats'] }}</strong> ·
-            {{ obj['first_seen'] }} → {{ obj['last_seen'] }}
+            {% if obj['first_seen'] %}{{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }}{% endif %} → {% if obj['last_seen'] %}{{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}{% endif %}
           </div>
 
         </div>

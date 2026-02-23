@@ -20,14 +20,14 @@
 
                     <!-- filename -->
                     <div class="h5 mb-1 font-weight-normal">
-                        {{ obj['result'] | safe }}
+                        {{ obj['result'] }}
                     </div>
 
                     <!-- metadata -->
                     <div class="text-muted block-obj-meta">
                         Seen <strong>{{ obj['nb_seen'] }}</strong> times ·
-                        First: {{ obj['first_seen'] }} ·
-                        Last: {{ obj['last_seen'] }}
+                        First: {{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }} ·
+                        Last: {{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}
                     </div>
 
                     <!-- tags -->

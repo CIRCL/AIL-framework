@@ -48,7 +48,7 @@
           <!-- Activity -->
           <div class="text-muted block-obj-meta mt-1">
             Users <strong>{{ obj['nb_participants'] }}</strong> ·
-            {{ obj['first_seen'] }} → {{ obj['last_seen'] }}
+            {% if obj['first_seen'] %}{{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }}{% endif %} → {% if obj['last_seen'] %}{{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}{% endif %}
           </div>
 
           <!-- Tags -->

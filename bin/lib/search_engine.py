@@ -516,7 +516,12 @@ def api_search(data):
                     meta = obj.get_meta(options={'link', 'tags_safe'})
                 elif obj_type == 'domain':
                     obj = Domains.Domain(obj_id)
-                    meta = obj.get_meta(options={'link', 'tags_safe'})
+                    meta = obj.get_meta(options={'img', 'link', 'tags_safe'})
+                    # TEMP FIX  TODO
+                    meta['domain_type'] = meta['type']
+                    meta['type'] = 'domain'
+                    meta['first_seen'] = meta['first_seen'].replace('/', '-')
+                    meta['last_check'] = meta['last_check'].replace('/', '-')
                 elif obj_type == 'file-name':
                     obj = FilesNames.FileName(obj_id)
                     meta = obj.get_meta(options={'link'})

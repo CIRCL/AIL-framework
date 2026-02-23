@@ -112,7 +112,6 @@ class Timeline:
         for block in r_meta.zrange(f'line:{self.id}:{self.name}', 0, -1):
             if block:
                 if block.startswith('start:'):
-                    print(self._get_block_obj_global_id(block[6:]))
                     objs.add(self._get_block_obj_global_id(block[6:]))
         return objs
 

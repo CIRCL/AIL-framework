@@ -67,8 +67,39 @@ block-obj {
 }
 
 .object_image {
-    max-width: 50%;
     filter: blur(5px);
+}
+
+.image-preview-wrap {
+  width: 100%;
+  max-height: 420px;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7ea;
+  border-bottom: 1px solid #e5e7ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* keep aspect ratio, no distortion */
+.image-preview {
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* fallback */
+.image-preview-fallback {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
 }
 
 .obj-avatar {
@@ -121,5 +152,20 @@ block-obj {
     line-height: 1.2rem;
     max-height: 4.8rem;        /* 4 lines max */
     overflow: hidden;
+}
+
+.domain-title {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.domain-type {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #f1f3f5;
+  color: #495057;
+  font-weight: 600;
+  letter-spacing: .3px;
 }
 </style>

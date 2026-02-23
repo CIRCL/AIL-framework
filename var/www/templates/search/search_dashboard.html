@@ -420,40 +420,10 @@
                 {% with message=obj %}
                     {% include 'chats_explorer/block_message.html' %}
                 {% endwith %}
-            {% elif obj.type == 'domain' or obj.type == 'image' or obj.type == 'screenshot' %}
-                <div class="card mb-2">
-                    <div class="card-header bg-dark">
-    {#                TODO URL   #}
-                        <h5 class="text-white text-center">{{ obj['url'] }} &nbsp; <small><a target="_blank" href="{{ obj['link'] }}">{{ obj['id'] }}</a></small></h5>
-                    </div>
-                    <div class="card-body py-1">
-                        <div>
-                            <h5>
-                                {% for tag in obj['tags'] %}
-                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                {% endfor %}
-                            </h5>
-                        </div>
-
-                        <pre class="border">{{ obj['result'] }}</pre>
-
-                        <div class="text-center">
-                            {% if obj['tags_safe'] or obj['is_tags_safe'] %}
-                                {% if obj['type'] == 'image' %}
-                                    <img class="object_image mb-1" src="{{ url_for('objects_image.image', filename=obj['img']) }}" loading="lazy">
-                                {% elif obj['type'] == 'screenshot' or 'domain' in obj %}
-                                    <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename=obj['img']) }}" loading="lazy">
-                                {% endif %}
-                            {% else %}
-                                <span class="my-2 fa-stack fa-2x">
-                                    <i class="fas fa-stack-1x fa-image"></i>
-                                    <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
-                                </span>
-                            {% endif %}
-                        </div>
-
-                    </div>
-                </div>
+            {% elif obj.type == 'image' or obj.type == 'screenshot' %}
+                {% include 'objects/image/block_img_description.html' %}
+            {% elif obj.type == 'domain' %}
+                {% include 'crawler/block_domain_description.html' %}
 {#                TODO MODIFY ME TO SHOW ALL DOMAINS  that matches "domains_items" #}
             {% elif obj.type == 'item' %}
                 <div class="card mb-2">
@@ -489,6 +459,11 @@
         {% endfor %}
 
             {% include 'search/pagination.html' %}
+
+    {% elif request.args.get('q','') %}
+        <div class="text-muted d-block my-4">
+          No Results
+        </div>
     {% endif %}
 
 
