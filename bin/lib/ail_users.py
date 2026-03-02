@@ -769,12 +769,12 @@ def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uui
     if not user.exists():
         create_user(user_id, password=password, admin_id=admin_id, org_uuid=org_uuid, role=role, otp=otp, send_email=send_email)
         access_logger.info(f'Create user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
-        return user_id, 200
+        return {'id': user_id}, 200
     # Edit
     else:
         edit_user(admin_id, user_id, password, chg_passwd=True, org_uuid=org_uuid, edit_otp=True, otp=otp, role=role, send_email=send_email)
         access_logger.info(f'Edit user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
-        return user_id, 200
+        return {'id': user_id}, 200
 
 def api_change_user_self_password(user_id, password):
     if not check_password_strength(password):

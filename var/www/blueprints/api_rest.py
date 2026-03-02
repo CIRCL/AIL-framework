@@ -19,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_api
 from lib import ail_core
 from lib import ail_updates
+from lib import ail_users
 from lib import ail_logger
 from lib import crawlers
 from lib import chats_viewer
@@ -292,3 +293,36 @@ def v1_investigation(investigation_uuid):
     return create_json_response(r[0], r[1])
 
 # TODO CATCH REDIRECT
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # #     ADMINS    # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@api_rest.route("api/v1/user/create", methods=['POST'])
+@token_required('admin')
+def v1_user_create():
+    data_json = request.get_json()
+    user_token = get_auth_from_header()
+    admin_org, admin_id, admin_role = ail_api.get_basic_user_meta(user_token)
+    email = data_json.get('id')
+    email = email.lower()
+    if email and len(email) < 300 and ail_users.check_email(email):
+        org_uuid = data_json.get('org_uuid')
+        role = data_json.get('role')
+        password = data_json.get('password')
+        if password:
+            if not ail_users.check_password_strength(password):
+                return create_json_response({'status': 'error', 'reason': 'Incorrect Password'}, 400)
+        else:
+            password = ail_users.gen_password()
+        otp = data_json.get('otp', True)
+        send_email = data_json.get('send_email', True)
+
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.user_agent.string
+
+        r = ail_users.api_create_user(admin_id, ip_address, user_agent, email, password, org_uuid, role, otp, send_email=send_email)
+        return create_json_response(r[0], r[1])
+    else:
+        return create_json_response({'status': 'error', 'reason': 'Invalid user_id'}, 400)
+

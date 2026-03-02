@@ -100,6 +100,9 @@ class Tracker:
     def get_uuid(self):
         return self.uuid
 
+    def get_id(self):
+        return self.uuid
+
     def exists(self):
         return r_tracker.exists(f'tracker:{self.uuid}')
 
@@ -1680,6 +1683,9 @@ class RetroHunt:
 
     def __init__(self, task_uuid):
         self.uuid = task_uuid
+
+    def get_id(self):
+        return self.uuid
 
     def exists(self):
         return r_tracker.exists(f'retro_hunt:{self.uuid}')
