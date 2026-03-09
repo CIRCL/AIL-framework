@@ -93,7 +93,11 @@ class DomHash(AbstractDaterangeObject):
 
 
 def _compute_dom_hash(html_content):
-    soup = BeautifulSoup(html_content, "lxml")
+    try:
+        soup = BeautifulSoup(html_content, "lxml")
+    except Exception as e:
+        print(e)  # TODO LOG
+        return None
     to_hash = "|".join(t.name for t in soup.findAll()).encode()
     return sha256(to_hash).hexdigest()[:32]
 
@@ -103,10 +107,12 @@ def extract_dom_hash(html_content):
 def create(content, obj_id=None):
     if obj_id is None:
         obj_id = extract_dom_hash(content)
-    obj = DomHash(obj_id)
-    if not obj.exists():
-        obj.create()
-    return obj
+    if obj_id:
+        obj = DomHash(obj_id)
+        if not obj.exists():
+            obj.create()
+        return obj
+    return None
 
 
 class DomHashs(AbstractDaterangeObjects):

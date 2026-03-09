@@ -1424,9 +1424,10 @@ class CrawlerCapturesProcessor:
         if self.domain.id.endswith('.onion'):
             if is_onion_filter_enabled():
                 try:
-                    if not check_if_onion_is_safe(self.domain.id, unknown=is_onion_filter_unknown()):  # LOG ?????????????????
+                    if not check_if_onion_is_safe(self.domain.id, unknown=is_onion_filter_unknown()):
                         return []
-                except OnionFilteringError:
+                except OnionFilteringError as e:
+                    self.logger.warning(f'OnionFilteringError: {e}')
                     return []
 
         self.root_item_id = None
@@ -1488,8 +1489,13 @@ class CrawlerCapturesProcessor:
                         # Filter Domain
                         if is_onion_filter_enabled():
                             if new_domain.endswith('.onion'):
-                                if not check_if_onion_is_safe(new_domain, unknown=is_onion_filter_unknown()):
-                                    return False  # TODO RETURN []
+                                try:
+                                    if not check_if_onion_is_safe(new_domain, unknown=is_onion_filter_unknown()):
+                                        return False  # TODO RETURN []
+                                except OnionFilteringError as e:
+                                    self.logger.warning(f'OnionFilteringError: {e}')
+                                    time.sleep(10)
+                                    return False
         else:
             last_url = f'http://{self.domain.id}'
 
@@ -1519,7 +1525,8 @@ class CrawlerCapturesProcessor:
                 parent_id = item_id
 
                 # DOM-HASH
-                self.process_domhash(item, dom_hash_id, capture['html'])
+                if dom_hash_id:
+                    self.process_domhash(item, dom_hash_id, capture['html'])
 
                 # TITLE
                 title = self.extract_title(item, capture['html'])

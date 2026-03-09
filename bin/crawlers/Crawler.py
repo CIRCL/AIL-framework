@@ -406,7 +406,7 @@ class Crawler(AbstractModule):
                 print('retrieved content')
                 # print(entries.get('html'))
 
-        if 'last_redirected_url' in entries and entries.get('last_redirected_url'): # TODO ADD RELATIONSHIP REDIRECT
+        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
             last_url = entries['last_redirected_url']
             unpacked_last_url = crawlers.unpack_url(last_url)
             current_domain = unpacked_last_url['domain']
@@ -422,8 +422,18 @@ class Crawler(AbstractModule):
                         # Filter Domain
                         if self.filter_unsafe_onion:
                             if current_domain.endswith('.onion'):
-                                if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
-                                    return False
+                                try:
+                                    if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
+                                        return False
+                                except OnionFilteringError as e:
+                                    self.logger.warning(f'OnionFilteringError: {e}')
+                                    time.sleep(10)
+                                    try:
+                                        if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
+                                            return False
+                                    except OnionFilteringError as e:
+                                        self.logger.warning(f'Aborted: OnionFilteringError: {e}')
+                                        return False
 
         # TODO LAST URL
         # FIXME
