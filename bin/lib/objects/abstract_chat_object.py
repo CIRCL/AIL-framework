@@ -288,7 +288,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         curr_date = None
         try:
             nb = int(nb)
-        except TypeError:
+        except (TypeError, ValueError):
             nb = 500
         if message:
             page = self.get_message_page(message, nb)
