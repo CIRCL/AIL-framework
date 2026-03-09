@@ -190,6 +190,7 @@ login_manager.init_app(app)
 def load_user(session_id):
     # print(session)
     user_id = get_session_user(session_id)
+    print(user_id)
     if user_id:
         user = AILUser.get(user_id)
         # print(user)
@@ -300,6 +301,10 @@ sock = Sock(app)
 @login_required
 @sock.route('/ws/dashboard')
 def ws_dashboard(ws):
+    if not current_user.is_authenticated:
+        ws.close()
+        return
+
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     next_feeders = ail_stats.get_next_feeder_timestamp(int(time.time())) + 1
