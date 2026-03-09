@@ -190,7 +190,6 @@ login_manager.init_app(app)
 def load_user(session_id):
     # print(session)
     user_id = get_session_user(session_id)
-    print(user_id)
     if user_id:
         user = AILUser.get(user_id)
         # print(user)
