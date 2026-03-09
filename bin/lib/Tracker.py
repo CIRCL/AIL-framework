@@ -2361,10 +2361,13 @@ def api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid):
 
 def api_retro_hunt_object_status_done(data, user_org, user_id, user_role):
     retro_uuid = data.get('uuid')
-    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    res = api_check_retro_hunt_task_uuid(retro_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(retro_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
     object_gid = data.get('gid')
     if not retro_hunt.is_retro_hunted_obj(object_gid):
         return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
@@ -2372,10 +2375,13 @@ def api_retro_hunt_object_status_done(data, user_org, user_id, user_role):
 
 def api_retro_hunt_object_status_reject(data, user_org, user_id, user_role):
     retro_uuid = data.get('uuid')
-    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    res = api_check_retro_hunt_task_uuid(retro_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(retro_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
     object_gid = data.get('gid')
     if not retro_hunt.is_retro_hunted_obj(object_gid):
         return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
@@ -2383,10 +2389,13 @@ def api_retro_hunt_object_status_reject(data, user_org, user_id, user_role):
 
 def api_retro_hunt_object_status_unread(data, user_org, user_id, user_role):
     retro_uuid = data.get('uuid')
-    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    res = api_check_retro_hunt_task_uuid(retro_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(retro_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
     object_gid = data.get('gid')
     if not retro_hunt.is_retro_hunted_obj(object_gid):
         return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
@@ -2394,10 +2403,13 @@ def api_retro_hunt_object_status_unread(data, user_org, user_id, user_role):
 
 def api_retro_hunt_object_status_read(data, user_org, user_id, user_role):
     retro_uuid = data.get('uuid')
-    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    res = api_check_retro_hunt_task_uuid(retro_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(retro_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
     object_gid = data.get('gid')
     if not retro_hunt.is_retro_hunted_obj(object_gid):
         return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
@@ -2405,10 +2417,13 @@ def api_retro_hunt_object_status_read(data, user_org, user_id, user_role):
 
 def api_retro_hunt_remove_object(data, user_org, user_id, user_role):
     retro_uuid = data.get('uuid')
-    res = api_check_retro_hunt_acl(retro_uuid, user_org, user_id, user_role, 'edit')
+    res = api_check_retro_hunt_task_uuid(retro_uuid)
     if res:
         return res
     retro_hunt = RetroHunt(retro_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
     object_gid = data.get('gid')
     if not retro_hunt.is_retro_hunted_obj(object_gid):
         return {"status": "error", "reason": "Not Retro Hunted Object"}, 404
