@@ -92,6 +92,9 @@ class MeiliSearch:
         if not self.get_indexes():
             self.create_indexes()
 
+    def get_nb_tasks(self):
+        return self.client.get_tasks().total
+
     def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent'):
         # TODO investigate attributesToRetrieve speed
         end_query = []

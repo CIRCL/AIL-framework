@@ -271,7 +271,8 @@ def search_domain_username(domain, s_username=None, r_pos=False, page=1, nb=500)
                 break
             cursor += 1
     else:
-        re_search = re.compile(s_username)
+        # escape username search
+        re_search = re.compile(re.escape(s_username))
         total, results = get_cache_search_mail(domain=domain, s_username=s_username, page=page, nb=nb)
         if results is None:
             results = []

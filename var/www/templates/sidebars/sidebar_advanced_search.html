@@ -8,14 +8,14 @@
     <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
         <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100 mb-4">
             <li class="nav-item">
-                <a class="nav-link" href="#search_mails">
+                <a class="nav-link" href="{{ url_for('search_b.search_advanced') }}#search_mails">
                     <i class="fas fa-envelope"></i>
                     <span>Mail Search</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                  <a class="nav-link" href="#search_domains_name">
+                  <a class="nav-link" href="{{ url_for('search_b.search_advanced') }}#search_domains_name">
                       <i class="fas fa-user-secret"></i>
                       <i class="fab fa-html5"></i>
                       <span>Search Domain by name</span>
@@ -23,21 +23,21 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#search_usernames">
+                <a id="nav_search_usernames" class="nav-link" href="{{ url_for('search_b.search_advanced') }}#search_usernames">
                     <i class="fas fa-user"></i>
       	            <span>Username Search</span>
       	        </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#search_passive_ssh">
+                <a id="nav_search_passivessh" class="nav-link" href="{{ url_for('search_b.search_advanced') }}#search_passive_ssh">
                     <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:20px;">
       	            <span>Passive SSH Search</span>
       	        </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="#search_gtrackers">
+                <a class="nav-link" href="{{ url_for('search_b.search_advanced') }}#search_gtrackers">
                     <i class="fab fa-google"></i>
                     <span>GTracking Search</span>
                 </a>

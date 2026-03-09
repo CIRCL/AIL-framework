@@ -90,6 +90,7 @@ def objects_mail_search_post():
         page = 1
     return redirect(url_for('objects_mail.objects_mail_search', search=to_search, page=page))
 
+# TODO MOVE TO SEARCH
 @objects_mail.route("/objects/mail/search", methods=['GET'])
 @login_required
 @login_user
@@ -97,6 +98,12 @@ def objects_mail_search():
     user_id = current_user.get_user_id()
     mode = request.args.get('mode')
     in_username = request.args.get('username')
+    # TODO move to API fct
+    # change mode if user use * as username search
+    if in_username == '*' and mode == 'domain_users':
+        in_username = None
+        mode = 'domain_search'
+
     in_domain = request.args.get('domain')
 
     page = request.args.get('page', 1)

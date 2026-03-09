@@ -108,9 +108,8 @@ def search_passivessh_host_ssh():
 
         log(user_id, 'ssh-host', search)
         r = SSHKeys.api_get_passive_ssh_host(search)
-        result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",
-                               to_search_host=search, result=result)
+                               to_search_host=search, result=r[0])
 
 @search_b.route("/search/passivessh/host/history", methods=['GET', 'POST'])
 @login_required
@@ -126,9 +125,8 @@ def search_passivessh_host_history():
 
         log(user_id, 'ssh-history', search)
         r = SSHKeys.api_get_passive_ssh_host_history(search)
-        result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",
-                               to_search_history=search, result=result)
+                               to_search_history=search, result=r[0])
 
 @search_b.route("/search/passivessh/fingerprint", methods=['GET', 'POST'])
 @login_required
@@ -144,6 +142,5 @@ def search_passivessh_fingerprint():
 
         log(user_id, 'ssh-fingerprint', search)
         r = SSHKeys.api_get_passive_ssh_fingerprint_hosts(search)
-        result = json.dumps(r[0], indent=2)
         return render_template("search_passivessh.html",
-                               to_search_fingerprint=search, result=result)
+                               to_search_fingerprint=search, result=r[0])

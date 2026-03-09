@@ -31,12 +31,26 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-                {% include 'search/block_passive_ssh_search.html' %}
+                <div class="d-flex align-items-center justify-content-between my-2 flex-wrap">
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ url_for('search_b.search_dashboard') }}">
+                      <i class="fa-solid fa-search mr-1"></i>
+                      Global search
+                    </a>
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ url_for('search_b.search_advanced') }}">
+                      <i class="fa-solid fa-sliders mr-1"></i>
+                      Advanced search
+                      <span class="text-dark">
+                        <i class="fas fa-envelope"></i>
+                        <i class="fa-solid fa-at"></i>
+                        <i class="fas fa-user"></i>
+                      </span>
+                      <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:25px;">
+                    </a>
+                </div>
 
-{#                {% if result %}#}
-{#                    {% set endpoint_url = url_for('search_b.search_crawled') + "?search=" + to_search + "&index=" + search_index %}#}
-{#                    {% include 'search/pagination.html' %}#}
-{#                {% endif %}#}
+                {% include 'search/block_passive_ssh_search.html' %}
 
 
                 {% if result %}
@@ -65,6 +79,7 @@
 <script>
     $(document).ready(function(){
         $("#page-search").addClass("active");
+        $("#nav_search_passivessh").addClass("active");
   });
 
 function toggle_sidebar(){

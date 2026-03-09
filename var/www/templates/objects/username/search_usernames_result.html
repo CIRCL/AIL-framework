@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Usernames Search - AIL</title>
+  <title>Search Usernames - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -28,57 +28,82 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_advanced_search.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+
+                <div class="d-flex align-items-center justify-content-between my-2 flex-wrap">
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ url_for('search_b.search_dashboard') }}">
+                      <i class="fa-solid fa-search mr-1"></i>
+                      Global search
+                    </a>
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ url_for('search_b.search_advanced') }}">
+                      <i class="fa-solid fa-sliders mr-1"></i>
+                      Advanced search
+                      <span class="text-dark">
+                        <i class="fas fa-envelope"></i>
+                        <i class="fa-solid fa-at"></i>
+                        <i class="fas fa-user"></i>
+                      </span>
+                      <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:25px;">
+                    </a>
+                </div>
 
                 {% with page=dict_page['page'], subtypes=subtypes, subtype=subtype %}
 				    {% include 'username/block_usernames_search.html' %}
                 {% endwith %}
 
-
-				<table id="table_objects" class="table table-striped table-bordered">
-                    <thead class="bg-dark text-white">
-                    <tr>
-                        <th>Subtype</th>
-                        <th>ID</th>
-                        <th>First Seen</th>
-                        <th>Last Seen</th>
-                        <th>NB Seen</th>
-                        <th>Sparkline</th>
-                    </tr>
-                    </thead>
-                    <tbody style="font-size: 15px;">
-                    {% for obj_id in dict_objects %}
+                {% if dict_objects %}
+                    <table id="table_objects" class="table table-striped table-bordered">
+                        <thead class="bg-dark text-white">
                         <tr>
-                            <td>
-                                {% with style=dict_objects[obj_id]['icon']['style'], icon=dict_objects[obj_id]['icon']['icon'] , color=dict_objects[obj_id]['icon']['color'] %}
-                                    {% include 'objects/obj_svg_block.html' %}
-                                {% endwith %}
-                                 {{ dict_objects[obj_id]['subtype'] }}
-                            </td>
-                            <td>
-                                <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=username&subtype=telegram&id={{ obj_id }}">
-                                    <span>{{ dict_objects[obj_id]['id'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['id'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['id'][search_result[obj_id]['hl-end']:] }}
-                                </a>
-                            </td>
-                            <td>
-                                {% if dict_objects[obj_id]['first_seen'] %}
-                                    {{ dict_objects[obj_id]['first_seen'][0:4] }}-{{ dict_objects[obj_id]['first_seen'][4:6] }}-{{ dict_objects[obj_id]['first_seen'][6:8] }}
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if dict_objects[obj_id]['last_seen'] %}
-                                    {{ dict_objects[obj_id]['last_seen'][0:4] }}-{{ dict_objects[obj_id]['last_seen'][4:6] }}-{{ dict_objects[obj_id]['last_seen'][6:8] }}
-                                {% endif %}
-                            </td>
-                            <td>{{ dict_objects[obj_id]['nb_seen'] }}
-                            </td>
-                            <td id="sparklines_{{ obj_id }}" style="text-align:center;"></td>
+                            <th>Subtype</th>
+                            <th>ID</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>NB Seen</th>
+                            <th>Sparkline</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody style="font-size: 15px;">
+                        {% for obj_id in dict_objects %}
+                            <tr>
+                                <td>
+                                    {% with style=dict_objects[obj_id]['icon']['style'], icon=dict_objects[obj_id]['icon']['icon'] , color=dict_objects[obj_id]['icon']['color'] %}
+                                        {% include 'objects/obj_svg_block.html' %}
+                                    {% endwith %}
+                                     {{ dict_objects[obj_id]['subtype'] }}
+                                </td>
+                                <td>
+                                    <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=username&subtype=telegram&id={{ obj_id }}">
+                                        <span>{{ dict_objects[obj_id]['id'][:search_result[obj_id]['hl-start']] }}</span><span class="hg-text">{{dict_objects[obj_id]['id'][search_result[obj_id]['hl-start']:search_result[obj_id]['hl-end']]}}</span>{{ dict_objects[obj_id]['id'][search_result[obj_id]['hl-end']:] }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if dict_objects[obj_id]['first_seen'] %}
+                                        {{ dict_objects[obj_id]['first_seen'][0:4] }}-{{ dict_objects[obj_id]['first_seen'][4:6] }}-{{ dict_objects[obj_id]['first_seen'][6:8] }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if dict_objects[obj_id]['last_seen'] %}
+                                        {{ dict_objects[obj_id]['last_seen'][0:4] }}-{{ dict_objects[obj_id]['last_seen'][4:6] }}-{{ dict_objects[obj_id]['last_seen'][6:8] }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ dict_objects[obj_id]['nb_seen'] }}
+                                </td>
+                                <td id="sparklines_{{ obj_id }}" style="text-align:center;"></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% elif to_search %}
+                    <div class="text-center text-muted my-4">
+                        <i class="fas fa-search"></i>
+                        <p class="mb-0">No results found.</p>
+                    </div>
+                {% endif %}
 
                 {% if dict_page %}
                     {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'],  nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'] %}
@@ -94,14 +119,16 @@
 <script>
     var chart = {};
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
-        $("#nav_username").addClass("active");
+        $("#page-search").addClass("active");
+        $("#nav_search_usernames").addClass("active");
 
-        $('#table_objects').DataTable({
-            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-            "iDisplayLength": 10,
-            "order": [[ 3, "desc" ]]
-        });
+        {% if dict_objects %}
+            $('#table_objects').DataTable({
+                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                "iDisplayLength": 10,
+                "order": [[ 3, "desc" ]]
+            });
+        {% endif %}
   });
 
 function toggle_sidebar(){
