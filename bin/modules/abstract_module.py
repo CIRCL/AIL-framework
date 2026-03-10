@@ -115,6 +115,11 @@ class AbstractModule(ABC):
             obj_global_id = '::'
         self.queue.send_message(obj_global_id, message, queue)
 
+    def send_back_message_to_queue(self, message=''):
+        self.queue.send_back_message_to_queue(self.obj.get_global_id(), self.sha256_mess, message=message)
+        self.obj = None
+        self.sha256_mess = None
+
     def get_available_queues(self):
         return self.queue.get_out_queues()
 
@@ -156,6 +161,12 @@ class AbstractModule(ABC):
 
         # Endless loop processing messages from the input queue
         while self.proceed:
+            # Optionnal Check Function before poping the message from the queue (ex: check indexer status)
+            if not self.can_process_next_message():
+                print('Can\'t process next message')
+                time.sleep(self.pending_seconds)
+                continue
+
             # Get one message (ex:item id) from the Redis Queue (QueueIn)
             message = self.get_message()
 
@@ -210,6 +221,9 @@ class AbstractModule(ABC):
         Main method of the Module to implement
         """
         pass
+
+    def can_process_next_message(self):
+        return True
 
     def compute_manual(self, obj, message=None):
         self.obj = obj

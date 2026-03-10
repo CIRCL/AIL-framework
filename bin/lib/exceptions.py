@@ -29,3 +29,6 @@ class AILObjectUnknown(AILError):
 
 class OnionFilteringError(AILError):
     pass
+
+class MeilisearchError(AILError):
+    pass

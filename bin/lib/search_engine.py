@@ -8,6 +8,7 @@ import time
 import uuid
 
 import meilisearch
+from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError
 from hashlib import sha256
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -15,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_logger
+from lib.exceptions import MeilisearchError
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Domains
 from lib.objects import FilesNames
@@ -86,11 +88,19 @@ def index_all():
 
 class MeiliSearch:
     def __init__(self):
-        self.client = meilisearch.Client(M_URL, M_KEY)
+        self.client = meilisearch.Client(M_URL, M_KEY, timeout=3)
 
     def init(self):
         if not self.get_indexes():
             self.create_indexes()
+
+    def is_up(self):
+        try:
+            self.client.health()
+            return True
+        except (MeilisearchApiError, MeilisearchCommunicationError, Exception) as e:
+            # TODO LOG
+            return False
 
     def get_nb_tasks(self):
         return self.client.get_tasks().total
@@ -174,11 +184,29 @@ class MeiliSearch:
             self.setup_index_searchable_filterable_sortable(index_name)
 
     # replacing existing documents
-    def add(self, index, document):
-        self.client.index(index).add_documents([document], primary_key='uuid')
+    def add(self, index, document, retry=3):
+        try:
+            self.client.index(index).add_documents([document], primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError) as e:
+            logger.warning(f'Meilisearch connection failed, retry: {retry}')
+            if retry > 0:
+                self.add(index, document, retry - 1)
+                time.sleep(10)
+            else:
+                logger.warning(f'Meilisearch connection failed: {e.message}')
+                raise MeilisearchError(e.message)
 
-    def update(self, index, document):
-        self.client.index(index).update_documents([document], primary_key='uuid')
+    def update(self, index, document, retry=3):
+        try:
+            self.client.index(index).update_documents([document], primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError) as e:
+            logger.warning(f'Meilisearch connection failed, retry: {retry}')
+            if retry > 0:
+                self.update(index, document, retry - 1)
+                time.sleep(10)
+            else:
+                logger.warning(f'Meilisearch connection failed: {e.message}')
+                raise MeilisearchError(e.message)
 
     def remove(self, index, doc_id):
         self.client.index(index).delete_document(doc_id)
@@ -268,7 +296,11 @@ def index_crawled():
         dom_id = r_search.spop('to_index:crawled')
         if not dom_id:
             break
-        _index_crawled_domain(dom_id)
+        try:
+            _index_crawled_domain(dom_id)
+        except MeilisearchError:
+            # send back for resume
+            r_search.sadd('to_index:crawled', dom_id)
 
 
 ## MESSAGE ##
