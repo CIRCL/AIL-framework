@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
+import json
 import os
 import sys
 
@@ -257,7 +257,7 @@ def _get_passive_ssh_result(path):
         if res.status_code != 404:
             print(f" PassiveSSH requests error: {res.text}, {res.status_code}")
         # set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
-        return res.text, res.status_code
+        return json.loads(res.text), res.status_code
     else:
         r = res.json()
         if r:
@@ -341,9 +341,8 @@ def api_test_passive_ssh():
     if not url:
         return {"status": "error", "reason": "Invalid passive SSH URL"}, 400
     s = get_passive_ssh_session()
-    res = s.get(f'{url}/host/ssh/ail-project.org')
+    res = s.get(f'{url}/host/ssh/github.com')
     if res.status_code != 200:
-        # TODO LOG
         print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
         set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
     else:
