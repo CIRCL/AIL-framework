@@ -300,8 +300,9 @@ def index_crawled():
             _index_crawled_domain(dom_id)
         except MeilisearchError:
             # send back for resume
-            print('send back to indexing queue')
             r_search.sadd('to_index:crawled', dom_id)
+            print('send back to indexing queue')
+            time.sleep(10)
 
 
 ## MESSAGE ##
