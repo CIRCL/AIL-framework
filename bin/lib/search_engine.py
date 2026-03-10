@@ -8,7 +8,7 @@ import time
 import uuid
 
 import meilisearch
-from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError
+from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError
 from hashlib import sha256
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -88,7 +88,7 @@ def index_all():
 
 class MeiliSearch:
     def __init__(self):
-        self.client = meilisearch.Client(M_URL, M_KEY, timeout=3)
+        self.client = meilisearch.Client(M_URL, M_KEY, timeout=5)
 
     def init(self):
         if not self.get_indexes():
@@ -187,7 +187,7 @@ class MeiliSearch:
     def add(self, index, document, retry=3):
         try:
             self.client.index(index).add_documents([document], primary_key='uuid')
-        except (MeilisearchCommunicationError, MeilisearchApiError) as e:
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as e:
             logger.warning(f'Meilisearch connection failed, retry: {retry}')
             if retry > 0:
                 self.add(index, document, retry - 1)
@@ -199,7 +199,7 @@ class MeiliSearch:
     def update(self, index, document, retry=3):
         try:
             self.client.index(index).update_documents([document], primary_key='uuid')
-        except (MeilisearchCommunicationError, MeilisearchApiError) as e:
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as e:
             logger.warning(f'Meilisearch connection failed, retry: {retry}')
             if retry > 0:
                 self.update(index, document, retry - 1)
