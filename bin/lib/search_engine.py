@@ -62,8 +62,6 @@ def load_indexes_names():
 
 
 INDEX_NAMES = load_indexes_names()
-
-
 def get_indexes_names():
     return INDEX_NAMES
 
@@ -398,6 +396,20 @@ def index_file_names():
         document = obj.get_search_document()
         if document:
             Engine.update(index, document)
+
+
+INDEXING_FUNCTIONS = {
+    'all': index_all,
+    'crawled': index_crawled,
+    'chats': index_chats,
+    'messages': index_messages,
+    'user_accounts': index_user_accounts,
+    'images_descriptions': index_images_descriptions,
+    'screenshots_descriptions': index_screenshots_descriptions,
+    'domains_descriptions': index_domains_descriptions,
+    'titles': index_titles,
+    'file_names': index_file_names,
+}
 
 ## --INDEXER-- ##
 

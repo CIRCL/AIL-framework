@@ -98,3 +98,24 @@ meilisearch = True
 meilisearch_url = http://<meilisearch_url>        # URL where Meilisearch is running (e.g., `http://127.0.0.1:7700`)  
 meilisearch_key = <meilisearch_db_password>       # Meilisearch master key or API key
 ```
+
+### Reindex after upgrading to v6.7
+
+> ⚠️ Meilisearch indexes created with AIL versions **before v6.7** are **automatically removed during the update**.  
+> Search indexing was refactored, so the indexes must be rebuilt using the new schema.
+
+Use `tools/reindex_meilisearch.py` to rebuild the indexes:
+
+```bash
+# Reindex everything
+python3 tools/reindex_meilisearch.py --type all
+
+# Reindex only one dataset
+python3 tools/reindex_meilisearch.py --type messages
+```
+
+If you want to **reset and recreate the indexes** before reindexing:
+
+```bash
+python3 tools/reindex_meilisearch.py --reset --type all
+```
