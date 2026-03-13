@@ -1,179 +1,280 @@
-# AIL framework
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="220" alt="AIL logo" />
+</p>
 
-<img src="https://raw.githubusercontent.com/ail-project/ail-framework/master/var/www/static/image/ail-icon.png" height="400" />
+<h1 align="center">AIL Framework</h1>
 
-<table>
-<tr>
-  <td>Latest Release</td>
-  <td><a href="https://github.com/ail-project/ail-framework/releases/latest"><img src="https://img.shields.io/github/release/ail-project/ail-framework/all.svg"></a></td>
-</tr>
-<tr>
-  <td>CI</td>
-  <td><a href="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml"><img src="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml/badge.svg"></a></td>
-</tr>
-<tr>
-  <td>Gitter</td>
-  <td><a href="https://gitter.im/ail-project/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/ail-project.svg" /></a></td>
-</tr>
-<tr>
-  <td>Contributors</td>
-  <td><img src="https://img.shields.io/github/contributors/ail-project/ail-framework.svg" /></td>
-</tr>
-<tr>
-  <td>License</td>
-  <td><img src="https://img.shields.io/github/license/ail-project/ail-framework.svg" /></td>
-</tr>
-</table>
+<p align="center">
+  Open-source framework for the collection, crawling, processing, and analysis of unstructured information.
+</p>
 
-AIL framework - Framework for Analysis of Information Leaks
+<p align="center">
+  <a href="https://github.com/ail-project/ail-framework/releases/latest">
+    <img src="https://img.shields.io/github/v/release/ail-project/ail-framework?label=Release" alt="Latest Release">
+  </a>
+  <a href="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml">
+    <img src="https://github.com/ail-project/ail-framework/actions/workflows/ail_framework_test.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://gitter.im/ail-project/?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
+    <img src="https://badges.gitter.im/ail-project.svg" alt="Gitter">
+  </a>
+  <a href="https://github.com/ail-project/ail-framework/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/ail-project/ail-framework.svg" alt="Contributors">
+  </a>
+  <a href="https://github.com/ail-project/ail-framework/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/ail-project/ail-framework.svg" alt="License">
+  </a>
+</p>
 
-AIL is a modular framework to analyse potential information leaks from unstructured data sources like pastes from Pastebin or similar services or unstructured data streams. AIL framework is flexible and can be extended to support other functionalities to mine or process sensitive information (e.g. data leak prevention).
+AIL framework is an open-source platform to **collect, crawl, process and analyse unstructured data** from the clear web, Tor, I2P, chats, files and external feeds.
 
-![Overview](https://www.ail-project.org/assets/img/dashboard.jpeg "AIL framework Dashboard")
+Originally developed at [CIRCL](https://www.circl.lu/), AIL helps analysts transform raw, messy content into structured intelligence through extraction, tagging, detection, correlation and investigation workflows.
 
+![AIL dashboard](https://www.ail-project.org/assets/img/dashboard.jpeg "AIL dashboard")
 
-![Finding webshells with AIL](./doc/screenshots/webshells.gif?raw=true "Finding webshells with AIL")
+## What is AIL?  https://ail-project.org
 
-## AIL V5.0 Version:
+AIL (Analysis of Information Leaks) is an open-source framework for the collection, crawling, processing, and analysis of unstructured information. It supports threat intelligence, leak analysis, and investigative workflows by helping analysts extract, detect, correlate, and share relevant information from a wide range of sources.
 
-AIL v5.0 introduces significant improvements and new features:
+AIL includes:
+- an **extensible Python-based framework** for processing and analysing unstructured information,
+- a **crawler manager** for continuous and authenticated collection,
+- **feeders** for communication platforms and external streams,
+- a **detection and retro-hunt engine** based on keywords, regex and YARA,
+- **search, correlation and investigation** capabilities to pivot across extracted data,
+- and **export/integration** features for platforms such as [MISP](https://github.com/MISP/MISP).
 
-- **Codebase Rewrite**: The codebase has undergone a substantial rewrite, 
-resulting in enhanced performance and speed improvements.
-- **Database Upgrade**: The database has been migrated from ARDB to Kvrocks.
-- **New Correlation Engine**: AIL v5.0 introduces a new powerful correlation engine with two new correlation types: CVE and Title.
-- **Enhanced Logging**: The logging system has been improved to provide better troubleshooting capabilities.
-- **Tagging Support**: [AIL objects](./doc/README.md#ail_objects) now support tagging, 
-allowing users to categorize and label extracted information for easier analysis and organization.
-- **Trackers**: Improved objects filtering, PGP and decoded tracking added.
-- **UI Content Visualization**: The user interface has been upgraded to visualize extracted and tracked information.
-- **New Crawler Lacus**: improve crawling capabilities.
-- **Modular Importers and Exporters**: New importers (ZMQ, AIL Feeders) and exporters (MISP, Mail, TheHive) modular design.
-Allow easy creation and customization by extending an abstract class.
-- **Module Queues**: improved the queuing mechanism between detection modules.
-- **New Object CVE and Title**: Extract an correlate CVE IDs and web page titles.
+## AIL intelligence lifecycle
+
+AIL follows a practical intelligence workflow:
+
+1. **Collection**
+   Continuous ingestion from chats, websites, hidden services, files and feeds.
+2. **Processing**
+   Extraction, decoding, OCR, QR/barcode parsing, enrichment and tagging.
+3. **Detection**
+   Real-time tracking with words, sets, regex, typo-squatting and YARA rules.
+4. **Analysis**
+   Search, pivoting, correlation graphs and investigations.
+5. **Dissemination**
+   Export of findings and objects to MISP intelligence-sharing platforms.
+
+## What’s new in AIL v6.7
+
+AIL is now at **v6.7** and recent releases significantly expanded search, image analysis, crawling and document-processing capabilities.
+
+Highlights include:
+
+- **Unified search interface** with best-match and most-recent ordering
+- **Date range filtering** and improved advanced search workflows
+- **Image and screenshot descriptions** for faster visual analysis and searchability
+- **Expanded OCR and QR extraction**, including support for more difficult image cases
+- **Full PDF processing pipeline**, including metadata extraction and **translation** support
+- **I2P crawling support** in addition to clear web and Tor collection
+- **Passive SSH correlation** for infrastructure analysis and deanonymization workflows
+- **Improved chat exploration** for platforms such as Discord, Telegram and Matrix
 
 ## Features
 
-![Internal](./doc/screenshots/ail-internal.png?raw=true "AIL framework Internal")
+![AIL internal overview](./doc/screenshots/ail-internal.png?raw=true "AIL internal overview")
 
-- Modular architecture to handle streams of unstructured or structured information
-- Default support for external ZMQ feeds, such as provided by CIRCL or other providers
-- Multiple Importers and feeds support
-- Each module can process and reprocess the information already analyzed by AIL
-- Detecting and extracting URLs including their geographical location (e.g. IP address location)
-- Extracting and validating potential leaks of credit card numbers, credentials, ...
-- Extracting and validating leaked email addresses, including DNS MX validation
-- Module for extracting Tor .onion addresses for further analysis
-- Keep tracks of credentials duplicates (and diffing between each duplicate found)
-- Extracting and validating potential hostnames (e.g. to feed Passive DNS systems)
-- A full-text indexer module to index unstructured information
-- Terms, Set of terms, Regex, typo squatting and YARA tracking and occurrence
-- YARA Retro Hunt
-- Many more modules for extracting phone numbers, credentials, and more
-- Alerting to [MISP](https://github.com/MISP/MISP) to share found leaks within a threat intelligence platform using [MISP standard](https://www.misp-project.org/objects.html#_ail_leak)
-- Detecting and decoding encoded file (Base64, hex encoded or your own decoding scheme) and storing files
-- Detecting Amazon AWS and Google API keys
-- Detecting Bitcoin address and Bitcoin private keys
-- Detecting private keys, certificate, keys (including SSH, OpenVPN)
-- Detecting IBAN bank accounts
-- Tagging system with [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies) tags
-- UI submission
-- Create events on [MISP](https://github.com/MISP/MISP) and cases on [The Hive](https://github.com/TheHive-Project/TheHive)
-- Automatic export on detection with [MISP](https://github.com/MISP/MISP) (events) and [The Hive](https://github.com/TheHive-Project/TheHive) (alerts) on selected tags
-- Extracted and decoded files can be searched by date range, type of file (mime-type) and encoding discovered
-- Correlations engine and Graph to visualize relationships between decoded files (hashes), PGP UIDs, domains, username, and cryptocurrencies addresses
-- Websites, Forums and Tor Hidden-Services hidden services crawler to crawl and parse output
-- Domain availability monitoring to detect up and down of websites and hidden services
-- Browsed hidden services are automatically captured and integrated into the analyzed output, including a blurring screenshot interface (to avoid "burning the eyes" of security analysts with sensitive content)
-- Tor hidden services is part of the standard framework, all the AIL modules are available to the crawled hidden services
-- Crawler scheduler to trigger crawling on demand or at regular intervals for URLs or Tor hidden services
+### Collection
 
-### Trackers:
-Trackers are user-defined rules or patterns that automatically detect, tag and notify about relevant information collected by AIL.
+- Modular architecture to handle streams of unstructured information
+- Multiple feeder and importer support
+- Feeders for chat and stream sources such as [Discord](https://github.com/ail-project/ail-feeder-discord), [Telegram](https://github.com/ail-project/ail-feeder-telegram) and other providers
+- Crawling support for the clear web, **Tor hidden services** (onion) and **I2P**
+- Authenticated crawling with browser sessions, cookies and local storage reuse
+- Continuous or on-demand monitoring of websites and hidden services over time
+- UI submission/import capabilities
 
-Trackers types: [Documentation](/doc/README.md#trackers)
-- word or set of words
+### Processing and enrichment
+
+- Full-text indexing of unstructured information (chats, crawled contents)
+- Extraction of URLs, hostnames, email addresses and credentials
+- Detection of phone numbers, API keys, IBANs, certificates and private keys
+- Detection of Bitcoin addresses, private keys and related cryptocurrency artifacts
+- File extraction and decoding from encoded content (Base64, hex)
+- OCR processing for screenshots and images
+- QR code and barcode extraction with reprocessing of embedded content
+- AI-assisted descriptions for images, screenshots and domains
+- PDF metadata extraction, ingestion and translation
+- Tagging system using [MISP Galaxy](https://github.com/MISP/misp-galaxy) and [MISP Taxonomies](https://github.com/MISP/misp-taxonomies)
+
+### Detection and tracking
+
+Trackers are user-defined rules or patterns that automatically detect, tag and notify analysts about relevant information collected by AIL.
+
+Supported tracker types:
+
+- word tracking
+- set-of-words tracking
+- regex tracking
 - YARA rules
-- Regex
-- Typo Squatting
+- typo-squatting detection
 
-![tracker-create](./doc/screenshots/tracker_create.png "AIL framework create tracker")
+Detection capabilities include:
 
-![tracker-yara](./doc/screenshots/tracker_yara.png "AIL framework Yara tracker")
+- real-time tagging and classification
+- object occurrence tracking
+- webhook or email notification workflows
+- built-in YARA editor
 
-![retro-hunt](./doc/screenshots/retro_hunt.png "AIL framework Retro Hunt")
+AIL also supports **Retro Hunts**, enabling analysts to run newly created YARA rules against **historical data** to uncover previously missed content.
+
+![tracker-create](./doc/screenshots/tracker_create.png "AIL tracker creation")
+
+![tracker-yara](./doc/screenshots/tracker_yara.png "AIL YARA tracker")
+
+![retro-hunt](./doc/screenshots/retro_hunt.png "AIL retro hunt")
+
+### Search, correlation and investigation
+
+- Unified search interface with recency and relevancy ordering
+- Search by date range and specialized advanced search for selected data types
+- Search across chats, crawled domains, titles, filenames and AI-generated descriptions
+- Correlation engine and graph visualisation for relationships between:
+  - decoded files and hashes
+  - PGP metadata
+  - domains, titles, dom-hash, favicons, cookie-names
+  - usernames and user-accounts
+  - CVEs
+  - SSH keys
+  - cryptocurrencies
+  - PDF metadata
+  - ...
+- Investigation workflow to group, enrich and follow analyst findings
+
+![global search](./doc/screenshots/search.png "AIL global search")
+
+### Export and integrations
+
+- Alerting and sharing to [MISP](https://github.com/MISP/MISP)
+- Export of AIL objects and investigations to MISP formats
+- Automatic exports on selected detections and tags
+- Integrations supporting collaborative intelligence and incident-response workflows
+
+## Why AIL?
+
+AIL is built for analysts who need to work with **messy, real-world data**:
+
+- free text,
+- screenshots,
+- PDFs and files,
+- chat messages,
+- encoded payloads,
+- content collected from web, Tor and I2P sources.
+
+Instead of treating those sources separately, AIL helps turn them into searchable, correlated and actionable intelligence.
+
+## Screenshots
+
+### Websites, forums and hidden services
+
+![Domain CIRCL](./doc/screenshots/domain_circl.png?raw=true "Crawled domain view")
+
+#### Login-protected crawling with pre-recorded session cookies
+
+![Domain cookiejar](./doc/screenshots/crawler-cookiejar-domain-crawled.png?raw=true "Authenticated crawling")
+
+### Extracted and decoded files
+
+![Extracted files](./doc/screenshots/decodeds_dashboard.png?raw=true "Decoded files dashboard")
+
+### Correlation engine
+
+![Onion Domains Correlations](./doc/screenshots/correlation.png?raw=true "Onion domain correlations")
+
+![Correlation decoded image](./doc/screenshots/correlation_decoded_image.png?raw=true "Decoded image correlations")
+
+### Investigation
+
+![Investigation](./doc/screenshots/investigation_mixer.png?raw=true "Investigation view")
+
+### Tagging system
+
+![Tags](./doc/screenshots/tags_search.png?raw=true "Tags search")
+
+![Tags search](./doc/screenshots/tags_search_items.png?raw=true "Tagged items")
+
+### MISP export
+
+![misp_export](./doc/screenshots/misp_export.png?raw=true "MISP export")
+
+### Automatic events and alerts
+
+![tags_misp_auto](./doc/screenshots/tags_misp_auto.png?raw=true "Automatic MISP export")
+
+### UI submission
+
+![ui_submit](./doc/screenshots/ui_submit.png?raw=true "UI importer")
 
 ## Installation
 
-To install the AIL framework, run the following commands:
-```bash
-# Clone the repo first
-git clone https://github.com/ail-project/ail-framework.git
-git submodule update --init --recursive
-cd ail-framework
+To install the AIL framework:
 
-# For Debian and Ubuntu based distributions
+```bash
+# Clone the repository
+git clone https://github.com/ail-project/ail-framework.git
+cd ail-framework
+git submodule update --init --recursive
+
+# Install dependencies on Debian/Ubuntu-based distributions
 ./installing_deps.sh
 
-# Launch ail
-cd ~/ail-framework/
-cd bin/
+# Start AIL
+cd bin
 ./LAUNCH.sh -l
 ```
 
-The default [installing_deps.sh](./installing_deps.sh) is for Debian and Ubuntu based distributions.
+The default [installing_deps.sh](./installing_deps.sh) script targets Debian and Ubuntu based distributions.
 
-Requirement:
+### Requirements
+
 - Python 3.8+
 
-### Installation Notes
+[How to size the hardware requirements for AIL?](https://ail-project.org/faq.html)
 
-For Lacus Crawler and LibreTranslate installation instructions (if you want to use those features), refer to the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler)
+### Installation notes
 
+
+Some optional components require additional configuration, including the **Lacus crawler**, the **Meilisearch search indexer**, and the **translation**. See the [HOWTO](https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler) for detailed setup instructions.
 ## Starting AIL
 
-To start AIL, use the following commands:
-
 ```bash
-cd bin/
+cd bin
 ./LAUNCH.sh -l
 ```
-You can access the AIL framework web interface at the following URL: 
 
-```
+The web interface is available at:
+
+```text
 https://localhost:7000/
 ```
 
-The default credentials for the web interface are located in the ``DEFAULT_PASSWORD``file, which is deleted when you change your password.
-
-## Training
-
-CIRCL organises training on how to use or extend the AIL framework. AIL training materials are available at [https://github.com/ail-project/ail-training](https://github.com/ail-project/ail-training).
+The default credentials are stored in the `DEFAULT_PASSWORD` file and the file is removed once the password is changed.
 
 ## Documentation
 
-The documentation is available in [doc/README.md](doc/README.md)
+- Main documentation: [doc/README.md](doc/README.md)
+- API documentation: [doc/api.md](doc/api.md)
+- HOWTO guides: [HOWTO.md](HOWTO.md)
 
-## API
+## Training
 
-The API documentation is available in [doc/api.md](doc/api.md)
 
-## HOWTO
-
-HOWTO are available in [HOWTO.md](HOWTO.md)
-
+Training materials on how to use and extend the AIL framework are available at [ail-project/ail-training](https://github.com/ail-project/ail-training).
 ## Privacy and GDPR
 
-For information on AIL's compliance with GDPR and privacy considerations, refer to the [AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf) document.
+For information on privacy and GDPR-related considerations, see the document [AIL information leaks analysis and the GDPR in the context of collection, analysis and sharing information leaks](https://www.circl.lu/assets/files/information-leaks-analysis-and-gdpr.pdf).
 
-this document provides an overview how to use AIL in a lawfulness context especially in the scope of General Data Protection Regulation.
+This document provides guidance on using AIL in a lawful context, especially within the scope of the General Data Protection Regulation.
 
 ## Research using AIL
 
-If you use or reference AIL in an academic paper, you can cite it using the following BibTeX:
+If you use or reference AIL in academic work, you can cite it as follows:
 
-~~~~
+```bibtex
 @inproceedings{mokaddem2018ail,
   title={AIL-The design and implementation of an Analysis Information Leak framework},
   author={Mokaddem, Sami and Wagener, G{\'e}rard and Dulaunoy, Alexandre},
@@ -182,70 +283,29 @@ If you use or reference AIL in an academic paper, you can cite it using the foll
   year={2018},
   organization={IEEE}
 }
-~~~~
-
-## Screenshots
-
-### Websites, Forums and Tor Hidden-Services
-
-![Domain CIRCL](./doc/screenshots/domain_circl.png?raw=true "Tor hidden service crawler")
-
-#### Login protected, pre-recorded session cookies:
-![Domain cookiejar](./doc/screenshots/crawler-cookiejar-domain-crawled.png?raw=true "Tor hidden service crawler")
-
-### Extracted encoded files from items
-
-![Extracted files](./doc/screenshots/decodeds_dashboard.png?raw=true "AIL extracted decoded files statistics")
-
-### Correlation Engine
-
-![Correlation decoded image](./doc/screenshots/correlation_decoded_image.png?raw=true "Correlation decoded image")
-
-### Investigation
-
-![Investigation](./doc/screenshots/investigation_mixer.png?raw=true "AIL framework cookiejar")
-
-### Tagging system
-
-![Tags](./doc/screenshots/tags_search.png?raw=true "AIL framework tags")
-
-![Tags search](./doc/screenshots/tags_search_items.png?raw=true "AIL framework tags items search")
-
-### MISP Export
-
-![misp_export](./doc/screenshots/misp_export.png?raw=true "AIL framework MISP Export")
-
-### MISP and The Hive, automatic events and alerts creation
-
-![tags_misp_auto](./doc/screenshots/tags_misp_auto.png?raw=true "AIL framework MISP and Hive auto export")
-
-### UI submission
-
-![ui_submit](./doc/screenshots/ui_submit.png?raw=true "AIL framework UI importer")
-
-### Trackers
+```
 
 ## License
 
-```
-    Copyright (C) 2014 Jules Debra
-    Copyright (c) 2021 Olivier Sagit
-    Copyright (C) 2014-2026 CIRCL - Computer Incident Response Center Luxembourg
-    Copyright (c) 2014-2024 Raphaël Vinot
-    Copyright (c) 2014-2026 Alexandre Dulaunoy
-    Copyright (c) 2016-2024 Sami Mokaddem
-    Copyright (c) 2018-2026 Thirion Aurélien
+```text
+Copyright (C) 2014 Jules Debra
+Copyright (c) 2021 Olivier Sagit
+Copyright (C) 2014-2026 CIRCL - Computer Incident Response Center Luxembourg
+Copyright (c) 2014-2024 Raphaël Vinot
+Copyright (c) 2014-2026 Alexandre Dulaunoy
+Copyright (c) 2016-2024 Sami Mokaddem
+Copyright (c) 2018-2026 Thirion Aurélien
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ```
