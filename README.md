@@ -83,7 +83,7 @@ Highlights include:
 - Modular architecture to handle streams of unstructured information
 - Multiple feeder and importer support
 - Feeders for chat and stream sources such as [Discord](https://github.com/ail-project/ail-feeder-discord), [Telegram](https://github.com/ail-project/ail-feeder-telegram) and other providers
-- Crawling support for the clear web, **Tor hidden services** (onion) and **I2P**
+- Crawling support for the clear web, darknet, **Tor hidden services** (.onion), and **I2P**
 - Authenticated crawling with browser sessions, cookies and local storage reuse
 - Continuous or on-demand monitoring of websites and hidden services over time
 - UI submission/import capabilities
