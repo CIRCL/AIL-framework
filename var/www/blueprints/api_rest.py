@@ -172,6 +172,10 @@ def lacus_cookiejar_import():
 @token_required('user')
 def get_crawler_scheduler():
     res = crawlers.get_schedulers_metas()
+    # Ensure tags sets are JSON-serializable
+    for meta in res:
+        if isinstance(meta.get('tags'), set):
+            meta['tags'] = list(meta['tags'])
     return create_json_response(res, 200)
 
 @api_rest.route("api/v1/crawler/schedule/<path:schedule_uuid>", methods=['DELETE'])
@@ -179,7 +183,13 @@ def get_crawler_scheduler():
 def delete_crawler_schedule(schedule_uuid):
     data = {'uuid': schedule_uuid}
     res = crawlers.api_delete_schedule(data)
-    return create_json_response(res[0], res[1])
+    # Ensure error payloads are JSON-serializable (uuid may be a CrawlerSchedule object)
+    if isinstance(res[0], dict):
+        res_dict = {k: str(v) if not isinstance(v, (str, int, float, bool, list, dict, type(None))) else v
+                    for k, v in res[0].items()}
+    else:
+        res_dict = res[0]
+    return create_json_response(res_dict, res[1])
 
 @api_rest.route("api/v1/crawler/captures/status", methods=['GET'])
 @token_required('user')
