@@ -9,7 +9,7 @@ import time
 import html2text
 
 import gcld3
-from lexilang.detector import detect as lexilang_detect
+from picolang.detector import detect as picolang_detect
 from libretranslatepy import LibreTranslateAPI
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -242,7 +242,7 @@ dict_iso_1_to_3 = {
     'sn': 'sna',
     'so': 'som',
     'sq': 'sqi',
-    'sr': 'hbs',  # Lexilang invalid use of sr. Should se deprecated sh
+    'sr': 'hbs',  # picolang invalid use of sr. Should se deprecated sh
     'st': 'sot',
     'su': 'sun',
     'sv': 'swe',
@@ -625,8 +625,8 @@ class LanguagesDetector:
                 languages.append(lang.language)
         return languages
 
-    def detect_lexilang(self, content):
-        language, prob = lexilang_detect(content)
+    def detect_picolang(self, content):
+        language, prob = picolang_detect(content)
         # print(language, prob)
         if prob > 0 and self.min_probability == -1:
             return [language]
@@ -646,10 +646,10 @@ class LanguagesDetector:
         # print('-------------------------------------------------------')
         # print(content)
         # print(len(content))
-        # lexilang
+        # picolang
         if len(content) < 150:
-            # print('lexilang')
-            languages = self.detect_lexilang(content)
+            # print('picolang')
+            languages = self.detect_picolang(content)
         # gcld3
         else:
             languages = self.detect_gcld3(content)

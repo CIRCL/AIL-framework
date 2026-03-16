@@ -23,9 +23,8 @@ git submodule update
 bash ${AIL_BIN}/LAUNCH.sh -lrv
 bash ${AIL_BIN}/LAUNCH.sh -lkv
 
-echo -e $GREEN"Updating python Lexilang..."$DEFAULT
-pip uninstall -y lexilang
-pip install -U git+https://github.com/ail-project/LexiLang
+echo -e $GREEN"Installing python picolang..."$DEFAULT
+pip install -U picolang
 
 echo -e $GREEN"Updating python pyail."$DEFAULT
 pip install -U pyail
