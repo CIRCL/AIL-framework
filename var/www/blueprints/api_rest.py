@@ -165,6 +165,57 @@ def lacus_cookiejar_import():
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # #    CRAWLER SCHEDULER / STATS    # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@api_rest.route("api/v1/crawler/scheduler", methods=['GET'])
+@token_required('user')
+def get_crawler_scheduler():
+    res = crawlers.get_schedulers_metas()
+    return create_json_response(res, 200)
+
+@api_rest.route("api/v1/crawler/schedule/<path:schedule_uuid>", methods=['DELETE'])
+@token_required('admin')
+def delete_crawler_schedule(schedule_uuid):
+    data = {'uuid': schedule_uuid}
+    res = crawlers.api_delete_schedule(data)
+    return create_json_response(res[0], res[1])
+
+@api_rest.route("api/v1/crawler/captures/status", methods=['GET'])
+@token_required('user')
+def get_crawler_captures_status():
+    res = crawlers.get_captures_status()
+    return create_json_response(res, 200)
+
+@api_rest.route("api/v1/crawler/stats", methods=['GET'])
+@token_required('user')
+def get_crawler_stats():
+    domain_type = request.args.get('domain_type')
+    res = crawlers.get_crawlers_stats(domain_type=domain_type)
+    return create_json_response(res, 200)
+
+@api_rest.route("api/v1/crawler/blacklist", methods=['GET'])
+@token_required('admin')
+def get_crawler_blacklist():
+    res = crawlers.get_blacklist()
+    return create_json_response(list(res), 200)
+
+@api_rest.route("api/v1/crawler/blacklist", methods=['POST'])
+@token_required('admin')
+def add_crawler_blacklist():
+    data = request.get_json()
+    res = crawlers.api_blacklist_domain(data)
+    return create_json_response(res[0], res[1])
+
+@api_rest.route("api/v1/crawler/blacklist/<path:domain>", methods=['DELETE'])
+@token_required('admin')
+def delete_crawler_blacklist(domain):
+    data = {'domain': domain}
+    res = crawlers.api_unblacklist_domain(data)
+    return create_json_response(res[0], res[1])
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #       IMPORTERS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 @api_rest.route("api/v1/import/json/item", methods=['POST'])  # TODO V2 Migration
