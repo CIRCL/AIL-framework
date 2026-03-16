@@ -204,22 +204,22 @@ def get_crawler_stats():
     res = crawlers.get_crawlers_stats(domain_type=domain_type)
     return create_json_response(res, 200)
 
-@api_rest.route("api/v1/crawler/blacklist", methods=['GET'])
+@api_rest.route("api/v1/crawler/blocklist", methods=['GET'])
 @token_required('admin')
-def get_crawler_blacklist():
+def get_crawler_blocklist():
     res = crawlers.get_blacklist()
     return create_json_response(list(res), 200)
 
-@api_rest.route("api/v1/crawler/blacklist", methods=['POST'])
+@api_rest.route("api/v1/crawler/blocklist", methods=['POST'])
 @token_required('admin')
-def add_crawler_blacklist():
+def add_crawler_blocklist():
     data = request.get_json()
     res = crawlers.api_blacklist_domain(data)
     return create_json_response(res[0], res[1])
 
-@api_rest.route("api/v1/crawler/blacklist/<path:domain>", methods=['DELETE'])
+@api_rest.route("api/v1/crawler/blocklist/<path:domain>", methods=['DELETE'])
 @token_required('admin')
-def delete_crawler_blacklist(domain):
+def delete_crawler_blocklist(domain):
     data = {'domain': domain}
     res = crawlers.api_unblacklist_domain(data)
     return create_json_response(res[0], res[1])
