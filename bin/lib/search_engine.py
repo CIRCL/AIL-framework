@@ -87,6 +87,7 @@ def index_all():
 class MeiliSearch:
     def __init__(self):
         self.client = meilisearch.Client(M_URL, M_KEY, timeout=5)
+        self.search_client = meilisearch.Client(M_URL, M_KEY, timeout=30)
 
     def init(self):
         if not self.get_indexes():
@@ -132,7 +133,7 @@ class MeiliSearch:
             elif timestamp_to:
                 q['filter'] = f'last <= {timestamp_to}'
             end_query.append(q)
-        return self.client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
+        return self.search_client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
 
     def get_indexes(self):
         names = []
