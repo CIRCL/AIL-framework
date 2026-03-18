@@ -134,6 +134,20 @@ def add_crawler_task():
     return create_json_response(dict_res, 200)
 
 
+@api_rest.route("api/v1/crawler/stats", methods=['GET'])
+@token_required('user')
+def get_crawler_stats():
+    domain_type = request.args.get('domain_type')
+    res = crawlers.get_crawlers_stats(domain_type=domain_type)
+    return create_json_response(res, 200)
+
+
+@api_rest.route("api/v1/crawler/captures", methods=['GET'])
+@token_required('user')
+def get_crawler_captures():
+    res = crawlers.get_captures_status()
+    return create_json_response(res, 200)
+
 @api_rest.route("api/v1/add/crawler/capture", methods=['POST'])  # TODO V2 Migration
 @token_required('user')
 def add_crawler_capture():
@@ -153,6 +167,7 @@ def get_onions_up_month(date_year_month):
     res = Domains.api_get_onions_by_month(date_year_month)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+
 @api_rest.route("api/v1/lacus/cookiejar/import", methods=['POST'])
 @token_required('user')
 def lacus_cookiejar_import():
@@ -164,62 +179,40 @@ def lacus_cookiejar_import():
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # # # # # # # # # #    CRAWLER SCHEDULER / STATS    # # # # # # # # # # # # # #
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#### SCHEDULER ####
 
 @api_rest.route("api/v1/crawler/scheduler", methods=['GET'])
 @token_required('user')
 def get_crawler_scheduler():
     res = crawlers.get_schedulers_metas()
-    # Ensure tags sets are JSON-serializable
-    for meta in res:
-        if isinstance(meta.get('tags'), set):
-            meta['tags'] = list(meta['tags'])
     return create_json_response(res, 200)
 
-@api_rest.route("api/v1/crawler/schedule/<path:schedule_uuid>", methods=['DELETE'])
+@api_rest.route("api/v1/crawler/schedule/delete/<path:schedule_uuid>", methods=['DELETE'])
 @token_required('admin')
 def delete_crawler_schedule(schedule_uuid):
     data = {'uuid': schedule_uuid}
     res = crawlers.api_delete_schedule(data)
-    # Ensure error payloads are JSON-serializable (uuid may be a CrawlerSchedule object)
-    if isinstance(res[0], dict):
-        res_dict = {k: str(v) if not isinstance(v, (str, int, float, bool, list, dict, type(None))) else v
-                    for k, v in res[0].items()}
-    else:
-        res_dict = res[0]
-    return create_json_response(res_dict, res[1])
+    return create_json_response(res[0], res[1])
 
-@api_rest.route("api/v1/crawler/captures/status", methods=['GET'])
-@token_required('user')
-def get_crawler_captures_status():
-    res = crawlers.get_captures_status()
-    return create_json_response(res, 200)
 
-@api_rest.route("api/v1/crawler/stats", methods=['GET'])
-@token_required('user')
-def get_crawler_stats():
-    domain_type = request.args.get('domain_type')
-    res = crawlers.get_crawlers_stats(domain_type=domain_type)
-    return create_json_response(res, 200)
+#### BLACKLIST ####
 
-@api_rest.route("api/v1/crawler/blocklist", methods=['GET'])
+@api_rest.route("api/v1/crawler/blacklist", methods=['GET'])
 @token_required('admin')
-def get_crawler_blocklist():
+def get_crawler_blacklist():
     res = crawlers.get_blacklist()
     return create_json_response(list(res), 200)
 
-@api_rest.route("api/v1/crawler/blocklist", methods=['POST'])
+@api_rest.route("api/v1/crawler/blacklist/add", methods=['POST'])
 @token_required('admin')
-def add_crawler_blocklist():
+def add_crawler_blacklist():
     data = request.get_json()
     res = crawlers.api_blacklist_domain(data)
     return create_json_response(res[0], res[1])
 
-@api_rest.route("api/v1/crawler/blocklist/<path:domain>", methods=['DELETE'])
+@api_rest.route("api/v1/crawler/blacklist/delete/<path:domain>", methods=['DELETE'])
 @token_required('admin')
-def delete_crawler_blocklist(domain):
+def delete_crawler_blacklist(domain):
     data = {'domain': domain}
     res = crawlers.api_unblacklist_domain(data)
     return create_json_response(res[0], res[1])

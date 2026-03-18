@@ -1853,6 +1853,7 @@ class CrawlerSchedule:
         status = self.get_status()
         if isinstance(status, ScheduleStatus):
             status = status.name
+        meta['tags'] = list(sorted(self.get_tags()))
         meta['status'] = status
         return meta
 
@@ -1907,6 +1908,7 @@ class CrawlerSchedule:
         r_crawler.delete(f'schedule:{self.uuid}')
         r_crawler.delete(f'schedule:tags:{self.uuid}')
         r_crawler.srem('scheduler:schedules', self.uuid)
+        return self.uuid
 
 def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
     schedule_uuid = gen_uuid()
@@ -1925,7 +1927,7 @@ def api_delete_schedule(data):
     schedule = CrawlerSchedule(schedule_uuid)
     if not schedule.exists():
         return {'error': 'unknown schedule uuid', 'uuid': schedule}, 404
-    return schedule.delete(), 200
+    return {'uuid': schedule.delete()}, 200
 
 #### CRAWLER CAPTURE ####
 
