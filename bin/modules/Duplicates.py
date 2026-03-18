@@ -9,7 +9,7 @@ This huge module is, in short term, checking duplicates.
 Its input comes from other modules, namely:
     Credential
 
-Perform comparisions with ssdeep and tlsh
+Perform comparisions with tlsh
 
 """
 
@@ -36,13 +36,11 @@ class Duplicates(AbstractModule):
         super(Duplicates, self).__init__()
 
         config_loader = ConfigLoader()
-        THRESHOLD_SSDEEP = config_loader.get_config_int('Modules_Duplicates', 'threshold_duplicate_ssdeep')
         THRESHOLD_TLSH = config_loader.get_config_int('Modules_Duplicates', 'threshold_duplicate_tlsh')
         self.min_item_size = float(config_loader.get_config_str('Modules_Duplicates', 'min_paste_size')) # # TODO: # FIXME: rename me
         self.maximum_month_range = config_loader.get_config_int('Modules_Duplicates', 'maximum_month_range')
 
         self.algos = {
-                        "ssdeep": {"threshold": THRESHOLD_SSDEEP},
                         "tlsh": {"threshold": THRESHOLD_TLSH}
                      }
 
@@ -65,7 +63,6 @@ class Duplicates(AbstractModule):
 
         # Get Hashs
         content = item.get_content(r_type='bytes')
-        self.algos['ssdeep']['hash'] = Duplicate.get_ssdeep_hash(content)
         self.algos['tlsh']['hash'] = Duplicate.get_tlsh_hash(content)
 
         # TODO: Handle computed duplicates

@@ -899,7 +899,6 @@ def create_item(obj_id, obj_metadata, io_content):
 
 # if __name__ == '__main__':
     # content = 'test file content'
-    # duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
 
     # item = Item('tests/2020/01/02/test_save.gz')
     # item.create(content, _save=False)

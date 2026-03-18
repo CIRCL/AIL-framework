@@ -19,7 +19,6 @@ websockets>9.0
 # Hashlib
 crcmod
 mmh3>2.5
-ssdeep>3.3
 xxhash>3.1.0
 
 # ZMQ
