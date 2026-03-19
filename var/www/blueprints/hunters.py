@@ -29,7 +29,7 @@ from lib import module_extractor
 from lib import item_basic
 from lib import Tracker
 from lib import Tag
-from lib import retro_hunt_markdown
+from lib import markdown_report
 from packages import Date
 
 
@@ -711,7 +711,7 @@ def retro_hunt_export_markdown():
     for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs()):
         obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
         meta = obj.get_meta(options={'last_full_date', 'tags'})
-        content = retro_hunt_markdown.normalize_content(obj.get_content())
+        content = markdown_report.normalize_content(obj.get_content())
         matches = module_extractor.get_tracker_match(user_org, user_id, obj, content, match_uuid=task_uuid)
         if matches:
             matches = sorted(matches, key=lambda match: match[0])
@@ -719,13 +719,13 @@ def retro_hunt_export_markdown():
 
         exported_objects.append({
             'meta': meta,
-            'date_label': retro_hunt_markdown.format_object_date(meta),
-            'infoleak_tags': retro_hunt_markdown.get_infoleak_taxonomy_tags(meta.get('tags')),
-            'excerpts': retro_hunt_markdown.build_match_excerpts(content, matches, context_lines=5),
+            'date_label': markdown_report.format_object_date(meta),
+            'infoleak_tags': markdown_report.get_infoleak_taxonomy_tags(meta.get('tags')),
+            'excerpts': markdown_report.build_match_excerpts(content, matches, context_lines=5),
         })
 
-    markdown_document = retro_hunt_markdown.build_retro_hunt_markdown(retro_hunt_meta, rule_content, exported_objects)
-    filename = retro_hunt_markdown.get_retro_hunt_export_filename(retro_hunt_meta)
+    markdown_document = markdown_report.build_retro_hunt_markdown(retro_hunt_meta, rule_content, exported_objects)
+    filename = markdown_report.get_retro_hunt_export_filename(retro_hunt_meta)
 
     response = Response(markdown_document, mimetype='text/markdown')
     response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'

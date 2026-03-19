@@ -3,8 +3,6 @@
 
 import html
 import re
-from typing import List, Tuple
-
 
 def get_targeted_object_types(filters):
     if filters:
@@ -24,7 +22,7 @@ def format_object_date(meta):
         if first_seen and last_seen:
             return f'{first_seen} / {last_seen}'
         return first_seen or last_seen
-    return meta.get('full_date') or meta.get('date') or meta.get('last_full_date') or 'Unknown'
+    return meta.get('full_date') or meta.get('date') or meta.get('last_full_date') or None
 
 
 def normalize_content(content):
@@ -35,7 +33,7 @@ def normalize_content(content):
     return str(content)
 
 
-def _compute_line_ranges(content: str, matches: List[Tuple[int, int, str]], context_lines: int = 5):
+def _compute_line_ranges(content, matches, context_lines=5):
     if not content:
         return []
 
@@ -138,8 +136,11 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
         '',
         '## Description',
         '',
-        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}",
-        f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}",
+        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}"
+    ]
+    if retro_hunt_meta.get('description'):
+        lines.append(f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}")
+    lines.extend([
         f"- **Targeted object types:** {targeted_objects}",
         '',
         '## YARA Rule',
@@ -150,13 +151,13 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
         '',
         '## Results',
         ''
-    ]
+    ])
 
     if not objects:
         lines.extend(['No matched objects were available for export.', ''])
 
     for index, obj in enumerate(objects, start=1):
-        subtype = obj['meta'].get('subtype') or 'N/A'
+        subtype = obj['meta'].get('subtype') or ''
         infoleak_tags = obj.get('infoleak_tags') or []
         if obj['meta'].get('type'):
             object_label = f"{obj['meta']['type']} / {subtype} / {obj['meta']['id']}"
@@ -165,18 +166,18 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
         lines.extend([
             f"### Object {index}: {object_label}",
             '',
-            f"- **Object ID:** {obj['meta']['id']}",
-            f"- **Subtype:** {subtype}",
-            f"- **Infoleak taxonomy tags:** {', '.join(infoleak_tags) if infoleak_tags else 'None'}",
-            f"- **Date(s):** {obj['date_label']}",
-            ''
         ])
+        tags = ', '.join(infoleak_tags) if infoleak_tags else None
+        if tags:
+            lines.append(f"- **Tags:** {', '.join(infoleak_tags) if infoleak_tags else 'None'}")
+        if obj['date_label']:
+            lines.append(f"- **Date:** {obj['date_label']}")
+        lines.append('')
 
         if obj.get('excerpts'):
             for excerpt_index, excerpt in enumerate(obj['excerpts'], start=1):
                 lines.extend([
-                    f"#### Match Excerpt {excerpt_index}",
-                    '',
+                    f"#### Match Preview {excerpt_index}",
                     f"_{excerpt['line_label']}_",
                     '',
                     excerpt['rendered'],
@@ -184,8 +185,7 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
                 ])
         else:
             lines.extend([
-                '#### Match Excerpts',
-                '',
+                '#### Match Preview',
                 '_No textual excerpt could be generated for this object._',
                 ''
             ])
@@ -196,4 +196,4 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
 def get_retro_hunt_export_filename(retro_hunt_meta):
     name = retro_hunt_meta.get('name', 'retro-hunt')
     uuid = retro_hunt_meta.get('uuid', 'export')
-    return f"{_sanitize_filename(name)}-{uuid}.md"
+    return f"retrohunt_{_sanitize_filename(name)}-{uuid}.md"
