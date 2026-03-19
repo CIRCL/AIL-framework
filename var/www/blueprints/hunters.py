@@ -710,7 +710,7 @@ def retro_hunt_export_markdown():
     exported_objects = []
     for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs()):
         obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
-        meta = obj.get_meta(options={'last_full_date', 'tags'})
+        meta = obj.get_meta(options={'last_full_date', 'protocol', 'tags'})
         content = markdown_report.normalize_content(obj.get_content())
         matches = module_extractor.get_tracker_match(user_org, user_id, obj, content, match_uuid=task_uuid)
         if matches:

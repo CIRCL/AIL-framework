@@ -132,11 +132,12 @@ def _sanitize_filename(value):
 def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
     targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
     lines = [
-        f"# Retro Hunt Export - {retro_hunt_meta.get('name', 'Unnamed Retro Hunt')}",
+        f"# AIL Retro Hunt - {retro_hunt_meta.get('name', '')}",
         '',
         '## Description',
         '',
-        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}"
+        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}",
+        f"- **uuid:** {retro_hunt_meta.get('uuid', '')}"
     ]
     if retro_hunt_meta.get('description'):
         lines.append(f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}")
@@ -167,6 +168,8 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
             f"### Object {index}: {object_label}",
             '',
         ])
+        if obj['meta'].get('protocol'):
+            lines.append(f"- **Platform:** {obj['meta']['protocol']}")
         tags = ', '.join(infoleak_tags) if infoleak_tags else None
         if tags:
             lines.append(f"- **Tags:** {', '.join(infoleak_tags) if infoleak_tags else 'None'}")
