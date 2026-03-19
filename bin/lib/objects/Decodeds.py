@@ -184,8 +184,8 @@ class Decoded(AbstractDaterangeObject):
     def get_decoders(self):
         return ['base64', 'binary', 'hexadecimal']
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         if 'mimetype' in options:
             meta['mimetype'] = self.get_mimetype()

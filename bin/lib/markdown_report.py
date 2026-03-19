@@ -150,7 +150,7 @@ def _sanitize_filename(value):
     return sanitized or 'retro-hunt'
 
 
-def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
+def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
     objects = sorted(objects, key=get_object_sort_key)
     targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
     lines = [
@@ -182,10 +182,15 @@ def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
     for index, obj in enumerate(objects, start=1):
         subtype = obj['meta'].get('subtype') or ''
         infoleak_tags = obj.get('infoleak_tags') or []
-        if obj['meta'].get('type'):
-            object_label = f"{obj['meta']['type']} / {subtype} / {obj['meta']['id']}"
+        if len(obj['meta']['id']) > 20:
+            if obj['meta']['type'] == 'message':
+                s_obj_id = obj['meta']['id'].split('/', 1)[-1]
+            else:
+                s_obj_id = obj['meta']['id'][30:]
         else:
-            object_label = obj['meta']['id']
+            s_obj_id = obj['meta']['id']
+        object_label = f"{obj['meta']['type']} {subtype} [{s_obj_id}]({url_root}{obj['meta']['link']})"
+
         lines.extend([
             f"### Object {index}: {object_label}",
             '',

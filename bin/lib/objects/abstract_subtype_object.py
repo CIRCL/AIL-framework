@@ -102,7 +102,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         if last_seen:
             return f'{last_seen[0:4]}-{last_seen[4:6]}-{last_seen[6:8]}'
 
-    def _get_meta(self, options=None):
+    def _get_meta(self, options=None, flask_context=False):
         if options is None:
             options = set()
         meta = {'id': self.id,
@@ -114,7 +114,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         if 'icon' in options:
             meta['icon'] = self.get_svg_icon()
         if 'link' in options:
-            meta['link'] = self.get_link()
+            meta['link'] = self.get_link(flask_context=flask_context)
         if 'sparkline' in options:
             meta['sparkline'] = self.get_sparkline()
         return meta

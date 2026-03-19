@@ -93,13 +93,13 @@ class SSHKey(AbstractDaterangeObject):
         self._set_field('type', key_type)
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):  # TODO get HOSTS
+    def get_meta(self, options=None, flask_context=False):  # TODO get HOSTS
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self._get_meta(options=options)
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
         meta['key_type'] = self.get_key_type()

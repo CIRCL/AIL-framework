@@ -77,14 +77,14 @@ class AbstractObject(ABC):
     def get_last_full_date(self):
         return None
 
-    def get_default_meta(self, tags=False, link=False, options=set()):
+    def get_default_meta(self, tags=False, link=False, options=set(), flask_context=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
                      'subtype': self.get_subtype(r_str=True)}
         if tags:
             dict_meta['tags'] = self.get_tags(r_list=True)
         if link:
-            dict_meta['link'] = self.get_link()
+            dict_meta['link'] = self.get_link(flask_context=flask_context)
         if 'uuid' in options:
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
         if 'custom' in options:

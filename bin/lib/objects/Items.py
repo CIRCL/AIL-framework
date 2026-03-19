@@ -269,13 +269,13 @@ class Item(AbstractObject):
         self.set_parent(parent_id)
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):
+    def get_meta(self, options=None, flask_context=False):
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True, options=options)
+        meta = self.get_default_meta(tags=True, options=options, flask_context=flask_context)
         meta['date'] = self.get_date(separator=True)
         meta['source'] = self.get_source()
         # optional meta fields

@@ -82,8 +82,8 @@ class DomHash(AbstractDaterangeObject):
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
         return meta

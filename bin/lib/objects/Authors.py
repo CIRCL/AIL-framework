@@ -97,13 +97,14 @@ class Author(AbstractDaterangeObject):
     #     return obj
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):
+    # flask_context: function run in flask
+    def get_meta(self, options=None, flask_context=False):
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self._get_meta(options=options)
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
         return meta

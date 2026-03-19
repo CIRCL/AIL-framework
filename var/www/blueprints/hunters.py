@@ -699,6 +699,8 @@ def retro_hunt_export_markdown():
     if res:
         return create_json_response(res[0], res[1])
 
+    url_root = url_for('hunters.trackers_dashboard', _external=True).split('/trackers', 1)[0]
+
     retro_hunt = Tracker.RetroHunt(task_uuid)
     res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
     if res:
@@ -710,7 +712,7 @@ def retro_hunt_export_markdown():
     exported_objects = []
     for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs()):
         obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
-        meta = obj.get_meta(options={'last_full_date', 'protocol', 'tags'})
+        meta = obj.get_meta(options={'last_full_date', 'link', 'protocol', 'tags'}, flask_context=False)
         content = markdown_report.normalize_content(obj.get_content())
         matches = module_extractor.get_tracker_match(user_org, user_id, obj, content, match_uuid=task_uuid)
         if matches:
@@ -724,7 +726,7 @@ def retro_hunt_export_markdown():
             'excerpts': markdown_report.build_match_excerpts(content, matches, context_lines=5),
         })
 
-    markdown_document = markdown_report.build_retro_hunt_markdown(retro_hunt_meta, rule_content, exported_objects)
+    markdown_document = markdown_report.build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, exported_objects)
     filename = markdown_report.get_retro_hunt_export_filename(retro_hunt_meta)
 
     response = Response(markdown_document, mimetype='text/markdown')

@@ -65,8 +65,8 @@ class FileName(AbstractDaterangeObject):
         if len(pdfs) == 1:
             return pdfs.pop()[1:]
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
         if 'pdf' in options:

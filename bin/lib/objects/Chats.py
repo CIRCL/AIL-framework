@@ -93,8 +93,8 @@ class Chat(AbstractChatObject):
         icon = '\uf086'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
-    def get_meta(self, options=set(), translation_target=None):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), translation_target=None, flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
         if 'icon' in options:

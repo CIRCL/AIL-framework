@@ -196,8 +196,8 @@ class UserAccount(AbstractSubtypeObject):
             messages.append(mess[8:])
         return messages
 
-    def get_meta(self, options=set(), translation_target=None): # TODO Username timeline
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), translation_target=None, flask_context=False): # TODO Username timeline
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)  # TODO add in options ????

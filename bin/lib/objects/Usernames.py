@@ -61,8 +61,8 @@ class Username(AbstractSubtypeObject):
             icon = '\uf007'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True) # TODO NB Chats
@@ -81,6 +81,7 @@ class Username(AbstractSubtypeObject):
         else:
             obj = MISPObject('user-account', standalone=True)
             obj_attrs.append(obj.add_attribute('username', value=self.id))
+            # TODO SET platform name
 
         first_seen = self.get_first_seen()
         last_seen = self.get_last_seen()
