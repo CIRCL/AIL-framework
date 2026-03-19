@@ -4,6 +4,27 @@
 import html
 import re
 
+def _normalize_sort_date(value):
+    if value is None:
+        return None
+    normalized = re.sub(r'[^0-9]', '', str(value))
+    if len(normalized) >= 8:
+        return normalized[:8]
+    return None
+
+
+def get_object_sort_key(obj):
+    meta = obj.get('meta') or {}
+    sort_date = (_normalize_sort_date(meta.get('first_seen')) or
+                 _normalize_sort_date(meta.get('last_seen')) or
+                 _normalize_sort_date(meta.get('last_full_date')))
+    object_type = meta.get('type') or ''
+    object_subtype = meta.get('subtype') or ''
+    object_id = meta.get('id') or ''
+    missing_date = sort_date is None
+    return (missing_date, sort_date or '', object_type, object_subtype, object_id)
+
+
 def get_targeted_object_types(filters):
     if filters:
         return sorted(filters.keys())
@@ -130,6 +151,7 @@ def _sanitize_filename(value):
 
 
 def build_retro_hunt_markdown(retro_hunt_meta, rule_content, objects):
+    objects = sorted(objects, key=get_object_sort_key)
     targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
     lines = [
         f"# AIL Retro Hunt - {retro_hunt_meta.get('name', '')}",
