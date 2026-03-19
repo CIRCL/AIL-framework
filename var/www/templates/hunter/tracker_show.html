@@ -277,9 +277,6 @@
                                         {%for tag in meta['tags']%}
                                             <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                                         {%endfor%}
-                                                {% if not meta['tags'] %}
-                                                    <span class="badge badge-secondary">No tags</span>
-                                                {% endif %}
                                                 </div>
                                             </div>
                                         </div>
@@ -319,13 +316,6 @@
                                         <div>
                                             <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
                                                 <h6 class="mb-0">YARA rule content</h6>
-                                                <div>
-                                                    {% if rule_content %}
-                                                        <span class="badge badge-danger">Configured</span>
-                                                    {% else %}
-                                                        <span class="badge badge-secondary">Not configured</span>
-                                                    {% endif %}
-                                                </div>
                                             </div>
                                             {% if rule_content %}
                                                 <pre class="text-collapse border bg-white mb-2 p-3 tracker-code-block">{{ rule_content }}</pre>
@@ -335,19 +325,11 @@
                                             {% endif %}
                                         </div>
                                         <div>
-                                            <div class="tracker-detail-list mb-3">
+                                            <div class="tracker-detail-list">
                                                 <div class="tracker-detail-row">
-                                                    <span class="tracker-detail-label">Filters</span>
-                                                    <span class="tracker-detail-value">
-                                                        {% if meta['filters'] %}
-                                                            <span class="badge badge-info">Configured</span>
-                                                        {% else %}
-                                                            <span class="badge badge-secondary">None</span>
-                                                        {% endif %}
-                                                    </span>
+                                                    <h6 class="mb-2">Filters</h6>
                                                 </div>
                                             </div>
-                                            <h6 class="mb-2">Tracker filters</h6>
                                             {% if meta['filters'] %}
                                                 <pre class="border bg-white mb-0 p-3 tracker-code-block">{{ meta['filters'] }}</pre>
                                             {% else %}
