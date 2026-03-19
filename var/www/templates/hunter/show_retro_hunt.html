@@ -222,9 +222,14 @@
 {#										</div>#}
 {#									</div>#}
 
-									<button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
-										<i class="fas fa-search"></i> Show Objects
-									</button>
+									<div class="d-flex flex-wrap">
+										<button class="btn btn-info mr-2 mb-2" type="button" id="button-search-tags" onclick="getItems();">
+											<i class="fas fa-search"></i> Show Objects
+										</button>
+										<a class="btn btn-outline-secondary mb-2" href="{{ url_for('hunters.retro_hunt_export_markdown') }}?uuid={{ dict_task['uuid'] }}">
+											<i class="fas fa-file-download"></i> Export Markdown
+										</a>
+									</div>
 
 								</div>
 							</div>

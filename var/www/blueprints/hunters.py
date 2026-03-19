@@ -25,9 +25,11 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib.objects import ail_objects
 from lib import chats_viewer
+from lib import module_extractor
 from lib import item_basic
 from lib import Tracker
 from lib import Tag
+from lib import retro_hunt_markdown
 from packages import Date
 
 
@@ -682,6 +684,52 @@ def retro_hunt_show_task():
                            rule_content=rule_content,
                            bootstrap_label=bootstrap_label)
 
+
+
+@hunters.route('/retro_hunt/task/export/markdown', methods=['GET'])
+@login_required
+@login_read_only
+def retro_hunt_export_markdown():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+
+    task_uuid = request.args.get('uuid', None)
+    res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
+    if res:
+        return create_json_response(res[0], res[1])
+
+    retro_hunt = Tracker.RetroHunt(task_uuid)
+    res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+
+    retro_hunt_meta = retro_hunt.get_meta(options={'creator', 'date', 'description', 'filters', 'tags'})
+    rule_content = Tracker.get_yara_rule_content(retro_hunt_meta['rule'])
+
+    exported_objects = []
+    for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs()):
+        obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
+        meta = obj.get_meta(options={'last_full_date', 'tags'})
+        content = retro_hunt_markdown.normalize_content(obj.get_content())
+        matches = module_extractor.get_tracker_match(user_org, user_id, obj, content, match_uuid=task_uuid)
+        if matches:
+            matches = sorted(matches, key=lambda match: match[0])
+            matches = module_extractor.merge_overlap(matches)
+
+        exported_objects.append({
+            'meta': meta,
+            'date_label': retro_hunt_markdown.format_object_date(meta),
+            'infoleak_tags': retro_hunt_markdown.get_infoleak_taxonomy_tags(meta.get('tags')),
+            'excerpts': retro_hunt_markdown.build_match_excerpts(content, matches, context_lines=5),
+        })
+
+    markdown_document = retro_hunt_markdown.build_retro_hunt_markdown(retro_hunt_meta, rule_content, exported_objects)
+    filename = retro_hunt_markdown.get_retro_hunt_export_filename(retro_hunt_meta)
+
+    response = Response(markdown_document, mimetype='text/markdown')
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
 
 @hunters.route('/retro_hunt/add', methods=['GET', 'POST'])
 @login_required
