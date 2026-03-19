@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>AIL Framework - AIL</title>
+    <title>Tacker - AIL</title>
     <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
     <!-- Core CSS -->
@@ -113,8 +113,15 @@
             gap: 0.4rem;
         }
 
-        .tracker-span-4 {
-            grid-column: span 4;
+        .tracker-rule-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .tracker-span-6 {
+            grid-column: span 6;
         }
 
         .tracker-span-12 {
@@ -126,7 +133,11 @@
                 grid-template-columns: 1fr;
             }
 
-            .tracker-span-4,
+            .tracker-rule-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tracker-span-6,
             .tracker-span-12 {
                 grid-column: auto;
             }
@@ -161,7 +172,7 @@
                         </div>
                         <div class="card-body bg-light">
                             <div class="tracker-dashboard-grid">
-                                <div class="tracker-meta-section tracker-span-4">
+                                <div class="tracker-meta-section tracker-span-6">
                                     <h6><i class="fas fa-crosshairs text-primary"></i> Tracker overview</h6>
                                     <div class="tracker-detail-list">
                                         <div class="tracker-detail-row">
@@ -256,7 +267,7 @@
                                     </div>
                                 </div>
 
-                                <div class="tracker-meta-section tracker-span-4">
+                                <div class="tracker-meta-section tracker-span-6">
                                     <h6><i class="fas fa-bell text-warning"></i> Notification & contacts</h6>
                                     <div class="tracker-detail-list">
                                         <div class="tracker-detail-row">
@@ -302,46 +313,47 @@
                                     </div>
                                 </div>
 
-                                <div class="tracker-meta-section tracker-span-4">
-                                    <h6><i class="fas fa-code text-danger"></i> Rule & filters</h6>
-                                    <div class="tracker-detail-list">
-                                        <div class="tracker-detail-row">
-                                            <span class="tracker-detail-label">YARA rule</span>
-                                            <span class="tracker-detail-value">
-                                                {% if rule_content %}
-                                                    <span class="badge badge-danger">Configured</span>
-                                                {% else %}
-                                                    <span class="badge badge-secondary">Not configured</span>
-                                                {% endif %}
-                                            </span>
+                                <div class="tracker-meta-section tracker-span-12">
+                                    <h6><i class="fas fa-code text-danger"></i> YARA rule & filters</h6>
+                                    <div class="tracker-rule-grid">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                                                <h6 class="mb-0">YARA rule content</h6>
+                                                <div>
+                                                    {% if rule_content %}
+                                                        <span class="badge badge-danger">Configured</span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">Not configured</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% if rule_content %}
+                                                <pre class="text-collapse border bg-white mb-2 p-3 tracker-code-block">{{ rule_content }}</pre>
+                                                <button class="btn btn-info btn-sm" id="btn_read_more">Show more</button>
+                                            {% else %}
+                                                <div class="alert alert-secondary mb-0">This tracker does not include a YARA rule.</div>
+                                            {% endif %}
                                         </div>
-                                        <div class="tracker-detail-row">
-                                            <span class="tracker-detail-label">Filters</span>
-                                            <span class="tracker-detail-value">
-                                                {% if meta['filters'] %}
-                                                    <span class="badge badge-info">Configured</span>
-                                                {% else %}
-                                                    <span class="badge badge-secondary">None</span>
-                                                {% endif %}
-                                            </span>
+                                        <div>
+                                            <div class="tracker-detail-list mb-3">
+                                                <div class="tracker-detail-row">
+                                                    <span class="tracker-detail-label">Filters</span>
+                                                    <span class="tracker-detail-value">
+                                                        {% if meta['filters'] %}
+                                                            <span class="badge badge-info">Configured</span>
+                                                        {% else %}
+                                                            <span class="badge badge-secondary">None</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <h6 class="mb-2">Tracker filters</h6>
+                                            {% if meta['filters'] %}
+                                                <pre class="border bg-white mb-0 p-3 tracker-code-block">{{ meta['filters'] }}</pre>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Filters</span>
+                                            {% endif %}
                                         </div>
-                                    </div>
-                                    <div class="mt-3">
-                                        <h6 class="mb-2">YARA rule content</h6>
-                                        {% if rule_content %}
-                                            <pre class="text-collapse border bg-white mb-2 p-3 tracker-code-block">{{ rule_content }}</pre>
-                                            <button class="btn btn-info btn-sm" id="btn_read_more">Show more</button>
-                                        {% else %}
-                                            <div class="alert alert-secondary mb-0">This tracker does not include a YARA rule.</div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="mt-3">
-                                        <h6 class="mb-2">Tracker filters</h6>
-                                        {% if meta['filters'] %}
-                                            <pre class="border bg-white mb-0 p-3 tracker-code-block">{{ meta['filters'] }}</pre>
-                                        {% else %}
-                                            <span class="badge badge-secondary">No Filters</span>
-                                        {% endif %}
                                     </div>
                                 </div>
 
