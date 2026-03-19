@@ -27,6 +27,122 @@
     <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
 
+    <style>
+        .tracker-dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .tracker-meta-section {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.5rem;
+            padding: 0.9rem 1rem;
+            background: #fff;
+            height: 100%;
+        }
+
+        .tracker-meta-section h6 {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .tracker-detail-list {
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .tracker-detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding-bottom: 0.45rem;
+        }
+
+        .tracker-detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .tracker-detail-label {
+            color: #6c757d;
+            font-weight: 600;
+            min-width: 88px;
+        }
+
+        .tracker-detail-value {
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .tracker-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .tracker-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .tracker-stat-card {
+            border-radius: 0.5rem;
+            padding: 0.85rem;
+            color: #fff;
+        }
+
+        .tracker-stat-card .tracker-stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .tracker-code-block {
+            max-height: 520px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .tracker-plain-list {
+            display: grid;
+            gap: 0.4rem;
+        }
+
+        .tracker-rule-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .tracker-span-6 {
+            grid-column: span 6;
+        }
+
+        .tracker-span-12 {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1199.98px) {
+            .tracker-dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tracker-rule-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tracker-span-6,
+            .tracker-span-12 {
+                grid-column: auto;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -39,10 +155,9 @@
         {% include 'hunter/menu_sidebar.html' %}
         <div class="col-12 col-lg-10" id="core_content">
 
-
             <div class="row">
-                <div class="col-lg-4">
-                    <div class="card my-2">
+                <div class="col-12 my-2">
+                    <div class="card">
                         <div class="card-header bg-dark text-white">
                             <span class="badge badge-light lex-row-reverse float-right">
                                 <span id="sparkline"></span>
@@ -55,12 +170,14 @@
                                 {% endif %}
                             </h4>
                         </div>
-                        <div class="card-body bg-light pt-2">
-                            <table class="table table-borderless">
-                                <tbody>
-                                <tr>
-                                    <td class="text-right"><b>Type</b></td>
-                                    <td>
+                        <div class="card-body bg-light">
+                            <div class="tracker-dashboard-grid">
+                                <div class="tracker-meta-section tracker-span-6">
+                                    <h6><i class="fas fa-crosshairs text-primary"></i> Tracker overview</h6>
+                                    <div class="tracker-detail-list">
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Type</span>
+                                            <div class="tracker-detail-value">
                                         {% if meta['type'] == 'word' %}
                                             <i class="fas fa-font"></i>&nbsp;
                                         {% elif meta['type'] == 'set' %}
@@ -73,11 +190,11 @@
                                             <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>&nbsp;
                                         {% endif %}
                                         {{ meta['type'] }}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Tracked</b></td>
-                                    <td>
+                                            </div>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Tracked</span>
+                                            <div class="tracker-detail-value">
                                         {% if meta['type'] == 'typosquatting' %}
                                             <a class="btn btn-primary" data-toggle="collapse" href="#collapseTypo" role="button" aria-expanded="false" aria-controls="collapseTypo" data-toggle="tooltip" title="Show Variations">
                                                 {{ meta['tracked'] }} &nbsp;<i class="fas fa-chevron-circle-down"></i>
@@ -95,17 +212,15 @@
                                         {% else %}
                                             {{ meta['tracked'] }}
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Date</b></td>
-                                    <td>
-                                        {{meta['date'][0:4]}}/{{meta['date'][4:6]}}/{{meta['date'][6:8]}}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Level</b></td>
-                                    <td>
+                                            </div>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Created</span>
+                                            <span class="tracker-detail-value">{{meta['date'][0:4]}}/{{meta['date'][4:6]}}/{{meta['date'][6:8]}}</span>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Level</span>
+                                            <span class="tracker-detail-value">
                                         {% if meta['level'] == 0 %}
                                             My User
                                         {% elif meta['level'] == 1 %}
@@ -113,125 +228,181 @@
                                         {% elif meta['level'] == 2 %}
                                             My Organisation
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Creator</b></td>
-                                    <td>{{meta['user']}}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Org</b></td>
-                                    <td>
+                                            </span>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Creator</span>
+                                            <span class="tracker-detail-value">{{meta['user']}}</span>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Organisation</span>
+                                            <span class="tracker-detail-value">
                                         {% if meta['org'] %}
                                             {{meta['org_name']}}<br>{{ meta['org'] }}
+                                        {% else %}
+                                            <span class="text-muted">Not set</span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>First Seen</b></td>
-                                    <td>
+                                            </span>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">First seen</span>
+                                            <span class="tracker-detail-value">
                                         {% if meta['first_seen'] %}
                                             {{ meta['first_seen'][0:4] }} / {{ meta['first_seen'][4:6] }} / {{ meta['first_seen'][6:8] }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Last Seen</b></td>
-                                    <td>
+                                            </span>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Last seen</span>
+                                            <span class="tracker-detail-value">
                                         {% if meta['last_seen'] %}
                                             {{ meta['last_seen'][0:4] }} / {{ meta['last_seen'][4:6] }} / {{ meta['last_seen'][6:8] }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
                                         {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Tags</b></td>
-                                    <td>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-meta-section tracker-span-6">
+                                    <h6><i class="fas fa-bell text-warning"></i> Notification & contacts</h6>
+                                    <div class="tracker-detail-list">
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Tags</span>
+                                            <div class="tracker-detail-value">
+                                                <div class="tracker-chip-list justify-content-end">
                                         {%for tag in meta['tags']%}
                                             <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                                         {%endfor%}
-                                    </td>
-                                </tr>
+                                                {% if not meta['tags'] %}
+                                                    <span class="badge badge-secondary">No tags</span>
+                                                {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
                                 {% if meta['filter_duplicate_notification'] %}
-                                    <td class="text-right"><b>Notification</b></td>
-                                    <td>
-                                        <i class="fas fa-clone"></i> Filter Duplicate Content
-                                    </td>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Notification</span>
+                                            <span class="tracker-detail-value"><i class="fas fa-clone"></i> Filter Duplicate Content</span>
+                                        </div>
                                 {% endif %}
-                                <tr>
-                                    <td class="text-right"><b>Mails</b></td>
-                                    <td>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Emails</span>
+                                            <div class="tracker-detail-value tracker-plain-list">
                                         {% for mail in meta['mails'] %}
                                             <div>{{ mail }}</div>
                                         {% endfor %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Webhook</b></td>
-                                    <td>{{meta['webhook']}}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Filters</b></td>
-                                    <td>
-                                        <div class="">
-                                            {% if meta['filters'] %}
-                                                <pre>{{ meta['filters'] }}</pre>
+                                                {% if not meta['mails'] %}
+                                                    <span class="text-muted">No email notifications configured</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="tracker-detail-row">
+                                            <span class="tracker-detail-label">Webhook</span>
+                                            <span class="tracker-detail-value">
+                                                {% if meta['webhook'] %}
+                                                    {{meta['webhook']}}
+                                                {% else %}
+                                                    <span class="text-muted">No webhook configured</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-meta-section tracker-span-12">
+                                    <h6><i class="fas fa-code text-danger"></i> YARA rule & filters</h6>
+                                    <div class="tracker-rule-grid">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+                                                <h6 class="mb-0">YARA rule content</h6>
+                                                <div>
+                                                    {% if rule_content %}
+                                                        <span class="badge badge-danger">Configured</span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">Not configured</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% if rule_content %}
+                                                <pre class="text-collapse border bg-white mb-2 p-3 tracker-code-block">{{ rule_content }}</pre>
+                                                <button class="btn btn-info btn-sm" id="btn_read_more">Show more</button>
                                             {% else %}
-                                                <span class="badge badge-secondary">No Filters</span><br>
+                                                <div class="alert alert-secondary mb-0">This tracker does not include a YARA rule.</div>
                                             {% endif %}
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Objects Match</b></td>
-                                    <td>
+                                        <div>
+                                            <div class="tracker-detail-list mb-3">
+                                                <div class="tracker-detail-row">
+                                                    <span class="tracker-detail-label">Filters</span>
+                                                    <span class="tracker-detail-value">
+                                                        {% if meta['filters'] %}
+                                                            <span class="badge badge-info">Configured</span>
+                                                        {% else %}
+                                                            <span class="badge badge-secondary">None</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <h6 class="mb-2">Tracker filters</h6>
+                                            {% if meta['filters'] %}
+                                                <pre class="border bg-white mb-0 p-3 tracker-code-block">{{ meta['filters'] }}</pre>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Filters</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tracker-meta-section tracker-span-12">
+                                    <h6><i class="fas fa-chart-pie text-success"></i> Tracking activity</h6>
+                                    <div class="tracker-detail-row mb-3">
+                                        <span class="tracker-detail-label">Objects matched</span>
+                                        <div class="tracker-detail-value">
+                                            <div class="tracker-chip-list justify-content-end">
                                         {%for obj_type in meta['nb_objs']%}
-                                            <h4><span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} p-2">
                                                 {{ obj_type }}
                                                 <span class="badge badge-light">{{ meta['nb_objs'][obj_type] }}</span>
-                                            </span></h4>
+                                                </span>
                                         {%endfor%}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Objects Done</b></td>
-                                    <td>
-                                        <h4><span class="badge badge-success">
-                                            <i class="fa-solid fa-check-to-slot"></i>
-                                            <span class="badge badge-light">{{ meta['objs_stats']['done'] }}</span>
-                                        </span></h4>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Objects Rejected</b></td>
-                                    <td>
-                                        <h4><span class="badge badge-danger">
-                                            <i class="fa-solid fa-xmark"></i>
-                                            <span class="badge badge-light">{{ meta['objs_stats']['fp'] }}</span>
-                                        </span></h4>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Objects Read</b></td>
-                                    <td>
-                                        <h4><span class="badge badge-info">
-                                            <i class="fa-solid fa-eye"></i>
-                                            <span class="badge badge-light">{{ meta['objs_stats']['read']}}</span>
-                                        </span></h4>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-right"><b>Objects Unread</b></td>
-                                    <td>
-                                        <h4><span class="badge badge-warning">
-                                            <i class="fa-regular fa-eye-slash"></i>
-                                            <span class="badge badge-light">{{ meta['objs_stats']['unread'] }}</span>
-                                        </span></h4>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+                                                {% if not meta['nb_objs'] %}
+                                                    <span class="badge badge-secondary">No matches yet</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tracker-stat-grid">
+                                        <div class="tracker-stat-card bg-success">
+                                            <div class="small text-uppercase">Done</div>
+                                            <div class="tracker-stat-value">{{ meta['objs_stats']['done'] }}</div>
+                                            <div><i class="fa-solid fa-check-to-slot"></i> Reviewed and validated</div>
+                                        </div>
+                                        <div class="tracker-stat-card bg-danger">
+                                            <div class="small text-uppercase">Rejected</div>
+                                            <div class="tracker-stat-value">{{ meta['objs_stats']['fp'] }}</div>
+                                            <div><i class="fa-solid fa-xmark"></i> False positives</div>
+                                        </div>
+                                        <div class="tracker-stat-card bg-info">
+                                            <div class="small text-uppercase">Read</div>
+                                            <div class="tracker-stat-value">{{ meta['objs_stats']['read']}}</div>
+                                            <div><i class="fa-solid fa-eye"></i> Already reviewed</div>
+                                        </div>
+                                        <div class="tracker-stat-card bg-warning text-dark">
+                                            <div class="small text-uppercase">Unread</div>
+                                            <div class="tracker-stat-value">{{ meta['objs_stats']['unread'] }}</div>
+                                            <div><i class="fa-regular fa-eye-slash"></i> Needs attention</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                            <div class="d-flex flex-row-reverse">
+                        <div class="card-footer bg-white border-0 pt-0">
+                            <div class="d-flex flex-wrap justify-content-end">
                                 <a href="{{ url_for('hunters.tracker_delete') }}?uuid={{ meta['uuid'] }}" style="font-size: 15px">
                                     <button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
                                 </a>
@@ -244,21 +415,8 @@
                                     </a>
                                 {% endif %}
                             </div>
-
                         </div>
                     </div>
-                </div>
-
-                <div class="col-lg-8 mt-1">
-
-                    {% if rule_content %}
-                        <h5 class="mb-0">Yara Rule:</h5>
-                        <p class="my-0">
-                            <pre class="text-collapse border bg-light mb-0 p-2">{{ rule_content }}</pre>
-                            <button class="btn btn-info btn-sm" id="btn_read_more">Show more</button>
-                        </p>
-                    {% endif %}
-
                 </div>
             </div>
 
