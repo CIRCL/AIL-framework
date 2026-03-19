@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_core
+from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
 from lib import chats_viewer
 from lib import module_extractor
@@ -32,8 +33,13 @@ from lib import Tag
 from lib import markdown_report
 from packages import Date
 
+config_loader = ConfigLoader()
+#### VARIABLES ####
+root_url = config_loader.get_config_str("Notifications", "ail_domain")
 
 bootstrap_label = Flask_config.bootstrap_label
+
+config_loader = None
 
 # ============ BLUEPRINT ============
 hunters = Blueprint('hunters', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/hunter'))
@@ -699,8 +705,6 @@ def retro_hunt_export_markdown():
     if res:
         return create_json_response(res[0], res[1])
 
-    url_root = url_for('hunters.trackers_dashboard', _external=True).split('/trackers', 1)[0]
-
     retro_hunt = Tracker.RetroHunt(task_uuid)
     res = Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'view')
     if res:
@@ -726,7 +730,7 @@ def retro_hunt_export_markdown():
             'excerpts': markdown_report.build_match_excerpts(content, matches, context_lines=5),
         })
 
-    markdown_document = markdown_report.build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, exported_objects)
+    markdown_document = markdown_report.build_retro_hunt_markdown(root_url, retro_hunt_meta, rule_content, exported_objects)
     filename = markdown_report.get_retro_hunt_export_filename(retro_hunt_meta)
 
     response = Response(markdown_document, mimetype='text/markdown')
