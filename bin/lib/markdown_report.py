@@ -150,22 +150,8 @@ def _sanitize_filename(value):
     return sanitized or 'retro-hunt'
 
 
-def _build_markdown_document(url_root, title, description_lines, rule_section_title, rule_content, objects, empty_rule_message=None):
+def _build_markdown_document(url_root, lines, objects):
     objects = sorted(objects, key=get_object_sort_key)
-    lines = [
-        title,
-        '',
-        '## Description',
-        '',
-    ]
-    lines.extend(description_lines)
-    lines.extend(['', rule_section_title, ''])
-
-    if rule_content:
-        lines.extend(['```yara', rule_content, '```', ''])
-    elif empty_rule_message:
-        lines.extend([empty_rule_message, ''])
-
     lines.extend(['## Results', ''])
 
     if not objects:
@@ -175,7 +161,10 @@ def _build_markdown_document(url_root, title, description_lines, rule_section_ti
         subtype = obj['meta'].get('subtype') or ''
         infoleak_tags = obj.get('infoleak_tags') or []
         if len(obj['meta']['id']) > 20:
-            if obj['meta']['type'] == 'message':
+            if obj['meta']['type'] == 'item':
+                s_obj_id = obj['meta']['id'].split('/')
+                s_obj_id = f"{s_obj_id[0]} {s_obj_id[-1]}"
+            elif obj['meta']['type'] == 'message':
                 s_obj_id = obj['meta']['id'].split('/', 1)[-1]
             else:
                 s_obj_id = obj['meta']['id'][30:]
@@ -215,47 +204,66 @@ def _build_markdown_document(url_root, title, description_lines, rule_section_ti
 
 def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
     targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
-    description_lines = [
-        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}",
-        f"- **uuid:** {retro_hunt_meta.get('uuid', '')}",
+    lines = [
+        f"# <img src=\"https://ail-project.org/assets/img/ail-project-medium.png\" alt=\"AIL Project\" width=\"120\"> Retro Hunt - {retro_hunt_meta.get('name', '')}",
+        '',
+        '## Details',
+        '',
+        f"- **Name:** {retro_hunt_meta.get('name', 'Unknown')}",
+        f"- **UUID:** {retro_hunt_meta.get('uuid', '')}"
     ]
     if retro_hunt_meta.get('description'):
-        description_lines.append(
-            f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}"
-        )
-    description_lines.append(f"- **Targeted object types:** {targeted_objects}")
-    return _build_markdown_document(
-        url_root,
-        f"# AIL Retro Hunt - {retro_hunt_meta.get('name', '')}",
-        description_lines,
-        '## YARA Rule',
-        rule_content,
-        objects,
-    )
+        lines.append(f"- **Description:** {retro_hunt_meta.get('description') or 'No description provided'}")
+    lines.extend([
+        f"- **Targeted object types:** {targeted_objects}",
+        '',
+        '### YARA Rule',
+        '',
+        '```yara',
+        rule_content or '',
+        '```',
+        '',
+    ])
+    return _build_markdown_document(url_root, lines, objects)
 
 
 def build_tracker_markdown(url_root, tracker_meta, rule_content, objects, filter_obj_types=None, date_from=None, date_to=None):
     filter_obj_types = sorted(filter_obj_types or [])
     targeted_objects = ', '.join(filter_obj_types) if filter_obj_types else 'All tracked object types'
-    description_lines = [
-        f"- **Tracker uuid:** {tracker_meta.get('uuid', '')}",
+    lines = [
+        f"# <img src=\"https://ail-project.org/assets/img/ail-project-medium.png\" alt=\"AIL Project\" width=\"120\"> Tracker Export - {tracker_meta.get('description') or tracker_meta.get('uuid', '')}",
+        '',
+        '## Details',
+        '',
+        f"- **UUID:** {tracker_meta.get('uuid', '')}",
         f"- **Tracker type:** {tracker_meta.get('type', 'Unknown')}",
-        f"- **Tracked value:** {tracker_meta.get('tracked', 'Unknown')}",
+        f"- **Tracked:** {tracker_meta.get('tracked', 'Unknown')}",
         f"- **Targeted object types:** {targeted_objects}",
     ]
     if tracker_meta.get('description'):
-        description_lines.append(f"- **Tracker description:** {tracker_meta.get('description')}")
+        lines.append(f"- **Description:** {tracker_meta.get('description')}")
+
+    lines.append('')
+    lines.append('### Match Information')
     if date_from or date_to:
-        description_lines.append(f"- **Date range:** {date_from or 'N/A'} / {date_to or 'N/A'}")
-    return _build_markdown_document(
-        url_root,
-        f"# AIL Tracker Export - {tracker_meta.get('description') or tracker_meta.get('uuid', '')}",
-        description_lines,
-        '## Rule / Filters',
-        rule_content,
-        objects,
-        empty_rule_message='_This tracker does not include a YARA rule._',
-    )
+        if date_from and date_to:
+            date_from = f"{date_from[0:4]}/{date_from[4:6]}/{date_from[6:8]}"
+            date_to = f"{date_to[0:4]}/{date_to[4:6]}/{date_to[6:8]}"
+        elif date_from:
+            date_from = f"{date_from[0:4]}/{date_from[4:6]}/{date_from[6:8]}"
+        else:
+            date_to = f"{date_to[0:4]}/{date_to[4:6]}/{date_to[6:8]}"
+        lines.append(f"- **Match date range:** {date_from or 'N/A'} - {date_to or 'N/A'}")
+    if tracker_meta.get('first_seen'):
+        lines.append(f"- **First seen:** {tracker_meta.get('first_seen')[0:4]}/{tracker_meta.get('first_seen')[4:6]}/{tracker_meta.get('first_seen')[6:8]}")
+    if tracker_meta.get('last_seen'):
+        lines.append(f"- **Last seen:** {tracker_meta.get('last_seen')[0:4]}/{tracker_meta.get('last_seen')[4:6]}/{tracker_meta.get('last_seen')[6:8]}")
+    lines.append('')
+
+    if rule_content:
+        lines.extend(['### YARA Rule', '```yara', rule_content, '```', ''])
+
+    return _build_markdown_document(url_root, lines, objects)
 
 
 def get_retro_hunt_export_filename(retro_hunt_meta):
@@ -265,6 +273,5 @@ def get_retro_hunt_export_filename(retro_hunt_meta):
 
 
 def get_tracker_export_filename(tracker_meta):
-    name = tracker_meta.get('description') or tracker_meta.get('tracked') or 'tracker'
     uuid = tracker_meta.get('uuid', 'export')
-    return f"tracker_{_sanitize_filename(name)}-{uuid}.md"
+    return f"tracker_{uuid}.md"
