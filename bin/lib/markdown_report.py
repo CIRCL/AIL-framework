@@ -150,31 +150,23 @@ def _sanitize_filename(value):
     return sanitized or 'retro-hunt'
 
 
-def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
+def _build_markdown_document(url_root, title, description_lines, rule_section_title, rule_content, objects, empty_rule_message=None):
     objects = sorted(objects, key=get_object_sort_key)
-    targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
     lines = [
-        f"# AIL Retro Hunt - {retro_hunt_meta.get('name', '')}",
+        title,
         '',
         '## Description',
         '',
-        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}",
-        f"- **uuid:** {retro_hunt_meta.get('uuid', '')}"
     ]
-    if retro_hunt_meta.get('description'):
-        lines.append(f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}")
-    lines.extend([
-        f"- **Targeted object types:** {targeted_objects}",
-        '',
-        '## YARA Rule',
-        '',
-        '```yara',
-        rule_content or '',
-        '```',
-        '',
-        '## Results',
-        ''
-    ])
+    lines.extend(description_lines)
+    lines.extend(['', rule_section_title, ''])
+
+    if rule_content:
+        lines.extend(['```yara', rule_content, '```', ''])
+    elif empty_rule_message:
+        lines.extend([empty_rule_message, ''])
+
+    lines.extend(['## Results', ''])
 
     if not objects:
         lines.extend(['No matched objects were available for export.', ''])
@@ -197,9 +189,8 @@ def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
         ])
         if obj['meta'].get('protocol'):
             lines.append(f"- **Platform:** {obj['meta']['protocol']}")
-        tags = ', '.join(infoleak_tags) if infoleak_tags else None
-        if tags:
-            lines.append(f"- **Tags:** {', '.join(infoleak_tags) if infoleak_tags else 'None'}")
+        if infoleak_tags:
+            lines.append(f"- **Tags:** {', '.join(infoleak_tags)}")
         if obj['date_label']:
             lines.append(f"- **Date:** {obj['date_label']}")
         lines.append('')
@@ -219,11 +210,61 @@ def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
                 '_No textual excerpt could be generated for this object._',
                 ''
             ])
-
     return '\n'.join(lines).strip() + '\n'
+
+
+def build_retro_hunt_markdown(url_root, retro_hunt_meta, rule_content, objects):
+    targeted_objects = ', '.join(get_targeted_object_types(retro_hunt_meta.get('filters')))
+    description_lines = [
+        f"- **Retro hunt name:** {retro_hunt_meta.get('name', 'Unknown')}",
+        f"- **uuid:** {retro_hunt_meta.get('uuid', '')}",
+    ]
+    if retro_hunt_meta.get('description'):
+        description_lines.append(
+            f"- **Retro hunt description:** {retro_hunt_meta.get('description') or 'No description provided'}"
+        )
+    description_lines.append(f"- **Targeted object types:** {targeted_objects}")
+    return _build_markdown_document(
+        url_root,
+        f"# AIL Retro Hunt - {retro_hunt_meta.get('name', '')}",
+        description_lines,
+        '## YARA Rule',
+        rule_content,
+        objects,
+    )
+
+
+def build_tracker_markdown(url_root, tracker_meta, rule_content, objects, filter_obj_types=None, date_from=None, date_to=None):
+    filter_obj_types = sorted(filter_obj_types or [])
+    targeted_objects = ', '.join(filter_obj_types) if filter_obj_types else 'All tracked object types'
+    description_lines = [
+        f"- **Tracker uuid:** {tracker_meta.get('uuid', '')}",
+        f"- **Tracker type:** {tracker_meta.get('type', 'Unknown')}",
+        f"- **Tracked value:** {tracker_meta.get('tracked', 'Unknown')}",
+        f"- **Targeted object types:** {targeted_objects}",
+    ]
+    if tracker_meta.get('description'):
+        description_lines.append(f"- **Tracker description:** {tracker_meta.get('description')}")
+    if date_from or date_to:
+        description_lines.append(f"- **Date range:** {date_from or 'N/A'} / {date_to or 'N/A'}")
+    return _build_markdown_document(
+        url_root,
+        f"# AIL Tracker Export - {tracker_meta.get('description') or tracker_meta.get('uuid', '')}",
+        description_lines,
+        '## Rule / Filters',
+        rule_content,
+        objects,
+        empty_rule_message='_This tracker does not include a YARA rule._',
+    )
 
 
 def get_retro_hunt_export_filename(retro_hunt_meta):
     name = retro_hunt_meta.get('name', 'retro-hunt')
     uuid = retro_hunt_meta.get('uuid', 'export')
     return f"retrohunt_{_sanitize_filename(name)}-{uuid}.md"
+
+
+def get_tracker_export_filename(tracker_meta):
+    name = tracker_meta.get('description') or tracker_meta.get('tracked') or 'tracker'
+    uuid = tracker_meta.get('uuid', 'export')
+    return f"tracker_{_sanitize_filename(name)}-{uuid}.md"
