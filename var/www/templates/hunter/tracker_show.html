@@ -490,9 +490,14 @@
                             </div>
                         </div>
 
-                        <button class="btn btn-info mt-2">
-                            <i class="fas fa-search"></i> Tracked Objects
-                        </button>
+                        <div class="d-flex flex-wrap align-items-center mt-2">
+                            <button class="btn btn-info mr-2">
+                                <i class="fas fa-search"></i> Tracked Objects
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary mt-2 mt-sm-0" onclick="exportTrackedObjects()">
+                                <i class="fas fa-file-export"></i> Export Markdown
+                            </button>
+                        </div>
 
                     </div>
                 </div>
@@ -739,6 +744,30 @@
         var date_from = $('#date-range-from-input').val();
         var date_to = $('#date-range-to-input').val();
         window.location.replace("{{ url_for('hunters.show_tracker') }}?uuid={{ meta['uuid'] }}&date_from=" + date_from + "&date_to=" + date_to);
+    }
+
+    function exportTrackedObjects() {
+        const params = new URLSearchParams();
+        params.set('uuid', '{{ meta['uuid'] }}');
+
+        const dateFrom = $('#date-range-from-input').val();
+        const dateTo = $('#date-range-to-input').val();
+        if (dateFrom) {
+            params.set('date_from', dateFrom);
+        }
+        if (dateTo) {
+            params.set('date_to', dateTo);
+        }
+
+        const selectedTypes = [];
+        $('input[name$="_obj"]:checked').each(function () {
+            selectedTypes.push($(this).attr('name').replace(/_obj$/, ''));
+        });
+        if (selectedTypes.length > 0) {
+            params.set('filter', selectedTypes.join(','));
+        }
+
+        window.open("{{ url_for('hunters.tracker_export_markdown') }}?" + params.toString(), '_blank');
     }
 
 var heatyearChart = echarts.init(document.getElementById('heatmapyear'));

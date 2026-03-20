@@ -249,6 +249,73 @@ def show_tracker():
                             filter_obj_types=filter_obj_types,
                             bootstrap_label=bootstrap_label)
 
+
+@hunters.route('/tracker/export/markdown', methods=['GET'])
+@login_required
+@login_read_only
+def tracker_export_markdown():
+    user_id = current_user.get_user_id()
+    user_org = current_user.get_org()
+    user_role = current_user.get_role()
+
+    tracker_uuid = request.args.get('uuid', None)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    filter_obj_types = ail_core.sanitize_tracked_objects(request.args.get('filter', '').split(','))
+    if len(filter_obj_types) == ail_core.get_nb_objects_tracked():
+        filter_obj_types = []
+
+    res = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'view')
+    if res:
+        return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+
+    if date_from:
+        date_from = date_from.replace('-', '')
+    if date_to:
+        date_to = date_to.replace('-', '')
+    date_from, date_to = Date.sanitise_daterange(date_from, date_to)
+
+    tracker = Tracker.Tracker(tracker_uuid)
+    tracker_meta = tracker.get_meta(options={'description', 'filters', 'tracked'})
+
+    if tracker_meta['type'] == 'yara':
+        rule_content = Tracker.get_yara_rule_content(tracker_meta['tracked'])
+    else:
+        rule_content = None
+
+    exported_objects = []
+    for obj_gid in tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types):
+        obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
+        obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
+        meta = obj.get_meta(options={'last_full_date', 'first_seen', 'last_seen', 'full_date', 'date', 'link', 'protocol', 'tags'}, flask_context=False)
+        content = markdown_report.normalize_content(obj.get_content())
+        matches = module_extractor.get_tracker_match(user_org, user_id, obj, content, match_uuid=tracker_uuid)
+        if matches:
+            matches = sorted(matches, key=lambda match: match[0])
+            matches = module_extractor.merge_overlap(matches)
+
+        exported_objects.append({
+            'meta': meta,
+            'date_label': markdown_report.format_object_date(meta),
+            'infoleak_tags': markdown_report.get_infoleak_taxonomy_tags(meta.get('tags')),
+            'excerpts': markdown_report.build_match_excerpts(content, matches, context_lines=5),
+        })
+
+    markdown_document = markdown_report.build_tracker_markdown(
+        root_url,
+        tracker_meta,
+        rule_content,
+        exported_objects,
+        filter_obj_types=filter_obj_types,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    filename = markdown_report.get_tracker_export_filename(tracker_meta)
+
+    response = Response(markdown_document, mimetype='text/markdown')
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
 @hunters.route("/tracker/show/stats/year", methods=['GET'])
 @login_required
 @login_read_only
