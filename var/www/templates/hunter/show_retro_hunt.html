@@ -132,6 +132,20 @@
             background: rgba(255, 255, 255, 0.65);
         }
 
+        .retro-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.65rem 1rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 999px;
+        }
+
+        .retro-status-badge i {
+            font-size: 1.35rem;
+        }
+
         .retro-span-4 {
             grid-column: span 4;
         }
@@ -180,15 +194,15 @@
                 <div class="col-12 my-2">
                     <div class="card">
                         <div class="card-header bg-dark text-white">
-                            <span class="badge badge-light lex-row-reverse float-right px-3 py-2">
+                            <span class="badge badge-light lex-row-reverse float-right retro-status-badge">
                                 {%if dict_task['state']=='pending'%}
-                                    <span class="text-secondary"><i class="fas fa-ellipsis-h fa-lg"></i> Pending</span>
+                                    <span class="text-secondary"><i class="fas fa-ellipsis-h"></i> Pending</span>
                                 {%elif dict_task['state']=='completed'%}
-                                    <span class="text-success"><i class="fas fa-check-square fa-lg"></i> Completed</span>
+                                    <span class="text-success"><i class="fas fa-check-square"></i> Completed</span>
                                 {%elif dict_task['state']=='paused'%}
-                                    <span class="text-secondary"><i class="fas fa-pause fa-lg"></i> Paused</span>
+                                    <span class="text-secondary"><i class="fas fa-pause"></i> Paused</span>
                                 {%elif dict_task['state']=='running'%}
-                                    <span class="text-secondary"><i class="fas fa-sync-alt fa-lg fa-spin"></i> Running</span>
+                                    <span class="text-secondary"><i class="fas fa-sync-alt fa-spin"></i> Running</span>
                                 {%endif%}
                             </span>
                             <h4 class="card-title mb-1">{{ dict_task['name'] }}</h4>
