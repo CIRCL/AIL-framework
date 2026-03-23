@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
 
-    <title>AIL Framework - AIL</title>
+    <title>Retro Hunt - AIL</title>
     <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
     <!-- Core CSS -->
@@ -25,18 +25,6 @@
     <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
     <style>
-        .btn-link {
-            color: #17a2b8;
-        }
-
-        .btn-link:hover {
-            color: blue;
-        }
-
-        .mouse_pointer {
-            cursor: pointer;
-        }
-
         .retro-dashboard-grid {
             display: grid;
             grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -185,6 +173,7 @@
                             </span>
                             <h4 class="card-title mb-1">{{ dict_task['name'] }}</h4>
                             <p class="mb-0 text-white-50">
+                                {{ dict_task['description'] or '' }}
                                 Retro hunt task overview
                                 {%if dict_task['state']!='completed'%}
                                     <span class="ml-2 text-info font-weight-bold">{{ dict_task['progress'] }}% complete</span>
@@ -194,7 +183,7 @@
                         <div class="card-body bg-light">
                             <div class="retro-dashboard-grid">
                                 <div class="retro-meta-section retro-span-5">
-                                    <h6><i class="fas fa-binoculars text-primary"></i> Task overview</h6>
+                                    <h6><i class="fas fa-crosshairs text-primary"></i> Task overview</h6>
                                     <div class="retro-detail-list">
                                         <div class="retro-detail-row">
                                             <span class="retro-detail-label">Date</span>
