@@ -20,6 +20,79 @@
 {#    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>#}
 {#    <script src="{{ url_for('static', filename='js/d3/sparklines.js') }}"></script>#}
 
+    <style>
+        .tracker-hero {
+            background: linear-gradient(135deg, #0c6cc2 0%, #1282d4 100%);
+            border-radius: 0.75rem;
+            color: #fff;
+            box-shadow: 0 0.5rem 1.25rem rgba(12, 108, 194, 0.18);
+        }
+
+        .tracker-stat-card {
+            display: block;
+            height: 100%;
+            color: inherit;
+            text-decoration: none;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.75rem;
+            background: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .tracker-stat-card:hover,
+        .tracker-stat-card:focus {
+            color: inherit;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.08);
+            border-color: rgba(12, 108, 194, 0.25);
+        }
+
+        .tracker-stat-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(12, 108, 194, 0.12);
+            color: #0c6cc2;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .tracker-stat-count {
+            min-width: 3rem;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .tracker-table thead th {
+            border-top: 0;
+            font-size: 0.8rem;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        .tracker-name {
+            word-break: break-word;
+        }
+
+        .tracker-object-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tracker-empty-state {
+            border: 1px dashed #ced4da;
+            border-radius: 0.75rem;
+            background: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
 
@@ -31,110 +104,240 @@
         {% include 'hunter/menu_sidebar.html' %}
 
         <div class="col-12 col-lg-10" id="core_content">
-
-                <div class="d-flex justify-content-around my-2">
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu') }}">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-ruler-combined"></i>
-                                All Trackers&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['all'] }}</span>
-                            </h5>
+            <div class="py-3 py-lg-4">
+                <div class="tracker-hero p-4 mb-4">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                        <div class="pr-lg-4 mb-3 mb-lg-0">
+                            <h2 class="h3 mb-2">Tracker Dashboard</h2>
+                            <p class="mb-0 text-white-50">
+                                Quickly jump to tracker categories, review recent activity, and create a new tracker in one place.
+                            </p>
                         </div>
-                    </a>
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_word') }}">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-font"></i>
-                                Words&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['word'] }}</span>
-                            </h5>
+                        <div class="d-flex flex-column flex-sm-row">
+                            <a class="btn btn-light mb-2 mb-sm-0 mr-sm-2" href="{{ url_for('hunters.add_tracked_menu') }}">
+                                <i class="fas fa-plus-circle mr-2"></i>Create New Tracker
+                            </a>
+                            <a class="btn btn-outline-light" href="{{ url_for('hunters.tracked_menu') }}">
+                                <i class="fas fa-list mr-2"></i>Browse All Trackers
+                            </a>
                         </div>
-                    </a>
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_set') }}">
-                        <div class="card-body">
-                            <h5 class="card-title"><i class="fas fa-layer-group"></i>
-                                Set&nbsp;&nbsp;&nbsp;&nbsp;<span class="badge badge-light">{{ stats['set'] }}</span>
-                            </h5>
-                        </div>
-                    </a>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-around my-2">
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_regex') }}">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-drafting-compass"></i>
-                                Regex&nbsp;&nbsp;&nbsp;&nbsp;
-                                <span class="badge badge-light">{{ stats['regex'] }}</span>
-                            </h5>
-                        </div>
-                    </a>
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_typosquatting') }}">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fa fa-clone"></i>
-                                Typo Squatting&nbsp;&nbsp;&nbsp;&nbsp;
-                                <span class="badge badge-light">{{ stats['typosquatting'] }}</span>
-                            </h5>
-                        </div>
-                    </a>
-                    <a class="btn btn-info  border-secondary" style="width: 20rem;" href="{{ url_for('hunters.tracked_menu_yara') }}">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>
-                                Yara&nbsp;&nbsp;&nbsp;&nbsp;
-                                <span class="badge badge-light">{{ stats['yara'] }}</span>
-                            </h5>
-                        </div>
-                    </a>
-                </div>
-
-        {# TODO Buttons#}
-
-            <a class="btn btn-primary my-2" href="{{ url_for('hunters.add_tracked_menu') }}">
-                <i class="fas fa-plus-circle ml-auto"></i>
-                Create New Tracker
-            </a>
-
-            <div class="card my-3">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="card-title"><b>Trackers Last Matches</b></h5>
-                </div>
-                <div class="card-body">
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th><i class="fa-solid fa-crosshairs"></i></th>
-                                <th>tracker</th>
-                                <th class="text-center"><i class="fas fa-cube"></i></th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tracked_objs">
-                            {% for tracker in trackers %}
-                                <tr>
-                                    <td>{{ tracker['type'] }}</td>
-                                    <td style="word-break: break-all;">
-                                        <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">{% if tracker['description'] %}{{ tracker['description'] }}{% else %}{{ tracker['tracked'] }}{% endif %}</a>
-                                    </td>
-                                    <td class="text-center">
-                                        <a href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
-                                            <svg height="26" width="26" style="pointer-events:none;">
-                                            <g class="nodes">
-                                                <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
-                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
-                                            </g>
-                                        </svg>
+                <div class="row">
+                    <div class="col-12 col-xl-8 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                                <h3 class="h5 mb-1">Tracker Types</h3>
+                                <p class="text-muted mb-0">Choose a category to manage the trackers most relevant to your workflow.</p>
+                            </div>
+                            <div class="card-body px-4 pb-4 pt-3">
+                                <div class="row">
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <i class="fas fa-ruler-combined"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">All Trackers</div>
+                                                    <small class="text-muted">Open the complete tracker list</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['all'] }}</span>
+                                            </div>
                                         </a>
-                                    </td>
-                                    <td>{{ tracker['timestamp'] }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu_word') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <i class="fas fa-font"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">Words</div>
+                                                    <small class="text-muted">Track single keywords and phrases</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['word'] }}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu_set') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <i class="fas fa-layer-group"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">Sets</div>
+                                                    <small class="text-muted">Review grouped tracker collections</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['set'] }}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu_regex') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <i class="fas fa-drafting-compass"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">Regex</div>
+                                                    <small class="text-muted">Manage flexible pattern matching</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['regex'] }}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu_typosquatting') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <i class="fa fa-clone"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">Typo Squatting</div>
+                                                    <small class="text-muted">Inspect typo and clone detections</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['typosquatting'] }}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-12 col-md-6 col-xl-4 mb-3">
+                                        <a class="tracker-stat-card p-3" href="{{ url_for('hunters.tracked_menu_yara') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="tracker-stat-icon mr-3">
+                                                    <span class="bg-danger text-white font-weight-bold px-2 py-1 rounded">{</span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="font-weight-bold">Yara</div>
+                                                    <small class="text-muted">Access rule-based tracker searches</small>
+                                                </div>
+                                                <span class="badge badge-primary tracker-stat-count">{{ stats['yara'] }}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-12 col-xl-4 mb-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                                <h3 class="h5 mb-1">Quick Actions</h3>
+                                <p class="text-muted mb-0">Start common tasks without leaving the dashboard.</p>
+                            </div>
+                            <div class="card-body px-4 pb-4 pt-3">
+                                <div class="list-group list-group-flush">
+                                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.add_tracked_menu') }}">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="font-weight-bold">Create a tracker</div>
+                                                <small class="text-muted">Add a new tracker for a word, set, regex, typo, or Yara rule.</small>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-muted ml-3"></i>
+                                        </div>
+                                    </a>
+                                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.tracked_menu') }}">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="font-weight-bold">Review all trackers</div>
+                                                <small class="text-muted">Open the full tracker management page.</small>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-muted ml-3"></i>
+                                        </div>
+                                    </a>
+                                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.tracked_menu_yara') }}">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="font-weight-bold">Focus on Yara rules</div>
+                                                <small class="text-muted">Jump directly to Yara-based detections.</small>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-muted ml-3"></i>
+                                        </div>
+                                    </a>
+                                    <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.tracked_menu_typosquatting') }}">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <div class="font-weight-bold">Check typo squatting</div>
+                                                <small class="text-muted">Review suspicious lookalike entries quickly.</small>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-muted ml-3"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
+                        <div class="mb-2 mb-lg-0">
+                            <h3 class="h5 mb-1">Latest Tracker Matches</h3>
+                            <p class="text-muted mb-0">See the most recent tracker hits and open the related object or tracker details.</p>
+                        </div>
+                        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('hunters.tracked_menu') }}">
+                            View all trackers
+                        </a>
+                    </div>
+                    <div class="card-body px-4 pb-4 pt-3">
+                        {% if trackers %}
+                            <div class="table-responsive">
+                                <table class="table tracker-table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Tracker</th>
+                                            <th class="text-center">Object</th>
+                                            <th>Last match</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tracked_objs">
+                                        {% for tracker in trackers %}
+                                            <tr>
+                                                <td>
+                                                    <span class="badge badge-light border text-uppercase px-3 py-2">{{ tracker['type'] }}</span>
+                                                </td>
+                                                <td class="tracker-name">
+                                                    <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">
+                                                        {% if tracker['description'] %}
+                                                            {{ tracker['description'] }}
+                                                        {% else %}
+                                                            {{ tracker['tracked'] }}
+                                                        {% endif %}
+                                                    </a>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a class="tracker-object-link" href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                                        <svg height="26" width="26" style="pointer-events:none;">
+                                                            <g class="nodes">
+                                                                <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
+                                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                                            </g>
+                                                        </svg>
+                                                    </a>
+                                                </td>
+                                                <td class="text-nowrap">{{ tracker['timestamp'] }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="tracker-empty-state text-center py-5 px-3">
+                                <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                                <h4 class="h6">No recent tracker matches</h4>
+                                <p class="text-muted mb-3">Create a tracker to begin monitoring new matches from this dashboard.</p>
+                                <a class="btn btn-primary" href="{{ url_for('hunters.add_tracked_menu') }}">
+                                    <i class="fas fa-plus-circle mr-2"></i>Create New Tracker
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-
-
         </div>
     </div>
 </div>
