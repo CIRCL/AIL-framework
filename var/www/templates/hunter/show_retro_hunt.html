@@ -1,424 +1,554 @@
 <!DOCTYPE html>
 <html>
 
-	<head>
-	  <meta charset="utf-8">
+<head>
+    <meta charset="utf-8">
 
-	  <title>AIL Framework - AIL</title>
-		<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <title>AIL Framework - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
-	  <!-- Core CSS -->
-		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
 
-	  <!-- JS -->
-		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-		<script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+    <script language="javascript" src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
-		<style>
-	    .btn-link {
-	      color: #17a2b8
-	    }
-			.btn-link:hover {
-			  color: blue;
-			}
-	    .mouse_pointer{
-				cursor: pointer;
-			}
-	  </style>
+    <style>
+        .btn-link {
+            color: #17a2b8;
+        }
 
-	</head>
-	<body>
+        .btn-link:hover {
+            color: blue;
+        }
 
-		{% include 'nav_bar.html' %}
+        .mouse_pointer {
+            cursor: pointer;
+        }
 
-        {% include 'modals/retro_hunt_remove_object.html' %}
+        .retro-dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 1rem;
+        }
 
-		<div class="container-fluid">
-			<div class="row">
+        .retro-meta-section {
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 0.5rem;
+            padding: 0.9rem 1rem;
+            background: #fff;
+            height: 100%;
+        }
 
-				{% include 'hunter/menu_sidebar.html' %}
+        .retro-meta-section h6 {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
 
-				<div class="col-12 col-lg-10" id="core_content">
+        .retro-detail-list {
+            display: grid;
+            gap: 0.65rem;
+        }
 
-                    <div class="row">
-                        <div class="col-lg-4">
-                            <div class="card my-2">
-								<div class="card-header bg-dark text-white">
-									<div class="">
-										<span class="badge badge-pill badge-light lex-row-reverse float-right">
-											{%if dict_task['state']=='pending'%}
-												<span class="text-secondary"><i class="fas fa-ellipsis-h fa-3x"></i>pending</span>
-											{%elif dict_task['state']=='completed'%}
-												<span class="text-success"><i class="fas fa-check-square fa-3x"></i>&nbsp;completed</span>
-											{%elif dict_task['state']=='paused'%}
-												<span class="text-secondary"><i class="fas fa-pause fa-3x"></i>&nbsp;paused</span>
-											{%elif dict_task['state']=='running'%}
-												<span class="text-secondary"><i class="fas fa-sync-alt fa-3x fa-spin"></i>running</span>
-											{%endif%}
-										</span>
+        .retro-detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            align-items: flex-start;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            padding-bottom: 0.45rem;
+        }
 
-										<h3 class="card-title">
-											{{dict_task['name']}}
-											{%if dict_task['state']!='completed'%}
-												<span class="text-info">[{{ dict_task['progress']}}%]</span>
-											{%endif%}
-										</h3>
+        .retro-detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
 
-									</div>
-								</div>
-					            <div class="card-body bg-light pt-2">
-									<div class="d-flex justify-content-end">
-										{%if dict_task['state']=='paused'%}
-											<a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
-												<button class='btn btn-info'><i class="fas fa-play"></i></button>
-											</a>
-										{%endif%}
-										{%if dict_task['state']=='running' or dict_task['state']=='pending'%}
-											<!-- <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
-												<button class='btn btn-secondary'><i class="fas fa-stop"></i></button>
-											</a> -->
-											<a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
-												<button class='btn btn-info'><i class="fas fa-pause"></i></button>
-											</a>
-										{%endif%}
-										<a href="{{ url_for('hunters.retro_hunt_delete_task') }}?uuid={{dict_task['uuid']}}"  class="mx-1">
-											<button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
-										</a>
-									</div>
-									<hr>
-					        	    <table class="table table-borderless">
-                                        <tbody>
-                                        <tr>
-                                            <td class="text-right"><b>Date</b></td>
-                                            <td>
-                                                {{dict_task['date'][0:4]}}/{{dict_task['date'][4:6]}}/{{dict_task['date'][6:8]}}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Description</b></td>
-                                            <td>{{dict_task['description']}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Level</b></td>
-                                            <td>
+        .retro-detail-label {
+            color: #6c757d;
+            font-weight: 600;
+            min-width: 108px;
+        }
+
+        .retro-detail-value {
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .retro-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .retro-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .retro-stat-card {
+            border-radius: 0.5rem;
+            padding: 0.85rem;
+            color: #fff;
+        }
+
+        .retro-stat-card .retro-stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .retro-code-block {
+            max-height: 520px;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin-bottom: 0;
+        }
+
+        .retro-action-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .retro-primary-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .retro-primary-actions .btn {
+            min-width: 160px;
+            font-weight: 600;
+            box-shadow: 0 0.35rem 0.8rem rgba(0, 0, 0, 0.12);
+        }
+
+        .retro-muted-block {
+            border: 1px dashed rgba(0, 0, 0, 0.15);
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.65);
+        }
+
+        .retro-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.65rem 1rem;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 999px;
+        }
+
+        .retro-status-badge i {
+            font-size: 1.35rem;
+        }
+
+        .retro-span-4 {
+            grid-column: span 4;
+        }
+
+        .retro-span-5 {
+            grid-column: span 5;
+        }
+
+        .retro-span-7 {
+            grid-column: span 7;
+        }
+
+        .retro-span-12 {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 1199.98px) {
+            .retro-dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .retro-span-4,
+            .retro-span-5,
+            .retro-span-7,
+            .retro-span-12 {
+                grid-column: auto;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+{% include 'nav_bar.html' %}
+
+{% include 'modals/retro_hunt_remove_object.html' %}
+
+<div class="container-fluid">
+    <div class="row">
+
+        {% include 'hunter/menu_sidebar.html' %}
+
+        <div class="col-12 col-lg-10" id="core_content">
+
+            <div class="row">
+                <div class="col-12 my-2">
+                    <div class="card">
+                        <div class="card-header bg-dark text-white">
+                            <span class="badge badge-light lex-row-reverse float-right retro-status-badge">
+                                {%if dict_task['state']=='pending'%}
+                                    <span class="text-secondary"><i class="fas fa-ellipsis-h"></i> Pending</span>
+                                {%elif dict_task['state']=='completed'%}
+                                    <span class="text-success"><i class="fas fa-check-square"></i> Completed</span>
+                                {%elif dict_task['state']=='paused'%}
+                                    <span class="text-secondary"><i class="fas fa-pause"></i> Paused</span>
+                                {%elif dict_task['state']=='running'%}
+                                    <span class="text-secondary"><i class="fas fa-sync-alt fa-spin"></i> Running</span>
+                                {%endif%}
+                            </span>
+                            <h4 class="card-title mb-1">{{ dict_task['name'] }}</h4>
+                            <p class="mb-0 text-white-50">
+                                Retro hunt task overview
+                                {%if dict_task['state']!='completed'%}
+                                    <span class="ml-2 text-info font-weight-bold">{{ dict_task['progress'] }}% complete</span>
+                                {%endif%}
+                            </p>
+                        </div>
+                        <div class="card-body bg-light">
+                            <div class="retro-primary-actions">
+                                <button class="btn btn-info btn-lg" type="button" id="button-search-tags" onclick="getItems();">
+                                    <i class="fas fa-search"></i> Show Objects
+                                </button>
+                                {%if dict_task['state']=='paused'%}
+                                    <a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-success btn-lg">
+                                        <i class="fas fa-play"></i> Resume Retro Hunt
+                                    </a>
+                                {%endif%}
+                                {%if dict_task['state']=='running' or dict_task['state']=='pending'%}
+                                    <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-warning btn-lg">
+                                        <i class="fas fa-pause"></i> Pause Retro Hunt
+                                    </a>
+                                {%endif%}
+                                <a class="btn btn-secondary btn-lg" href="{{ url_for('hunters.retro_hunt_export_markdown') }}?uuid={{ dict_task['uuid'] }}">
+                                    <i class="fas fa-file-download"></i> Export Markdown
+                                </a>
+                                <a href="{{ url_for('hunters.retro_hunt_delete_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-trash-alt"></i> Delete Task
+                                </a>
+                            </div>
+                            <div class="retro-dashboard-grid">
+                                <div class="retro-meta-section retro-span-5">
+                                    <h6><i class="fas fa-binoculars text-primary"></i> Task overview</h6>
+                                    <div class="retro-detail-list">
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Date</span>
+                                            <span class="retro-detail-value">{{dict_task['date'][0:4]}}/{{dict_task['date'][4:6]}}/{{dict_task['date'][6:8]}}</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Description</span>
+                                            <span class="retro-detail-value">{{ dict_task['description'] or 'No description provided' }}</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Level</span>
+                                            <span class="retro-detail-value">
                                                 {% if dict_task['level'] == 1 %}
                                                     Global
                                                 {% elif dict_task['level'] == 2 %}
                                                     My Organisation
+                                                {% else %}
+                                                    —
                                                 {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Tags</b></td>
-                                            <td>
-                                                {%for tag in dict_task['tags']%}
-                                                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
-                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                                    </a>
-                                                {%endfor%}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Creator</b></td>
-                                            <td>{{dict_task['creator']}}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Org</b></td>
-                                            <td>{{dict_task['org_name']}}<br>{{ dict_task['org'] }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Filters</b></td>
-                                            <td>
-                                                <div class="">
-                                                    {% if dict_task['filters'] %}
-                                                        <pre>{{ dict_task['filters'] }}</pre>
-                                                    {% else %}
-                                                        <span class="badge badge-secondary">No Filters</span><br>
+                                            </span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Creator</span>
+                                            <span class="retro-detail-value">{{ dict_task['creator'] }}</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Organisation</span>
+                                            <span class="retro-detail-value">
+                                                {% if dict_task['org'] %}
+                                                    {{ dict_task['org_name'] }}<br>{{ dict_task['org'] }}
+                                                {% else %}
+                                                    <span class="text-muted">Not set</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Tags</span>
+                                            <div class="retro-detail-value">
+                                                <div class="retro-chip-list justify-content-end">
+                                                    {% for tag in dict_task['tags'] %}
+                                                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
+                                                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                                                        </a>
+                                                    {% endfor %}
+                                                    {% if not dict_task['tags'] %}
+                                                        <span class="badge badge-secondary">No tags</span>
                                                     {% endif %}
                                                 </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Objects Match</b></td>
-                                            <td>
-                                                {%for obj_type in dict_task['nb_objs']%}
-                                                    <h4><span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="retro-meta-section retro-span-7">
+                                    <h6><i class="fas fa-tasks text-info"></i> Workflow summary</h6>
+                                    <div class="retro-detail-list">
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Task state</span>
+                                            <span class="retro-detail-value text-capitalize">{{ dict_task['state'] }}</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Progress</span>
+                                            <span class="retro-detail-value">{{ dict_task['progress'] }}%</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Next step</span>
+                                            <div class="retro-detail-value">
+                                                {% if dict_task['state'] == 'paused' %}
+                                                    Resume the hunt to continue processing matched objects.
+                                                {% elif dict_task['state'] == 'running' %}
+                                                    Review the matched objects as new results become available.
+                                                {% elif dict_task['state'] == 'pending' %}
+                                                    The hunt is queued and can be paused if needed.
+                                                {% else %}
+                                                    Review the results and export or manage matched objects.
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="retro-muted-block mt-3">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                            <strong class="text-muted"><i class="fas fa-filter"></i> Filters</strong>
+                                            <span class="small text-muted">Secondary configuration</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            {% if dict_task['filters'] %}
+                                                <pre class="border bg-white p-3 retro-code-block">{{ dict_task['filters'] }}</pre>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No filters configured</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="retro-meta-section retro-span-12">
+                                    <h6><i class="fas fa-chart-pie text-success"></i> Match activity</h6>
+                                    <div class="retro-detail-row mb-3">
+                                        <span class="retro-detail-label">Objects matched</span>
+                                        <div class="retro-detail-value">
+                                            <div class="retro-chip-list justify-content-end">
+                                                {% for obj_type in dict_task['nb_objs'] %}
+                                                    <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} p-2">
                                                         {{ obj_type }}
                                                         <span class="badge badge-light">{{ dict_task['nb_objs'][obj_type] }}</span>
-                                                    </span></h4>
-                                                {%endfor%}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Objects Done</b></td>
-                                            <td>
-                                                <h4><span class="badge badge-success">
-                                                    <i class="fa-solid fa-check-to-slot"></i>
-                                                    <span class="badge badge-light">{{ dict_task['objs_stats']['done'] }}</span>
-                                                </span></h4>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Objects Rejected</b></td>
-                                            <td>
-                                                <h4><span class="badge badge-danger">
-                                                    <i class="fa-solid fa-xmark"></i>
-                                                    <span class="badge badge-light">{{ dict_task['objs_stats']['fp'] }}</span>
-                                                </span></h4>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Objects Read</b></td>
-                                            <td>
-                                                <h4><span class="badge badge-info">
-                                                    <i class="fa-solid fa-eye"></i>
-                                                    <span class="badge badge-light">{{ dict_task['objs_stats']['read']}}</span>
-                                                </span></h4>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-right"><b>Objects Unread</b></td>
-                                            <td>
-                                                <h4><span class="badge badge-warning">
-                                                    <i class="fa-regular fa-eye-slash"></i>
-                                                    <span class="badge badge-light">{{ dict_task['objs_stats']['unread'] }}</span>
-                                                </span></h4>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-					            </div>
-					        </div>
+                                                    </span>
+                                                {% endfor %}
+                                                {% if not dict_task['nb_objs'] %}
+                                                    <span class="badge badge-secondary">No matches yet</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="retro-stat-grid">
+                                        <div class="retro-stat-card bg-success">
+                                            <div class="small text-uppercase">Done</div>
+                                            <div class="retro-stat-value">{{ dict_task['objs_stats']['done'] }}</div>
+                                            <div><i class="fa-solid fa-check-to-slot"></i> Reviewed and validated</div>
+                                        </div>
+                                        <div class="retro-stat-card bg-danger">
+                                            <div class="small text-uppercase">Rejected</div>
+                                            <div class="retro-stat-value">{{ dict_task['objs_stats']['fp'] }}</div>
+                                            <div><i class="fa-solid fa-xmark"></i> False positives</div>
+                                        </div>
+                                        <div class="retro-stat-card bg-info">
+                                            <div class="small text-uppercase">Read</div>
+                                            <div class="retro-stat-value">{{ dict_task['objs_stats']['read'] }}</div>
+                                            <div><i class="fa-solid fa-eye"></i> Already reviewed</div>
+                                        </div>
+                                        <div class="retro-stat-card bg-warning text-dark">
+                                            <div class="small text-uppercase">Unread</div>
+                                            <div class="retro-stat-value">{{ dict_task['objs_stats']['unread'] }}</div>
+                                            <div><i class="fa-regular fa-eye-slash"></i> Needs attention</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="retro-meta-section retro-span-12">
+                                    <h6><i class="fas fa-code text-danger"></i> Retro hunt rule</h6>
+                                    {% if rule_content %}
+                                        <pre class="border bg-white p-3 retro-code-block">{{ rule_content }}</pre>
+                                    {% else %}
+                                        <div class="alert alert-secondary mb-0">No rule content is available for this retro hunt.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
+            </div>
 
-					    <div class="col-lg-8">
+            {% if dict_task['objs'] %}
+                <div class="mt-4">
+                    <table class="table table-bordered table-hover" id="objs_table">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Type</th>
+                                <th></th>
+                                <th>Id</th>
+                                <th></th>
+                                <th>Last Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for object in dict_task['objs'] %}
+                                <tr class="border-color: blue;">
+                                    <td>
+                                        {% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
+                                            {% include 'objects/obj_svg_block.html' %}
+                                        {% endwith %}
+                                        {{ object['type']}}
+                                    </td>
+                                    <td>
+                                        {% if object['subtype'] %}
+                                            {{ object['subtype']}}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
+                                            {{ object['id']}}
+                                        </a>
+                                        <div>
+                                            {% for tag in object['tags'] %}
+                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if object['tracker_status'] == 'read' %}
+                                            <i class="fa-solid fa-eye" title="read"></i>
+                                            <span hidden>read</span>
+                                        {% elif object['tracker_status'] == 'done' %}
+                                            <i class="text-success fa-solid fa-check-to-slot" title="done"></i>
+                                            <span hidden>done</span>
+                                        {% elif object['tracker_status'] == 'rejected' %}
+                                            <i class="text-danger fa-solid fa-xmark" title="rejected (false positive)"></i>
+                                            <span hidden>rejected</span>
+                                        {% else %}
+                                            <i class="fa-regular fa-eye-slash" title="unread"></i>
+                                            <span hidden>unread</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if object['last_full_date'] %}
+                                            {{ object['last_full_date']}}
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">
+                                        {% if object['tracker_status'] == 'read' %}
+                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                            </a>
+                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                            </a>
+                                        {% elif object['tracker_status'] == 'done' %}
+                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                            </a>
+                                        {% elif object['tracker_status'] == 'rejected' %}
+                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                            </a>
+                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                                <i class="fa-regular fa-eye-slash"></i>
+                                            </a>
+                                        {% else %}
+                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                                <i class="text-success fa-solid fa-check-to-slot"></i>
+                                            </a>
+                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-danger py-0 px-1" title="Remove object from retro hunt"
+                                                data-toggle="modal" data-target="#modal_retro_hunt_remove_object"
+                                                data-retro_uuid="{{ dict_task['uuid'] }}" data-obj_gid="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-							<div class="card border-dark my-2">
-								<div class="card-body">
+                <hr>
+            {% endif %}
 
-{#									<div class="row mb-2">#}
-{#										<div class="col-lg-6">#}
-{#											<div class="input-group" id="date-range-from">#}
-{#												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>#}
-{#												<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from" autocomplete="off"> #}
-{#													value="{{ dict_task['date_from_input'][0:4] }}-{{ dict_task['date_from_input'][4:6] }}-{{ dict_task['date_from_input'][6:8] }}"#}
-{#											</div>#}
-{#										</div>#}
-{#										<div class="col-lg-6">#}
-{#											<div class="input-group" id="date-range-to">#}
-{#												<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>#}
-{#												<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to" autocomplete="off"> #}
-{#													value="{{ dict_task['date_to_input'][0:4] }}-{{ dict_task['date_to_input'][4:6] }}-{{ dict_task['date_to_input'][6:8] }}"#}
-{#											</div>#}
-{#										</div>#}
-{#									</div>#}
-
-									<div class="d-flex flex-wrap">
-										<button class="btn btn-info mr-2 mb-2" type="button" id="button-search-tags" onclick="getItems();">
-											<i class="fas fa-search"></i> Show Objects
-										</button>
-										<a class="btn btn-outline-secondary mb-2" href="{{ url_for('hunters.retro_hunt_export_markdown') }}?uuid={{ dict_task['uuid'] }}">
-											<i class="fas fa-file-download"></i> Export Markdown
-										</a>
-									</div>
-
-								</div>
-							</div>
-
-							<p class="my-0"><pre class="border bg-light">{{ rule_content }}</pre></p>
-
-					    </div>
-					</div>
-
-					{% if dict_task['objs'] %}
-						<div class="mt-4">
-							<table class="table table-bordered table-hover" id="objs_table">
-								<thead class="thead-dark">
-									<tr>
-										<th>Type</th>
-                                        <th></th>
-                                        <th>Id</th>
-                                        <th></th>
-                                        <th>Last Date</th>
-                                        <th></th>
-									</tr>
-								</thead>
-								<tbody>
-									{% for object in dict_task['objs'] %}
-                                        <tr class="border-color: blue;">
-                                            <td>
-                                                {% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
-                                                    {% include 'objects/obj_svg_block.html' %}
-                                                {% endwith %}
-                                                {{ object['type']}}
-                                            </td>
-                                            <td>
-                                                {% if object['subtype'] %}
-                                                    {{ object['subtype']}}
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
-                                                    {{ object['id']}}
-                                                </a>
-                                                <div>
-                                                    {% for tag in object['tags'] %}
-                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-                                                    {% endfor %}
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                {% if object['tracker_status'] == 'read' %}
-                                                    <i class="fa-solid fa-eye" title="read"></i>
-                                                    <span hidden>read</span>
-                                                {% elif object['tracker_status'] == 'done' %}
-                                                    <i class="text-success fa-solid fa-check-to-slot" title="done"></i>
-                                                    <span hidden>done</span>
-                                                {% elif object['tracker_status'] == 'rejected' %}
-                                                    <i class="text-danger fa-solid fa-xmark" title="rejected (false positive)"></i>
-                                                    <span hidden>rejected</span>
-                                                {% else %}
-                                                    <i class="fa-regular fa-eye-slash" title="unread"></i>
-                                                    <span hidden>unread</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                {% if object['last_full_date'] %}
-                                                    {{ object['last_full_date']}}
-                                                {% endif %}
-                                            </td>
-                                            <td class="text-right">
-                                                {% if object['tracker_status'] == 'read' %}
-                                                    <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
-                                                            <i class="text-success fa-solid fa-check-to-slot"></i>
-                                                    </a>
-                                                    <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
-                                                            <i class="fa-solid fa-xmark"></i>
-                                                    </a>
-                                                    <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
-                                                            <i class="fa-regular fa-eye-slash"></i>
-                                                    </a>
-                                                {% elif object['tracker_status'] == 'done' %}
-                                                    <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
-                                                            <i class="fa-solid fa-xmark"></i>
-                                                    </a>
-                                                    <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
-                                                            <i class="fa-regular fa-eye-slash"></i>
-                                                    </a>
-                                                {% elif object['tracker_status'] == 'rejected' %}
-                                                    <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
-                                                            <i class="text-success fa-solid fa-check-to-slot"></i>
-                                                    </a>
-                                                    <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
-                                                            <i class="fa-regular fa-eye-slash"></i>
-                                                    </a>
-                                                {% else %}
-                                                    <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
-                                                            <i class="text-success fa-solid fa-check-to-slot"></i>
-                                                    </a>
-                                                    <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
-                                                            <i class="fa-solid fa-xmark"></i>
-                                                    </a>
-                                                {% endif %}
-            									<button class="btn btn-outline-danger py-0 px-1" title="Remove object from retro hunt"
-                                                        data-toggle="modal" data-target="#modal_retro_hunt_remove_object"
-                                                        data-retro_uuid="{{ dict_task['uuid'] }}" data-obj_gid="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
-                                                    <i class="fas fa-trash-alt"></i></button>
-                                                </button>
-                                            </td>
-                                        </tr>
-									{%  endfor %}
-								</tbody>
-							</table>
-						</div>
-
-						<hr>
-					{% endif %}
-
-				</div>
-			</div>
-		</div>
+        </div>
+    </div>
+</div>
 
 <script>
 $(document).ready(function(){
-		$('#nav_title_retro_hunt').removeClass("text-muted");
-
-		/*$('#date-range-from').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-					},
-					setValue: function(s,s1,s2){
-							$('#date-range-from-input').val(s1);
-							$('#date-range-to-input').val(s2);
-					}
-		});
-		$('#date-range-to').dateRangePicker({
-				separator : ' to ',
-				getValue: function(){
-						if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-								return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-						else
-								return '';
-				},
-				setValue: function(s,s1,s2){
-						$('#date-range-from-input').val(s1);
-						$('#date-range-to-input').val(s2);
-				}
-		});*/
+        $('#nav_title_retro_hunt').removeClass("text-muted");
 
         {% if dict_task['objs'] %}
-		$('#objs_table').DataTable({
-	        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-	        "iDisplayLength": 10,
-	        "order": [[ 4, "asc" ]]
-	    });
+        $('#objs_table').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 4, "asc" ]]
+        });
         {% endif%}
 
 });
 
 // track viewed objects
-    const obj_links = document.querySelectorAll("a.obj-link");
-    obj_links.forEach(obj_link => {
-        obj_link.addEventListener("mousedown", function () {
-            const objectGID = obj_link.dataset.objectId;
-            console.log('click')
-            navigator.sendBeacon("{{ url_for('hunters.retro_hunt_object_status_read') }}?uuid={{ dict_task['uuid'] }}&gid=" + objectGID);
-            const row = obj_link.closest("tr");
-            row.children[3].innerHTML = '<i class="fa-solid fa-eye"></i><span hidden>read</span>';
-        });
+const obj_links = document.querySelectorAll("a.obj-link");
+obj_links.forEach(obj_link => {
+    obj_link.addEventListener("mousedown", function () {
+        const objectGID = obj_link.dataset.objectId;
+        navigator.sendBeacon("{{ url_for('hunters.retro_hunt_object_status_read') }}?uuid={{ dict_task['uuid'] }}&gid=" + objectGID);
+        const row = obj_link.closest("tr");
+        row.children[3].innerHTML = '<i class="fa-solid fa-eye"></i><span hidden>read</span>';
     });
+});
 
 function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
+    if($('#nav_menu').is(':visible')){
+        $('#nav_menu').hide();
+        $('#side_menu').removeClass('border-right')
+        $('#side_menu').removeClass('col-lg-2')
+        $('#core_content').removeClass('col-lg-10')
+    }else{
+        $('#nav_menu').show();
+        $('#side_menu').addClass('border-right')
+        $('#side_menu').addClass('col-lg-2')
+        $('#core_content').addClass('col-lg-10')
+    }
 }
 
 function getItems() {
-	var date_from = $('#date-range-from-input').val();
-	var date_to =$('#date-range-to-input').val();
-	{#window.location.replace("{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ dict_task['uuid'] }}&date_from="+date_from+"&date_to="+date_to);#}
     window.location.replace("{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ dict_task['uuid'] }}&objs=True");
 }
 
