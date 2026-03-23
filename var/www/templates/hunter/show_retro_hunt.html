@@ -260,10 +260,6 @@
                                             </span>
                                         </div>
                                         <div class="retro-detail-row">
-                                            <span class="retro-detail-label">Creator</span>
-                                            <span class="retro-detail-value">{{ dict_task['creator'] }}</span>
-                                        </div>
-                                        <div class="retro-detail-row">
                                             <span class="retro-detail-label">Organisation</span>
                                             <span class="retro-detail-value">
                                                 {% if dict_task['org'] %}
@@ -272,6 +268,10 @@
                                                     <span class="text-muted">Not set</span>
                                                 {% endif %}
                                             </span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Creator</span>
+                                            <span class="retro-detail-value">{{ dict_task['creator'] }}</span>
                                         </div>
                                         <div class="retro-detail-row">
                                             <span class="retro-detail-label">Tags</span>
@@ -316,11 +316,11 @@
                                             <span class="retro-detail-label">Next step</span>
                                             <div class="retro-detail-value">
                                                 {% if dict_task['state'] == 'paused' %}
-                                                    Resume the hunt to continue processing matched objects.
+                                                    Resume the hunt to continue processing objects.
                                                 {% elif dict_task['state'] == 'running' %}
                                                     Review the matched objects as new results become available.
                                                 {% elif dict_task['state'] == 'pending' %}
-                                                    The hunt is queued and can be paused if needed.
+                                                    The retro hunt is queued and can be paused if needed.
                                                 {% else %}
                                                     Review the results and export or manage matched objects.
                                                 {% endif %}
