@@ -44,6 +44,55 @@
             box-shadow: 0 0.75rem 2rem rgba(31, 60, 136, 0.18);
         }
 
+        .page-hero p,
+        .page-hero li {
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .hero-info-card {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 0.85rem;
+            padding: 1rem 1.1rem;
+            height: 100%;
+            backdrop-filter: blur(2px);
+        }
+
+        .hero-info-card h6 {
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.85rem;
+            color: #ffffff;
+        }
+
+        .hero-info-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero-info-list li {
+            position: relative;
+            padding-left: 1.1rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .hero-info-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .hero-info-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 0.45rem;
+            height: 0.45rem;
+            border-radius: 50%;
+            background-color: #8fd3ff;
+        }
+
         .hero-metrics .card,
         .tracker-section {
             border: none;
@@ -275,15 +324,42 @@
             <div class="page-hero my-3 p-4 p-lg-5">
                 <div class="row align-items-center">
                     <div class="col-lg-8 mb-4 mb-lg-0">
-                        <span class="badge badge-light text-primary px-3 py-2 mb-3">{{ tracker_type|title }} tracker workspace</span>
-                        <h2 class="mb-3">Manage your trackers faster and with more context.</h2>
-                        <p class="mb-0 lead">This page groups your personal, organisation, and global trackers in one place so you can quickly review scope, notification recipients, and recent activity trends.</p>
+                        <span class="badge badge-light text-primary px-3 py-2 mb-3">Detection and tracking</span>
+                        <h2 class="mb-3">Trackers help analysts detect, classify, and follow relevant content in AIL.</h2>
+                        <p class="lead mb-3">Trackers are user-defined rules or patterns that automatically detect, tag, and notify analysts about information collected by AIL.</p>
+                        <p class="mb-0">Use this page to review personal, organisation, and global trackers, check notification recipients, and monitor recent activity before opening a tracker for more details.</p>
                     </div>
                     <div class="col-lg-4 text-lg-right">
                         <a class="btn btn-light btn-lg px-4" href="{{ url_for('hunters.add_tracked_menu') }}">
                             <i class="fas fa-plus-circle mr-2"></i>
                             Create New Tracker
                         </a>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-12 col-xl-6 mb-3 mb-xl-0">
+                        <div class="hero-info-card">
+                            <h6>Supported tracker types</h6>
+                            <ul class="hero-info-list">
+                                <li>Word tracking</li>
+                                <li>Set-of-words tracking</li>
+                                <li>Regex tracking</li>
+                                <li>YARA rules</li>
+                                <li>Typo-squatting detection</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-xl-6">
+                        <div class="hero-info-card">
+                            <h6>Detection capabilities</h6>
+                            <ul class="hero-info-list">
+                                <li>Real-time tagging and classification</li>
+                                <li>Object occurrence tracking</li>
+                                <li>Webhook or email notification workflows</li>
+                                <li>Built-in YARA editor</li>
+                                <li>Retro Hunts for running new YARA rules on historical data</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
