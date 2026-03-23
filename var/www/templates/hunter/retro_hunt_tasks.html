@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Retro Hunt</title>
+  <title>Retro Hunts</title>
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -225,7 +225,6 @@
       <div class="progress-note">Queued and waiting to start.</div>
     {% elif task['state'] == 'completed' %}
       <span class="state-label text-success"><i class="fas fa-check-circle"></i> Completed</span>
-      <div class="progress-note">This retro hunt finished processing.</div>
     {% elif task['state'] == 'paused' %}
       <span class="state-label text-secondary"><i class="fas fa-pause-circle"></i> Paused</span>
       <div class="progress-note">Progress saved at {{ task['progress'] }}%.</div>
@@ -251,10 +250,6 @@
         <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{ task['uuid'] }}" class="btn btn-info btn-sm">
           <i class="fas fa-pause mr-1"></i> Pause
         </a>
-      {% else %}
-        <span class="btn btn-light btn-sm disabled">
-          <i class="fas fa-check mr-1"></i> No action
-        </span>
       {% endif %}
     </div>
   {% endmacro %}
@@ -281,13 +276,12 @@
         <td>
           <span class="meta-label">Organisation</span>
           <div>{{ dict_task['org_name'] }}</div>
-          <div class="text-muted">{{ dict_task['org'] }}</div>
         </td>
 
         <td>{{ format_date(dict_task['date']) }}</td>
 
         <td class="text-center align-middle">
-          <span class="match-count">{{ dict_task['nb_match'] }}</span>
+          <span class="match-count">{% if dict_task['nb_match'] %}{{ dict_task['nb_match'] }}{% else %}0{% endif %}</span>
         </td>
 
         <td class="state-block">
@@ -310,7 +304,7 @@
           <p class="section-description">{{ description }}</p>
         </div>
         <span class="badge badge-pill badge-light border px-3 py-2 mt-3 mt-lg-0">
-          {{ tasks|length }} task{% if tasks|length != 1 %}s{% endif %}
+          {{ tasks|length }} hunt{% if tasks|length != 1 %}s{% endif %}
         </span>
       </div>
 
@@ -320,7 +314,7 @@
             <table id="{{ table_id }}" class="table table-striped table-bordered retro-table mb-0">
               <thead class="bg-dark text-white">
                 <tr>
-                  <th>Retro hunt</th>
+                  <th>Retro Hunt</th>
                   <th>Owner</th>
                   <th>Created</th>
                   <th>Matches</th>
@@ -360,21 +354,14 @@
           <div class="row align-items-center">
             <div class="col-lg-8 mb-4 mb-lg-0">
               <span class="badge badge-light text-primary px-3 py-2 mb-3">Retro Hunts</span>
-              <h2 class="mb-3">Search historical data more easily</h2>
-              <p class="lead mb-0">
-                Review existing retro hunts, track their progress, and jump directly to the hunt details or actions that matter.
-              </p>
+              <h2 class="mb-0">Search historical data with YARA rules</h2>
             </div>
 
             <div class="col-lg-4">
               <div class="d-flex flex-column flex-lg-column align-items-stretch align-items-lg-end">
                 <a class="btn btn-light btn-lg px-4 mb-3" href="{{url_for('hunters.retro_hunt_add_task')}}">
-                  <i class="fas fa-plus-circle mr-2"></i>
-                  Create New Retro Hunt
-                </a>
-                <a class="btn btn-outline-light btn-lg px-4" href="{{ url_for('hunters.tracked_menu') }}">
-                  <i class="fas fa-crosshairs mr-2"></i>
-                  Open Trackers
+                  <i class="fas fa-history mr-2"></i>
+                  Create Retro Hunt
                 </a>
               </div>
             </div>
@@ -383,25 +370,31 @@
           <div class="row mt-4">
             <div class="col-12 col-md-4 mb-3 mb-md-0">
               <div class="hero-info-card text-center">
-                <i class="fas fa-search fa-2x mb-3"></i>
-                <h6>Centralized overview</h6>
-                <p class="mb-0">See your organisation and global retro hunts in clearly separated sections.</p>
+                <i class="fas fa-history fa-2x mb-3"></i>
+                <h6>Historical search</h6>
+                <p class="mb-0">
+                  Run a new YARA rule on data already stored by AIL.
+                </p>
               </div>
             </div>
 
             <div class="col-12 col-md-4 mb-3 mb-md-0">
               <div class="hero-info-card text-center">
-                <i class="fas fa-tasks fa-2x mb-3"></i>
-                <h6>Quick status checks</h6>
-                <p class="mb-0">Understand whether a task is queued, running, paused, or completed at a glance.</p>
+                <i class="fas fa-search fa-2x mb-3"></i>
+                <h6>Find older matches</h6>
+                <p class="mb-0">
+                  Discover content that was not detected when it was first collected.
+                </p>
               </div>
             </div>
 
             <div class="col-12 col-md-4">
               <div class="hero-info-card text-center">
-                <i class="fas fa-bolt fa-2x mb-3"></i>
-                <h6>Faster actions</h6>
-                <p class="mb-0">Resume, pause, or open a retro hunt directly from the task list.</p>
+                <i class="fas fa-tasks fa-2x mb-3"></i>
+                <h6>Track progress</h6>
+                <p class="mb-0">
+                  Monitor queued, running, paused, and completed Retro Hunts.
+                </p>
               </div>
             </div>
           </div>
@@ -412,7 +405,7 @@
             <div class="card summary-card h-100">
               <div class="card-body">
                 <div class="summary-value">{{ total_count }}</div>
-                <div class="summary-label">Visible retro hunts</div>
+                <div class="summary-label">Visible Retro Hunts</div>
                 <div class="summary-help">All hunts currently available to you.</div>
               </div>
             </div>
@@ -422,8 +415,8 @@
             <div class="card summary-card h-100">
               <div class="card-body">
                 <div class="summary-value">{{ running_count }}</div>
-                <div class="summary-label">Currently running</div>
-                <div class="summary-help">Tasks actively processing historical data.</div>
+                <div class="summary-label">Running</div>
+                <div class="summary-help">Hunts currently scanning historical data.</div>
               </div>
             </div>
           </div>
@@ -432,8 +425,8 @@
             <div class="card summary-card h-100">
               <div class="card-body">
                 <div class="summary-value">{{ paused_count }}</div>
-                <div class="summary-label">Paused tasks</div>
-                <div class="summary-help">Tasks that can be resumed when needed.</div>
+                <div class="summary-label">Paused</div>
+                <div class="summary-help">Hunts that can be resumed later.</div>
               </div>
             </div>
           </div>
@@ -442,8 +435,8 @@
             <div class="card summary-card h-100">
               <div class="card-body">
                 <div class="summary-value">{{ completed_count }}</div>
-                <div class="summary-label">Completed hunts</div>
-                <div class="summary-help">Finished jobs ready for review.</div>
+                <div class="summary-label">Completed</div>
+                <div class="summary-help">Finished hunts ready for review.</div>
               </div>
             </div>
           </div>
@@ -451,22 +444,22 @@
 
         {{ render_task_section(
           'table_retro_hunts_org',
-          'Organisation retro hunts',
+          'Organisation Retro Hunts',
           'Shared',
-          'Retro hunts created for your organisation so your team can review and manage them together.',
+          'These Retro Hunts are shared with your organisation so your team can collaborate on historical YARA searches and review results together.',
           retro_hunts_org,
-          'Your organisation does not have any retro hunts yet.',
-          'Create a new retro hunt to search historical data and share the results with your organisation.'
+          'Your organisation does not have any Retro Hunts yet.',
+          'Create a Retro Hunt to apply a new YARA rule to historical data and share the results with your organisation.'
         ) }}
 
         {{ render_task_section(
           'table_retro_hunts_global',
-          'Global retro hunts',
+          'Global Retro Hunts',
           'Global',
-          'Retro hunts that are visible across the platform and can be monitored from one central place.',
+          'These Retro Hunts are shared with the wider community and can help all users collaborate on historical YARA searches.',
           retro_hunts_global,
-          'No global retro hunts are currently available.',
-          'When global retro hunts are created, they will appear here for quick access and monitoring.'
+          'No global Retro Hunts are currently available.',
+          'Create a global Retro Hunt to share historical YARA searches and results with the wider community.'
         ) }}
 
         <br>
@@ -488,11 +481,11 @@ $(document).ready(function(){
         "iDisplayLength": 10,
         "order": [[2, "desc"]],
         "language": {
-          "search": "Search retro hunts:",
-          "lengthMenu": "Show _MENU_ retro hunts",
-          "info": "Showing _START_ to _END_ of _TOTAL_ retro hunts",
-          "infoEmpty": "No retro hunts available",
-          "zeroRecords": "No matching retro hunts found"
+          "search": "Search Retro Hunts:",
+          "lengthMenu": "Show _MENU_ Retro Hunts",
+          "info": "Showing _START_ to _END_ of _TOTAL_ Retro Hunts",
+          "infoEmpty": "No Retro Hunts available",
+          "zeroRecords": "No matching Retro Hunts found"
         }
       });
     }
