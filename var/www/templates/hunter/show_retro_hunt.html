@@ -112,6 +112,26 @@
             gap: 0.5rem;
         }
 
+        .retro-primary-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .retro-primary-actions .btn {
+            min-width: 160px;
+            font-weight: 600;
+            box-shadow: 0 0.35rem 0.8rem rgba(0, 0, 0, 0.12);
+        }
+
+        .retro-muted-block {
+            border: 1px dashed rgba(0, 0, 0, 0.15);
+            border-radius: 0.5rem;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.65);
+        }
+
         .retro-span-4 {
             grid-column: span 4;
         }
@@ -181,6 +201,27 @@
                             </p>
                         </div>
                         <div class="card-body bg-light">
+                            <div class="retro-primary-actions">
+                                <button class="btn btn-info btn-lg" type="button" id="button-search-tags" onclick="getItems();">
+                                    <i class="fas fa-search"></i> Show Objects
+                                </button>
+                                {%if dict_task['state']=='paused'%}
+                                    <a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-success btn-lg">
+                                        <i class="fas fa-play"></i> Resume Retro Hunt
+                                    </a>
+                                {%endif%}
+                                {%if dict_task['state']=='running' or dict_task['state']=='pending'%}
+                                    <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-warning btn-lg">
+                                        <i class="fas fa-pause"></i> Pause Retro Hunt
+                                    </a>
+                                {%endif%}
+                                <a class="btn btn-secondary btn-lg" href="{{ url_for('hunters.retro_hunt_export_markdown') }}?uuid={{ dict_task['uuid'] }}">
+                                    <i class="fas fa-file-download"></i> Export Markdown
+                                </a>
+                                <a href="{{ url_for('hunters.retro_hunt_delete_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-danger btn-lg">
+                                    <i class="fas fa-trash-alt"></i> Delete Task
+                                </a>
+                            </div>
                             <div class="retro-dashboard-grid">
                                 <div class="retro-meta-section retro-span-5">
                                     <h6><i class="fas fa-crosshairs text-primary"></i> Task overview</h6>
@@ -238,39 +279,43 @@
                                 </div>
 
                                 <div class="retro-meta-section retro-span-7">
-                                    <h6><i class="fas fa-tasks text-info"></i> Workflow & actions</h6>
-                                    <div class="retro-detail-list mb-3">
+                                    <h6><i class="fas fa-tasks text-info"></i> Workflow summary</h6>
+                                    <div class="retro-detail-list">
                                         <div class="retro-detail-row">
-                                            <span class="retro-detail-label">Filters</span>
-                                            <div class="retro-detail-value w-100">
-                                                {% if dict_task['filters'] %}
-                                                    <pre class="border bg-white p-3 retro-code-block">{{ dict_task['filters'] }}</pre>
+                                            <span class="retro-detail-label">Task state</span>
+                                            <span class="retro-detail-value text-capitalize">{{ dict_task['state'] }}</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Progress</span>
+                                            <span class="retro-detail-value">{{ dict_task['progress'] }}%</span>
+                                        </div>
+                                        <div class="retro-detail-row">
+                                            <span class="retro-detail-label">Next step</span>
+                                            <div class="retro-detail-value">
+                                                {% if dict_task['state'] == 'paused' %}
+                                                    Resume the hunt to continue processing matched objects.
+                                                {% elif dict_task['state'] == 'running' %}
+                                                    Review the matched objects as new results become available.
+                                                {% elif dict_task['state'] == 'pending' %}
+                                                    The hunt is queued and can be paused if needed.
                                                 {% else %}
-                                                    <span class="badge badge-secondary">No filters configured</span>
+                                                    Review the results and export or manage matched objects.
                                                 {% endif %}
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="retro-action-stack">
-                                        <button class="btn btn-info" type="button" id="button-search-tags" onclick="getItems();">
-                                            <i class="fas fa-search"></i> Show Objects
-                                        </button>
-                                        <a class="btn btn-outline-secondary" href="{{ url_for('hunters.retro_hunt_export_markdown') }}?uuid={{ dict_task['uuid'] }}">
-                                            <i class="fas fa-file-download"></i> Export Markdown
-                                        </a>
-                                        {%if dict_task['state']=='paused'%}
-                                            <a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-outline-success">
-                                                <i class="fas fa-play"></i> Resume
-                                            </a>
-                                        {%endif%}
-                                        {%if dict_task['state']=='running' or dict_task['state']=='pending'%}
-                                            <a href="{{ url_for('hunters.retro_hunt_pause_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-outline-info">
-                                                <i class="fas fa-pause"></i> Pause
-                                            </a>
-                                        {%endif%}
-                                        <a href="{{ url_for('hunters.retro_hunt_delete_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-outline-danger">
-                                            <i class="fas fa-trash-alt"></i> Delete
-                                        </a>
+                                    <div class="retro-muted-block mt-3">
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                            <strong class="text-muted"><i class="fas fa-filter"></i> Filters</strong>
+                                            <span class="small text-muted">Secondary configuration</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            {% if dict_task['filters'] %}
+                                                <pre class="border bg-white p-3 retro-code-block">{{ dict_task['filters'] }}</pre>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No filters configured</span>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
 
