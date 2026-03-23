@@ -16,9 +16,95 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+	<style>
+		.tracker-page {
+			background: #f8f9fc;
+			min-height: 100vh;
+		}
+
+		.tracker-shell {
+			max-width: 1400px;
+		}
+
+		.tracker-hero {
+			border: 0;
+			background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+			box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.18);
+		}
+
+		.tracker-hero .display-title {
+			font-size: 1.85rem;
+			font-weight: 600;
+		}
+
+		.tracker-card {
+			border: 0;
+			box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
+		}
+
+		.tracker-card .card-header {
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		}
+
+		.section-label {
+			font-size: 0.8rem;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+			text-transform: uppercase;
+			color: #6c757d;
+		}
+
+		.object-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			grid-gap: 0.75rem;
+		}
+
+		.object-option {
+			background: #f8f9fc;
+			border: 1px solid #e9ecef;
+			border-radius: 0.5rem;
+			padding: 0.85rem 1rem;
+			height: 100%;
+		}
+
+		.object-option .custom-control-label {
+			font-weight: 600;
+		}
+
+		.filter-card {
+			border: 1px dashed #adb5bd;
+			background: #fcfcfd;
+		}
+
+		.sticky-panel {
+			position: sticky;
+			top: 1rem;
+		}
+
+		#nb_word {
+			width: 100%;
+			height: calc(1.5em + 0.75rem + 2px);
+			padding: 0.375rem 0.75rem;
+			border: 1px solid #ced4da;
+			border-radius: 0.25rem;
+		}
+
+		#default_yara_rule_content {
+			max-height: 16rem;
+			overflow: auto;
+			white-space: pre-wrap;
+		}
+
+		@media (max-width: 1199.98px) {
+			.sticky-panel {
+				position: static;
+			}
+		}
+	</style>
 </head>
 
-<body>
+<body class="tracker-page">
 
 	{% include 'nav_bar.html' %}
 
@@ -28,286 +114,354 @@
 			{% include 'hunter/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
-
-						<div class="card my-3">
-						  <div class="card-header bg-dark text-white">
-								<h5 class="card-title">{%if dict_tracker%}Edit a{%else%}Create a new{%endif%} Tracker</h5>
+				<div class="container-fluid tracker-shell py-3 py-xl-4">
+					<div class="card tracker-hero text-white mb-4">
+						<div class="card-body p-4 p-xl-5">
+							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+								<div class="pr-lg-4">
+									<div class="section-label text-light mb-2">Tracker configuration</div>
+									<h1 class="display-title mb-2">{%if dict_tracker%}Edit tracker{%else%}Create a new tracker{%endif%}</h1>
+									<p class="mb-0 text-white-50">Use this form to define what should trigger alerts, where notifications should go, and which object types should be scanned.</p>
+								</div>
+								<div class="mt-3 mt-lg-0 text-lg-right">
+									<span class="badge badge-light px-3 py-2 mb-2 d-inline-block">{%if dict_tracker%}Editing existing tracker{%else%}New tracker setup{%endif%}</span>
+									<div class="small text-white-50">Step 1: Configure details &nbsp;•&nbsp; Step 2: Choose scope &nbsp;•&nbsp; Step 3: Define matching rule</div>
+								</div>
 							</div>
-						  <div class="card-body">
-
-								<form action="{%if dict_tracker%}{{ url_for('hunters.tracker_edit') }}{%else%}{{ url_for('hunters.add_tracked_menu') }}{%endif%}" method='post'>
-									{%if dict_tracker%}
-										<input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{dict_tracker['uuid']}}" hidden>
-									{%endif%}
-
-									<div class="row">
-										<div class="col-12 col-xl-9">
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-                                                <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
-										    </div>
-												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{%for mail in dict_tracker['mails'] %}{{mail}} {%endfor%}"{%endif%}{%endif%}>
-										    </div>
-											<div class="input-group mb-2 mr-sm-2">
-										        <div class="input-group-prepend">
-                                                    <div class="input-group-text bg-info text-white"><i class="fas fa-anchor"></i></div>
-										        </div>
-												<input id="webhook" name="webhook" class="form-control" placeholder="Webhook URL" type="text" {%if dict_tracker%}{%if dict_tracker['webhook']%}value="{{dict_tracker['webhook']}}"{%endif%}{%endif%}>
-                                            </div>
-                                            <div class="custom-control custom-switch my-1">
-                                                <input class="custom-control-input" type="checkbox" name="notification_filter_duplicate" id="notification_filter_duplicate" {% if dict_tracker['filter_duplicate_notification'] %}checked=""{% endif %}>
-                                                <label class="custom-control-label" for="notification_filter_duplicate"><i class="fas fa-clone"></i>&nbsp;Notification: Filter Duplicate Content <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Prevent duplicate notifications by filtering matches with identical object content in email and webhook alerts."></i></label>
-                                            </div>
-											<div class="input-group mb-2 mr-sm-2">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
-                                                </div>
-												<input id="description" name="description" class="form-control" placeholder="Tracker Description (optional)" type="text" {%if dict_tracker%}{%if dict_tracker['description']%}value="{{dict_tracker['description']}}"{%endif%}{%endif%}>
-                                            </div>
-
-                                            <div class="card my-4">
-                                                <div class="card-header bg-info text-white">
-													<b>Objects to Track:</b>
-												</div>
-                                                <div class="card-body">
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="cve_obj" id="cve_obj" checked="">#}
-{#                                                        <label class="custom-control-label" for="cve_obj"><i class="fas fa-bug"></i>&nbsp;CVE</label>#}
-{#                                                    </div>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="crypto_obj" id="crypto_obj" checked="">#}
-{#                                                        <label class="custom-control-label" for="crypto_obj"><i class="fas fa-coins"></i>&nbsp;Cryptocurrency</label>#}
-{#                                                    </div>#}
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if not dict_tracker['filters'] or 'decoded' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Content that has been decoded from an encoded format, such as base64"></i></label>
-                                                    </div>
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="domain_obj" id="domain_obj" checked="">#}
-{#                                                        <label class="custom-control-label" for="domain_obj"><i class="fas fa-spider"></i>&nbsp;Domain</label>#}
-{#                                                    </div>#}
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if not dict_tracker['filters'] or 'item' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text that has been processed by AIL. It can include various types of extracted information"></i></label>
-                                                    </div>
-                                                    <div class="card border-dark mb-4" id="sources_item_div">
-                                                        <div class="card-body">
-                                                            <h5>Filter Item by sources</h5>
-                                                            <div class="input-group mb-2 mr-sm-2">
-                                                                <div class="input-group-prepend">
-                                                                    <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
-                                                                </div>
-                                                                <input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item Sources to track (ALL IF EMPTY)" autocomplete="off">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" {% if not dict_tracker['filters'] or 'pgp' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="PGP key/block metadata"></i></label>
-                                                    </div>
-                                                    <div class="card border-dark mb-4" id="sources_pgp_div">
-                                                        <div class="card-body">
-                                                            <h6>Filter PGP by subtype:</h6>
-                                                            <div class="custom-control custom-switch mt-1">
-                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'name' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
-                                                                <label class="custom-control-label" for="filter_pgp_name">
-                                                                    <svg height="26" width="26">
-                                                                        <g class="nodes">
-                                                                            <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>
-                                                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon fas" font-size="16px">&#xf507;</text>
-                                                                        </g>
-                                                                    </svg>
-                                                                    name
-                                                                </label>
-                                                            </div>
-                                                            <div class="custom-control custom-switch mt-1">
-                                                                <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'mail' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
-                                                                <label class="custom-control-label" for="filter_pgp_mail">
-                                                                    <svg height="26" width="26">
-                                                                        <g class="nodes">
-                                                                            <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>
-                                                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="fas" font-size="16px">&#xf1fa;</text>
-                                                                        </g>
-                                                                        </svg>
-                                                                    mail
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="title_obj" id="title_obj" {% if not dict_tracker['filters'] or 'title' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="title_obj"><i class="fas fa-heading"></i>&nbsp;Title <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Title that has been extracted from a HTML page"></i></label>
-                                                    </div>
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if not dict_tracker['filters'] or 'message' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Message <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Messages from Chats"></i></label>
-                                                    </div>
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="file-name_obj" id="file-name_obj" {% if not dict_tracker['filters'] or 'file-name' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="file-name_obj"><i class="far fa-file"></i>&nbsp;File Name <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="File name of Files from chats/messages"></i></label>
-                                                    </div>
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="qrcode_obj" id="qrcode_obj" {% if not dict_tracker['filters'] or 'qrcode' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode"></i>&nbsp;Qrcode <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Qcodes Extracted from Images and Screenshots"></i></label>
-                                                    </div>
-                                                    <div class="custom-control custom-switch mt-1">
-                                                        <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if not dict_tracker['filters'] or 'ocr' in dict_tracker['filters'] %}checked=""{% endif %}>
-                                                        <label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand"></i>&nbsp;OCR <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Text extracted from Images"></i></label>
-                                                    </div>
-
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="level" id="screenshot_obj" checked="">#}
-{#                                                        <label class="custom-control-label" for="screenshot_obj"><i class="fas fa-image"></i>&nbsp;Screenshot</label>#}
-{#                                                    </div>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="level" id="username_obj" checked="">#}
-{#                                                        <label class="custom-control-label" for="username_obj"><i class="fas fa-user"></i>&nbsp;Username</label>#}
-{#                                                    </div>#}
-
-{#                                                    <li class="list-group-item text-left">#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="CveCheck" name="CveCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="CveCheck"><i class="fas fa-bug"></i> Cve</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="CryptocurrencyCheck" name="CryptocurrencyCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="CryptocurrencyCheck"><i class="fas fa-coins"></i> Cryptocurrency</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="DecodedCheck" name="DecodedCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="DecodedCheck"><i class="fas fa-lock-open"></i> Decoded</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="ScreenshotCheck" name="ScreenshotCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="ScreenshotCheck"><i class="fas fa-image"></i> Screenshot</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="PgpCheck" name="PgpCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="PgpCheck"><i class="fas fa-key"></i> PGP</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="UsernameCheck" name="UsernameCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="UsernameCheck"><i class="fas fa-user"></i> Username</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="DomainCheck" name="DomainCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="DomainCheck"><i class="fas fa-spider"></i> Domain</label>#}
-{#                                                        </div>#}
-{#                                                        <div class="form-check">#}
-{#                                                            <input class="form-check-input" type="checkbox" value="True" id="ItemCheck" name="ItemCheck" checked="">#}
-{#                                                            <label class="form-check-label" for="ItemCheck"><i class="fas fa-user"></i> Item</label>#}
-{#                                                        </div>#}
-{##}
-{#                                                </li>#}
-
-
-												</div>
-											</div>
-
-											<div class="card my-4">
-                                                <div class="card-header bg-secondary text-white">
-													<b>Tags</b>
-												</div>
-                                                <div class="card-body">
-													<div class="input-group mb-2 mr-sm-2">
-														<div class="input-group-prepend">
-													  	    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-													    </div>
-														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
-													</div>
-													{% include 'tags/block_tags_selector.html' %}
-												</div>
-											</div>
-
-										</div>
-										<div class="col-12 col-xl-3">
-
-                                            <label  class="mt-3" for="level_selector">View Level</label>
-                                            <select class="custom-select" id="level_selector" name="level">
-                                                {% if dict_tracker %}
-                                                    <option value="1" {% if dict_tracker['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2" {% if dict_tracker['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
-                                                    <option value="0" {% if dict_tracker['level'] == 0 %}selected{% endif %}><i class="fas fa-user"></i> My User</option>
-                                                {% else %}
-                                                    <option value="1" selected><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
-                                                    <option value="0"><i class="fas fa-user"></i> My User</option>
-                                                {% endif %}
-                                            </select>
-
-										</div>
-									</div>
-
-									<hr>
-									<h4>Tracker Type:</h4>
-
-									<select id="tracker_type" name="tracker_type" class="custom-select w-25 mb-3">
-										<option disabled selected value> -- Select a tracker type -- </option>
-										<option value="word">Word</option>
-										<option value="set">Set</option>
-										<option value="regex">Regex</option>
-										<option value="yara">YARA rule</option>
-										<option value="typosquatting">Typo-squatting</option>
-									</select>
-
-									<p id="tracker_desc">Terms to track (space separated)</p>
-
-									<div class="row" id="simple_input">
-										<div class="col-12 col-lg-10">
-											<input id="tracker" name="tracker" class="form-control" placeholder="Terms to track (space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['type'] != 'yara' and dict_tracker['type'] != 'typosquatting'%}value="{{dict_tracker['tracked']}}"{%endif%}{%endif%}>
-										</div>
-										<div class="col-12 col-lg-2">
-											<input type="number" id="nb_word" name="nb_word" name="quantity" min="1" placeholder="Nb of keywords" {%if dict_tracker%}{%if dict_tracker['nb_words']%}value="{{dict_tracker['nb_words']}}"{%endif%}{%endif%}>
-										</div>
-									</div>
-
-
-									<div class="mb-2" id="yara_rule">
-										<div class="" id="yara_default_rules">
-
-											<h6>Default YARA rules:</h6>
-											<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
-											  <option selected>Select a default rule</option>
-												{% for yara_types in all_yara_files %}
-													{% for yara_file_name in all_yara_files[yara_types] %}
-													<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
-													{% endfor %}
-												{% endfor %}
-											</select>
-
-											<pre class="border bg-light" id="default_yara_rule_content"></pre>
-
-										</div>
-
-										<hr>
-
-										<h6>Custom YARA rules:</h6>
-										<div class="row" id="textarea">
-											<div class="col-12">
-												<div class="border">
-													<textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
-												</div>
-											</div>
-										</div>
-									</div>
-
-									<br>
-									<button class="btn btn-success mt-2">
-										<i class="fas fa-plus"></i> {%if dict_tracker%}Edit{%else%}Create{%endif%} Tracker
-									</button>
-
-								</form>
-
-
-
-						  </div>
 						</div>
+					</div>
 
+					<form action="{%if dict_tracker%}{{ url_for('hunters.tracker_edit') }}{%else%}{{ url_for('hunters.add_tracked_menu') }}{%endif%}" method='post'>
+						{%if dict_tracker%}
+							<input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{dict_tracker['uuid']}}" hidden>
+						{%endif%}
 
+						<div class="row">
+							<div class="col-12 col-xl-8">
+								<div class="card tracker-card mb-4">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-sliders-h text-primary mr-2"></i>Basic details</h5>
+										<p class="mb-0 text-muted">Add context so other users can quickly understand what this tracker is monitoring.</p>
+									</div>
+									<div class="card-body">
+										<div class="form-group">
+											<label for="description" class="font-weight-bold">Description</label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+												</div>
+												<input id="description" name="description" class="form-control" placeholder="What does this tracker monitor?" type="text" {%if dict_tracker%}{%if dict_tracker['description']%}value="{{dict_tracker['description']}}"{%endif%}{%endif%}>
+											</div>
+											<small class="form-text text-muted">Optional, but recommended when the tracker will be shared with your team.</small>
+										</div>
+
+										<div class="row">
+											<div class="col-12 col-lg-6">
+												<div class="form-group mb-lg-0">
+													<label for="mails" class="font-weight-bold">Email notifications</label>
+													<div class="input-group">
+														<div class="input-group-prepend">
+															<div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
+														</div>
+														<input id="mails" name="mails" class="form-control" placeholder="analyst@example.com team@example.com" type="text" {%if dict_tracker%}{%if dict_tracker['mails']%}value="{%for mail in dict_tracker['mails'] %}{{mail}} {%endfor%}"{%endif%}{%endif%}>
+													</div>
+													<small class="form-text text-muted">Separate multiple addresses with spaces.</small>
+												</div>
+											</div>
+											<div class="col-12 col-lg-6 mt-3 mt-lg-0">
+												<div class="form-group mb-0">
+													<label for="webhook" class="font-weight-bold">Webhook notifications</label>
+													<div class="input-group">
+														<div class="input-group-prepend">
+															<div class="input-group-text bg-info text-white"><i class="fas fa-anchor"></i></div>
+														</div>
+														<input id="webhook" name="webhook" class="form-control" placeholder="https://your-endpoint.example/webhook" type="text" {%if dict_tracker%}{%if dict_tracker['webhook']%}value="{{dict_tracker['webhook']}}"{%endif%}{%endif%}>
+													</div>
+													<small class="form-text text-muted">Optional callback URL for automated alert handling.</small>
+												</div>
+											</div>
+										</div>
+
+										<div class="alert alert-light border mt-4 mb-0">
+											<div class="custom-control custom-switch my-1">
+												<input class="custom-control-input" type="checkbox" name="notification_filter_duplicate" id="notification_filter_duplicate" {% if dict_tracker['filter_duplicate_notification'] %}checked=""{% endif %}>
+												<label class="custom-control-label font-weight-bold" for="notification_filter_duplicate"><i class="fas fa-clone text-primary mr-1"></i>Filter duplicate notifications</label>
+												<small class="d-block text-muted ml-4 pl-1 mt-1">Prevent repeated alerts when multiple matches contain identical object content in email or webhook notifications.</small>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="card tracker-card mb-4">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-crosshairs text-info mr-2"></i>Objects to scan</h5>
+										<p class="mb-0 text-muted">Choose the object types that can trigger this tracker and refine them when needed.</p>
+									</div>
+									<div class="card-body">
+										<div class="object-grid">
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if not dict_tracker['filters'] or 'decoded' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open text-info mr-1"></i>Decoded</label>
+													<small class="form-text text-muted">Content decoded from formats such as base64.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if not dict_tracker['filters'] or 'item' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="item_obj"><i class="fas fa-file text-info mr-1"></i>Item</label>
+													<small class="form-text text-muted">Processed text items and extracted content.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" {% if not dict_tracker['filters'] or 'pgp' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="pgp_obj"><i class="fas fa-key text-info mr-1"></i>PGP</label>
+													<small class="form-text text-muted">PGP key and block metadata.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="title_obj" id="title_obj" {% if not dict_tracker['filters'] or 'title' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="title_obj"><i class="fas fa-heading text-info mr-1"></i>Title</label>
+													<small class="form-text text-muted">Titles extracted from HTML pages.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if not dict_tracker['filters'] or 'message' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots text-info mr-1"></i>Message</label>
+													<small class="form-text text-muted">Messages from chats and conversations.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="file-name_obj" id="file-name_obj" {% if not dict_tracker['filters'] or 'file-name' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="file-name_obj"><i class="far fa-file text-info mr-1"></i>File name</label>
+													<small class="form-text text-muted">Filenames extracted from shared files or attachments.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="qrcode_obj" id="qrcode_obj" {% if not dict_tracker['filters'] or 'qrcode' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="qrcode_obj"><i class="fas fa-qrcode text-info mr-1"></i>QR code</label>
+													<small class="form-text text-muted">Codes extracted from images and screenshots.</small>
+												</div>
+											</div>
+
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if not dict_tracker['filters'] or 'ocr' in dict_tracker['filters'] %}checked=""{% endif %}>
+													<label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand text-info mr-1"></i>OCR</label>
+													<small class="form-text text-muted">Text recognized from images.</small>
+												</div>
+											</div>
+										</div>
+
+										<div class="card filter-card mt-4 mb-3" id="sources_item_div">
+											<div class="card-body">
+												<h6 class="font-weight-bold mb-1">Refine item tracking by source</h6>
+												<p class="text-muted small mb-3">Leave this empty to scan items from every source.</p>
+												<div class="input-group mb-0">
+													<div class="input-group-prepend">
+														<div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
+													</div>
+													<input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item sources to track (all if empty)" autocomplete="off">
+												</div>
+											</div>
+										</div>
+
+										<div class="card filter-card mt-3" id="sources_pgp_div">
+											<div class="card-body">
+												<h6 class="font-weight-bold mb-1">Refine PGP tracking by subtype</h6>
+												<p class="text-muted small mb-3">Enable one or both PGP subtypes depending on what should trigger alerts.</p>
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'name' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
+													<label class="custom-control-label" for="filter_pgp_name">
+														<svg height="26" width="26" class="mr-1">
+															<g class="nodes">
+																<circle cx="13" cy="13" r="13" fill="#44AA99"></circle>
+																<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon fas" font-size="16px">&#xf507;</text>
+															</g>
+														</svg>
+														Name
+													</label>
+												</div>
+												<div class="custom-control custom-switch mt-2">
+													<input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" {% if not dict_tracker['filters'] %}checked=""{% endif %} {% if 'pgp' in dict_tracker['filters'] %}{% if not 'subtypes' in dict_tracker['filters']['pgp'] %}checked=""{% else %}{% if 'mail' in dict_tracker['filters']['pgp']['subtypes'] %}checked=""{% endif %}{% endif %}{% endif %}>
+													<label class="custom-control-label" for="filter_pgp_mail">
+														<svg height="26" width="26" class="mr-1">
+															<g class="nodes">
+																<circle cx="13" cy="13" r="13" fill="#44AA99"></circle>
+																<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="fas" font-size="16px">&#xf1fa;</text>
+															</g>
+														</svg>
+														Email
+													</label>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="card tracker-card mb-4">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-search text-success mr-2"></i>How should this tracker match?</h5>
+										<p class="mb-0 text-muted">Pick a tracker type and then enter the term, rule, set, or domain variation to monitor.</p>
+									</div>
+									<div class="card-body">
+										<div class="form-row align-items-end">
+											<div class="col-12 col-lg-4">
+												<div class="form-group mb-lg-0">
+													<label for="tracker_type" class="font-weight-bold">Tracker type</label>
+													<select id="tracker_type" name="tracker_type" class="custom-select w-100">
+														<option disabled selected value> -- Select a tracker type -- </option>
+														<option value="word">Word</option>
+														<option value="set">Set</option>
+														<option value="regex">Regex</option>
+														<option value="yara">YARA rule</option>
+														<option value="typosquatting">Typo-squatting</option>
+													</select>
+												</div>
+											</div>
+											<div class="col-12 col-lg-8 mt-3 mt-lg-0">
+												<div class="alert alert-info mb-0 py-2 px-3">
+													<div class="small mb-0" id="tracker_desc">Terms to track (space separated)</div>
+												</div>
+											</div>
+										</div>
+
+										<div class="row mt-3" id="simple_input">
+											<div class="col-12 col-lg-9">
+												<div class="form-group mb-lg-0">
+													<label for="tracker" class="font-weight-bold">Tracked value</label>
+													<input id="tracker" name="tracker" class="form-control" placeholder="Terms to track (space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['type'] != 'yara' and dict_tracker['type'] != 'typosquatting'%}value="{{dict_tracker['tracked']}}"{%endif%}{%endif%}>
+												</div>
+											</div>
+											<div class="col-12 col-lg-3 mt-3 mt-lg-0">
+												<div class="form-group mb-0">
+													<label for="nb_word" class="font-weight-bold">Unique terms required</label>
+													<input type="number" id="nb_word" name="nb_word" min="1" placeholder="1" {%if dict_tracker%}{%if dict_tracker['nb_words']%}value="{{dict_tracker['nb_words']}}"{%endif%}{%endif%}>
+													<small class="form-text text-muted">Used for set trackers.</small>
+												</div>
+											</div>
+										</div>
+
+										<div class="mt-4" id="yara_rule">
+											<div class="card border-0 bg-light mb-3" id="yara_default_rules">
+												<div class="card-body">
+													<h6 class="font-weight-bold">Default YARA rules</h6>
+													<p class="small text-muted">Start with a built-in rule, then inspect its contents below.</p>
+													<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
+														<option selected>Select a default rule</option>
+														{% for yara_types in all_yara_files %}
+															{% for yara_file_name in all_yara_files[yara_types] %}
+																<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
+															{% endfor %}
+														{% endfor %}
+													</select>
+													<pre class="border rounded bg-white p-3 mb-0" id="default_yara_rule_content"></pre>
+												</div>
+											</div>
+
+											<div class="card border-0 bg-light">
+												<div class="card-body">
+													<h6 class="font-weight-bold">Custom YARA rule</h6>
+													<p class="small text-muted">Paste or edit your own YARA rule. The editor will keep the existing content when you edit a tracker.</p>
+													<div class="border rounded bg-white px-3 pt-3">
+														<textarea class="form-control border-0 px-0" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="8">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div class="card tracker-card mb-4 mb-xl-0">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
+										<p class="mb-0 text-muted">Use tags to make trackers easier to search, group, and reuse.</p>
+									</div>
+									<div class="card-body">
+										<div class="form-group mb-3">
+											<label for="tags" class="font-weight-bold">Custom tags</label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+												</div>
+												<input id="tags" name="tags" class="form-control" placeholder="malware campaign client-a" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
+											</div>
+											<small class="form-text text-muted">Separate custom tags with spaces.</small>
+										</div>
+										{% include 'tags/block_tags_selector.html' %}
+									</div>
+								</div>
+							</div>
+
+							<div class="col-12 col-xl-4 mt-4 mt-xl-0">
+								<div class="sticky-panel">
+									<div class="card tracker-card mb-4">
+										<div class="card-header bg-white py-3">
+											<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility & actions</h5>
+											<p class="mb-0 text-muted">Decide who can view this tracker, then save your changes.</p>
+										</div>
+										<div class="card-body">
+											<div class="form-group">
+												<label class="font-weight-bold" for="level_selector">View level</label>
+												<select class="custom-select" id="level_selector" name="level">
+													{% if dict_tracker %}
+														<option value="1" {% if dict_tracker['level'] == 1 %}selected{% endif %}>Global</option>
+														<option value="2" {% if dict_tracker['level'] == 2 %}selected{% endif %}>My Organisation</option>
+														<option value="0" {% if dict_tracker['level'] == 0 %}selected{% endif %}>My User</option>
+													{% else %}
+														<option value="1" selected>Global</option>
+														<option value="2">My Organisation</option>
+														<option value="0">My User</option>
+													{% endif %}
+												</select>
+												<small class="form-text text-muted">Global trackers are visible to all users, organisation trackers stay within your org, and user trackers remain private to you.</small>
+											</div>
+
+											<div class="alert alert-secondary small mb-4">
+												<div class="font-weight-bold mb-2">Quick guidance</div>
+												<ul class="mb-0 pl-3">
+													<li>Use <strong>Word</strong> for exact terms.</li>
+													<li>Use <strong>Set</strong> when several terms should appear together.</li>
+													<li>Use <strong>Regex</strong> for patterns.</li>
+													<li>Use <strong>YARA</strong> for advanced rule logic.</li>
+													<li>Use <strong>Typo-squatting</strong> to generate domain variations.</li>
+												</ul>
+											</div>
+
+											<button class="btn btn-success btn-lg btn-block">
+												<i class="fas fa-save mr-1"></i> {%if dict_tracker%}Save tracker changes{%else%}Create tracker{%endif%}
+											</button>
+										</div>
+									</div>
+
+									<div class="card tracker-card">
+										<div class="card-body">
+											<div class="section-label mb-2">Checklist before saving</div>
+											<ul class="mb-0 pl-3 text-muted">
+												<li>Confirm the tracker type matches your use case.</li>
+												<li>Verify the object types are broad enough to catch the content you expect.</li>
+												<li>Add email or webhook settings if you want notifications.</li>
+												<li>Use tags so the tracker is easy to find later.</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
 			</div>
-
 		</div>
 	</div>
 
@@ -340,31 +494,31 @@ $(document).ready(function(){
 	$('#tracker_type').on('change', function() {
 		var tracker_type = this.value;
 		if (tracker_type=="word") {
-			$("#tracker_desc").text("Token to track. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
+			$("#tracker_desc").text("Track a single exact token. Use a regex tracker if you need special characters such as [<>~!?@#$%^&*|()_-+={}\":;,.\'\\n\\r\\t]/\\.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
 			$("#nb_word").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="set") {
-			$("#tracker_desc").text("Set of Terms to track (space separated). This tracker is used to check if an item contain one or more terms specified in a set. If an item contain NB unique terms (by default NB of unique keywords = 1), this tracker is triggered. You need to use a regex if you want to use one of the following special characters [<>~!?@#$%^&*|()_-+={}\":;,.\'\n\r\t]/\\ ");
+			$("#tracker_desc").text("Track a set of terms separated by spaces. The tracker is triggered when an item contains the required number of unique terms from the set.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
 			$("#nb_word").show();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="regex") {
-			$("#tracker_desc").text("Enter a valid Python regex");
+			$("#tracker_desc").text("Enter a valid Python regular expression.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
 			$("#nb_word").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="yara") {
-			$("#tracker_desc").text("Select a default yara rule or create your own rule:");
+			$("#tracker_desc").text("Select a default YARA rule or write your own custom rule.");
 			$("#tracker_desc").show();
 			$("#tracker").hide();
 			$("#nb_word").hide();
 			$("#yara_rule").show();
 		} else if (tracker_type=="typosquatting") {
-			$("#tracker_desc").text("Generation of variation for domain name. Only one domain name at a time.");
+			$("#tracker_desc").text("Generate variations for one domain name at a time.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
 			$("#nb_word").hide();
