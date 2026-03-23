@@ -920,14 +920,14 @@ def get_user_trackers_meta(user_id, tracker_type=None):
     metas = []
     for tracker_uuid in get_user_trackers(user_id, tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags', 'user'}))
     return metas
 
 def get_global_trackers_meta(tracker_type=None):
     metas = []
     for tracker_uuid in get_global_trackers(tracker_type=tracker_type):
         tracker = Tracker(tracker_uuid)
-        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
+        metas.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags', 'user'}))
     return metas
 
 def get_org_trackers_meta(user_org, tracker_type=None):
@@ -943,7 +943,7 @@ def get_users_trackers_meta(user_id):
         tracker = Tracker(tracker_uuid)
         if tracker.is_level_user():
             if tracker.get_user() != user_id:
-                trackers.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags'}))
+                trackers.append(tracker.get_meta(options={'description', 'mails', 'org', 'org_name', 'sparkline', 'tags', 'user'}))
     return trackers
 
 def get_orgs_trackers_meta(user_org):

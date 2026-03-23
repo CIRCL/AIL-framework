@@ -160,7 +160,7 @@ def tracked_menu_admin():
     org_trackers = Tracker.get_orgs_trackers_meta(user_org)
     user_trackers = Tracker.get_users_trackers_meta(user_id)
     return render_template("trackersManagement.html", user_trackers=user_trackers, org_trackers=org_trackers, global_trackers=[],
-                           bootstrap_label=bootstrap_label)
+                           bootstrap_label=bootstrap_label, is_admin=True)
 
 
 @hunters.route("/tracker/show", methods=['GET', 'POST'])

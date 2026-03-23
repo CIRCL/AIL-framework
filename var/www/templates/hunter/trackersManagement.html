@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,26 +25,23 @@
         }
 
         .btn-link {
-            color: #000000;
+            color: #000;
         }
 
         .mouse_pointer {
             cursor: pointer;
         }
 
-        .lb-md {
-            font-size: 16px;
-        }
-
         .page-hero {
             background: linear-gradient(135deg, #1f3c88 0%, #3461d9 100%);
             border-radius: 1rem;
-            color: #ffffff;
+            color: #fff;
             box-shadow: 0 0.75rem 2rem rgba(31, 60, 136, 0.18);
         }
 
         .page-hero p,
-        .page-hero li {
+        .page-hero li,
+        .page-hero small {
             color: rgba(255, 255, 255, 0.92);
         }
 
@@ -63,7 +59,7 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             margin-bottom: 0.85rem;
-            color: #ffffff;
+            color: #fff;
         }
 
         .hero-info-list {
@@ -93,28 +89,35 @@
             background-color: #8fd3ff;
         }
 
-        .hero-metrics .card,
+        .summary-card,
         .tracker-section {
             border: none;
             border-radius: 1rem;
             box-shadow: 0 0.5rem 1.5rem rgba(24, 39, 75, 0.08);
+            background: #fff;
         }
 
-        .hero-metrics .metric-value {
+        .summary-value {
             font-size: 1.9rem;
             font-weight: 700;
             line-height: 1;
             color: #1f2d3d;
         }
 
-        .hero-metrics .metric-label {
+        .summary-label {
             color: #6c7a89;
             font-size: 0.95rem;
             margin-top: 0.35rem;
         }
 
+        .summary-help {
+            color: #8a94a3;
+            font-size: 0.82rem;
+            margin-top: 0.35rem;
+        }
+
         .tracker-section .card-header {
-            background-color: #ffffff;
+            background-color: #fff;
             border-bottom: 1px solid #e9eef5;
             padding: 1.25rem 1.5rem 1rem;
         }
@@ -125,6 +128,11 @@
             font-size: 0.72rem;
             font-weight: 700;
             color: #6c7a89;
+        }
+
+        .section-description {
+            color: #6c7a89;
+            margin-bottom: 0;
         }
 
         .tracker-table thead th {
@@ -140,6 +148,10 @@
             font-weight: 600;
             color: #1f3c88;
             word-break: break-word;
+        }
+
+        .tracker-main-text {
+            color: #1f2d3d;
         }
 
         .tracker-description {
@@ -185,6 +197,10 @@
             border-radius: 0.85rem;
         }
 
+        .muted-dash {
+            color: #9aa5b1;
+        }
+
         @media (max-width: 767.98px) {
             .page-hero {
                 text-align: center;
@@ -200,28 +216,48 @@
 
 {% include 'nav_bar.html' %}
 
+{% macro format_date(date_value) %}
+    {% if date_value %}
+        {{ date_value[0:4] }}/{{ date_value[4:6] }}/{{ date_value[6:8] }}
+    {% else %}
+        <span class="muted-dash">—</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro render_tracker_value(value) %}
+    {% if value %}
+        {% if value|length > 140 %}
+            {{ value[0:140] }}...
+        {% else %}
+            {{ value }}
+        {% endif %}
+    {% else %}
+        <span class="text-muted">No value provided</span>
+    {% endif %}
+{% endmacro %}
+
 {% macro render_tracker_rows(trackers) %}
-    {% for dict_uuid in trackers %}
+    {% for tracker in trackers %}
         <tr>
             <td>
-                <span class="badge badge-primary px-2 py-1">{{ dict_uuid['type'] }}</span>
+                <span class="badge badge-primary px-2 py-1">{{ tracker['type'] }}</span>
             </td>
+
             <td>
-                <a class="tracker-link" target="_blank" href="{{ url_for('hunters.show_tracker') }}?uuid={{ dict_uuid['uuid'] }}">
-                    {% if dict_uuid['tracked'] %}
-                        {% if dict_uuid['tracked']|length > 256 %}
-                            {{ dict_uuid['tracked'][0:256] }}...
-                        {% else %}
-                            {{ dict_uuid['tracked'] }}
-                        {% endif %}
-                    {% endif %}
+                <a class="tracker-link" target="_blank" href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">
+                    {{ render_tracker_value(tracker['tracked']) }}
                 </a>
-                {% if dict_uuid['description'] %}
-                    <div class="tracker-description"><i>{{ dict_uuid['description'] }}</i></div>
+
+                {% if tracker['description'] %}
+                    <div class="tracker-description">
+                        <span class="meta-label">Description</span>
+                        <div class="tracker-main-text">{{ tracker['description'] }}</div>
+                    </div>
                 {% endif %}
-                {% if dict_uuid['tags'] %}
+
+                {% if tracker['tags'] %}
                     <div class="tag-list">
-                        {% for tag in dict_uuid['tags'] %}
+                        {% for tag in tracker['tags'] %}
                             <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=item&ltags={{ tag }}">
                                 <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                             </a>
@@ -229,71 +265,65 @@
                     </div>
                 {% endif %}
             </td>
+
+            {% if is_admin %}
+                <td>
+                    {% if tracker['user'] %}
+                        <span class="text-muted">{{ tracker['user'] }}</span>
+                    {% elif tracker['org_name'] %}
+                        <span class="meta-label">Organisation</span>
+                        <div>{{ tracker['org_name'] }}</div>
+                    {% endif %}
+                </td>
+            {% endif %}
+
+            <td>{{ format_date(tracker['first_seen']) }}</td>
+            <td>{{ format_date(tracker['last_seen']) }}</td>
+
             <td>
-                {% if dict_uuid['org'] %}
-                    <span class="meta-label">Organisation</span>
-                    {{ dict_uuid['org_name'] }}<br>{{ dict_uuid['org'] }}
-                {% else %}
-                    <span class="text-muted">Not assigned</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if dict_uuid['first_seen'] %}
-                    <span class="meta-label">First seen</span>
-                    {{ dict_uuid['first_seen'][0:4] }}/{{ dict_uuid['first_seen'][4:6] }}/{{ dict_uuid['first_seen'][6:8] }}
-                {% else %}
-                    <span class="text-muted">—</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if dict_uuid['last_seen'] %}
-                    <span class="meta-label">Last seen</span>
-                    {{ dict_uuid['last_seen'][0:4] }}/{{ dict_uuid['last_seen'][4:6] }}/{{ dict_uuid['last_seen'][6:8] }}
-                {% else %}
-                    <span class="text-muted">—</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if dict_uuid['mails'] %}
-                    <span class="meta-label">Recipients</span>
+                {% if tracker['mails'] %}
                     <ul class="email-list">
-                        {% for mail in dict_uuid['mails'] %}
+                        {% for mail in tracker['mails'] %}
                             <li>{{ mail }}</li>
                         {% endfor %}
                     </ul>
-                {% else %}
-                    <span class="text-muted">No email notifications</span>
                 {% endif %}
             </td>
-            <td id="sparklines_{{ dict_uuid['uuid'] }}" class="text-center align-middle"></td>
+
+            <td class="text-center align-middle">
+                <div id="sparklines_{{ tracker['uuid'] }}"></div>
+            </td>
         </tr>
     {% endfor %}
 {% endmacro %}
 
-{% macro render_tracker_section(table_id, title, subtitle, trackers, empty_title) %}
+{% macro render_tracker_section(table_id, title, subtitle, description, trackers, empty_title, empty_text) %}
     <div class="card tracker-section my-3">
         <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
             <div>
                 <div class="section-kicker">{{ subtitle }}</div>
                 <h5 class="card-title mb-1">{{ title }}</h5>
-                <p class="text-muted mb-0">Browse, filter, and review activity trends for these trackers.</p>
+                <p class="section-description">{{ description }}</p>
             </div>
-            <span class="badge badge-pill badge-light border px-3 py-2 mt-3 mt-lg-0">{{ trackers|length }} tracker{% if trackers|length != 1 %}s{% endif %}</span>
+            <span class="badge badge-pill badge-light border px-3 py-2 mt-3 mt-lg-0">
+                {{ trackers|length }} tracker{% if trackers|length != 1 %}s{% endif %}
+            </span>
         </div>
+
         <div class="card-body">
             {% if trackers %}
                 <div class="table-responsive">
                     <table id="{{ table_id }}" class="table table-striped table-bordered tracker-table mb-0">
                         <thead class="bg-dark text-white">
-                        <tr>
-                            <th>Type</th>
-                            <th>Tracker details</th>
-                            <th>Organisation</th>
-                            <th>First seen</th>
-                            <th>Last seen</th>
-                            <th>Email notifications</th>
-                            <th>Trend</th>
-                        </tr>
+                            <tr>
+                                <th>Type</th>
+                                <th>What is being tracked</th>
+                                {% if is_admin %}<th>Owner</th>{% endif %}
+                                <th>First match</th>
+                                <th>Latest match</th>
+                                <th>Notifications</th>
+                                <th><small>Recent activity</small></th>
+                            </tr>
                         </thead>
                         <tbody style="font-size: 15px;">
                             {{ render_tracker_rows(trackers) }}
@@ -303,7 +333,7 @@
             {% else %}
                 <div class="tracker-empty-state">
                     <strong>{{ empty_title }}</strong><br>
-                    Create a tracker or adjust your scope to start seeing data here.
+                    {{ empty_text }}
                 </div>
             {% endif %}
         </div>
@@ -324,84 +354,126 @@
             <div class="page-hero my-3 p-4 p-lg-5">
                 <div class="row align-items-center">
                     <div class="col-lg-8 mb-4 mb-lg-0">
-                        <span class="badge badge-light text-primary px-3 py-2 mb-3">Detection and tracking</span>
-                        <h2 class="mb-3">Trackers help analysts detect, classify, and follow relevant content in AIL.</h2>
-                        <p class="lead mb-3">Trackers are user-defined rules or patterns that automatically detect, tag, and notify analysts about information collected by AIL.</p>
-                        <p class="mb-0">Use this page to review personal, organisation, and global trackers, check notification recipients, and monitor recent activity before opening a tracker for more details.</p>
+                        <span class="badge badge-light text-primary px-3 py-2 mb-3">{{ tracker_type|title }} Trackers</span>
+                        <h2 class="mb-3">Monitor content with trackers</h2>
+                        <p class="lead">
+                            Create and manage rules that detect matching content in data processed by AIL.
+                        </p>
                     </div>
-                    <div class="col-lg-4 text-lg-right">
-                        <a class="btn btn-light btn-lg px-4" href="{{ url_for('hunters.add_tracked_menu') }}">
-                            <i class="fas fa-plus-circle mr-2"></i>
-                            Create New Tracker
-                        </a>
+
+                    <div class="col-lg-4">
+                        <div class="d-flex flex-column flex-lg-column align-items-stretch align-items-lg-end">
+                            <a class="btn btn-light btn-lg px-4 mb-3" href="{{ url_for('hunters.add_tracked_menu') }}">
+                                <i class="fas fa-plus-circle mr-2"></i>
+                                Create New Tracker
+                            </a>
+
+                            <a class="btn btn-outline-light btn-lg px-4" href="{{ url_for('hunters.retro_hunt_add_task') }}">
+                                <i class="fas fa-history mr-2"></i>
+                                Create Retro Hunt
+                            </a>
+                        </div>
                     </div>
                 </div>
+
                 <div class="row mt-4">
-                    <div class="col-12 col-xl-6 mb-3 mb-xl-0">
-                        <div class="hero-info-card">
-                            <h6>Supported tracker types</h6>
-                            <ul class="hero-info-list">
-                                <li>Word tracking</li>
-                                <li>Set-of-words tracking</li>
-                                <li>Regex tracking</li>
-                                <li>YARA rules</li>
-                                <li>Typo-squatting detection</li>
-                            </ul>
+                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                        <div class="hero-info-card text-center">
+                            <i class="fas fa-bolt fa-2x mb-3"></i>
+                            <h6>New data</h6>
+                            <p class="mb-0">Trackers run on newly processed data.</p>
                         </div>
                     </div>
-                    <div class="col-12 col-xl-6">
-                        <div class="hero-info-card">
-                            <h6>Detection capabilities</h6>
-                            <ul class="hero-info-list">
-                                <li>Real-time tagging and classification</li>
-                                <li>Object occurrence tracking</li>
-                                <li>Webhook or email notification workflows</li>
-                                <li>Built-in YARA editor</li>
-                                <li>Retro Hunts for running new YARA rules on historical data</li>
-                            </ul>
+
+                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                        <div class="hero-info-card text-center">
+                            <i class="fas fa-users fa-2x mb-3"></i>
+                            <h6>Collaboration</h6>
+                            <p class="mb-0">Share trackers with your organisation or the community.</p>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="hero-info-card text-center">
+                            <i class="fas fa-history fa-2x mb-3"></i>
+                            <h6>Historical search</h6>
+                            <p class="mb-0">Use Retro Hunts for historical YARA searches.</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="row hero-metrics mb-4">
+            <div class="row mb-4">
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card h-100">
+                    <div class="card summary-card h-100">
                         <div class="card-body">
-                            <div class="metric-value">{{ total_count }}</div>
-                            <div class="metric-label">Total visible trackers</div>
+                            <div class="summary-value">{{ total_count }}</div>
+                            <div class="summary-label">Total visible trackers</div>
+                            <div class="summary-help">All trackers you can currently access.</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card h-100">
+                    <div class="card summary-card h-100">
                         <div class="card-body">
-                            <div class="metric-value">{{ user_count }}</div>
-                            <div class="metric-label">Your trackers</div>
+                            <div class="summary-value">{{ user_count }}</div>
+                            <div class="summary-label">Your trackers</div>
+                            <div class="summary-help">Trackers created for your own use.</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card h-100">
+                    <div class="card summary-card h-100">
                         <div class="card-body">
-                            <div class="metric-value">{{ org_count }}</div>
-                            <div class="metric-label">Organisation trackers</div>
+                            <div class="summary-value">{{ org_count }}</div>
+                            <div class="summary-label">Organisation trackers</div>
+                            <div class="summary-help">Trackers shared with your organisation.</div>
                         </div>
                     </div>
                 </div>
+
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card h-100">
+                    <div class="card summary-card h-100">
                         <div class="card-body">
-                            <div class="metric-value">{{ global_count }}</div>
-                            <div class="metric-label">Global trackers</div>
+                            <div class="summary-value">{{ global_count }}</div>
+                            <div class="summary-label">Global trackers</div>
+                            <div class="summary-help">Trackers available to all users.</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {{ render_tracker_section('table_user_trackers', 'Your ' ~ tracker_type ~ ' Trackers', 'Personal scope', user_trackers, 'You do not have any personal trackers yet.') }}
-            {{ render_tracker_section('table_org_trackers', 'Organisation ' ~ tracker_type ~ ' Trackers', 'Shared scope', org_trackers, 'Your organisation does not have shared trackers yet.') }}
-            {{ render_tracker_section('table_global_trackers', 'Global ' ~ tracker_type ~ ' Trackers', 'Global scope', global_trackers, 'No global trackers are currently available.') }}
+            {{ render_tracker_section(
+                'table_user_trackers',
+                'Your ' ~ tracker_type ~ ' trackers',
+                'Personal',
+                'These trackers are private to you unless shared separately.',
+                user_trackers,
+                'You do not have any personal trackers yet.',
+                'Create your first tracker to start detecting and monitoring content that matters to you.'
+            ) }}
+
+            {{ render_tracker_section(
+                'table_org_trackers',
+                'Organisation ' ~ tracker_type ~ ' trackers',
+                'Shared',
+                'These trackers are shared across your organisation.',
+                org_trackers,
+                'Your organisation does not have any shared trackers yet.',
+                'Create a tracker for your organisation to share monitoring rules and collaborate with other members of your organisation.'
+            ) }}
+
+            {{ render_tracker_section(
+                'table_global_trackers',
+                'Global ' ~ tracker_type ~ ' trackers',
+                'Global',
+                'These trackers are available across the platform.',
+                global_trackers,
+                'No global trackers are currently available.',
+                'Create a global tracker to share monitoring rules with the wider community and support collaboration across all users.'
+            ) }}
         </div>
     </div>
 </div>
@@ -411,37 +483,36 @@
         $("#page-Tracker").addClass("active");
         $("#nav_tracker_{{tracker_type}}").addClass("active");
 
-        {% for dict_uuid in user_trackers %}
-            sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
+        {% for tracker in user_trackers %}
+            sparkline("sparklines_{{ tracker['uuid'] }}", {{ tracker['sparkline'] }}, { height: 40 });
         {% endfor %}
-        {% for dict_uuid in org_trackers %}
-            sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
+        {% for tracker in org_trackers %}
+            sparkline("sparklines_{{ tracker['uuid'] }}", {{ tracker['sparkline'] }}, { height: 40 });
         {% endfor %}
-        {% for dict_uuid in global_trackers %}
-            sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});
+        {% for tracker in global_trackers %}
+            sparkline("sparklines_{{ tracker['uuid'] }}", {{ tracker['sparkline'] }}, { height: 40 });
         {% endfor %}
 
-        if ($('#table_user_trackers').length) {
-            $('#table_user_trackers').DataTable({
-                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-                "iDisplayLength": 10,
-                "order": [[4, "desc"]]
-            });
+        function initTrackerTable(selector) {
+            if ($(selector).length) {
+                $(selector).DataTable({
+                    "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+                    "iDisplayLength": 10,
+                    "order": [[4, "desc"]],
+                    "language": {
+                        "search": "Search trackers:",
+                        "lengthMenu": "Show _MENU_ trackers",
+                        "info": "Showing _START_ to _END_ of _TOTAL_ trackers",
+                        "infoEmpty": "No trackers available",
+                        "zeroRecords": "No matching trackers found"
+                    }
+                });
+            }
         }
-        if ($('#table_org_trackers').length) {
-            $('#table_org_trackers').DataTable({
-                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-                "iDisplayLength": 10,
-                "order": [[4, "desc"]]
-            });
-        }
-        if ($('#table_global_trackers').length) {
-            $('#table_global_trackers').DataTable({
-                "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-                "iDisplayLength": 10,
-                "order": [[4, "desc"]]
-            });
-        }
+
+        initTrackerTable('#table_user_trackers');
+        initTrackerTable('#table_org_trackers');
+        initTrackerTable('#table_global_trackers');
     });
 
     function toggle_sidebar() {
