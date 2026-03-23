@@ -108,7 +108,7 @@
                 <div class="tracker-hero p-4 mb-4">
                     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                         <div class="pr-lg-4 mb-3 mb-lg-0">
-                            <h2 class="h3 mb-0">Hunter Dashboard</h2>
+                            <h2 class="h3 mb-0">Hunting Dashboard</h2>
                         </div>
                         <div class="d-flex flex-column flex-sm-row">
                             <a class="btn btn-light mb-2 mb-sm-0 mr-sm-2" href="{{ url_for('hunters.add_tracked_menu') }}">
@@ -338,12 +338,6 @@
 <script>
     $(document).ready(function () {
         $("#page-Tracker").addClass("active");
-        $("#nav_tracker_{{tracker_type}}").addClass("active");
-
-{#        {% for dict_uuid in global_trackers %}#}
-{#            sparkline("sparklines_{{ dict_uuid['uuid'] }}", {{ dict_uuid['sparkline'] }}, {height: 40});#}
-{#        {% endfor %}#}
-
     });
 
     var url_obj_description = "{{ url_for('correlation.get_description') }}?object_id=";
