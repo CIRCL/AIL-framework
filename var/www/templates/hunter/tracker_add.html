@@ -595,9 +595,19 @@ function setRulezetError(message) {
 
 function setYaraRuleContent(content) {
 	const textarea = document.getElementById('text_input');
-	textarea.value = content;
-	textarea.dispatchEvent(new Event('input', { bubbles: true }));
-	textarea.dispatchEvent(new Event('change', { bubbles: true }));
+	if (window.yaraEditor) {
+		window.yaraEditor.dispatch({
+			changes: {
+				from: 0,
+				to: window.yaraEditor.state.doc.length,
+				insert: content
+			}
+		});
+	} else {
+		textarea.value = content;
+		textarea.dispatchEvent(new Event('input', { bubbles: true }));
+		textarea.dispatchEvent(new Event('change', { bubbles: true }));
+	}
 }
 
 $('#import_rulezet_btn').on('click', function () {
@@ -661,7 +671,7 @@ $('#import_rulezet_btn').on('click', function () {
 }`,
 		codemirror_extensions: []
 	}
-	createYaraEditor(
+	window.yaraEditor = createYaraEditor(
 		document.getElementById('text_input'),
 		yaraEditorOptions
 	)
