@@ -119,13 +119,15 @@
 						<div class="card-body p-4 p-xl-5">
 							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
 								<div class="pr-lg-4">
-									<div class="section-label text-light mb-2">Tracker configuration</div>
 									<h1 class="display-title mb-2">{%if dict_tracker%}Edit tracker{%else%}Create a new tracker{%endif%}</h1>
-									<p class="mb-0 text-white-50">Use this form to define what should trigger alerts, where notifications should go, and which object types should be scanned.</p>
+									<p class="mb-0 text-white-50">Define what should trigger alerts, where notifications should go, and which object types should be scanned.</p>
 								</div>
-								<div class="mt-3 mt-lg-0 text-lg-right">
-									<span class="badge badge-light px-3 py-2 mb-2 d-inline-block">{%if dict_tracker%}Editing existing tracker{%else%}New tracker setup{%endif%}</span>
-									<div class="small text-white-50">Step 1: Configure details &nbsp;•&nbsp; Step 2: Choose scope &nbsp;•&nbsp; Step 3: Define matching rule</div>
+								<div class="text-white">
+									<ul>
+                                        <li>Step 1: Configure details</li>
+                                        <li>Step 2: Choose scope</li>
+                                        <li>Step 3: Define matching rule</li>
+                                    </ul>
 								</div>
 							</div>
 						</div>
@@ -322,10 +324,10 @@
 													<label for="tracker_type" class="font-weight-bold">Tracker type</label>
 													<select id="tracker_type" name="tracker_type" class="custom-select w-100">
 														<option disabled selected value> -- Select a tracker type -- </option>
+                                                        <option value="yara">YARA rule</option>
 														<option value="word">Word</option>
 														<option value="set">Set</option>
 														<option value="regex">Regex</option>
-														<option value="yara">YARA rule</option>
 														<option value="typosquatting">Typo-squatting</option>
 													</select>
 												</div>
@@ -345,10 +347,9 @@
 												</div>
 											</div>
 											<div class="col-12 col-lg-3 mt-3 mt-lg-0">
-												<div class="form-group mb-0">
+												<div class="form-group mb-0" id="nb_word_section">
 													<label for="nb_word" class="font-weight-bold">Unique terms required</label>
 													<input type="number" id="nb_word" name="nb_word" min="1" placeholder="1" {%if dict_tracker%}{%if dict_tracker['nb_words']%}value="{{dict_tracker['nb_words']}}"{%endif%}{%endif%}>
-													<small class="form-text text-muted">Used for set trackers.</small>
 												</div>
 											</div>
 										</div>
@@ -386,20 +387,21 @@
 								<div class="card tracker-card mb-4 mb-xl-0">
 									<div class="card-header bg-white py-3">
 										<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
-										<p class="mb-0 text-muted">Use tags to make trackers easier to search, group, and reuse.</p>
+										<p class="mb-0 text-muted">Apply tags to matched objects.</p>
 									</div>
 									<div class="card-body">
-										<div class="form-group mb-3">
+                                        <label class="font-weight-bold">MISP tags</label>
+										{% include 'tags/block_tags_selector.html' %}
+                                        <div class="form-group my-3">
 											<label for="tags" class="font-weight-bold">Custom tags</label>
 											<div class="input-group">
 												<div class="input-group-prepend">
 													<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
 												</div>
-												<input id="tags" name="tags" class="form-control" placeholder="malware campaign client-a" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
+												<input id="tags" name="tags" class="form-control" placeholder="my-tag1 tag2" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
 											</div>
 											<small class="form-text text-muted">Separate custom tags with spaces.</small>
 										</div>
-										{% include 'tags/block_tags_selector.html' %}
 									</div>
 								</div>
 							</div>
@@ -409,7 +411,7 @@
 									<div class="card tracker-card mb-4">
 										<div class="card-header bg-white py-3">
 											<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility & actions</h5>
-											<p class="mb-0 text-muted">Decide who can view this tracker, then save your changes.</p>
+											<p class="mb-0 text-muted">Decide who can view this tracker.</p>
 										</div>
 										<div class="card-body">
 											<div class="form-group">
@@ -433,7 +435,6 @@
 												<ul class="mb-0 pl-3">
 													<li>Use <strong>Word</strong> for exact terms.</li>
 													<li>Use <strong>Set</strong> when several terms should appear together.</li>
-													<li>Use <strong>Regex</strong> for patterns.</li>
 													<li>Use <strong>YARA</strong> for advanced rule logic.</li>
 													<li>Use <strong>Typo-squatting</strong> to generate domain variations.</li>
 												</ul>
@@ -452,7 +453,6 @@
 												<li>Confirm the tracker type matches your use case.</li>
 												<li>Verify the object types are broad enough to catch the content you expect.</li>
 												<li>Add email or webhook settings if you want notifications.</li>
-												<li>Use tags so the tracker is easy to find later.</li>
 											</ul>
 										</div>
 									</div>
@@ -475,7 +475,7 @@ $(document).ready(function(){
 	$("#nav_manual_crawler").addClass("active");
 	$("#tracker_desc").hide();
 	$("#tracker").hide();
-	$("#nb_word").hide();
+	$("#nb_word_section").hide();
 	$("#yara_rule").hide();
 
 
@@ -494,34 +494,35 @@ $(document).ready(function(){
 	$('#tracker_type').on('change', function() {
 		var tracker_type = this.value;
 		if (tracker_type=="word") {
-			$("#tracker_desc").text("Track a single exact token. Use a regex tracker if you need special characters such as [<>~!?@#$%^&*|()_-+={}\":;,.\'\\n\\r\\t]/\\.");
+			$("#tracker_desc").text("Track a single exact token. Use a YARA rule tracker if you need special characters such as [<>~!?@#$%^&*|()_-+={}\":;,.\'\\n\\r\\t]/\\.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
-			$("#nb_word").hide();
+			$("#nb_word_section").hide();
+            $("#nb_word_label").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="set") {
 			$("#tracker_desc").text("Track a set of terms separated by spaces. The tracker is triggered when an item contains the required number of unique terms from the set.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
-			$("#nb_word").show();
+			$("#nb_word_section").show();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="regex") {
 			$("#tracker_desc").text("Enter a valid Python regular expression.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
-			$("#nb_word").hide();
+			$("#nb_word_section").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="yara") {
 			$("#tracker_desc").text("Select a default YARA rule or write your own custom rule.");
 			$("#tracker_desc").show();
 			$("#tracker").hide();
-			$("#nb_word").hide();
+			$("#nb_word_section").hide();
 			$("#yara_rule").show();
 		} else if (tracker_type=="typosquatting") {
 			$("#tracker_desc").text("Generate variations for one domain name at a time.");
 			$("#tracker_desc").show();
 			$("#tracker").show();
-			$("#nb_word").hide();
+			$("#nb_word_section").hide();
 			$("#yara_rule").hide();
 		}
 	});
