@@ -264,10 +264,10 @@
 									</div>
 								</div>
 
-								<div class="card retro-card mb-4">
-									<div class="card-header bg-white py-3">
-										<h5 class="mb-1"><i class="fas fa-shield-alt text-secondary mr-2"></i>YARA rules</h5>
-										<p class="mb-0 text-muted">Pick a default rule for quick setup or paste a custom rule for advanced matching.</p>
+									<div class="card retro-card mb-4">
+										<div class="card-header bg-white py-3">
+											<h5 class="mb-1"><i class="fas fa-shield-alt text-secondary mr-2"></i>YARA rules</h5>
+											<p class="mb-0 text-muted">Pick a default rule for quick setup or paste a custom rule for advanced matching.</p>
 									</div>
 									<div class="card-body" id="yara_rule">
 										<div id="yara_default_rules">
@@ -282,54 +282,53 @@
 											</select>
 											<pre class="border bg-light p-3 mb-3" id="default_yara_rule_content"></pre>
 										</div>
-										<div class="form-group mb-0">
-											<label for="text_input" class="font-weight-bold">Custom YARA rule</label>
-											<textarea class="form-control" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="6">{% if new_rule %}{{ new_rule }}{% endif %}</textarea>
+											<div class="form-group mb-0">
+												<label for="text_input" class="font-weight-bold">Custom YARA rule</label>
+												<textarea class="form-control" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="6">{% if new_rule %}{{ new_rule }}{% endif %}</textarea>
+											</div>
 										</div>
 									</div>
-								</div>
-							</div>
 
-							<div class="col-12 col-xl-4">
-								<div class="sticky-panel">
 									<div class="card retro-card mb-4">
 										<div class="card-header bg-white py-3">
-											<h5 class="mb-1"><i class="fas fa-layer-group text-success mr-2"></i>Visibility</h5>
-											<p class="mb-0 text-muted">Control who can view this retro hunt task.</p>
+											<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
+											<p class="mb-0 text-muted">Apply tags to improve classification and downstream filtering.</p>
 										</div>
 										<div class="card-body">
-											<label for="level_selector" class="font-weight-bold">View level</label>
-											<select class="custom-select" id="level_selector" name="level">
-												<option value="1" {% if new_level %}{% if new_level == 1 %}selected{% endif %}{% else %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
-												<option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
-											</select>
+											<div class="input-group mb-3">
+												<div class="input-group-prepend">
+													<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+												</div>
+												<input id="tags" name="tags" class="form-control" placeholder="Custom tags (optional, space separated)" type="text">
+											</div>
+											{% include 'tags/block_tags_selector.html' %}
+										</div>
+									</div>
+								</div>
+
+								<div class="col-12 col-xl-4">
+									<div class="sticky-panel">
+										<div class="card retro-card mb-4">
+											<div class="card-header bg-white py-3">
+												<h5 class="mb-1"><i class="fas fa-layer-group text-success mr-2"></i>Visibility & actions</h5>
+												<p class="mb-0 text-muted">Control who can view this retro hunt task and launch it.</p>
+											</div>
+											<div class="card-body">
+												<label for="level_selector" class="font-weight-bold">View level</label>
+												<select class="custom-select" id="level_selector" name="level">
+													<option value="1" {% if new_level %}{% if new_level == 1 %}selected{% endif %}{% else %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+													<option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
+												</select>
+												<button class="btn btn-primary btn-lg btn-block mt-4">
+													<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
+												</button>
+											</div>
 										</div>
 									</div>
 								</div>
 							</div>
+							</form>
 						</div>
-
-						<div class="card retro-card mb-4">
-							<div class="card-header bg-white py-3">
-								<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
-								<p class="mb-0 text-muted">Apply tags to improve classification and downstream filtering.</p>
-							</div>
-							<div class="card-body">
-								<div class="input-group mb-3">
-									<div class="input-group-prepend">
-										<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-									</div>
-									<input id="tags" name="tags" class="form-control" placeholder="Custom tags (optional, space separated)" type="text">
-								</div>
-								{% include 'tags/block_tags_selector.html' %}
-							</div>
-						</div>
-
-						<button class="btn btn-primary btn-lg">
-							<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
-						</button>
-						</form>
-					</div>
 
 
 			</div>
