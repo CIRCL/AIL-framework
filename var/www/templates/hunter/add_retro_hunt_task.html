@@ -168,20 +168,20 @@
 												<div class="custom-control custom-switch mt-1">
 													<input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if 'decoded' in new_filters %}checked=""{% endif %}>
 													<label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open text-info mr-1"></i>Decoded</label>
-													<small class="form-text text-muted">Decoded content such as base64 outputs.</small>
+													<small class="form-text text-muted">Content decoded from formats such as base64.</small>
 												</div>
 											</div>
 											<div class="object-option">
 												<div class="custom-control custom-switch mt-1">
 													<input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if 'message' in new_filters %}checked=""{% endif %}>
-													<label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots text-info mr-1"></i>Messages</label>
-													<small class="form-text text-muted">Chat logs and conversational text.</small>
+													<label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots text-info mr-1"></i>Message</label>
+													<small class="form-text text-muted">Messages from chats and conversations.</small>
 												</div>
 											</div>
 											<div class="object-option">
 												<div class="custom-control custom-switch mt-1">
 													<input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if 'ocr' in new_filters %}checked=""{% endif %}>
-													<label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand text-info mr-1"></i>OCRs</label>
+													<label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand text-info mr-1"></i>OCR</label>
 													<small class="form-text text-muted">Text extracted from images.</small>
 												</div>
 											</div>
@@ -193,13 +193,13 @@
 												<div class="custom-control custom-switch mt-1">
 													<input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if 'item' in new_filters %}checked=""{% endif %}>
 													<label class="custom-control-label" for="item_obj"><i class="fas fa-file text-info mr-1"></i>Item</label>
-													<small class="form-text text-muted">General parsed items and extracted content.</small>
+													<small class="form-text text-muted">Processed text items and extracted content.</small>
 												</div>
 											</div>
 										</div>
 										<div class="card filter-card mt-4 mb-0" id="sources_item_div">
 											<div class="card-body">
-												<h6 class="font-weight-bold mb-1">Refine item tracking by source</h6>
+												<h6 class="font-weight-bold mb-1">Refine item scanning by source</h6>
 												<p class="text-muted small mb-3">Leave this empty to scan items from every source.</p>
 												<div class="form-group mb-3">
 													<div class="input-group">
@@ -226,47 +226,12 @@
 												</div>
 											</div>
 										</div>
-
-
-{#                                            <div class="custom-control custom-switch mt-1">#}
-{#                                                <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" checked="">#}
-{#                                                <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP</label>#}
-{#                                            </div>#}
-{#                                            <div class="card border-dark mb-4" id="sources_pgp_div">#}
-{#                                                <div class="card-body">#}
-{#                                                    <h6>Filter PGP by subtype:</h6>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" checked="">#}
-{#                                                        <label class="custom-control-label" for="filter_pgp_name">#}
-{#                                                            <svg height="26" width="26">#}
-{#                                                                <g class="nodes">#}
-{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
-{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon fas" font-size="16px">&#xf507;</text>#}
-{#                                                                </g>#}
-{#                                                            </svg>#}
-{#                                                            name#}
-{#                                                        </label>#}
-{#                                                    </div>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" checked="">#}
-{#                                                        <label class="custom-control-label" for="filter_pgp_mail">#}
-{#                                                            <svg height="26" width="26">#}
-{#                                                                <g class="nodes">#}
-{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
-{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="fas" font-size="16px">&#xf1fa;</text>#}
-{#                                                                </g>#}
-{#                                                            </svg>#}
-{#                                                            mail#}
-{#                                                        </label>#}
-{#                                                    </div>#}
-{#                                                </div>#}
-{#                                            </div>#}
 									</div>
 								</div>
 
 									<div class="card retro-card mb-4">
 										<div class="card-header bg-white py-3">
-											<h5 class="mb-1"><i class="fas fa-shield-alt text-secondary mr-2"></i>YARA rules</h5>
+                                            <h5 class="mb-1"><i class="fas fa-search text-success mr-2"></i>How should this retro hunt match?</h5>
 											<p class="mb-0 text-muted">Pick a default rule for quick setup or paste a custom rule for advanced matching.</p>
 									</div>
 									<div class="card-body" id="yara_rule">
@@ -292,16 +257,21 @@
 									<div class="card retro-card mb-4">
 										<div class="card-header bg-white py-3">
 											<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
-											<p class="mb-0 text-muted">Apply tags to improve classification and downstream filtering.</p>
+											<p class="mb-0 text-muted">Apply tags to matched objects.</p>
 										</div>
 										<div class="card-body">
-											<div class="input-group mb-3">
-												<div class="input-group-prepend">
-													<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-												</div>
-												<input id="tags" name="tags" class="form-control" placeholder="Custom tags (optional, space separated)" type="text">
-											</div>
-											{% include 'tags/block_tags_selector.html' %}
+                                            <label class="font-weight-bold">MISP tags</label>
+                                            {% include 'tags/block_tags_selector.html' %}
+                                            <div class="form-group my-3">
+                                                <label for="tags" class="font-weight-bold">Custom tags</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+                                                    </div>
+                                                    <input id="tags" name="tags" class="form-control" placeholder="my-tag1 tag2" type="text">
+                                                </div>
+                                                <small class="form-text text-muted">Separate custom tags with spaces.</small>
+                                            </div>
 										</div>
 									</div>
 								</div>
@@ -310,8 +280,8 @@
 									<div class="sticky-panel">
 										<div class="card retro-card mb-4">
 											<div class="card-header bg-white py-3">
-												<h5 class="mb-1"><i class="fas fa-layer-group text-success mr-2"></i>Visibility & actions</h5>
-												<p class="mb-0 text-muted">Control who can view this retro hunt task and launch it.</p>
+												<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility & actions</h5>
+												<p class="mb-0 text-muted">Decide who can view this retro hunt.</p>
 											</div>
 											<div class="card-body">
 												<label for="level_selector" class="font-weight-bold">View level</label>
@@ -319,6 +289,7 @@
 													<option value="1" {% if new_level %}{% if new_level == 1 %}selected{% endif %}{% else %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
 													<option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
 												</select>
+                                                <small class="form-text text-muted">Global retro hunts are visible to all users, while organisation retro hunts are visible only within your organisation.</small>
 												<button class="btn btn-primary btn-lg btn-block mt-4">
 													<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
 												</button>
