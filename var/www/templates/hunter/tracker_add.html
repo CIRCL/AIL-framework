@@ -90,12 +90,6 @@
 			border-radius: 0.25rem;
 		}
 
-		#default_yara_rule_content {
-			max-height: 16rem;
-			overflow: auto;
-			white-space: pre-wrap;
-		}
-
 		@media (max-width: 1199.98px) {
 			.sticky-panel {
 				position: static;
@@ -355,19 +349,23 @@
 										</div>
 
 										<div class="mt-4" id="yara_rule">
-											<div class="card border-0 bg-light mb-3" id="yara_default_rules">
+											<div class="card border-0 bg-light mb-3">
 												<div class="card-body">
-													<h6 class="font-weight-bold">Default YARA rules</h6>
-													<p class="small text-muted">Start with a built-in rule, then inspect its contents below.</p>
-													<select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
-														<option selected>Select a default rule</option>
-														{% for yara_types in all_yara_files %}
-															{% for yara_file_name in all_yara_files[yara_types] %}
-																<option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
-															{% endfor %}
-														{% endfor %}
-													</select>
-													<pre class="border rounded bg-white p-3 mb-0" id="default_yara_rule_content"></pre>
+													<div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+														<h6 class="font-weight-bold mb-0">Import YARA rule from Rulezet</h6>
+														<a class="btn btn-outline-primary btn-sm mt-2 mt-md-0 d-inline-flex align-items-center" href="https://rulezet.org/" target="_blank" rel="noopener noreferrer">
+															<img src="https://rulezet.org/static/image/logo.png" alt="Rulezet logo" style="height: 16px; width: auto;" class="mr-1">
+															<i class="fas fa-external-link-alt mr-1"></i>Search on Rulezet
+														</a>
+													</div>
+													<p class="small text-muted">Paste a full Rulezet rule URL, then import the rule content.</p>
+													<div class="input-group mb-2">
+														<input type="url" class="form-control" id="rulezet_rule_url" placeholder="https://rulezet.org/rule/public/215468">
+														<div class="input-group-append">
+															<button class="btn btn-outline-success" id="import_rulezet_btn" type="button">Import</button>
+														</div>
+													</div>
+													<div class="alert alert-danger py-2 px-3 mb-0 d-none" id="rulezet_error"></div>
 												</div>
 											</div>
 
@@ -377,6 +375,11 @@
 													<p class="small text-muted">Paste or edit your own YARA rule. The editor will keep the existing content when you edit a tracker.</p>
 													<div class="border rounded bg-white px-3 pt-3">
 														<textarea class="form-control border-0 px-0" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="8">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
+													</div>
+													<div class="form-group mt-3 mb-0">
+														<label for="source" class="font-weight-bold">Rule source</label>
+														<input id="source" name="source" class="form-control" type="text" value="{%if dict_tracker and dict_tracker['source']%}{{dict_tracker['source']}}{%else%}manual{%endif%}">
+														<small class="form-text text-muted">Use <code>manual</code> for manually created YARA rules, or keep an external reference (for example, a Rulezet URL).</small>
 													</div>
 												</div>
 											</div>
@@ -446,10 +449,10 @@
 										</div>
 									</div>
 
-									<div class="card tracker-card">
-										<div class="card-body">
-											<div class="section-label mb-2">Checklist before saving</div>
-											<ul class="mb-0 pl-3 text-muted">
+								<div class="card tracker-card">
+									<div class="card-body">
+										<div class="section-label mb-2">Checklist before saving</div>
+										<ul class="mb-0 pl-3 text-muted">
 												<li>Confirm the tracker type matches your use case.</li>
 												<li>Verify the object types are broad enough to catch the content you expect.</li>
 												<li>Add email or webhook settings if you want notifications.</li>
@@ -513,7 +516,7 @@ $(document).ready(function(){
 			$("#nb_word_section").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="yara") {
-			$("#tracker_desc").text("Select a default YARA rule or write your own custom rule.");
+			$("#tracker_desc").text("Paste your own YARA rule or import one from Rulezet.");
 			$("#tracker_desc").show();
 			$("#tracker").hide();
 			$("#nb_word_section").hide();
@@ -530,9 +533,8 @@ $(document).ready(function(){
 	{%if dict_tracker%}
 		$('#tracker_type').val('{{dict_tracker['type']}}').change();
 		{%if dict_tracker['type']=='yara'%}
-            {% if dict_tracker['tracked'][0:21] == 'ail-yara-rules/rules/' %}
-			    $('#yara_default_rule').val('{{dict_tracker['tracked'][21:]}}').change();
-            {%endif%}
+			$('#tracker_desc').show();
+			$('#yara_rule').show();
 		{%endif%}
 	{%endif%}
 
@@ -580,17 +582,64 @@ function pgp_source_input_controller() {
 }
 
 
-function get_default_rule_content(selector){
-	var yara_name = selector.value
-	if (yara_name === "Select a default rule") {
-		jQuery("#default_yara_rule_content").text("")
+function setRulezetError(message) {
+	const errorContainer = $('#rulezet_error');
+	if (message) {
+		errorContainer.text(message);
+		errorContainer.removeClass('d-none');
 	} else {
-		$.getJSON("{{ url_for('hunters.get_default_yara_rule_content') }}?rule=" + yara_name,
-			function(data) {
-				jQuery("#default_yara_rule_content").text(data['content'])
-		});
+		errorContainer.text('');
+		errorContainer.addClass('d-none');
 	}
 }
+
+function setYaraRuleContent(content) {
+	const textarea = document.getElementById('text_input');
+	textarea.value = content;
+	textarea.dispatchEvent(new Event('input', { bubbles: true }));
+	textarea.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+$('#import_rulezet_btn').on('click', function () {
+	setRulezetError('');
+	const rulezetUrl = $('#rulezet_rule_url').val().trim();
+	if (!rulezetUrl) {
+		setRulezetError('Please provide a Rulezet URL.');
+		return;
+	}
+	try {
+		const parsed = new URL(rulezetUrl);
+		const pathSegments = parsed.pathname.split('/').filter(Boolean);
+		const ruleId = pathSegments[pathSegments.length - 1];
+		if (!ruleId) {
+			setRulezetError('Unable to extract Rule ID from URL.');
+			return;
+		}
+	} catch (_) {
+		setRulezetError('Invalid Rulezet URL.');
+		return;
+	}
+
+	$.getJSON("{{ url_for('hunters.import_rulezet_yara_rule') }}?url=" + encodeURIComponent(rulezetUrl))
+		.done(function (data) {
+			if ((data.format || '').toLowerCase() !== 'yara') {
+				setRulezetError('Only YARA rules are supported.');
+				return;
+			}
+			setYaraRuleContent(data.to_string || '');
+			if (!$('#tracker').val().trim()) {
+				$('#tracker').val(data.title || '');
+			}
+			if (!$('#description').val().trim()) {
+				$('#description').val(data.description || '');
+			}
+			$('#source').val(rulezetUrl);
+		})
+		.fail(function (xhr) {
+			const response = xhr.responseJSON || {};
+			setRulezetError(response.reason || 'Unable to fetch Rulezet rule details.');
+		});
+});
 
 </script>
 
