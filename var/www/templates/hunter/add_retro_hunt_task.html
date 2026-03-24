@@ -65,6 +65,11 @@
 			font-weight: 600;
 		}
 
+		.filter-card {
+			border: 1px dashed #adb5bd;
+			background: #fcfcfd;
+		}
+
 		.sticky-panel {
 			position: sticky;
 			top: 1rem;
@@ -192,11 +197,11 @@
 												</div>
 											</div>
 										</div>
-										<div class="card border mt-4 mb-0" id="sources_item_div">
+										<div class="card filter-card mt-4 mb-0" id="sources_item_div">
 											<div class="card-body">
-												<h6 class="font-weight-bold mb-3"><i class="fas fa-filter text-dark mr-2"></i>Filter item objects</h6>
+												<h6 class="font-weight-bold mb-1">Refine item tracking by source</h6>
+												<p class="text-muted small mb-3">Leave this empty to scan items from every source.</p>
 												<div class="form-group mb-3">
-													<label for="sources_item" class="font-weight-bold">Sources</label>
 													<div class="input-group">
 														<div class="input-group-prepend">
 															<div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
@@ -204,7 +209,7 @@
 														<input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item sources to track (all if empty)" autocomplete="off">
 													</div>
 												</div>
-												<label class="font-weight-bold">Date range</label>
+												<label class="font-weight-bold mb-2">Date range</label>
 												<div class="row mb-0">
 													<div class="col-lg-6">
 														<div class="input-group mb-3 mb-lg-0" id="date-range-from">
@@ -300,31 +305,31 @@
 											</select>
 										</div>
 									</div>
-
-									<div class="card retro-card mb-4">
-										<div class="card-header bg-white py-3">
-											<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
-											<p class="mb-0 text-muted">Apply tags to improve classification and downstream filtering.</p>
-										</div>
-										<div class="card-body">
-											<div class="input-group mb-3">
-												<div class="input-group-prepend">
-													<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-												</div>
-												<input id="tags" name="tags" class="form-control" placeholder="Custom tags (optional, space separated)" type="text">
-											</div>
-											{% include 'tags/block_tags_selector.html' %}
-										</div>
-									</div>
-
-									<button class="btn btn-primary btn-lg btn-block">
-										<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
-									</button>
 								</div>
 							</div>
 						</div>
-					</form>
-				</div>
+
+						<div class="card retro-card mb-4">
+							<div class="card-header bg-white py-3">
+								<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
+								<p class="mb-0 text-muted">Apply tags to improve classification and downstream filtering.</p>
+							</div>
+							<div class="card-body">
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+									</div>
+									<input id="tags" name="tags" class="form-control" placeholder="Custom tags (optional, space separated)" type="text">
+								</div>
+								{% include 'tags/block_tags_selector.html' %}
+							</div>
+						</div>
+
+						<button class="btn btn-primary btn-lg">
+							<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
+						</button>
+						</form>
+					</div>
 
 
 			</div>
