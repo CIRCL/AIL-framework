@@ -354,8 +354,8 @@
 													<div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
 														<h6 class="font-weight-bold mb-0">Import YARA rule from Rulezet</h6>
 														<a class="btn btn-outline-primary btn-sm mt-2 mt-md-0 d-inline-flex align-items-center" href="https://rulezet.org/" target="_blank" rel="noopener noreferrer">
-															<img src="https://rulezet.org/static/image/logo.png" alt="Rulezet logo" style="height: 16px; width: auto;" class="mr-1">
-															<i class="fas fa-external-link-alt mr-1"></i>Search on Rulezet
+															<img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet logo" style="height: 50px; width: auto;" class="mr-1">
+															Search on Rulezet
 														</a>
 													</div>
 													<p class="small text-muted">Paste a full Rulezet rule URL, then import the rule content.</p>
@@ -372,7 +372,7 @@
 											<div class="card border-0 bg-light">
 												<div class="card-body">
 													<h6 class="font-weight-bold">Custom YARA rule</h6>
-													<p class="small text-muted">Paste or edit your own YARA rule. The editor will keep the existing content when you edit a tracker.</p>
+													<p class="small text-muted">Create, Paste or edit your own YARA rule. The editor will keep the existing content when you edit a tracker.</p>
 													<div class="border rounded bg-white px-3 pt-3">
 														<textarea class="form-control border-0 px-0" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="8">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
 													</div>
@@ -516,7 +516,7 @@ $(document).ready(function(){
 			$("#nb_word_section").hide();
 			$("#yara_rule").hide();
 		} else if (tracker_type=="yara") {
-			$("#tracker_desc").text("Paste your own YARA rule or import one from Rulezet.");
+			$("#tracker_desc").text("Create, Paste your own YARA rule or import one from Rulezet.");
 			$("#tracker_desc").show();
 			$("#tracker").hide();
 			$("#nb_word_section").hide();
