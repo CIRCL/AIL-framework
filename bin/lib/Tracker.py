@@ -186,6 +186,12 @@ class Tracker:
     def get_description(self):
         return self._get_field('description')
 
+    def get_source(self):
+        source = self._get_field('source')
+        if not source:
+            source = 'manual'
+        return source
+
     ## LEVEL ##
 
     def get_level(self):
@@ -416,6 +422,8 @@ class Tracker:
             meta['level'] = self.get_level()
         if 'description' in options:
             meta['description'] = self.get_description()
+        if 'source' in options:
+            meta['source'] = self.get_source()
         if 'nb_objs' in options:
             meta['nb_objs'] = self.get_nb_objs()
         if 'objs_stats' in options:
@@ -624,7 +632,7 @@ class Tracker:
 
     # TODO escape custom tags
     # TODO escape mails ????
-    def create(self, tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None):
+    def create(self, tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual'):
         if self.exists():
             raise Exception('Error: Tracker already exists')
 
@@ -652,6 +660,7 @@ class Tracker:
             self._set_field('description', escape(description))
         if webhook:
             self._set_field('webhook', webhook)
+        self._set_field('source', source or 'manual')
 
         # create all tracker set
         r_tracker.sadd(f'all:tracker:{tracker_type}', to_track)
@@ -688,7 +697,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False):
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False, source='manual'):
 
         # edit tracker
         old_type = self.get_type()
@@ -745,6 +754,7 @@ class Tracker:
 
         self._set_field('description', description)
         self._set_field('webhook', webhook)
+        self._set_field('source', source or 'manual')
 
         # Tags
         nb_old_tags = r_tracker.scard(f'tracker:tags:{self.uuid}')
@@ -834,16 +844,16 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
 
 
-def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, tracker_uuid=None):
+def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', tracker_uuid=None):
     if not tracker_uuid:
         tracker_uuid = str(uuid.uuid4())
     tracker = Tracker(tracker_uuid)
     return tracker.create(tracker_type, to_track, org, user_id, level, description=description, filters=filters, tags=tags,
-                          mails=mails, webhook=webhook)
+                          mails=mails, webhook=webhook, source=source)
 
-def _re_create_tracker(tracker_type, tracker_uuid, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, first_seen=None, last_seen=None):
+def _re_create_tracker(tracker_type, tracker_uuid, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', first_seen=None, last_seen=None):
     create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
-                   tags=tags, mails=mails, webhook=webhook, tracker_uuid=tracker_uuid)
+                   tags=tags, mails=mails, webhook=webhook, source=source, tracker_uuid=tracker_uuid)
 
 def is_tracker(tracker_uuid):
     return Tracker(tracker_uuid).exists()
@@ -1207,6 +1217,8 @@ def api_add_tracker(dict_input, org, user_id):
     description = escape(description)
     webhook = dict_input.get('webhook', '')
     webhook = escape(webhook)
+    source = dict_input.get('source', 'manual')
+    source = escape(source)
     res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
     if res[1] != 200:
         return res
@@ -1262,7 +1274,7 @@ def api_add_tracker(dict_input, org, user_id):
         level = 1
 
     tracker_uuid = create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
-                                  tags=tags, mails=mails, webhook=webhook)
+                                  tags=tags, mails=mails, webhook=webhook, source=source)
 
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
@@ -1297,6 +1309,8 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     description = escape(description)
     webhook = dict_input.get('webhook', '')
     webhook = escape(webhook)
+    source = dict_input.get('source', 'manual')
+    source = escape(source)
     res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
     if res[1] != 200:
         return res
@@ -1343,7 +1357,8 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
 
     tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
-                 tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate)
+                 tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate,
+                 source=source)
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 
@@ -1769,6 +1784,12 @@ class RetroHunt:
     def get_description(self):
         return self._get_field('description')
 
+    def get_source(self):
+        source = self._get_field('source')
+        if not source:
+            source = 'manual'
+        return source
+
     def get_timeout(self):
         res = self._get_field('timeout')
         if res:
@@ -1824,6 +1845,8 @@ class RetroHunt:
             meta['date'] = self.get_date()
         if 'description' in options:
             meta['description'] = self.get_description()
+        if 'source' in options:
+            meta['source'] = self.get_source()
         if 'level' in options:
             meta['level'] = self.get_level()
         if 'mails' in options:
@@ -2033,7 +2056,7 @@ class RetroHunt:
         self.obj_undone(obj_gid)
         self.obj_unreject(obj_gid)
 
-    def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending'):
+    def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual'):
         if self.exists():
             raise Exception('Error: Retro Hunt Task already exists')
 
@@ -2047,6 +2070,7 @@ class RetroHunt:
         self._set_field('creator', user_id)
         if description:
             self._set_field('description', description)
+        self._set_field('source', source or 'manual')
         if timeout:
             self._set_field('timeout', int(timeout))
         for tag in tags:
@@ -2116,14 +2140,14 @@ class RetroHunt:
         self.clear_cache()
         return self.uuid
 
-def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', task_uuid=None):
+def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual', task_uuid=None):
     if not task_uuid:
         task_uuid = str(uuid.uuid4())
     retro_hunt = RetroHunt(task_uuid)
     # rule_type: yara_default - yara custom
     rule = save_yara_rule(rule_type, rule, tracker_uuid=retro_hunt.uuid)
     retro_hunt.create(user_org, user_id, level, name, rule, description=description, mails=mails, tags=tags,
-                      timeout=timeout, filters=filters, state=state)
+                      timeout=timeout, filters=filters, state=state, source=source)
     return retro_hunt.uuid
 
 # TODO
@@ -2293,6 +2317,8 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
     description = dict_input.get('description', '')
     description = escape(description)
     description = description[:1000]
+    source = dict_input.get('source', 'manual')
+    source = escape(source)
 
     res = api_validate_rule_to_add(rule, task_type)
     if res[1] != 200:
@@ -2343,7 +2369,7 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
                     return res
 
     task_uuid = create_retro_hunt(user_org, user_id, level, name, task_type, rule, description=description,
-                                  mails=mails, tags=tags, timeout=30, filters=filters)
+                                  mails=mails, tags=tags, timeout=30, filters=filters, source=source)
     return {'name': name, 'rule': rule, 'type': task_type, 'uuid': task_uuid}, 200
 
 def api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid):

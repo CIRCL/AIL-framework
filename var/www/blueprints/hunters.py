@@ -8,6 +8,9 @@
 import os
 import sys
 import json
+from urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.error import HTTPError, URLError
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
@@ -61,13 +64,52 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 
-@hunters.route("/yara/rule/default/content", methods=['GET'])
+def _extract_rulezet_rule_id(rulezet_url):
+    parsed = urlparse(rulezet_url)
+    if parsed.scheme not in {'http', 'https'}:
+        return None
+    if parsed.netloc not in {'rulezet.org', 'www.rulezet.org'}:
+        return None
+    path_segments = [segment for segment in parsed.path.split('/') if segment]
+    if not path_segments:
+        return None
+    return path_segments[-1]
+
+@hunters.route("/yara/rule/rulezet/import", methods=['GET'])
 @login_required
 @login_read_only
-def get_default_yara_rule_content():
-    default_yara_rule = request.args.get('rule')
-    res = Tracker.api_get_default_rule_content(default_yara_rule)
-    return Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json'), res[1]
+def import_rulezet_yara_rule():
+    rulezet_url = request.args.get('url', '').strip()
+    if not rulezet_url:
+        return jsonify({'status': 'error', 'reason': 'Invalid Rulezet URL.'}), 400
+
+    rule_id = _extract_rulezet_rule_id(rulezet_url)
+    if not rule_id:
+        return jsonify({'status': 'error', 'reason': 'Unable to extract Rule ID from URL.'}), 400
+
+    api_url = f'https://rulezet.org/api/rule/public/detail/{rule_id}'
+    try:
+        with urlopen(api_url, timeout=15) as response:
+            if response.status != 200:
+                return jsonify({'status': 'error', 'reason': 'Unable to fetch Rulezet rule details.'}), 502
+            payload = json.loads(response.read().decode('utf-8'))
+    except HTTPError as error:
+        if error.code == 404:
+            return jsonify({'status': 'error', 'reason': 'Rule not found on Rulezet.'}), 404
+        return jsonify({'status': 'error', 'reason': 'Unable to fetch Rulezet rule details.'}), 502
+    except (URLError, TimeoutError, json.JSONDecodeError):
+        return jsonify({'status': 'error', 'reason': 'Unable to fetch Rulezet rule details.'}), 502
+
+    if payload.get('format') != 'yara':
+        return jsonify({'status': 'error', 'reason': 'Only YARA rules are supported.'}), 400
+
+    return jsonify({
+        'status': 'success',
+        'title': payload.get('title', ''),
+        'description': payload.get('description', ''),
+        'to_string': payload.get('to_string', ''),
+        'format': payload.get('format', '')
+    })
 
 ##################
 #    TRACKERS    #
@@ -344,6 +386,9 @@ def parse_add_edit_request(request_form):
     nb_words = request_form.get("nb_word", 1)
     description = request.form.get("description", '')
     webhook = request_form.get("webhook", '')
+    source = request_form.get("source", '').strip()
+    if not source:
+        source = 'manual'
     level = request_form.get("level", 0)
     mails = request_form.get("mails", [])
     notification_filter_duplicate = request_form.get('notification_filter_duplicate', False)
@@ -378,16 +423,9 @@ def parse_add_edit_request(request_form):
 
     # YARA #
     if tracker_type == 'yara':
-        yara_default_rule = request_form.get("yara_default_rule")
-        if yara_default_rule == 'Select a default rule':
-            yara_default_rule = None
         yara_custom_rule = request_form.get("yara_custom_rule")
-        if yara_custom_rule:
-            to_track = yara_custom_rule
-            tracker_type = 'yara_custom'
-        else:
-            to_track = yara_default_rule
-            tracker_type = 'yara_default'
+        to_track = yara_custom_rule
+        tracker_type = 'yara_custom'
 
     level = int(level)
     if mails:
@@ -430,7 +468,7 @@ def parse_add_edit_request(request_form):
     input_dict = {"tracked": to_track, "type": tracker_type,
                   "tags": tags, "mails": mails, "filters": filters,
                   "notification_filter_duplicate" : notification_filter_duplicate,
-                  "level": level, "description": description, "webhook": webhook}
+                  "level": level, "description": description, "webhook": webhook, "source": source}
     if tracker_uuid:
         input_dict['uuid'] = tracker_uuid
     if tracker_type == 'set':
@@ -457,8 +495,7 @@ def add_tracked_menu():
         return render_template("tracker_add.html",
                                dict_tracker={},
                                all_sources=item_basic.get_all_items_sources(r_list=True),
-                               tags_selector_data=Tag.get_tags_selector_data(),
-                               all_yara_files=Tracker.get_all_default_yara_files())
+                               tags_selector_data=Tag.get_tags_selector_data())
 
 @hunters.route("/tracker/edit", methods=['GET', 'POST'])
 @login_required
@@ -481,7 +518,7 @@ def tracker_edit():
             return create_json_response(res[0], res[1])
 
         tracker = Tracker.Tracker(tracker_uuid)
-        dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks'})
+        dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks', 'source'})
         if dict_tracker['type'] == 'yara':
             if not Tracker.is_default_yara_rule(dict_tracker['tracked']):
                 dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
@@ -499,8 +536,7 @@ def tracker_edit():
         return render_template("tracker_add.html",
                                dict_tracker=dict_tracker,
                                all_sources=item_basic.get_all_items_sources(r_list=True),
-                               tags_selector_data=tags_selector_data,
-                               all_yara_files=Tracker.get_all_default_yara_files())
+                               tags_selector_data=tags_selector_data)
 
 @hunters.route('/tracker/delete', methods=['GET'])
 @login_required
@@ -813,6 +849,9 @@ def retro_hunt_add_task():
         name = request.form.get("name", '')
         description = request.form.get("description", '')
         timeout = request.form.get("timeout", 30)
+        source = request.form.get("source", '').strip()
+        if not source:
+            source = 'manual'
         # TAGS
         tags = request.form.get("tags", [])
         taxonomies_tags = request.form.get('taxonomies_tags')
@@ -878,14 +917,9 @@ def retro_hunt_add_task():
                         filters[obj_type]['subtypes'].append(obj_subtype)
 
         # YARA #
-        yara_default_rule = request.form.get("yara_default_rule")
         yara_custom_rule =  request.form.get("yara_custom_rule")
-        if yara_custom_rule:
-            rule = yara_custom_rule
-            rule_type='yara_custom'
-        else:
-            rule = yara_default_rule
-            rule_type='yara_default'
+        rule = yara_custom_rule
+        rule_type='yara_custom'
 
         user_org = current_user.get_org()
         user_id = current_user.get_user_id()
@@ -893,6 +927,7 @@ def retro_hunt_add_task():
         input_dict = {"level": level, "name": name, "description": description, "creator": user_id,
                       "rule": rule, "type": rule_type,
                       "tags": tags, "filters": filters, "timeout": timeout,  # "mails": mails
+                      "source": source,
                       }
 
         res = Tracker.api_create_retro_hunt_task(input_dict, user_org, user_id)
@@ -923,7 +958,6 @@ def retro_hunt_add_task():
             new_filters = {'message', 'ocr', 'item'}
 
         return render_template("add_retro_hunt_task.html",
-                               all_yara_files=Tracker.get_all_default_yara_files(),
                                tags_selector_data=Tag.get_tags_selector_data(),
                                items_sources=item_basic.get_all_items_sources(r_list=True),
                                new_description=new_description, new_level=new_level, new_rule=new_rule,
