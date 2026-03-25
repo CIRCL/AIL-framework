@@ -1,0 +1,67 @@
+<div class="card border-0 bg-light mb-3 d-none" id="yara_rule_builder_card">
+    <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="font-weight-bold mb-0">Beginner-friendly YARA rule builder</h6>
+            <div class="d-flex align-items-center">
+            <span class="badge badge-primary mr-2">V1</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="yara_builder_close_btn">Back to editor</button>
+        </div>
+        </div>
+        <p class="small text-muted mb-3">Fill the form, then click <strong>Generate Rule</strong> to replace the YARA editor content.</p>
+
+        <div class="alert alert-danger py-2 px-3 mb-3 d-none" id="yara_builder_error"></div>
+
+        <div class="form-group">
+            <label for="yara_builder_rule_name" class="font-weight-bold">Rule name</label>
+            <input type="text" class="form-control" id="yara_builder_rule_name" placeholder="example_rule_name">
+            <small class="form-text text-muted">Rule name: Name of the YARA rule. Must follow YARA naming rules.</small>
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold">Metadata (optional)</label>
+            <div class="form-row">
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="yara_builder_description" placeholder="Description">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="yara_builder_author" placeholder="Author">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="yara_builder_date" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <input type="text" class="form-control" id="yara_builder_version" placeholder="Version">
+                </div>
+            </div>
+            <small class="form-text text-muted">Metadata: Optional information used to document the rule.</small>
+        </div>
+
+        <div class="form-group mb-2">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="font-weight-bold mb-0">Detection strings</label>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="yara_builder_add_string_btn">
+                    <i class="fas fa-plus mr-1"></i>Add string
+                </button>
+            </div>
+            <small class="form-text text-muted mb-2">Detection strings: Enter one or more text values that the rule should search for.</small>
+            <div id="yara_builder_strings_list"></div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold">Match mode</label>
+            <div class="custom-control custom-radio">
+                <input class="custom-control-input" type="radio" name="yara_builder_match_mode" id="yara_builder_match_any" value="any" checked>
+                <label class="custom-control-label" for="yara_builder_match_any">Any of the strings</label>
+            </div>
+            <div class="custom-control custom-radio">
+                <input class="custom-control-input" type="radio" name="yara_builder_match_mode" id="yara_builder_match_all" value="all">
+                <label class="custom-control-label" for="yara_builder_match_all">All of the strings</label>
+            </div>
+            <small class="form-text text-muted">Match mode: Any = at least one string found. All = every string found.</small>
+        </div>
+
+        <button type="button" class="btn btn-success" id="yara_builder_generate_btn">
+            <i class="fas fa-magic mr-1"></i>Generate Rule
+        </button>
+    </div>
+</div>

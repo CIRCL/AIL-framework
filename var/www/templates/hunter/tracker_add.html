@@ -349,7 +349,14 @@
 										</div>
 
 										<div class="mt-4" id="yara_rule">
-											<div class="card border-0 bg-light mb-3">
+											<div class="d-flex justify-content-end mb-3">
+											<button type="button" class="btn btn-outline-primary btn-sm" id="yara_builder_open_btn">
+												<i class="fas fa-magic mr-1"></i>Use guided builder
+											</button>
+										</div>
+										{% include 'hunter/partials/yara_rule_builder.html' %}
+
+										<div class="card border-0 bg-light mb-3">
 												<div class="card-body">
 													<div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
 														<h6 class="font-weight-bold mb-0">Import YARA rule from Rulezet</h6>
@@ -651,6 +658,15 @@ $('#import_rulezet_btn').on('click', function () {
 		});
 });
 
+</script>
+
+<script src="{{ url_for('static', filename='js/yara-rule-builder.js') }}"></script>
+<script>
+initYaraRuleBuilder({
+	onRuleGenerated: function (content) {
+		setYaraRuleContent(content);
+	}
+});
 </script>
 
 <script type="module">
