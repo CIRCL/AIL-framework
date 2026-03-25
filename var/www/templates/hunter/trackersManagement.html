@@ -220,7 +220,7 @@
     {% if date_value %}
         {{ date_value[0:4] }}/{{ date_value[4:6] }}/{{ date_value[6:8] }}
     {% else %}
-        <span class="muted-dash">—</span>
+        <span class="muted-dash"> —</span>
     {% endif %}
 {% endmacro %}
 
@@ -500,7 +500,7 @@
                 $(selector).DataTable({
                     "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
                     "iDisplayLength": 10,
-                    "order": [[{{ 3 if not is_admin else 4 }}, "desc"]],
+                    "order": [[{{ 4 if not is_admin else 3 }}, "desc"]],
                     "language": {
                         "search": "Search trackers:",
                         "lengthMenu": "Show _MENU_ trackers",
