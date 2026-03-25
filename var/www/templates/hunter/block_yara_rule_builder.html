@@ -6,14 +6,22 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" id="yara_builder_close_btn">Back to editor</button>
         </div>
         </div>
-        <p class="small text-muted mb-3">Fill the form, then click <strong>Generate Rule</strong> to replace the YARA editor content.</p>
+        <p class="small text-muted mb-2">New to YARA? Use this guided builder. Fill the steps below, then click <strong>Generate Rule</strong> to replace the editor content.</p>
+        <div class="alert alert-info py-2 px-3 mb-3">
+            <strong>How it works:</strong>
+            <ol class="mb-0 pl-3 small">
+                <li>Give your rule a name.</li>
+                <li>Add one or more suspicious words or phrases.</li>
+                <li>Choose whether <em>any</em> or <em>all</em> strings must match.</li>
+            </ol>
+        </div>
 
         <div class="alert alert-danger py-2 px-3 mb-3 d-none" id="yara_builder_error"></div>
 
         <div class="form-group">
             <label for="yara_builder_rule_name" class="font-weight-bold">Rule name</label>
             <input type="text" class="form-control" id="yara_builder_rule_name" placeholder="example_rule_name">
-            <small class="form-text text-muted">Rule name: Name of the YARA rule. Must follow YARA naming rules.</small>
+            <small class="form-text text-muted">Use letters, numbers, and underscores only (for example: <code>suspicious_powershell</code>).</small>
         </div>
 
         <div class="form-group">
@@ -32,7 +40,7 @@
                     <input type="text" class="form-control" id="yara_builder_version" placeholder="Version">
                 </div>
             </div>
-            <small class="form-text text-muted">Metadata: Optional information used to document the rule.</small>
+            <small class="form-text text-muted">Optional notes for your team (who wrote it, when, and why).</small>
         </div>
 
         <div class="form-group mb-2">
@@ -42,7 +50,13 @@
                     <i class="fas fa-plus mr-1"></i>Add string
                 </button>
             </div>
-            <small class="form-text text-muted mb-2">Detection strings: Enter one or more text values that the rule should search for.</small>
+            <small class="form-text text-muted mb-2">Add words or phrases to search for (examples: <code>powershell</code>, <code>cmd.exe /c</code>, <code>wallet.dat</code>).</small>
+            <div class="mb-2">
+                <span class="small text-muted mr-2">Quick start examples:</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-1 yara-builder-example-btn" data-example-name="phishing_keywords">Phishing keywords</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-1 yara-builder-example-btn" data-example-name="malware_commands">Malware commands</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-1 yara-builder-example-btn" data-example-name="crypto_theft">Crypto theft</button>
+            </div>
             <div id="yara_builder_strings_list"></div>
         </div>
 
@@ -50,13 +64,19 @@
             <label class="font-weight-bold">Match mode</label>
             <div class="custom-control custom-radio">
                 <input class="custom-control-input" type="radio" name="yara_builder_match_mode" id="yara_builder_match_any" value="any" checked>
-                <label class="custom-control-label" for="yara_builder_match_any">Any of the strings</label>
+                <label class="custom-control-label" for="yara_builder_match_any">Alert if <strong>at least one</strong> string is found</label>
             </div>
             <div class="custom-control custom-radio">
                 <input class="custom-control-input" type="radio" name="yara_builder_match_mode" id="yara_builder_match_all" value="all">
-                <label class="custom-control-label" for="yara_builder_match_all">All of the strings</label>
+                <label class="custom-control-label" for="yara_builder_match_all">Alert only if <strong>all strings</strong> are found</label>
             </div>
-            <small class="form-text text-muted">Match mode: Any = at least one string found. All = every string found.</small>
+            <small class="form-text text-muted">Tip: start with "at least one string" for broader detection, then tighten it later.</small>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold mb-1">Preview</label>
+            <pre class="bg-white border rounded p-2 mb-0"><code id="yara_builder_preview">Rule preview will appear here...</code></pre>
+            <small class="form-text text-muted">This is the YARA text that will be inserted into the editor.</small>
         </div>
 
         <button type="button" class="btn btn-success" id="yara_builder_generate_btn">

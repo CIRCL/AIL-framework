@@ -30,7 +30,7 @@
                         <button type="button" class="btn btn-outline-danger btn-sm yara-builder-remove-string-btn">Remove</button>
                     </div>
                 </div>
-                <small class="form-text text-muted">Case insensitive: Match regardless of uppercase/lowercase. Full word: Match only the exact word.</small>
+                <small class="form-text text-muted">Case insensitive = ignore uppercase/lowercase. Full word = avoid partial matches (for example "admin" will not match "administrator").</small>
             </div>
         `;
     }
@@ -50,8 +50,27 @@
         const builderCard = document.getElementById('yara_rule_builder_card');
         const openButton = document.getElementById('yara_builder_open_btn');
         const closeButton = document.getElementById('yara_builder_close_btn');
+        const preview = document.getElementById('yara_builder_preview');
+        const exampleButtons = Array.from(document.querySelectorAll('.yara-builder-example-btn'));
 
         let nextStringIndex = 1;
+        const sampleRules = {
+            phishing_keywords: {
+                ruleName: 'phishing_keywords',
+                strings: ['verify your account', 'urgent action required', 'login now'],
+                mode: 'any'
+            },
+            malware_commands: {
+                ruleName: 'suspicious_command_activity',
+                strings: ['powershell -enc', 'cmd.exe /c', 'rundll32'],
+                mode: 'any'
+            },
+            crypto_theft: {
+                ruleName: 'crypto_wallet_targeting',
+                strings: ['wallet.dat', 'seed phrase', 'private key'],
+                mode: 'any'
+            }
+        };
 
         function setError(message) {
             if (!message) {
@@ -67,6 +86,7 @@
             stringsList.insertAdjacentHTML('beforeend', createStringRow(nextStringIndex));
             nextStringIndex += 1;
             updateRemoveButtonsState();
+            updatePreview();
         }
 
         function updateRemoveButtonsState() {
@@ -141,6 +161,44 @@
             return lines.join('\n');
         }
 
+        function renderPreview(text, isError) {
+            if (!preview) return;
+            preview.textContent = text;
+            if (isError) {
+                preview.classList.add('text-danger');
+            } else {
+                preview.classList.remove('text-danger');
+            }
+        }
+
+        function updatePreview() {
+            try {
+                renderPreview(buildRule(), false);
+            } catch (error) {
+                renderPreview(`Complete the fields to preview the rule.\n\n${error.message || ''}`, true);
+            }
+        }
+
+        function fillFromExample(exampleName) {
+            const sample = sampleRules[exampleName];
+            if (!sample) return;
+
+            document.getElementById('yara_builder_rule_name').value = sample.ruleName;
+            stringsList.innerHTML = '';
+            sample.strings.forEach((value) => {
+                addStringField();
+                const rows = stringsList.querySelectorAll('.yara-builder-string-row');
+                const lastRow = rows[rows.length - 1];
+                lastRow.querySelector('.yara-builder-string-text').value = value;
+            });
+            const selectedMode = document.querySelector(`input[name="yara_builder_match_mode"][value="${sample.mode}"]`);
+            if (selectedMode) {
+                selectedMode.checked = true;
+            }
+            setError('');
+            updatePreview();
+        }
+
 
         function openBuilder() {
             builderCard.classList.remove('d-none');
@@ -178,6 +236,26 @@
             if (rows.length <= 1) return;
             event.target.closest('.yara-builder-string-row').remove();
             updateRemoveButtonsState();
+            updatePreview();
+        });
+
+        stringsList.addEventListener('input', function () {
+            updatePreview();
+        });
+
+        document.getElementById('yara_builder_rule_name').addEventListener('input', updatePreview);
+        document.getElementById('yara_builder_description').addEventListener('input', updatePreview);
+        document.getElementById('yara_builder_author').addEventListener('input', updatePreview);
+        document.getElementById('yara_builder_date').addEventListener('input', updatePreview);
+        document.getElementById('yara_builder_version').addEventListener('input', updatePreview);
+        document.querySelectorAll('input[name="yara_builder_match_mode"]').forEach((field) => {
+            field.addEventListener('change', updatePreview);
+        });
+
+        exampleButtons.forEach((button) => {
+            button.addEventListener('click', function () {
+                fillFromExample(button.dataset.exampleName);
+            });
         });
 
         generateButton.addEventListener('click', function () {
@@ -196,5 +274,6 @@
         }
 
         addStringField();
+        updatePreview();
     };
 })();
