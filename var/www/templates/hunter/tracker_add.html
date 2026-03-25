@@ -450,7 +450,7 @@
 												</ul>
 											</div>
 
-											<button class="btn btn-success btn-lg btn-block">
+											<button class="btn btn-success btn-lg btn-block" id="tracker_submit_btn">
 												<i class="fas fa-save mr-1"></i> {%if dict_tracker%}Save tracker changes{%else%}Create tracker{%endif%}
 											</button>
 										</div>
@@ -663,6 +663,7 @@ $('#import_rulezet_btn').on('click', function () {
 <script src="{{ url_for('static', filename='js/yara-rule-builder.js') }}"></script>
 <script>
 initYaraRuleBuilder({
+	disabledButtonSelectors: ['#tracker_submit_btn'],
 	onRuleGenerated: function (content) {
 		setYaraRuleContent(content);
 	}

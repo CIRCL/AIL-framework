@@ -307,7 +307,7 @@
 													<option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
 												</select>
                                                 <small class="form-text text-muted">Global retro hunts are visible to all users, while organisation retro hunts are visible only within your organisation.</small>
-												<button class="btn btn-primary btn-lg btn-block mt-4">
+												<button class="btn btn-primary btn-lg btn-block mt-4" id="retro_hunt_submit_btn">
 													<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
 												</button>
 											</div>
@@ -481,6 +481,7 @@ $('#import_rulezet_btn').on('click', function () {
 <script src="{{ url_for('static', filename='js/yara-rule-builder.js') }}"></script>
 <script>
 initYaraRuleBuilder({
+	disabledButtonSelectors: ['#retro_hunt_submit_btn'],
 	onRuleGenerated: function (content) {
 		setYaraRuleContent(content);
 	}

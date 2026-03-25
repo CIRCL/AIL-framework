@@ -6,13 +6,14 @@
             <button type="button" class="btn btn-outline-secondary btn-sm" id="yara_builder_close_btn">Back to editor</button>
         </div>
         </div>
-        <p class="small text-muted mb-2">New to YARA? Use this guided builder. Fill the steps below, then click <strong>Generate Rule</strong> to replace the editor content.</p>
+        <p class="small text-muted mb-2">New to YARA? This guided form writes the technical YARA syntax for you. Fill the fields in plain language, then click <strong>Generate Rule</strong>.</p>
         <div class="alert alert-info py-2 px-3 mb-3">
             <strong>How it works:</strong>
             <ol class="mb-0 pl-3 small">
-                <li>Give your rule a name.</li>
-                <li>Add one or more suspicious words or phrases.</li>
-                <li>Choose whether <em>any</em> or <em>all</em> strings must match.</li>
+                <li>Give your rule a name (example: <code>suspicious_login_reset</code>).</li>
+                <li>Add suspicious words or phrases you want to detect.</li>
+                <li>Choose if a match should happen when <em>any</em> string is found, or only when <em>all</em> are found.</li>
+                <li>Review the generated preview, then apply it to the editor.</li>
             </ol>
         </div>
 
@@ -44,11 +45,8 @@
         </div>
 
         <div class="form-group mb-2">
-            <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="mb-2">
                 <label class="font-weight-bold mb-0">Detection strings</label>
-                <button type="button" class="btn btn-outline-primary btn-sm" id="yara_builder_add_string_btn">
-                    <i class="fas fa-plus mr-1"></i>Add string
-                </button>
             </div>
             <small class="form-text text-muted mb-2">Add words or phrases to search for (examples: <code>powershell</code>, <code>cmd.exe /c</code>, <code>wallet.dat</code>).</small>
             <div class="mb-2">
@@ -57,7 +55,19 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm mb-1 yara-builder-example-btn" data-example-name="malware_commands">Malware commands</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm mb-1 yara-builder-example-btn" data-example-name="crypto_theft">Crypto theft</button>
             </div>
+            <div class="mb-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="yara_builder_add_string_btn">
+                    <i class="fas fa-plus mr-1"></i>Add string
+                </button>
+            </div>
             <div id="yara_builder_strings_list"></div>
+            <div class="alert alert-light border mt-2 mb-0 py-2 px-3">
+                <div class="small font-weight-bold mb-1"><i class="fas fa-info-circle text-primary mr-1"></i>String option guide</div>
+                <ul class="small text-muted mb-0 pl-3">
+                    <li><strong>Case insensitive</strong>: Ignore uppercase/lowercase differences.</li>
+                    <li><strong>Full word</strong>: Avoid partial matches (for example, <code>admin</code> does not match <code>administrator</code>).</li>
+                </ul>
+            </div>
         </div>
 
         <div class="form-group mb-3">

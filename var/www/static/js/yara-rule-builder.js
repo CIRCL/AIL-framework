@@ -30,7 +30,6 @@
                         <button type="button" class="btn btn-outline-danger btn-sm yara-builder-remove-string-btn">Remove</button>
                     </div>
                 </div>
-                <small class="form-text text-muted">Case insensitive = ignore uppercase/lowercase. Full word = avoid partial matches (for example "admin" will not match "administrator").</small>
             </div>
         `;
     }
@@ -41,6 +40,7 @@
 
     window.initYaraRuleBuilder = function initYaraRuleBuilder(options) {
         const onRuleGenerated = options.onRuleGenerated;
+        const disabledButtonSelectors = Array.isArray(options.disabledButtonSelectors) ? options.disabledButtonSelectors : [];
 
         const stringsList = document.getElementById('yara_builder_strings_list');
         const addStringButton = document.getElementById('yara_builder_add_string_btn');
@@ -71,6 +71,10 @@
                 mode: 'any'
             }
         };
+        const disabledButtons = disabledButtonSelectors
+            .map((selector) => document.querySelector(selector))
+            .filter((button) => button);
+        const disabledButtonsDefaultTitles = new Map();
 
         function setError(message) {
             if (!message) {
@@ -205,6 +209,13 @@
             if (openButton) {
                 openButton.classList.add('d-none');
             }
+            disabledButtons.forEach((button) => {
+                if (!disabledButtonsDefaultTitles.has(button)) {
+                    disabledButtonsDefaultTitles.set(button, button.getAttribute('title') || '');
+                }
+                button.disabled = true;
+                button.setAttribute('title', 'Close YARA builder first, then continue.');
+            });
         }
 
         function closeBuilder() {
@@ -212,6 +223,15 @@
             if (openButton) {
                 openButton.classList.remove('d-none');
             }
+            disabledButtons.forEach((button) => {
+                button.disabled = false;
+                const previousTitle = disabledButtonsDefaultTitles.get(button);
+                if (previousTitle) {
+                    button.setAttribute('title', previousTitle);
+                } else {
+                    button.removeAttribute('title');
+                }
+            });
         }
 
         if (openButton) {
