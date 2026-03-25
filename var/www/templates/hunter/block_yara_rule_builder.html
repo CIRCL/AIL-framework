@@ -13,7 +13,7 @@
                 <li>Give your rule a name (example: <code>suspicious_login_reset</code>).</li>
                 <li>Add suspicious words or phrases you want to detect.</li>
                 <li>Choose if a match should happen when <em>any</em> string is found, or only when <em>all</em> are found.</li>
-                <li>Review the generated preview, then apply it to the editor.</li>
+                <li>Generate the rule.</li>
             </ol>
         </div>
 
@@ -80,7 +80,6 @@
                 <input class="custom-control-input" type="radio" name="yara_builder_match_mode" id="yara_builder_match_all" value="all">
                 <label class="custom-control-label" for="yara_builder_match_all">Alert only if <strong>all strings</strong> are found</label>
             </div>
-            <small class="form-text text-muted">Tip: start with "at least one string" for broader detection, then tighten it later.</small>
         </div>
 
         <div class="form-group mb-3">

@@ -450,8 +450,8 @@
 												</ul>
 											</div>
 
-											<button class="btn btn-success btn-lg btn-block" id="tracker_submit_btn">
-												<i class="fas fa-save mr-1"></i> {%if dict_tracker%}Save tracker changes{%else%}Create tracker{%endif%}
+											<button class="btn btn-{%if dict_tracker%}success{%else%}primary{%endif%} btn-lg btn-block" id="tracker_submit_btn">
+												{%if dict_tracker%}<i class="fas fa-save mr-1"></i> Save tracker changes{%else%}<i class="fas fa-plus mr-1"></i> Create tracker{%endif%}
 											</button>
 										</div>
 									</div>
