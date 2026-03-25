@@ -277,6 +277,7 @@
                 </td>
             {% endif %}
 
+            <td>{{ format_date(tracker['date']) }}</td>
             <td>{{ format_date(tracker['first_seen']) }}</td>
             <td>{{ format_date(tracker['last_seen']) }}</td>
 
@@ -319,6 +320,7 @@
                                 <th>Type</th>
                                 <th>What is being tracked</th>
                                 {% if is_admin %}<th>Owner</th>{% endif %}
+                                <th>Created</th>
                                 <th>First match</th>
                                 <th>Latest match</th>
                                 <th>Notifications</th>
@@ -498,7 +500,7 @@
                 $(selector).DataTable({
                     "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
                     "iDisplayLength": 10,
-                    "order": [[4, "desc"]],
+                    "order": [[{{ 3 if not is_admin else 4 }}, "desc"]],
                     "language": {
                         "search": "Search trackers:",
                         "lengthMenu": "Show _MENU_ trackers",
