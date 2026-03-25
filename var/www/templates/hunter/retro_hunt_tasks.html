@@ -273,10 +273,12 @@
           {% endif %}
         </td>
 
-        <td>
-          <span class="meta-label">Organisation</span>
-          <div>{{ dict_task['org_name'] }}</div>
-        </td>
+        {% if is_admin %}
+            <td>
+              <span class="meta-label">Organisation</span>
+              <div>{{ dict_task['org_name'] }}</div>
+            </td>
+        {% endif %}
 
         <td>{{ format_date(dict_task['date']) }}</td>
 
@@ -315,7 +317,7 @@
               <thead class="bg-dark text-white">
                 <tr>
                   <th>Retro Hunt</th>
-                  <th>Owner</th>
+                  {% if is_admin %}<th>Owner</th>{% endif %}
                   <th>Created</th>
                   <th>Matches</th>
                   <th>Status</th>
@@ -479,7 +481,7 @@ $(document).ready(function(){
       $(selector).DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
-        "order": [[2, "desc"]],
+        "order": [[{% if is_admin %}2{% else %}1{% endif %}, "desc"]],
         "language": {
           "search": "Search Retro Hunts:",
           "lengthMenu": "Show _MENU_ Retro Hunts",
