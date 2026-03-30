@@ -360,18 +360,19 @@
 												<div class="card-body">
 													<div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
 														<h6 class="font-weight-bold mb-0">Import YARA rule from Rulezet</h6>
-														<a class="btn btn-outline-primary btn-sm mt-2 mt-md-0 d-inline-flex align-items-center" href="https://rulezet.org/" target="_blank" rel="noopener noreferrer">
+														<a class="btn btn-outline-primary btn-sm mt-2 mt-md-0 d-inline-flex align-items-center" href="https://rulezet.org/rule/rules_list?format=yara" target="_blank" rel="noopener noreferrer">
 															<img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet logo" style="height: 50px; width: auto;" class="mr-1">
 															Search on Rulezet
 														</a>
 													</div>
-													<p class="small text-muted">Paste a full Rulezet rule URL, then import the rule content.</p>
+													<p class="small text-muted mb-2">Rulezet is an open-source platform for sharing and improving detection rules.</p>
 													<div class="input-group mb-2">
 														<input type="url" class="form-control" id="rulezet_rule_url" placeholder="https://rulezet.org/rule/public/215468">
 														<div class="input-group-append">
 															<button class="btn btn-outline-success" id="import_rulezet_btn" type="button">Import</button>
 														</div>
 													</div>
+                                                     <small class="form-text text-muted mb-2">After import, the rule content is inserted below.</small>
 													<div class="alert alert-danger py-2 px-3 mb-0 d-none" id="rulezet_error"></div>
 												</div>
 											</div>
