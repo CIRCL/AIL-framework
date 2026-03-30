@@ -483,6 +483,7 @@
 <script>
     $(document).ready(function () {
         $("#page-Tracker").addClass("active");
+        $("#nav_title_trackers").removeClass("text-muted");
         $("#nav_tracker_{{tracker_type}}").addClass("active");
 
         {% for tracker in user_trackers %}
