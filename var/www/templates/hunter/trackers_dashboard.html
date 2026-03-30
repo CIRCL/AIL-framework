@@ -265,6 +265,120 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white border-0 pt-4 px-4 pb-2">
+                                <h3 class="h5 mb-1">Your Recent Hunting Activity</h3>
+                                <p class="text-muted mb-0">
+                                    Quickly reopen the trackers you created and the retro hunts you launched most recently.
+                                </p>
+                            </div>
+                            <div class="card-body px-4 pb-4 pt-3">
+                                <div class="row">
+                                    <div class="col-12 col-xl-6 mb-4 mb-xl-0">
+                                        <div class="border rounded h-100 p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h4 class="h6 mb-1">Trackers you created</h4>
+                                                    <p class="text-muted mb-0">
+                                                        Quick access to your latest trackers.
+                                                    </p>
+                                                </div>
+                                                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('hunters.tracked_menu') }}">
+                                                    View all trackers
+                                                </a>
+                                            </div>
+
+                                            {% if my_trackers %}
+                                                <div class="list-group list-group-flush">
+                                                    {% for tracker in my_trackers %}
+                                                        <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div class="pr-3">
+                                                                    <div class="font-weight-bold">
+                                                                        {% if tracker['description'] %}
+                                                                            {{ tracker['description'] }}
+                                                                        {% else %}
+                                                                            {{ tracker['tracked'] }}
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <small class="text-muted">
+                                                                        <span class="badge badge-light border text-uppercase mr-2">{{ tracker['type'] }}</span>
+                                                                        Created {% if tracker['date'] %}{{ tracker['date'][0:4] }}/{{ tracker['date'][4:6] }}/{{ tracker['date'][6:8] }}{% endif %}
+                                                                    </small>
+                                                                </div>
+                                                                <i class="fas fa-chevron-right text-muted"></i>
+                                                            </div>
+                                                        </a>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="tracker-empty-state text-center py-4 px-3">
+                                                    <i class="fas fa-plus-circle fa-lg text-muted mb-2"></i>
+                                                    <h5 class="h6">No trackers created yet</h5>
+                                                    <p class="text-muted mb-3">
+                                                        Create your first tracker to monitor words, sets, regexes, typo domains, or YARA rules.
+                                                    </p>
+                                                    <a class="btn btn-primary btn-sm" href="{{ url_for('hunters.add_tracked_menu') }}">
+                                                        Create a tracker
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-xl-6">
+                                        <div class="border rounded h-100 p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h4 class="h6 mb-1">Retro hunts you launched</h4>
+                                                    <p class="text-muted mb-0">
+                                                        Review your latest retro hunt tasks and continue your analysis.
+                                                    </p>
+                                                </div>
+                                                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('hunters.retro_hunt_all_tasks') }}">
+                                                    View all retro hunts
+                                                </a>
+                                            </div>
+
+                                            {% if my_retro_hunts %}
+                                                <div class="list-group list-group-flush">
+                                                    {% for hunt in my_retro_hunts %}
+                                                        <a class="list-group-item list-group-item-action px-0" href="{{ url_for('hunters.retro_hunt_show_task') }}?uuid={{ hunt['uuid'] }}">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div class="pr-3">
+                                                                    <div class="font-weight-bold">{{ hunt['name'] }}</div>
+                                                                    <small class="text-muted">
+                                                                        <span class="badge badge-light border text-uppercase mr-2">{{ hunt['status'] }}</span>
+                                                                        Created {% if hunt['date'] %}{{ hunt['date'][0:4] }}/{{ hunt['date'][4:6] }}/{{ hunt['date'][6:8] }}{% endif %}
+                                                                    </small>
+                                                                </div>
+                                                                <i class="fas fa-chevron-right text-muted"></i>
+                                                            </div>
+                                                        </a>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <div class="tracker-empty-state text-center py-4 px-3">
+                                                    <i class="fas fa-history fa-lg text-muted mb-2"></i>
+                                                    <h5 class="h6">No retro hunts launched yet</h5>
+                                                    <p class="text-muted mb-3">
+                                                        Launch a retro hunt to search historical data with YARA rules.
+                                                    </p>
+                                                    <a class="btn btn-primary btn-sm" href="{{ url_for('hunters.retro_hunt_add_task') }}">
+                                                        Create a retro hunt
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between">
                         <div class="mb-2 mb-lg-0">

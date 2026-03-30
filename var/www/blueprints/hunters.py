@@ -62,8 +62,6 @@ def create_json_response(data, status_code):
         abort(404)
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
-# ============= ROUTES ==============
-
 def _extract_rulezet_rule_id(rulezet_url):
     parsed = urlparse(rulezet_url)
     if parsed.scheme not in {'http', 'https'}:
@@ -74,6 +72,9 @@ def _extract_rulezet_rule_id(rulezet_url):
     if not path_segments:
         return None
     return path_segments[-1]
+
+
+# ============= ROUTES ==============
 
 @hunters.route("/yara/rule/rulezet/import", methods=['GET'])
 @login_required
@@ -115,7 +116,7 @@ def import_rulezet_yara_rule():
 #    TRACKERS    #
 ##################
 
-@hunters.route('/trackers', methods=['GET'])
+@hunters.route('/hunting', methods=['GET'])
 @login_required
 @login_read_only
 def trackers_dashboard():
@@ -125,7 +126,10 @@ def trackers_dashboard():
     for t in trackers:
         t['obj'] = ail_objects.get_obj_basic_meta(ail_objects.get_obj_from_global_id(t['obj']))
     stats = Tracker.get_trackers_stats(user_org, user_id)
-    return render_template("trackers_dashboard.html", trackers=trackers, stats=stats, bootstrap_label=bootstrap_label)
+    my_trackers = Tracker.get_trackers_owner_dashboard(user_org, user_id)
+    my_retro_hunts = Tracker.get_retro_hunt_owner_dashboard(user_org, user_id)
+    return render_template("trackers_dashboard.html", trackers=trackers, stats=stats,
+                           my_trackers=my_trackers, my_retro_hunts=my_retro_hunts, bootstrap_label=bootstrap_label)
 
 @hunters.route("/trackers/all")
 @login_required
@@ -488,7 +492,7 @@ def add_tracked_menu():
         org = current_user.get_org()
         res = Tracker.api_add_tracker(input_dict, org, user_id)
         if res[1] == 200:
-            return redirect(url_for('hunters.trackers_dashboard'))
+            return redirect(url_for('hunters.show_tracker', uuid=res[0].get('uuid')))
         else:
             return create_json_response(res[0], res[1])
     else:
@@ -747,7 +751,7 @@ def retro_hunt_all_tasks():
 @login_admin
 def retro_hunt_all_tasks_admin():
     retro_hunts_org = Tracker.get_retro_hunt_metas(Tracker.get_retro_hunts_orgs())
-    return render_template("retro_hunt_tasks.html", retro_hunts_global=[], retro_hunts_org=retro_hunts_org, bootstrap_label=bootstrap_label)
+    return render_template("retro_hunt_tasks.html", retro_hunts_global=[], retro_hunts_org=retro_hunts_org, bootstrap_label=bootstrap_label, is_admin=True)
 
 @hunters.route('/retro_hunt/task/show', methods=['GET'])
 @login_required
@@ -932,7 +936,7 @@ def retro_hunt_add_task():
 
         res = Tracker.api_create_retro_hunt_task(input_dict, user_org, user_id)
         if res[1] == 200:
-            return redirect(url_for('hunters.retro_hunt_all_tasks'))
+            return redirect(url_for('hunters.retro_hunt_show_task', uuid=res[0].get('uuid')))
         else:
             ## TODO: use modal
             return create_json_response(res[0], res[1])
@@ -974,7 +978,10 @@ def retro_hunt_pause_task():
     res = Tracker.api_pause_retro_hunt_task(user_org, user_id, user_role, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('hunters.retro_hunt_all_tasks'))
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(url_for('hunters.retro_hunt_all_tasks'))
 
 @hunters.route('/retro_hunt/task/resume', methods=['GET'])
 @login_required
@@ -987,7 +994,10 @@ def retro_hunt_resume_task():
     res = Tracker.api_resume_retro_hunt_task(user_org, user_id, user_role, task_uuid)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('hunters.retro_hunt_all_tasks'))
+    if request.referrer:
+        return redirect(request.referrer)
+    else:
+        return redirect(url_for('hunters.retro_hunt_all_tasks'))
 
 @hunters.route('/retro_hunt/task/delete', methods=['GET'])
 @login_required

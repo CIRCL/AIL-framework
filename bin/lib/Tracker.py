@@ -458,6 +458,14 @@ class Tracker:
             r_tracker.lpush('trackers:dashboard', mess)
             r_tracker.ltrim(f'trackers:dashboard', 0, 9)
 
+    def _add_to_owner_dashboard(self, user_id):
+        r_tracker.lpush(f'trackers:owner:{user_id}', self.uuid)
+        r_tracker.ltrim(f'trackers:owner:{user_id}', 0, 4)
+
+    def _remove_from_owner_dashboard(self):
+        user_id = self.get_user()
+        r_tracker.lrem(f'trackers:owner:{user_id}',  -1, self.uuid)
+
     def get_nb_objs_by_type(self, obj_type):
         return r_tracker.scard(f'tracker:objs:{self.uuid}:{obj_type}')
 
@@ -692,6 +700,7 @@ class Tracker:
             r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
 
         self._set_field('last_change', time.time())
+        self._add_to_owner_dashboard(user_id)
 
         # toggle refresh module tracker list/set
         trigger_trackers_refresh(tracker_type)
@@ -829,6 +838,8 @@ class Tracker:
             r_tracker.srem(f'org:tracker:{org}', self.uuid)
             r_tracker.srem(f'org:tracker:{org}:{tracker_type}', self.uuid)
 
+        self._remove_from_owner_dashboard()
+
         r_tracker.srem(f'all:tracker:{tracker_type}', tracked)
         # tracker - uuid map
         r_tracker.srem(f'all:tracker_uuid:{tracker_type}:{tracked}', self.uuid)
@@ -842,7 +853,6 @@ class Tracker:
         r_tracker.delete(f'tracker:objs:done:{self.uuid}')
         r_tracker.delete(f'tracker:objs:fp:{self.uuid}')
         trigger_trackers_refresh(tracker_type)
-
 
 def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', tracker_uuid=None):
     if not tracker_uuid:
@@ -998,6 +1008,36 @@ def get_trackers_dashboard(user_org, user_id):
         meta['tags'] = list(meta['tags'])
         trackers.append(meta)
     return trackers
+
+def get_trackers_owner_dashboard(user_org, user_id):
+    trackers = []
+    for tracker_uuid in r_tracker.lrange(f'trackers:owner:{user_id}', 0, -1):
+        tracker = Tracker(tracker_uuid)
+        if not tracker.check_level(user_org, user_id):
+            continue
+        meta = tracker.get_meta(options={'description', 'tags'})
+        if not meta.get('type'):
+            meta['type'] = 'Tracker DELETED'
+        meta['tags'] = list(meta['tags'])
+        trackers.append(meta)
+    return trackers
+
+def reindex_tracker_owner_dashboard():
+    trackers_by_user = {}
+    users = ail_orgs.get_users()
+    for tracker_uuid in get_trackers():
+        tracker = Tracker(tracker_uuid)
+        user_id = tracker.get_user()
+        if user_id in users:
+            creation_date = tracker.get_date()
+            if user_id not in trackers_by_user:
+                trackers_by_user[user_id] = []
+            trackers_by_user[user_id].append((creation_date, tracker))
+
+    for user_id, trackers in trackers_by_user.items():
+        trackers.sort(key=lambda x: x[0], reverse=True)
+        for _, tracker in trackers[:5]:
+            tracker._add_to_owner_dashboard(user_id)
 
 def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS (trim)
     trackers = []
@@ -2056,6 +2096,14 @@ class RetroHunt:
         self.obj_undone(obj_gid)
         self.obj_unreject(obj_gid)
 
+    def _add_to_owner_dashboard(self, user_id):
+        r_tracker.lpush(f'retro_hunt:owner:{user_id}', self.uuid)
+        r_tracker.ltrim(f'retro_hunt:owner:{user_id}', 0, 4)
+
+    def _remove_from_owner_dashboard(self):
+        user_id = self.get_creator()
+        r_tracker.lrem(f'retro_hunt:owner:{user_id}',  -1, self.uuid)
+
     def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual'):
         if self.exists():
             raise Exception('Error: Retro Hunt Task already exists')
@@ -2090,6 +2138,7 @@ class RetroHunt:
         if state not in ('pending', 'completed', 'paused'):
             state = 'pending'
         self._set_state(state)
+        self._add_to_owner_dashboard(user_id)
 
     def delete_objs(self):
         for obj_type in get_objects_retro_hunted():
@@ -2121,6 +2170,7 @@ class RetroHunt:
                 except FileNotFoundError:
                     pass
 
+        self._remove_from_owner_dashboard()
         self.delete_level()
 
         r_tracker.srem('retro_hunts:pending', self.uuid)
@@ -2195,6 +2245,35 @@ def get_retro_hunt_paused_tasks():
 
 def get_retro_hunt_completed_tasks():
     return r_tracker.smembers('retro_hunts:completed')
+
+def get_retro_hunt_owner_dashboard(user_org, user_id):
+    retros = []
+    for retro_uuid in r_tracker.lrange(f'retro_hunt:owner:{user_id}', 0, -1):
+        retro = RetroHunt(retro_uuid)
+        if not retro.check_level(user_org):
+            continue
+        meta = retro.get_meta(options={'date', 'description', 'tags'})
+        if not meta.get('type'):
+            meta['type'] = 'Tracker DELETED'
+        meta['tags'] = list(meta['tags'])
+        retros.append(meta)
+    return retros
+
+def reindex_retro_hunt_owner_dashboard():
+    retros_by_user = {}
+    users = ail_orgs.get_users()
+    for retro_uuid in get_all_retro_hunt_tasks():
+        retro = RetroHunt(retro_uuid)
+        user_id = retro.get_creator()
+        if user_id in users:
+            creation_date = retro.get_date()
+            if user_id not in retros_by_user:
+                retros_by_user[user_id] = []
+            retros_by_user[user_id].append((creation_date, retro))
+    for user_id, retros in retros_by_user.items():
+        retros.sort(key=lambda x: x[0], reverse=True)
+        for _, retro in retros[:5]:
+            retro._add_to_owner_dashboard(user_id)
 
 ## Change STATES ##
 

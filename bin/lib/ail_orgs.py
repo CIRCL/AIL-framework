@@ -97,6 +97,13 @@ def create_default_org():
     creator = 'admin@admin.test'
     return create_org(creator, name, description)
 
+def get_users():
+    users = []
+    for org_uuid in get_orgs():
+        org = Organisation(org_uuid)
+        users.extend(org.get_users())
+    return set(users)
+
 #### ORGANISATION ####
 
 class Organisation:
