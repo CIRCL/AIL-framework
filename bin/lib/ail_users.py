@@ -647,6 +647,7 @@ class AILUser(UserMixin):
             org.remove_user(self.user_id)
         r_serv_db.delete(f'ail:user:metadata:{self.user_id}')
         r_serv_db.hdel('ail:users:all', self.user_id)
+        # TODO delete created trackers + dashboard
 
 
 #### API ####

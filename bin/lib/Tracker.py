@@ -1036,8 +1036,11 @@ def reindex_tracker_owner_dashboard():
 
     for user_id, trackers in trackers_by_user.items():
         trackers.sort(key=lambda x: x[0], reverse=True)
-        for _, tracker in trackers[:5]:
-            tracker._add_to_owner_dashboard(user_id)
+        if trackers:
+            trackers = trackers[:5]
+            trackers.reverse()
+            for _, tracker in trackers:
+                tracker._add_to_owner_dashboard(user_id)
 
 def get_user_dashboard(user_id):  # TODO SORT + REMOVE OLDER ROWS (trim)
     trackers = []
@@ -2272,8 +2275,11 @@ def reindex_retro_hunt_owner_dashboard():
             retros_by_user[user_id].append((creation_date, retro))
     for user_id, retros in retros_by_user.items():
         retros.sort(key=lambda x: x[0], reverse=True)
-        for _, retro in retros[:5]:
-            retro._add_to_owner_dashboard(user_id)
+        if retros:
+            retros = retros[:5]
+            retros.reverse()
+            for _, retro in retros:
+                retro._add_to_owner_dashboard(user_id)
 
 ## Change STATES ##
 
