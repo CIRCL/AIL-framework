@@ -1,68 +1,87 @@
       <div class="col-12 col-lg-2 p-0 bg-light border-right" id="side_menu">
 
-      	<button type="button" class="btn btn-outline-secondary mt-1 ml-3" onclick="toggle_sidebar()">
-          <i class="fas fa-align-left"></i>
-      	  <span>Toggle Sidebar</span>
-      	</button>
+        <div class="px-3 pt-2 pb-1 border-bottom bg-white">
+          <button type="button" class="btn btn-outline-secondary btn-sm btn-block" onclick="toggle_sidebar()" aria-label="Toggle hunter sidebar">
+            <i class="fas fa-align-left mr-2"></i>
+            <span>Toggle Sidebar</span>
+          </button>
+        </div>
 
-      	<nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
-      		<h5 class="d-flex text-muted w-100" id="nav_title_trackers">
-      		  <span>Trackers </span>
-      			<a class="ml-auto" href="{{url_for('hunters.add_tracked_menu')}}">
-      				<i class="fas fa-plus-circle fa-fw ml-auto"></i>
-      			</a>
-      		</h5>
-      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu')}}" id="nav_tracker_">
-                <i class="fas fa-ruler-combined fa-fw"></i>
-      	        <span>All Trackers</span>
-      	      </a>
-      	    </li>
-      	    <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_word')}}" id="nav_tracker_word">
-                <i class="fas fa-font fa-fw"></i>
-      	        <span>Words</span>
-      	      </a>
-      	    </li>
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_set')}}" id="nav_tracker_set">
-      	        <i class="fas fa-layer-group fa-fw"></i>
-      	        <span>Set</span>
-      	      </a>
-      	    </li>
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_regex')}}" id="nav_tracker_regex">
-      	        <i class="fas fa-drafting-compass fa-fw"></i>
+        <nav class="navbar navbar-expand navbar-light bg-light flex-md-column flex-row align-items-start py-2" id="nav_menu">
+          <div class="w-100 px-2 mb-2">
+            <a class="btn btn-primary btn-sm btn-block" href="{{ url_for('hunters.trackers_dashboard') }}">
+              <i class="fas fa-tachometer-alt mr-2"></i>Hunter Dashboard
+            </a>
+          </div>
+
+          <h5 class="d-flex text-muted w-100 align-items-center px-2" id="nav_title_trackers">
+            <span class="font-weight-bold">Trackers</span>
+            <a class="ml-auto btn btn-outline-primary btn-sm" href="{{ url_for('hunters.add_tracked_menu') }}" title="Create tracker">
+              <i class="fas fa-plus-circle fa-fw"></i>
+            </a>
+          </h5>
+
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu') }}" id="nav_tracker_">
+                <i class="fas fa-ruler-combined fa-fw mr-2 text-secondary"></i>
+                <span>All Trackers</span>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu_word') }}" id="nav_tracker_word">
+                <i class="fas fa-font fa-fw mr-2 text-secondary"></i>
+                <span>Words</span>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu_set') }}" id="nav_tracker_set">
+                <i class="fas fa-layer-group fa-fw mr-2 text-secondary"></i>
+                <span>Sets</span>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu_regex') }}" id="nav_tracker_regex">
+                <i class="fas fa-drafting-compass fa-fw mr-2 text-secondary"></i>
                 <span>Regex</span>
-      	      </a>
-      	    </li>
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_yara')}}" id="nav_tracker_yara">
-                <span class="bg-danger text-white font-weight-bold" style="font-size: 120%">&nbsp;{ </span>
-                <span>&nbsp;YARA</span>
-      	      </a>
-      	    </li>
-			<li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.tracked_menu_typosquatting')}}" id="nav_tracker_typosquatting">
-                <i class="fa fa-clone fa-fw"></i>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu_yara') }}" id="nav_tracker_yara">
+                <span class="badge badge-danger mr-2">Y</span>
+                <span>YARA Rules</span>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.tracked_menu_typosquatting') }}" id="nav_tracker_typosquatting">
+                <i class="fa fa-clone fa-fw mr-2 text-secondary"></i>
                 <span>Typo-squatting</span>
-      	      </a>
-      	    </li>
+              </a>
+            </li>
           </ul>
-          <h5 class="d-flex text-muted w-100" id="nav_title_retro_hunt">
-      		  <span>Retro Hunt </span>
-      			<a class="ml-auto" href="{{url_for('hunters.retro_hunt_add_task')}}">
-      				<i class="fas fa-history fa-fw ml-auto"></i>
-      			</a>
-      		</h5>
-      	  <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
-            <li class="nav-item">
-      	      <a class="nav-link" href="{{url_for('hunters.retro_hunt_all_tasks')}}" id="nav_retro_hunts">
-                <i class="fas fa-meteor fa-fw"></i>
-      	        <span>Retro Hunt</span>
-      	      </a>
-      	    </li>
+
+          <hr class="w-100 my-2">
+
+          <h5 class="d-flex text-muted w-100 align-items-center px-2" id="nav_title_retro_hunt">
+            <span class="font-weight-bold">Retro Hunt</span>
+            <a class="ml-auto btn btn-outline-primary btn-sm" href="{{ url_for('hunters.retro_hunt_add_task') }}" title="Create retro hunt task">
+              <i class="fas fa-plus fa-fw"></i>
+            </a>
+          </h5>
+
+          <ul class="nav flex-md-column flex-row navbar-nav justify-content-between w-100"> <!--nav-pills-->
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.retro_hunt_all_tasks') }}" id="nav_retro_hunts">
+                <i class="fas fa-history fa-fw mr-2 text-secondary"></i>
+                <span>All Retro Hunts</span>
+              </a>
+            </li>
+            <li class="nav-item w-100">
+              <a class="nav-link d-flex align-items-center" href="{{ url_for('hunters.retro_hunt_add_task') }}" id="nav_retro_hunts_add">
+                <i class="fas fa-meteor fa-fw mr-2 text-secondary"></i>
+                <span>Create Task</span>
+              </a>
+            </li>
           </ul>
-      	</nav>
+        </nav>
       </div>
