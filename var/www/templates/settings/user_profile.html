@@ -107,8 +107,11 @@
       padding: 1rem;
       text-align: center;
     }
+    .api-actions {
+      gap: 0.3rem;
+    }
     .api-actions .btn {
-      margin-top: 0.35rem;
+      margin-top: 0;
     }
     @media (max-width: 768px) {
       .profile-label {
@@ -202,6 +205,9 @@
                                             {% if not meta['2fa'] %}
                                                 <p class="status-value text-danger"><i class="fas fa-shield-alt mr-1"></i>Disabled</p>
                                                 <p class="text-muted small mb-2">Your account is currently protected by password only.</p>
+                                                <p class="small text-warning mb-2">
+                                                    <i class="fas fa-info-circle mr-1"></i>For better security, enable 2FA to protect your account from unauthorized access.
+                                                </p>
                                                 <a class="btn btn-success btn-sm" href="{{url_for('settings_b.user_otp_enable_self')}}">
                                                     <i class="fas fa-plus"></i> Enable 2FA OTP
                                                 </a>
@@ -223,8 +229,13 @@
 
                                         <div class="d-flex flex-wrap">
                                             {% if meta['2fa'] %}
+                                                <div class="w-100 text-muted small mb-2">
+                                                    <strong>HOTP - Paper-Based Single Use Tokens</strong><br>
+                                                    If you don’t have access to your phone or authentication app, use the tokens below.<br>
+                                                    Print and store them securely for future access.
+                                                </div>
                                                 <a class="btn btn-outline-info mb-2 mr-2" href="{{url_for('settings_b.user_hotp')}}">
-                                                    <i class="fas fa-eye"></i> View Paper Tokens
+                                                    <i class="fas fa-eye"></i> View HOTP Paper Tokens
                                                 </a>
                                             {% endif %}
                                         </div>
