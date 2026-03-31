@@ -17,6 +17,58 @@
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
+  <style>
+    .profile-page-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .profile-subtitle {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+    .profile-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.35rem;
+    }
+    .profile-label {
+      font-weight: 600;
+      color: #495057;
+      width: 35%;
+    }
+    .profile-value {
+      word-break: break-word;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .status-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 0.35rem;
+    }
+    .status-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03rem;
+      color: #6c757d;
+      margin-bottom: 0.35rem;
+    }
+    .status-value {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0;
+    }
+    .misp-logo {
+      width: 120px;
+    }
+    .misp-action-btn {
+      min-width: 42px;
+    }
+  </style>
 </head>
 <body>
 
@@ -27,97 +79,119 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				<div class="card mb-3 mt-1">
-					<div class="card-header text-white bg-dark pb-1">
-						<h5 class="card-title">My Profile :</h5>
+				<div class="card mb-3 mt-1 shadow-sm">
+					<div class="card-header bg-white border-bottom">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                            <div>
+                                <h5 class="profile-page-title">Profile Settings</h5>
+                                <p class="profile-subtitle">Manage your account information, security options, and MISP integrations.</p>
+                            </div>
+                        </div>
 					</div>
 					<div class="card-body">
 
                         <div class="row">
-                            <div class="col-xl-6">
-                                <div class="card text-center border-secondary">
-                                    <div class="card-body px-1 py-0">
-                                        <table class="table table-sm">
+                            <div class="col-12 col-xl-6 mb-3">
+                                <div class="card profile-card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="section-title">Profile Information</h6>
+                                    </div>
+                                    <div class="card-body px-2 py-2">
+                                        <table class="table table-sm table-borderless mb-0">
                                             <tbody>
                                             <tr>
-                                                <td>Email</td>
-                                                <td>{{meta['id']}}</td>
+                                                <td class="profile-label">Email</td>
+                                                <td class="profile-value">{{meta['id']}}</td>
                                             </tr>
                                             <tr>
-                                                <td>Organisation</td>
-                                                <td>
+                                                <td class="profile-label">Organisation</td>
+                                                <td class="profile-value">
                                                     {{meta['org_name']}}<br>
-                                                    {{meta['org']}}
+                                                    <span class="text-muted">{{meta['org']}}</span>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>Role</td>
-                                                <td>{{meta['role']}}</td>
+                                                <td class="profile-label">Role</td>
+                                                <td class="profile-value">{{meta['role']}}</td>
                                             </tr>
                                             <tr>
-                                                <td>API Key</td>
-                                                <td>
+                                                <td class="profile-label">API Key</td>
+                                                <td class="profile-value">
                                                     <span id="censored_key">
                                                         {{meta['api_key'][:4]}}*********************************{{meta['api_key'][-4:]}}
                                                     </span>
                                                     <span id="uncensored_key" style="display: none;">
                                                         {{meta['api_key']}}
                                                     </span>
-                                                    <a class="ml-3" href="{{url_for('settings_b.new_token_user_self')}}"><i class="fa fa-random"></i></a>
-                                                    <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key" onclick="show_api_key();">
+                                                    <span class="btn btn-outline-secondary btn-sm ml-2 px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key">
                                                         <i class="fas fa-eye"></i>
                                                     </span>
+                                                    <a class="btn btn-outline-primary btn-sm ml-1 py-0" href="{{url_for('settings_b.new_token_user_self')}}" title="Generate a new API key">
+                                                        <i class="fa fa-random"></i> Regenerate
+                                                    </a>
                                                 </td>
                                             </tr>
-                                            <tr>
-                                                <td>2FA OTP</td>
-                                                <td>
-                                                    {% if meta['2fa'] %}
-                                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
-                                                        {% if acl_admin %}
-                                                            <div>
-                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_reset_self')}}"><i class="fas fa-sync"></i> RESET OTP</a>
-                                                            </div>
-                                                        {% endif %}
-                                                        {% if not global_2fa %}
-                                                            <div>
-                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_disable_self')}}"><i class="fas fa-warning"></i> DISABLE 2FA OTP</a>
-                                                            </div>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
-                                                        <div>
-                                                            <a class="btn btn-success" href="{{url_for('settings_b.user_otp_enable_self')}}"><i class="fas fa-plus"></i> ACTIVATE 2FA OTP</a>
-                                                        </div>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            {% if meta['2fa'] %}
-                                                <tr>
-                                                    <td>TOTP</td>
-                                                    <td><a class="btn btn-info" href="{{url_for('settings_b.user_hotp')}}"><i class="fas fa-eye"></i> View Paper Tokens</a></td>
-                                                </tr>
-                                            {% endif %}
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-12 col-xl-6 mb-3">
+                                <div class="card h-100 border-secondary">
+                                    <div class="card-header bg-light">
+                                        <h6 class="section-title">Security & Access</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="status-card p-3 mb-3">
+                                            <p class="status-title">Two-factor authentication</p>
+                                            {% if not meta['2fa'] %}
+                                                <p class="status-value text-danger">Disabled</p>
+                                                <p class="text-muted small mb-2">Your account is currently protected by password only.</p>
+                                                <a class="btn btn-success btn-sm" href="{{url_for('settings_b.user_otp_enable_self')}}">
+                                                    <i class="fas fa-plus"></i> Enable 2FA OTP
+                                                </a>
+                                            {% else %}
+                                                <p class="status-value text-success">Enabled</p>
+                                                <p class="text-muted small mb-2">Your account requires a one-time code during sign in.</p>
+                                                {% if acl_admin %}
+                                                    <a class="btn btn-outline-danger btn-sm mr-2 mb-2" href="{{url_for('settings_b.user_otp_reset_self')}}">
+                                                        <i class="fas fa-sync"></i> Reset OTP
+                                                    </a>
+                                                {% endif %}
+                                                {% if not global_2fa %}
+                                                    <a class="btn btn-outline-danger btn-sm mb-2" href="{{url_for('settings_b.user_otp_disable_self')}}">
+                                                        <i class="fas fa-warning"></i> Disable 2FA OTP
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="d-flex flex-wrap">
+                                            {% if meta['2fa'] %}
+                                                <a class="btn btn-outline-info mb-2 mr-2" href="{{url_for('settings_b.user_hotp')}}">
+                                                    <i class="fas fa-eye"></i> View Paper Tokens
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-
-
-                        <div class="card my-2">
-                            <div class="card-header bg-dark text-white">
-                                <h3 class="txt-secondary my-2">User Settings:</h3>
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">MISP Integrations</h3>
+                                <a href="{{ url_for('settings_b.edit_misp') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus"></i> Add MISP Account
+                                </a>
                             </div>
                             <div class="card-body">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" style="width:150px;"></h3>
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" class="misp-logo"></h3>
 
 
-                                        <table id="table_misp_config" class="table table-striped border-primary">
+                                        <table id="table_misp_config" class="table table-striped table-hover border-primary">
                                             <thead class="bg-dark text-white">
                                             <tr>
                                                 <th>Description</th>
@@ -152,12 +226,12 @@
                                                     <td></td>
                                                     <td>
                                                         <a href="{{ url_for('settings_b.edit_misp') }}?uuid={{ misp['uuid'] }}">
-															<button type="button" class="btn btn-outline-info">
+															<button type="button" class="btn btn-outline-info misp-action-btn" title="Edit MISP connection">
 																<i class="fas fa-pencil-alt"></i>
 															</button>
 														</a>
                                                         <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}">
-															<button type="button" class="btn btn-outline-danger">
+															<button type="button" class="btn btn-outline-danger misp-action-btn" title="Delete MISP connection">
 																<i class="fa-solid fa-trash-can"></i>
 															</button>
 														</a>
@@ -166,12 +240,6 @@
                                             {% endfor %}
                                             </tbody>
                                         </table>
-
-                                        <a href="{{ url_for('settings_b.edit_misp') }}">
-                                            <button class="btn btn-primary my-2">
-                                                <i class="fa-solid fa-plus"></i> Add <b>MISP</b> Account
-                                            </button>
-                                        </a>
                                     </div>
                                 </div>
                             </div>
