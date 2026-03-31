@@ -18,6 +18,12 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
   <style>
+    body {
+      background: #f4f6f9;
+    }
+    .page-shell {
+      padding-bottom: 1.5rem;
+    }
     .profile-page-title {
       font-size: 1.25rem;
       font-weight: 600;
@@ -31,6 +37,7 @@
     .profile-card {
       border: 1px solid #dee2e6;
       border-radius: 0.35rem;
+      box-shadow: 0 0.2rem 0.45rem rgba(15, 23, 42, 0.05);
     }
     .profile-label {
       font-weight: 600;
@@ -68,12 +75,55 @@
     .misp-action-btn {
       min-width: 42px;
     }
+    .card-header h6, .card-header h3 {
+      margin-bottom: 0;
+    }
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0d6efd, #5fa9ff);
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.85rem;
+      box-shadow: 0 0.35rem 0.6rem rgba(13, 110, 253, 0.25);
+    }
+    .misp-table th {
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+    .misp-table td {
+      vertical-align: middle;
+    }
+    .misp-empty-state {
+      border: 1px dashed #ced4da;
+      border-radius: 0.5rem;
+      background: #f8f9fa;
+      color: #6c757d;
+      padding: 1rem;
+      text-align: center;
+    }
+    .api-actions {
+      gap: 0.3rem;
+    }
+    .api-actions .btn {
+      margin-top: 0;
+    }
+    @media (max-width: 768px) {
+      .profile-label {
+        width: 42%;
+      }
+    }
   </style>
 </head>
 <body>
 
 {% include 'nav_bar.html' %}
-	<div class="container-fluid">
+	<div class="container-fluid page-shell">
 		<div class="row">
 			{% include 'settings/menu_sidebar.html' %}
 
@@ -82,9 +132,12 @@
 				<div class="card mb-3 mt-1 shadow-sm">
 					<div class="card-header bg-white border-bottom">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                            <div>
+                            <div class="d-flex align-items-center">
+                                <div class="profile-avatar">{{ meta['id'][0] | upper }}</div>
+                                <div>
                                 <h5 class="profile-page-title">Profile Settings</h5>
                                 <p class="profile-subtitle">Manage your account information, security options, and MISP integrations.</p>
+                                </div>
                             </div>
                         </div>
 					</div>
@@ -123,12 +176,17 @@
                                                     <span id="uncensored_key" style="display: none;">
                                                         {{meta['api_key']}}
                                                     </span>
-                                                    <span class="btn btn-outline-secondary btn-sm ml-2 px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key">
-                                                        <i class="fas fa-eye"></i>
-                                                    </span>
-                                                    <a class="btn btn-outline-primary btn-sm ml-1 py-0" href="{{url_for('settings_b.new_token_user_self')}}" title="Generate a new API key">
-                                                        <i class="fa fa-random"></i> Regenerate
-                                                    </a>
+                                                    <div class="api-actions d-inline-flex flex-wrap align-items-center">
+                                                        <button class="btn btn-outline-secondary btn-sm ml-2 px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key" type="button">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-info btn-sm ml-1 py-0" id="btn_copy_key" onclick="copy_api_key();" title="Copy API key" type="button">
+                                                            <i class="fas fa-copy"></i> Copy
+                                                        </button>
+                                                        <a class="btn btn-outline-primary btn-sm ml-1 py-0" href="{{url_for('settings_b.new_token_user_self')}}" title="Generate a new API key">
+                                                            <i class="fa fa-random"></i> Regenerate
+                                                        </a>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             </tbody>
@@ -145,8 +203,11 @@
                                         <div class="status-card p-3 mb-3">
                                             <p class="status-title">Two-factor authentication</p>
                                             {% if not meta['2fa'] %}
-                                                <p class="status-value text-danger">Disabled</p>
+                                                <p class="status-value text-danger"><i class="fas fa-shield-alt mr-1"></i>Disabled</p>
                                                 <p class="text-muted small mb-2">Your account is currently protected by password only.</p>
+                                                <p class="small text-warning mb-2">
+                                                    <i class="fas fa-info-circle mr-1"></i>For better security, enable 2FA to protect your account from unauthorized access.
+                                                </p>
                                                 <a class="btn btn-success btn-sm" href="{{url_for('settings_b.user_otp_enable_self')}}">
                                                     <i class="fas fa-plus"></i> Enable 2FA OTP
                                                 </a>
@@ -168,8 +229,13 @@
 
                                         <div class="d-flex flex-wrap">
                                             {% if meta['2fa'] %}
+                                                <div class="w-100 text-muted small mb-2">
+                                                    <strong>HOTP - Paper-Based Single Use Tokens</strong><br>
+                                                    If you don’t have access to your phone or authentication app, use the tokens below.<br>
+                                                    Print and store them securely for future access.
+                                                </div>
                                                 <a class="btn btn-outline-info mb-2 mr-2" href="{{url_for('settings_b.user_hotp')}}">
-                                                    <i class="fas fa-eye"></i> View Paper Tokens
+                                                    <i class="fas fa-eye"></i> View HOTP Paper Tokens
                                                 </a>
                                             {% endif %}
                                         </div>
@@ -190,8 +256,17 @@
                                     <div class="card-body">
                                         <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" class="misp-logo"></h3>
 
-
-                                        <table id="table_misp_config" class="table table-striped table-hover border-primary">
+                                        {% if misps|length == 0 %}
+                                            <div class="misp-empty-state">
+                                                <i class="fas fa-plug fa-lg mb-2"></i>
+                                                <p class="mb-2">No MISP integrations configured yet.</p>
+                                                <a href="{{ url_for('settings_b.edit_misp') }}" class="btn btn-primary btn-sm">
+                                                    Add your first MISP account
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                        <div class="table-responsive">
+                                        <table id="table_misp_config" class="table table-striped table-hover border-primary misp-table">
                                             <thead class="bg-dark text-white">
                                             <tr>
                                                 <th>Description</th>
@@ -230,7 +305,7 @@
 																<i class="fas fa-pencil-alt"></i>
 															</button>
 														</a>
-                                                        <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}">
+                                                        <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}" onclick="return confirm('Delete this MISP integration?');">
 															<button type="button" class="btn btn-outline-danger misp-action-btn" title="Delete MISP connection">
 																<i class="fa-solid fa-trash-can"></i>
 															</button>
@@ -240,6 +315,8 @@
                                             {% endfor %}
                                             </tbody>
                                         </table>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -256,13 +333,15 @@
 
 <script>
 $(document).ready(function(){
-    $("#nav_edit_profile").addClass("active");
+	$("#nav_edit_profile").addClass("active");
 	$("#nav_my_profile").removeClass("text-muted");
-    $('#table_misp_config').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 2, "desc" ]]
-    });
+    if ($('#table_misp_config').length) {
+        $('#table_misp_config').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 2, "desc" ]]
+        });
+    }
 
 } );
 
@@ -284,6 +363,17 @@ function show_api_key() {
     $('#censored_key').hide();
     $('#btn_key').hide();
     $('#uncensored_key').show();
+}
+
+function copy_api_key() {
+    var apiKey = "{{meta['api_key']}}";
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(apiKey);
+        $('#btn_copy_key').html('<i class="fas fa-check"></i> Copied');
+        setTimeout(function(){
+            $('#btn_copy_key').html('<i class="fas fa-copy"></i> Copy');
+        }, 1600);
+    }
 }
 
 </script>
