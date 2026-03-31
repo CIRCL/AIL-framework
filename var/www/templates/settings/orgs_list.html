@@ -93,21 +93,6 @@
             overflow: hidden;
             background: #fff;
         }
-        .orgs-table-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: .5rem;
-            padding: .75rem 1rem;
-            border-bottom: 1px solid #e9ecef;
-            background: #f8f9fa;
-        }
-        .orgs-toolbar-text {
-            margin: 0;
-            color: #495057;
-            font-size: .9rem;
-        }
         .orgs-name {
             font-weight: 600;
         }
@@ -115,15 +100,6 @@
             color: #6c757d;
             max-width: 34rem;
             overflow-wrap: anywhere;
-        }
-        .orgs-uuid {
-            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: .85rem;
-            display: inline-block;
-            padding: .2rem .35rem;
-            border-radius: .25rem;
-            background: #f1f3f5;
-            color: #374151;
         }
         .orgs-users-badge {
             min-width: 4.4rem;
@@ -157,7 +133,7 @@
                 <div class="orgs-page-title mt-2 mb-2">
                     <div>
                         <h3 class="mb-1">AIL Organisations</h3>
-                        <p class="orgs-subtitle">Browse and maintain organisations, membership counts, and access scope.</p>
+                        <p class="orgs-subtitle">Browse and manage organisations.</p>
                     </div>
                 </div>
 
@@ -180,21 +156,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <div class="orgs-summary-card">
-                            <span class="orgs-summary-icon neutral"><i class="fas fa-users"></i></span>
-                            <div class="orgs-summary-body">
-                                <div class="orgs-summary-label">Total Members</div>
-                                <div class="orgs-summary-value">{{ meta['orgs']|sum(attribute='nb_users') }}</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="orgs-table-wrap mb-3">
-                    <div class="orgs-table-toolbar">
-                        <p class="orgs-toolbar-text mb-0">Use search and sorting to quickly locate an organisation by name, UUID, or description.</p>
-                    </div>
                     <table id="tableorgs" class="table table-hover table-striped mb-0">
                         <thead class="thead-dark">
                         <tr>
@@ -213,11 +177,11 @@
                                     <span class="orgs-name">{{ org['name'] }}</span>
                                 </td>
                                 <td>
-                                    <a class="orgs-uuid" href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}" title="Open organisation details">
+                                    <a class="" href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}" title="Open organisation details">
                                         {{ org['uuid'] }}
                                     </a>
                                 </td>
-                                <td class="orgs-description">{{ org['description'] }}</td>
+                                <td class="orgs-description">{% if org['description'] %}{{ org['description'] }}{% endif %}</td>
                                 <td>
                                     {% if org['date_created'] %}
                                         {{ org['date_created'] }}
