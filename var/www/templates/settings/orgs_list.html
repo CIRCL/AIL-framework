@@ -16,6 +16,133 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <style>
+        .orgs-page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+        .orgs-subtitle {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
+        .orgs-summary-card {
+            border: 1px solid #dde3ea;
+            border-radius: .65rem;
+            padding: .9rem 1rem;
+            margin-bottom: .75rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            min-height: 100%;
+            box-shadow: 0 .18rem .45rem rgba(0, 0, 0, .06);
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .orgs-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .35rem .8rem rgba(0, 0, 0, .08);
+        }
+        .orgs-summary-icon {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            border: 1px solid transparent;
+            flex-shrink: 0;
+        }
+        .orgs-summary-icon.success {
+            color: #1e7e34;
+            background: rgba(40, 167, 69, .12);
+            border-color: rgba(40, 167, 69, .22);
+        }
+        .orgs-summary-icon.primary {
+            color: #0f5ec7;
+            background: rgba(0, 123, 255, .12);
+            border-color: rgba(0, 123, 255, .22);
+        }
+        .orgs-summary-icon.neutral {
+            color: #495057;
+            background: rgba(108, 117, 125, .13);
+            border-color: rgba(108, 117, 125, .2);
+        }
+        .orgs-summary-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .orgs-summary-label {
+            color: #6c757d;
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+            margin-bottom: .25rem;
+        }
+        .orgs-summary-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .orgs-table-wrap {
+            border: 1px solid #e9ecef;
+            border-radius: .5rem;
+            overflow: hidden;
+            background: #fff;
+        }
+        .orgs-table-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .5rem;
+            padding: .75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        .orgs-toolbar-text {
+            margin: 0;
+            color: #495057;
+            font-size: .9rem;
+        }
+        .orgs-name {
+            font-weight: 600;
+        }
+        .orgs-description {
+            color: #6c757d;
+            max-width: 34rem;
+            overflow-wrap: anywhere;
+        }
+        .orgs-uuid {
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: .85rem;
+            display: inline-block;
+            padding: .2rem .35rem;
+            border-radius: .25rem;
+            background: #f1f3f5;
+            color: #374151;
+        }
+        .orgs-users-badge {
+            min-width: 4.4rem;
+            display: inline-block;
+            text-align: center;
+        }
+        .orgs-actions-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            align-items: center;
+        }
+        .orgs-actions-group .btn {
+            margin: 0;
+        }
+        #tableorgs td {
+            vertical-align: middle;
+        }
+    </style>
 
 </head>
 <body>
@@ -27,46 +154,115 @@
             {% include 'settings/menu_sidebar.html' %}
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <h3>AIL Organisations:</h3>
-                <span>Active <span class="badge badge-primary">{{ meta['active'] }}</span></span>
+                <div class="orgs-page-title mt-2 mb-2">
+                    <div>
+                        <h3 class="mb-1">AIL Organisations</h3>
+                        <p class="orgs-subtitle">Browse and maintain organisations, membership counts, and access scope.</p>
+                    </div>
+                </div>
 
-                <table id="tableorgs" class="table table-hover table-striped">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th>Name</th>
-                        <th>uuid</th>
-                        <th>Description</th>
-                        <th>Created at</th>
-                        <th>Nb Users</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tbody_last_crawled">
-                    {% for org in meta['orgs'] %}
+                <div class="row mb-2">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="orgs-summary-card">
+                            <span class="orgs-summary-icon success"><i class="fas fa-building"></i></span>
+                            <div class="orgs-summary-body">
+                                <div class="orgs-summary-label">Active Organisations</div>
+                                <div class="orgs-summary-value text-success">{{ meta['active'] }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="orgs-summary-card">
+                            <span class="orgs-summary-icon primary"><i class="fas fa-sitemap"></i></span>
+                            <div class="orgs-summary-body">
+                                <div class="orgs-summary-label">Total Organisations</div>
+                                <div class="orgs-summary-value text-primary">{{ meta['orgs']|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="orgs-summary-card">
+                            <span class="orgs-summary-icon neutral"><i class="fas fa-users"></i></span>
+                            <div class="orgs-summary-body">
+                                <div class="orgs-summary-label">Total Members</div>
+                                <div class="orgs-summary-value">{{ meta['orgs']|sum(attribute='nb_users') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="orgs-table-wrap mb-3">
+                    <div class="orgs-table-toolbar">
+                        <p class="orgs-toolbar-text mb-0">Use search and sorting to quickly locate an organisation by name, UUID, or description.</p>
+                    </div>
+                    <table id="tableorgs" class="table table-hover table-striped mb-0">
+                        <thead class="thead-dark">
                         <tr>
-                            <td>{{org['name']}}</td>
-                            <td><a href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}">{{ org['uuid'] }}</a></td>
-                            <td>{{org['description']}}</td>
-                            <td>
-                                {% if org['date_created'] %}
-                                    {{org['date_created']}}
-                                {% endif %}
-                            </td>
-                            <td>{{org['nb_users']}}</td>
-                            <td>
-                                <div class="d-flex justify-content-start">
-{#                                    <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', org_uuid=org['uuid']) }}">#}
-{#                                        <i class="fas fa-pencil-alt"></i>#}
-{#                                    </a>#}
-                                    <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_org', uuid=org['uuid']) }}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
-                                </div>
-                            </td>
+                            <th>Organisation</th>
+                            <th>UUID</th>
+                            <th>Description</th>
+                            <th>Created At</th>
+                            <th>Members</th>
+                            <th>Actions</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="tbody_last_crawled">
+                        {% for org in meta['orgs'] %}
+                            <tr>
+                                <td>
+                                    <span class="orgs-name">{{ org['name'] }}</span>
+                                </td>
+                                <td>
+                                    <a class="orgs-uuid" href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}" title="Open organisation details">
+                                        {{ org['uuid'] }}
+                                    </a>
+                                </td>
+                                <td class="orgs-description">{{ org['description'] }}</td>
+                                <td>
+                                    {% if org['date_created'] %}
+                                        {{ org['date_created'] }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-light border orgs-users-badge">{{ org['nb_users'] }} users</span>
+                                </td>
+                                <td>
+                                    <div class="orgs-actions-group">
+                                        <a class="btn btn-outline-danger px-2 py-0 confirm-action"
+                                           href="{{ url_for('settings_b.delete_org', uuid=org['uuid']) }}"
+                                           title="Delete organisation"
+                                           data-confirm-title="Delete organisation {{ org['name'] }}?"
+                                           data-confirm-message="This action cannot be undone and can impact linked users and data visibility."
+                                           data-confirm-button="Delete organisation">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="modal fade" id="actionConfirmModal" tabindex="-1" role="dialog" aria-labelledby="actionConfirmModalTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="actionConfirmModalTitle">Confirm action</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="actionConfirmModalMessage">
+                                Are you sure you want to continue?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                                <a href="#" class="btn btn-danger" id="actionConfirmModalButton">Continue</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
     	    </div>
 		</div>
@@ -78,9 +274,27 @@ $(document).ready(function(){
     $("#nav_orgs_list").addClass("active");
 	$("#nav_orgs_management").removeClass("text-muted");
     $('#tableorgs').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "aLengthMenu": [[5, 10, 15, 25, -1], [5, 10, 15, 25, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 0, "asc" ]]
+        "order": [[ 0, "asc" ]],
+        "language": {
+            "search": "Search organisations:",
+            "lengthMenu": "Show _MENU_ organisations",
+            "info": "Showing _START_ to _END_ of _TOTAL_ organisations",
+            "infoEmpty": "No organisations found",
+            "zeroRecords": "No matching organisations"
+        }
+    });
+
+    $('.confirm-action').on('click', function(event){
+        event.preventDefault();
+        const $link = $(this);
+        $('#actionConfirmModalTitle').text($link.data('confirm-title') || 'Confirm action');
+        $('#actionConfirmModalMessage').text($link.data('confirm-message') || 'Are you sure you want to continue?');
+        $('#actionConfirmModalButton')
+            .text($link.data('confirm-button') || 'Continue')
+            .attr('href', $link.attr('href'));
+        $('#actionConfirmModal').modal('show');
     });
 });
 
