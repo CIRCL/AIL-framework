@@ -383,31 +383,45 @@
                                             Connect your Rulezet account to synchronize personalized rules and actions.
                                         </div>
                                         <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
+                                            {% set rulezet_api_key = meta.get('rulezet_api_key') %}
                                             <div class="form-group">
                                                 <label for="rulezet_api_key" class="font-weight-bold">API Key</label>
-                                                <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
-                                                       value="{{ meta.get('rulezet_api_key', '') or '' }}" maxlength="60"
-                                                       placeholder="Enter your Rulezet API key (60 alphanumeric characters)"
-                                                       required>
+                                                {% if rulezet_api_key %}
+                                                    <input type="text" class="form-control mb-2" id="rulezet_api_key_masked"
+                                                           value="{{ rulezet_api_key[0:4] }}{{ '*' * (rulezet_api_key|length - 8) }}{{ rulezet_api_key[-4:] }}"
+                                                           readonly>
+                                                    <div id="rulezet_api_key_edit_container" class="d-none">
+                                                        <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
+                                                               value="" maxlength="60"
+                                                               placeholder="Enter your new Rulezet API key (60 alphanumeric characters)">
+                                                    </div>
+                                                {% else %}
+                                                    <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
+                                                           value="" maxlength="60"
+                                                           placeholder="Enter your Rulezet API key (60 alphanumeric characters)"
+                                                           required>
+                                                {% endif %}
                                                 <small class="form-text text-muted">
                                                     You can find your Rulezet API key in your Rulezet account settings:
                                                   <a href="https://rulezet.org/account/" target="_blank" rel="noopener noreferrer">https://rulezet.org/account/</a>
                                                 </small>
                                             </div>
                                             <div class="d-flex flex-wrap">
-                                                <button type="submit" class="btn btn-primary btn-sm mr-2 mb-2">
-                                                    <i class="fas fa-save"></i>
-                                                    {% if meta.get('rulezet_api_key') %}
-                                                        Update Rulezet Key
-                                                    {% else %}
-                                                        Save Rulezet Key
-                                                    {% endif %}
-                                                </button>
-                                                {% if meta.get('rulezet_api_key') %}
+                                                {% if rulezet_api_key %}
+                                                    <button type="button" id="rulezet_edit_btn" class="btn btn-outline-primary btn-sm mr-2 mb-2">
+                                                        <i class="fas fa-pen"></i> Replace Rulezet Key
+                                                    </button>
+                                                    <button type="submit" id="rulezet_save_btn" class="btn btn-primary btn-sm mr-2 mb-2 d-none">
+                                                        <i class="fas fa-save"></i> Update Rulezet Key
+                                                    </button>
                                                     <a href="{{ url_for('settings_b.delete_rulezet') }}" class="btn btn-outline-danger btn-sm mb-2"
                                                        onclick="return confirm('Remove your Rulezet API key?');">
                                                         <i class="fa-solid fa-trash-can"></i> Remove Rulezet Key
                                                     </a>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-primary btn-sm mr-2 mb-2">
+                                                        <i class="fas fa-save"></i> Save Rulezet Key
+                                                    </button>
                                                 {% endif %}
                                             </div>
                                         </form>
@@ -429,6 +443,15 @@
 $(document).ready(function(){
 	$("#nav_edit_profile").addClass("active");
 	$("#nav_my_profile").removeClass("text-muted");
+
+    $('#rulezet_edit_btn').on('click', function() {
+        $('#rulezet_api_key_masked').addClass('d-none');
+        $('#rulezet_api_key_edit_container').removeClass('d-none');
+        $('#rulezet_api_key').prop('required', true).trigger('focus');
+        $('#rulezet_edit_btn').addClass('d-none');
+        $('#rulezet_save_btn').removeClass('d-none');
+    });
+
     if ($('#table_misp_config').length) {
         $('#table_misp_config').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
