@@ -368,9 +368,10 @@
                                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
                                             <div class="mb-2 mb-md-0">
                                                 <h5 class="card-title mb-1">
-                                                    <img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet" class="rulezet-logo mr-2">
+                                                    <a href="https://rulezet.org/" target="_blank" title="Open Rulezet website">
+                                                        <img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet" class="rulezet-logo mr-2">
+                                                    </a>
                                                 </h5>
-                                                <p class="text-muted mb-0 small">Connect your Rulezet account to synchronize personalized rules and actions.</p>
                                             </div>
                                             <span class="rulezet-pill">
                                                 <i class="fas fa-key"></i>
@@ -379,8 +380,7 @@
                                         </div>
 
                                         <div class="rulezet-note p-2 mb-3 small">
-                                            <strong>Quick tip:</strong> You can paste your API key and save it here at any time.
-                                            If you rotate your key in Rulezet, come back and update it to keep integrations working.
+                                            Connect your Rulezet account to synchronize personalized rules and actions.
                                         </div>
                                         <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
                                             <div class="form-group">
@@ -390,7 +390,8 @@
                                                        placeholder="Enter your Rulezet API key (60 alphanumeric characters)"
                                                        required>
                                                 <small class="form-text text-muted">
-                                                    Rulezet accepts exactly one API key per user. The key must be exactly 60 characters long and contain only letters and numbers.
+                                                    You can find your Rulezet API key in your Rulezet account settings:
+                                                  <a href="https://rulezet.org/account/" target="_blank" rel="noopener noreferrer">https://rulezet.org/account/</a>
                                                 </small>
                                             </div>
                                             <div class="d-flex flex-wrap">
