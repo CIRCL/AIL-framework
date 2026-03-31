@@ -16,6 +16,52 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <style>
+        .users-summary-card {
+            border: 1px solid #e9ecef;
+            border-radius: .5rem;
+            padding: .75rem 1rem;
+            margin-bottom: .75rem;
+            background-color: #fff;
+            min-height: 100%;
+        }
+        .users-summary-label {
+            color: #6c757d;
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .02em;
+            margin-bottom: .25rem;
+        }
+        .users-summary-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .users-page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .5rem;
+            flex-wrap: wrap;
+        }
+        .users-identity small {
+            color: #6c757d;
+            display: block;
+            line-height: 1.15;
+        }
+        .users-status-pill {
+            font-size: .75rem;
+            margin-top: .25rem;
+            display: inline-block;
+        }
+        .users-actions-group .btn {
+            margin-right: .35rem;
+            margin-bottom: .25rem;
+        }
+        .users-2fa-group .btn {
+            margin-top: .35rem;
+        }
+    </style>
 
 </head>
 <body>
@@ -27,9 +73,34 @@
             {% include 'settings/menu_sidebar.html' %}
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <h3>AIL Users:</h3>
-                <span>Logged <span class="badge badge-success">{{ meta['logged'] }}</span></span>
-                <span>Active <span class="badge badge-primary">{{ meta['active'] }}</span></span>
+                <div class="users-page-title mt-2 mb-3">
+                    <h3 class="mb-0">AIL Users</h3>
+                    <a class="btn btn-danger" href="{{ url_for('settings_b.users_logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout All Users
+                    </a>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="users-summary-card">
+                            <div class="users-summary-label">Logged In</div>
+                            <div class="users-summary-value text-success">{{ meta['logged'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="users-summary-card">
+                            <div class="users-summary-label">Active Users</div>
+                            <div class="users-summary-value text-primary">{{ meta['active'] }}</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="users-summary-card">
+                            <div class="users-summary-label">Total Users</div>
+                            <div class="users-summary-value">{{ meta['users']|length }}</div>
+                        </div>
+                    </div>
+                </div>
+
                 <table id="tableusers" class="table table-hover table-striped">
                     <thead class="thead-dark">
                     <tr>
@@ -48,23 +119,27 @@
                     {% for user in meta['users'] %}
                         <tr>
                             <td>
-                                <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
-                                    {{user['id']}}
-                                </a>
+                                <div class="users-identity">
+                                    <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
+                                        <strong>{{ user['id'] }}</strong>
+                                    </a>
+                                    <small>{{ user['org_name'] }}</small>
+                                    <small>{{ user['org'] }}</small>
+                                </div>
                                 {% if user['is_disabled'] %}
-                                    <span class="badge badge-danger"><b>Disabled</b></span>
+                                    <span class="badge badge-danger users-status-pill"><b>Disabled</b></span>
+                                {% elif user['is_logged'] %}
+                                    <span class="badge badge-success users-status-pill"><b>Online</b></span>
                                 {% endif %}
                             </td>
                             <td>
-                                {{ user['org_name'] }}<br>
-                                {{user['org']}}
+                                <span class="text-monospace">{{ user['org'] }}</span>
                             </td>
                             <td>{{user['last_edit']}}</td>
                             <td>
                                 {% if user['last_login'] %}
                                     {{user['last_login']}}
                                 {% else %}-{% endif %}
-                            {{ meta['is_logged'] }}
                                 {% if user['is_logged'] %}
                                     <i class="fas fa-plug text-success"></i>
                                     <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}">
@@ -82,6 +157,7 @@
                                 {% endif %}
                             </td>
                             <td>
+                                <div class="users-2fa-group">
                                 {% if user['2fa'] %}
                                     {% if user['otp_setup'] %}
                                         <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
@@ -100,23 +176,23 @@
                                         <i class="fas fa-plus"></i>
                                     </a>
                                 {% endif %}
-
+                                </div>
                             </td>
                             <td>
-                                <div class="d-flex justify-content-start">
-                                    <a class="btn btn-outline-primary ml-3 px-1 py-0" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
+                                <div class="users-actions-group">
+                                    <a class="btn btn-outline-primary px-2 py-0" title="Edit user" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
                                         <i class="fas fa-pencil-alt"></i>
                                     </a>
                                     {% if user['is_disabled'] %}
-                                        <a class="btn btn-outline-success ml-3 px-1 py-0" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
+                                        <a class="btn btn-outline-success px-2 py-0" title="Enable user" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
                                             <i class="fas fa-user-check"></i>
                                         </a>
                                     {% else %}
-                                        <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
+                                        <a class="btn btn-outline-danger px-2 py-0" title="Disable user" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
                                             <i class="fas fa-user-slash"></i>
                                         </a>
                                     {% endif %}
-                                    <a class="btn btn-outline-danger ml-3 px-1 py-0" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
+                                    <a class="btn btn-outline-danger px-2 py-0" title="Delete user" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
                                         <i class="fas fa-trash-alt"></i>
                                     </a>
                                 </div>
@@ -125,10 +201,6 @@
                     {% endfor %}
                     </tbody>
                 </table>
-
-                <a class="btn btn-danger my-4" href="{{ url_for('settings_b.users_logout') }}">
-                    <i class="fas fa-sign-out-alt"></i> Logout All Users
-                </a>
 
     	    </div>
 		</div>
