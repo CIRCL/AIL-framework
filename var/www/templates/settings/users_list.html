@@ -29,13 +29,51 @@
             margin-bottom: 0;
         }
         .users-summary-card {
-            border: 1px solid #e9ecef;
-            border-radius: .5rem;
-            padding: .75rem 1rem;
+            border: 1px solid #dde3ea;
+            border-radius: .65rem;
+            padding: .9rem 1rem;
             margin-bottom: .75rem;
-            background-color: #fff;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
             min-height: 100%;
-            box-shadow: 0 .1rem .2rem rgba(0, 0, 0, .04);
+            box-shadow: 0 .18rem .45rem rgba(0, 0, 0, .06);
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .users-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .35rem .8rem rgba(0, 0, 0, .08);
+        }
+        .users-summary-icon {
+            width: 2.2rem;
+            height: 2.2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            border: 1px solid transparent;
+            flex-shrink: 0;
+        }
+        .users-summary-icon.success {
+            color: #1e7e34;
+            background: rgba(40, 167, 69, .12);
+            border-color: rgba(40, 167, 69, .22);
+        }
+        .users-summary-icon.primary {
+            color: #0f5ec7;
+            background: rgba(0, 123, 255, .12);
+            border-color: rgba(0, 123, 255, .22);
+        }
+        .users-summary-icon.neutral {
+            color: #495057;
+            background: rgba(108, 117, 125, .13);
+            border-color: rgba(108, 117, 125, .2);
+        }
+        .users-summary-body {
+            display: flex;
+            flex-direction: column;
         }
         .users-summary-label {
             color: #6c757d;
@@ -125,7 +163,11 @@
                         <h3 class="mb-1">AIL Users</h3>
                         <p class="users-subtitle">Manage accounts, user access, sessions, and multi-factor authentication.</p>
                     </div>
-                    <a class="btn btn-danger" href="{{ url_for('settings_b.users_logout') }}" onclick="return confirm('This will log out every active user session. Continue?');">
+                    <a class="btn btn-danger confirm-action"
+                       href="{{ url_for('settings_b.users_logout') }}"
+                       data-confirm-title="Log out all users?"
+                       data-confirm-message="This will log out every active user session."
+                       data-confirm-button="Log out everyone">
                         <i class="fas fa-sign-out-alt"></i> Logout All Users
                     </a>
                 </div>
@@ -133,20 +175,29 @@
                 <div class="row mb-2">
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="users-summary-card">
-                            <div class="users-summary-label">Logged In</div>
-                            <div class="users-summary-value text-success">{{ meta['logged'] }}</div>
+                            <span class="users-summary-icon success"><i class="fas fa-plug"></i></span>
+                            <div class="users-summary-body">
+                                <div class="users-summary-label">Logged In</div>
+                                <div class="users-summary-value text-success">{{ meta['logged'] }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="users-summary-card">
-                            <div class="users-summary-label">Active Users</div>
-                            <div class="users-summary-value text-primary">{{ meta['active'] }}</div>
+                            <span class="users-summary-icon primary"><i class="fas fa-user-check"></i></span>
+                            <div class="users-summary-body">
+                                <div class="users-summary-label">Active Users</div>
+                                <div class="users-summary-value text-primary">{{ meta['active'] }}</div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6 col-xl-3">
                         <div class="users-summary-card">
-                            <div class="users-summary-label">Total Users</div>
-                            <div class="users-summary-value">{{ meta['users']|length }}</div>
+                            <span class="users-summary-icon neutral"><i class="fas fa-users"></i></span>
+                            <div class="users-summary-body">
+                                <div class="users-summary-label">Total Users</div>
+                                <div class="users-summary-value">{{ meta['users']|length }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -213,13 +264,23 @@
                                     {% if user['2fa'] %}
                                         {% if user['otp_setup'] %}
                                             <span class="badge badge-success users-2fa-badge"><b>Enabled</b></span>
-                                            <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}" title="Reset 2FA" onclick="return confirm('Reset 2FA for this user?');">
+                                            <a class="btn btn-outline-danger px-2 py-0 confirm-action"
+                                               href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}"
+                                               title="Reset 2FA"
+                                               data-confirm-title="Reset 2FA for {{ user['id'] }}?"
+                                               data-confirm-message="The user will need to set up their authenticator app again."
+                                               data-confirm-button="Reset 2FA">
                                                 <i class="fas fa-random"></i>
                                             </a>
                                         {% else %}
                                             <span class="badge badge-warning users-2fa-badge"><b>Enforced</b></span>
                                         {% endif %}
-                                        <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}" title="Disable 2FA" onclick="return confirm('Disable 2FA for this user?');">
+                                        <a class="btn btn-outline-danger px-2 py-0 confirm-action"
+                                           href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}"
+                                           title="Disable 2FA"
+                                           data-confirm-title="Disable 2FA for {{ user['id'] }}?"
+                                           data-confirm-message="This will remove two-factor protection for this account."
+                                           data-confirm-button="Disable 2FA">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     {% else %}
@@ -244,7 +305,12 @@
                                                 <i class="fas fa-user-slash"></i>
                                             </a>
                                         {% endif %}
-                                        <a class="btn btn-outline-danger px-2 py-0" title="Delete user" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}" onclick="return confirm('Delete this user permanently? This action cannot be undone.');">
+                                        <a class="btn btn-outline-danger px-2 py-0 confirm-action"
+                                           title="Delete user"
+                                           href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}"
+                                           data-confirm-title="Delete user {{ user['id'] }}?"
+                                           data-confirm-message="This action cannot be undone and permanently removes this account."
+                                           data-confirm-button="Delete user">
                                             <i class="fas fa-trash-alt"></i>
                                         </a>
                                     </div>
@@ -253,6 +319,26 @@
                         {% endfor %}
                         </tbody>
                     </table>
+                </div>
+
+                <div class="modal fade" id="actionConfirmModal" tabindex="-1" role="dialog" aria-labelledby="actionConfirmModalTitle" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="actionConfirmModalTitle">Confirm action</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body" id="actionConfirmModalMessage">
+                                Are you sure you want to continue?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                                <a href="#" class="btn btn-danger" id="actionConfirmModalButton">Continue</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
     	    </div>
@@ -275,6 +361,17 @@ $(document).ready(function(){
             "infoEmpty": "No users found",
             "zeroRecords": "No matching users"
         }
+    });
+
+    $('.confirm-action').on('click', function(event){
+        event.preventDefault();
+        const $link = $(this);
+        $('#actionConfirmModalTitle').text($link.data('confirm-title') || 'Confirm action');
+        $('#actionConfirmModalMessage').text($link.data('confirm-message') || 'Are you sure you want to continue?');
+        $('#actionConfirmModalButton')
+            .text($link.data('confirm-button') || 'Continue')
+            .attr('href', $link.attr('href'));
+        $('#actionConfirmModal').modal('show');
     });
 });
 
