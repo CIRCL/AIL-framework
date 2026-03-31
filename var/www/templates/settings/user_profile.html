@@ -162,7 +162,7 @@
                                 <div class="profile-avatar">{{ meta['id'][0] | upper }}</div>
                                 <div>
                                 <h5 class="profile-page-title">Profile Settings</h5>
-                                <p class="profile-subtitle">Manage your account information, security options, and MISP integrations.</p>
+                                <p class="profile-subtitle">Manage your account information, security options, and connectors.</p>
                                 </div>
                             </div>
                         </div>
@@ -380,7 +380,7 @@
                                         </div>
 
                                         <div class="rulezet-note p-2 mb-3 small">
-                                            Connect your Rulezet account to synchronize personalized rules and actions.
+                                            Connect your Rulezet account to synchronize personalized rules.
                                         </div>
                                         <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
                                             {% set rulezet_api_key = meta.get('rulezet_api_key') %}

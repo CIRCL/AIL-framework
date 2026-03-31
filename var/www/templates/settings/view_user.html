@@ -128,7 +128,7 @@
                                         {% else %}
                                             <p class="mb-2"><span class="badge badge-warning">Enforced (not configured)</span></p>
                                         {% endif %}
-                                        <a class="btn btn-sm btn-outline-danger mt-2" href="{{ url_for('settings_b.user_otp_disable', user_id=meta['id']) }}">
+                                        <a class="btn btn-sm btn-outline-danger" href="{{ url_for('settings_b.user_otp_disable', user_id=meta['id']) }}">
                                             <i class="fas fa-times"></i> Disable 2FA
                                         </a>
                                     {% else %}
