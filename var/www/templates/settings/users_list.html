@@ -152,9 +152,6 @@
                 </div>
 
                 <div class="users-table-wrap mb-3">
-                    <div class="users-table-toolbar">
-                        <p class="users-toolbar-text mb-0"><i class="fas fa-info-circle"></i> Tip: Use the search box to quickly find a user by ID, role, or organization.</p>
-                    </div>
                     <table id="tableusers" class="table table-hover table-striped mb-0">
                         <thead class="thead-dark">
                         <tr>
@@ -177,7 +174,6 @@
                                         <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
                                             <strong>{{ user['id'] }}</strong>
                                         </a>
-                                        <small>User profile</small>
                                     </div>
                                     {% if user['is_disabled'] %}
                                         <span class="badge badge-danger users-status-pill"><b>Disabled</b></span>
@@ -187,31 +183,26 @@
                                 </td>
                                 <td>
                                     {{ user['org_name'] }}
-                                    <div><small>{{ user['org'] }}</small></div>
                                 </td>
-                                <td class="users-date">{{ user['last_edit'] }}</td>
+                                <td class="users-date">{% if user['last_edit'] %}{{ user['last_edit'][:10] }}<br>{{ user['last_edit'][11:] }}{% endif %}</td>
                                 <td class="users-date">
                                     {% if user['last_login'] %}
-                                        {{ user['last_login'] }}
-                                    {% else %}
-                                        <span class="text-muted">Never</span>
+                                        {{ user['last_login'][:10] }}<br>{{ user['last_login'][11:] }}
                                     {% endif %}
                                     {% if user['is_logged'] %}
-                                        <div class="mt-1">
+                                        <span class="mt-1">
                                             <i class="fas fa-plug text-success" title="Active session"></i>
-                                            <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}" title="Log out this user" onclick="return confirm('Log out this user now?');">
-                                                <i class="fas fa-sign-out-alt"></i> Logout
+                                            <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}" title="Log out this user">
+                                                <i class="fas fa-sign-out-alt"></i>
                                             </a>
-                                        </div>
+                                        </span>
                                     {% endif %}
                                 </td>
-                                <td class="users-date">{% if user['last_seen'] %}{{ user['last_seen'] }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                <td class="users-date">{% if user['last_seen'] %}{{ user['last_seen'][:10] }}<br>{{ user['last_seen'][11:] }}{% endif %}</td>
                                 <td><span class="badge badge-light border">{{ user['role'] }}</span></td>
                                 <td class="users-date">
                                     {% if user['last_seen_api'] %}
-                                        {{ user['last_seen_api'] }}
-                                    {% else %}
-                                        <span class="text-muted">No recent API activity</span>
+                                        {{ user['last_seen_api'][:10] }}<br>{{ user['last_seen_api'][11:] }}
                                     {% endif %}
                                     {% if user['is_disabled'] %}
                                         <div><span class="badge badge-danger mt-1"><b>Disabled</b></span></div>
@@ -223,18 +214,18 @@
                                         {% if user['otp_setup'] %}
                                             <span class="badge badge-success users-2fa-badge"><b>Enabled</b></span>
                                             <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}" title="Reset 2FA" onclick="return confirm('Reset 2FA for this user?');">
-                                                <i class="fas fa-random"></i> Reset
+                                                <i class="fas fa-random"></i>
                                             </a>
                                         {% else %}
                                             <span class="badge badge-warning users-2fa-badge"><b>Enforced</b></span>
                                         {% endif %}
                                         <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}" title="Disable 2FA" onclick="return confirm('Disable 2FA for this user?');">
-                                            <i class="fas fa-times"></i> Disable
+                                            <i class="fas fa-times"></i>
                                         </a>
                                     {% else %}
                                         <span class="badge badge-danger users-2fa-badge"><b>Disabled</b></span>
                                         <a class="btn btn-outline-success px-2 py-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}" title="Enable 2FA">
-                                            <i class="fas fa-plus"></i> Enable
+                                            <i class="fas fa-plus"></i>
                                         </a>
                                     {% endif %}
                                     </div>
@@ -242,19 +233,19 @@
                                 <td>
                                     <div class="users-actions-group">
                                         <a class="btn btn-outline-primary px-2 py-0" title="Edit user" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
-                                            <i class="fas fa-pencil-alt"></i> Edit
+                                            <i class="fas fa-pencil-alt"></i>
                                         </a>
                                         {% if user['is_disabled'] %}
-                                            <a class="btn btn-outline-success px-2 py-0" title="Enable user" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}" onclick="return confirm('Enable this user account?');">
-                                                <i class="fas fa-user-check"></i> Enable
+                                            <a class="btn btn-outline-success px-2 py-0" title="Enable user" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
+                                                <i class="fas fa-user-check"></i>
                                             </a>
                                         {% else %}
-                                            <a class="btn btn-outline-danger px-2 py-0" title="Disable user" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}" onclick="return confirm('Disable this user account?');">
-                                                <i class="fas fa-user-slash"></i> Disable
+                                            <a class="btn btn-outline-danger px-2 py-0" title="Disable user" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
+                                                <i class="fas fa-user-slash"></i>
                                             </a>
                                         {% endif %}
                                         <a class="btn btn-outline-danger px-2 py-0" title="Delete user" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}" onclick="return confirm('Delete this user permanently? This action cannot be undone.');">
-                                            <i class="fas fa-trash-alt"></i> Delete
+                                            <i class="fas fa-trash-alt"></i>
                                         </a>
                                     </div>
                                 </td>
