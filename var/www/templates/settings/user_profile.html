@@ -212,7 +212,7 @@
                                                     <i class="fas fa-plus"></i> Enable 2FA OTP
                                                 </a>
                                             {% else %}
-                                                <p class="status-value text-success">Enabled</p>
+                                                <p class="status-value text-success"><i class="fas fa-shield-alt mr-1"></i>Enabled</p>
                                                 <p class="text-muted small mb-2">Your account requires a one-time code during sign in.</p>
                                                 {% if acl_admin %}
                                                     <a class="btn btn-outline-danger btn-sm mr-2 mb-2" href="{{url_for('settings_b.user_otp_reset_self')}}">
