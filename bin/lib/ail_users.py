@@ -8,6 +8,7 @@ import re
 import secrets
 import sys
 import segno
+import string
 
 from base64 import b64encode
 from datetime import datetime
@@ -128,6 +129,17 @@ def check_email(email):
         return True
     else:
         return False
+
+def is_valid_rulezet_api_key(api_key):
+    if not api_key:
+        return False
+    if len(api_key) != 60:
+        return False
+    allowed_chars = set(string.ascii_letters + string.digits)
+    for char in api_key:
+        if char not in allowed_chars:
+            return False
+    return True
 
 #### TOKENS ####
 
@@ -497,6 +509,8 @@ class AILUser(UserMixin):
             meta['api_key'] = self.get_api_key()
         if 'role' in options:
             meta['role'] = get_user_role(self.user_id)
+        if 'rulezet_api_key' in options:
+            meta['rulezet_api_key'] = self.get_rulezet_api_key()
         if '2fa' in options:
             meta['2fa'] = self.is_2fa_enabled()
         if 'otp_setup' in options:
@@ -575,6 +589,17 @@ class AILUser(UserMixin):
 
     def delete_api_key(self):
         _delete_user_token(self.user_id)
+
+    ## RULEZET ##
+
+    def get_rulezet_api_key(self):
+        return r_serv_db.hget(f'ail:user:settings:{self.user_id}', 'rulezet:api_key')
+
+    def set_rulezet_api_key(self, api_key):
+        r_serv_db.hset(f'ail:user:settings:{self.user_id}', 'rulezet:api_key', api_key)
+
+    def delete_rulezet_api_key(self):
+        r_serv_db.hdel(f'ail:user:settings:{self.user_id}', 'rulezet:api_key')
 
     ## OTP ##
 
@@ -661,7 +686,7 @@ def api_get_users_meta():
     return meta
 
 def api_get_user_profile(user_id):
-    options = {'api_key', 'role', '2fa', 'org', 'org_name'}
+    options = {'api_key', 'role', '2fa', 'org', 'org_name', 'rulezet_api_key'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -760,6 +785,22 @@ def api_create_user_api_key(user_id, admin_id, ip_address, user_agent):
         return {'status': 'error', 'reason': 'User not found'}, 404
     access_logger.info(f'New api key for user {user_id}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
     return user.new_api_key(), 200
+
+def api_edit_user_rulezet_api_key(user_id, api_key):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    if not is_valid_rulezet_api_key(api_key):
+        return {'status': 'error', 'reason': 'Invalid Rulezet API key format. The key must contain exactly 60 alphanumeric characters.'}, 400
+    user.set_rulezet_api_key(api_key)
+    return {'status': 'success'}, 200
+
+def api_delete_user_rulezet_api_key(user_id):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    user.delete_rulezet_api_key()
+    return {'status': 'success'}, 200
 
 def api_create_user(admin_id, ip_address, user_agent, user_id, password, org_uuid, role, otp, send_email=False):
     user = AILUser(user_id)

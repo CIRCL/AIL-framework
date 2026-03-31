@@ -80,6 +80,8 @@ def user_profile():
     global_2fa = ail_users.is_2fa_enabled()
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
                            misps=ail_config.get_user_config_misps(user_id),
+                           rulezet_error=request.args.get('rulezet_error'),
+                           rulezet_success=request.args.get('rulezet_success'),
                            acl_admin=acl_admin)
 
 @settings_b.route("/settings/user/view", methods=['GET'])
@@ -264,6 +266,31 @@ def delete_misp():
     return redirect(url_for('settings_b.user_profile'))
 
 ## --USER MISP-- ##
+
+#### USER RULEZET ####
+
+@settings_b.route("/settings/user/rulezet/edit", methods=['POST'])
+@login_required
+@login_user
+def edit_rulezet():
+    user_id = current_user.get_user_id()
+    api_key = request.form.get('rulezet_api_key')
+    r = ail_users.api_edit_user_rulezet_api_key(user_id, api_key)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Rulezet API key saved successfully'))
+
+@settings_b.route("/settings/user/rulezet/delete", methods=['GET'])
+@login_required
+@login_user
+def delete_rulezet():
+    user_id = current_user.get_user_id()
+    r = ail_users.api_delete_user_rulezet_api_key(user_id)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Rulezet API key removed successfully'))
+
+## --USER RULEZET-- ##
 
 @settings_b.route("/settings/user/logout", methods=['GET'])
 @login_required
@@ -613,5 +640,4 @@ def passive_ssh_test():
 #     else:
 #         send = request.args.get('send')
 #         return render_template("email_users.html", send=send, acl_admin=acl_admin)
-
 

@@ -142,6 +142,16 @@
                         </div>
 					</div>
 					<div class="card-body">
+                        {% if rulezet_error %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle mr-1"></i>{{ rulezet_error }}
+                            </div>
+                        {% endif %}
+                        {% if rulezet_success %}
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle mr-1"></i>{{ rulezet_success }}
+                            </div>
+                        {% endif %}
 
                         <div class="row">
                             <div class="col-12 col-xl-6 mb-3">
@@ -317,6 +327,47 @@
                                         </table>
                                         </div>
                                         {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">Rulezet Connector</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center mb-3">Rulezet</h5>
+                                        <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
+                                            <div class="form-group">
+                                                <label for="rulezet_api_key" class="font-weight-bold">API Key</label>
+                                                <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
+                                                       value="{{ meta.get('rulezet_api_key', '') or '' }}" maxlength="60"
+                                                       placeholder="Enter your Rulezet API key (60 alphanumeric characters)"
+                                                       required>
+                                                <small class="form-text text-muted">
+                                                    Rulezet accepts exactly one API key per user. The key must be exactly 60 characters long and contain only letters and numbers.
+                                                </small>
+                                            </div>
+                                            <div class="d-flex flex-wrap">
+                                                <button type="submit" class="btn btn-primary btn-sm mr-2 mb-2">
+                                                    <i class="fas fa-save"></i>
+                                                    {% if meta.get('rulezet_api_key') %}
+                                                        Update Rulezet Key
+                                                    {% else %}
+                                                        Save Rulezet Key
+                                                    {% endif %}
+                                                </button>
+                                                {% if meta.get('rulezet_api_key') %}
+                                                    <a href="{{ url_for('settings_b.delete_rulezet') }}" class="btn btn-outline-danger btn-sm mb-2"
+                                                       onclick="return confirm('Remove your Rulezet API key?');">
+                                                        <i class="fa-solid fa-trash-can"></i> Remove Rulezet Key
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
