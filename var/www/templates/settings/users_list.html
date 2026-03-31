@@ -123,8 +123,6 @@
                                     <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
                                         <strong>{{ user['id'] }}</strong>
                                     </a>
-                                    <small>{{ user['org_name'] }}</small>
-                                    <small>{{ user['org'] }}</small>
                                 </div>
                                 {% if user['is_disabled'] %}
                                     <span class="badge badge-danger users-status-pill"><b>Disabled</b></span>
@@ -133,13 +131,14 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="text-monospace">{{ user['org'] }}</span>
+                                {{ user['org_name'] }}
+                                <div><small>{{ user['org'] }}</small></div>
                             </td>
                             <td>{{user['last_edit']}}</td>
                             <td>
                                 {% if user['last_login'] %}
                                     {{user['last_login']}}
-                                {% else %}-{% endif %}
+                                {% endif %}
                                 {% if user['is_logged'] %}
                                     <i class="fas fa-plug text-success"></i>
                                     <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}">
@@ -147,12 +146,11 @@
                                     </a>
                                 {% endif %}
                             </td>
-                            <td>{% if user['last_seen'] %}{{user['last_seen']}}{% else %}-{% endif %}</td>
+                            <td>{% if user['last_seen'] %}{{user['last_seen']}}{% endif %}</td>
                             <td>{{user['role']}}</td>
                             <td>
-                                {% if user['last_seen_api'] %}{{user['last_seen_api']}}{% else %}-{% endif %}
+                                {% if user['last_seen_api'] %}{{user['last_seen_api']}}<br>{% endif %}
                                 {% if user['is_disabled'] %}
-                                    <br>
                                     <span class="badge badge-danger"><b>Disabled</b></span>
                                 {% endif %}
                             </td>
@@ -161,18 +159,18 @@
                                 {% if user['2fa'] %}
                                     {% if user['otp_setup'] %}
                                         <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
-                                        <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}">
+                                        <a class="btn btn-outline-danger px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}">
                                             <i class="fas fa-random"></i> Reset
                                         </a>
                                     {% else %}
                                         <span class="badge badge-warning" style="font-size: 1.0rem;"><b>ENFORCED</b></span>
                                     {% endif %}
-                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}">
+                                    <a class="btn btn-outline-danger px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}">
                                         <i class="fas fa-times"></i>
                                     </a>
                                 {% else %}
                                     <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
-                                    <a class="btn btn-outline-success px-1 py-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}">
+                                    <a class="btn btn-outline-success px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}">
                                         <i class="fas fa-plus"></i>
                                     </a>
                                 {% endif %}
