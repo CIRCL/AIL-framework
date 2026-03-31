@@ -868,6 +868,9 @@ def exists_role(role):
 
 def set_user_role(user_id, role):
     roles = _get_users_roles_dict()
+    # remove all role
+    for r in get_roles():
+        r_serv_db.srem(f'ail:users:role:{r}', user_id)
     # set role
     for role_to_add in roles[role]:
         r_serv_db.sadd(f'ail:users:role:{role_to_add}', user_id)
@@ -890,3 +893,5 @@ def check_user_role_integrity(user_id):
             return False
     return True
 
+def get_admins():
+    return r_serv_db.smembers(f'ail:users:role:admin')

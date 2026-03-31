@@ -177,7 +177,7 @@
                                                         {{meta['api_key']}}
                                                     </span>
                                                     <div class="api-actions d-inline-flex flex-wrap align-items-center">
-                                                        <button class="btn btn-outline-secondary btn-sm ml-2 px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key" type="button">
+                                                        <button class="btn btn-outline-secondary btn-sm px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key" type="button">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                         <button class="btn btn-outline-info btn-sm ml-1 py-0" id="btn_copy_key" onclick="copy_api_key();" title="Copy API key" type="button">
@@ -205,7 +205,7 @@
                                             {% if not meta['2fa'] %}
                                                 <p class="status-value text-danger"><i class="fas fa-shield-alt mr-1"></i>Disabled</p>
                                                 <p class="text-muted small mb-2">Your account is currently protected by password only.</p>
-                                                <p class="small text-warning mb-2">
+                                                <p class="small text-muted mb-2">
                                                     <i class="fas fa-info-circle mr-1"></i>For better security, enable 2FA to protect your account from unauthorized access.
                                                 </p>
                                                 <a class="btn btn-success btn-sm" href="{{url_for('settings_b.user_otp_enable_self')}}">
