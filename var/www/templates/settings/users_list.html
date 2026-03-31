@@ -17,6 +17,17 @@
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <style>
+        .users-page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+        .users-subtitle {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
         .users-summary-card {
             border: 1px solid #e9ecef;
             border-radius: .5rem;
@@ -24,6 +35,7 @@
             margin-bottom: .75rem;
             background-color: #fff;
             min-height: 100%;
+            box-shadow: 0 .1rem .2rem rgba(0, 0, 0, .04);
         }
         .users-summary-label {
             color: #6c757d;
@@ -37,29 +49,64 @@
             font-weight: 700;
             line-height: 1.1;
         }
-        .users-page-title {
+        .users-table-wrap {
+            border: 1px solid #e9ecef;
+            border-radius: .5rem;
+            overflow: hidden;
+            background: #fff;
+        }
+        .users-table-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: .5rem;
             flex-wrap: wrap;
+            gap: .5rem;
+            padding: .75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            background: #f8f9fa;
+        }
+        .users-toolbar-text {
+            margin: 0;
+            color: #495057;
+            font-size: .9rem;
+        }
+        .users-identity strong {
+            display: inline-block;
+            margin-right: .35rem;
         }
         .users-identity small {
             color: #6c757d;
             display: block;
             line-height: 1.15;
+            margin-top: .2rem;
         }
         .users-status-pill {
             font-size: .75rem;
             margin-top: .25rem;
             display: inline-block;
         }
-        .users-actions-group .btn {
-            margin-right: .35rem;
-            margin-bottom: .25rem;
+        .users-date {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
         }
+        .users-actions-group,
+        .users-2fa-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            align-items: center;
+        }
+        .users-actions-group .btn,
         .users-2fa-group .btn {
-            margin-top: .35rem;
+            margin: 0;
+        }
+        .users-2fa-badge {
+            min-width: 78px;
+            text-align: center;
+            font-size: .8rem;
+        }
+        #tableusers td {
+            vertical-align: middle;
         }
     </style>
 
@@ -73,9 +120,12 @@
             {% include 'settings/menu_sidebar.html' %}
 			<div class="col-12 col-lg-10" id="core_content">
 
-                <div class="users-page-title mt-2 mb-3">
-                    <h3 class="mb-0">AIL Users</h3>
-                    <a class="btn btn-danger" href="{{ url_for('settings_b.users_logout') }}">
+                <div class="users-page-title mt-2 mb-2">
+                    <div>
+                        <h3 class="mb-1">AIL Users</h3>
+                        <p class="users-subtitle">Manage accounts, user access, sessions, and multi-factor authentication.</p>
+                    </div>
+                    <a class="btn btn-danger" href="{{ url_for('settings_b.users_logout') }}" onclick="return confirm('This will log out every active user session. Continue?');">
                         <i class="fas fa-sign-out-alt"></i> Logout All Users
                     </a>
                 </div>
@@ -101,104 +151,118 @@
                     </div>
                 </div>
 
-                <table id="tableusers" class="table table-hover table-striped">
-                    <thead class="thead-dark">
-                    <tr>
-                        <th>User</th>
-                        <th>Org</th>
-                        <th>Last Edit</th>
-                        <th>Last Login</th>
-                        <th>Last Seen</th>
-                        <th>Role</th>
-                        <th>Last API Access</th>
-                        <th>2FA</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tbody_last_crawled">
-                    {% for user in meta['users'] %}
+                <div class="users-table-wrap mb-3">
+                    <div class="users-table-toolbar">
+                        <p class="users-toolbar-text mb-0"><i class="fas fa-info-circle"></i> Tip: Use the search box to quickly find a user by ID, role, or organization.</p>
+                    </div>
+                    <table id="tableusers" class="table table-hover table-striped mb-0">
+                        <thead class="thead-dark">
                         <tr>
-                            <td>
-                                <div class="users-identity">
-                                    <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
-                                        <strong>{{ user['id'] }}</strong>
-                                    </a>
-                                </div>
-                                {% if user['is_disabled'] %}
-                                    <span class="badge badge-danger users-status-pill"><b>Disabled</b></span>
-                                {% elif user['is_logged'] %}
-                                    <span class="badge badge-success users-status-pill"><b>Online</b></span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {{ user['org_name'] }}
-                                <div><small>{{ user['org'] }}</small></div>
-                            </td>
-                            <td>{{user['last_edit']}}</td>
-                            <td>
-                                {% if user['last_login'] %}
-                                    {{user['last_login']}}
-                                {% endif %}
-                                {% if user['is_logged'] %}
-                                    <i class="fas fa-plug text-success"></i>
-                                    <a class="btn btn-outline-danger px-1 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                    </a>
-                                {% endif %}
-                            </td>
-                            <td>{% if user['last_seen'] %}{{user['last_seen']}}{% endif %}</td>
-                            <td>{{user['role']}}</td>
-                            <td>
-                                {% if user['last_seen_api'] %}{{user['last_seen_api']}}<br>{% endif %}
-                                {% if user['is_disabled'] %}
-                                    <span class="badge badge-danger"><b>Disabled</b></span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="users-2fa-group">
-                                {% if user['2fa'] %}
-                                    {% if user['otp_setup'] %}
-                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
-                                        <a class="btn btn-outline-danger px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}">
-                                            <i class="fas fa-random"></i> Reset
-                                        </a>
-                                    {% else %}
-                                        <span class="badge badge-warning" style="font-size: 1.0rem;"><b>ENFORCED</b></span>
-                                    {% endif %}
-                                    <a class="btn btn-outline-danger px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                {% else %}
-                                    <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
-                                    <a class="btn btn-outline-success px-1 py-0 mt-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}">
-                                        <i class="fas fa-plus"></i>
-                                    </a>
-                                {% endif %}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="users-actions-group">
-                                    <a class="btn btn-outline-primary px-2 py-0" title="Edit user" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
-                                        <i class="fas fa-pencil-alt"></i>
-                                    </a>
-                                    {% if user['is_disabled'] %}
-                                        <a class="btn btn-outline-success px-2 py-0" title="Enable user" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}">
-                                            <i class="fas fa-user-check"></i>
-                                        </a>
-                                    {% else %}
-                                        <a class="btn btn-outline-danger px-2 py-0" title="Disable user" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}">
-                                            <i class="fas fa-user-slash"></i>
-                                        </a>
-                                    {% endif %}
-                                    <a class="btn btn-outline-danger px-2 py-0" title="Delete user" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
-                                </div>
-                            </td>
+                            <th>User</th>
+                            <th>Org</th>
+                            <th>Last Edit</th>
+                            <th>Last Login</th>
+                            <th>Last Seen</th>
+                            <th>Role</th>
+                            <th>Last API Access</th>
+                            <th>2FA</th>
+                            <th>Actions</th>
                         </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody id="tbody_last_crawled">
+                        {% for user in meta['users'] %}
+                            <tr>
+                                <td>
+                                    <div class="users-identity">
+                                        <a href="{{ url_for('settings_b.user_view', user_id=user['id']) }}">
+                                            <strong>{{ user['id'] }}</strong>
+                                        </a>
+                                        <small>User profile</small>
+                                    </div>
+                                    {% if user['is_disabled'] %}
+                                        <span class="badge badge-danger users-status-pill"><b>Disabled</b></span>
+                                    {% elif user['is_logged'] %}
+                                        <span class="badge badge-success users-status-pill"><b>Online</b></span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ user['org_name'] }}
+                                    <div><small>{{ user['org'] }}</small></div>
+                                </td>
+                                <td class="users-date">{{ user['last_edit'] }}</td>
+                                <td class="users-date">
+                                    {% if user['last_login'] %}
+                                        {{ user['last_login'] }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                    {% if user['is_logged'] %}
+                                        <div class="mt-1">
+                                            <i class="fas fa-plug text-success" title="Active session"></i>
+                                            <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_logout', user_id=user['id']) }}" title="Log out this user" onclick="return confirm('Log out this user now?');">
+                                                <i class="fas fa-sign-out-alt"></i> Logout
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="users-date">{% if user['last_seen'] %}{{ user['last_seen'] }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                                <td><span class="badge badge-light border">{{ user['role'] }}</span></td>
+                                <td class="users-date">
+                                    {% if user['last_seen_api'] %}
+                                        {{ user['last_seen_api'] }}
+                                    {% else %}
+                                        <span class="text-muted">No recent API activity</span>
+                                    {% endif %}
+                                    {% if user['is_disabled'] %}
+                                        <div><span class="badge badge-danger mt-1"><b>Disabled</b></span></div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="users-2fa-group">
+                                    {% if user['2fa'] %}
+                                        {% if user['otp_setup'] %}
+                                            <span class="badge badge-success users-2fa-badge"><b>Enabled</b></span>
+                                            <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_reset', user_id=user['id']) }}" title="Reset 2FA" onclick="return confirm('Reset 2FA for this user?');">
+                                                <i class="fas fa-random"></i> Reset
+                                            </a>
+                                        {% else %}
+                                            <span class="badge badge-warning users-2fa-badge"><b>Enforced</b></span>
+                                        {% endif %}
+                                        <a class="btn btn-outline-danger px-2 py-0" href="{{ url_for('settings_b.user_otp_disable', user_id=user['id']) }}" title="Disable 2FA" onclick="return confirm('Disable 2FA for this user?');">
+                                            <i class="fas fa-times"></i> Disable
+                                        </a>
+                                    {% else %}
+                                        <span class="badge badge-danger users-2fa-badge"><b>Disabled</b></span>
+                                        <a class="btn btn-outline-success px-2 py-0" href="{{ url_for('settings_b.user_otp_enable', user_id=user['id']) }}" title="Enable 2FA">
+                                            <i class="fas fa-plus"></i> Enable
+                                        </a>
+                                    {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="users-actions-group">
+                                        <a class="btn btn-outline-primary px-2 py-0" title="Edit user" href="{{ url_for('settings_b.edit_user', user_id=user['id']) }}">
+                                            <i class="fas fa-pencil-alt"></i> Edit
+                                        </a>
+                                        {% if user['is_disabled'] %}
+                                            <a class="btn btn-outline-success px-2 py-0" title="Enable user" href="{{ url_for('settings_b.user_enable', user_id=user['id']) }}" onclick="return confirm('Enable this user account?');">
+                                                <i class="fas fa-user-check"></i> Enable
+                                            </a>
+                                        {% else %}
+                                            <a class="btn btn-outline-danger px-2 py-0" title="Disable user" href="{{ url_for('settings_b.user_disable', user_id=user['id']) }}" onclick="return confirm('Disable this user account?');">
+                                                <i class="fas fa-user-slash"></i> Disable
+                                            </a>
+                                        {% endif %}
+                                        <a class="btn btn-outline-danger px-2 py-0" title="Delete user" href="{{ url_for('settings_b.delete_user', user_id=user['id']) }}" onclick="return confirm('Delete this user permanently? This action cannot be undone.');">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
     	    </div>
 		</div>
@@ -210,9 +274,16 @@ $(document).ready(function(){
     $("#nav_users_list").addClass("active");
 	$("#nav_user_management").removeClass("text-muted");
     $('#tableusers').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+        "aLengthMenu": [[5, 10, 15, 25, -1], [5, 10, 15, 25, "All"]],
         "iDisplayLength": 10,
-        "order": [[ 4, "desc" ]]
+        "order": [[ 4, "desc" ]],
+        "language": {
+            "search": "Search users:",
+            "lengthMenu": "Show _MENU_ users",
+            "info": "Showing _START_ to _END_ of _TOTAL_ users",
+            "infoEmpty": "No users found",
+            "zeroRecords": "No matching users"
+        }
     });
 });
 
