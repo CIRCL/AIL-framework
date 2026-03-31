@@ -72,6 +72,10 @@
     .misp-logo {
       width: 120px;
     }
+    .rulezet-logo {
+      width: 132px;
+      max-width: 100%;
+    }
     .misp-action-btn {
       min-width: 42px;
     }
@@ -112,6 +116,28 @@
     }
     .api-actions .btn {
       margin-top: 0;
+    }
+    .rulezet-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .rulezet-note {
+      border-left: 4px solid #0d6efd;
+      background: #eef5ff;
+      color: #495057;
+      border-radius: 0.35rem;
+    }
+    .rulezet-pill {
+      border: 1px solid #d9e2f6;
+      background: #f3f7ff;
+      color: #2f5fb3;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      padding: 0.2rem 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
     }
     @media (max-width: 768px) {
       .profile-label {
@@ -337,9 +363,25 @@
                                 <h3 class="section-title">Rulezet Connector</h3>
                             </div>
                             <div class="card-body">
-                                <div class="card">
+                                <div class="card rulezet-card">
                                     <div class="card-body">
-                                        <h5 class="card-title text-center mb-3">Rulezet</h5>
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                                            <div class="mb-2 mb-md-0">
+                                                <h5 class="card-title mb-1">
+                                                    <img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet" class="rulezet-logo mr-2">
+                                                </h5>
+                                                <p class="text-muted mb-0 small">Connect your Rulezet account to synchronize personalized rules and actions.</p>
+                                            </div>
+                                            <span class="rulezet-pill">
+                                                <i class="fas fa-key"></i>
+                                                API Key Required
+                                            </span>
+                                        </div>
+
+                                        <div class="rulezet-note p-2 mb-3 small">
+                                            <strong>Quick tip:</strong> You can paste your API key and save it here at any time.
+                                            If you rotate your key in Rulezet, come back and update it to keep integrations working.
+                                        </div>
                                         <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
                                             <div class="form-group">
                                                 <label for="rulezet_api_key" class="font-weight-bold">API Key</label>
