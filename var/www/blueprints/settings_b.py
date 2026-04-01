@@ -483,6 +483,15 @@ def organisation():
         meta['users'] = ail_users.get_users_meta(meta['users'])
     return render_template("view_organisation.html", meta=meta, acl_admin=True)
 
+@settings_b.route("/settings/organisation/edit", methods=['GET', 'POST'])
+@login_required
+@login_admin
+def passive_dns_edit():
+    if request.method == 'POST':
+        pass
+    else:
+        pass
+
 @settings_b.route("/settings/create_organisation", methods=['GET'])
 @login_required
 @login_admin

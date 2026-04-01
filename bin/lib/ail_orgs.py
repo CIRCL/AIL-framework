@@ -117,7 +117,7 @@ class Organisation:
     def _get_field(self, field):
         return r_serv_db.hget(f'ail:org:{self.uuid}', field)
 
-    def _set_fields(self, field, value):
+    def _set_field(self, field, value):
         r_serv_db.hset(f'ail:org:{self.uuid}', field, value)
 
     def get_uuid(self):
@@ -129,14 +129,27 @@ class Organisation:
     def get_date_modified(self):
         return self._get_field('date_modified')
 
+    def update_last_modified(self):
+        current = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        self._set_field('date_modified', current)
+
     def get_description(self):
         return self._get_field('description')
+
+    def set_description(self, description):
+        return self._set_field('description', description)
 
     def get_name(self):
         return self._get_field('name')
 
+    def set_name(self, name):
+        self._set_field('name', name)
+
     def get_nationality(self):
         return self._get_field('nationality')
+
+    def set_nationality(self, nationality):
+        self._set_field('nationality', nationality)
 
     def get_creator(self):
         return self._get_field('creator')
@@ -144,13 +157,19 @@ class Organisation:
     def get_org_type(self):
         return self._get_field('type')
 
+    def set_org_type(self, org_type):
+        self._set_field('type', org_type)
+
     def get_sector(self):
         return self._get_field('sector')
 
-    def get_tags(self):  # TODO
-        pass
+    def set_sector(self, sector):
+        return self._set_field('sector', sector)
 
-    def get_logo(self):
+    def get_tags(self):
+        return r_serv_db.smembers(f'ail:org:{self.uuid}:tags')
+
+    def get_logo(self): # TODO LATER
         pass
 
     def get_users(self):
@@ -162,13 +181,17 @@ class Organisation:
     def get_meta(self, options=set()):
         meta = {'uuid': self.uuid}
         if 'name' in options:
-            meta['name'] = self._get_field('name')
+            meta['name'] = self.get_name()
         if 'description' in options:
-            meta['description'] = self._get_field('description')
+            meta['description'] = self.get_description()
         if 'creator' in options:
             meta['creator'] = self._get_field('creator')
         if 'date_created' in options:
             meta['date_created'] = self._get_field('date_created')
+        if 'last_edit' in options:
+            meta['last_edit'] = self._get_field('date_modified')
+        if 'nationality' in options:
+            meta['nationality'] = self.get_nationality()
         if 'users' in options:
             meta['users'] = self.get_users()
         if 'nb_users' in options:
@@ -176,6 +199,12 @@ class Organisation:
                 meta['nb_users'] = len(meta['users'])
             else:
                 meta['nb_users'] = self.get_nb_users()
+        if 'org_type' in options:
+            meta['org_type'] = self.get_org_type()
+        if 'sector' in options:
+            meta['sector'] = self.get_sector()
+        if 'tags' in options:
+            meta['tags'] = self.get_tags()
         return meta
 
     def is_user(self, user_id):
@@ -184,38 +213,58 @@ class Organisation:
     def add_user(self, user_id):
         r_serv_db.sadd(f'ail:org:{self.uuid}:users', user_id)
         r_serv_db.hset(f'ail:user:metadata:{user_id}', 'org', self.uuid)
+        self.update_last_modified()
 
     def remove_user(self, user_id):
         r_serv_db.srem(f'ail:org:{self.uuid}:users', user_id)
         r_serv_db.hdel(f'ail:user:metadata:{user_id}', 'org')
+        self.update_last_modified()
 
     def remove_users(self):
         for user_id in self.get_users():
             self.remove_user(user_id)
+        self.update_last_modified()
 
     def create(self, creator, name, description=None, nationality=None, sector=None, org_type=None, logo=None):
         r_serv_db.sadd(f'ail:orgs', self.uuid)
 
-        self._set_fields('creator', creator)
-        self._set_fields('name', name)
-        self._set_fields('description', description)
+        self._set_field('creator', creator)
+        self.set_name(name)
+        self.set_description(description)
         if nationality:
-            self._set_fields('nationality', nationality)
+            self._set_field('nationality', nationality)
         if sector:
-            self._set_fields('sector', sector)
+            self._set_field('sector', sector)
         if org_type:
-            self._set_fields('type', org_type)
+            self._set_field('type', org_type)
         # if logo:
 
         current = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
-        self._set_fields('date_created', current)
-        self._set_fields('date_modified', current)
+        self._set_field('date_created', current)
+        self._set_field('date_modified', current)
 
-    def edit(self):
-        pass
+    def edit(self, name=None, description=None, nationality=None, sector=None, org_type=None, logo=None, tags=[]):
+        if name:
+            self.set_name(name)
+        if description:
+            self.set_description(description)
+        if nationality:
+            self.set_nationality(nationality)
+        if sector:
+            self.set_sector(sector)
+        if org_type:
+            self.set_org_type(org_type)
+        # if tags:
+        #     nb_tags = r_serv_db.scard(f'ail:org:{self.uuid}:tags')
+        #     if nb_tags > 0 or tags:
+        #         r_serv_db.delete(f'ail:org:{self.uuid}:tags')
+        #         for tag in tags:
+        #             r_serv_db.sadd(f'ail:org:{self.uuid}:tags', tag)
+        self.update_last_modified()
 
     def delete(self):  # TODO CHANGE ACL ASSOCIATED WITH ORGS -> Tracker, Investigation, objects, ...
         self.remove_users()
+        r_serv_db.delete(f'ail:org:{self.uuid}:tags')
         r_serv_db.delete(f'ail:org:{self.uuid}')
         r_serv_db.srem(f'ail:orgs', self.uuid)
 
@@ -339,7 +388,7 @@ def api_get_org_meta(org_uuid):
     if not exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Unknown org'}, 404
     org = Organisation(org_uuid)
-    meta = org.get_meta(options={'date_created', 'description', 'name', 'users', 'nb_users'})
+    meta = org.get_meta(options={'date_created', 'date_created', 'description', 'name', 'users', 'nb_users'})
     return meta, 200
 
 def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):
@@ -352,6 +401,21 @@ def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=
     org.create(creator, name, description=description)
     access_logger.info(f'Created org {org_uuid}', extra={'user_id': creator, 'ip_address': ip_address, 'user_agent': user_agent})
     return org.get_uuid(), 200
+
+def api_edit_org(data, admin_id, ip_address, user_agent):
+    org_uuid = data.get('uuid')
+    if not exists_org(org_uuid):
+        return {'status': 'error', 'reason': 'Org not found'}, 404
+    name = data.get('name')
+    description = data.get('description')
+    nationality = data.get('nationality')
+    sector = data.get('sector')
+    org_type = data.get('org_type')
+    org = Organisation(org_uuid)
+    org.edit(name=name, description=description, nationality=nationality, sector=sector, org_type=org_type)
+    access_logger.warning(f'Edited org {org_uuid}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
+    return org.get_uuid(), 200
+
 
 def api_delete_org(org_uuid, admin_id, ip_address, user_agent):  # TODO check if nothing is linked to this org
     if not exists_org(org_uuid):
