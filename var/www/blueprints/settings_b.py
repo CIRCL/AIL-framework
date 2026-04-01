@@ -486,7 +486,7 @@ def organisation():
 @settings_b.route("/settings/organisation/edit", methods=['GET', 'POST'])
 @login_required
 @login_admin
-def passive_dns_edit():
+def organisation_edit():
     if request.method == 'POST':
         pass
     else:
