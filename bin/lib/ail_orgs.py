@@ -36,7 +36,7 @@ SPECIAL_NATIONALITIES = {
     },
     'international': {
         'name': 'International',
-        'flag': None
+        'flag': '🌍'
     }
 }
 
@@ -49,54 +49,21 @@ def _country_code_to_flag(country_code):
         return None
     return ''.join(chr(127397 + ord(char)) for char in code)
 
-
-def _get_country_from_value(value):
-    if not value:
-        return None
-    normalized_value = value.strip()
-    if not normalized_value:
-        return None
-
-    if len(normalized_value) == 2:
-        country = pycountry.countries.get(alpha_2=normalized_value.upper())
-        if country:
-            return country
-    if len(normalized_value) == 3:
-        country = pycountry.countries.get(alpha_3=normalized_value.upper())
-        if country:
-            return country
-
-    lowered_value = normalized_value.lower()
-    for country in pycountry.countries:
-        names = {
-            country.name.lower(),
-            getattr(country, 'official_name', '').lower(),
-            getattr(country, 'common_name', '').lower()
-        }
-        if lowered_value in names:
-            return country
-    return None
-
-
 def normalize_nationality(nationality):
     if nationality is None:
         return None
     nationality = nationality.strip()
     if not nationality:
         return ''
-
     lowered_nationality = nationality.lower()
     if lowered_nationality in SPECIAL_NATIONALITIES:
-        return lowered_nationality
-    for key, special in SPECIAL_NATIONALITIES.items():
-        if lowered_nationality == special['name'].lower():
-            return key
+        return SPECIAL_NATIONALITIES[lowered_nationality]['name']
 
-    country = _get_country_from_value(nationality)
+    country = pycountry.countries.get(name=nationality)
     if country:
-        return country.alpha_2
-
-    return nationality
+        return country.name
+    else:
+        return None
 
 
 def format_nationality(nationality):
@@ -106,14 +73,13 @@ def format_nationality(nationality):
     if not nationality:
         return None
 
-    lowered_nationality = nationality.lower()
-    if lowered_nationality in SPECIAL_NATIONALITIES:
-        special = SPECIAL_NATIONALITIES[lowered_nationality]
+    if nationality in SPECIAL_NATIONALITIES:
+        special = SPECIAL_NATIONALITIES[nationality]
         if special['flag']:
             return f"{special['flag']} {special['name']}"
         return special['name']
 
-    country = _get_country_from_value(nationality)
+    country = pycountry.countries.get(name=nationality)
     if country:
         country_name = country.name
         country_flag = getattr(country, 'flag', None) or _country_code_to_flag(country.alpha_2)
@@ -135,7 +101,7 @@ def get_nationality_selector():
     for country in countries:
         flag = getattr(country, 'flag', None) or _country_code_to_flag(country.alpha_2)
         label = f"{flag} {country.name}" if flag else country.name
-        options.append({'value': country.alpha_2, 'name': country.name, 'label': label})
+        options.append({'value': country.name, 'name': country.name, 'label': label})
     return options
 
 # #### PART OF ORGANISATION ####
