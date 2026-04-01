@@ -180,6 +180,15 @@ def get_users():
         users.extend(org.get_users())
     return set(users)
 
+def get_nb_regions():
+    regions = set()
+    for org_uuid in get_orgs():
+        org = Organisation(org_uuid)
+        region = org.get_nationality()
+        if region:
+            regions.add(region)
+    return len(regions)
+
 #### ORGANISATION ####
 
 class Organisation:

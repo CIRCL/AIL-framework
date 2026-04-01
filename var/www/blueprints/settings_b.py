@@ -469,7 +469,8 @@ def users_list():
 @login_admin
 def organisations_list():
     meta = ail_orgs.api_get_orgs_meta()
-    return render_template("orgs_list.html", meta=meta, acl_admin=True)
+    nb_regions = ail_orgs.get_nb_regions()
+    return render_template("orgs_list.html", meta=meta, nb_regions=nb_regions, acl_admin=True)
 
 @settings_b.route("/settings/organisation", methods=['GET'])
 @login_required
