@@ -26,27 +26,67 @@
             {% include 'settings/menu_sidebar.html' %}
             <div class="col-12 col-lg-10" id="core_content">
 
-                <form class="form-signin" action="{{ url_for('settings_b.create_org_post')}}" autocomplete="off" method="post">
+                <div class="row justify-content-center mt-2 mb-4">
+                    <div class="col-12 col-xl-10">
+                        <form class="form-signin" action="{{ url_for('settings_b.create_org_post')}}" autocomplete="off" method="post">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-light">
+                                    <h1 class="h4 mb-1 text-secondary"><i class="fa fa-building-o mr-2"></i>Create Organisation</h1>
+                                    <small class="text-muted">Add the core details and metadata for this organisation.</small>
+                                </div>
+                                <div class="card-body">
+                                    <h2 class="h6 text-uppercase text-muted mb-3">Basic Information</h2>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label for="inputUUID">UUID</label>
+                                            <input class="form-control" type="text" id="inputUUID" name="uuid" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" required>
+                                            <small class="form-text text-muted">Use a UUIDv4. This cannot be changed later.</small>
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label for="inputName">Name</label>
+                                            <input class="form-control" type="text" id="inputName" name="name" placeholder="Organisation name" autocomplete="off" required>
+                                        </div>
+                                    </div>
 
-                    <h1 class="h3 mt-1 mb-3 text-center text-secondary">{% if meta['uuid'] %}Edit{% else %}Create{% endif %} Org</h1>
+                                    <div class="form-group">
+                                        <label for="inputDescription">Description</label>
+                                        <input class="form-control" type="text" id="inputDescription" name="description" placeholder="Short description (optional)" autocomplete="off">
+                                    </div>
 
-                    <div class="form-group">
-                        <label for="inputUUID">UUID:</label>
-                        <input class="form-control" type="text" id="inputUUID" name="uuid" placeholder="UUID" autocomplete="off" required>
+                                    <hr>
+                                    <h2 class="h6 text-uppercase text-muted mb-3">Organisation Metadata</h2>
+                                    <div class="form-row">
+                                        <div class="form-group col-md-4">
+                                            <label for="inputNationality">Nationality</label>
+                                            <input class="form-control" type="text" id="inputNationality" name="nationality"
+                                                   placeholder="Select or type a country"
+                                                   list="nationalityOptions"
+                                                   autocomplete="off">
+                                            <datalist id="nationalityOptions">
+                                                {% for nationality in nationality_selector %}
+                                                    <option value="{{ nationality['value'] }}">{{ nationality['label'] }}</option>
+                                                {% endfor %}
+                                            </datalist>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="inputType">Org Type</label>
+                                            <input class="form-control" type="text" id="inputType" name="org_type" placeholder="Private, NGO, Government... (optional)" autocomplete="off">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="inputSector">Sector</label>
+                                            <input class="form-control" type="text" id="inputSector" name="sector" placeholder="Finance, Health, Tech... (optional)" autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white">
+                                    <button class="btn btn-primary btn-lg px-4" type="submit">
+                                        <i class="fa fa-plus mr-1"></i>Create Organisation
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="form-group">
-                        <label for="inputName">Name:</label>
-                        <input class="form-control" type="text" id="inputName" name="name" placeholder="Name" autocomplete="off" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="inputDescription">Description:</label>
-                        <input class="form-control" type="text" id="inputDescription" name="description" placeholder="Description - (optional)" autocomplete="off">
-                    </div>
-
-                    <button class="btn btn-lg btn-primary btn-block mt-3" type="submit">Submit</button>
-                </form>
+                </div>
 
     	    </div>
 		</div>

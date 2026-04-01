@@ -527,7 +527,10 @@ def organisation_edit():
 @login_admin
 def create_organisation():
     meta = {}
-    return render_template("create_org.html", meta=meta, error_mail=False, acl_admin=True)
+    nationality_selector = ail_orgs.get_nationality_selector()
+    return render_template("create_org.html", meta=meta,
+                           nationality_selector=nationality_selector,
+                           acl_admin=True)
 
 @settings_b.route("/settings/create_org_post", methods=['POST'])
 @login_required
@@ -539,8 +542,12 @@ def create_org_post():
     org_uuid = request.form.get('uuid')
     name = request.form.get('name')
     description = request.form.get('description')
+    nationality = request.form.get('nationality')
+    sector = request.form.get('sector')
+    org_type = request.form.get('org_type')
 
-    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], request.user_agent, description=description)
+    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], request.user_agent,
+                                description=description, nationality=nationality, sector=sector, org_type=org_type)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
