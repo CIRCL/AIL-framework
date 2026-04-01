@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+import pycountry
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
@@ -470,7 +471,25 @@ def users_list():
 def organisations_list():
     meta = ail_orgs.api_get_orgs_meta()
     nb_regions = ail_orgs.get_nb_regions()
-    return render_template("orgs_list.html", meta=meta, nb_regions=nb_regions, acl_admin=True)
+    special_regions = set(ail_orgs.SPECIAL_NATIONALITIES.keys())
+    regions_country_map = {}
+    special_region_stats = {}
+    for org in meta.get('orgs', []):
+        nationality = org.get('nationality')
+        if not nationality:
+            continue
+        if nationality in special_regions:
+            special_region_stats[nationality] = special_region_stats.get(nationality, 0) + 1
+            continue
+        country = pycountry.countries.get(name=nationality)
+        if country:
+            country_name = country.name
+            regions_country_map[country_name] = regions_country_map.get(country_name, 0) + 1
+
+    return render_template("orgs_list.html", meta=meta, nb_regions=nb_regions,
+                           country_region_stats=regions_country_map,
+                           special_region_stats=special_region_stats,
+                           acl_admin=True)
 
 @settings_b.route("/settings/organisation", methods=['GET'])
 @login_required
