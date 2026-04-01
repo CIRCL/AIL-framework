@@ -3,6 +3,7 @@
 
 import os
 import sys
+import pycountry
 
 from datetime import datetime
 
@@ -26,6 +27,116 @@ r_data = config_loader.get_db_conn("Kvrocks_DB")  # TODO MOVE DEFAULT DB
 # r_cache = config_loader.get_redis_conn("Redis_Cache")
 
 config_loader = None
+
+
+SPECIAL_NATIONALITIES = {
+    'europe': {
+        'name': 'Europe',
+        'flag': '🇪🇺'
+    },
+    'international': {
+        'name': 'International',
+        'flag': None
+    }
+}
+
+
+def _country_code_to_flag(country_code):
+    if not country_code or len(country_code) != 2:
+        return None
+    code = country_code.upper()
+    if not code.isalpha():
+        return None
+    return ''.join(chr(127397 + ord(char)) for char in code)
+
+
+def _get_country_from_value(value):
+    if not value:
+        return None
+    normalized_value = value.strip()
+    if not normalized_value:
+        return None
+
+    if len(normalized_value) == 2:
+        country = pycountry.countries.get(alpha_2=normalized_value.upper())
+        if country:
+            return country
+    if len(normalized_value) == 3:
+        country = pycountry.countries.get(alpha_3=normalized_value.upper())
+        if country:
+            return country
+
+    lowered_value = normalized_value.lower()
+    for country in pycountry.countries:
+        names = {
+            country.name.lower(),
+            getattr(country, 'official_name', '').lower(),
+            getattr(country, 'common_name', '').lower()
+        }
+        if lowered_value in names:
+            return country
+    return None
+
+
+def normalize_nationality(nationality):
+    if nationality is None:
+        return None
+    nationality = nationality.strip()
+    if not nationality:
+        return ''
+
+    lowered_nationality = nationality.lower()
+    if lowered_nationality in SPECIAL_NATIONALITIES:
+        return lowered_nationality
+    for key, special in SPECIAL_NATIONALITIES.items():
+        if lowered_nationality == special['name'].lower():
+            return key
+
+    country = _get_country_from_value(nationality)
+    if country:
+        return country.alpha_2
+
+    return nationality
+
+
+def format_nationality(nationality):
+    if nationality is None:
+        return None
+    nationality = nationality.strip()
+    if not nationality:
+        return None
+
+    lowered_nationality = nationality.lower()
+    if lowered_nationality in SPECIAL_NATIONALITIES:
+        special = SPECIAL_NATIONALITIES[lowered_nationality]
+        if special['flag']:
+            return f"{special['flag']} {special['name']}"
+        return special['name']
+
+    country = _get_country_from_value(nationality)
+    if country:
+        country_name = country.name
+        country_flag = getattr(country, 'flag', None) or _country_code_to_flag(country.alpha_2)
+        if country_flag:
+            return f"{country_flag} {country_name}"
+        return country_name
+    return nationality
+
+
+def get_nationality_selector():
+    options = []
+    for key, special in SPECIAL_NATIONALITIES.items():
+        label = special['name']
+        if special['flag']:
+            label = f"{special['flag']} {label}"
+        options.append({'value': key, 'name': special['name'], 'label': label})
+
+    countries = sorted(pycountry.countries, key=lambda country: country.name)
+    for country in countries:
+        flag = getattr(country, 'flag', None) or _country_code_to_flag(country.alpha_2)
+        label = f"{flag} {country.name}" if flag else country.name
+        options.append({'value': country.alpha_2, 'name': country.name, 'label': label})
+    return options
 
 # #### PART OF ORGANISATION ####
 # from abc import ABC, abstractmethod
@@ -192,6 +303,7 @@ class Organisation:
             meta['last_edit'] = self._get_field('date_modified')
         if 'nationality' in options:
             meta['nationality'] = self.get_nationality()
+            meta['nationality_display'] = format_nationality(meta['nationality'])
         if 'users' in options:
             meta['users'] = self.get_users()
         if 'nb_users' in options:
@@ -388,7 +500,7 @@ def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
 
 def api_get_orgs_meta():
     meta = {'orgs': [], 'active': get_nb_active_orgs()}
-    options = {'date_created', 'description', 'name', 'nb_users'}
+    options = {'date_created', 'description', 'name', 'nb_users', 'nationality'}
     for org_uuid in get_orgs():
         org = Organisation(org_uuid)
         meta['orgs'].append(org.get_meta(options=options))
@@ -430,7 +542,7 @@ def api_edit_org(data, admin_id, ip_address, user_agent):
         description = description.strip()
     nationality = data.get('nationality')
     if nationality is not None:
-        nationality = nationality.strip()
+        nationality = normalize_nationality(nationality)
     sector = data.get('sector')
     if sector is not None:
         sector = sector.strip()

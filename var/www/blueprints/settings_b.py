@@ -515,7 +515,12 @@ def organisation_edit():
         meta, r = ail_orgs.api_get_org_meta(org_uuid)
         if r != 200:
             return create_json_response(meta, r)
-        return render_template("edit_org.html", meta=meta, acl_admin=True)
+        nationality_selector = ail_orgs.get_nationality_selector()
+        nationality_values = {country['value'] for country in nationality_selector}
+        return render_template("edit_org.html", meta=meta,
+                               nationality_selector=nationality_selector,
+                               nationality_unknown=bool(meta.get('nationality')) and meta.get('nationality') not in nationality_values,
+                               acl_admin=True)
 
 @settings_b.route("/settings/create_organisation", methods=['GET'])
 @login_required
