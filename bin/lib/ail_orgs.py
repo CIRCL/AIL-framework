@@ -30,11 +30,11 @@ config_loader = None
 
 
 SPECIAL_NATIONALITIES = {
-    'europe': {
+    'Europe': {
         'name': 'Europe',
         'flag': '🇪🇺'
     },
-    'international': {
+    'International': {
         'name': 'International',
         'flag': '🌍'
     }
@@ -55,9 +55,8 @@ def normalize_nationality(nationality):
     nationality = nationality.strip()
     if not nationality:
         return ''
-    lowered_nationality = nationality.lower()
-    if lowered_nationality in SPECIAL_NATIONALITIES:
-        return SPECIAL_NATIONALITIES[lowered_nationality]['name']
+    if nationality in SPECIAL_NATIONALITIES:
+        return SPECIAL_NATIONALITIES[nationality]['name']
 
     country = pycountry.countries.get(name=nationality)
     if country:
