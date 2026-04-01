@@ -14,8 +14,12 @@
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    {% if nb_regions > 0 %}
+    <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/world.js')}}"></script>
+    {% endif %}
     <style>
         .orgs-page-title {
             display: flex;
@@ -118,6 +122,38 @@
         #tableorgs td {
             vertical-align: middle;
         }
+        .orgs-map-card {
+            border: 1px solid #e9ecef;
+            border-radius: .5rem;
+            background: #fff;
+            padding: .9rem 1rem;
+            margin-bottom: .9rem;
+        }
+        .orgs-map-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: .25rem;
+        }
+        .orgs-map-subtitle {
+            color: #6c757d;
+            font-size: .9rem;
+            margin-bottom: .7rem;
+        }
+        .orgs-map-chart {
+            width: 100%;
+            height: 420px;
+        }
+        .orgs-special-regions {
+            margin-top: .75rem;
+            padding-top: .65rem;
+            border-top: 1px dashed #e3e7eb;
+            color: #495057;
+            font-size: .92rem;
+        }
+        .orgs-special-regions ul {
+            margin-bottom: 0;
+            padding-left: 1rem;
+        }
     </style>
 
 </head>
@@ -166,6 +202,24 @@
                         </div>
                     </div>
                 </div>
+
+                {% if nb_regions > 0 %}
+                    <div class="orgs-map-card">
+                        <div class="orgs-map-title">Organisations by Country</div>
+                        <div class="orgs-map-subtitle">Only country nationalities are plotted on the world map.</div>
+                        <div id="orgs-world-map" class="orgs-map-chart"></div>
+                        {% if special_region_stats %}
+                            <div class="orgs-special-regions">
+                                <strong>Special regions (not plotted on map):</strong>
+                                <ul>
+                                    {% for region, count in special_region_stats|dictsort %}
+                                        <li>{{ region }}: {{ count }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
 
                 <div class="orgs-table-wrap mb-3">
                     <table id="tableorgs" class="table table-hover table-striped mb-0">
@@ -274,6 +328,57 @@ $(document).ready(function(){
             .attr('href', $link.attr('href'));
         $('#actionConfirmModal').modal('show');
     });
+
+    {% if nb_regions > 0 %}
+    if (typeof echarts !== 'undefined') {
+        const countryStats = {{ country_region_stats|tojson }};
+        const countryData = Object.keys(countryStats).map(function(countryName) {
+            return {
+                name: countryName,
+                value: countryStats[countryName]
+            };
+        });
+        const worldMapElement = document.getElementById('orgs-world-map');
+        if (worldMapElement) {
+            const worldMapChart = echarts.init(worldMapElement);
+            worldMapChart.setOption({
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function(params) {
+                        const value = params.value || 0;
+                        return params.name + ': ' + value + ' organisation(s)';
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: countryData.length ? Math.max.apply(Math, countryData.map(function(entry) { return entry.value; })) : 1,
+                    left: 'left',
+                    bottom: 10,
+                    text: ['More', 'Less'],
+                    calculable: true,
+                    inRange: {
+                        color: ['#e6f2ff', '#77a8e8', '#1f5ea8']
+                    }
+                },
+                series: [{
+                    name: 'Organisations',
+                    type: 'map',
+                    map: 'world',
+                    roam: true,
+                    emphasis: {
+                        label: {
+                            show: true
+                        }
+                    },
+                    data: countryData
+                }]
+            });
+            window.addEventListener('resize', function() {
+                worldMapChart.resize();
+            });
+        }
+    }
+    {% endif %}
 });
 
 function toggle_sidebar(){
