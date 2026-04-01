@@ -480,14 +480,23 @@ def api_get_org_meta(org_uuid):
     meta = org.get_meta(options={'date_created', 'creator', 'description', 'last_edit', 'name', 'nationality', 'nb_users', 'org_type', 'sector', 'users'})
     return meta, 200
 
-def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):
+def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None, nationality=None, sector=None, org_type=None):
     if not is_valid_uuid_v4(org_uuid):
         return {'status': 'error', 'reason': 'Invalid UUID'}, 400
     if exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Org already exists'}, 400
 
+    if description is not None:
+        description = description.strip()
+    if nationality is not None:
+        nationality = normalize_nationality(nationality)
+    if sector is not None:
+        sector = sector.strip()
+    if org_type is not None:
+        org_type = org_type.strip()
+
     org = Organisation(org_uuid)
-    org.create(creator, name, description=description)
+    org.create(creator, name, description=description, nationality=nationality, sector=sector, org_type=org_type)
     access_logger.info(f'Created org {org_uuid}', extra={'user_id': creator, 'ip_address': ip_address, 'user_agent': user_agent})
     return org.get_uuid(), 200
 
