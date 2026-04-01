@@ -487,10 +487,35 @@ def organisation():
 @login_required
 @login_admin
 def organisation_edit():
+    org_uuid = request.args.get('uuid')
+    if not org_uuid:
+        return create_json_response({'status': 'error', 'reason': 'Missing UUID'}, 400)
+
     if request.method == 'POST':
-        pass
+        admin_id = current_user.get_user_id()
+        name = request.form.get('name')
+        description = request.form.get('description')
+        nationality = request.form.get('nationality')
+        sector = request.form.get('sector')
+        org_type = request.form.get('org_type')
+
+        data = {
+            'uuid': org_uuid,
+            'name': name,
+            'description': description,
+            'nationality': nationality,
+            'sector': sector,
+            'org_type': org_type
+        }
+        r = ail_orgs.api_edit_org(data, admin_id, request.access_route[0], request.user_agent)
+        if r[1] != 200:
+            return create_json_response(r[0], r[1])
+        return redirect(url_for('settings_b.organisation', uuid=org_uuid))
     else:
-        pass
+        meta, r = ail_orgs.api_get_org_meta(org_uuid)
+        if r != 200:
+            return create_json_response(meta, r)
+        return render_template("edit_org.html", meta=meta, acl_admin=True)
 
 @settings_b.route("/settings/create_organisation", methods=['GET'])
 @login_required
@@ -649,4 +674,3 @@ def passive_ssh_test():
 #     else:
 #         send = request.args.get('send')
 #         return render_template("email_users.html", send=send, acl_admin=acl_admin)
-

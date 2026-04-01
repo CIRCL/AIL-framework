@@ -102,6 +102,9 @@
 							</p>
 						</div>
 						<div class="mt-3 mt-lg-0">
+							<a class="btn btn-outline-light mr-2" href="{{ url_for('settings_b.organisation_edit', uuid=meta['uuid']) }}" title="Edit organisation">
+								<i class="fas fa-edit"></i> Edit
+							</a>
 							<span class="badge badge-light px-3 py-2">
 								UUID: {{ meta['uuid'] }}
 							</span>
