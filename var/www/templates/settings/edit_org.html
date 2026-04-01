@@ -44,7 +44,18 @@
 
                     <div class="form-group">
                         <label for="inputNationality">Nationality:</label>
-                        <input class="form-control" type="text" id="inputNationality" name="nationality" placeholder="Nationality - (optional)" value="{{ meta['nationality'] if meta['nationality'] else '' }}" autocomplete="off">
+                        <select class="form-control" id="inputNationality" name="nationality">
+                            <option value="">-- Select a country or region --</option>
+                            {% for nationality in nationality_selector %}
+                                <option value="{{ nationality['value'] }}"
+                                    {% if meta['nationality'] and meta['nationality'] == nationality['value'] %}selected{% endif %}>
+                                    {{ nationality['label'] }}
+                                </option>
+                            {% endfor %}
+                            {% if nationality_unknown %}
+                                <option value="{{ meta['nationality'] }}" selected>{{ meta['nationality'] }}</option>
+                            {% endif %}
+                        </select>
                     </div>
 
                     <div class="form-group">
