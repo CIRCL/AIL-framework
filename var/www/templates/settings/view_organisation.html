@@ -153,6 +153,18 @@
 							</div>
 						</div>
 						<div class="row org-meta-row">
+							<div class="col-12 col-md-3 org-meta-key">Nationality</div>
+							<div class="col-12 col-md-9 org-meta-value">
+								{% if meta['nationality_display'] %}
+									{{ meta['nationality_display'] }}
+								{% elif meta['nationality'] %}
+									{{ meta['nationality'] }}
+								{% else %}
+									<span class="org-empty">Not set.</span>
+								{% endif %}
+							</div>
+						</div>
+						<div class="row org-meta-row">
 							<div class="col-12 col-md-3 org-meta-key">Tags</div>
 							<div class="col-12 col-md-9 org-meta-value">
 								{% if meta['tags'] %}
