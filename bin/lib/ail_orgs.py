@@ -477,7 +477,7 @@ def api_get_org_meta(org_uuid):
     if not exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Unknown org'}, 404
     org = Organisation(org_uuid)
-    meta = org.get_meta(options={'date_created', 'description', 'name', 'users', 'nb_users', 'creator', 'nationality', 'sector', 'org_type'})
+    meta = org.get_meta(options={'date_created', 'creator', 'description', 'last_edit', 'name', 'nationality', 'nb_users', 'org_type', 'sector', 'users'})
     return meta, 200
 
 def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):

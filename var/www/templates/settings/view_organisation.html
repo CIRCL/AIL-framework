@@ -166,8 +166,6 @@
 								<div class="org-meta-grid-value">
 									{% if meta['last_edit'] %}
 										{{ meta['last_edit'] }}
-									{% else %}
-										<span class="org-empty">Never updated.</span>
 									{% endif %}
 								</div>
 							</div>
@@ -183,7 +181,7 @@
 									{% elif meta['nationality'] %}
 										{{ meta['nationality'] }}
 									{% else %}
-										<span class="org-empty">Not set.</span>
+										<span class="org-empty">-</span>
 									{% endif %}
 								</div>
 							</div>
@@ -197,7 +195,7 @@
 									{% if meta['org_type'] %}
 										{{ meta['org_type'] }}
 									{% else %}
-										<span class="org-empty">Not set.</span>
+										<span class="org-empty">-</span>
 									{% endif %}
 								</div>
 							</div>
@@ -211,7 +209,7 @@
 									{% if meta['sector'] %}
 										{{ meta['sector'] }}
 									{% else %}
-										<span class="org-empty">Not set.</span>
+										<span class="org-empty">-</span>
 									{% endif %}
 								</div>
 							</div>
