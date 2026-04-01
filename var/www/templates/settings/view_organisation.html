@@ -49,6 +49,25 @@
 			border-radius: 0.6rem;
 			box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
 		}
+		.org-meta-grid-card {
+			border: 1px solid #e5e7eb;
+			border-radius: 0.6rem;
+			box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+			height: 100%;
+		}
+		.org-meta-grid-label {
+			font-size: .78rem;
+			text-transform: uppercase;
+			letter-spacing: .04em;
+			color: #64748b;
+			margin-bottom: .35rem;
+		}
+		.org-meta-grid-value {
+			font-size: 1rem;
+			font-weight: 600;
+			color: #0f172a;
+			word-break: break-word;
+		}
 		.org-meta-row {
 			padding: .8rem 0;
 			border-bottom: 1px solid #eef2f7;
@@ -132,8 +151,69 @@
 					<div class="col-12 col-md-4 mb-3">
 						<div class="card org-stat-card h-100">
 							<div class="card-body">
-								<div class="org-stat-label">Created</div>
+								<div class="org-stat-label">Created at</div>
 								<div class="org-stat-value">{{ meta['date_created'] }}</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="row my-1">
+					<div class="col-12 col-md-6 col-xl-3 mb-3">
+						<div class="card org-meta-grid-card">
+							<div class="card-body">
+								<div class="org-meta-grid-label">Last edit</div>
+								<div class="org-meta-grid-value">
+									{% if meta['last_edit'] %}
+										{{ meta['last_edit'] }}
+									{% else %}
+										<span class="org-empty">Never updated.</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-xl-3 mb-3">
+						<div class="card org-meta-grid-card">
+							<div class="card-body">
+								<div class="org-meta-grid-label">Nationality</div>
+								<div class="org-meta-grid-value">
+									{% if meta['nationality_display'] %}
+										{{ meta['nationality_display'] }}
+									{% elif meta['nationality'] %}
+										{{ meta['nationality'] }}
+									{% else %}
+										<span class="org-empty">Not set.</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-xl-3 mb-3">
+						<div class="card org-meta-grid-card">
+							<div class="card-body">
+								<div class="org-meta-grid-label">Organisation type</div>
+								<div class="org-meta-grid-value">
+									{% if meta['org_type'] %}
+										{{ meta['org_type'] }}
+									{% else %}
+										<span class="org-empty">Not set.</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-xl-3 mb-3">
+						<div class="card org-meta-grid-card">
+							<div class="card-body">
+								<div class="org-meta-grid-label">Sector</div>
+								<div class="org-meta-grid-value">
+									{% if meta['sector'] %}
+										{{ meta['sector'] }}
+									{% else %}
+										<span class="org-empty">Not set.</span>
+									{% endif %}
+								</div>
 							</div>
 						</div>
 					</div>
@@ -149,18 +229,6 @@
 									{{ meta['description'] }}
 								{% else %}
 									<span class="org-empty">No description provided.</span>
-								{% endif %}
-							</div>
-						</div>
-						<div class="row org-meta-row">
-							<div class="col-12 col-md-3 org-meta-key">Nationality</div>
-							<div class="col-12 col-md-9 org-meta-value">
-								{% if meta['nationality_display'] %}
-									{{ meta['nationality_display'] }}
-								{% elif meta['nationality'] %}
-									{{ meta['nationality'] }}
-								{% else %}
-									<span class="org-empty">Not set.</span>
 								{% endif %}
 							</div>
 						</div>
