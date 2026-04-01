@@ -192,6 +192,11 @@
                                 </td>
                                 <td>
                                     <div class="orgs-actions-group">
+                                        <a class="btn btn-outline-primary px-2 py-0"
+                                           href="{{ url_for('settings_b.organisation_edit', uuid=org['uuid']) }}"
+                                           title="Edit organisation">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
                                         <a class="btn btn-outline-danger px-2 py-0 confirm-action"
                                            href="{{ url_for('settings_b.delete_org', uuid=org['uuid']) }}"
                                            title="Delete organisation"

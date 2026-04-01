@@ -244,16 +244,28 @@ class Organisation:
         self._set_field('date_modified', current)
 
     def edit(self, name=None, description=None, nationality=None, sector=None, org_type=None, logo=None, tags=[]):
-        if name:
+        if name is not None:
             self.set_name(name)
-        if description:
-            self.set_description(description)
-        if nationality:
-            self.set_nationality(nationality)
-        if sector:
-            self.set_sector(sector)
-        if org_type:
-            self.set_org_type(org_type)
+        if description is not None:
+            if description:
+                self.set_description(description)
+            else:
+                r_serv_db.hdel(f'ail:org:{self.uuid}', 'description')
+        if nationality is not None:
+            if nationality:
+                self.set_nationality(nationality)
+            else:
+                r_serv_db.hdel(f'ail:org:{self.uuid}', 'nationality')
+        if sector is not None:
+            if sector:
+                self.set_sector(sector)
+            else:
+                r_serv_db.hdel(f'ail:org:{self.uuid}', 'sector')
+        if org_type is not None:
+            if org_type:
+                self.set_org_type(org_type)
+            else:
+                r_serv_db.hdel(f'ail:org:{self.uuid}', 'type')
         # if tags:
         #     nb_tags = r_serv_db.scard(f'ail:org:{self.uuid}:tags')
         #     if nb_tags > 0 or tags:
@@ -388,7 +400,7 @@ def api_get_org_meta(org_uuid):
     if not exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Unknown org'}, 404
     org = Organisation(org_uuid)
-    meta = org.get_meta(options={'date_created', 'date_created', 'description', 'name', 'users', 'nb_users'})
+    meta = org.get_meta(options={'date_created', 'description', 'name', 'users', 'nb_users', 'creator', 'nationality', 'sector', 'org_type'})
     return meta, 200
 
 def api_create_org(creator, org_uuid, name, ip_address, user_agent, description=None):
@@ -407,10 +419,24 @@ def api_edit_org(data, admin_id, ip_address, user_agent):
     if not exists_org(org_uuid):
         return {'status': 'error', 'reason': 'Org not found'}, 404
     name = data.get('name')
+    if name is None:
+        return {'status': 'error', 'reason': 'Invalid org name'}, 400
+    name = name.strip()
+    if not name:
+        return {'status': 'error', 'reason': 'Invalid org name'}, 400
+
     description = data.get('description')
+    if description is not None:
+        description = description.strip()
     nationality = data.get('nationality')
+    if nationality is not None:
+        nationality = nationality.strip()
     sector = data.get('sector')
+    if sector is not None:
+        sector = sector.strip()
     org_type = data.get('org_type')
+    if org_type is not None:
+        org_type = org_type.strip()
     org = Organisation(org_uuid)
     org.edit(name=name, description=description, nationality=nationality, sector=sector, org_type=org_type)
     access_logger.warning(f'Edited org {org_uuid}', extra={'user_id': admin_id, 'ip_address': ip_address, 'user_agent': user_agent})
