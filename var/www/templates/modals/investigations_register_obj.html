@@ -90,11 +90,10 @@ function reloadInvestigationsSelector(resetSelection) {
 }
 
 $('#investigations_register_obj_modal').on('shown.bs.modal', function () {
-  $('#inv_obj_comment').val('');
-  reloadInvestigationsSelector(true);
+  reloadInvestigationsSelector(false);
 });
 
-$('#linvestigations').on('focus', function () {
+$('#linvestigations').on('focus click', function () {
   reloadInvestigationsSelector(false);
 });
 
