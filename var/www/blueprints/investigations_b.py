@@ -242,6 +242,8 @@ def register_investigation():
         res = Investigations.api_register_object(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
+    if request.referrer:
+        return redirect(request.referrer)
     return redirect(url_for('investigations_b.investigations_dashboard'))
 
 @investigations_b.route("/investigation/object/unregister", methods=['GET'])
