@@ -16,6 +16,7 @@
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
 
 </head>
 <body>
@@ -58,6 +59,39 @@
                             </li>
                         </ul>
 
+                    </div>
+                </div>
+
+                <div class="card my-3">
+                    <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
+                        <h5 class="text-secondary mb-0"><i class="fas fa-chart-pie"></i> Language analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if language_distribution %}
+                            <div class="row">
+                                <div class="col-12 col-lg-6">
+                                    <div id="instance-language-pie" style="width: 100%;height: 320px;"></div>
+                                </div>
+                                <div class="col-12 col-lg-6">
+                                    <label for="languageFilter" class="font-weight-bold">Filter chats by language(s)</label>
+                                    <select id="languageFilter" class="form-control" multiple size="12">
+                                        {% for language in available_languages %}
+                                            <option value="{{ language['code'] }}">{{ language['label'] }} ({{ language['code'] }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Use Ctrl/Cmd + click to select multiple languages. The chart is visual only.</small>
+                                    <div class="mt-2">
+                                        <button class="btn btn-outline-secondary btn-sm" id="clearLanguageFilters" type="button">Clear language filters</button>
+                                    </div>
+                                    <div class="mt-2" id="activeLanguageFilters"></div>
+                                    <div class="mt-2 text-muted" id="languageFilterSummary"></div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                No language metadata is available for this chat subtype yet.
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -124,11 +158,122 @@
         $("#page-Decoded").addClass("active");
         $("#nav_explorer_chat").addClass("active");
 
-        $('#tablechats').DataTable({
+        const chatLanguagesById = {};
+        {% for chat in chat_instance["chats"] %}
+            chatLanguagesById[{{ chat['id']|tojson }}] = {{ chat.get('languages', [])|tojson }};
+        {% endfor %}
+
+        const languageLabels = {};
+        {% for language in available_languages %}
+            languageLabels[{{ language['code']|tojson }}] = {{ language['label']|tojson }};
+        {% endfor %}
+
+        let selectedLanguages = [];
+        $.fn.dataTable.ext.search.push(function(settings, data) {
+            if (settings.nTable.id !== 'tablechats') {
+                return true;
+            }
+            if (!selectedLanguages.length) {
+                return true;
+            }
+            const chatId = data[1];
+            const languages = chatLanguagesById[chatId] || [];
+            return selectedLanguages.some((language) => languages.includes(language));
+        });
+
+        const table = $('#tablechats').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
             "order": [[ 6, "desc" ]]
         });
+
+        function updateLanguageFilterState() {
+            const selectedOptions = Array.from(document.getElementById('languageFilter')?.selectedOptions || []);
+            selectedLanguages = selectedOptions.map(option => option.value);
+            const summaryElt = document.getElementById('languageFilterSummary');
+            const activeElt = document.getElementById('activeLanguageFilters');
+
+            if (summaryElt) {
+                const nbRows = table.rows({ filter: 'applied' }).count();
+                if (!selectedLanguages.length) {
+                    summaryElt.textContent = `Showing all chats for this subtype (${nbRows} rows).`;
+                } else {
+                    summaryElt.textContent = `Showing ${nbRows} chats for ${selectedLanguages.length} selected language(s).`;
+                }
+            }
+
+            if (activeElt) {
+                activeElt.innerHTML = '';
+                selectedLanguages.forEach((language) => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge badge-info mr-1';
+                    badge.textContent = `${languageLabels[language] || 'Unknown'} (${language})`;
+                    activeElt.appendChild(badge);
+                });
+            }
+        }
+
+        const languageFilter = document.getElementById('languageFilter');
+        if (languageFilter) {
+            languageFilter.addEventListener('change', function() {
+                updateLanguageFilterState();
+                table.draw();
+            });
+        }
+
+        const clearFiltersButton = document.getElementById('clearLanguageFilters');
+        if (clearFiltersButton) {
+            clearFiltersButton.addEventListener('click', function() {
+                if (!languageFilter) return;
+                Array.from(languageFilter.options).forEach((opt) => {
+                    opt.selected = false;
+                });
+                updateLanguageFilterState();
+                table.draw();
+            });
+        }
+        updateLanguageFilterState();
+
+        const rawLanguageDistribution = {{ language_distribution|tojson }};
+        const chartContainer = document.getElementById('instance-language-pie');
+        if (chartContainer && rawLanguageDistribution.length) {
+            const totalCount = rawLanguageDistribution.reduce((acc, entry) => acc + entry.value, 0);
+            const chartData = [];
+            let otherCount = 0;
+            rawLanguageDistribution.forEach((entry) => {
+                const ratio = totalCount ? (entry.value / totalCount) : 0;
+                if (rawLanguageDistribution.length > 12 && ratio < 0.02) {
+                    otherCount += entry.value;
+                } else {
+                    chartData.push({name: `${entry.label} (${entry.code})`, value: entry.value});
+                }
+            });
+            if (otherCount > 0) {
+                chartData.push({name: 'Other languages', value: otherCount});
+            }
+
+            const languagePieChart = echarts.init(chartContainer);
+            window.addEventListener('resize', function() {
+                languagePieChart.resize();
+            });
+            languagePieChart.setOption({
+                tooltip: { trigger: 'item' },
+                legend: { top: '5%', left: 'center', type: 'scroll' },
+                series: [{
+                    name: 'Chat containers',
+                    type: 'pie',
+                    radius: ['35%', '70%'],
+                    avoidLabelOverlap: true,
+                    itemStyle: {
+                        borderRadius: 8,
+                        borderColor: '#fff',
+                        borderWidth: 1
+                    },
+                    label: { formatter: '{b}: {c}' },
+                    data: chartData
+                }]
+            });
+        }
   });
 
 function toggle_sidebar(){
