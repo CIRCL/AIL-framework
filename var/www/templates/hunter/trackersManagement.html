@@ -116,6 +116,26 @@
             margin-top: 0.35rem;
         }
 
+        .summary-anchor {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            border-radius: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .summary-anchor:hover,
+        .summary-anchor:focus {
+            color: inherit;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 0.75rem 1.5rem rgba(24, 39, 75, 0.12);
+        }
+
+        .tracker-anchor-target {
+            scroll-margin-top: 1.5rem;
+        }
+
         .tracker-section .card-header {
             background-color: #fff;
             border-bottom: 1px solid #e9eef5;
@@ -298,8 +318,8 @@
     {% endfor %}
 {% endmacro %}
 
-{% macro render_tracker_section(table_id, title, subtitle, description, trackers, empty_title, empty_text) %}
-    <div class="card tracker-section my-3">
+{% macro render_tracker_section(table_id, section_id, title, subtitle, description, trackers, empty_title, empty_text) %}
+    <div id="{{ section_id }}" class="card tracker-section my-3 tracker-anchor-target">
         <div class="card-header d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
             <div>
                 <div class="section-kicker">{{ subtitle }}</div>
@@ -417,38 +437,45 @@
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card summary-card h-100">
+                    <a class="summary-anchor h-100" href="#your-trackers-section" aria-label="Jump to Your trackers section">
+                        <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value">{{ user_count }}</div>
                             <div class="summary-label">Your trackers</div>
                             <div class="summary-help">Trackers created for your own use.</div>
                         </div>
                     </div>
+                    </a>
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card summary-card h-100">
+                    <a class="summary-anchor h-100" href="#organisation-trackers-section" aria-label="Jump to Organisation trackers section">
+                        <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value">{{ org_count }}</div>
                             <div class="summary-label">Organisation trackers</div>
                             <div class="summary-help">Trackers shared with your organisation.</div>
                         </div>
                     </div>
+                    </a>
                 </div>
 
                 <div class="col-12 col-md-6 col-xl-3 mb-3">
-                    <div class="card summary-card h-100">
+                    <a class="summary-anchor h-100" href="#global-trackers-section" aria-label="Jump to Global trackers section">
+                        <div class="card summary-card h-100">
                         <div class="card-body">
                             <div class="summary-value">{{ global_count }}</div>
                             <div class="summary-label">Global trackers</div>
                             <div class="summary-help">Trackers available to all users.</div>
                         </div>
                     </div>
+                    </a>
                 </div>
             </div>
 
             {{ render_tracker_section(
                 'table_user_trackers',
+                'your-trackers-section',
                 'Your ' ~ tracker_type ~ ' trackers',
                 'Personal',
                 'These trackers are private to you unless shared separately.',
@@ -459,6 +486,7 @@
 
             {{ render_tracker_section(
                 'table_org_trackers',
+                'organisation-trackers-section',
                 'Organisation ' ~ tracker_type ~ ' trackers',
                 'Shared',
                 'These trackers are shared across your organisation.',
@@ -469,6 +497,7 @@
 
             {{ render_tracker_section(
                 'table_global_trackers',
+                'global-trackers-section',
                 'Global ' ~ tracker_type ~ ' trackers',
                 'Global',
                 'These trackers are available across the platform.',
