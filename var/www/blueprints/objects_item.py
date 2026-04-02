@@ -113,7 +113,7 @@ def showItem():  # # TODO: support post
             if not inv.check_level(user_org):
                 continue
 
-            invests.append(inv.get_metadata(r_str=True))
+            invests.append(inv.get_meta(r_str=True))
         meta['investigations'] = invests
     else:
         meta['investigations'] = []

@@ -77,7 +77,7 @@ def show_investigation():
     if res:
         return create_json_response(res[0], res[1])
 
-    metadata = investigation.get_metadata(r_str=True, options={'org_name'})
+    metadata = investigation.get_meta(r_str=True, options={'org_name'})
     objs = []
     for obj in investigation.get_objects():
         obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)
@@ -177,7 +177,7 @@ def edit_investigation():  # TODO CHECK ACL
     else:
         investigation_uuid = request.args.get('uuid')
         investigation = Investigations.Investigation(investigation_uuid)
-        metadata = investigation.get_metadata(r_str=False)
+        metadata = investigation.get_meta(r_str=False)
         taxonomies_tags, galaxies_tags = Tag.sort_tags_taxonomies_galaxies(metadata['tags'])
         tags_selector_data = Tag.get_tags_selector_data()
         tags_selector_data['taxonomies_tags'] = taxonomies_tags

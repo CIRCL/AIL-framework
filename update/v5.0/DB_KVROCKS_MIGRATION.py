@@ -259,7 +259,7 @@ def investigations_migration():
     print('INVESTIGATION MIGRATION...')
     for investigation_uuid in old_Investigations.get_all_investigations():
         old_investigation = old_Investigations.Investigation(investigation_uuid)
-        meta = old_investigation.get_metadata()
+        meta = old_investigation.get_meta()
         Investigations._re_create_investigation(meta['uuid'], get_ail_uuid(), meta['user_creator'], 1, meta['date'], meta['name'], meta['threat_level'], meta['analysis'], meta['info'], meta['tags'], meta['last_change'], meta['timestamp'], meta['misp_events'])
         new_investigation = Investigations.Investigation(meta['uuid'])
         for dict_obj in old_investigation.get_objects():
