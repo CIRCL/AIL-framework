@@ -746,6 +746,37 @@ def _delete_messages_languages():
     for message in get_messages_iterator():
         message.delete_languages()
 
+def print_messages_language_by_language(language):
+    for instance_uuid in sorted(get_chat_service_instances()):
+        chat_instance = ChatServiceInstance(instance_uuid)
+        for chat_id in chat_instance.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            chat_messages = chat.get_messages_by_lang(language)
+            if not chat_messages:
+                continue
+            for message_id in chat_messages:
+                message = Messages.Message(message_id)
+                print(message.get_content())
+
+def redetect_messages_language_by_language(language):
+    nb_chats = 0
+    nb_messages = 0
+    for instance_uuid in sorted(get_chat_service_instances()):
+        chat_instance = ChatServiceInstance(instance_uuid)
+        for chat_id in chat_instance.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            chat_messages = chat.get_messages_by_lang(language)
+            if not chat_messages:
+                continue
+            nb_chats += 1
+            for message_id in chat_messages:
+                message = Messages.Message(message_id)
+                if message.get_language() == language:
+                    message.detect_language()
+                    nb_messages += 1
+    return {'language': language, 'chats': nb_chats, 'messages': nb_messages}
+
+
 # TODO
 #   - Messages duplicates
 #   - Number of tracked messages by chat
