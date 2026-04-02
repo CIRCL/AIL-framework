@@ -454,7 +454,11 @@
                                     </td>
                                     <td>
                                         {% if object['last_full_date'] %}
-                                            {{ object['last_full_date']}}
+                                            {% if object['last_full_date'] | length == 8 %}
+                                                {{ object['last_full_date'][0:4] }}-{{ object['last_full_date'][4:6] }}-{{ object['last_full_date'][6:8] }}
+                                            {% endif %}
+                                                {{ object['last_full_date'] }}
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                     <td class="text-right">

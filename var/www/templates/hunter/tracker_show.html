@@ -522,6 +522,7 @@
 							<tr class="border-color: blue;"
                                 data-url-done="{{ url_for('hunters.tracker_object_status_done', uuid=meta['uuid'], gid=object['gid'] ) }}"
                                 data-url-rejected="{{ url_for('hunters.tracker_object_status_reject', uuid=meta['uuid'], gid=object['gid'] ) }}"
+                                data-url-read="{{ url_for('hunters.tracker_object_status_read', uuid=meta['uuid'], gid=object['gid'] ) }}">
                                 data-url-unread="{{ url_for('hunters.tracker_object_status_unread', uuid=meta['uuid'], gid=object['gid'] ) }}">
 								<td>
 									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
@@ -571,7 +572,11 @@
 
 								<td>
 									{% if object['last_full_date'] %}
-										{{ object['last_full_date']}}
+                                        {% if object['last_full_date'] | length == 8 %}
+                                            {{ object['last_full_date'][0:4] }}-{{ object['last_full_date'][4:6] }}-{{ object['last_full_date'][6:8] }}
+                                        {% endif %}
+										    {{ object['last_full_date'] }}
+                                        {% endif %}
 									{% endif %}
 								</td>
 								<td class="text-right">
