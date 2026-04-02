@@ -199,7 +199,7 @@ class ChatServiceInstance:
             for chat_id in self.get_chats_with_messages():
                 chat = Chats.Chat(chat_id, self.uuid)
                 chat_meta = chat.get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'})
-                chat_meta['languages'] = sorted(chat.get_languages())
+                chat_meta['languages'] = [lang_stat[0] for lang_stat in chat.get_obj_language_stats()]
                 meta['chats'].append(chat_meta)
         if 'languages' in options:
             meta['languages'] = Language.get_container_subtype_languages('chat', self.uuid)

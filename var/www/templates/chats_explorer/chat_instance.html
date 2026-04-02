@@ -111,7 +111,7 @@
                     </thead>
                     <tbody style="font-size: 15px;">
                     {% for chat in chat_instance["chats"] %}
-                        <tr>
+                        <tr data-chat-id="{{ chat['id'] }}">
                             <td>
                                 <img src="{% if chat['icon'] %}{{ url_for('objects_image.image', filename=chat['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
                                      class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
@@ -169,14 +169,15 @@
         {% endfor %}
 
         let selectedLanguages = [];
-        $.fn.dataTable.ext.search.push(function(settings, data) {
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
             if (settings.nTable.id !== 'tablechats') {
                 return true;
             }
             if (!selectedLanguages.length) {
                 return true;
             }
-            const chatId = data[1];
+            const rowNode = settings.aoData[dataIndex] ? settings.aoData[dataIndex].nTr : null;
+            const chatId = rowNode ? rowNode.getAttribute('data-chat-id') : null;
             const languages = chatLanguagesById[chatId] || [];
             return selectedLanguages.some((language) => languages.includes(language));
         });
