@@ -223,12 +223,10 @@
                 <div class="page-hero mt-3 p-4 p-lg-5 mb-4">
                     <div class="row align-items-center">
                         <div class="col-12 col-lg-8 mb-4 mb-lg-0">
-                            <span class="badge badge-light text-primary px-3 py-2 mb-3">Investigations</span>
                             <h2 class="mb-3 font-weight-bold">
                                 <i class="fas fa-microscope mr-1"></i> Investigations Dashboard
                             </h2>
-                            <p class="lead mb-1">Group related objects into a single analysis workspace for each case or research topic.</p>
-                            <small>Each investigation keeps context with a name and description, making reviews and collaboration easier.</small>
+                            <p class="lead mb-1">Investigations provide a shared workspace to organize relevant data for analysis and collaboration.</p>
                         </div>
                         <div class="col-12 col-lg-4 text-lg-right">
                             <a class="btn btn-light btn-lg px-4" href="{{ url_for('investigations_b.add_investigation') }}">
@@ -241,8 +239,8 @@
                         <div class="col-12 col-md-4 mb-3 mb-md-0">
                             <div class="hero-info-card text-center">
                                 <i class="fas fa-project-diagram fa-2x mb-3"></i>
-                                <h6>Case workspace</h6>
-                                <p class="mb-0">Collect all relevant objects and findings in one investigation.</p>
+                                <h6>Shared Case workspace</h6>
+                                <p class="mb-0">Group objects, findings, and context for better collaboration.</p>
                             </div>
                         </div>
 
@@ -282,7 +280,7 @@
                                 <div class="card-body">
                                     <div class="summary-value">{{ inv_global|length }}</div>
                                     <div class="summary-label">Global Investigations</div>
-                                    <div class="summary-help">Shared investigations from other organisations.</div>
+                                    <div class="summary-help">Investigations available to all users.</div>
                                 </div>
                             </div>
                         </a>
@@ -347,7 +345,7 @@
 
                 <div class="card investigation-section mb-3">
                     <div class="card-header">
-                        <div class="section-kicker">Shared Intelligence</div>
+                        <div class="section-kicker">Shared</div>
                         <h3 class="h5 mt-1 text-secondary mb-1">
                             <i class="fas fa-globe"></i> Global Investigations
                         </h3>
