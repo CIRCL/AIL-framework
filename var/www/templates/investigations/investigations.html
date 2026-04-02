@@ -246,8 +246,8 @@
                                                 {{ dict_investigation['org_name']}}<span hidden>{{ dict_investigation['org'] }}</span>
                                             </td>
                                         {% endif %}
-                                        <td>{{ dict_investigation['date'] or '<span class="muted-dash">—</span>'|safe }}</td>
-                                        <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>'|safe }}</td>
+                                        <td>{{ dict_investigation['date'] or '<span class="muted-dash">—</span>' }}</td>
+                                        <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>' }}</td>
                                         <td>{{ dict_investigation['nb_objects']}}</td>
                                     </tr>
                                 {% else %}
@@ -298,14 +298,13 @@
                                         </td>
                                         <td>
                                             {% if dict_investigation['org'] %}
-                                                <span class="meta-label">Organisation</span>
-                                                {{ dict_investigation['org_name']}}<span hidden>{{ dict_investigation['org'] }}</span>
+                                                {{ dict_investigation['org_name']}}{{ dict_investigation['org'] }}
                                             {% else %}
                                                 <span class="muted-dash">—</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ dict_investigation['date'] or '<span class="muted-dash">—</span>'|safe }}</td>
-                                        <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>'|safe }}</td>
+                                        <td>{{ dict_investigation['date'] or '<span class="muted-dash">—</span>' }}</td>
+                                        <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>' }}</td>
                                         <td>{{ dict_investigation['nb_objects']}}</td>
                                     </tr>
                                 {% else %}
