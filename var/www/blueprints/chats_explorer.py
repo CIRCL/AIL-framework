@@ -78,8 +78,30 @@ def chats_explorer_instance():
         return create_json_response(chat_instance[0], chat_instance[1])
     else:
         chat_instance = chat_instance[0]
+        language_distribution = []
+        for code, count in sorted(chat_instance.get('languages', {}).items(), key=lambda item: item[1], reverse=True):
+            language_distribution.append({
+                'code': code,
+                'label': Language.get_language_from_iso(code) or f'Unknown ({code})',
+                'value': int(count)
+            })
+
+        available_codes = {entry['code'] for entry in language_distribution}
+        for chat in chat_instance.get('chats', []):
+            for code in chat.get('languages', []):
+                available_codes.add(code)
+
+        available_languages = []
+        for code in sorted(available_codes):
+            available_languages.append({
+                'code': code,
+                'label': Language.get_language_from_iso(code) or f'Unknown ({code})'
+            })
+
         return render_template('chat_instance.html', chat_instance=chat_instance,
-                               bootstrap_label=bootstrap_label)
+                               bootstrap_label=bootstrap_label,
+                               language_distribution=language_distribution,
+                               available_languages=available_languages)
 
 @chats_explorer.route("chats/explorer/instances/languages/messages", methods=['GET'])
 @login_required
