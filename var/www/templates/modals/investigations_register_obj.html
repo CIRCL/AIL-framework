@@ -79,6 +79,9 @@ function reloadInvestigationsSelector(resetSelection) {
             name: 'linvestigations',
             emptyText: 'Search investigations'
           });
+          linvestigations.input.on('click', function () {
+            reloadInvestigationsSelector(false);
+          });
         } else {
           if (resetSelection) {
             linvestigations.removeFromSelection(linvestigations.getSelectedItems(), true);
@@ -90,10 +93,6 @@ function reloadInvestigationsSelector(resetSelection) {
 }
 
 $('#investigations_register_obj_modal').on('shown.bs.modal', function () {
-  reloadInvestigationsSelector(false);
-});
-
-$('#linvestigations').on('focus click', function () {
   reloadInvestigationsSelector(false);
 });
 
