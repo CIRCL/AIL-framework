@@ -33,27 +33,96 @@
             color: rgba(255, 255, 255, 0.9);
         }
 
-        .hero-metric {
-            background-color: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .hero-info-card {
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             border-radius: 0.85rem;
-            padding: 1rem;
+            padding: 1rem 1.1rem;
             height: 100%;
+            backdrop-filter: blur(2px);
         }
 
-        .hero-metric-label {
-            text-transform: uppercase;
+        .hero-info-card h6 {
+            font-size: 0.82rem;
             letter-spacing: 0.08em;
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.88);
+            text-transform: uppercase;
+            margin-bottom: 0.85rem;
+            color: #fff;
         }
 
-        .hero-metric-value {
-            font-size: 1.5rem;
+        .hero-info-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero-info-list li {
+            position: relative;
+            padding-left: 1.1rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .hero-info-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .hero-info-list li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.55rem;
+            width: 0.45rem;
+            height: 0.45rem;
+            border-radius: 50%;
+            background-color: #8fd3ff;
+        }
+
+        .summary-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 0.5rem 1.5rem rgba(24, 39, 75, 0.08);
+            background: #fff;
+        }
+
+        .summary-value {
+            font-size: 1.9rem;
             font-weight: 700;
-            line-height: 1.2;
-            color: #fff;
+            line-height: 1;
+            color: #1f2d3d;
+        }
+
+        .summary-label {
+            color: #6c7a89;
+            font-size: 0.95rem;
+            margin-top: 0.35rem;
+        }
+
+        .summary-help {
+            color: #8a94a3;
+            font-size: 0.82rem;
+            margin-top: 0.35rem;
+        }
+
+        .summary-anchor {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            border-radius: 1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .summary-anchor .summary-value,
+        .summary-anchor .summary-label,
+        .summary-anchor .summary-help {
+            color: inherit;
+        }
+
+        .summary-anchor:hover,
+        .summary-anchor:focus {
+            color: inherit;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 0.75rem 1.5rem rgba(24, 39, 75, 0.12);
         }
 
         .investigation-section {
@@ -178,32 +247,55 @@
             <div class="col-12 col-lg-10" id="core_content">
 
                 <div class="page-hero mt-3 p-3 p-md-4 mb-4">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
-                        <div class="mb-3 mb-lg-0 pr-lg-3">
+                    <div class="row align-items-stretch">
+                        <div class="col-12 col-lg-7 mb-3 mb-lg-0">
                             <h2 class="mb-2 font-weight-bold">
                                 <i class="fas fa-microscope mr-1"></i> Investigations Dashboard
                             </h2>
                             <p class="mb-1">Track your organisation investigations and browse shared global investigations.</p>
-                            <small>Open an investigation to review scope, context, timeline, and linked objects.</small>
+                            <small>Open an investigation to review scope, timeline, context, and linked objects.</small>
                         </div>
+                        <div class="col-12 col-lg-5">
+                            <div class="hero-info-card">
+                                <h6>What is an investigation?</h6>
+                                <ul class="hero-info-list">
+                                    <li>A collaborative workspace to collect related events and indicators.</li>
+                                    <li>Use tags and timeline updates to keep analysis structured and searchable.</li>
+                                    <li>Share globally when findings can help other organisations.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-right">
                         <a class="btn btn-light font-weight-semibold" href="{{ url_for('investigations_b.add_investigation') }}">
                             <i class="fas fa-plus"></i> Create Investigation
                         </a>
                     </div>
+                </div>
 
-                    <div class="row mt-3">
-                        <div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
-                            <div class="hero-metric">
-                                <span class="hero-metric-label">My Organisation</span>
-                                <div class="hero-metric-value">{{ inv_org|length }}</div>
+                <div class="row mb-4">
+                    <div class="col-12 col-md-6 mb-3 mb-md-0">
+                        <a class="summary-anchor text-dark" href="#table_investigation_wrapper">
+                            <div class="card summary-card">
+                                <div class="card-body">
+                                    <div class="summary-value">{{ inv_org|length }}</div>
+                                    <div class="summary-label">My Organisation Investigations</div>
+                                    <div class="summary-help">Investigations owned by your team.</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
-                            <div class="hero-metric">
-                                <span class="hero-metric-label">Global Shared</span>
-                                <div class="hero-metric-value">{{ inv_global|length }}</div>
+                        </a>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <a class="summary-anchor text-dark" href="#table_investigation_global_wrapper">
+                            <div class="card summary-card">
+                                <div class="card-body">
+                                    <div class="summary-value">{{ inv_global|length }}</div>
+                                    <div class="summary-label">Global Investigations</div>
+                                    <div class="summary-help">Shared investigations from other organisations.</div>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
