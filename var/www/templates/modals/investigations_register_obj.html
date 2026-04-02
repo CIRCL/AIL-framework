@@ -5,32 +5,61 @@
   <div class="modal-dialog modal-lg">
 
     <div id="investigations_register_obj_content" class="modal-content">
-      <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
-        <h4>Add to Investigations</h4>
-      </div>
-
-      <div class="modal-body">
-
-        <div class="input-group" >
-          <input id="linvestigations" type="text" class="form-control" autocomplete="off" style="width: 760px">
-        </div>
-        <div class="form- mt-2">
-            <label for="inv_obj_comment">Object Comment <i>(optional)</i>:</label>
-            <textarea class="form-control" id="inv_obj_comment" name="inv_obj_comment" rows="2"></textarea>
-        </div>
-
-      </div>
-
-      <div class="modal-footer">
-        <a class="btn btn-info" href="{{ url_for('investigations_b.add_investigation') }}" target="_blank">
-            <i class="fas fa-microscope"></i>
-            <span class="label-icon">Create Investigation </span>
-        </a>
-        <button class="btn btn-primary" onclick="Register_Obj()">
-            <i class="fas fa-plus"></i>
-            Add to Investigations
+      <div class="modal-header" style="border-bottom: 0; background: linear-gradient(90deg, #5b7bd5 0%, #4f67a3 100%); color: #ffffff;">
+        <h4 class="modal-title mb-0">
+          <i class="fas fa-layer-group mr-2"></i>
+          Add Object to Investigation
+        </h4>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
         </button>
-        <button type="button" class="btn btn-outline-dark" data-dismiss="modal" >Close</button>
+      </div>
+
+      <div class="modal-body pt-4 pb-3">
+        <p class="text-muted mb-3">
+          Select one or more investigations, then optionally add context so teammates immediately understand why this object is relevant.
+        </p>
+
+        <div class="form-group mb-3">
+          <label for="linvestigations" class="font-weight-bold mb-1">Investigation(s)</label>
+          <input
+            id="linvestigations"
+            type="text"
+            class="form-control"
+            autocomplete="off"
+            placeholder="Search and select investigations..."
+          >
+          <small class="form-text text-muted">Tip: You can select multiple investigations.</small>
+        </div>
+
+        <div class="form-group mb-0">
+          <label for="inv_obj_comment" class="font-weight-bold mb-1">
+            Comment <span class="font-italic font-weight-normal">(optional)</span>
+          </label>
+          <textarea
+            class="form-control"
+            id="inv_obj_comment"
+            name="inv_obj_comment"
+            rows="3"
+            placeholder="Add a note about why this object is being added..."
+          ></textarea>
+          <small class="form-text text-muted">This note will be attached to the object in the selected investigations.</small>
+        </div>
+
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <a class="btn btn-outline-info" href="{{ url_for('investigations_b.add_investigation') }}" target="_blank">
+            <i class="fas fa-microscope mr-1"></i>
+            <span class="label-icon">Create Investigation</span>
+        </a>
+        <div>
+          <button type="button" class="btn btn-outline-dark mr-2" data-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="Register_Obj()">
+            <i class="fas fa-plus mr-1"></i>
+            Add to Investigations
+          </button>
+        </div>
 
       </div>
     </div>
@@ -41,29 +70,34 @@
 var linvestigations;
 
 $('#investigations_register_obj_modal').on('shown.bs.modal', function () {
+  $('#inv_obj_comment').val('');
 
-  $.getJSON("{{ url_for('investigations_b.get_investigations_selector_json') }}",
-      function(data) {
-        console.log(data);
-
-        linvestigations = $('#linvestigations').tagSuggest({
-          data: data,
-          maxDropHeight: 200,
-          name: 'linvestigations',
-          emptyText: 'Select Investigations'
-        });
-      }
-  );
+  if (!linvestigations) {
+    $.getJSON("{{ url_for('investigations_b.get_investigations_selector_json') }}",
+        function(data) {
+          linvestigations = $('#linvestigations').tagSuggest({
+            data: data,
+            maxDropHeight: 200,
+            name: 'linvestigations',
+            emptyText: 'Search investigations'
+          });
+        }
+    );
+  }
 
 });
 
 function Register_Obj() {
     var uuids = linvestigations.getValue();
     var comment = $('#inv_obj_comment').val();
+    if (!uuids) {
+      alert('Please select at least one investigation.');
+      return;
+    }
     // TODO: REQUEST
-    var url = "{{ url_for('investigations_b.register_investigation') }}?uuids=" + uuids + "&type={{ obj_type }}&subtype={{ obj_subtype }}&id={{ obj_id }}"
+    var url = "{{ url_for('investigations_b.register_investigation') }}?uuids=" + encodeURIComponent(uuids) + "&type={{ obj_type }}&subtype={{ obj_subtype }}&id={{ obj_id }}"
     if (comment) {
-        url += "&comment=" + comment;
+        url += "&comment=" + encodeURIComponent(comment);
     }
     window.location.replace(url);
 }
