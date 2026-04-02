@@ -69,28 +69,39 @@
 <script>
 var linvestigations;
 
-$('#investigations_register_obj_modal').on('shown.bs.modal', function () {
-  $('#inv_obj_comment').val('');
-
-  if (!linvestigations) {
-    $.getJSON("{{ url_for('investigations_b.get_investigations_selector_json') }}",
-        function(data) {
+function reloadInvestigationsSelector(resetSelection) {
+  $.getJSON("{{ url_for('investigations_b.get_investigations_selector_json') }}",
+      function(data) {
+        if (!linvestigations) {
           linvestigations = $('#linvestigations').tagSuggest({
             data: data,
             maxDropHeight: 200,
             name: 'linvestigations',
             emptyText: 'Search investigations'
           });
+        } else {
+          if (resetSelection) {
+            linvestigations.removeFromSelection(linvestigations.getSelectedItems(), true);
+          }
+          linvestigations.setData(data);
         }
-    );
-  }
+      }
+  );
+}
 
+$('#investigations_register_obj_modal').on('shown.bs.modal', function () {
+  $('#inv_obj_comment').val('');
+  reloadInvestigationsSelector(true);
+});
+
+$('#linvestigations').on('focus', function () {
+  reloadInvestigationsSelector(false);
 });
 
 function Register_Obj() {
     var uuids = linvestigations.getValue();
     var comment = $('#inv_obj_comment').val();
-    if (!uuids) {
+    if (!uuids || uuids.length === 0) {
       alert('Please select at least one investigation.');
       return;
     }
