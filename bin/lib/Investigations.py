@@ -480,8 +480,12 @@ def api_add_investigation(json_dict):
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
 
+    # TODO TEMP
+    name = info
+    description = info
+
     try:
-        res = create_investigation(user_org, user_id, level, date, name, description, analysis, info, tags=tags)
+        res = create_investigation(user_org, user_id, level, date, name, description, analysis, tags=tags)
     except UpdateInvestigationError as e:
         return e.message, 400
     return res, 200
