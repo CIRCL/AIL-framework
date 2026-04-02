@@ -412,7 +412,10 @@
                         </thead>
                         <tbody>
                             {% for object in dict_task['objs'] %}
-                                <tr class="border-color: blue;">
+                                <tr class="border-color: blue;"
+                                    data-url-done="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] ) }}"
+                                    data-url-rejected="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] ) }}"
+                                    data-url-unread="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] ) }}">
                                     <td>
                                         {% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
                                             {% include 'objects/obj_svg_block.html' %}
@@ -455,38 +458,40 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-right">
+                                        <span class="status-action-container">
                                         {% if object['tracker_status'] == 'read' %}
-                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                            <a class="btn btn-outline-primary py-0 px-1 status-action" data-status-target="done" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
                                                 <i class="text-success fa-solid fa-check-to-slot"></i>
                                             </a>
-                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                            <a class="btn btn-outline-danger py-0 px-1 status-action" data-status-target="rejected" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
-                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                            <a class="btn btn-outline-info py-0 px-1 status-action" data-status-target="unread" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
                                                 <i class="fa-regular fa-eye-slash"></i>
                                             </a>
                                         {% elif object['tracker_status'] == 'done' %}
-                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                            <a class="btn btn-outline-danger py-0 px-1 status-action" data-status-target="rejected" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
-                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                            <a class="btn btn-outline-info py-0 px-1 status-action" data-status-target="unread" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
                                                 <i class="fa-regular fa-eye-slash"></i>
                                             </a>
                                         {% elif object['tracker_status'] == 'rejected' %}
-                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                            <a class="btn btn-outline-primary py-0 px-1 status-action" data-status-target="done" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
                                                 <i class="text-success fa-solid fa-check-to-slot"></i>
                                             </a>
-                                            <a class="btn btn-outline-info py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
+                                            <a class="btn btn-outline-info py-0 px-1 status-action" data-status-target="unread" href="{{ url_for('hunters.retro_hunt_object_status_unread', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as unread">
                                                 <i class="fa-regular fa-eye-slash"></i>
                                             </a>
                                         {% else %}
-                                            <a class="btn btn-outline-primary py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
+                                            <a class="btn btn-outline-primary py-0 px-1 status-action" data-status-target="done" href="{{ url_for('hunters.retro_hunt_object_status_done', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as done">
                                                 <i class="text-success fa-solid fa-check-to-slot"></i>
                                             </a>
-                                            <a class="btn btn-outline-danger py-0 px-1" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
+                                            <a class="btn btn-outline-danger py-0 px-1 status-action" data-status-target="rejected" href="{{ url_for('hunters.retro_hunt_object_status_reject', uuid=dict_task['uuid'], gid=object['gid'] )}}" title="Mark as rejected (false positive)">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </a>
                                         {% endif %}
+                                        </span>
                                         <button class="btn btn-outline-danger py-0 px-1" title="Remove object from retro hunt"
                                                 data-toggle="modal" data-target="#modal_retro_hunt_remove_object"
                                                 data-retro_uuid="{{ dict_task['uuid'] }}" data-obj_gid="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
@@ -529,6 +534,52 @@ obj_links.forEach(obj_link => {
         const row = obj_link.closest("tr");
         row.children[3].innerHTML = '<i class="fa-solid fa-eye"></i><span hidden>read</span>';
     });
+});
+
+function getStatusIconHtml(status) {
+    if (status === 'read') {
+        return '<i class="fa-solid fa-eye" title="read"></i><span hidden>read</span>';
+    } else if (status === 'done') {
+        return '<i class="text-success fa-solid fa-check-to-slot" title="done"></i><span hidden>done</span>';
+    } else if (status === 'rejected') {
+        return '<i class="text-danger fa-solid fa-xmark" title="rejected (false positive)"></i><span hidden>rejected</span>';
+    }
+    return '<i class="fa-regular fa-eye-slash" title="unread"></i><span hidden>unread</span>';
+}
+
+function getStatusButtonsHtml(status, row) {
+    const buttons = [];
+    if (status !== 'done') {
+        buttons.push(`<a class="btn btn-outline-primary py-0 px-1 status-action" data-status-target="done" href="${row.dataset.urlDone}" title="Mark as done"><i class="text-success fa-solid fa-check-to-slot"></i></a>`);
+    }
+    if (status !== 'rejected') {
+        buttons.push(`<a class="btn btn-outline-danger py-0 px-1 status-action" data-status-target="rejected" href="${row.dataset.urlRejected}" title="Mark as rejected (false positive)"><i class="fa-solid fa-xmark"></i></a>`);
+    }
+    if (status !== 'unread') {
+        buttons.push(`<a class="btn btn-outline-info py-0 px-1 status-action" data-status-target="unread" href="${row.dataset.urlUnread}" title="Mark as unread"><i class="fa-regular fa-eye-slash"></i></a>`);
+    }
+    return buttons.join('\n');
+}
+
+document.addEventListener('click', function(event) {
+    const statusAction = event.target.closest('a.status-action');
+    if (!statusAction) {
+        return;
+    }
+    event.preventDefault();
+    fetch(statusAction.href, {method: 'GET', credentials: 'same-origin'})
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Status update failed');
+            }
+            const row = statusAction.closest('tr');
+            const newStatus = statusAction.dataset.statusTarget;
+            row.children[3].innerHTML = getStatusIconHtml(newStatus);
+            row.querySelector('.status-action-container').innerHTML = getStatusButtonsHtml(newStatus, row);
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
 });
 
 function toggle_sidebar(){
