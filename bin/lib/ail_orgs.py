@@ -390,6 +390,139 @@ def add_obj_to_org(org_uuid, obj_type, obj_gid):  # ADD set UUID -> object types
 def remove_obj_to_org(org_uuid, obj_type, obj_gid):
     r_serv_db.srem(f'org:{org_uuid}:{obj_type}', obj_gid)
 
+def _sanitize_org_metadata_field(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return None
+    return value
+
+def _extract_misp_organization(record):
+    if not isinstance(record, dict):
+        return {}
+    organisation = record.get('Organisation')
+    if isinstance(organisation, dict):
+        return organisation
+    return record
+
+def _can_update_org_field(current_value, new_value, update_policy):
+    if new_value is None:
+        return False
+    if update_policy == 'if_empty':
+        return current_value in [None, '']
+    # default: overwrite
+    return True
+
+def sync_remote_misp_organizations_metadata(url, key, ssl=False, update_policy='overwrite'):
+    report = {
+        'status': 'success',
+        'retrieved': 0,
+        'matched': 0,
+        'updated': 0,
+        'skipped': 0,
+        'failed': 0,
+        'errors': []
+    }
+
+    if update_policy not in {'overwrite', 'if_empty'}:
+        return {
+            'status': 'error',
+            'reason': f'Invalid update policy: {update_policy}',
+            'retrieved': 0,
+            'matched': 0,
+            'updated': 0,
+            'skipped': 0,
+            'failed': 0,
+            'errors': []
+        }
+
+    try:
+        from pymisp import PyMISP, PyMISPError
+    except Exception as e:
+        report['status'] = 'error'
+        report['reason'] = f'Unable to import pymisp: {str(e)}'
+        return report
+
+    try:
+        misp = PyMISP(url, key, ssl)
+    except (PyMISPError, Exception) as e:
+        report['status'] = 'error'
+        report['reason'] = f'Unable to connect to remote MISP: {str(e)}'
+        return report
+
+    try:
+        organizations = misp.organisations(pythonify=False)
+    except AttributeError:
+        organizations = misp.search(controller='organisations', pythonify=False)
+    except (PyMISPError, Exception) as e:
+        report['status'] = 'error'
+        report['reason'] = f'Unable to retrieve organizations from remote MISP: {str(e)}'
+        return report
+
+    if isinstance(organizations, dict):
+        organizations = organizations.get('response', [])
+
+    if not isinstance(organizations, list):
+        organizations = []
+
+    report['retrieved'] = len(organizations)
+    processed_uuids = set()
+
+    for entry in organizations:
+        try:
+            organization = _extract_misp_organization(entry)
+            org_uuid = organization.get('uuid')
+            if not org_uuid:
+                report['skipped'] += 1
+                report['errors'].append({'uuid': None, 'reason': 'Missing UUID in remote organization'})
+                continue
+
+            if org_uuid in processed_uuids:
+                report['skipped'] += 1
+                continue
+            processed_uuids.add(org_uuid)
+
+            if not exists_org(org_uuid):
+                report['skipped'] += 1
+                continue
+
+            report['matched'] += 1
+            org = Organisation(org_uuid)
+
+            remote_name = _sanitize_org_metadata_field(organization.get('name'))
+            remote_description = _sanitize_org_metadata_field(organization.get('description'))
+            remote_nationality = _sanitize_org_metadata_field(organization.get('nationality'))
+            if remote_nationality is not None:
+                remote_nationality = normalize_nationality(remote_nationality)
+            remote_sector = _sanitize_org_metadata_field(organization.get('sector'))
+            remote_type = _sanitize_org_metadata_field(organization.get('type'))
+
+            updates = {}
+            if _can_update_org_field(org.get_name(), remote_name, update_policy):
+                updates['name'] = remote_name
+            if _can_update_org_field(org.get_description(), remote_description, update_policy):
+                updates['description'] = remote_description
+            if _can_update_org_field(org.get_nationality(), remote_nationality, update_policy):
+                updates['nationality'] = remote_nationality
+            if _can_update_org_field(org.get_sector(), remote_sector, update_policy):
+                updates['sector'] = remote_sector
+            if _can_update_org_field(org.get_org_type(), remote_type, update_policy):
+                updates['org_type'] = remote_type
+
+            if updates:
+                org.edit(**updates)
+                report['updated'] += 1
+            else:
+                report['skipped'] += 1
+
+        except Exception as e:
+            report['failed'] += 1
+            report['errors'].append({'uuid': organization.get('uuid') if isinstance(organization, dict) else None, 'reason': str(e)})
+            continue
+
+    return report
 
 ## --ORGANISATION-- ##
 
