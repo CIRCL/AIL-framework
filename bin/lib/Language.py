@@ -148,19 +148,26 @@ PRIMARY_LANGUAGE_ALIAS = {
     'ji': 'yi'
 }
 
+# Temporary gcld3 normalization overrides:
+# gcld3 may emit transliterated tags (e.g., "ja-Latn")
+DETECTED_LANGUAGE_PRIMARY_OVERRIDES = {
+    'bg-Latn': 'bg',
+    'el-Latn': 'el',
+    'hi-Latn': 'hi',
+    'ja-Latn': 'ja',
+    'ru-Latn': 'ru',
+    'zh-Latn': 'zh',
+}
+
+
 # Explicit ISO 639-3 -> canonical BCP 47 primary language subtags.
 # NOTE: used by migration/update code; script/region must never be guessed.
 ISO639_3_TO_BCP47_PRIMARY = {
-    'srp': 'sr',
-    **{
-        code_3: code_2
-        for code_3, code_2 in {
-            lang.alpha_3: lang.alpha_2
-            for lang in pycountry.languages
-            if hasattr(lang, 'alpha_3') and hasattr(lang, 'alpha_2')
-        }.items()
-    }
+    lang.alpha_3: lang.alpha_2
+    for lang in pycountry.languages
+    if hasattr(lang, 'alpha_3') and hasattr(lang, 'alpha_2')
 }
+ISO639_3_TO_BCP47_PRIMARY['srp'] = 'sr'
 ISO639_3_TO_BCP47_PRIMARY['hbs'] = 'sh'
 
 def iso639_3_to_bcp47_primary(code_iso3):
@@ -749,7 +756,10 @@ class LanguagesDetector:
         # print('------------------------------------------------')
         for lang in self.detector.FindTopNMostFreqLangs(content, num_langs=self.nb_langs):
             if lang.proportion >= self.min_proportion and lang.probability >= self.min_probability and lang.is_reliable:
-                languages.append(lang.language)
+                language = lang.language
+                if language in DETECTED_LANGUAGE_PRIMARY_OVERRIDES:
+                    language = DETECTED_LANGUAGE_PRIMARY_OVERRIDES[language]
+                languages.append(language)
         return languages
 
     def detect_picolang(self, content):

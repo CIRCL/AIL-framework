@@ -6,15 +6,16 @@ import os
 import sys
 
 sys.path.append(os.environ['AIL_BIN'])
-
-from lib.ConfigLoader import ConfigLoader
+##################################
+# Import Project packages
+##################################
 from lib import Language
-from lib.objects import Messages
+from lib import chats_viewer
 
 logger = logging.getLogger('ail.language_migration')
 
 
-def migrate_message_languages(r_lang, dry_run=False):
+def migrate_message_languages(dry_run=False):
     counters = {
         'already_valid_bcp47': 0,
         'migrated_iso639_3': 0,
@@ -23,9 +24,7 @@ def migrate_message_languages(r_lang, dry_run=False):
         'updated_messages': 0,
     }
 
-    for key in r_lang.scan_iter(match='obj:lang:message:*'):
-        message_id = key.split(':', 3)[-1]
-        message = Messages.Message(message_id)
+    for message in chats_viewer.get_messages_iterator():
         existing_languages = list(message.get_languages())
         if not existing_languages:
             continue
@@ -58,12 +57,12 @@ def migrate_message_languages(r_lang, dry_run=False):
 
             changed = True
             if dry_run:
-                logger.info('Would migrate %s language %s -> %s', message.get_global_id(), language, target)
+                logger.info(f'Migrate {message.id} language {language} -> {target}')
                 continue
 
             message.remove_language(language)
             message.add_language(target)
-            logger.info('Migrated %s language %s -> %s', message.get_global_id(), language, target)
+            logger.info(f'Migrated {message.id} language {language} -> {target}')
 
         if changed:
             counters['updated_messages'] += 1
@@ -75,10 +74,7 @@ def main():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     dry_run = '--dry-run' in sys.argv
 
-    config_loader = ConfigLoader()
-    r_lang = config_loader.get_db_conn('Kvrocks_Languages')
-
-    counters = migrate_message_languages(r_lang, dry_run=dry_run)
+    counters = migrate_message_languages(dry_run=dry_run)
     logger.info('Migration summary: %s', counters)
 
 
