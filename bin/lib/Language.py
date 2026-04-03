@@ -163,6 +163,11 @@ ISO639_3_TO_BCP47_PRIMARY = {
 }
 ISO639_3_TO_BCP47_PRIMARY['hbs'] = 'sh'
 
+def iso639_3_to_bcp47_primary(code_iso3):
+    if not code_iso3:
+        return None
+    return ISO639_3_TO_BCP47_PRIMARY.get(code_iso3.lower())
+
 def get_all_languages():
     languages = {}
     for iso3, name in dict_iso_languages.items():
@@ -306,11 +311,6 @@ def create_dict_iso_3_to_1():
 
 
 dict_iso_3_to_1 = create_dict_iso_3_to_1()
-
-def iso639_3_to_bcp47_primary(code_iso3):
-    if not code_iso3:
-        return None
-    return ISO639_3_TO_BCP47_PRIMARY.get(code_iso3.lower())
 
 def _is_valid_primary_subtag(primary):
     if len(primary) == 2:

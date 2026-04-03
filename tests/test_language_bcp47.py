@@ -8,13 +8,11 @@ import importlib.util
 import types
 from unittest.mock import patch
 
-AIL_HOME = os.environ.get('AIL_HOME', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-AIL_BIN = os.environ.get('AIL_BIN', os.path.join(AIL_HOME, 'bin'))
-os.environ.setdefault('AIL_HOME', AIL_HOME)
-os.environ.setdefault('AIL_BIN', AIL_BIN)
-os.environ.setdefault('AIL_FLASK', os.path.join(AIL_HOME, 'var', 'www'))
-os.environ.setdefault('AIL_REDIS', os.path.join(AIL_HOME, 'redis'))
-sys.path.append(AIL_BIN)
+AIL_HOME = os.environ.get('AIL_HOME')
+sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
 
 if 'html2text' not in sys.modules:
     html2text_module = types.ModuleType('html2text')
