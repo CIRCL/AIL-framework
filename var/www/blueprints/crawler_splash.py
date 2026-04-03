@@ -587,9 +587,8 @@ def domains_explorer_web():
 @login_read_only
 def domains_all_languages_json():
     # # TODO: get domain type
-    iso = request.args.get('iso')
     domain_types = request.args.getlist('domain_types')
-    return jsonify(Language.get_languages_from_iso(Domains.get_all_domains_languages(), sort=True))
+    return jsonify(Language.get_bcp_languages_name(Domains.get_all_domains_languages()))
 
 
 @crawler_splash.route('/domains/languages/search_get', methods=['GET'])

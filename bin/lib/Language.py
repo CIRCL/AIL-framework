@@ -178,6 +178,15 @@ def iso639_3_to_bcp47_primary(code_iso3):
 def get_all_languages():
     return dict_bcp47_languages.copy()
 
+def get_bcp_languages_name(languages_code):
+    languages = []
+    for language_code in languages_code:
+        languages.append(get_bcp_language_name(language_code))
+    return languages
+
+def get_bcp_language_name(language_code):
+    return dict_bcp47_languages[language_code]
+
 def create_dict_iso_languages():
     dict_lang = {}
     all_languages = get_all_languages()
