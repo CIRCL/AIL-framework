@@ -144,7 +144,7 @@ def html2text(): # # TODO: support post
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
     item = Item(item_id)
-    return item.get_html2text_content()
+    return Response(item.get_html2text_content(), mimetype='text/plain')
 
 @objects_item.route("/objects/item/raw_content")
 @login_required
@@ -174,7 +174,7 @@ def item_content_more():
     item = Item(item_id)
     item_content = item.get_content()
     to_return = item_content[max_preview_modal-1:]
-    return to_return
+    return Response(to_return, mimetype='text/plain')
 
 @objects_item.route("/objects/item/diff")
 @login_required
@@ -194,7 +194,7 @@ def object_item_diff():
     lines2 = item2_content.splitlines()
     htmldiff = difflib.HtmlDiff()
     diff = htmldiff.make_file(lines1, lines2)
-    return diff
+    return Response(diff, mimetype='text/plain')
 
 @objects_item.route("/objects/item/preview")
 @login_required
