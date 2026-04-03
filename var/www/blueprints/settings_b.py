@@ -475,6 +475,8 @@ def organisations_list():
     regions_country_map = {}
     special_region_stats = {}
     for org in meta.get('orgs', []):
+        if not org['nb_users'] > 0:
+            continue
         nationality = org.get('nationality')
         if not nationality:
             continue
