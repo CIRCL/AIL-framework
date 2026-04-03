@@ -165,9 +165,8 @@ def chats_explorer_chat_lang():
     if target == "Don't Translate":
         target = None
     language = request.args.get('lang')
+    language = Language.normalize_bcp47_tag(language)
     lang = language
-    if language:
-        language = Language.get_iso_from_language(language)
     if not language:
         return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
     meta = chats_viewer.api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=target)
@@ -550,9 +549,8 @@ def objects_user_account_lang():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
     language = request.args.get('lang')
+    language = Language.normalize_bcp47_tag(language)
     lang = language
-    if language:
-        language = Language.get_iso_from_language(language)
     if not language:
         return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
     target = request.args.get('target')

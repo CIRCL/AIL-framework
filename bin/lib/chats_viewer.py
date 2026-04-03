@@ -1143,7 +1143,7 @@ def api_get_languages_stats(obj_type, chat_instance_uuid, chat_id):
     stats = obj.get_obj_language_stats()
     langs = []
     for stat in stats:
-        langs.append({'name': Language.get_language_from_iso(stat[0]), 'value': int(stat[1])})
+        langs.append({'name': stat[0], 'value': int(stat[1])})
     return langs
 
 
