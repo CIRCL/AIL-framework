@@ -1,4 +1,5 @@
 <script>
+const languageNamesByCode = {{ all_languages|tojson }};
 var langPieChart = echarts.init(document.getElementById('langpie'));
 window.addEventListener('resize', function() {
     langPieChart.resize();
@@ -6,11 +7,20 @@ window.addEventListener('resize', function() {
 var optionlangpie;
 optionlangpie = {
   tooltip: {
-    trigger: 'item'
+    trigger: 'item',
+    formatter: function(params) {
+      const code = params.name;
+      const label = languageNamesByCode[code] || code;
+      return `${label} (${code}): ${params.value}`;
+    }
   },
   legend: {
     top: '5%',
-    left: 'center'
+    left: 'center',
+    formatter: function(code) {
+      const label = languageNamesByCode[code] || code;
+      return `${label} (${code})`;
+    }
   },
   series: [
     {
@@ -30,8 +40,13 @@ optionlangpie = {
       emphasis: {
         label: {
           show: true,
-          fontSize: 40,
-          fontWeight: 'bold'
+          fontSize: 20,
+          fontWeight: 'bold',
+          formatter: function(params) {
+            const code = params.name;
+            const label = languageNamesByCode[code] || code;
+            return `${label}\n(${code})`;
+          }
         }
       },
       labelLine: {
