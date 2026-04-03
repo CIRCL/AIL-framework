@@ -113,6 +113,13 @@ class TestLanguageBCP47(unittest.TestCase):
         self.assertIsNone(Language.normalize_bcp47_tag('english'))
         self.assertIsNone(Language.normalize_bcp47_tag('en-XYZ'))
 
+    def test_get_all_languages_is_bcp47_keyed(self):
+        languages = Language.get_all_languages()
+        self.assertEqual(languages['en'], 'English')
+        self.assertEqual(languages['fr'], 'French')
+        self.assertEqual(languages['sh'], 'Serbo-Croatian')
+        self.assertNotIn('eng', languages)
+
 
 class FakeRedis:
     def scan_iter(self, match=None):
