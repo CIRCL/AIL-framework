@@ -755,8 +755,7 @@ def print_messages_language_by_language(language):
             if not chat_messages:
                 continue
             for message_id in chat_messages:
-                message = Messages.Message(message_id)
-                print(message.get_content())
+                message = Messages.Message(message_id[1:])
 
 def redetect_messages_language_by_language(language):
     nb_chats = 0
@@ -770,7 +769,7 @@ def redetect_messages_language_by_language(language):
                 continue
             nb_chats += 1
             for message_id in chat_messages:
-                message = Messages.Message(message_id)
+                message = Messages.Message(message_id[1:])
                 if message.get_language() == language:
                     message.detect_language()
                     nb_messages += 1
