@@ -415,7 +415,7 @@ def _can_update_org_field(current_value, new_value, update_policy):
     # default: overwrite
     return True
 
-def sync_remote_misp_organizations_metadata(url, key, ssl=False, update_policy='overwrite'):
+def sync_remote_misp_organizations_metadata(url, key, ssl=False, update_policy='if_empty'):
     report = {
         'status': 'success',
         'retrieved': 0,
