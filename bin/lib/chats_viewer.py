@@ -756,6 +756,7 @@ def print_messages_language_by_language(language):
                 continue
             for message_id in chat_messages:
                 message = Messages.Message(message_id[1:])
+                print(message.get_content())
 
 def redetect_messages_language_by_language(language):
     nb_chats = 0
