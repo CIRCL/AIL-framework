@@ -54,7 +54,7 @@ $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
       {% if 'taxonomies_tags' in tags_selector_data %}
         var valueData = [
           {% for tag in tags_selector_data['taxonomies_tags'] %}
-            '{{tag|safe}}',
+            '{{tag|tojson}}',
           {%  endfor %}
         ];
       {% else %}
@@ -75,7 +75,7 @@ $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
     {% if 'galaxies_tags' in tags_selector_data %}
       var valueData = [
         {% for tag in tags_selector_data['galaxies_tags'] %}
-          '{{tag|safe}}',
+          '{{tag|tojson}}',
         {%  endfor %}
       ];
     {% else %}

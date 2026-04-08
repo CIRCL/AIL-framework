@@ -60,9 +60,9 @@ def create_json_response(data, status_code):
 def screenshot(filename):
     if not filename:
         abort(404)
-    if not 64 <= len(filename) <= 70:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 64 <= len(filename) <= 70 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     s = Screenshot(filename)
     return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
 
@@ -144,7 +144,7 @@ def html2text(): # # TODO: support post
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
     item = Item(item_id)
-    return item.get_html2text_content()
+    return Response(item.get_html2text_content(), mimetype='text/plain')
 
 @objects_item.route("/objects/item/raw_content")
 @login_required
@@ -166,16 +166,6 @@ def item_download():  # # TODO: support post
     item = Item(item_id)
     return send_file(item.get_raw_content(), download_name=item_id, as_attachment=True)
 
-@objects_item.route("/objects/item/content/more")
-@login_required
-@login_read_only
-def item_content_more():
-    item_id = request.args.get('id', '')
-    item = Item(item_id)
-    item_content = item.get_content()
-    to_return = item_content[max_preview_modal-1:]
-    return to_return
-
 @objects_item.route("/objects/item/diff")
 @login_required
 @login_user
@@ -194,7 +184,7 @@ def object_item_diff():
     lines2 = item2_content.splitlines()
     htmldiff = difflib.HtmlDiff()
     diff = htmldiff.make_file(lines1, lines2)
-    return diff
+    return Response(diff, mimetype='text/plain')
 
 @objects_item.route("/objects/item/preview")
 @login_required

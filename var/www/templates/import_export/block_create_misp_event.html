@@ -58,6 +58,6 @@ $('#user_misp').tagSuggest({
     maxSelection: 1,
     emptyText: 'Select MISP Account',
     name: 'user_misp',
-    {% if selector_val %}value: ['{{ selector_val | safe}}']{% endif %}
+    {% if selector_val %}value: ['{{ selector_val | tojson}}']{% endif %}
 });
 </script>
