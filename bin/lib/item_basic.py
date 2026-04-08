@@ -24,6 +24,8 @@ config_loader = None
 
 def exist_item(item_id):
     filename = get_item_filepath(item_id)
+    if not filename:
+        return False
     if os.path.isfile(filename):
         return True
     else:
@@ -31,7 +33,12 @@ def exist_item(item_id):
 
 def get_item_filepath(item_id):
     filename = os.path.join(ConfigLoader.get_items_dir(), item_id)
-    return os.path.realpath(filename)
+    filename = os.path.realpath(filename)
+    items_dir = ConfigLoader.get_items_dir()
+    if not os.path.commonpath([filename, items_dir]) == items_dir:
+        return None
+    else:
+        return filename
 
 def get_item_date(item_id, add_separator=False):
     l_dir = item_id.split('/')

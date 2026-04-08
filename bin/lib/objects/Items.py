@@ -89,7 +89,7 @@ class Item(AbstractObject):
         filename = os.path.realpath(filename)
 
         # incorrect filename
-        if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
+        if not os.path.commonpath([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
             return None
         else:
             return filename
@@ -788,7 +788,7 @@ def get_item_filename(item_id):
     filename = os.path.realpath(filename)
 
     # incorrect filename
-    if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
+    if not os.path.commonpath([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
         return None
     else:
         return filename
