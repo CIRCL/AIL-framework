@@ -35,6 +35,8 @@ def get_item_filepath(item_id):
     filename = os.path.join(ConfigLoader.get_items_dir(), item_id)
     filename = os.path.realpath(filename)
     items_dir = ConfigLoader.get_items_dir()
+    if items_dir[-1] == '/':
+        items_dir = items_dir[:-1]
     if not os.path.commonpath([filename, items_dir]) == items_dir:
         return None
     else:
