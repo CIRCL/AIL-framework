@@ -80,16 +80,12 @@
                                           <td>{{metadata['date']}}</td>
                                         </tr>
                                         <tr>
-                                          <th>Threat Level</th>
-                                          <td>{{metadata['threat_level']}}</td>
-                                        </tr>
-                                        <tr>
                                           <th>Analysis</th>
                                           <td>{{metadata['analysis']}}</td>
                                         </tr>
                                         <tr>
-                                          <th>Info</th>
-                                          <td>{{metadata['info']}}</td>
+                                          <th>Description</th>
+                                          <td>{% if metadata['description'] %}{{ metadata['description'] }}{% endif %}</td>
                                         </tr>
                                                     <tr>
                                           <th># Objects</th>

@@ -63,36 +63,7 @@
 										  </div>
 
 											<div class="row">
-												<div class="col-12 col-xl-6">
-													<div class="form-group">
-													 <label for="threat_level">Threat Level:
-														 <span id="threat_level_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
-														 <script type="text/javascript">
-														 		$(function() {
-																 		$('#threat_level_idInfoPopover').popover({
-																				html: true,
-																				content: function() {
-																				 		var tempSelector = '#threat_level';
-																						return $('<div>').append(
-												                        $('<span>').attr('class', 'blue bold').text($(tempSelector +" option:selected").text())
-												                    ).append(
-												                        $('<span>').text(': ' + fieldDesc[$(tempSelector).val()])
-												                    );
-																				}
-																		});
-																		var fieldDesc = {"1":"*high* means sophisticated APT malware or 0-day attack","2":"*medium* means APT malware","3":"*low* means mass-malware","4":"*undefined* no risk"};
-																});
-														 </script>
-													 </label>
-													 <select class="form-control" id="threat_level" name="threat_level" required>
-														 <option value="1">High</option>
-														 <option value="2">Medium</option>
-														 <option value="3">Low</option>
-														 <option value="4">Undefined</option>
-													 </select>
-													</div>
-												</div>
-												<div class="col-12 col-xl-6">
+												<div class="col-12>
 													<div class="form-group">
 													 <label for="analysis">Analysis:
 														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>

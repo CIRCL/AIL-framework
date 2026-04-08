@@ -79,15 +79,11 @@ class Investigation(object):
         else:
             return self.uuid
 
-    # # TODO: Replace by title ??????
     def get_name(self):
-        return r_tracking.hget(f'investigations:data:{self.uuid}', 'name')
+        return self._get_field('info')
 
     def get_description(self):
         return self._get_field('description')
-
-    def set_description(self, description):
-        self._set_field('description', description)
 
     ## LEVEL ##
 
@@ -186,7 +182,8 @@ class Investigation(object):
                 'date': self.get_date(),
                 'timestamp': self.get_timestamp(r_str=r_str),
                 'last_change': self.get_last_change(r_str=r_str),
-                'info': self.get_info(),
+                'info': self.get_info(), # name
+                'description': self.get_description(),
                 'nb_objects': self.get_nb_objects(),
                 # 'misp_events': list(self.get_misp_events())
                 }
@@ -197,10 +194,10 @@ class Investigation(object):
         return meta
 
     def set_name(self, name):
-        r_tracking.hset(f'investigations:data:{self.uuid}', 'name', name)
+        r_tracking.hset(f'investigations:data:{self.uuid}', 'info', name)
 
-    def set_info(self, info):
-        r_tracking.hset(f'investigations:data:{self.uuid}', 'info', info)
+    def set_description(self, info):
+        r_tracking.hset(f'investigations:data:{self.uuid}', 'description', info)
 
     def set_date(self, date):
         r_tracking.hset(f'investigations:data:{self.uuid}', 'date', date)
@@ -363,7 +360,7 @@ def create_investigation(user_org, user_id, level, date, name, description, anal
     investigation.set_level(level, user_org)
 
     investigation.set_name(name)
-    investigation.set_info(description)
+    investigation.set_description(description)
     investigation.set_date(date)
     investigation.set_analysis(analysis)
 
@@ -456,9 +453,11 @@ def api_get_investigation(user_org, user_id, user_role, investigation_uuid):  # 
 def api_add_investigation(json_dict):
     user_org = json_dict.get('user_org')
     user_id = json_dict.get('user_id')
-    name = json_dict.get('name') ##### mandatory ?
+    name = json_dict.get('name') # TODO make mandatory
+    name = name[:10000]
     name = escape(name)
-    description = json_dict.get('description')
+    description = json_dict.get('description', '')
+    description = description[:50000]
     description = escape(description)
     analysis = json_dict.get('analysis', 0)
 
@@ -473,16 +472,9 @@ def api_add_investigation(json_dict):
     if level not in range(1, 3):
         level = 1
 
-    info = json_dict.get('info', '')
-    info = escape(info)
-    info = info[:1000]
     tags = json_dict.get('tags', [])
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
-
-    # TODO TEMP
-    name = info
-    description = info
 
     try:
         res = create_investigation(user_org, user_id, level, date, name, description, analysis, tags=tags)
@@ -514,13 +506,9 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
     if res:
         return res
 
-    name = json_dict.get('name') ##### mandatory ?
+    name = json_dict.get('name')
+    name = name[:1000]
     name = escape(name)
-    threat_level = json_dict.get('threat_level', 4)
-    try:
-        investigation.set_threat_level(threat_level)
-    except UpdateInvestigationError:
-        return {"status": "error", "reason": "Invalid Investigation threat_level"}, 400
 
     analysis = json_dict.get('analysis', 0)
     try:
@@ -528,9 +516,9 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
     except UpdateInvestigationError:
         return {"status": "error", "reason": "Invalid Investigation analysis"}, 400
 
-    info = json_dict.get('info', '')
-    info = escape(info)
-    info = info[:1000]
+    description = json_dict.get('description', '')
+    description = escape(description)
+    description = description[:50000]
     tags = json_dict.get('tags', [])
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
@@ -539,8 +527,8 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
     if level != old_level:
         investigation.reset_level(old_level, level, user_org)
 
-    investigation.set_info(info)
     investigation.set_name(name)
+    investigation.set_description(description)
     investigation.set_tags(tags)
 
     timestamp = int(time.time())

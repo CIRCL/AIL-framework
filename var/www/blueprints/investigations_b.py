@@ -99,11 +99,10 @@ def add_investigation():
         user_id = current_user.get_user_id()
         user_org = current_user.get_org()
         level = request.form.get("investigation_level")
-        name = request.form.get("investigation_name")
+        name = request.form.get("investigation_info")
+        description = request.form.get("investigation_description", '')
         date = request.form.get("investigation_date")
-        threat_level = request.form.get("threat_level")
         analysis = request.form.get("analysis")
-        info = request.form.get("investigation_info")
         # tags
         taxonomies_tags = request.form.get('taxonomies_tags')
         if taxonomies_tags:
@@ -122,8 +121,8 @@ def add_investigation():
         tags = taxonomies_tags + galaxies_tags
 
         input_dict = {"user_org": user_org, "user_id": user_id, "level": level, "name": name,
-                      "threat_level": threat_level, "date": date,
-                      "analysis": analysis, "info": info, "tags": tags}
+                      "description": description, "date": date,
+                      "analysis": analysis, "tags": tags}
         res = Investigations.api_add_investigation(input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
@@ -143,11 +142,9 @@ def edit_investigation():  # TODO CHECK ACL
         user_role = current_user.get_role()
         investigation_uuid = request.form.get("investigation_uuid")
         level = request.form.get("investigation_level")
-        name = request.form.get("investigation_name")
-        date = request.form.get("investigation_date")
-        threat_level = request.form.get("threat_level")
         analysis = request.form.get("analysis")
-        info = request.form.get("investigation_info")
+        name = request.form.get("investigation_info")
+        description = request.form.get("investigation_description")
 
         # tags
         taxonomies_tags = request.form.get('taxonomies_tags')
@@ -167,8 +164,8 @@ def edit_investigation():  # TODO CHECK ACL
         tags = taxonomies_tags + galaxies_tags
 
         input_dict = {"user_id": user_id, "uuid": investigation_uuid, "level": level,
-                      "name": name, "threat_level": threat_level,
-                      "analysis": analysis, "info": info, "tags": tags}
+                      "description": description,
+                      "analysis": analysis, "name": name, "tags": tags}
         res = Investigations.api_edit_investigation(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
