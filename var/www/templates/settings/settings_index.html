@@ -162,8 +162,7 @@
 
 				<div class="card mb-3">
 					<div class="card-header bg-white border-bottom">
-						<h5 class="card-title mb-0"><i class="fas fa-server mr-2 text-secondary"></i>Instance Status</h5>
-            <small class="status-helper">Important metadata about your current deployment.</small>
+						<h5 class="card-title mb-0"><i class="fas fa-server mr-2 text-secondary"></i>AIL Status</h5>
 					</div>
 					<div class="card-body pt-3">
 
@@ -183,13 +182,13 @@
                         </tr>
                         <tr
                         {%if git_metadata['current_branch'] != 'master'%}
-                          class="table-danger"
+                          class="table-warning"
                         {%endif%}
                         >
                           <td class="status-label">Current Branch</td>
                           <td class="status-value">
                             {%if git_metadata['current_branch'] != 'master'%}
-                              <i class="fas fa-times-circle text-danger" data-toggle="tooltip" data-placement="top" title="Please checkout the master branch"></i>&nbsp;
+                              <i class="fas fa-warning text-warning" data-toggle="tooltip" data-placement="top" title="Please checkout the master branch"></i>&nbsp;
                             {%endif%}
                             {{git_metadata['current_branch']}}
                           </td>
@@ -261,7 +260,6 @@
               <h5 class="card-title mb-0">
                 <i class="fas fa-bolt text-warning mr-2"></i>Quick Actions
               </h5>
-              <small class="status-helper">Shortcuts for daily actions</small>
             </div>
           </div>
           <div class="card-body">
@@ -279,16 +277,16 @@
                   <span class="quick-action-icon icon-settings"><i class="fas fa-key"></i></span>
                   <span class="quick-action-title">Change Password</span>
                 </div>
-                <p class="quick-action-desc">Keep your account secure by rotating your password.</p>
+                <p class="quick-action-desc">Change your password.</p>
               </a>
 
-              <a href="{{url_for('settings_b.passive_dns')}}" class="quick-action-card">
-                <div class="d-flex align-items-center mb-2">
-                  <span class="quick-action-icon icon-settings"><i class="fas fa-network-wired"></i></span>
-                  <span class="quick-action-title">Passive DNS</span>
-                </div>
-                <p class="quick-action-desc">Manage passive DNS ingestion and configuration options.</p>
-              </a>
+{#              <a href="{{url_for('settings_b.passive_dns')}}" class="quick-action-card">#}
+{#                <div class="d-flex align-items-center mb-2">#}
+{#                  <span class="quick-action-icon icon-settings"><i class="fas fa-network-wired"></i></span>#}
+{#                  <span class="quick-action-title">Passive DNS</span>#}
+{#                </div>#}
+{#                <p class="quick-action-desc">Manage passive DNS ingestion and configuration options.</p>#}
+{#              </a>#}
 
               <a href="{{url_for('settings_b.settings_modules')}}" class="quick-action-card">
                 <div class="d-flex align-items-center mb-2">
@@ -371,6 +369,7 @@
 var to_refresh
 
 $(document).ready(function(){
+  $("#page-options").addClass("active");
   $("#nav_server_status").addClass("active");
 	$("#nav_server").removeClass("text-muted");
   $( window ).on("focus", function() {
