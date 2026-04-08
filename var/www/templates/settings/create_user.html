@@ -33,7 +33,7 @@
                     <div>
                         <h2 class="mb-1">
                             <i class="fas fa-user-plus text-primary"></i>
-                            {% if meta['id'] %}Edit user{% else %}Create user{% endif %}
+                            {% if meta['id'] %}Edit User{% else %}Create User{% endif %}
                         </h2>
                         <div class="text-muted small">
                             {% if meta['id'] %}
@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <a href="{{url_for('settings_b.users_list')}}" class="btn btn-outline-primary mt-3 mt-lg-0">
-                        <i class="fas fa-arrow-left"></i> Back to user list
+                        <i class="fas fa-arrow-left"></i> Back to users list
                     </a>
                 </div>
 
@@ -135,6 +135,8 @@
                                         {% if error %}
                                             <div class="invalid-feedback d-block mt-2">{{error}}</div>
                                         {% endif %}
+
+                                        {% include 'settings/block_password_requirements.html' %}
                                     </div>
                                 </div>
                             </div>
@@ -163,16 +165,13 @@
                                 </div>
                                 <div class="card-body">
                                     <button class="btn btn-primary btn-block" type="submit">
-                                        <i class="fas fa-save mr-1"></i>
-                                        {% if meta['id'] %}Update user{% else %}Create user{% endif %}
+                                        {% if meta['id'] %}<i class="fas fa-save mr-1"></i> Update User{% else %}<i class="fas fa-plus mr-1"></i> Create User{% endif %}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </form>
-
-                {% include 'settings/block_password_requirements.html' %}
 
     	    </main>
 		</div>
