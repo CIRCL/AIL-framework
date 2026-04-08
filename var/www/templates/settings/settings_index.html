@@ -144,9 +144,19 @@
                 {% endif %}
               </p>
             </div>
-            <span class="badge badge-light mt-2 mt-md-0 px-3 py-2">
-              {% if acl_admin %}Administrator Dashboard{% else %}User Dashboard{% endif %}
-            </span>
+            {% if ail_version is not none %}
+              <a target="_blank"
+                 href="https://github.com/ail-project/ail-framework/releases/tag/{{ail_version}}"
+                 class="badge badge-light mt-2 mt-md-0 px-3 py-2 text-dark"
+                 title="Open release notes for {{ail_version}}">
+                {{ail_version}}
+              </a>
+            {% else %}
+              <span class="badge badge-light mt-2 mt-md-0 px-3 py-2 text-dark"
+                    title="No tagged version detected">
+                {{git_metadata['current_branch']}}
+              </span>
+            {% endif %}
           </div>
         </div>
 
