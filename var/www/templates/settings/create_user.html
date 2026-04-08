@@ -20,6 +20,43 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+    <style>
+      .create-user-hero {
+        background: linear-gradient(135deg, #0d6efd 0%, #5f8dff 100%);
+        border-radius: .5rem;
+        color: #fff;
+        padding: 1rem 1.25rem;
+      }
+
+      .section-card {
+        border: none;
+        border-radius: .5rem;
+      }
+
+      .section-card .card-header {
+        border-top-left-radius: .5rem;
+        border-top-right-radius: .5rem;
+      }
+
+      .soft-muted {
+        color: #6c757d;
+      }
+
+      .form-tip {
+        background-color: #f8f9fc;
+        border: 1px solid #e9ecef;
+        border-radius: .5rem;
+      }
+
+      .quick-checklist li {
+        margin-bottom: .5rem;
+      }
+
+      .input-group-text {
+        min-width: 2.5rem;
+        justify-content: center;
+      }
+    </style>
 </head>
 <body>
 
@@ -29,27 +66,29 @@
             {% include 'settings/menu_sidebar.html' %}
             <main class="col-12 col-lg-10" id="core_content">
 
-                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mt-2 mb-3">
-                    <div>
-                        <h2 class="mb-1">
-                            <i class="fas fa-user-plus text-primary"></i>
-                            {% if meta['id'] %}Edit User{% else %}Create User{% endif %}
-                        </h2>
-                        <div class="text-muted small">
-                            {% if meta['id'] %}
-                                Update account details, role, organization and security settings.
-                            {% else %}
-                                Create a new account and configure initial access options.
-                            {% endif %}
+                <div class="create-user-hero mt-2 mb-3 shadow-sm">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-user-plus"></i>
+                                {% if meta['id'] %}Edit User{% else %}Create User{% endif %}
+                            </h2>
+                            <div class="small">
+                                {% if meta['id'] %}
+                                    Update account details, role, organization and security settings.
+                                {% else %}
+                                    Create a new account and configure initial access options.
+                                {% endif %}
+                            </div>
                         </div>
+                        <a href="{{url_for('settings_b.users_list')}}" class="btn btn-light mt-3 mt-lg-0">
+                            <i class="fas fa-arrow-left"></i> Back to users list
+                        </a>
                     </div>
-                    <a href="{{url_for('settings_b.users_list')}}" class="btn btn-outline-primary mt-3 mt-lg-0">
-                        <i class="fas fa-arrow-left"></i> Back to users list
-                    </a>
                 </div>
 
                 {% if new_user %}
-                    <div class="card shadow-sm mb-3 border-success">
+                    <div class="card shadow-sm mb-3 border-success section-card">
                             <div class="card-header bg-success text-white">
                                 {% if new_user['edited'] %}
                                     <h5 class="mb-0"><i class="fas fa-check-circle mr-1"></i> User updated</h5>
@@ -78,25 +117,32 @@
                 <form action="{{ url_for('settings_b.create_user_post')}}" autocomplete="off" method="post">
                     <div class="row">
                         <div class="col-12 col-xl-8">
-                            <div class="card mb-3 shadow-sm">
+                            <div class="card mb-3 shadow-sm section-card">
                                 <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0">Account details</h5>
+                                    <h5 class="mb-0"><i class="fas fa-id-card mr-1"></i> Account details</h5>
                                 </div>
                                 <div class="card-body">
                                     <label for="inputEmail" class="font-weight-bold">Email address</label>
                                     {% if meta['id'] %}
-                                        <input type="email" id="inputEmail" class="form-control" placeholder="Email address" autocomplete="off" value="{{ meta['id'] }}" disabled>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-envelope"></i></span></div>
+                                            <input type="email" id="inputEmail" class="form-control" placeholder="Email address" autocomplete="off" value="{{ meta['id'] }}" disabled>
+                                        </div>
                                         <input type="email" name="username" hidden="" value="{{ meta['id'] }}">
                                     {% else %}
-                                        <input type="email" id="inputEmail" name="username" class="form-control {% if error_mail %}is-invalid{% endif %}" placeholder="name@example.com" autocomplete="off" required>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-envelope"></i></span></div>
+                                            <input type="email" id="inputEmail" name="username" class="form-control {% if error_mail %}is-invalid{% endif %}" placeholder="name@example.com" autocomplete="off" required>
+                                        </div>
                                     {% endif %}
+                                    <small class="form-text soft-muted">Use a valid email. It will be used as the login identifier.</small>
                                     {% if error_mail %}
-                                        <div class="invalid-feedback">Please provide a valid email address</div>
+                                        <div class="invalid-feedback d-block">Please provide a valid email address</div>
                                     {% endif %}
 
                                     <label class="mt-3 font-weight-bold" for="user_organisation">Organisation</label>
                                     <input id="user_organisation" name="user_organisation" type="text" class="form-control" aria-describedby="orgHelp" autocomplete="off">
-                                    <small id="orgHelp" class="form-text text-muted">Start typing to select an existing organization.</small>
+                                    <small id="orgHelp" class="form-text soft-muted">Start typing to select an existing organization.</small>
 
                                     <label class="mt-3 font-weight-bold" for="role_selector">User role</label>
                                     <select class="custom-select" id="role_selector" name="user_role">
@@ -108,14 +154,19 @@
                                             {% endif %}
                                         {% endfor %}
                                     </select>
+                                    <small class="form-text soft-muted">Choose the least-privileged role needed for this account.</small>
                                 </div>
                             </div>
 
-                            <div class="card mb-3 shadow-sm">
+                            <div class="card mb-3 shadow-sm section-card">
                                 <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0">Password</h5>
+                                    <h5 class="mb-0"><i class="fas fa-lock mr-1"></i> Password</h5>
                                 </div>
                                 <div class="card-body">
+                                    <div id="password-section-info" class="alert alert-info py-2 px-3 mb-3" role="alert">
+                                        <i class="fas fa-info-circle mr-1"></i> Manual password mode enabled. Ensure the password follows the policy below.
+                                    </div>
+
                                     <div class="custom-control custom-switch mb-3">
                                         <input type="checkbox" class="custom-control-input" id="set_manual_password" value="" onclick="toggle_password_fields();">
                                         <label class="custom-control-label" for="set_manual_password">{% if meta['id'] %}Reset{% else %}Set{% endif %} password manually</label>
@@ -125,11 +176,17 @@
                                         <div class="row">
                                             <div class="col-12 col-md-6">
                                                 <label for="inputPassword1" class="font-weight-bold">Password</label>
-                                                <input type="password" id="inputPassword1" name="password1" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Password" autocomplete="new-password">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-key"></i></span></div>
+                                                    <input type="password" id="inputPassword1" name="password1" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Password" autocomplete="new-password">
+                                                </div>
                                             </div>
                                             <div class="col-12 col-md-6 mt-3 mt-md-0">
                                                 <label for="inputPassword2" class="font-weight-bold">Confirm password</label>
-                                                <input type="password" id="inputPassword2" name="password2" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Confirm password" value="" autocomplete="new-password">
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-check"></i></span></div>
+                                                    <input type="password" id="inputPassword2" name="password2" class="form-control {% if error %}is-invalid{% endif %}" placeholder="Confirm password" value="" autocomplete="new-password">
+                                                </div>
                                             </div>
                                         </div>
                                         {% if error %}
@@ -143,9 +200,21 @@
                         </div>
 
                         <div class="col-12 col-xl-4">
-                            <div class="card mb-3 shadow-sm">
+                            <div class="card mb-3 shadow-sm section-card form-tip">
+                                <div class="card-body">
+                                    <h6 class="mb-2"><i class="fas fa-magic mr-1 text-primary"></i> Quick checklist</h6>
+                                    <ul class="pl-3 mb-0 quick-checklist small">
+                                        <li>Double-check the email spelling.</li>
+                                        <li>Set an organization for better access control.</li>
+                                        <li>Enable 2FA for all privileged users.</li>
+                                        <li>Use manual password only when required.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3 shadow-sm section-card">
                                 <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0">Security controls</h5>
+                                    <h5 class="mb-0"><i class="fas fa-shield-alt mr-1"></i> Security controls</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="custom-control custom-switch mb-3">
@@ -159,9 +228,9 @@
                                 </div>
                             </div>
 
-                            <div class="card mb-3 shadow-sm">
+                            <div class="card mb-3 shadow-sm section-card">
                                 <div class="card-header bg-dark text-white">
-                                    <h5 class="mb-0">Save</h5>
+                                    <h5 class="mb-0"><i class="fas fa-save mr-1"></i> Save</h5>
                                 </div>
                                 <div class="card-body">
                                     <button class="btn btn-primary btn-block" type="submit">
