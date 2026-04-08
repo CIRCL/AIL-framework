@@ -17,6 +17,110 @@
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
+  <style>
+    .status-hero {
+      background: linear-gradient(120deg, #1f2937 0%, #111827 70%);
+      color: #fff;
+      border-radius: 0.75rem;
+      padding: 1.1rem 1.25rem;
+      margin-top: .5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.22);
+    }
+    .status-hero h4 {
+      margin-bottom: .35rem;
+    }
+    .status-grid-card {
+      border-radius: .75rem;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      height: 100%;
+    }
+    .status-table td {
+      vertical-align: middle;
+    }
+    .status-label {
+      font-weight: 600;
+      color: #374151;
+      width: 42%;
+    }
+    .status-value {
+      font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      word-break: break-word;
+    }
+    .progress {
+      height: 1.1rem;
+      border-radius: 2rem;
+      background-color: #e9ecef;
+    }
+    .progress-bar {
+      font-weight: 600;
+      min-width: 2rem;
+    }
+    .status-helper {
+      font-size: .9rem;
+      color: #6b7280;
+    }
+    .dashboard-section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .85rem;
+    }
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .9rem;
+    }
+    .quick-action-card {
+      border: 1px solid #e5e7eb;
+      border-radius: .75rem;
+      background: #fff;
+      padding: .9rem 1rem;
+      transition: all .2s ease;
+      text-decoration: none !important;
+      color: #1f2937;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+      height: 100%;
+    }
+    .quick-action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      border-color: #cbd5e1;
+      color: #111827;
+    }
+    .quick-action-icon {
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: .5rem;
+      font-size: .95rem;
+    }
+    .quick-action-title {
+      font-weight: 600;
+      margin-bottom: .2rem;
+    }
+    .quick-action-desc {
+      margin-bottom: 0;
+      color: #6b7280;
+      font-size: .86rem;
+    }
+    .icon-admin { background: #fef3c7; color: #92400e; }
+    .icon-user { background: #dbeafe; color: #1e40af; }
+    .icon-settings { background: #dcfce7; color: #166534; }
+    .icon-doc { background: #ede9fe; color: #5b21b6; }
+    #update_error_div {
+      background-color: #fdf2f2;
+      border: 1px solid #fecaca;
+      border-radius: .5rem;
+      padding: .75rem;
+      margin-top: .85rem;
+    }
+  </style>
+
 </head>
 <body>
 
@@ -28,25 +132,53 @@
 			{% include 'settings/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+        <div class="status-hero">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div>
+              <h4 class="mb-1">Settings &amp; System Status</h4>
+              <p class="mb-0">
+                {% if acl_admin %}
+                  Quick access to admin tools, user management and instance diagnostics.
+                {% else %}
+                  Quick access to your profile, account settings and instance diagnostics.
+                {% endif %}
+              </p>
+            </div>
+            {% if ail_version is not none %}
+              <a target="_blank"
+                 href="https://github.com/ail-project/ail-framework/releases/tag/{{ail_version}}"
+                 class="badge badge-light mt-2 mt-md-0 px-3 py-2 text-dark"
+                 title="Open release notes for {{ail_version}}">
+                {{ail_version}}
+              </a>
+            {% else %}
+              <span class="badge badge-light mt-2 mt-md-0 px-3 py-2 text-dark"
+                    title="No tagged version detected">
+                {{git_metadata['current_branch']}}
+              </span>
+            {% endif %}
+          </div>
+        </div>
 
-				<div class="card mb-3 mt-1">
-					<div class="card-header text-white bg-dark pb-1">
-						<h5 class="card-title">AIL-framework Status :</h5>
+				<div class="card mb-3">
+					<div class="card-header bg-white border-bottom">
+						<h5 class="card-title mb-0"><i class="fas fa-server mr-2 text-secondary"></i>Instance Status</h5>
+            <small class="status-helper">Important metadata about your current deployment.</small>
 					</div>
-					<div class="card-body">
+					<div class="card-body pt-3">
 
             <div class="row">
-              <div class="col-xl-6">
-                <div class="card text-center border-secondary">
-                  <div class="card-body px-1 py-0">
-                    <table class="table table-sm">
+              <div class="col-xl-6 mb-3 mb-xl-0">
+                <div class="card status-grid-card">
+                  <div class="card-body px-3 py-2">
+                    <table class="table table-sm status-table mb-0">
                       <tbody>
                         <tr>
-                          <td>AIL Version</td>
+                          <td class="status-label">AIL Version</td>
                           {%if ail_version is not none %}
-                              <td>{{ail_version}}<a target="_blank" href="https://github.com/ail-project/ail-framework/releases/tag/{{ail_version}}" class="text-info"><small> (release note)</small></a></td>
+                              <td class="status-value">{{ail_version}}<a target="_blank" href="https://github.com/ail-project/ail-framework/releases/tag/{{ail_version}}" class="text-info"><small> (release note)</small></a></td>
 			                    {%else%}
-                              <td>{{git_metadata['current_branch']}}</td>
+                              <td class="status-value">{{git_metadata['current_branch']}}</td>
                           {%endif%}
                         </tr>
                         <tr
@@ -54,8 +186,8 @@
                           class="table-danger"
                         {%endif%}
                         >
-                          <td>Current Branch</td>
-                          <td>
+                          <td class="status-label">Current Branch</td>
+                          <td class="status-value">
                             {%if git_metadata['current_branch'] != 'master'%}
                               <i class="fas fa-times-circle text-danger" data-toggle="tooltip" data-placement="top" title="Please checkout the master branch"></i>&nbsp;
                             {%endif%}
@@ -67,8 +199,8 @@
                             class="table-warning"
                           {%endif%}
                           >
-                            <td>Current Commit ID</td>
-                            <td>
+                            <td class="status-label">Current Commit ID</td>
+                            <td class="status-value">
                               {%if git_metadata['new_git_update_available']%}
                                 <i class="fas fa-exclamation-triangle text-secondary" data-toggle="tooltip" data-placement="top" title="A New Update Is Available"></i>&nbsp;
                               {%endif%}
@@ -80,8 +212,8 @@
                             class="table-danger"
                           {%endif%}
                           >
-                            <td>Current Tag</td>
-                            <td>
+                            <td class="status-label">Current Tag</td>
+                            <td class="status-value">
                               {%if git_metadata['new_git_version_available']%}
                                 <i class="fas fa-exclamation-circle text-danger" data-toggle="tooltip" data-placement="top" title="A New Version Is Available"></i>&nbsp;&nbsp;
                               {%endif%}
@@ -95,21 +227,24 @@
               </div>
 
               <div class="col-xl-6">
-                <div class="card text-center border-success" id="card_progress">
+                <div class="card status-grid-card border-success" id="card_progress">
                   <div class="card-body" id="card_progress_body">
-                    <h5 class="card-title">Backgroud Update: <span id="backgroud_update_version"></span></h5>
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                      <h5 class="card-title mb-0">Background Update</h5>
+                      <span class="badge badge-info" id="backgroud_update_version"></span>
+                    </div>
+                    <p class="status-helper mb-2">Overall progress</p>
                     <div class="progress">
                       <div class="progress-bar bg-danger" role="progressbar" id="update_global_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
-                    <hr class="my-1">
-                    Updating: <strong id="backgroud_update_name"></strong> ...
+                    <hr class="my-2">
+                    <p class="status-helper mb-2">Currently running: <strong id="backgroud_update_name"></strong></p>
                     <div class="progress">
                       <div class="progress-bar progress-bar-striped bg-warning progress-bar-animated" role="progressbar" id="update_background_progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                     <div class="text-danger" id="update_error_div">
-                      <hr>
                       <h5 class="card-title"><i class="fas fa-times-circle text-danger"></i> Update Error:</h5>
-                      <p id="update_error_mess"></p>
+                      <p class="mb-0" id="update_error_mess"></p>
                     </div>
                   </div>
                 </div>
@@ -119,6 +254,93 @@
 
 					</div>
 				</div>
+
+        <div class="card mb-3">
+          <div class="card-header bg-white border-bottom py-3">
+            <div class="dashboard-section-title">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-bolt text-warning mr-2"></i>Quick Actions
+              </h5>
+              <small class="status-helper">Shortcuts for daily actions</small>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="quick-grid">
+              <a href="{{url_for('settings_b.user_profile')}}" class="quick-action-card">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="quick-action-icon icon-user"><i class="fas fa-user-edit"></i></span>
+                  <span class="quick-action-title">My Profile</span>
+                </div>
+                <p class="quick-action-desc">Update your personal details and profile information.</p>
+              </a>
+
+              <a href="{{url_for('root.change_password')}}" class="quick-action-card">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="quick-action-icon icon-settings"><i class="fas fa-key"></i></span>
+                  <span class="quick-action-title">Change Password</span>
+                </div>
+                <p class="quick-action-desc">Keep your account secure by rotating your password.</p>
+              </a>
+
+              <a href="{{url_for('settings_b.passive_dns')}}" class="quick-action-card">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="quick-action-icon icon-settings"><i class="fas fa-network-wired"></i></span>
+                  <span class="quick-action-title">Passive DNS</span>
+                </div>
+                <p class="quick-action-desc">Manage passive DNS ingestion and configuration options.</p>
+              </a>
+
+              <a href="{{url_for('settings_b.settings_modules')}}" class="quick-action-card">
+                <div class="d-flex align-items-center mb-2">
+                  <span class="quick-action-icon icon-doc"><i class="fas fa-project-diagram"></i></span>
+                  <span class="quick-action-title">Modules</span>
+                </div>
+                <p class="quick-action-desc">Review available modules and their current states.</p>
+              </a>
+            </div>
+
+            {% if acl_admin %}
+              <hr>
+              <div class="dashboard-section-title mt-2">
+                <h6 class="mb-0 text-dark"><i class="fas fa-users-cog text-secondary mr-2"></i>Admin User Management</h6>
+                <small class="status-helper">Manage users and organisations</small>
+              </div>
+              <div class="quick-grid">
+                <a href="{{url_for('settings_b.create_user')}}" class="quick-action-card">
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="quick-action-icon icon-admin"><i class="fas fa-user-plus"></i></span>
+                    <span class="quick-action-title">Create User</span>
+                  </div>
+                  <p class="quick-action-desc">Add a new user account with specific access controls.</p>
+                </a>
+
+                <a href="{{url_for('settings_b.users_list')}}" class="quick-action-card">
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="quick-action-icon icon-admin"><i class="fas fa-users"></i></span>
+                    <span class="quick-action-title">Users List</span>
+                  </div>
+                  <p class="quick-action-desc">View and manage existing users and permissions.</p>
+                </a>
+
+                <a href="{{url_for('settings_b.organisations_list')}}" class="quick-action-card">
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="quick-action-icon icon-admin"><i class="fas fa-landmark"></i></span>
+                    <span class="quick-action-title">Organisations</span>
+                  </div>
+                  <p class="quick-action-desc">Browse organisations and quickly access details.</p>
+                </a>
+
+                <a href="{{url_for('settings_b.create_organisation')}}" class="quick-action-card">
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="quick-action-icon icon-admin"><i class="fas fa-plus"></i></span>
+                    <span class="quick-action-title">Create Organisation</span>
+                  </div>
+                  <p class="quick-action-desc">Create a new organisation and assign users to it.</p>
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
 
         {%if git_metadata['new_git_version_available']%}
           <div class="alert alert-danger" role="alert">
@@ -197,7 +419,7 @@ function refresh_update_status(){
       } else {
         $('#update_error_div').hide();
         $('#card_progress').removeClass("border-danger");
-        $('#card_progress').add("border-success");
+        $('#card_progress').addClass("border-success");
       }
     } else {
       $('#card_progress').hide();
