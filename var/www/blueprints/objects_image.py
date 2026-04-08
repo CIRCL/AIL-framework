@@ -36,9 +36,9 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 def image(filename):
     if not filename:
         abort(404)
-    if not 64 <= len(filename) <= 70:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 64 <= len(filename) <= 70 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     image = Images.Image(filename)
     return send_from_directory(Images.IMAGE_FOLDER, image.get_rel_path(), as_attachment=False, mimetype='image')
 

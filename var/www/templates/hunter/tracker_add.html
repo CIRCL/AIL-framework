@@ -326,8 +326,8 @@ $(document).ready(function(){
 
 
 	sources_item = $('#sources_item').tagSuggest({
-		data: {{all_sources|safe}},
-		{%if dict_tracker%}{%if dict_tracker['filters']%}{%if dict_tracker['filters']['item']%}{%if dict_tracker['filters']['item']['sources']%}value: {{dict_tracker['filters']['item']['sources']|safe}},{%endif%}{%endif%}{%endif%}{%endif%}
+		data: {{all_sources|tojson}},
+		{%if dict_tracker%}{%if dict_tracker['filters']%}{%if dict_tracker['filters']['item']%}{%if dict_tracker['filters']['item']['sources']%}value: {{dict_tracker['filters']['item']['sources']|tojson}},{%endif%}{%endif%}{%endif%}{%endif%}
 		sortOrder: 'name',
 		maxDropHeight: 200,
 		name: 'sources_item',

@@ -60,9 +60,9 @@ def create_json_response(data, status_code):
 def screenshot(filename):
     if not filename:
         abort(404)
-    if not 64 <= len(filename) <= 70:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 64 <= len(filename) <= 70 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     s = Screenshot(filename)
     return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
 

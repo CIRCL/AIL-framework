@@ -36,9 +36,9 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 def favicon(filename):
     if not filename:
         abort(404)
-    if not 9 <= len(filename) <= 11:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 9 <= len(filename) <= 11 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     fav = Favicons.Favicon(filename)
     return send_from_directory(Favicons.FAVICON_FOLDER, fav.get_rel_path(), as_attachment=False, mimetype='image')
 

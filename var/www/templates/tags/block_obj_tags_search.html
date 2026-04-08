@@ -46,7 +46,7 @@
     function(data) {
       ltags = $('#ltags').tagSuggest({
         data: data,
-				value: [{%if "current_tags"%}{% for tag in current_tags %}'{{tag|safe}}',{%endfor%}{%endif%}],
+				value: [{%if "current_tags"%}{% for tag in current_tags %}'{{tag|tojson}}',{%endfor%}{%endif%}],
         sortOrder: 'name',
         maxDropHeight: 200,
         name: 'ltags'

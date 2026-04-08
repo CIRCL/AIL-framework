@@ -269,7 +269,7 @@ $(document).ready(function(){
 	});
 
 	sources_item = $('#sources_item').tagSuggest({
-		data: {{items_sources|safe}},
+		data: {{items_sources|tojson}},
 		sortOrder: 'name',
 		maxDropHeight: 200,
 		name: 'sources_item',

@@ -46,7 +46,7 @@
     function(data) {
       llanguages = $('#llanguages').tagSuggest({
         data: data,
-				value: [{%if current_languages%}{% for language in current_languages %}'{{language|safe}}',{%endfor%}{%endif%}],
+				value: [{%if current_languages%}{% for language in current_languages %}'{{language|tojson}}',{%endfor%}{%endif%}],
         sortOrder: 'name',
         maxDropHeight: 200,
         name: 'llanguages'
