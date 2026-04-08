@@ -166,16 +166,6 @@ def item_download():  # # TODO: support post
     item = Item(item_id)
     return send_file(item.get_raw_content(), download_name=item_id, as_attachment=True)
 
-@objects_item.route("/objects/item/content/more")
-@login_required
-@login_read_only
-def item_content_more():
-    item_id = request.args.get('id', '')
-    item = Item(item_id)
-    item_content = item.get_content()
-    to_return = item_content[max_preview_modal-1:]
-    return Response(to_return, mimetype='text/plain')
-
 @objects_item.route("/objects/item/diff")
 @login_required
 @login_user
