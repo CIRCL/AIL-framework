@@ -82,6 +82,9 @@ class Investigation(object):
     def get_name(self):
         return self._get_field('info')
 
+    def get_info(self):
+        return r_tracking.hget(f'investigations:data:{self.uuid}', 'info')
+
     def get_description(self):
         return self._get_field('description')
 
@@ -143,9 +146,6 @@ class Investigation(object):
     # save all editor ??????
     def get_creator_user(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'creator_user')
-
-    def get_info(self):
-        return r_tracking.hget(f'investigations:data:{self.uuid}', 'info')
 
     def get_date(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'date')
@@ -409,11 +409,11 @@ def get_investigations_selector(org_uuid):
     l_investigations = []
     for investigation_uuid in get_global_investigations():
         investigation = Investigation(investigation_uuid)
-        name = investigation.get_info()
+        name = investigation.get_name()
         l_investigations.append({"id": investigation_uuid, "name": name})
     for investigation_uuid in get_org_investigations(org_uuid):
         investigation = Investigation(investigation_uuid)
-        name = investigation.get_info()
+        name = investigation.get_name()
         l_investigations.append({"id": investigation_uuid, "name": name})
     return l_investigations
 
@@ -561,9 +561,9 @@ def api_download_investigation(user_org, user_id, user_role, json_dict):
     res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
     if res:
         return res
-    description = investigation.get_info()
-    if description:
-        filename = description.replace('_', '').replace('/', '')
+    name = investigation.get_name()
+    if name:
+        filename = name.replace('_', '').replace('/', '')
     else:
         filename = ''
     filename = f'{filename}_{investigation.get_uuid()}.zip'

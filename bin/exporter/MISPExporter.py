@@ -284,7 +284,7 @@ class MISPExporterInvestigation(MISPExporter):
                                   distribution=0,
                                   threat_level=investigation.get_threat_level(),
                                   analysis=investigation.get_analysis(),
-                                  info=investigation.get_info(),
+                                  info=investigation.get_info(), # TODO Name + Description
                                   tags=investigation.get_tags(),
                                   export=True)
         return event
