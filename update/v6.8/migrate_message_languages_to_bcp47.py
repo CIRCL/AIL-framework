@@ -9,6 +9,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib import ail_updates
 from lib import Language
 from lib import chats_viewer
 
@@ -16,7 +17,9 @@ logger = logging.getLogger('ail.language_migration')
 
 
 def migrate_message_languages(dry_run=False):
+    update = ail_updates.AILBackgroundUpdate('v6.8')
     nb_messages = chats_viewer.get_nb_messages_iterator()
+    update.set_nb_to_update(nb_messages)
     nb_done = 0
     counters = {
         'already_valid_bcp47': 0,
@@ -31,10 +34,12 @@ def migrate_message_languages(dry_run=False):
         if nb_done % 10000 == 0:
             progress = int((nb_done * 100) / nb_messages)
             logger.info(f'{progress}% {nb_done}/{nb_messages}')
+            update.update_progress()
 
         existing_languages = list(message.get_languages())
         if not existing_languages:
             nb_done += 1
+            update.inc_nb_updated()
             continue
 
         changed = False
@@ -75,6 +80,7 @@ def migrate_message_languages(dry_run=False):
         if changed:
             counters['updated_messages'] += 1
         nb_done += 1
+        update.inc_nb_updated()
     return counters
 
 
