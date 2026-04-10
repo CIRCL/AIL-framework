@@ -150,9 +150,6 @@
             font-weight: 600;
             color: inherit;
             word-break: break-word;
-            text-decoration: underline;
-            text-decoration-thickness: 1px;
-            text-underline-offset: 2px;
         }
 
         .investigation-link-hint {
@@ -328,7 +325,7 @@
                                             <a class="investigation-link" href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
                                                 <span class="investigation-name">{{ dict_investigation['info']}}</span>
                                                 <span class="investigation-link-hint">
-                                                    Open investigation <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
+                                                    <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
                                                 </span>
                                                 <div class="investigation-tags">
                                                     {% for tag in dict_investigation['tags'] %}
@@ -387,7 +384,7 @@
                                             <a class="investigation-link" href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
                                                 <span class="investigation-name">{{ dict_investigation['info']}}</span>
                                                 <span class="investigation-link-hint">
-                                                    Open investigation <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
+                                                    <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
                                                 </span>
                                                 <div class="investigation-tags">
                                                     {% for tag in dict_investigation['tags'] %}
