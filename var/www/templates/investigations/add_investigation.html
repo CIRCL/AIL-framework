@@ -89,7 +89,7 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_investigations.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 				<div class="container-fluid investigation-shell py-3 py-xl-4">
@@ -104,10 +104,10 @@
 											Create a new investigation
 										{% endif %}
 									</h1>
-									<p class="mb-0 text-white-50">Capture key details, set analysis status, and control visibility for your team.</p>
+									<p class="mb-0 text-white-50">Launch a new investigation with the right details, status, and visibility settings for collaboration.</p>
 								</div>
 								<div class="text-white">
-									<ul class="mb-0 mt-3 mt-lg-0 text-white-50">
+									<ul class="mb-0 mt-3 mt-lg-0 text-white">
 										<li>Step 1: Add title and context</li>
 										<li>Step 2: Set status and timeline</li>
 										<li>Step 3: Apply tags and sharing level</li>
@@ -165,7 +165,7 @@
 													<div class="status-grid mb-3">
 														<div class="status-chip">
 															<div class="small text-uppercase text-muted">Status</div>
-															<div class="font-weight-bold"><i class="fas fa-stream text-info mr-1"></i>Workflow stage</div>
+															<div class="font-weight-bold"><i class="fas fa-stream text-info mr-1"></i>Case stage</div>
 														</div>
 														<div class="status-chip">
 															<div class="small text-uppercase text-muted">Date</div>
@@ -215,7 +215,7 @@
 											<div class="card mb-4 investigation-form-card">
 											  <div class="card-header investigation-form-header py-3">
 													<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Classification tags</h5>
-													<p class="mb-0 text-muted">Attach tags to improve filtering, cross-correlation, and reporting.</p>
+													<p class="mb-0 text-muted">Attach tags to improve filtering and reporting.</p>
 												</div>
 											  <div class="card-body">
 													{% include 'tags/block_tags_selector.html' %}
@@ -227,12 +227,12 @@
 										<div class="col-12 col-xl-4">
 											<div class="card investigation-form-card sticky-panel mb-4">
 												<div class="card-body">
-													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Visibility &amp; actions</h6>
+													<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility &amp; actions</h5>
 													<p class="text-muted mb-3">
 														{% if edit %}
 															Update metadata and visibility for this investigation.
 														{% else %}
-															Define how this investigation will be shared once created.
+															Decide who can view this investigation.
 														{% endif %}
 													</p>
 													<label class="font-weight-bold mb-1" for="level_selector">View Level</label>
@@ -245,11 +245,7 @@
 															<option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
 														{% endif %}
 													</select>
-													<small class="text-muted d-block mt-2">Global shares this investigation with all eligible users; My Organisation restricts visibility to your organisation.</small>
-													<div class="alert alert-light border mt-3 mb-0 small">
-														<i class="fas fa-shield-alt text-success mr-1"></i>
-														Choose <strong>My Organisation</strong> for internal-only investigations.
-													</div>
+													<small class="text-muted d-block mt-2">Global investigations are visible to all users; My Organisation restricts visibility to your organisation.</small>
 													<hr>
 													<div class="d-flex flex-column">
 														<button class="btn btn-primary px-4 py-2 mb-2">
@@ -259,30 +255,18 @@
 																<i class="fas fa-plus"></i> Create Investigation
 															{% endif %}
 														</button>
-														<small class="text-muted">Your changes are saved when you click the button above.</small>
 													</div>
 												</div>
 											</div>
 
-											<div class="card quick-tip-card mb-4">
-												<div class="card-body">
-													<h6 class="font-weight-bold mb-2"><i class="fas fa-lightbulb text-warning mr-1"></i>Quick tips</h6>
-													<ul class="small text-muted mb-0 pl-3">
-														<li>Use a descriptive name with campaign, actor, or target context.</li>
-														<li>Add enough details so teammates can continue the work.</li>
-														<li>Select accurate status to keep dashboards reliable.</li>
-													</ul>
-												</div>
-											</div>
+										</div>
+                                    </div>
 
-										</div>
-										</div>
-
-										<div class="d-flex justify-content-start mt-1 mb-4">
-											<a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary">
-												<i class="fas fa-arrow-left"></i> Back to investigations
-											</a>
-										</div>
+                        <div class="d-flex justify-content-start mt-1 mb-4">
+                            <a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to investigations
+                            </a>
+                        </div>
 
 					</form>
 				</div>
@@ -296,6 +280,7 @@
 
 <script>
 $(document).ready(function(){
+    $("#page-investigation").addClass("active");
 	$('#nav_investigation').removeClass("text-muted");
 	$("#nav_add_investigation").addClass("active");
 
