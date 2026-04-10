@@ -22,24 +22,43 @@
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 	<style>
+		.investigation-page {
+			background: #f8f9fc;
+			min-height: 100vh;
+		}
+		.investigation-shell {
+			max-width: 1300px;
+		}
+		.investigation-hero {
+			border: 0;
+			background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+			box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.2);
+		}
 		.investigation-form-card {
 			border: 0;
-			border-radius: .75rem;
-			box-shadow: 0 8px 24px rgba(18, 38, 63, 0.08);
+			box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
 		}
 		.investigation-form-header {
-			background: linear-gradient(120deg, #2b3648 0%, #1f2735 100%);
-			border-top-left-radius: .75rem;
-			border-top-right-radius: .75rem;
+			background: #fff;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 		}
 		.form-hint {
 			font-size: .85rem;
+		}
+		.sticky-panel {
+			position: sticky;
+			top: 1rem;
+		}
+		@media (max-width: 1199.98px) {
+			.sticky-panel {
+				position: static;
+			}
 		}
 	</style>
 
 </head>
 
-<body>
+<body class="investigation-page">
 
 	{% include 'nav_bar.html' %}
 
@@ -49,16 +68,39 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+				<div class="container-fluid investigation-shell py-3 py-xl-4">
+					<div class="card investigation-hero text-white mb-4">
+						<div class="card-body p-4 p-xl-5">
+							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+								<div class="pr-lg-4">
+									<h1 class="h3 mb-2">
+										{% if edit %}
+											Update investigation
+										{% else %}
+											Create a new investigation
+										{% endif %}
+									</h1>
+									<p class="mb-0 text-white-50">Capture key details, set analysis status, and control visibility for your team.</p>
+								</div>
+								<ul class="mb-0 mt-3 mt-lg-0 text-white-50">
+									<li>Add context and scope</li>
+									<li>Set status and date</li>
+									<li>Choose visibility and tags</li>
+								</ul>
+							</div>
+						</div>
+					</div>
 
-						<div class="card my-3 investigation-form-card">
-						  <div class="card-header text-white investigation-form-header">
-								<h5 class="card-title">
+						<div class="card mb-4 investigation-form-card">
+						  <div class="card-header investigation-form-header py-3">
+								<h5 class="card-title mb-1">
 									{% if edit %}
 										Edit Investigation
 									{% else %}
 										Create Investigation
 									{% endif %}
 								</h5>
+								<p class="mb-0 text-muted">Complete the form below to keep your investigation clear and actionable.</p>
 							</div>
 						  <div class="card-body">
 
@@ -117,14 +159,18 @@
 												</div>
 											</div>
 
-											<div class="input-group" id="ivestigation-date">
-												<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-												<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
+											<div class="form-group">
+												<label for="ivestigation-date-input" class="font-weight-bold mb-1">Investigation date <span class="text-danger">*</span></label>
+												<div class="input-group" id="ivestigation-date">
+													<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+													<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
+												</div>
+												<small class="text-muted form-hint">Select when this investigation started or was reported.</small>
 											</div>
 
 											<div class="card my-4">
-											  <div class="card-header bg-secondary text-white">
-													<b>Tags</b>
+											  <div class="card-header bg-white border-bottom">
+													<b><i class="fas fa-tags text-danger mr-1"></i>Tags</b>
 												</div>
 											  <div class="card-body">
 													{% include 'tags/block_tags_selector.html' %}
@@ -134,9 +180,9 @@
 										</div>
 
 										<div class="col-12 col-xl-4">
-											<div class="card border-0 bg-light h-100">
+											<div class="card border-0 bg-light h-100 sticky-panel">
 												<div class="card-body">
-													<h6 class="font-weight-bold">Publishing options</h6>
+													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Publishing options</h6>
 													<p class="text-muted mb-3">
 														{% if edit %}
 															Update metadata and visibility for this investigation.
@@ -161,20 +207,21 @@
 									</div>
 
 
-									<br>
-									<button class="btn btn-primary mt-2">
+									<div class="d-flex justify-content-end mt-2">
+									<button class="btn btn-primary px-4">
 										{% if edit %}
 											<i class="fas fa-pencil-alt"></i> Edit Investigation
 										{% else %}
 											<i class="fas fa-plus"></i> Create Investigation
 										{% endif %}
 									</button>
+									</div>
 
 								</form>
 
 						  </div>
 						</div>
-
+				</div>
 
 			</div>
 
