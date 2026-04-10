@@ -53,6 +53,22 @@
 			border: 1px dashed #adb5bd;
 			background: #fcfcfd;
 		}
+		.status-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+			grid-gap: 0.75rem;
+		}
+		.status-chip {
+			background: #f8f9fc;
+			border: 1px solid #e9ecef;
+			border-radius: 0.5rem;
+			padding: 0.75rem;
+		}
+		.section-divider {
+			border-top: 1px solid rgba(0, 0, 0, 0.06);
+			margin-top: 1rem;
+			padding-top: 1rem;
+		}
 		.sticky-panel {
 			position: sticky;
 			top: 1rem;
@@ -126,6 +142,8 @@
 														<small class="text-muted form-hint">Use a short and specific title for easier search and collaboration.</small>
 													</div>
 
+													<div class="section-divider"></div>
+
 													<div class="form-group mb-0">
 														<label for="investigation_description" class="font-weight-bold mb-1">Description</label>
 														<div class="input-group">
@@ -144,6 +162,16 @@
 													<p class="mb-0 text-muted">Track investigation progress and set the investigation date.</p>
 												</div>
 												<div class="card-body">
+													<div class="status-grid mb-3">
+														<div class="status-chip">
+															<div class="small text-uppercase text-muted">Status</div>
+															<div class="font-weight-bold"><i class="fas fa-stream text-info mr-1"></i>Workflow stage</div>
+														</div>
+														<div class="status-chip">
+															<div class="small text-uppercase text-muted">Date</div>
+															<div class="font-weight-bold"><i class="far fa-calendar-alt text-secondary mr-1"></i>Case timeline</div>
+														</div>
+													</div>
 													<div class="form-group">
 													 <label for="analysis" class="font-weight-bold mb-1">Analysis status
 														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
@@ -171,6 +199,8 @@
 													 </select>
 													</div>
 
+													<div class="section-divider"></div>
+
 													<div class="form-group mb-0">
 														<label for="ivestigation-date-input" class="font-weight-bold mb-1">Investigation date <span class="text-danger">*</span></label>
 														<div class="input-group" id="ivestigation-date">
@@ -197,7 +227,7 @@
 										<div class="col-12 col-xl-4">
 											<div class="card investigation-form-card sticky-panel mb-4">
 												<div class="card-body">
-													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Publishing options</h6>
+													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Visibility &amp; actions</h6>
 													<p class="text-muted mb-3">
 														{% if edit %}
 															Update metadata and visibility for this investigation.
@@ -216,6 +246,21 @@
 														{% endif %}
 													</select>
 													<small class="text-muted d-block mt-2">Global shares this investigation with all eligible users; My Organisation restricts visibility to your organisation.</small>
+													<div class="alert alert-light border mt-3 mb-0 small">
+														<i class="fas fa-shield-alt text-success mr-1"></i>
+														Choose <strong>My Organisation</strong> for internal-only investigations.
+													</div>
+													<hr>
+													<div class="d-flex flex-column">
+														<button class="btn btn-primary px-4 py-2 mb-2">
+															{% if edit %}
+																<i class="fas fa-pencil-alt"></i> Edit Investigation
+															{% else %}
+																<i class="fas fa-plus"></i> Create Investigation
+															{% endif %}
+														</button>
+														<small class="text-muted">Your changes are saved when you click the button above.</small>
+													</div>
 												</div>
 											</div>
 
@@ -231,18 +276,13 @@
 											</div>
 
 										</div>
-									</div>
+										</div>
 
-
-									<div class="d-flex justify-content-end mt-2 mb-4">
-									<button class="btn btn-primary px-4 py-2">
-										{% if edit %}
-											<i class="fas fa-pencil-alt"></i> Edit Investigation
-										{% else %}
-											<i class="fas fa-plus"></i> Create Investigation
-										{% endif %}
-									</button>
-									</div>
+										<div class="d-flex justify-content-start mt-1 mb-4">
+											<a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary">
+												<i class="fas fa-arrow-left"></i> Back to investigations
+											</a>
+										</div>
 
 					</form>
 				</div>
