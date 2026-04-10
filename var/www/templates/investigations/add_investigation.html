@@ -21,6 +21,21 @@
 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+	<style>
+		.investigation-form-card {
+			border: 0;
+			border-radius: .75rem;
+			box-shadow: 0 8px 24px rgba(18, 38, 63, 0.08);
+		}
+		.investigation-form-header {
+			background: linear-gradient(120deg, #2b3648 0%, #1f2735 100%);
+			border-top-left-radius: .75rem;
+			border-top-right-radius: .75rem;
+		}
+		.form-hint {
+			font-size: .85rem;
+		}
+	</style>
 
 </head>
 
@@ -35,8 +50,8 @@
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-						<div class="card my-3">
-						  <div class="card-header bg-dark text-white">
+						<div class="card my-3 investigation-form-card">
+						  <div class="card-header text-white investigation-form-header">
 								<h5 class="card-title">
 									{% if edit %}
 										Edit Investigation
@@ -54,16 +69,25 @@
 									{% endif %}
 
 									<div class="row">
-										<div class="col-12 col-xl-9">
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
-										    </div>
-												<input id="investigation_info" name="investigation_info" class="form-control" placeholder="Quick Investigation Info" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
-										  </div>
+										<div class="col-12 col-xl-8">
+											<div class="form-group">
+												<label for="investigation_info" class="font-weight-bold mb-1">Investigation name <span class="text-danger">*</span></label>
+												<div class="input-group">
+											    <div class="input-group-prepend">
+											      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+											    </div>
+													<input id="investigation_info" name="investigation_info" class="form-control" placeholder="e.g. Suspicious infrastructure campaign" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
+											  </div>
+												<small class="text-muted form-hint">Choose a short, clear title that helps others quickly understand the investigation.</small>
+											</div>
+
+											<div class="form-group">
+												<label for="investigation_description" class="font-weight-bold mb-1">Description</label>
+												<textarea id="investigation_description" name="investigation_description" class="form-control" rows="3" placeholder="Add context, key indicators, and objectives for this investigation (optional).">{% if edit and metadata['description'] %}{{ metadata['description'] }}{% endif %}</textarea>
+											</div>
 
 											<div class="row">
-												<div class="col-12>
+												<div class="col-12">
 													<div class="form-group">
 													 <label for="analysis">Analysis:
 														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
@@ -109,24 +133,29 @@
 
 										</div>
 
-										<div class="col-12 col-xl-3">
-											{% if edit %}
-												Edit Investigation
-											{% else %}
-												Create a new Investigation
-											{% endif %}
-
-                                            <br>
-                                            <label  class="mt-3" for="level_selector">View Level</label>
-                                            <select class="custom-select" id="level_selector" name="investigation_level">
-                                                {% if edit %}
-                                                    <option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2" {% if metadata['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
-                                                {% else %}
-                                                    <option value="1" selected><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
-                                                {% endif %}
-                                            </select>
+										<div class="col-12 col-xl-4">
+											<div class="card border-0 bg-light h-100">
+												<div class="card-body">
+													<h6 class="font-weight-bold">Publishing options</h6>
+													<p class="text-muted mb-3">
+														{% if edit %}
+															Update metadata and visibility for this investigation.
+														{% else %}
+															Define how this investigation will be shared once created.
+														{% endif %}
+													</p>
+													<label class="font-weight-bold" for="level_selector">View Level</label>
+													<select class="custom-select" id="level_selector" name="investigation_level">
+														{% if edit %}
+															<option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+															<option value="2" {% if metadata['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
+														{% else %}
+															<option value="1" selected><i class="fas fa-users"></i> Global</option>
+															<option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
+														{% endif %}
+													</select>
+												</div>
+											</div>
 
 										</div>
 									</div>
