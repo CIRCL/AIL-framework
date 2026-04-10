@@ -27,12 +27,16 @@
 			min-height: 100vh;
 		}
 		.investigation-shell {
-			max-width: 1300px;
+			max-width: 1400px;
 		}
 		.investigation-hero {
 			border: 0;
 			background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
 			box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.2);
+		}
+		.investigation-hero .display-title {
+			font-size: 1.85rem;
+			font-weight: 600;
 		}
 		.investigation-form-card {
 			border: 0;
@@ -44,6 +48,10 @@
 		}
 		.form-hint {
 			font-size: .85rem;
+		}
+		.quick-tip-card {
+			border: 1px dashed #adb5bd;
+			background: #fcfcfd;
 		}
 		.sticky-panel {
 			position: sticky;
@@ -73,7 +81,7 @@
 						<div class="card-body p-4 p-xl-5">
 							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
 								<div class="pr-lg-4">
-									<h1 class="h3 mb-2">
+									<h1 class="display-title mb-2">
 										{% if edit %}
 											Update investigation
 										{% else %}
@@ -82,29 +90,18 @@
 									</h1>
 									<p class="mb-0 text-white-50">Capture key details, set analysis status, and control visibility for your team.</p>
 								</div>
-								<ul class="mb-0 mt-3 mt-lg-0 text-white-50">
-									<li>Add context and scope</li>
-									<li>Set status and date</li>
-									<li>Choose visibility and tags</li>
-								</ul>
+								<div class="text-white">
+									<ul class="mb-0 mt-3 mt-lg-0 text-white-50">
+										<li>Step 1: Add title and context</li>
+										<li>Step 2: Set status and timeline</li>
+										<li>Step 3: Apply tags and sharing level</li>
+									</ul>
+								</div>
 							</div>
 						</div>
 					</div>
 
-						<div class="card mb-4 investigation-form-card">
-						  <div class="card-header investigation-form-header py-3">
-								<h5 class="card-title mb-1">
-									{% if edit %}
-										Edit Investigation
-									{% else %}
-										Create Investigation
-									{% endif %}
-								</h5>
-								<p class="mb-0 text-muted">Complete the form below to keep your investigation clear and actionable.</p>
-							</div>
-						  <div class="card-body">
-
-								<form action="{% if edit %}{{ url_for('investigations_b.edit_investigation') }}{% else %}{{ url_for('investigations_b.add_investigation') }}{% endif %}" method='post' onsubmit="SubmitCreateInvestigation();">
+					<form action="{% if edit %}{{ url_for('investigations_b.edit_investigation') }}{% else %}{{ url_for('investigations_b.add_investigation') }}{% endif %}" method='post' onsubmit="SubmitCreateInvestigation();">
 
 									{% if edit %}
 										<input id="investigation_uuid" name="investigation_uuid" type="text" value="{{ metadata['uuid'] }}" hidden>
@@ -112,26 +109,43 @@
 
 									<div class="row">
 										<div class="col-12 col-xl-8">
-											<div class="form-group">
-												<label for="investigation_info" class="font-weight-bold mb-1">Investigation name <span class="text-danger">*</span></label>
-												<div class="input-group">
-											    <div class="input-group-prepend">
-											      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
-											    </div>
-													<input id="investigation_info" name="investigation_info" class="form-control" placeholder="e.g. Suspicious infrastructure campaign" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
-											  </div>
-												<small class="text-muted form-hint">Choose a short, clear title that helps others quickly understand the investigation.</small>
-											</div>
-
-											<div class="form-group">
-												<label for="investigation_description" class="font-weight-bold mb-1">Description</label>
-												<textarea id="investigation_description" name="investigation_description" class="form-control" rows="3" placeholder="Add context, key indicators, and objectives for this investigation (optional).">{% if edit and metadata['description'] %}{{ metadata['description'] }}{% endif %}</textarea>
-											</div>
-
-											<div class="row">
-												<div class="col-12">
+											<div class="card mb-4 investigation-form-card">
+												<div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-file-signature text-primary mr-2"></i>Investigation details</h5>
+													<p class="mb-0 text-muted">Add a clear title and summary so your team immediately understands the objective.</p>
+												</div>
+												<div class="card-body">
 													<div class="form-group">
-													 <label for="analysis">Analysis:
+														<label for="investigation_info" class="font-weight-bold mb-1">Investigation name <span class="text-danger">*</span></label>
+														<div class="input-group">
+													    <div class="input-group-prepend">
+													      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+													    </div>
+															<input id="investigation_info" name="investigation_info" class="form-control" placeholder="Example: Suspicious infrastructure campaign" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
+													  </div>
+														<small class="text-muted form-hint">Use a short and specific title for easier search and collaboration.</small>
+													</div>
+
+													<div class="form-group mb-0">
+														<label for="investigation_description" class="font-weight-bold mb-1">Description</label>
+														<div class="input-group">
+															<div class="input-group-prepend">
+																<div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+															</div>
+															<textarea id="investigation_description" name="investigation_description" class="form-control" rows="3" placeholder="Add context, key indicators, and objectives (optional).">{% if edit and metadata['description'] %}{{ metadata['description'] }}{% endif %}</textarea>
+														</div>
+													</div>
+												</div>
+											</div>
+
+											<div class="card mb-4 investigation-form-card">
+												<div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-tasks text-info mr-2"></i>Status and timeline</h5>
+													<p class="mb-0 text-muted">Track investigation progress and set the investigation date.</p>
+												</div>
+												<div class="card-body">
+													<div class="form-group">
+													 <label for="analysis" class="font-weight-bold mb-1">Analysis status
 														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
 														 <script type="text/javascript">
 														 		$(function() {
@@ -156,21 +170,22 @@
 														 <option value="2">Completed</option>
 													 </select>
 													</div>
+
+													<div class="form-group mb-0">
+														<label for="ivestigation-date-input" class="font-weight-bold mb-1">Investigation date <span class="text-danger">*</span></label>
+														<div class="input-group" id="ivestigation-date">
+															<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+															<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
+														</div>
+														<small class="text-muted form-hint">Set when this case started or was first reported.</small>
+													</div>
 												</div>
 											</div>
 
-											<div class="form-group">
-												<label for="ivestigation-date-input" class="font-weight-bold mb-1">Investigation date <span class="text-danger">*</span></label>
-												<div class="input-group" id="ivestigation-date">
-													<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-													<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
-												</div>
-												<small class="text-muted form-hint">Select when this investigation started or was reported.</small>
-											</div>
-
-											<div class="card my-4">
-											  <div class="card-header bg-white border-bottom">
-													<b><i class="fas fa-tags text-danger mr-1"></i>Tags</b>
+											<div class="card mb-4 investigation-form-card">
+											  <div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Classification tags</h5>
+													<p class="mb-0 text-muted">Attach tags to improve filtering, cross-correlation, and reporting.</p>
 												</div>
 											  <div class="card-body">
 													{% include 'tags/block_tags_selector.html' %}
@@ -180,7 +195,7 @@
 										</div>
 
 										<div class="col-12 col-xl-4">
-											<div class="card border-0 bg-light h-100 sticky-panel">
+											<div class="card investigation-form-card sticky-panel mb-4">
 												<div class="card-body">
 													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Publishing options</h6>
 													<p class="text-muted mb-3">
@@ -190,7 +205,7 @@
 															Define how this investigation will be shared once created.
 														{% endif %}
 													</p>
-													<label class="font-weight-bold" for="level_selector">View Level</label>
+													<label class="font-weight-bold mb-1" for="level_selector">View Level</label>
 													<select class="custom-select" id="level_selector" name="investigation_level">
 														{% if edit %}
 															<option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
@@ -200,6 +215,18 @@
 															<option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
 														{% endif %}
 													</select>
+													<small class="text-muted d-block mt-2">Global shares this investigation with all eligible users; My Organisation restricts visibility to your organisation.</small>
+												</div>
+											</div>
+
+											<div class="card quick-tip-card mb-4">
+												<div class="card-body">
+													<h6 class="font-weight-bold mb-2"><i class="fas fa-lightbulb text-warning mr-1"></i>Quick tips</h6>
+													<ul class="small text-muted mb-0 pl-3">
+														<li>Use a descriptive name with campaign, actor, or target context.</li>
+														<li>Add enough details so teammates can continue the work.</li>
+														<li>Select accurate status to keep dashboards reliable.</li>
+													</ul>
 												</div>
 											</div>
 
@@ -207,8 +234,8 @@
 									</div>
 
 
-									<div class="d-flex justify-content-end mt-2">
-									<button class="btn btn-primary px-4">
+									<div class="d-flex justify-content-end mt-2 mb-4">
+									<button class="btn btn-primary px-4 py-2">
 										{% if edit %}
 											<i class="fas fa-pencil-alt"></i> Edit Investigation
 										{% else %}
@@ -217,10 +244,7 @@
 									</button>
 									</div>
 
-								</form>
-
-						  </div>
-						</div>
+					</form>
 				</div>
 
 			</div>
