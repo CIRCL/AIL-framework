@@ -16,6 +16,8 @@ logger = logging.getLogger('ail.language_migration')
 
 
 def migrate_message_languages(dry_run=False):
+    nb_messages = chats_viewer.get_nb_messages_iterator()
+    nb_done = 0
     counters = {
         'already_valid_bcp47': 0,
         'migrated_iso639_3': 0,
@@ -25,8 +27,14 @@ def migrate_message_languages(dry_run=False):
     }
 
     for message in chats_viewer.get_messages_iterator():
+        # progress
+        if nb_done % 10000 == 0:
+            progress = int((nb_done * 100) / nb_messages)
+            logger.info(f'{progress}% {nb_done}/{nb_messages}')
+
         existing_languages = list(message.get_languages())
         if not existing_languages:
+            nb_done += 1
             continue
 
         changed = False
@@ -48,7 +56,7 @@ def migrate_message_languages(dry_run=False):
                     category = 'already_valid_bcp47' if canonical == language else 'normalized_bcp47'
                 else:
                     counters['skipped_invalid'] += 1
-                    logger.warning('Skipping invalid/unmappable language tag for %s: %s', message.get_global_id(), language)
+                    logger.warning(f'Skipping invalid/unmappable language tag for {message.get_global_id()}: {language}')
                     continue
 
             counters[category] += 1
@@ -66,7 +74,7 @@ def migrate_message_languages(dry_run=False):
 
         if changed:
             counters['updated_messages'] += 1
-
+        nb_done += 1
     return counters
 
 
@@ -75,7 +83,7 @@ def main():
     dry_run = '--dry-run' in sys.argv
 
     counters = migrate_message_languages(dry_run=dry_run)
-    logger.info('Migration summary: %s', counters)
+    logger.info(f'Migration summary: {counters}')
 
 
 if __name__ == '__main__':
