@@ -49,7 +49,7 @@ BACKGROUND_UPDATES = {
     'v5.9': {
         'message': 'Compute Domain/Items Dom-Hash',
         'scripts': ['reprocess_dom_hash.py']
-    }
+    },
     'v6.8': {
          'message': 'Convert Message Language to IETF BCP 47',
          'scripts': ['migrate_message_languages_to_bcp47.py']
