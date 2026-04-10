@@ -227,7 +227,7 @@
 										<div class="col-12 col-xl-4">
 											<div class="card investigation-form-card sticky-panel mb-4">
 												<div class="card-body">
-													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Publishing options</h6>
+													<h6 class="font-weight-bold"><i class="fas fa-bullseye text-primary mr-1"></i>Visibility &amp; actions</h6>
 													<p class="text-muted mb-3">
 														{% if edit %}
 															Update metadata and visibility for this investigation.
@@ -250,6 +250,17 @@
 														<i class="fas fa-shield-alt text-success mr-1"></i>
 														Choose <strong>My Organisation</strong> for internal-only investigations.
 													</div>
+													<hr>
+													<div class="d-flex flex-column">
+														<button class="btn btn-primary px-4 py-2 mb-2">
+															{% if edit %}
+																<i class="fas fa-pencil-alt"></i> Edit Investigation
+															{% else %}
+																<i class="fas fa-plus"></i> Create Investigation
+															{% endif %}
+														</button>
+														<small class="text-muted">Your changes are saved when you click the button above.</small>
+													</div>
 												</div>
 											</div>
 
@@ -265,21 +276,13 @@
 											</div>
 
 										</div>
-									</div>
+										</div>
 
-
-									<div class="d-flex justify-content-between flex-wrap mt-2 mb-4">
-									<a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary mb-2 mb-sm-0">
-										<i class="fas fa-arrow-left"></i> Back to investigations
-									</a>
-									<button class="btn btn-primary px-4 py-2">
-										{% if edit %}
-											<i class="fas fa-pencil-alt"></i> Edit Investigation
-										{% else %}
-											<i class="fas fa-plus"></i> Create Investigation
-										{% endif %}
-									</button>
-									</div>
+										<div class="d-flex justify-content-start mt-1 mb-4">
+											<a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary">
+												<i class="fas fa-arrow-left"></i> Back to investigations
+											</a>
+										</div>
 
 					</form>
 				</div>
