@@ -43,9 +43,9 @@ def create_json_response(data, status_code):
 def pdf_pdfa(pdf_id):
     if not pdf_id:
         abort(404)
-    if not 64 <= len(pdf_id):
-        abort(404)
     pdf_id = pdf_id.replace('/', '')
+    if not 64 <= len(pdf_id) or not pdf_id.isascii() or not pdf_id.isalnum():
+        abort(404)
     pdf = PDFs.PDF(pdf_id)
     return send_from_directory(PDFs.PDF_FOLDER, pdf.get_rel_path(), as_attachment=False, mimetype='pdf', download_name=f'{pdf_id}.pdf')
 

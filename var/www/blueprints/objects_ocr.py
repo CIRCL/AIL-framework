@@ -44,9 +44,9 @@ def create_json_response(data, status_code):
 def ocr_image(filename):
     if not filename:
         abort(404)
-    if not 64 <= len(filename) <= 70:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 64 <= len(filename) <= 70 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     ocr = Ocrs.Ocr(filename)
     return send_file(BytesIO(ocr.draw_bounding_boxs()), mimetype='image/png')
 
