@@ -127,26 +127,40 @@
         }
 
         .investigation-link {
-            color: inherit;
+            color: #1c4fc8;
             display: block;
             text-decoration: none;
             border-radius: .5rem;
-            padding: .15rem .25rem;
+            padding: .2rem .3rem;
             margin: -.15rem -.25rem;
-            transition: background-color 0.2s ease;
+            border: 1px solid transparent;
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .investigation-link:hover,
         .investigation-link:focus {
-            color: inherit;
+            color: #143a93;
             text-decoration: none;
-            background-color: #f6f9ff;
+            background-color: #f0f5ff;
+            border-color: #c9d9fb;
+            box-shadow: 0 0.2rem 0.45rem rgba(20, 58, 147, 0.12);
         }
 
         .investigation-name {
             font-weight: 600;
-            color: #1f2d3d;
+            color: inherit;
             word-break: break-word;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 2px;
+        }
+
+        .investigation-link-hint {
+            display: inline-block;
+            margin-top: .35rem;
+            font-size: 0.78rem;
+            color: #3759b8;
+            font-weight: 600;
         }
 
         .investigation-tags {
@@ -313,6 +327,9 @@
                                         <td>
                                             <a class="investigation-link" href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
                                                 <span class="investigation-name">{{ dict_investigation['info']}}</span>
+                                                <span class="investigation-link-hint">
+                                                    Open investigation <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
+                                                </span>
                                                 <div class="investigation-tags">
                                                     {% for tag in dict_investigation['tags'] %}
                                                         <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
@@ -369,6 +386,9 @@
                                         <td>
                                             <a class="investigation-link" href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
                                                 <span class="investigation-name">{{ dict_investigation['info']}}</span>
+                                                <span class="investigation-link-hint">
+                                                    Open investigation <i class="fas fa-external-link-alt fa-xs ml-1" aria-hidden="true"></i>
+                                                </span>
                                                 <div class="investigation-tags">
                                                     {% for tag in dict_investigation['tags'] %}
                                                         <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
