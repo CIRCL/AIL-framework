@@ -81,6 +81,7 @@ def user_profile():
     global_2fa = ail_users.is_2fa_enabled()
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
                            misps=ail_config.get_user_config_misps(user_id),
+                           flowintels=ail_config.get_user_config_flowintels(user_id),
                            rulezet_error=request.args.get('rulezet_error'),
                            rulezet_success=request.args.get('rulezet_success'),
                            acl_admin=acl_admin)
@@ -267,6 +268,58 @@ def delete_misp():
     return redirect(url_for('settings_b.user_profile'))
 
 ## --USER MISP-- ##
+
+#### USER FLOWINTEL ####
+
+@settings_b.route("/settings/user/edit_flowintel", methods=['GET'])
+@login_required
+@login_user
+def edit_flowintel():
+    acl_admin = current_user.is_in_role('admin')
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        meta = ail_config.api_get_user_flowintels(user_id, conf_uuid)[0]
+    else:
+        meta = {}
+    return render_template("flowintel_add_instance.html", meta=meta,
+                           acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/edit_flowintel_post", methods=['POST'])
+@login_required
+@login_user
+def edit_flowintel_post():
+    user_id = current_user.get_user_id()
+    uuidv5 = request.form.get('uuid')
+    url = request.form.get('flowintel_url')
+    api_key = request.form.get('api_key')
+    description = request.form.get('description')
+    flowintel_ssl = request.form.get('flowintel_verify_ssl')
+    if flowintel_ssl:
+        flowintel_ssl = True
+    else:
+        flowintel_ssl = False
+
+    data = {'url': url, 'api_key': api_key, 'ssl': flowintel_ssl, 'description': description}
+    if uuidv5:
+        data['uuid'] = uuidv5
+    r = ail_config.api_edit_user_flowintel(user_id, data)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/flowintel/delete", methods=['GET'])
+@login_required
+@login_user
+def delete_flowintel():
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        ail_config.api_delete_user_flowintel(user_id, {'uuid': conf_uuid})
+    return redirect(url_for('settings_b.user_profile'))
+
+## --USER FLOWINTEL-- ##
 
 #### USER RULEZET ####
 
