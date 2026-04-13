@@ -185,7 +185,7 @@ def get_bcp_languages_name(languages_code):
     return languages
 
 def get_bcp_language_name(language_code):
-    return dict_bcp47_languages[language_code]
+    return dict_bcp47_languages[language_code.split('-', 1)[0]]
 
 def create_dict_iso_languages():
     dict_lang = {}
