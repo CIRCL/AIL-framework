@@ -430,6 +430,82 @@
                             </div>
                         </div>
 
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">FlowIntel Integrations</h3>
+                                <a href="{{ url_for('settings_b.edit_flowintel') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus"></i> Add FlowIntel Account
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/flowintel-logo.png')}}" alt="FlowIntel" class="misp-logo"></h3>
+
+                                        {% if flowintels|length == 0 %}
+                                            <div class="misp-empty-state">
+                                                <i class="fas fa-plug fa-lg mb-2"></i>
+                                                <p class="mb-2">No FlowIntel integrations configured yet.</p>
+                                                <a href="{{ url_for('settings_b.edit_flowintel') }}" class="btn btn-primary btn-sm">
+                                                    Add your first FlowIntel account
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                        <div class="table-responsive">
+                                        <table id="table_flowintel_config" class="table table-striped table-hover border-primary misp-table">
+                                            <thead class="bg-dark text-white">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>url</th>
+                                                <th>api key</th>
+                                                <th>verify cert</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody style="font-size: 15px;">
+                                            {% for flowintel in flowintels %}
+                                                <tr class="border-color: blue;">
+                                                    <td>
+                                                        {% if flowintel['description'] %}
+                                                            {{ flowintel['description'] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ flowintel['url'] }}</td>
+                                                    <td>
+                                                        {% if flowintel['api_key'] %}
+                                                            {{ flowintel['api_key'][0:4] }}*********************************{{ flowintel['api_key'][-4:] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if flowintel['ssl'] %}
+                                                            <i class="fa-solid fa-check"></i>
+                                                        {% else %}
+                                                            <i class="fa-solid fa-xmark"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('settings_b.edit_flowintel') }}?uuid={{ flowintel['uuid'] }}">
+                                                            <button type="button" class="btn btn-outline-info misp-action-btn" title="Edit FlowIntel connection">
+                                                                <i class="fas fa-pencil-alt"></i>
+                                                            </button>
+                                                        </a>
+                                                        <a href="{{ url_for('settings_b.delete_flowintel') }}?uuid={{ flowintel['uuid'] }}" onclick="return confirm('Delete this FlowIntel integration?');">
+                                                            <button type="button" class="btn btn-outline-danger misp-action-btn" title="Delete FlowIntel connection">
+                                                                <i class="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
 
 					</div>
 				</div>
@@ -455,6 +531,13 @@ $(document).ready(function(){
 
     if ($('#table_misp_config').length) {
         $('#table_misp_config').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 2, "desc" ]]
+        });
+    }
+    if ($('#table_flowintel_config').length) {
+        $('#table_flowintel_config').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,
             "order": [[ 2, "desc" ]]
