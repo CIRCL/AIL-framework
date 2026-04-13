@@ -120,6 +120,7 @@ dict_bcp47_languages = {
     'sk': 'Slovak',
     'sl': 'Slovenian',
     'so': 'Somali',
+    'sr': 'Serbian',
     'st': 'Southern Sotho',
     'es': 'Spanish',
     'su': 'Sundanese',
