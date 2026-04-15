@@ -16,6 +16,8 @@
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+		<script src="{{ url_for('static', filename='js/pivotick.umd.js') }}"></script>
+		<link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
 		<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
@@ -75,6 +77,16 @@
 
 		.graph_panel {
 			padding: unset;
+		}
+
+		#graph {
+			width: 100%;
+			height: 72vh;
+			min-height: 620px;
+		}
+
+		.node-content.icon.icon-unicode {
+			font-weight: 900;
 		}
 
 		.line_graph {
@@ -512,7 +524,7 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] | urlencode }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
+		create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] | urlencode }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
 			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{ dict_object["correlation_id"] | urlencode }}");
 		{% elif dict_object["object_type"] == "decoded" %}
@@ -575,8 +587,9 @@ function unselect_object_type_selector() {
 
 <script>
 	function resize_graph() {
-		zoom.translateTo(svg_node, 200, 200);
-		zoom.scaleTo(svg_node, 2);
+		if (all_graph.node_graph?.renderer?.fitAndCenter) {
+            all_graph.node_graph.renderer.fitAndCenter(1);
+        }
 	}
 
     function reset_graph() {
@@ -587,310 +600,246 @@ function unselect_object_type_selector() {
 
 <script>
 var correl_link = "{{ url_for('correlation.show_correlation') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}&max_nodes={{ dict_object["max_nodes"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}"
+
 {% if 'hidden_str' in dict_object %}
     correl_link = correl_link + "&hidden={{ dict_object["hidden_str"] }}"
 {% endif %}
 
-var width = 400,
-		height = 400;
-
-var link;
-
-var zoom = d3.zoom()
-	.scaleExtent([.2, 10])
-	.on("zoom", zoomed);
-
-// Loading:
-//$("#graph_loading").show()
-
-//var transform = d3.zoomIdentity;
-
-var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-var div = d3.select("body").append("div")
-		.attr("class", "tooltip_graph")
-		.style("opacity", 0);
-
-var simulation = d3.forceSimulation()
-		.force("link", d3.forceLink().id(function(d) { return d.id; }))
-		.force("charge", d3.forceManyBody())
-		.force("center", d3.forceCenter(width / 2, height / 2));
-		//.on("tick", ticked);
+const PivotickLib = window.Pivotick || {};
+const PivotickGraph = PivotickLib.Pivotick || PivotickLib.default || PivotickLib;
+const PivotickNode = PivotickLib.Node;
+const PivotickEdge = PivotickLib.Edge;
 
 var currentObject = null;
 
-var svg_node = d3.select("#graph").append("svg")
-		.attr("id", "graph_div")
-		.attr("width", width)
-		.attr("height", height)
-		.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed))
-		.on("dblclick.zoom", null)
+function build_tooltip_html(title, data) {
+    let desc = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div>';
+    desc = desc + '<div class="card-body bg-dark pb-1 pt-2"><dl class="row py-0 my-0">';
 
-var container_graph = svg_node.append("g");
-		//.attr("transform", "translate(40,0)")
-		//.attr("transform", "scale(2)");
+    Object.keys(data).forEach(function(key) {
+        if (key==="status") {
+            desc = desc + '<dt class="col-sm-3 px-0">status</dt><dd class="col-sm-9 px-0"><div class="badge badge-pill badge-light flex-row-reverse" style="color:';
+            desc = desc + (data.status ? 'Green' : 'Red');
+            desc = desc + ';"><i class="fas ';
+            desc = desc + (data.status ? 'fa-check-circle"></i>UP' : 'fa-times-circle"></i>DOWN');
+            desc = desc + '</div></dd>';
+        } else if (key!=="tags" && key!=="id" && key!=="img" && key!=="svg_icon" && key!=="icon" && key!=="link" && key!=="type" && key!=="tags_safe") {
+            if (data[key]) {
+                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
+                    let date = sanitize_text(data[key]);
+                    desc = desc + '<dt class="col-sm-3 px-0">' + sanitize_text(key) + '</dt><dd class="col-sm-9 px-0">' + date.slice(0,4) + '-' + date.slice(4,6) + '-' + date.slice(6,8) + '</dd>';
+                } else {
+                    desc = desc + '<dt class="col-sm-3 px-0">' + sanitize_text(key) + '</dt><dd class="col-sm-9 px-0">' + sanitize_text(data[key]) + '</dd>';
+                }
+            }
+        }
+    });
 
+    desc = desc + '</dl>';
+
+    if (data.tags) {
+        data.tags.forEach(function(tag) {
+            desc = desc + '<span class="badge badge-warning">' + sanitize_text(tag) + '</span>';
+        });
+    }
+
+    if (data.img) {
+        if (data.tags_safe) {
+            if (data.type === 'screenshot') {
+                desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}";
+            } else if (data.type === 'favicon') {
+                desc = desc + "<img src={{ url_for('objects_favicon.favicon', filename="") }}";
+            } else {
+                desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}";
+            }
+            desc = desc + data.img + ' class="img-thumbnail blured" id="tooltip_screenshot_correlation" style=""/>';
+        } else {
+            desc = desc + '<span class="my-2 fa-stack fa-4x"><i class="fas fa-stack-1x fa-image"></i><i class="fas fa-stack-2x fa-ban" style="color:Red"></i></span>';
+        }
+    }
+
+    desc = desc + '</div></div>';
+    return desc;
+}
+
+function render_pivotick_tooltip(element) {
+    const wrapper = document.createElement('div');
+    const elementData = typeof element.getData === 'function' ? (element.getData() || {}) : {};
+    const isNode = (typeof element.degree === 'function') || !!elementData._ail;
+    if (!isNode) {
+        const label = sanitize_text((elementData && elementData.label) ? elementData.label : 'Relationship');
+        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + label + '</b></div>';
+        return wrapper;
+    }
+
+    const nodeId = get_node_id(element);
+    const title = get_node_text(element);
+    if (!nodeId) {
+        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + sanitize_text(title || 'Object') + '</b></div>';
+        return wrapper;
+    }
+    const ail = elementData._ail || elementData;
+
+    if (ail.tooltip_html) {
+        wrapper.innerHTML = ail.tooltip_html;
+        blur_tooltip();
+        return wrapper;
+    }
+
+    wrapper.innerHTML = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div><div class="card-body bg-dark pt-0"><div class="spinner-border text-warning" role="status"></div> Loading...</div></div>';
+
+    $.getJSON("{{ url_for('correlation.get_description') }}?object_id=" + encodeURIComponent(nodeId),
+        function(data){
+            const html = build_tooltip_html(title, data);
+            ail.tooltip_html = html;
+            wrapper.innerHTML = html;
+            blur_tooltip();
+        }
+    ).fail(function(error){
+        wrapper.innerHTML = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div><div class="card-body bg-dark pt-0"><i class="fas fa-3x fa-times text-danger"></i>' + sanitize_text(error.statusText || 'Error') + '</div></div>';
+    });
+
+    return wrapper;
+}
+
+function get_node_font_family(nodeStyle) {
+    const styleClass = ((nodeStyle && (nodeStyle.style || nodeStyle.icon_class)) || '').toLowerCase();
+    if (styleClass.includes('fab')) {
+        return '"Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome"';
+    }
+    return '"Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome"';
+}
 
 function create_graph(url){
+    return $.getJSON(url)
+        .done(function(data){
+            const graphContainer = document.getElementById('graph');
 
-d3.json(url)
-.then(function(data){
+            const nodeById = {};
+            const nodes = data.nodes.map(function(n){
+                nodeById[n.id] = new PivotickNode(n.id, {
+                    ...n,
+                    label: n.text,
+                    _ail: n,
+                }, {
+                    color: n.style.node_color || n.style.color,
+                    size: n.style.node_radius || n.style.radius || 5,
+                    iconUnicode: n.style.icon_text || n.style.icon,
+                    fontFamily: get_node_font_family(n.style),
+                    textColor: '#000000',
+                });
+                return nodeById[n.id];
+            });
 
-	link = container_graph.append("g")
-	.selectAll("line")
-	.data(data.links)
-	.enter().append("line")
-		.attr("class", "link");
-		//.attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+            const edges = data.links.map(function(l, i){
+                const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                return new PivotickEdge(
+                    'e' + i,
+                    nodeById[sourceId],
+                    nodeById[targetId],
+                    { label: l.relationship || '' },
+                    {},
+                    false
+                );
+            });
 
-	var node = container_graph.selectAll(".node")
-				.data(data.nodes)
-			.enter().append("g")
-			.attr("class", "nodes")
-			.on("dblclick", doubleclick)
-			.on("click", click)
-			.on("mouseover", mouseovered)
-			.on("mouseout", mouseouted)
-			.call(d3.drag()
-					.on("start", drag_start)
-					.on("drag", dragged)
-					.on("end", drag_end));
-
-    /*
-    node.append("image")
-    .attr("xlink:href", "https://circl.lu/assets/images/circl-logo.png")
-    .attr("height", 20)
-    .attr("width", 20)
-    .attr("x", -10)
-    .attr("y", -10);
-
-     */
-
-	node.append("circle")
-			.attr("r", function(d) {
-				return (d.style.node_radius);})
-			.attr("fill", function(d) {
-					return d.style.node_color;});
-
-	node.append('text')
-		  .attr('text-anchor', 'middle')
-		  .attr('dominant-baseline', 'central')
-		  .attr("class", function(d) {
-				return "graph_node_icon " + d.style.icon_class
-			})
-    	.attr('font-size', '8px' )
-			.attr('pointer-events', 'none')
-    	.text(function(d) {
-				//if(d.hash){
-					return d.style.icon_text
-				//}
-			});
-
-	zoom.translateTo(svg_node, 200, 200);
-	zoom.scaleTo(svg_node, 2);
-
-/*	node.append("text")
-		      .attr("dy", 3)
-					.attr("dx", 7)
-					.attr("class", "graph_text_node")
-		      //.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-		      .text(function(d) { return d.id; });*/
-
-	simulation
-			.nodes(data.nodes)
-			.on("tick", ticked);
-
-	simulation.force("link")
-			.links(data.links);
-
-	function ticked() {
-		link
-				.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; });
-
-		/*node
-				.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; });*/
-		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-	}
-
-	// Loading ...
-	$("#graph_loading").remove();
-
-    if (!data.meta.complete){
-        $("#incomplete_graph").show();
-    }
-
-    d3.select("body").on("keypress", keypressed)
-
-
-
-})
-.catch(function(error) {
-				$("#graph_loading").remove()
-				svg_node.remove();
-				d3.select("#graph").append("div")
-													 .text(error);
-		});
-}
-
-function zoomed() {
-	container_graph.attr("transform", d3.event.transform);
-}
-
-function doubleclick (d) {
-	window.open(d.url, '_blank');
-}
-
-function keypressed () {
-    //console.log(d3.event.keyCode)
-    //console.log(currentObject.id)
-    // hide node, H or h key
-    if ((d3.event.keyCode === 72 || d3.event.keyCode === 104) && currentObject) {
-        window.location.href = correl_link + "&hide=" + currentObject.id
-    }
-
-}
-
-function click (d) {
-console.log('clicked')
-}
-
-function drag_start(d) {
-if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-d.fx = d.x;
-d.fy = d.y;
-}
-
-function dragged(d) {
-d.fx = d3.event.x;
-d.fy = d3.event.y;
-}
-
-function drag_end(d) {
-if (!d3.event.active) simulation.alphaTarget(0);
-d.fx = d.x;
-d.fy = d.y;
-}
-
-function mouseovered(d) {
-
-currentObject = d;
-
-var d3_pageX = d3.event.pageX;
-var d3_pageY = d3.event.pageY;
-
-if (d.popover) {
-	div.html(d.popover)
-		.style("left", (d3_pageX) + "px")
-		.style("top", (d3_pageY - 28) + "px");
-
-	div.transition()
-		.duration(200)
-		.style("opacity", 1);
-    blur_tooltip();
-} else {
-
-		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
-		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
-
-		div.html(pop_header + spinner)
-			.style("left", (d3_pageX) + "px")
-			.style("top", (d3_pageY - 28) + "px");
-
-		div.transition()
-			.duration(200)
-			.style("opacity", 1);
-
-		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
-				function(data){
-					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
-					Object.keys(data).forEach(function(key) {
-						if (key=="status") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
-							if (data["status"]) {
-								desc = desc + "Green"
-							} else {
-								desc = desc + "Red"
-							}
-							desc = desc + ";\"><i class=\"fas "
-							if (data["status"]) {
-								desc = desc + "fa-check-circle\"></i>UP"
-							} else {
-								desc = desc + "fa-times-circle\"></i>DOWN"
-							}
-							desc = desc + "</div></dd>"
-						} else if (key!=="tags" && key!=="id" && key!=="img" && key!=="svg_icon" && key!=="icon" && key!=="link" && key!=="type") {
-                            if (data[key]) {
-                                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
-                                    let date = sanitize_text(data[key])
-                                    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
-                                } else {
-							        desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
-                                }
-                            }
-						}
-					});
-					desc = desc + "</dl>"
-
-                    if (data["tags"]) {
-						data["tags"].forEach(function(tag) {
-							desc = desc + "<span class=\"badge badge-warning\">"+ sanitize_text(tag) +"</span>";
-						});
-					}
-
-					if (data["img"]) {
-                        if (data["tags_safe"]) {
-                            if (data["type"] === "screenshot") {
-						        desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}"
-                            } else if (data["type"] === "favicon") {
-                                desc = desc + "<img src={{ url_for('objects_favicon.favicon', filename="") }}"
-                            } else {
-                                desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}"
-                            }
-                            desc = desc + data["img"] +" class=\"img-thumbnail blured\" id=\"tooltip_screenshot_correlation\" style=\"\"/>";
-                        } else {
-                            desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
-                        }
-					}
-
-					desc = desc + "</div></div>"
-					div.html(desc)
-					 	.style("left", (d3_pageX) + "px")
-					 	.style("top", (d3_pageY - 28) + "px");
-					d.popover = desc
-
-                    if (data["img"]) {
-                        blur_tooltip();
+            all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
+                isDirected: true,
+                simulation: {
+                    useWorker: false,
+                    d3LinkDistance: 90,
+                },
+                render: {
+                    type: 'svg',
+                    defaultEdgeStyle: {
+                        markerEnd: undefined,
+                    },
+                },
+                UI: {
+                    tooltip: {
+                        enabled: true,
+                        render: function(element){ return render_pivotick_tooltip(element); },
                     }
+                },
+                callbacks: {
+                    onNodeDbclick: function(event, node){ doubleclick(event, node); },
+                    onNodeHoverIn: function(event, node){ currentObject = { id: get_node_id(node), node: node }; },
+                    onNodeHoverOut: function(){ currentObject = null; },
+                    onCanvasClick: function(){ currentObject = null; },
+                    onNodeClick: function(event, node){ click(node); },
+                },
+            });
 
-				})
-				.fail(function(error) {
-					desc = pop_header + "<div class=\"card-body bg-dark pt-0\"><i class=\"fas fa-3x fa-times text-danger\"></i>"+ error.statusText +"</div>"
-					div.html(desc)
-					 	.style("left", (d3_pageX) + "px")
-					 	.style("top", (d3_pageY - 28) + "px");
-				});
-		}
+            if (all_graph.node_graph?.renderer?.fitAndCenter) {
+                all_graph.node_graph.renderer.fitAndCenter(1);
+            }
+
+            $("#graph_loading").remove();
+
+            if (!data.meta.complete){
+                $("#incomplete_graph").show();
+            }
+
+            d3.select("body").on("keypress", keypressed);
+        })
+        .fail(function(error) {
+            $("#graph_loading").remove();
+            $("#graph").append($("<div></div>").text(error.statusText || error));
+        });
 }
 
-function mouseouted() {
-    currentObject = null;
-
-	div.transition()
-		.duration(500)
-		.style("opacity", 0);
-
-	link.style("stroke", "#666");
+function get_node_data(nodeLike) {
+    if (!nodeLike) {
+        return {};
+    }
+    if (typeof nodeLike.getData === 'function') {
+        return nodeLike.getData() || {};
+    }
+    return nodeLike;
 }
+
+function get_node_id(nodeLike) {
+    if (!nodeLike) {
+        return null;
+    }
+    if (nodeLike.id) {
+        return nodeLike.id;
+    }
+    const data = get_node_data(nodeLike);
+    return data.id || (data._ail && data._ail.id) || null;
+}
+
+function get_node_text(nodeLike) {
+    const data = get_node_data(nodeLike);
+    const ail = data._ail || {};
+    return ail.text || data.label || get_node_id(nodeLike) || '';
+}
+
+function doubleclick(event, node) {
+    const data = get_node_data(node);
+    const ail = data._ail || data;
+    if (ail.url) {
+        window.open(ail.url, '_blank');
+    }
+}
+
+function keypressed(event) {
+    const keyCode = event ? event.keyCode : d3.event.keyCode;
+    if ((keyCode === 72 || keyCode === 104) && currentObject) {
+        window.location.href = correl_link + "&hide=" + encodeURIComponent(currentObject.id);
+    }
+}
+
+function click(node) {
+    console.log('clicked', get_node_id(node));
+}
+
 
 all_graph.onResize = function () {
-	var aspect = 1000 / 500, all_graph = $("#graph_div");
-	var targetWidth = all_graph.parent().width();
-	all_graph.attr("width", targetWidth);
-	all_graph.attr("height", targetWidth / aspect);
+    if (all_graph.node_graph?.renderer?.fitAndCenter) {
+        all_graph.node_graph.renderer.fitAndCenter();
+    }
 }
 
 window.all_graph = all_graph;
