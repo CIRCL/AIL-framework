@@ -85,9 +85,6 @@
 			min-height: 620px;
 		}
 
-		.node-content.icon.icon-unicode {
-			font-weight: 900;
-		}
 
 		.line_graph {
 		  fill: none;
@@ -702,12 +699,45 @@ function render_pivotick_tooltip(element) {
     return wrapper;
 }
 
-function get_node_font_family(nodeStyle) {
-    const styleClass = ((nodeStyle && (nodeStyle.style || nodeStyle.icon_class)) || '').toLowerCase();
-    if (styleClass.includes('fab')) {
-        return '"Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome"';
+
+function get_icon_unicode_value(nodeStyle) {
+    return (nodeStyle && (nodeStyle.icon_text || nodeStyle.icon)) || '';
+}
+
+function get_icon_codepoint(iconValue) {
+    if (!iconValue) return null;
+    const cp = iconValue.codePointAt(0);
+    if (!cp) return null;
+    return cp.toString(16).toUpperCase();
+}
+
+function build_icon_class(nodeStyle, index) {
+    const baseClass = (nodeStyle && (nodeStyle.icon_class || nodeStyle.style)) || '';
+    const iconValue = get_icon_unicode_value(nodeStyle);
+    const codepoint = get_icon_codepoint(iconValue);
+    if (!codepoint) {
+        return baseClass;
     }
-    return '"Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome"';
+    return (baseClass + ' pvt-ail-icon-' + index).trim();
+}
+
+function inject_icon_css_rules(nodes) {
+    const styleId = 'pivotick-ail-icon-map';
+    let styleTag = document.getElementById(styleId);
+    if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = styleId;
+        document.head.appendChild(styleTag);
+    }
+    const rules = [];
+    nodes.forEach(function(node, index) {
+        const iconValue = get_icon_unicode_value(node.style);
+        const codepoint = get_icon_codepoint(iconValue);
+        if (codepoint) {
+            rules.push('.pvt-ail-icon-' + index + ' { --fa: "\\' + codepoint + '"; }');
+        }
+    });
+    styleTag.textContent = rules.join('\n');
 }
 
 function create_graph(url){
@@ -715,8 +745,10 @@ function create_graph(url){
         .done(function(data){
             const graphContainer = document.getElementById('graph');
 
+            inject_icon_css_rules(data.nodes);
+
             const nodeById = {};
-            const nodes = data.nodes.map(function(n){
+            const nodes = data.nodes.map(function(n, idx){
                 nodeById[n.id] = new PivotickNode(n.id, {
                     ...n,
                     label: n.text,
@@ -724,8 +756,7 @@ function create_graph(url){
                 }, {
                     color: n.style.node_color || n.style.color,
                     size: n.style.node_radius || n.style.radius || 5,
-                    iconUnicode: n.style.icon_text || n.style.icon,
-                    fontFamily: get_node_font_family(n.style),
+                    iconClass: build_icon_class(n.style, idx),
                     textColor: '#000000',
                 });
                 return nodeById[n.id];
@@ -753,7 +784,8 @@ function create_graph(url){
                 render: {
                     type: 'svg',
                     defaultEdgeStyle: {
-                        markerEnd: undefined,
+                        markerEnd: "",
+                        markerStart: "",
                     },
                 },
                 UI: {
