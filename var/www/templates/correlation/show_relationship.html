@@ -87,6 +87,10 @@
 			min-height: 620px;
 		}
 
+		.node-content.icon.icon-unicode {
+			font-weight: 900;
+		}
+
 		.line_graph {
 		  fill: none;
 		  stroke: steelblue;
@@ -562,9 +566,9 @@ function render_pivotick_tooltip(element) {
 function get_node_font_family(nodeStyle) {
     const styleClass = ((nodeStyle && (nodeStyle.style || nodeStyle.icon_class)) || '').toLowerCase();
     if (styleClass.includes('fab')) {
-        return '"Font Awesome 5 Brands"';
+        return '"Font Awesome 6 Brands", "Font Awesome 5 Brands", "FontAwesome"';
     }
-    return '"Font Awesome 5 Free"';
+    return '"Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome"';
 }
 
 function create_graph(url){
