@@ -468,7 +468,13 @@ const PivotickGraph = PivotickLib.Pivotick || PivotickLib.default || PivotickLib
 const PivotickNode = PivotickLib.Node;
 const PivotickEdge = PivotickLib.Edge;
 
-var currentObject = null;
+    const nodeId = get_node_id(element);
+    const title = get_node_text(element);
+    if (!nodeId) {
+        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + sanitize_text(title || 'Object') + '</b></div>';
+        return wrapper;
+    }
+    const ail = elementData._ail || elementData;
 
 function build_tooltip_html(title, data) {
     let desc = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div>';
@@ -500,6 +506,8 @@ function build_tooltip_html(title, data) {
             desc = desc + '<span class="badge badge-warning">' + sanitize_text(tag) + '</span>';
         });
     }
+    return (baseClass + ' pvt-ail-icon-' + index).trim();
+}
 
     if (data.img) {
         if (data.tags_safe) {
