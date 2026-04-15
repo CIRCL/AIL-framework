@@ -773,7 +773,7 @@ function create_graph(url){
                     {},
                     false
                 );
-            });
+            }).filter(function(e){ return !!e.from && !!e.to; });
 
             all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
                 isDirected: true,
@@ -786,6 +786,7 @@ function create_graph(url){
                     defaultEdgeStyle: {
                         markerEnd: "",
                         markerStart: "",
+                        curveStyle: 'straight',
                     },
                 },
                 UI: {
