@@ -15,7 +15,7 @@ jobs:
   # This workflow contains a single job called "build"
   ail_test:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # TODO: Matrix strategy for Python versions is defined but never used.
     # Currently all jobs use the same system Python, making this redundant.

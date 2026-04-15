@@ -219,7 +219,7 @@ git clone https://github.com/ail-project/ail-framework.git
 cd ail-framework
 git submodule update --init --recursive
 
-# Install dependencies on Debian/Ubuntu-based distributions
+# Install dependencies on Ubuntu
 ./installing_deps.sh
 
 # Start AIL
@@ -227,10 +227,11 @@ cd bin
 ./LAUNCH.sh -l
 ```
 
-The default [installing_deps.sh](./installing_deps.sh) script targets Debian and Ubuntu based distributions.
+The default [installing_deps.sh](./installing_deps.sh) script is only tested on Ubuntu.
 
 ### Requirements
 
+- Ubuntu 24.04
 - Python 3.8+
 
 [How to size the hardware requirements for AIL?](https://ail-project.org/faq.html)
