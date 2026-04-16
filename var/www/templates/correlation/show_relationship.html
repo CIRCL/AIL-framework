@@ -97,6 +97,64 @@
 			stroke-width: 1.5;
 			/*attr('stroke', '#bcbd22').*/
 		}
+
+        .pivotik-tooltip-card {
+            max-width: 30rem;
+            background-color: #1f1f1f;
+            color: #f8f9fa;
+            border: 1px solid #3a3a3a;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35);
+        }
+
+        .pivotik-tooltip-card .card-header {
+            border-bottom: 1px solid #3a3a3a;
+            background-color: #1f1f1f;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .pivotik-tooltip-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-top: 0.25rem;
+        }
+
+        .pivotik-tooltip-row {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 0.35rem;
+            padding: 0.35rem 0.5rem;
+        }
+
+        .pivotik-tooltip-label {
+            color: #b9c0c7;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .pivotik-tooltip-value {
+            color: #f8f9fa;
+            word-break: break-word;
+            white-space: pre-wrap;
+            line-height: 1.35;
+            font-size: 0.86rem;
+        }
+
+        .pivotik-tooltip-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.45rem;
+        }
+
+        .pivotik-tooltip-image {
+            margin-top: 0.6rem;
+            text-align: center;
+        }
 		</style>
 	</head>
 	<body>
@@ -468,48 +526,59 @@ const PivotickGraph = PivotickLib.Pivotick || PivotickLib.default || PivotickLib
 const PivotickNode = PivotickLib.Node;
 const PivotickEdge = PivotickLib.Edge;
 
-    const nodeId = get_node_id(element);
-    const title = get_node_text(element);
-    if (!nodeId) {
-        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + sanitize_text(title || 'Object') + '</b></div>';
-        return wrapper;
-    }
-    const ail = elementData._ail || elementData;
-
 function build_tooltip_html(title, data) {
-    let desc = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div>';
-    desc = desc + '<div class="card-body bg-dark pb-1 pt-2"><dl class="row py-0 my-0">';
+    const excludedKeys = ['tags', 'id', 'img', 'svg_icon', 'icon', 'link', 'type', 'tags_safe'];
+    const prettifyKey = function(key) {
+        return sanitize_text((key || '').replace(/_/g, ' '));
+    };
+    const formatDate = function(value) {
+        if (typeof value === 'string' && value.length === 8 && /^\d+$/.test(value)) {
+            return value.slice(0, 4) + '-' + value.slice(4, 6) + '-' + value.slice(6, 8);
+        }
+        return sanitize_text(value);
+    };
+    const buildDetailRow = function(label, value) {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        return '<div class="pivotik-tooltip-row"><span class="pivotik-tooltip-label">' + prettifyKey(label) +
+            '</span><span class="pivotik-tooltip-value">' + sanitize_text(value) + '</span></div>';
+    };
+
+    let desc = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div>';
+    desc = desc + '<div class="card-body p-2">';
+    desc = desc + '<div class="pivotik-tooltip-details">';
+
+    if (Object.prototype.hasOwnProperty.call(data, 'status')) {
+        const statusLabel = data.status ? 'UP' : 'DOWN';
+        const statusClass = data.status ? 'success' : 'danger';
+        const statusIcon = data.status ? 'fa-check-circle' : 'fa-times-circle';
+        desc = desc + '<div class="pivotik-tooltip-row"><span class="pivotik-tooltip-label">Status</span><span class="pivotik-tooltip-value"><span class="badge badge-' + statusClass + '"><i class="fas ' + statusIcon + ' mr-1"></i>' + statusLabel + '</span></span></div>';
+    }
 
     Object.keys(data).forEach(function(key) {
-        if (key==="status") {
-            desc = desc + '<dt class="col-sm-3 px-0">status</dt><dd class="col-sm-9 px-0"><div class="badge badge-pill badge-light flex-row-reverse" style="color:';
-            desc = desc + (data.status ? 'Green' : 'Red');
-            desc = desc + ';"><i class="fas ';
-            desc = desc + (data.status ? 'fa-check-circle"></i>UP' : 'fa-times-circle"></i>DOWN');
-            desc = desc + '</div></dd>';
-        } else if (key!=="tags" && key!=="id" && key!=="img" && key!=="svg_icon" && key!=="icon" && key!=="link" && key!=="type" && key!=="tags_safe") {
-            if (data[key]) {
-                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
-                    let date = sanitize_text(data[key]);
-                    desc = desc + '<dt class="col-sm-3 px-0">' + sanitize_text(key) + '</dt><dd class="col-sm-9 px-0">' + date.slice(0,4) + '-' + date.slice(4,6) + '-' + date.slice(6,8) + '</dd>';
-                } else {
-                    desc = desc + '<dt class="col-sm-3 px-0">' + sanitize_text(key) + '</dt><dd class="col-sm-9 px-0">' + sanitize_text(data[key]) + '</dd>';
-                }
-            }
+        if (excludedKeys.includes(key) || key === 'status' || !data[key]) {
+            return;
+        }
+        if (key === 'first_seen' || key === 'last_seen') {
+            desc = desc + buildDetailRow(key, formatDate(data[key]));
+        } else {
+            desc = desc + buildDetailRow(key, data[key]);
         }
     });
 
-    desc = desc + '</dl>';
+    desc = desc + '</div>';
 
     if (data.tags) {
+        desc = desc + '<div class="pivotik-tooltip-tags">';
         data.tags.forEach(function(tag) {
-            desc = desc + '<span class="badge badge-warning">' + sanitize_text(tag) + '</span>';
+            desc = desc + '<span class="badge badge-warning">' + sanitize_text(tag) + '</span> ';
         });
+        desc = desc + '</div>';
     }
-    return (baseClass + ' pvt-ail-icon-' + index).trim();
-}
 
     if (data.img) {
+        desc = desc + '<div class="pivotik-tooltip-image">';
         if (data.tags_safe) {
             if (data.type === 'screenshot') {
                 desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}";
@@ -518,10 +587,11 @@ function build_tooltip_html(title, data) {
             } else {
                 desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}";
             }
-            desc = desc + data.img + ' class="img-thumbnail blured" id="tooltip_screenshot_correlation" style=""/>';
+            desc = desc + data.img + ' class="img-thumbnail blured" id="tooltip_screenshot_correlation" style="max-height: 14rem;"/>';
         } else {
             desc = desc + '<span class="my-2 fa-stack fa-4x"><i class="fas fa-stack-1x fa-image"></i><i class="fas fa-stack-2x fa-ban" style="color:Red"></i></span>';
         }
+        desc = desc + '</div>';
     }
 
     desc = desc + '</div></div>';
@@ -552,7 +622,7 @@ function render_pivotick_tooltip(element) {
         return wrapper;
     }
 
-    wrapper.innerHTML = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div><div class="card-body bg-dark pt-0"><div class="spinner-border text-warning" role="status"></div> Loading...</div></div>';
+    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
 
     $.getJSON("{{ url_for('correlation.get_description') }}?object_id=" + encodeURIComponent(nodeId),
         function(data){
@@ -562,7 +632,7 @@ function render_pivotick_tooltip(element) {
             blur_tooltip();
         }
     ).fail(function(error){
-        wrapper.innerHTML = '<div class="card text-white" style="max-width: 25rem;"><div class="card-header bg-dark pb-0 border-white"><h6>' + sanitize_text(title) + '</h6></div><div class="card-body bg-dark pt-0"><i class="fas fa-3x fa-times text-danger"></i>' + sanitize_text(error.statusText || 'Error') + '</div></div>';
+        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
     });
 
     return wrapper;
