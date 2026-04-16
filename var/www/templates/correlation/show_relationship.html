@@ -74,7 +74,6 @@
 
         .blured {
             filter: blur(5px);
-            max-width: 200px;
         }
 
 		.graph_panel {
@@ -99,7 +98,8 @@
 		}
 
         .pivotik-tooltip-card {
-            max-width: 30rem;
+            width: min(44rem, 92vw);
+            max-width: 44rem;
             background-color: #1f1f1f;
             color: #f8f9fa;
             border: 1px solid #3a3a3a;
@@ -154,6 +154,24 @@
         .pivotik-tooltip-image {
             margin-top: 0.6rem;
             text-align: center;
+        }
+
+        .pivotik-tooltip-image .img-thumbnail {
+            max-width: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        .pvt-tooltip {
+            white-space: normal !important;
+        }
+
+        .pvt-tooltip .pvt-tooltip-container {
+            max-height: none !important;
+            overflow: visible !important;
+            max-width: min(92vw, 44rem) !important;
+            min-height: 0 !important;
+            resize: none !important;
         }
 		</style>
 	</head>
