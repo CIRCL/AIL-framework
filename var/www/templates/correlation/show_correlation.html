@@ -708,7 +708,7 @@ function build_tooltip_html(title, data) {
             '</span><span class="pivotik-tooltip-value">' + sanitize_text(value) + '</span></div>';
     };
 
-    let desc = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div>';
+    let desc = '<div class="card pivotik-tooltip-card">';
     desc = desc + '<div class="card-body p-2">';
     desc = desc + '<div class="pivotik-tooltip-details">';
 
@@ -785,7 +785,7 @@ function render_pivotick_tooltip(element) {
         return wrapper;
     }
 
-    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
+    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
 
     $.getJSON("{{ url_for('correlation.get_description') }}?object_id=" + encodeURIComponent(nodeId),
         function(data){
@@ -795,7 +795,7 @@ function render_pivotick_tooltip(element) {
             blur_tooltip();
         }
     ).fail(function(error){
-        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
+        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
     });
 
     return wrapper;
