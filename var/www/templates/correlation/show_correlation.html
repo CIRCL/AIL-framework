@@ -121,32 +121,37 @@
         .pivotik-tooltip-details {
             display: flex;
             flex-direction: column;
-            gap: 0.35rem;
-            margin-top: 0.25rem;
+            gap: 0.2rem;
         }
 
         .pivotik-tooltip-row {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 0.45rem;
             background: rgba(255, 255, 255, 0.04);
             border-radius: 0.35rem;
-            padding: 0.35rem 0.5rem;
+            padding: 0.25rem 0.45rem;
         }
 
         .pivotik-tooltip-label {
             color: #b9c0c7;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.03em;
+            min-width: 6.5rem;
+            flex: 0 0 6.5rem;
+            line-height: 1.3;
         }
 
         .pivotik-tooltip-value {
             color: #f8f9fa;
             word-break: break-word;
             overflow-wrap: anywhere;
-            white-space: pre-wrap;
-            line-height: 1.35;
-            font-size: 0.86rem;
+            white-space: normal;
+            line-height: 1.25;
+            font-size: 0.82rem;
+            flex: 1 1 auto;
         }
 
         .pivotik-tooltip-tags {
