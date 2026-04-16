@@ -101,13 +101,14 @@
 		}
 
         .pivotik-tooltip-card {
-            width: min(44rem, 92vw);
-            max-width: 44rem;
+            width: 100%;
+            max-width: 100%;
             background-color: #1f1f1f;
             color: #f8f9fa;
             border: 1px solid #3a3a3a;
             border-radius: 0.5rem;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35);
+            box-sizing: border-box;
         }
 
         .pivotik-tooltip-card .card-header {
@@ -142,6 +143,7 @@
         .pivotik-tooltip-value {
             color: #f8f9fa;
             word-break: break-word;
+            overflow-wrap: anywhere;
             white-space: pre-wrap;
             line-height: 1.35;
             font-size: 0.86rem;
@@ -167,12 +169,14 @@
 
         .pvt-tooltip {
             white-space: normal !important;
+            max-width: min(92vw, 44rem) !important;
         }
 
         .pvt-tooltip .pvt-tooltip-container {
-            max-height: none !important;
-            overflow: visible !important;
+            max-height: min(75vh, 38rem) !important;
+            overflow: auto !important;
             max-width: min(92vw, 44rem) !important;
+            width: min(92vw, 44rem) !important;
             min-height: 0 !important;
             resize: none !important;
         }
@@ -614,11 +618,13 @@ $(document).ready(function(){
 const blur_slider_correlation = $('#blur-slider-correlation');
 blur_slider_correlation.on('input change', blur_tooltip);
 function blur_tooltip(){
-    var image = $('#tooltip_screenshot_correlation')[0];
-    if (image) {
-        var blurValue = $('#blur-slider-correlation').val();
+    var images = document.getElementsByClassName('correlation-tooltip-image');
+    if (images.length) {
+        var blurValue = blur_slider_correlation.val();
         blurValue = 15 - blurValue;
-        image.style.filter = "blur(" + blurValue + "px)";
+        for (var i = 0; i < images.length; i++) {
+            images[i].style.filter = "blur(" + blurValue + "px)";
+        }
     }
 }
 
@@ -750,7 +756,7 @@ function build_tooltip_html(title, data) {
             } else {
                 desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}";
             }
-            desc = desc + data.img + ' class="img-thumbnail blured" id="tooltip_screenshot_correlation" style="max-height: 14rem;"/>';
+            desc = desc + data.img + ' class="img-thumbnail blured correlation-tooltip-image" style="max-height: 14rem;"/>';
         } else {
             desc = desc + '<span class="my-2 fa-stack fa-4x"><i class="fas fa-stack-1x fa-image"></i><i class="fas fa-stack-2x fa-ban" style="color:Red"></i></span>';
         }
