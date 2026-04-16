@@ -696,7 +696,7 @@ const PivotickEdge = PivotickLib.Edge;
 var currentObject = null;
 
 function build_tooltip_html(title, data) {
-    const excludedKeys = ['tags', 'id', 'img', 'svg_icon', 'icon', 'link', 'type', 'tags_safe'];
+    const excludedKeys = ['tags', 'id', 'img', 'svg_icon', 'icon', 'link', 'type', 'tags_safe', 'is_tags_safe'];
     const prettifyKey = function(key) {
         return sanitize_text((key || '').replace(/_/g, ' '));
     };
