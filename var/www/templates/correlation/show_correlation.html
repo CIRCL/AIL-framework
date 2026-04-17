@@ -75,7 +75,7 @@
             image-rendering: pixelated;
         }
 
-        .blured {
+        .object_image {
             filter: blur(5px);
         }
 
@@ -263,27 +263,7 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
-                                        <div class="card border-secondary">
-                                            <div class="card-body py-2">
-                                                <div class="row">
-                                                    <div class="col-md-3 text-center px-0">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(0);blur_tooltip();">
-                                                            <i class="fas fa-eye-slash"></i>
-      										                <span class="label-icon">Hide</span>
-                                                        </button>
-                                                    </div>
-                                                    <div class="col-md-6 text-center pl-0 pt-1">
-                                                        <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider-correlation">
-                                                    </div>
-                                                    <div class="col-md-3 text-center">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(15);blur_tooltip();">
-                                                            <i class="fas fa-image"></i>
-                                                            <span class="label-icon">Full</span>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {% include 'objects/image/block_blur_img_slider.html' %}
                                     </span>
                                     <span class="float-right mx-1">
 										{% if dict_object["object_type"] != "" %}
@@ -621,19 +601,6 @@ $(document).ready(function(){
 		all_graph.onResize();
 });
 
-const blur_slider_correlation = $('#blur-slider-correlation');
-blur_slider_correlation.on('input change', blur_tooltip);
-function blur_tooltip(){
-    var images = document.getElementsByClassName('correlation-tooltip-image');
-    if (images.length) {
-        var blurValue = blur_slider_correlation.val();
-        blurValue = 15 - blurValue;
-        for (var i = 0; i < images.length; i++) {
-            images[i].style.filter = "blur(" + blurValue + "px)";
-        }
-    }
-}
-
 $(window).on("resize", function() {
 		all_graph.onResize();
 });
@@ -762,7 +729,7 @@ function build_tooltip_html(title, data) {
             } else {
                 desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}";
             }
-            desc = desc + data.img + ' class="img-thumbnail blured correlation-tooltip-image" style="max-height: 14rem;"/>';
+            desc = desc + data.img + ' class="img-thumbnail correlation-tooltip-image object_image" style="max-height: 14rem;"/>';
         } else {
             desc = desc + '<span class="my-2 fa-stack fa-4x"><i class="fas fa-stack-1x fa-image"></i><i class="fas fa-stack-2x fa-ban" style="color:Red"></i></span>';
         }
@@ -793,7 +760,6 @@ function render_pivotick_tooltip(element) {
 
     if (ail.tooltip_html) {
         wrapper.innerHTML = ail.tooltip_html;
-        blur_tooltip();
         return wrapper;
     }
 
@@ -804,7 +770,6 @@ function render_pivotick_tooltip(element) {
             const html = build_tooltip_html(title, data);
             ail.tooltip_html = html;
             wrapper.innerHTML = html;
-            blur_tooltip();
         }
     ).fail(function(error){
         wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
