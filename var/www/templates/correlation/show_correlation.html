@@ -854,6 +854,35 @@ function inject_icon_css_rules(nodes) {
     styleTag.textContent = rules.join('\n');
 }
 
+const SIDEBAR_HIDDEN_KEYS = new Set([
+    'icon',
+    'shape',
+    'style',
+    'text',
+    'url',
+    'x',
+    'y',
+    'vx',
+    'vy',
+    'fx',
+    'fy',
+    '_ail',
+]);
+
+function build_sidebar_properties(element) {
+    const data = (element && typeof element.getData === 'function') ? (element.getData() || {}) : (element || {});
+    return Object.entries(data)
+        .filter(function(entry) {
+            const key = entry[0];
+            const value = entry[1];
+            return key && value !== null && value !== undefined && value !== '' && !SIDEBAR_HIDDEN_KEYS.has(key);
+        })
+        .map(function(entry) {
+            return { name: entry[0], value: entry[1] };
+        });
+}
+
+
 function create_graph(url){
     return $.getJSON(url)
         .done(function(data){
@@ -917,6 +946,11 @@ function create_graph(url){
                     sidebar: {
                         collapsed: false,
                     },
+                    propertiesPanel: {
+                        nodePropertiesMap: function(node) { return build_sidebar_properties(node); },
+                        edgePropertiesMap: function(edge) { return build_sidebar_properties(edge); },
+                    },
+
                 },
                 callbacks: {
                     onNodeDbclick: function(event, node){ doubleclick(event, node); },
