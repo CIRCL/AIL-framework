@@ -636,21 +636,19 @@ function render_pivotick_tooltip(element) {
 
     if (ail.tooltip_html) {
         wrapper.innerHTML = ail.tooltip_html;
-        blur_tooltip();
         return wrapper;
     }
 
-    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
+    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
 
     $.getJSON("{{ url_for('correlation.get_description') }}?object_id=" + encodeURIComponent(nodeId),
         function(data){
             const html = build_tooltip_html(title, data);
             ail.tooltip_html = html;
             wrapper.innerHTML = html;
-            blur_tooltip();
         }
     ).fail(function(error){
-        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-header py-2"><h6 class="mb-0">' + sanitize_text(title) + '</h6></div><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
+        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
     });
 
     return wrapper;
@@ -697,6 +695,34 @@ function inject_icon_css_rules(nodes) {
     styleTag.textContent = rules.join('\n');
 }
 
+const SIDEBAR_HIDDEN_KEYS = new Set([
+    'icon',
+    'shape',
+    'style',
+    'text',
+    'url',
+    'x',
+    'y',
+    'vx',
+    'vy',
+    'fx',
+    'fy',
+    '_ail',
+]);
+
+function build_sidebar_properties(element) {
+    const data = (element && typeof element.getData === 'function') ? (element.getData() || {}) : (element || {});
+    return Object.entries(data)
+        .filter(function(entry) {
+            const key = entry[0];
+            const value = entry[1];
+            return key && value !== null && value !== undefined && value !== '' && !SIDEBAR_HIDDEN_KEYS.has(key);
+        })
+        .map(function(entry) {
+            return { name: entry[0], value: entry[1] };
+        });
+}
+
 function create_graph(url){
     return $.getJSON(url)
         .done(function(data){
@@ -730,12 +756,18 @@ function create_graph(url){
                     {},
                     true
                 );
-            });
+            }).filter(function(e){ return !!e.from && !!e.to; });
 
             all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
                 simulation: {
-                    useWorker: false,
-                    d3LinkDistance: 90,
+                    cooldownTime: 2000,        // default 2000
+                    d3AlphaDecay: 0.015,       // default 0.0228
+                    d3VelocityDecay: 0.5,      // default 0.4
+                    d3LinkDistance: 60,        // default 30
+                    d3ManyBodyStrength: -250,  // default -150
+                    d3CollideRadius: 20,       // default 12
+                    d3CollideIterations: 2,    // default 1
+                    d3CenterStrength: 0.7,     // default 1
                 },
                 render: {
                     type: 'svg',
@@ -744,10 +776,18 @@ function create_graph(url){
                     },
                 },
                 UI: {
+                    mode: 'full',
                     tooltip: {
                         enabled: true,
                         render: function(element){ return render_pivotick_tooltip(element); },
-                    }
+                    },
+                    sidebar: {
+                        collapsed: false,
+                    },
+                    propertiesPanel: {
+                        nodePropertiesMap: function(node) { return build_sidebar_properties(node); },
+                        edgePropertiesMap: function(edge) { return build_sidebar_properties(edge); },
+                    },
                 },
                 callbacks: {
                     onNodeDbclick: function(event, node){ doubleclick(event, node); },
