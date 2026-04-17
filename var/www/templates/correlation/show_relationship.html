@@ -16,7 +16,8 @@
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/pivotick.umd.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/assets/SimulationWorker-kgekWV9K.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/pivotick.umd.cjs') }}"></script>
 		<link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
 		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
@@ -68,11 +69,7 @@
 			color: #000000;
 		}
 
-        .pixelated {
-            image-rendering: pixelated;
-        }
-
-        .blured {
+        .object_image {
             filter: blur(var(--object-image-blur, 5px));
         }
 
@@ -182,9 +179,7 @@
 		<div class="container-fluid">
 			<div class="row">
 
-				{% include 'sidebars/sidebar_objects.html' %}
-
-				<div class="col-12 col-lg-10" id="core_content">
+				<div class="col-12" id="core_content">
 
 					{% if dict_object["object_type"] == "pgp" %}
 						{% include 'correlation/metadata_card_pgp.html' %}
@@ -214,10 +209,6 @@
 						{% include 'correlation/metadata_card_item.html' %}
 					{% endif %}
 
-                    <div class="my-2">
-                        {% include 'objects/image/block_blur_img_slider.html' %}
-                    </div>
-
 					<div class="row">
 						<div class="col-xl-10">
 
@@ -225,27 +216,7 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
-                                        <div class="card border-secondary">
-                                            <div class="card-body py-2">
-                                                <div class="row">
-                                                    <div class="col-md-3 text-center px-0">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(0);blur_tooltip();">
-                                                            <i class="fas fa-eye-slash"></i>
-      										                <span class="label-icon">Hide</span>
-                                                        </button>
-                                                    </div>
-                                                    <div class="col-md-6 text-center pl-0 pt-1">
-                                                        <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider-correlation">
-                                                    </div>
-                                                    <div class="col-md-3 text-center">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(15);blur_tooltip();">
-                                                            <i class="fas fa-image"></i>
-                                                            <span class="label-icon">Full</span>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                       {% include 'objects/image/block_blur_img_slider.html' %}
                                     </span>
 {#                                    <span class="float-right mx-1">#}
 {#										{% if dict_object["object_type"] != "" %}#}
@@ -481,16 +452,6 @@ $(document).ready(function(){
 
 
 });
-
-const blur_slider_correlation = $('#blur-slider-correlation');
-function blur_tooltip(){
-    var image = $('.correlation-tooltip-image')[0];
-    if (image) {
-        var blurValue = $('#blur-slider-correlation').val();
-        blurValue = 15 - blurValue;
-        image.style.filter = "blur(" + blurValue + "px)";
-    }
-}
 
 $(window).on("resize", function() {
 		all_graph.onResize();
