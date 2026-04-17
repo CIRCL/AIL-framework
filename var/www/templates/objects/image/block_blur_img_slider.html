@@ -25,7 +25,7 @@
 <script>
     const blur_slider = $('#blur-slider');
     function blur_images(){
-        let blurValue = blur_slider.val();
+        let blurValue = Number(blur_slider.val());
         blurValue = 15 - blurValue;
         document.documentElement.style.setProperty('--object-image-blur', blurValue + 'px');
     }
