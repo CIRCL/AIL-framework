@@ -416,7 +416,7 @@
                 </div>
             </div>
 
-            <form action="{{ url_for('hunters.show_tracker') }}" method='post'>
+            <form id="tracker-filter-form" action="{{ url_for('hunters.show_tracker') }}" method='post'>
                 <input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{ meta['uuid'] }}" hidden>
 
                 <div class="card mb-5 mt-1">
@@ -522,7 +522,7 @@
 							<tr class="border-color: blue;"
                                 data-url-done="{{ url_for('hunters.tracker_object_status_done', uuid=meta['uuid'], gid=object['gid'] ) }}"
                                 data-url-rejected="{{ url_for('hunters.tracker_object_status_reject', uuid=meta['uuid'], gid=object['gid'] ) }}"
-                                data-url-read="{{ url_for('hunters.tracker_object_status_read', uuid=meta['uuid'], gid=object['gid'] ) }}">
+                                data-url-read="{{ url_for('hunters.tracker_object_status_read', uuid=meta['uuid'], gid=object['gid'] ) }}"
                                 data-url-unread="{{ url_for('hunters.tracker_object_status_unread', uuid=meta['uuid'], gid=object['gid'] ) }}">
 								<td>
 									{% with style=object['icon']['style'], icon=object['icon']['icon'] , color=object['icon']['color'] %}
@@ -830,6 +830,19 @@ var heatyearChart = echarts.init(document.getElementById('heatmapyear'));
 window.addEventListener('resize', function() {
     heatyearChart.resize();
 });
+
+function applyDateFilterFromHeatmap(date) {
+    if (!date) {
+        return;
+    }
+    $('#date-range-from-input').val(date);
+    $('#date-range-to-input').val(date);
+    const filterForm = document.getElementById('tracker-filter-form');
+    if (filterForm) {
+        filterForm.submit();
+    }
+}
+
 var optionheatmap;
 
 optionheatmap = {
@@ -863,6 +876,16 @@ optionheatmap = {
   ]
 };
 heatyearChart.setOption(optionheatmap);
+heatyearChart.on('click', function (params) {
+    if (!params || !params.data || params.data.length < 2) {
+        return;
+    }
+    const nbMatches = Number(params.data[1]) || 0;
+    if (nbMatches <= 0) {
+        return;
+    }
+    applyDateFilterFromHeatmap(params.data[0]);
+});
 
 update_heatmap_year(null);
 function update_heatmap_year(year) {
