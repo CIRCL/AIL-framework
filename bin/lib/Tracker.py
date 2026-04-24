@@ -349,6 +349,9 @@ class Tracker:
     def get_user(self):
         return self._get_field('user_id')
 
+    def get_creator(self):
+        return self._get_field('user_id')
+
     def webhook_export(self):
         webhook = self.get_webhook()
         return webhook is not None and webhook
@@ -1131,11 +1134,6 @@ def api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, action):
     if not ail_orgs.check_obj_access_acl(tracker, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
 
-def api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_role, new_level):
-    tracker = Tracker(tracker_uuid)
-    if not ail_orgs.check_acl_edit_level(tracker, user_org, user_id, user_role, new_level):
-        return {"status": "error", "reason": "Access Denied - Tracker level"}, 403
-
 ## --ACL-- ##
 
 def api_get_nb_year_tracker(tracker_uuid, year):
@@ -1343,9 +1341,6 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
         level = 1
     if level not in range(0, 3):
         level = 1
-    res = api_is_allowed_to_edit_tracker_level(tracker_uuid, user_org, user_id, user_role, level)
-    if res:
-        return res
 
     nb_words = dict_input.get('nb_words', 1)
     description = dict_input.get('description', '')
@@ -2317,11 +2312,6 @@ def delete_obj_retro_hunts(obj_gid):
 def api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, action):
     if not ail_orgs.check_obj_access_acl(retro_hunt, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
-
-# TODO
-def api_is_allowed_to_edit_retro_hunt_level(retro_hunt, user_org, user_id, user_role, new_level):
-    if not ail_orgs.check_acl_edit_level(retro_hunt, user_org, user_id, user_role, new_level):
-        return {"status": "error", "reason": "Access Denied - Tracker level"}, 403
 
 ####  API  ####
 

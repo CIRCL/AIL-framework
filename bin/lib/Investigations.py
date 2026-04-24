@@ -147,6 +147,9 @@ class Investigation(object):
     def get_creator_user(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'creator_user')
 
+    def get_creator(self):
+        return r_tracking.hget(f'investigations:data:{self.uuid}', 'creator_user')
+
     def get_date(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'date')
 
@@ -423,10 +426,6 @@ def api_check_investigation_acl(inv, user_org, user_id, user_role, action):
     if not ail_orgs.check_obj_access_acl(inv, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
 
-def api_is_allowed_to_edit_investigation_level(inv, user_org, user_id, user_role, new_level):
-    if not ail_orgs.check_acl_edit_level(inv, user_org, user_id, user_role, new_level):
-        return {"status": "error", "reason": "Access Denied - Investigation level"}, 403
-
 ####  API  ####
 
 def api_get_investigation(user_org, user_id, user_role, investigation_uuid):  # TODO check if is UUIDv4
@@ -502,9 +501,6 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
         level = 1
     if level not in range(1, 3):
         level = 1
-    res = api_is_allowed_to_edit_investigation_level(investigation, user_org, user_id, user_role, level)
-    if res:
-        return res
 
     name = json_dict.get('name')
     name = name[:1000]

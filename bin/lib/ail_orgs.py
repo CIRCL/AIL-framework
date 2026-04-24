@@ -547,15 +547,12 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
         if action == 'view':
             return True
         # edit + delete
-        else:   # TODO allow user to edit same org global
-            # if user_role == 'org_admin':
-            creator_org = obj.get_creator_org()
-            if user_org == creator_org:
+        else:
+            owner = obj.get_creator()
+            if user_id == owner:
                 return True
             else:
                 return False
-            # else:
-                return False  # TODO allow user (creator) to edit global tracker ????
     # Organization
     elif level == 2:
         if action == 'view':
@@ -563,45 +560,12 @@ def check_obj_access_acl(obj, user_org, user_id, user_role, action):
         elif action == 'edit':
             return obj.get_org() == user_org
         elif action == 'delete':
-            if user_role == 'org_admin':
-                if user_org == obj.get_org():
-                    return True
-                else:
-                    return False
+            owner = obj.get_creator()
+            if user_id == owner:
+                return True
             else:
                 return False
-
     return False
-
-def check_acl_edit_level(obj, user_org, user_id, user_role, new_level):
-    if user_role == 'admin':
-        return True
-
-    level = obj.get_level()
-    if new_level == level:
-        return True
-
-    # User
-    if new_level == 0:  # TODO
-        return False
-        # if obj.get_user() == user_id:
-        #     return True
-    # Global
-    elif new_level == 1:
-        if level == 0 and obj.get_id() == user_id:
-            return True
-        elif level == 2 and user_role == 'org_admin':
-            if obj.get_creator_org() == user_org:
-                return True
-    # Organisation
-    elif new_level == 2:
-        if level == 0 and obj.get_id() == user_id:
-            return True
-        elif level == 1 and user_role == 'org_admin':
-            if obj.get_creator_org() == user_org:
-                return True
-    return False
-
 
 #### API ####
 
