@@ -524,8 +524,7 @@ def tracker_edit():
         tracker = Tracker.Tracker(tracker_uuid)
         dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks', 'source'})
         if dict_tracker['type'] == 'yara':
-            if not Tracker.is_default_yara_rule(dict_tracker['tracked']):
-                dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
+            dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
         elif dict_tracker['type'] == 'set':
             tracked, nb_words = dict_tracker['tracked'].rsplit(';', 1)
             tracked = tracked.replace(',', ' ')

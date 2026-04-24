@@ -11,6 +11,7 @@ import yara
 import datetime
 import base64
 from hashlib import sha256
+from urllib.parse import urlparse
 
 import math
 
@@ -86,6 +87,16 @@ def verify_mail_list(mail_list):
         if not is_valid_mail(mail):
             return {'status': 'error', 'reason': 'Invalid email', 'value': mail}, 400
     return None
+
+def is_valid_webhook_url(webhook_url):
+    if not webhook_url:
+        return True
+    try:
+        parsed = urlparse(webhook_url)
+    except Exception:
+        return False
+    return parsed.scheme in {'http', 'https'} and bool(parsed.netloc)
+
 
 ## -- UTILS -- ##
 #################
@@ -1258,6 +1269,8 @@ def api_add_tracker(dict_input, org, user_id):
     description = escape(description)
     webhook = dict_input.get('webhook', '')
     webhook = escape(webhook)
+    if webhook and not is_valid_webhook_url(webhook):
+        return {"status": "error", "reason": "Invalid webhook URL"}, 400
     source = dict_input.get('source', 'manual')
     source = escape(source)
     res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
@@ -1346,7 +1359,8 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     description = dict_input.get('description', '')
     description = escape(description)
     webhook = dict_input.get('webhook', '')
-    webhook = escape(webhook)
+    if webhook and not is_valid_webhook_url(webhook):
+        return {"status": "error", "reason": "Invalid webhook URL"}, 400
     source = dict_input.get('source', 'manual')
     source = escape(source)
     res = api_validate_tracker_to_add(to_track, tracker_type, nb_words=nb_words)
