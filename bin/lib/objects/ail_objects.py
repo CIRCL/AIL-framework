@@ -417,7 +417,7 @@ def obj_iterator(obj_type, filters):
     elif obj_type == 'title':
         return Titles.Titles().get_iterator()
     else:
-        return []
+        return iter(())
 
 
 def card_objs_iterators(filters):
