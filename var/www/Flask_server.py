@@ -327,10 +327,11 @@ def ws_dashboard(ws):
 
 
 # ========== INITIAL taxonomies ============
-default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
-# enable default taxonomies
-for taxonomy in default_taxonomies:
-    Tag.enable_taxonomy_tags(taxonomy)
+if not Tag.is_taxonomy_enabled("infoleak"):
+    default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
+    # enable default taxonomies
+    for taxonomy in default_taxonomies:
+        Tag.enable_taxonomy_tags(taxonomy)
 
 # ========== GIT Cache ============
 clear_git_meta_cache()
