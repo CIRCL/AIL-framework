@@ -95,6 +95,86 @@
 				position: static;
 			}
 		}
+
+		.tracker-type-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+			grid-gap: 0.75rem;
+		}
+
+		.tracker-type-input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.tracker-type-card {
+			height: 100%;
+			display: block;
+			border: 1px solid #dee2e6;
+			border-radius: 0.75rem;
+			background: #fff;
+			padding: 0.85rem;
+			cursor: pointer;
+			transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+		}
+
+		.tracker-type-card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.08);
+			border-color: rgba(12, 108, 194, 0.35);
+		}
+
+		.tracker-type-input:focus + .tracker-type-card {
+			outline: 0;
+			box-shadow: 0 0 0 0.2rem rgba(12, 108, 194, 0.2);
+			border-color: #0c6cc2;
+		}
+
+		.tracker-type-input:checked + .tracker-type-card {
+			border-color: #0c6cc2;
+			background: #f2f8ff;
+			box-shadow: 0 0.65rem 1.25rem rgba(12, 108, 194, 0.16);
+		}
+
+		.tracker-type-icon {
+			width: 2.75rem;
+			height: 2.75rem;
+			border-radius: 0.65rem;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			background: rgba(12, 108, 194, 0.12);
+			color: #0c6cc2;
+			font-size: 1.15rem;
+			flex-shrink: 0;
+		}
+
+		.yara-workbench {
+			border: 1px solid #dbe6f3;
+			border-radius: 0.85rem;
+			background: #f8fbff;
+			padding: 1rem;
+			transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+		}
+
+		.yara-workbench.active {
+			border-color: #0c6cc2;
+			background: #f3f8ff;
+			box-shadow: 0 0.9rem 1.6rem rgba(12, 108, 194, 0.16);
+		}
+
+		.yara-workbench-header {
+			border: 1px solid rgba(12, 108, 194, 0.2);
+			border-radius: 0.65rem;
+			background: #fff;
+		}
+
+		.yara-builder-launch {
+			border: 1px dashed rgba(12, 108, 194, 0.3);
+			border-radius: 0.65rem;
+			background: #fff;
+		}
 	</style>
 </head>
 
@@ -312,21 +392,77 @@
 										<p class="mb-0 text-muted">Pick a tracker type and then enter the term, rule, set, or domain variation to monitor.</p>
 									</div>
 									<div class="card-body">
+										{% set selected_tracker_type = dict_tracker['type'] if dict_tracker and dict_tracker['type'] else 'yara' %}
 										<div class="form-row align-items-end">
-											<div class="col-12 col-lg-4">
+											<div class="col-12 col-lg-7">
 												<div class="form-group mb-lg-0">
-													<label for="tracker_type" class="font-weight-bold">Tracker type</label>
-													<select id="tracker_type" name="tracker_type" class="custom-select w-100">
-														<option disabled selected value> -- Select a tracker type -- </option>
-                                                        <option value="yara">YARA rule</option>
-														<option value="word">Word</option>
-														<option value="set">Set</option>
-														<option value="regex">Regex</option>
-														<option value="typosquatting">Typo-squatting</option>
-													</select>
+													<label class="font-weight-bold d-block">Tracker type</label>
+													<input type="hidden" id="tracker_type" name="tracker_type" value="{{ selected_tracker_type }}">
+													<div class="tracker-type-grid" role="radiogroup" aria-label="Tracker type selector">
+														<div>
+															<input class="tracker-type-input" type="radio" id="tracker_type_word" name="tracker_type_selector" value="word" {% if selected_tracker_type == 'word' %}checked{% endif %}>
+															<label class="tracker-type-card mb-0" for="tracker_type_word">
+																<div class="d-flex align-items-center">
+																	<div class="tracker-type-icon mr-2"><i class="fas fa-font"></i></div>
+																	<div>
+																		<div class="font-weight-bold">Word</div>
+																		<small class="text-muted">Single keyword</small>
+																	</div>
+																</div>
+															</label>
+														</div>
+														<div>
+															<input class="tracker-type-input" type="radio" id="tracker_type_set" name="tracker_type_selector" value="set" {% if selected_tracker_type == 'set' %}checked{% endif %}>
+															<label class="tracker-type-card mb-0" for="tracker_type_set">
+																<div class="d-flex align-items-center">
+																	<div class="tracker-type-icon mr-2"><i class="fas fa-layer-group"></i></div>
+																	<div>
+																		<div class="font-weight-bold">Set</div>
+																		<small class="text-muted">Set of words</small>
+																	</div>
+																</div>
+															</label>
+														</div>
+														<div>
+															<input class="tracker-type-input" type="radio" id="tracker_type_regex" name="tracker_type_selector" value="regex" {% if selected_tracker_type == 'regex' %}checked{% endif %}>
+															<label class="tracker-type-card mb-0" for="tracker_type_regex">
+																<div class="d-flex align-items-center">
+																	<div class="tracker-type-icon mr-2"><i class="fas fa-drafting-compass"></i></div>
+																	<div>
+																		<div class="font-weight-bold">Regex</div>
+																		<small class="text-muted">Regular expression</small>
+																	</div>
+																</div>
+															</label>
+														</div>
+														<div>
+															<input class="tracker-type-input" type="radio" id="tracker_type_typosquatting" name="tracker_type_selector" value="typosquatting" {% if selected_tracker_type == 'typosquatting' %}checked{% endif %}>
+															<label class="tracker-type-card mb-0" for="tracker_type_typosquatting">
+																<div class="d-flex align-items-center">
+																	<div class="tracker-type-icon mr-2"><i class="fa fa-clone"></i></div>
+																	<div>
+																		<div class="font-weight-bold">Typo Squatting</div>
+																		<small class="text-muted">Lookalike domains</small>
+																	</div>
+																</div>
+															</label>
+														</div>
+														<div>
+															<input class="tracker-type-input" type="radio" id="tracker_type_yara" name="tracker_type_selector" value="yara" {% if selected_tracker_type == 'yara' %}checked{% endif %}>
+															<label class="tracker-type-card mb-0" for="tracker_type_yara">
+																<div class="d-flex align-items-center">
+																	<div class="tracker-type-icon mr-2"><span class="bg-danger text-white font-weight-bold px-2 py-1 rounded">{</span></div>
+																	<div>
+																		<div class="font-weight-bold">YARA</div>
+																		<small class="text-muted">Pattern matching</small>
+																	</div>
+																</div>
+															</label>
+														</div>
+													</div>
 												</div>
 											</div>
-											<div class="col-12 col-lg-8 mt-3 mt-lg-0">
+											<div class="col-12 col-lg-5 mt-3 mt-lg-0">
 												<div class="alert alert-info mb-0 py-2 px-3">
 													<div class="small mb-0" id="tracker_desc">Terms to track (space separated)</div>
 												</div>
@@ -348,13 +484,28 @@
 											</div>
 										</div>
 
-										<div class="mt-4" id="yara_rule">
-											<div class="d-flex justify-content-end mb-1">
-											<button type="button" class="btn btn-outline-primary btn-sm" id="yara_builder_open_btn">
+											<div class="mt-4 yara-workbench" id="yara_rule">
+												<div class="yara-workbench-header p-3 mb-3">
+													<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+														<div>
+															<h6 class="font-weight-bold mb-1"><i class="fas fa-magic text-primary mr-1"></i>YARA Builder Workspace</h6>
+															<p class="small text-muted mb-0">Build or import a rule below. This section is available when <strong>YARA</strong> is selected.</p>
+														</div>
+														<span class="badge badge-primary mt-2 mt-md-0">Advanced matching</span>
+													</div>
+												</div>
+												<div class="yara-builder-launch p-3 mb-3">
+													<div class="small text-muted mb-2">Need help generating a starter rule?</div>
+													<button type="button" class="btn btn-primary btn-block" id="yara_builder_open_btn">
 												<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd" clip-rule="evenodd"><path fill="#020202" d="M23.856 19.082c-1.914-1.635-3.818-3.33-5.733-4.985a99 99 0 0 0-1.904-1.665c-.638-.548-1.286-1.086-1.914-1.655a59 59 0 0 1-2.313-2.153a.28.28 0 0 0-.409 0a.29.29 0 0 0 0 .409c1.206 1.405 2.473 2.791 3.819 4.087a39 39 0 0 0 1.774 1.615c.608.519 1.217.997 1.845 1.526c1.455 1.166 2.99 2.273 4.436 3.38a.333.333 0 1 0 .42-.519z"/><path fill="#0c6fff" d="m7.485 3.48l.638.189c.06.458.15.907.22 1.366a.34.34 0 0 0 .349.319a.35.35 0 0 0 .329-.35c0-.408.07-.817.1-1.226h.259c.339 0 .658-.12.997-.17a.33.33 0 0 0 .339-.318a.33.33 0 0 0-.32-.35c-.338-.079-.657-.159-.996-.209h-.23v-.588C9.11 1.615 9 1.146 8.921.588a.29.29 0 1 0-.578 0c-.09.528-.19.997-.24 1.575v.658l-.508.1a.29.29 0 0 0-.309.27a.31.31 0 0 0 .2.288m7.796 4.816l.778.12l.18.817a.339.339 0 0 0 .667 0c0-.27.07-.529.1-.798h.08c.329-.06.638-.16.997-.229a.33.33 0 0 0 .319-.339a.34.34 0 0 0-.41-.379c-.338 0-.657-.12-.996-.15c-.34-.03 0-.11 0-.169c-.07-.379-.19-.708-.29-1.077a.3.3 0 0 0-.587 0c-.06.37-.15.718-.19 1.097a2 2 0 0 0 0 .24c-.24.07-.478.159-.728.249a.3.3 0 0 0-.2.319a.29.29 0 0 0 .28.299M5.86 16.969c-.997-.499-1.794-.997-2.752-1.536c-.339-.23-.558.19-.378.648a26 26 0 0 0 2.522 1.775q.677.407 1.396.738q.722.332 1.485.558c.993.299 2.024.453 3.061.459c.409 0 .548-.579.19-.708a12.7 12.7 0 0 1-3.36-.937c-.738-.34-1.456-.678-2.164-.997"/><path fill="#020202" d="M14.913 16.6a.34.34 0 0 0-.449-.15c-.4.153-.835.19-1.256.11a12 12 0 0 1-2.074-.588a26.2 26.2 0 0 1-4.825-2.204a16 16 0 0 1-4.088-3.23a8 8 0 0 1-.468-.548a5 5 0 0 1-.36-.579a2.7 2.7 0 0 1-.219-.488a3 3 0 0 1-.13-.529c-.089-.737.13-1.166.55-1.385a6.1 6.1 0 0 1 2.99-.17c.29 0 .578.08.858.13c.438.09.857.2 1.296.319a.3.3 0 1 0 .17-.569a24 24 0 0 0-1.317-.378a9 9 0 0 0-.917-.19a6.83 6.83 0 0 0-3.45.06A1.994 1.994 0 0 0 .048 8.484q.03.364.12.718q.098.35.259.678c.1.21.219.399.339.598c.12.2.398.529.608.778q.729.795 1.565 1.475c-.16.529-.329.997-.538 1.546q-.377.9-.868 1.744q-.551.676-.997 1.426a1.67 1.67 0 0 0-.08.997a5.04 5.04 0 0 0 2.224 2.991a16.2 16.2 0 0 0 4.965 1.914c.773.198 1.565.315 2.363.35c.44.023.874-.1 1.236-.35c.284-.27.485-.616.578-.997a8.3 8.3 0 0 0 .19-1.395q.085-.886.279-1.755q.2-.867.548-1.685a.4.4 0 0 0 0-.26q.135.015.27 0a2.9 2.9 0 0 0 1.635-.219a.34.34 0 0 0 .17-.438m-2.672.618a30 30 0 0 0-.997 3.61q-.07.64-.23 1.265c-.066.21-.186.4-.348.549c-.17.14-.519.09-.897 0a11 11 0 0 1-1.805-.39a16.3 16.3 0 0 1-4.596-1.814a4.18 4.18 0 0 1-1.904-2.303a.8.8 0 0 1 .08-.588c.199-.419.548-.798.747-1.196c.09-.18.708-1.626.798-1.885c.16-.448.279-.907.398-1.366a20 20 0 0 0 2.294 1.576a25.2 25.2 0 0 0 5.114 2.063c.409.12.907.28 1.426.39a.3.3 0 0 0-.08.089"/><path fill="#020202" d="M7.545 9.381a.29.29 0 1 0 0-.578a4.2 4.2 0 0 0-1.764 0c-.459.19-.748.588-.45 1.446q.066.196.16.379q.106.188.24.359q.164.218.359.408q.196.18.418.33c.744.49 1.544.888 2.383 1.186c1.243.41 2.527.68 3.829.807a.33.33 0 0 0 .379-.279a.33.33 0 0 0-.27-.379a19.6 19.6 0 0 1-2.99-.897c-.48-.19-.998-.399-1.396-.628a10.5 10.5 0 0 1-1.326-.718l-.609-.488l-.319-.44c-.08-.149-.17-.238-.11-.308a.42.42 0 0 1 .23-.13a5.3 5.3 0 0 1 1.236-.07"/></g></svg> YARA rule builder
 											</button>
-										</div>
-										{% include 'hunter/block_yara_rule_builder.html' %}
+												</div>
+											{% include 'hunter/block_yara_rule_builder.html' %}
+											<div class="d-flex align-items-center my-3" aria-hidden="true">
+												<div class="flex-grow-1 border-top"></div>
+												<span class="badge badge-pill badge-light border text-secondary mx-2 px-3 py-2">Or import an existing YARA rule</span>
+												<div class="flex-grow-1 border-top"></div>
+											</div>
 
 										<div class="card border-0 bg-light mb-3">
 												<div class="card-body">
@@ -379,8 +530,8 @@
 
 											<div class="card border-0 bg-light">
 												<div class="card-body">
-													<h6 class="font-weight-bold">Custom YARA rule</h6>
-													<p class="small text-muted">Create, Paste or edit your own YARA rule. The editor will keep the existing content when you edit a tracker.</p>
+													<h6 class="font-weight-bold">YARA rule used by this tracker</h6>
+													<p class="small text-muted">This rule is what your tracker will run to detect matches. You can create, paste, or edit it below.</p>
 													<div class="border rounded bg-white px-3 pt-3">
 														<textarea class="form-control border-0 px-0" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="8">{%if dict_tracker%}{%if dict_tracker['type']=='yara' and dict_tracker['content']%}{{dict_tracker['content']}}{%endif%}{%endif%}</textarea>
 													</div>
@@ -502,8 +653,9 @@ $(document).ready(function(){
     item_source_input_controller();
     pgp_source_input_controller();
 
-	$('#tracker_type').on('change', function() {
-		var tracker_type = this.value;
+	function updateTrackerTypeUI(tracker_type, userInitiated) {
+		$('#tracker_type').val(tracker_type);
+		$("#yara_rule").toggleClass("active", tracker_type=="yara");
 		if (tracker_type=="word") {
 			$("#tracker_desc").text("Track a single exact token. Use a YARA rule tracker if you need special characters such as [<>~!?@#$%^&*|()_-+={}\":;,.\'\\n\\r\\t]/\\.");
 			$("#tracker_desc").show();
@@ -529,6 +681,9 @@ $(document).ready(function(){
 			$("#tracker").hide();
 			$("#nb_word_section").hide();
 			$("#yara_rule").show();
+			if (userInitiated) {
+				document.getElementById('yara_rule').scrollIntoView({ behavior: 'smooth', block: 'start' });
+			}
 		} else if (tracker_type=="typosquatting") {
 			$("#tracker_desc").text("Generate variations for one domain name at a time.");
 			$("#tracker_desc").show();
@@ -536,15 +691,13 @@ $(document).ready(function(){
 			$("#nb_word_section").hide();
 			$("#yara_rule").hide();
 		}
+	}
+
+	$('input[name="tracker_type_selector"]').on('change', function() {
+		updateTrackerTypeUI(this.value, true);
 	});
 
-	{%if dict_tracker%}
-		$('#tracker_type').val('{{dict_tracker['type']}}').change();
-		{%if dict_tracker['type']=='yara'%}
-			$('#tracker_desc').show();
-			$('#yara_rule').show();
-		{%endif%}
-	{%endif%}
+	updateTrackerTypeUI($('#tracker_type').val(), false);
 
     $('#item_obj').on("change", function () {
 		item_source_input_controller();
