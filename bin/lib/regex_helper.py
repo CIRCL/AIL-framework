@@ -33,6 +33,9 @@ def generate_redis_cache_key(module_name):
     new_uuid = str(uuid.uuid4())
     return f'{module_name}_extracted:{new_uuid}'
 
+def regex_escape(value):
+    return re.escape(value)
+
 def _regex_findall(redis_key, regex, item_content, r_set):
     all_items = re.findall(regex, item_content)
     if r_set:
