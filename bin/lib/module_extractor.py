@@ -335,6 +335,10 @@ def get_extracted_by_match(extracted):
                     matches[str_obj]['id'] = row_id
                     matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#ffc107', 'radius': 5}
                     matches[str_obj]['link'] = ''
+                    tracker = Tracker.Tracker(row_id)
+                    description = tracker.get_description()
+                    if description:
+                        matches[str_obj]['description'] = description
                 elif ob_type == 'retro_hunt':  # TODO put me in object class
                     matches[str_obj]['subtype'] = 'retro_hunt'
                     matches[str_obj]['id'] = row_id

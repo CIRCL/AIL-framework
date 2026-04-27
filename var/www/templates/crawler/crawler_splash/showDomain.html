@@ -17,6 +17,7 @@
   <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
   <style>
+
     .icon_img:hover{
   		cursor: pointer;
   		color: #17a2b8;
@@ -24,6 +25,9 @@
     .icon_selected{
   		color: #007bff;
   	}
+    .object_image {
+        filter: blur(var(--object-image-blur, 5px));
+    }
   </style>
 
 </head>
