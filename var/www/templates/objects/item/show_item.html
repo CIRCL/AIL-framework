@@ -65,6 +65,78 @@
     .section-block{
         margin: 0.85rem 0.65rem;
     }
+    .card-clean{
+        border: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 0.4rem 1.1rem rgba(0, 0, 0, 0.07);
+    }
+    .card-clean .card-header{
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .section-title{
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #343a40;
+    }
+    .section-badge{
+        border-radius: 999px;
+        font-size: 0.78rem;
+        padding: 0.3rem 0.55rem;
+    }
+    .summary-chip{
+        border: 1px solid #e9ecef;
+        border-radius: 0.65rem;
+        padding: 0.45rem 0.6rem;
+        background: #fff;
+        min-width: 170px;
+    }
+    .summary-chip .label{
+        display: block;
+        font-size: 0.72rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 0.1rem;
+    }
+    .summary-chip .value{
+        font-weight: 600;
+        color: #212529;
+        word-break: break-word;
+    }
+    .extracted-table tbody tr:hover{
+        background-color: #f8fbff;
+    }
+    .extracted-match-list{
+        margin: 0;
+        padding-left: 1rem;
+    }
+    .extracted-match-list li{
+        margin: 0.15rem 0;
+    }
+    .extracted-card-header{
+        cursor: pointer;
+        user-select: none;
+    }
+    .extracted-card-header:hover{
+        background: #eef3f8 !important;
+    }
+    .show-more-btn{
+        border-radius: 999px;
+        font-size: 0.78rem;
+        padding: 0.12rem 0.6rem;
+    }
+    .id-inline{
+        font-family: monospace;
+        font-size: 0.9rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.35rem;
+        background: #f1f3f5;
+        display: inline-block;
+    }
 	.rotate{
 		-moz-transition: all 0.1s linear;
 		-webkit-transition: all 0.1s linear;
@@ -183,17 +255,17 @@
         <div class="mr-auto text-muted small align-self-center">
           ID: <code>{{ meta['id'] }}</code>
         </div>
-        <div>
+        <div class="mt-1">
           <a href="{{ url_for('correlation.show_correlation')}}?type=item&id={{ meta['id'] }}" target="_blank">
-						<button class="btn btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
-						</button>
-					</a>
+			<button class="btn btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
+			</button>
+		  </a>
         </div>
         <div>
           {% with obj_type='item', obj_id=meta['id'], obj_subtype=''%}
             {% include 'modals/investigations_register_obj.html' %}
           {% endwith %}
-          <div>
+          <div class="mt-1">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
               <i class="fas fa-microscope"></i> Investigations
             </button>
@@ -421,74 +493,99 @@
 
   {% if extracted_matches %}
   <div id="accordion_extracted" class="mb-3 mx-3">
-      <div class="card">
-          <div class="card-header py-1" id="heading_extracted">
-              <div class="row">
-                  <div class="col-11">
-                      <div class="mt-2">
-                          <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="32"> Extracted&nbsp;&nbsp;
-                          <div class="badge badge-warning">{{extracted_matches|length}}</div>
-                      </div>
+      <div class="card card-clean">
+          <div class="card-header py-2 extracted-card-header" id="heading_extracted" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapse_extracted">
+              <div class="d-flex flex-wrap align-items-center justify-content-between">
+                  <div class="section-title">
+                      <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="28" alt="AIL logo">
+                      <span>Extracted Indicators</span>
+                      <span class="badge badge-warning section-badge">{{ extracted_matches|length }} types</span>
                   </div>
-                  <div class="col-1">
-                      <button class="btn btn-link btn-lg py-2 float-right rotate down" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapseDecoded">
-                          <i class="fas fa-chevron-circle-down"></i>
-                      </button>
-                  </div>
+                  <button class="btn btn-link py-0 px-1 rotate down" type="button" aria-label="Toggle extracted indicators">
+                      <i class="fas fa-lg fa-chevron-circle-down"></i>
+                  </button>
               </div>
           </div>
 
           <div id="collapse_extracted" class="collapse show" aria-labelledby="heading_extracted" data-parent="#accordion_extracted">
               <div class="card-body">
-                  <table id="table_extracted" class="table table-striped">
-                      <thead class="thead-dark">
-                      <tr>
-                          <th>Type</th>
-                          <th>ID</th>
-                          <th>Extracted</th>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      {% for match in extracted_matches %}
+                  <div class="d-flex flex-wrap mb-3" style="gap:0.55rem;">
+                      <div class="summary-chip">
+                          <span class="label">Types</span>
+                          <span class="value">{{ extracted_matches|length }}</span>
+                      </div>
+                      <div class="summary-chip">
+                          <span class="label">Total extracted hits</span>
+                          <span class="value">{{ extracted|length }}</span>
+                      </div>
+                      <div class="summary-chip">
+                          <span class="label">Quick hint</span>
+                          <span class="value">Click an extracted value to jump to highlighted content below.</span>
+                      </div>
+                  </div>
+
+                  <div class="table-responsive">
+                      <table id="table_extracted" class="table table-striped table-hover extracted-table mb-0">
+                          <thead class="thead-light">
                           <tr>
-                              <td>
-                                  <svg height="26" width="26">
-                                      <g class="nodes">
-                                          <circle cx="13" cy="13" r="13" fill="{{ extracted_matches[match]['icon']['color'] }}"></circle>
-                                          <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ extracted_matches[match]['icon']['style'] }}" font-size="16px">{{ extracted_matches[match]['icon']['icon'] }}</text>
-                                      </g>
-                                  </svg>
-                                  {{ extracted_matches[match]['subtype'] }}
-                              </td>
-                              <td>
-                                  {% if extracted_matches[match]['subtype'] == 'tracker' %}
-                                      <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ extracted_matches[match]['id'] }}">{{ extracted_matches[match]['id'] }}</a>
-                                      {% if 'description' in extracted_matches[match] %}
-                                          {{ extracted_matches[match]['description'] }}
-                                      {% endif %}
-                                  {% else %}
-                                      {{ extracted_matches[match]['id'] }}
-                                  {% endif %}
-                              </td>
-                              <td>
-                                  {% if extracted_matches[match]['matches']|length > 1 %}
-                                      <button class="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target="#collapseextracted{{ loop.index }}">
-                                          <i class="fa-solid fa-caret-up"></i>
-                                      </button>
-                                  {% endif %}
-                                  <div class="collapse show" id="collapseextracted{{ loop.index }}">
-                                      {% for row in extracted_matches[match]['matches'] %}
-                                          <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
-                                      {% endfor %}
-                                  </div>
-                              </td>
+                              <th style="min-width:170px;">Type</th>
+                              <th style="min-width:260px;">ID / Context</th>
+                              <th>Extracted Values</th>
                           </tr>
-                      {% endfor %}
-                      </tbody>
-                  </table>
+                          </thead>
+                          <tbody>
+                          {% for match in extracted_matches %}
+                              <tr>
+                                  <td>
+                                      <div class="d-flex align-items-center">
+                                          <svg height="26" width="26" class="mr-2 flex-shrink-0">
+                                              <g class="nodes">
+                                                  <circle cx="13" cy="13" r="13" fill="{{ extracted_matches[match]['icon']['color'] }}"></circle>
+                                                  <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ extracted_matches[match]['icon']['style'] }}" font-size="16px">{{ extracted_matches[match]['icon']['icon'] }}</text>
+                                              </g>
+                                          </svg>
+                                          <div>
+                                              <div class="font-weight-bold text-capitalize">{{ extracted_matches[match]['subtype'] }}</div>
+                                              <small class="text-muted">{{ extracted_matches[match]['matches']|length }} match{% if extracted_matches[match]['matches']|length > 1 %}es{% endif %}</small>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  <td>
+                                      {% if extracted_matches[match]['subtype'] == 'tracker' %}
+                                          <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ extracted_matches[match]['id'] }}" class="id-inline">{{ extracted_matches[match]['id'] }}</a>
+                                          {% if 'description' in extracted_matches[match] %}
+                                              <div class="small text-muted mt-1">{{ extracted_matches[match]['description'] }}</div>
+                                          {% endif %}
+                                      {% else %}
+                                          <span class="id-inline">{{ extracted_matches[match]['id'] }}</span>
+                                      {% endif %}
+                                  </td>
+                                  <td>
+                                      <ul class="extracted-match-list">
+                                      {% for row in extracted_matches[match]['matches'][:3] %}
+                                          <li><a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a></li>
+                                      {% endfor %}
+                                      </ul>
+                                      {% if extracted_matches[match]['matches']|length > 3 %}
+                                          <div class="collapse" id="collapseExtractedValues{{ loop.index }}">
+                                              <ul class="extracted-match-list mt-1">
+                                                  {% for row in extracted_matches[match]['matches'][3:] %}
+                                                      <li><a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a></li>
+                                                  {% endfor %}
+                                              </ul>
+                                          </div>
+                                          <button class="btn btn-outline-info btn-sm show-more-btn mt-1" type="button" data-toggle="collapse" data-target="#collapseExtractedValues{{ loop.index }}" aria-expanded="false" aria-controls="collapseExtractedValues{{ loop.index }}">
+                                              Show {{ extracted_matches[match]['matches']|length - 3 }} more
+                                          </button>
+                                      {% endif %}
+                                  </td>
+                              </tr>
+                          {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
               </div>
           </div>
-
       </div>
   </div>
   {% endif %}
@@ -570,6 +667,22 @@
         });
         $('[data-toggle="popover"]').popover({
             boundary:'window',
+        });
+
+        $('#collapse_extracted').on('show.bs.collapse', function(){
+            $('#heading_extracted .rotate').addClass('down');
+        });
+        $('#collapse_extracted').on('hide.bs.collapse', function(){
+            $('#heading_extracted .rotate').removeClass('down');
+        });
+        $('[id^=collapseExtractedValues]').on('show.bs.collapse', function(){
+            const button = $('[data-target="#' + this.id + '"]');
+            button.text('Show less');
+        });
+        $('[id^=collapseExtractedValues]').on('hide.bs.collapse', function(){
+            const button = $('[data-target="#' + this.id + '"]');
+            const hiddenCount = $(this).find('li').length;
+            button.text('Show ' + hiddenCount + ' more');
         });
     });
 
