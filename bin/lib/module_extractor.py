@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import sys
 
 import yara
@@ -188,6 +189,14 @@ def _get_trackers_match(trackers_uuids, user_org, user_id, obj_gid, content, pri
                 # print(regex_match)
                 for match in regex_match:
                     extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
+        elif tracker_type == 'typosquatting':
+            typo_domains = Tracker.get_tracked_typosquatting_domains(tracked)
+            for typo_domain in typo_domains:
+                regex = _get_word_regex(re.escape(typo_domain))
+                regex_match = regex_helper.regex_finditer(r_key, regex, obj_gid, content, max_time=5)
+                for match in regex_match:
+                    extracted.append([int(match[0]), int(match[1]), match[2], f'tracker:{tracker.uuid}'])
+
     return extracted, extracted_yara
 
 
