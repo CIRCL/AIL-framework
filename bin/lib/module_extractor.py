@@ -424,6 +424,9 @@ def get_extracted_by_match(extracted):
                     matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#ffc107', 'radius': 5}
                     matches[str_obj]['link'] = ''
                     tracker = Tracker.Tracker(row_id)
+                    tracked = tracker.get_tracked()
+                    if tracked:
+                        matches[str_obj]['name'] = tracked
                     description = tracker.get_description()
                     if description:
                         matches[str_obj]['description'] = description
@@ -432,6 +435,13 @@ def get_extracted_by_match(extracted):
                     matches[str_obj]['id'] = row_id
                     matches[str_obj]['icon'] = {'style': 'fas', 'icon': '\uf05b', 'color': '#008107', 'radius': 5}
                     matches[str_obj]['link'] = ''
+                    retro_hunt = Tracker.RetroHunt(row_id)
+                    name = retro_hunt.get_name()
+                    if name:
+                        matches[str_obj]['name'] = name
+                    description = retro_hunt.get_description()
+                    if description:
+                        matches[str_obj]['description'] = description
                 else:
                     row_id = row_id.split(':', 1)
                     if len(row_id) == 2:

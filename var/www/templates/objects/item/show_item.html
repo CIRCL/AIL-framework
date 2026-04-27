@@ -27,6 +27,15 @@
     .popover{
         max-width: 100%;
     }
+    .popover-header{
+        background: #343a40;
+        color: #fff;
+        font-weight: 600;
+    }
+    .popover-body{
+        background: #f8f9fa;
+        border-radius: 0 0 .3rem .3rem;
+    }
     .page-shell{
         padding: 0 0.5rem 1rem;
     }
@@ -553,6 +562,17 @@
                                   <td>
                                       {% if extracted_matches[match]['subtype'] == 'tracker' %}
                                           <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ extracted_matches[match]['id'] }}" class="id-inline">{{ extracted_matches[match]['id'] }}</a>
+                                          {% if 'name' in extracted_matches[match] %}
+                                              <div class="small font-weight-bold mt-1">{{ extracted_matches[match]['name'] }}</div>
+                                          {% endif %}
+                                          {% if 'description' in extracted_matches[match] %}
+                                              <div class="small text-muted mt-1">{{ extracted_matches[match]['description'] }}</div>
+                                          {% endif %}
+                                      {% elif extracted_matches[match]['subtype'] == 'retro_hunt' %}
+                                          <span class="id-inline">{{ extracted_matches[match]['id'] }}</span>
+                                          {% if 'name' in extracted_matches[match] %}
+                                              <div class="small font-weight-bold mt-1">{{ extracted_matches[match]['name'] }}</div>
+                                          {% endif %}
                                           {% if 'description' in extracted_matches[match] %}
                                               <div class="small text-muted mt-1">{{ extracted_matches[match]['description'] }}</div>
                                           {% endif %}
@@ -636,7 +656,7 @@
             {% if not extracted %}
                 <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
             {% else %}
-                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[r[0]]['subtype'] }}</div>{{ extracted_matches[r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Matched indicators" data-content="<ul class=&quot;list-group list-group-flush&quot;>{% for r in row[3] %}<li class=&quot;list-group-item px-2 py-2&quot;><div class=&quot;d-flex align-items-start&quot;><svg height=&quot;26&quot; width=&quot;26&quot; class=&quot;mr-2 mt-1 flex-shrink-0&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg><div><div class=&quot;font-weight-bold text-capitalize&quot;>{{ extracted_matches[r[0]]['subtype']|replace('_', ' ') }}</div><div><span class=&quot;badge badge-light border&quot;>{{ extracted_matches[r[0]]['id'] }}</span></div>{% if extracted_matches[r[0]]['subtype'] == 'tracker' or extracted_matches[r[0]]['subtype'] == 'retro_hunt' %}{% if 'name' in extracted_matches[r[0]] %}<div class=&quot;small font-weight-bold mt-1&quot;>{{ extracted_matches[r[0]]['name'] }}</div>{% endif %}{% if 'description' in extracted_matches[r[0]] %}<div class=&quot;small text-muted mt-1&quot;>{{ extracted_matches[r[0]]['description'] }}</div>{% endif %}{% endif %}<div class=&quot;small mt-1&quot;><span class=&quot;text-muted&quot;>Matched value:</span> <b>{{ r[1] }}</b></div></div></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
         </div>
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
