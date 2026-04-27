@@ -28,6 +28,15 @@ r_data = config_loader.get_db_conn("Kvrocks_DB")  # TODO MOVE DEFAULT DB
 
 config_loader = None
 
+IS_PYCOUNTRY_PATCHED = False
+
+def _patch_pycountry():
+    pycountry.countries.remove_entry(alpha_2="TW")
+    pycountry.countries.add_entry(alpha_2="XK", alpha_3="XXK", name="Kosovo", numeric="926", flag="🇽🇰")
+    pycountry.countries.add_entry(alpha_2="TW", alpha_3="TWN", name="Taiwan", numeric="158", flag="🇹🇼")
+    global IS_PYCOUNTRY_PATCHED
+    IS_PYCOUNTRY_PATCHED = True
+
 
 SPECIAL_NATIONALITIES = {
     'Europe': {
@@ -58,6 +67,9 @@ def normalize_nationality(nationality):
     if nationality in SPECIAL_NATIONALITIES:
         return SPECIAL_NATIONALITIES[nationality]['name']
 
+    if not IS_PYCOUNTRY_PATCHED:
+        _patch_pycountry()
+
     country = pycountry.countries.get(name=nationality)
     if country:
         return country.name
@@ -78,6 +90,9 @@ def format_nationality(nationality):
             return f"{special['flag']} {special['name']}"
         return special['name']
 
+    if not IS_PYCOUNTRY_PATCHED:
+        _patch_pycountry()
+
     country = pycountry.countries.get(name=nationality)
     if country:
         country_name = country.name
@@ -95,6 +110,9 @@ def get_nationality_selector():
         if special['flag']:
             label = f"{special['flag']} {label}"
         options.append({'value': key, 'name': special['name'], 'label': label})
+
+    if not IS_PYCOUNTRY_PATCHED:
+        _patch_pycountry()
 
     countries = sorted(pycountry.countries, key=lambda country: country.name)
     for country in countries:
