@@ -23,14 +23,40 @@
         .icon-button {
       position: relative;
       display: inline-block;
-      border: none;
-      background: none;
+      border: 1px solid transparent;
+      background: transparent;
       {#padding: 0;#}
       margin: 0;
       cursor: pointer;
       outline: inherit;
 	    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+      border-radius: 0.6rem;
+      padding: 0.3rem 0.25rem 0.2rem;
+      color: #1f2937;
+      text-decoration: none;
+      box-shadow: none;
     }
+    .icon-button:hover {
+      background: #f8fafc;
+      border-color: #dbe4ef;
+      box-shadow: none;
+      text-decoration: none;
+      color: #1f2937;
+    }
+    .icon-button:focus,
+    .icon-button:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+    .icon-button .h4 {
+      font-size: 0.95rem;
+      margin-top: 0.35rem;
+      margin-bottom: 0;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
 
     .icon-wrapper {
       position: relative;
@@ -94,10 +120,9 @@
                     </div>
                 </div>
 
+            </div>
 		</div>
-
-
-
+    
 	</div>
 
 <script>
