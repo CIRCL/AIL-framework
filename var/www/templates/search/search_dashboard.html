@@ -382,6 +382,20 @@
 
 </form>
 
+    {% if search_error %}
+        <div class="alert alert-warning border-left border-warning shadow-sm mt-3" role="alert">
+          <div class="d-flex align-items-start">
+            <div class="mr-3 mt-1">
+              <i class="fas fa-exclamation-triangle fa-lg text-warning"></i>
+            </div>
+            <div>
+              <h6 class="alert-heading mb-1">{{ search_error.title }}</h6>
+              <p class="mb-0">{{ search_error.message }}</p>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+
 {#        <small class="text-muted d-block mt-2">#}
 {#          Examples: <code>@username</code>, <code>example.onion</code>, <code>invoice.pdf</code>, <code>ransomware</code>#}
 {#        </small>#}

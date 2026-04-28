@@ -38,6 +38,7 @@ def create_json_response(data, status_code):
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')
 
+
 # ============ FUNCTIONS ============
 
 # ============= ROUTES ==============
@@ -65,12 +66,30 @@ def search_dashboard():
 
     # selected_scopes -> scope_human
 
+    search_error = None
     if search:
         r = search_engine.api_search({'indexes': indexes, 'search': search, 'page': page, 'user_id': user_id,
                                       'from': last_seen_from, 'to': last_seen_to, 'sort': sort})
         if r[1] != 200:
-            return create_json_response(r[0], r[1])
-        result, pagination = r[0]
+            error_type = r[0].get('error_type')
+            if error_type == 'meilisearch_timeout':
+                search_error = {
+                    'title': 'Search service timeout',
+                    'message': r[0].get('reason')
+                }
+                result = None
+                pagination = None
+            elif error_type == 'meilisearch_unreachable':
+                search_error = {
+                    'title': 'Search service unavailable',
+                    'message': r[0].get('reason')
+                }
+                result = None
+                pagination = None
+            else:
+                return create_json_response(r[0], r[1])
+        else:
+            result, pagination = r[0]
     else:
         result = None
         pagination = None
@@ -83,6 +102,7 @@ def search_dashboard():
                            sort=sort,
                            last_seen_from=last_seen_from,
                            last_seen_to=last_seen_to,
+                           search_error=search_error,
                            result=result, pagination=pagination)
 
 # username_subtypes=ail_core.get_object_all_subtypes('username')

@@ -526,8 +526,22 @@ def api_search(data):
         except:
             return {"status": "error", "reason": "Invalid date from"}, 400
 
-    result = Engine.search(indexes, to_search, page=page, nb=nb_per_page, timestamp_from=timestamp_from, sort=sort,
-                           timestamp_to=timestamp_to)
+    try:
+        result = Engine.search(indexes, to_search, page=page, nb=nb_per_page, timestamp_from=timestamp_from, sort=sort,
+                               timestamp_to=timestamp_to)
+    except MeilisearchTimeoutError:
+        return {
+            "status": "error",
+            "error_type": "meilisearch_timeout",
+            "reason": "The connection to Meilisearch timed out. Please try again in a few minutes."
+        }, 503
+    except MeilisearchCommunicationError:
+        return {
+            "status": "error",
+            "error_type": "meilisearch_unreachable",
+            "reason": "Meilisearch is unreachable. Install/start Meilisearch or check the connection settings."
+        }, 503
+
     objs = []
     pagination = {}
     if result.get("hits"):
