@@ -86,7 +86,7 @@ $('#user_organisation').tagSuggest({
     maxSelection: 1,
     emptyText: 'Select Organisation',
     name: 'user_organisation',
-    {% if selector_val %}value: ['{{ selector_val | tojson}}']{% endif %}
+    {% if selector_val %}value: [{{ selector_val | tojson}}]{% endif %}
   });
 } );
 
