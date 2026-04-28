@@ -147,7 +147,7 @@ class SSHKeys(AbstractDaterangeObjects):
         return 'SSHKeys'
 
     def get_icon(self):
-        return {'fa': 'fab', 'icon': 'console'}
+        return {'fa': 'fas', 'icon': 'terminal'}
 
     def get_link(self, flask_context=False):
         if flask_context:
