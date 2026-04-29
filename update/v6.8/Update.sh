@@ -35,6 +35,9 @@ pip install -U pylacus
 echo -e $GREEN"Updating pyfaup-rs."$DEFAULT
 pip install -U pyfaup-rs
 
+echo -e $GREEN"Updating pymisp."$DEFAULT
+pip install -U pymisp
+
 echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
 echo ""
