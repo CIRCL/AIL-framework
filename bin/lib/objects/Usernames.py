@@ -137,7 +137,7 @@ class Usernames(AbstractSubtypeObjects):
         return 'Usernames'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'user'}
+        return {'fa': 'fas', 'icon': 'user'}
 
     def get_link(self, flask_context=False):
         if flask_context:

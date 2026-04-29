@@ -130,7 +130,7 @@ class HHHashs(AbstractDaterangeObjects):
         return 'HHHashs'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'align-left'}
+        return {'fa': 'fas', 'icon': 'align-left'}
 
     def get_link(self, flask_context=False):
         if flask_context:

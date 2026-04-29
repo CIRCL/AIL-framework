@@ -108,7 +108,7 @@ class Titles(AbstractDaterangeObjects):
         return 'Titles'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'heading'}
+        return {'fa': 'fas', 'icon': 'heading'}
 
     def get_link(self, flask_context=False):
         if flask_context:

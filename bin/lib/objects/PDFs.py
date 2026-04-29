@@ -431,7 +431,7 @@ class PDFs(AbstractDaterangeObjects):
         return 'PDFS'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'file-pdf'}
+        return {'fa': 'fas', 'icon': 'file-pdf'}
 
     def get_link(self, flask_context=False):
         if flask_context:

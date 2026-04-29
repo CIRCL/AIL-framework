@@ -154,7 +154,7 @@ class Qrcodes(AbstractDaterangeObjects):
         return 'Qrcodes'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'qrcode'}
+        return {'fa': 'fas', 'icon': 'qrcode'}
 
     def get_link(self, flask_context=False):
         if flask_context:

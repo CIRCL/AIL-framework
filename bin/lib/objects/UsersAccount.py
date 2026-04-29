@@ -290,7 +290,7 @@ class UserAccounts(AbstractSubtypeObjects):
         return 'User-Accounts'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'user-circle'}
+        return {'fa': 'fas', 'icon': 'user-circle'}
 
     def get_link(self, flask_context=False):
         if flask_context:

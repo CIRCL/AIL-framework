@@ -199,7 +199,7 @@ class Images(AbstractDaterangeObjects):
         return 'Images'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'image'}
+        return {'fa': 'fas', 'icon': 'image'}
 
     def get_link(self, flask_context=False):
         if flask_context:

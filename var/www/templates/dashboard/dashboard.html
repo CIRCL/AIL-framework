@@ -207,7 +207,7 @@
 
                     {% for obj_type in nb_objects %}
                         <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
-                            {% with type=obj_type, name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon']['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
+                            {% with type=obj_type, name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
                                 {% include 'objects/block_obj_button.html' %}
                             {% endwith %}
                         </div>

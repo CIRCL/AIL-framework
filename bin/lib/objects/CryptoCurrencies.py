@@ -195,7 +195,7 @@ class CryptoCurrencies(AbstractSubtypeObjects):
         return 'Cryptocurrencies'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'coins'}
+        return {'fa': 'fas', 'icon': 'coins'}
 
     def get_link(self, flask_context=False):
         if flask_context:

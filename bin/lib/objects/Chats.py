@@ -245,7 +245,7 @@ class Chats(AbstractChatObjects):
         return 'Chats'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'comment'}
+        return {'fa': 'fas', 'icon': 'comment'}
 
     def get_link(self, flask_context=False):
         if flask_context:

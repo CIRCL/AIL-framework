@@ -105,7 +105,7 @@ class Pgps(AbstractSubtypeObjects):
         return 'PGP Dumps'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'key'}
+        return {'fa': 'fas', 'icon': 'key'}
 
     def get_link(self, flask_context=False):
         if flask_context:

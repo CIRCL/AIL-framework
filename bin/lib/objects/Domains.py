@@ -854,7 +854,7 @@ class Domains:
         return 'Domains'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'spider'}
+        return {'fa': 'fas', 'icon': 'spider'}
 
     def get_link(self, flask_context=False):
         if flask_context:

@@ -334,7 +334,7 @@ class Ocrs(AbstractDaterangeObjects):
         return 'Ocrs'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'expand'}
+        return {'fa': 'fas', 'icon': 'expand'}
 
     def get_link(self, flask_context=False):
         if flask_context:
