@@ -1059,7 +1059,7 @@ def crawler_settings():
 
     is_manager_connected = crawlers.get_lacus_connection_metadata(force_ping=True)
     is_crawler_working = crawlers.is_test_ail_crawlers_successful()
-    crawler_error_mess = crawlers.get_test_ail_crawlers_message()
+    crawler_test_metadata = crawlers.get_test_ail_crawlers_metadata()
 
     is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
     is_onion_filter_unknown = crawlers.is_onion_filter_unknown(cache=False)
@@ -1076,7 +1076,7 @@ def crawler_settings():
                            nb_captures=nb_captures,
                            # all_proxies=all_proxies,
                            is_crawler_working=is_crawler_working,
-                           crawler_error_mess=crawler_error_mess,
+                           crawler_test_metadata=crawler_test_metadata,
                            is_onion_filter_enabled=is_onion_filter_enabled,
                            is_onion_filter_unknown=is_onion_filter_unknown,
                            crawler_logs=crawler_logs

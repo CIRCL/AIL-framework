@@ -2757,61 +2757,85 @@ def api_set_crawler_max_captures(data):
 ## TEST ##
 
 def is_test_ail_crawlers_successful():
-    return r_db.hget('crawler:tor:test', 'success') == 'True'
+    web_success = r_db.hget('crawler:tor:test', 'web_success')
+    onion_success = r_db.hget('crawler:tor:test', 'onion_success')
+    return web_success == 'True' or onion_success == 'True'
 
 def get_test_ail_crawlers_message():
-    return r_db.hget('crawler:tor:test', 'message')
+    metadata = get_test_ail_crawlers_metadata()
+    return f"Web: {metadata['web_message']}\nOnion: {metadata['onion_message']}"
 
-def save_test_ail_crawlers_result(test_success, message):
-    r_db.hset('crawler:tor:test', 'success', str(test_success))
-    r_db.hset('crawler:tor:test', 'message', message)
+def get_test_ail_crawlers_metadata():
+    metadata = {
+        'web_success': r_db.hget('crawler:tor:test', 'web_success'),
+        'web_message': r_db.hget('crawler:tor:test', 'web_message'),
+        'onion_success': r_db.hget('crawler:tor:test', 'onion_success'),
+        'onion_message': r_db.hget('crawler:tor:test', 'onion_message'),
+        'date_test': r_db.hget('crawler:tor:test', 'date_test')
+    }
+    if metadata['web_success'] is None:
+        metadata['web_success'] = 'False'
+    if not metadata['web_message']:
+        metadata['web_message'] = 'Web crawler test has not been run yet.'
+    if metadata['onion_success'] is None:
+        metadata['onion_success'] = 'False'
+    if not metadata['onion_message']:
+        metadata['onion_message'] = 'Onion crawler test has not been run yet.'
+    if not metadata['date_test']:
+        metadata['date_test'] = 'Unknown'
+    return metadata
+
+def save_test_ail_crawlers_result(web_success, web_message, onion_success, onion_message, date_test):
+    r_db.hset('crawler:tor:test', 'web_success', str(web_success))
+    r_db.hset('crawler:tor:test', 'web_message', web_message)
+    r_db.hset('crawler:tor:test', 'onion_success', str(onion_success))
+    r_db.hset('crawler:tor:test', 'onion_message', onion_message)
+    r_db.hset('crawler:tor:test', 'date_test', date_test)
+
+def _run_lacus_network_test(lacus, user_agent, url, expected_text, proxy=None):
+    enqueue_kwargs = {'url': url, 'depth': 0, 'user_agent': user_agent, 'force': True, 'general_timeout_in_sec': 90}
+    if proxy:
+        enqueue_kwargs['proxy'] = proxy
+    capture_uuid = lacus.enqueue(**enqueue_kwargs)
+    status = lacus.get_capture_status(capture_uuid)
+    launch_time = int(time.time())
+    while int(time.time()) - launch_time < 90 and status != CaptureStatus.DONE:
+        time.sleep(1)
+        status = lacus.get_capture_status(capture_uuid)
+    entries = lacus.get_capture(capture_uuid)
+    if 'error' in entries:
+        return False, entries['error']
+    if 'html' in entries and entries['html']:
+        if expected_text in entries['html']:
+            return True, f'Expected content "{expected_text}" found.'
+        return False, f'Expected content "{expected_text}" not found.'
+    if status == 2:
+        return False, 'Timeout Error'
+    return False, 'Error'
 
 def test_ail_crawlers():
-    # # TODO: test web domain
+    date_test = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if not ping_lacus():
         lacus_url = get_lacus_url()
         error_message = f'Error: Can\'t connect to AIL Lacus, {lacus_url}'
         print(error_message)
-        save_test_ail_crawlers_result(False, error_message)
+        save_test_ail_crawlers_result(False, error_message, False, error_message, date_test)
         return False
 
     lacus = get_lacus()
     commit_id = git_status.get_last_commit_id_from_local()
     user_agent = f'{commit_id}-AIL LACUS CRAWLER'
-    # domain = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
-    url = 'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
 
-    ## LAUNCH CRAWLER, TEST MODE ##
-    # set_current_crawler_status(splash_url, 'CRAWLER TEST', started_time=True,
-    # crawled_domain='TEST DOMAIN', crawler_type='onion')
-    capture_uuid = lacus.enqueue(url=url, depth=0, user_agent=user_agent, proxy='force_tor',
-                                 force=True, general_timeout_in_sec=90)
-    status = lacus.get_capture_status(capture_uuid)
-    launch_time = int(time.time())  # capture timeout
-    while int(time.time()) - launch_time < 90 and status != CaptureStatus.DONE:
-        # DEBUG
-        print(int(time.time()) - launch_time)
-        print(status)
-        time.sleep(1)
-        status = lacus.get_capture_status(capture_uuid)
-
-    # TODO CRAWLER STATUS OR QUEUED CAPTURE LIST
-    entries = lacus.get_capture(capture_uuid)
-    if 'error' in entries:
-        save_test_ail_crawlers_result(False, entries['error'])
-        return False
-    elif 'html' in entries and entries['html']:
-        mess = 'It works!'
-        if mess in entries['html']:
-            save_test_ail_crawlers_result(True, mess)
-            return True
-        else:
-            return False
-    elif status == 2:
-        save_test_ail_crawlers_result(False, 'Timeout Error')
-    else:
-        save_test_ail_crawlers_result(False, 'Error')
-    return False
+    web_success, web_message = _run_lacus_network_test(lacus, user_agent, 'https://ail-project.org/', 'AIL Project')
+    onion_success, onion_message = _run_lacus_network_test(
+        lacus,
+        user_agent,
+        'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion',
+        'It works!',
+        proxy='force_tor'
+    )
+    save_test_ail_crawlers_result(web_success, web_message, onion_success, onion_message, date_test)
+    return web_success or onion_success
 
 #### ---- ####
 

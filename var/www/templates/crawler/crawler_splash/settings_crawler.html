@@ -137,19 +137,59 @@
 
 						<div class="d-flex flex-wrap align-items-center justify-content-between mb-3 action-buttons">
 							<div>
-								<h5 class="mb-1">TOR crawler diagnostic test</h5>
-								<p class="text-muted mb-0">Run this check to verify crawler dependencies and connectivity.</p>
+								<h5 class="mb-1">Crawler network availability test (Web + Onion)</h5>
+								<p class="text-muted mb-0">Run this check to verify crawler dependencies and network connectivity for both normal web and Tor onion services.</p>
 							</div>
 							<a href="{{ url_for('crawler_splash.crawler_settings_crawler_test') }}" class="btn btn-primary mt-2 mt-md-0">
 								Run Test Again <i class="fas fa-rocket ml-1"></i>
 							</a>
 						</div>
 
-						<pre class="bg-dark text-white p-3 test-output">----------------------------
-- TOR CRAWLER TEST OUTPUT: -
-----------------------------
+						{% set web_available = crawler_test_metadata['web_success'] == 'True' %}
+						{% set onion_available = crawler_test_metadata['onion_success'] == 'True' %}
+						<div class="mb-3">
+							<h5 class="mb-2">Network status</h5>
+							<div class="mb-2">
+								Web:
+								<span class="badge badge-{% if web_available %}success{% else %}danger{% endif %} px-3 py-2">
+									{% if web_available %}Available{% else %}Unavailable{% endif %}
+								</span>
+							</div>
+							<div>
+								Onion (Tor):
+								<span class="badge badge-{% if onion_available %}success{% else %}danger{% endif %} px-3 py-2">
+									{% if onion_available %}Available{% else %}Unavailable{% endif %}
+								</span>
+							</div>
+						</div>
 
-{{crawler_error_mess}}</pre>
+						{% if web_available and onion_available %}
+						<pre class="bg-dark text-white p-3 test-output">-----------------------------
+- CRAWLER TEST OUTPUT -
+-----------------------------
+Web: available
+Onion (Tor): available</pre>
+						{% elif not web_available or not onion_available %}
+						<pre class="bg-dark text-white p-3 test-output">-----------------------------
+- CRAWLER ISSUE DETAILS -
+-----------------------------
+{% if not web_available %}Web issue: {{ crawler_test_metadata['web_message'] }}{% endif %}
+{% if not web_available and not onion_available %}
+{% endif %}
+{% if not onion_available %}Onion issue: {{ crawler_test_metadata['onion_message'] }}{% endif %}</pre>
+						{% endif %}
+
+						<p class="text-muted mb-3"><strong>Last tested:</strong> {{ crawler_test_metadata['date_test'] }}</p>
+
+						<div class="alert alert-info">
+							<strong>Availability scope:</strong> Crawler network availability was last tested on <code>{{ crawler_test_metadata['date_test'] }}</code>.<br>
+							Web availability indicates whether the Lacus crawler could reach and crawl a normal website.<br>
+							Onion availability indicates whether the Lacus crawler could reach and crawl Tor hidden services.<br>
+							These results only reflect network availability at the time of the test. Relaunch the test to check current availability.<br>
+							It is possible for only one network to be available (for example: web available while onion is unavailable).<br>
+							Web availability is required for crawling normal websites.<br>
+							Onion availability is required for crawling Tor hidden services.
+						</div>
 
 						<div class="card border-secondary my-4">
 							<div class="card-body d-flex flex-wrap justify-content-between align-items-center">
