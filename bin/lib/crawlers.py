@@ -16,6 +16,7 @@ import re
 import sys
 import time
 import uuid
+from collections import deque
 
 from multiprocessing import Process as Proc
 
@@ -187,6 +188,23 @@ def get_date_crawled_items_source(date):
 
 def get_har_dir():
     return HAR_DIR
+
+
+def get_last_crawler_logs(lines=100):
+    log_path = os.path.join(os.environ['AIL_HOME'], 'logs', 'crawlers.log')
+    if not os.path.exists(log_path):
+        return ['No crawler logs available.']
+    if os.path.getsize(log_path) == 0:
+        return ['Crawler log file is empty.']
+    try:
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+            last_lines = deque(f, maxlen=lines)
+    except OSError:
+        return ['No crawler logs available.']
+
+    if not last_lines:
+        return ['Crawler log file is empty.']
+    return [line.rstrip('\n') for line in last_lines]
 
 def is_valid_onion_v3_domain(domain):
     if len(domain) == 62:  # v3 address

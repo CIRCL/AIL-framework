@@ -56,6 +56,12 @@
 			max-height: 260px;
 			overflow-y: auto;
 		}
+		.crawler-logs-output {
+			border-radius: .5rem;
+			max-height: 360px;
+			overflow-y: auto;
+			white-space: pre;
+		}
 	</style>
 </head>
 
@@ -222,6 +228,16 @@
 									</a>
 								{% endif %}
 
+							</div>
+						</div>
+
+
+						<div class="card border-secondary my-4">
+							<div class="card-body text-dark">
+								<h5 class="card-title mb-1">Recent crawler logs</h5>
+								<p class="text-muted mb-3">Recent crawler errors and status messages from <code>logs/crawlers.log</code> (last 100 lines).</p>
+								<pre class="bg-dark text-white p-3 crawler-logs-output">{% for line in crawler_logs %}{{ line }}
+{% endfor %}</pre>
 							</div>
 						</div>
 

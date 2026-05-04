@@ -61,6 +61,7 @@ def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 
+
 # ============= ROUTES ==============
 @crawler_splash.route("/crawlers/dashboard", methods=['GET'])
 @login_required
@@ -1062,6 +1063,7 @@ def crawler_settings():
 
     is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
     is_onion_filter_unknown = crawlers.is_onion_filter_unknown(cache=False)
+    crawler_logs = crawlers.get_last_crawler_logs(lines=100)
 
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
@@ -1076,7 +1078,8 @@ def crawler_settings():
                            is_crawler_working=is_crawler_working,
                            crawler_error_mess=crawler_error_mess,
                            is_onion_filter_enabled=is_onion_filter_enabled,
-                           is_onion_filter_unknown=is_onion_filter_unknown
+                           is_onion_filter_unknown=is_onion_filter_unknown,
+                           crawler_logs=crawler_logs
                            )
 
 
