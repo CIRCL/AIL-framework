@@ -344,7 +344,7 @@ class Crawler(AbstractModule):
         self.root_item = None
 
         # Save Capture
-        saved = self.save_capture_response(parent_id, entries)
+        saved = self.save_capture_response(capture, task, parent_id, entries)
         if saved:
             if self.parent != 'lookup':
                 # Update domain first/last seen
@@ -395,16 +395,22 @@ class Crawler(AbstractModule):
         task.remove()
         self.root_item = None
 
-    def save_capture_response(self, parent_id, entries):
+    def save_capture_response(self, capture, task, parent_id, entries):
         filter_page = False
         print(entries.keys())
         if 'error' in entries:
             # TODO IMPROVE ERROR MESSAGE
+            error_message = str(entries['error'])
             self.logger.warning(str(entries['error']))
-            print(entries.get('error'))
+            if error_message.startswith('Something went poorly'):
+                # Timeout, require restart of lacus
+                if 'Too many open files' in error_message:
+                    task.reset()
+                    capture.delete()
+                    self.logger.warning(f'Lacus Too many open files Error, {task.uuid} Send back in queue')
+                    time.sleep(60)
             if entries.get('html'):
                 print('retrieved content')
-                # print(entries.get('html'))
 
         if 'last_redirected_url' in entries and entries.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
             last_url = entries['last_redirected_url']
@@ -551,7 +557,7 @@ class Crawler(AbstractModule):
         entries_children = entries.get('children')
         if entries_children:
             for children in entries_children:
-                self.save_capture_response(parent_id, children)
+                self.save_capture_response(capture, task, parent_id, children)
         return True
 
 
