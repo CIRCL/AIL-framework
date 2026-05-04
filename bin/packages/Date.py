@@ -106,7 +106,7 @@ def get_current_week_day():
     return start.strftime("%Y%m%d")
 
 def get_current_utc_full_time():
-    timestamp = datetime.datetime.fromtimestamp(time.time())
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
     return timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
 def get_date_from_timestamp(timestamp):

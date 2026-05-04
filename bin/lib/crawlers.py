@@ -2692,9 +2692,12 @@ def ping_lacus():
     else:
         try:
             ping = lacus.is_up
-        except:
-            req_error = {'error': 'Failed to connect Lacus URL', 'status_code': 400}
+        except Exception as e:
+            req_error = {'error': f'Unexpected error while checking Lacus availability, {type(e).__name__}: {e}', 'status_code': 503}
             ping = False
+    if not ping:
+        req_error = {'error': 'Unable to reach Lacus. Please verify that the Lacus service is running and that the configured URL and port are reachable.', 'status_code': 503}
+
     update_lacus_connection_status(ping, req_error=req_error)
     return ping
 

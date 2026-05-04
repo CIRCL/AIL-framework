@@ -56,6 +56,15 @@
 			max-height: 260px;
 			overflow-y: auto;
 		}
+		.network-badge {
+			font-size: .9rem;
+		}
+		.network-result-card {
+			border-radius: .5rem;
+		}
+		.network-result-card .card-body {
+			padding: .9rem 1rem;
+		}
 		.crawler-logs-output {
 			border-radius: .5rem;
 			max-height: 360px;
@@ -78,7 +87,7 @@
 				<div class="d-flex flex-wrap justify-content-between align-items-center mt-3 mb-2">
 					<div>
 						<h2 class="mb-0">Crawler Settings</h2>
-						<p class="text-muted mb-0">Configure Lacus, manage queues, and validate crawler connectivity.</p>
+						<p class="text-muted mb-0">Set up Lacus, manage crawler queues, run connectivity checks, and monitor crawler health.</p>
 					</div>
 				</div>
 
@@ -113,7 +122,7 @@
 									<div class="card-body d-flex flex-column justify-content-between">
 										<div>
 											<div class="metric-label text-danger mb-2">Maintenance</div>
-											<p class="mb-3">Clear all pending Lacus queue items before restarting or troubleshooting.</p>
+											<p class="mb-3">Clear all pending Lacus queue.</p>
 										</div>
 										<a href="{{ url_for('crawler_splash.crawlers_dashboard_captures_delete') }}" class="btn btn-danger">
 											Delete Lacus Queues
@@ -122,76 +131,8 @@
 								</div>
 							</div>
 						</div>
-					</div>
-				</div>
 
-				<div class="card mb-3 mt-1 settings-card">
-					<div class="card-header bg-dark text-white">
-						<h4 class="mb-0">Crawler Health & Runtime</h4>
-						<span class="status-chip {% if is_crawler_working %}status-chip-success{% else %}status-chip-danger{% endif %}">
-							<i class="fas {% if is_crawler_working %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
-							{% if is_crawler_working %}Operational{% else %}Error{% endif %}
-						</span>
-					</div>
-					<div class="card-body">
-
-						<div class="d-flex flex-wrap align-items-center justify-content-between mb-3 action-buttons">
-							<div>
-								<h5 class="mb-1">Crawler network availability test (Web + Onion)</h5>
-								<p class="text-muted mb-0">Run this check to verify crawler dependencies and network connectivity for both normal web and Tor onion services.</p>
-							</div>
-							<a href="{{ url_for('crawler_splash.crawler_settings_crawler_test') }}" class="btn btn-primary mt-2 mt-md-0">
-								Run Test Again <i class="fas fa-rocket ml-1"></i>
-							</a>
-						</div>
-
-						{% set web_available = crawler_test_metadata['web_success'] == 'True' %}
-						{% set onion_available = crawler_test_metadata['onion_success'] == 'True' %}
-						<div class="mb-3">
-							<h5 class="mb-2">Network status</h5>
-							<div class="mb-2">
-								Web:
-								<span class="badge badge-{% if web_available %}success{% else %}danger{% endif %} px-3 py-2">
-									{% if web_available %}Available{% else %}Unavailable{% endif %}
-								</span>
-							</div>
-							<div>
-								Onion (Tor):
-								<span class="badge badge-{% if onion_available %}success{% else %}danger{% endif %} px-3 py-2">
-									{% if onion_available %}Available{% else %}Unavailable{% endif %}
-								</span>
-							</div>
-						</div>
-
-						{% if web_available and onion_available %}
-						<pre class="bg-dark text-white p-3 test-output">-----------------------------
-- CRAWLER TEST OUTPUT -
------------------------------
-Web: available
-Onion (Tor): available</pre>
-						{% elif not web_available or not onion_available %}
-						<pre class="bg-dark text-white p-3 test-output">-----------------------------
-- CRAWLER ISSUE DETAILS -
------------------------------
-{% if not web_available %}Web issue: {{ crawler_test_metadata['web_message'] }}{% endif %}
-{% if not web_available and not onion_available %}
-{% endif %}
-{% if not onion_available %}Onion issue: {{ crawler_test_metadata['onion_message'] }}{% endif %}</pre>
-						{% endif %}
-
-						<p class="text-muted mb-3"><strong>Last tested:</strong> {{ crawler_test_metadata['date_test'] }}</p>
-
-						<div class="alert alert-info">
-							<strong>Availability scope:</strong> Crawler network availability was last tested on <code>{{ crawler_test_metadata['date_test'] }}</code>.<br>
-							Web availability indicates whether the Lacus crawler could reach and crawl a normal website.<br>
-							Onion availability indicates whether the Lacus crawler could reach and crawl Tor hidden services.<br>
-							These results only reflect network availability at the time of the test. Relaunch the test to check current availability.<br>
-							It is possible for only one network to be available (for example: web available while onion is unavailable).<br>
-							Web availability is required for crawling normal websites.<br>
-							Onion availability is required for crawling Tor hidden services.
-						</div>
-
-						<div class="card border-secondary my-4">
+                        <div class="card border-secondary my-4">
 							<div class="card-body d-flex flex-wrap justify-content-between align-items-center">
 								<div>
 									<h5 class="card-title mb-1">Concurrent Crawlers</h5>
@@ -204,86 +145,171 @@ Onion (Tor): available</pre>
 									</a>
 								</div>
 							</div>
-						</div>
+                        </div>
 
-						<div class="card border-secondary my-4">
-							<div class="card-body text-dark">
-								<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
-									<span>Filter Unsafe Onion</span>
-									<span class="badge badge-{% if is_onion_filter_enabled %}success{% else %}danger{% endif %} px-3 py-2">
-										{% if is_onion_filter_enabled %}Enabled{% else %}Disabled{% endif %}
-									</span>
-								</h5>
-								<p>
-									This option enables filtering of onion domains that are considered unsafe due to containing violent content, child sexual abuse material (CSAM), or other harmful materials. When enabled, the system will attempt to identify and exclude such domains from crawling.
-								</p>
-
-								<p class="alert alert-warning mb-3">
-									<span class="text-danger"><i class="fa-solid fa-triangle-exclamation fa-2x"></i></span>
-									<strong> Disabling this option may result in crawling and downloading content that includes CSAM, extreme violence, or other harmful materials.</strong><br>
-									Users are strongly advised to keep this feature enabled to avoid unintentional exposure to such content.
-								</p>
-
-								<p>
-									🔍 <strong>How It Works:</strong> The filtering mechanism leverages known blocklists, heuristics, and automated detection techniques to reduce the risk of crawling unsafe content. While no filtering system is perfect, we continuously strive to improve detection and minimize exposure to harmful materials.
-								</p>
-
-								<p class="mb-3">
-									By using this feature, you benefit from an added layer of protection, but please note that some unsafe onion domains may still bypass detection due to evolving content and obfuscation techniques.<br>
-									We encourage users to remain cautious and use this feature as an additional safeguard.
-								</p>
-								{% if is_onion_filter_enabled %}
-									<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=disable" class="btn btn-danger my-2">
-										<i class="fa-solid fa-xmark"></i> Disable Unsafe Onion Filter
-									</a>
-								{% else %}
-									<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=enable" class="btn btn-success my-2">
-										<i class="fa-solid fa-check"></i> Enable Unsafe Onion Filter
-									</a>
-								{% endif %}
-
-								<hr class="border-1 my-4">
-
-								<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
-									<span>Crawl Unknown Onion</span>
-									<span class="badge badge-{% if is_onion_filter_unknown %}warning{% else %}secondary{% endif %} px-3 py-2">
-										{% if is_onion_filter_unknown %}Enabled{% else %}Disabled{% endif %}
-									</span>
-								</h5>
-								<p>This option controls whether the crawler should proceed with crawling onion domains that have <strong>not yet been classified</strong> as safe or unsafe.</p>
-
-								<ul class="mb-3">
-									<li><strong>If disabled:</strong> The crawler will process domains that have never been checked, potentially discovering new useful content but also increasing the risk of encountering unsafe materials.</li>
-									<li><strong>If enabled:</strong> The crawler will only process domains that have been explicitly identified as safe, reducing risk but potentially missing new, unclassified domains.</li>
-								</ul>
-
-								<p class="text-muted">This option is useful for users who want to explore uncharted domains while still benefiting from the <code>filter_unsafe_onion</code> protection. However, enabling this option increases the likelihood of encountering harmful content, so caution is advised.</p>
-								{% if is_onion_filter_unknown %}
-									<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=disable" class="btn btn-secondary my-2">
-										<i class="fa-solid fa-xmark"></i> Disable Unknown Onion Crawl
-									</a>
-								{% else %}
-									<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=enable" class="btn btn-info my-2">
-										<i class="fa-solid fa-check"></i> Enable Unknown Onion Crawl
-									</a>
-								{% endif %}
-
-							</div>
-						</div>
-
-
-						<div class="card border-secondary my-4">
-							<div class="card-body text-dark">
-								<h5 class="card-title mb-1">Recent crawler logs</h5>
-								<p class="text-muted mb-3">Recent crawler errors and status messages from <code>logs/crawlers.log</code> (last 100 lines).</p>
-								<pre class="bg-dark text-white p-3 crawler-logs-output">{% for line in crawler_logs %}{{ line }}
-{% endfor %}</pre>
-							</div>
-						</div>
-
-						<a href="{{ url_for('crawler_splash.crawler_blacklist') }}" class="btn btn-outline-danger">
+                        <a href="{{ url_for('crawler_splash.crawler_blacklist') }}" class="btn btn-outline-danger">
 							Blacklisted domains
 						</a>
+
+					</div>
+				</div>
+
+				{% set web_available = crawler_test_metadata['web_success'] == 'True' %}
+				{% set onion_available = crawler_test_metadata['onion_success'] == 'True' %}
+
+				<div class="card mb-3 mt-1 settings-card">
+					<div class="card-header bg-dark text-white">
+						<h4 class="mb-0">Connectivity Check</h4>
+						<span class="status-chip {% if is_crawler_working %}status-chip-success{% else %}status-chip-danger{% endif %}">
+							<i class="fas {% if is_crawler_working %}fa-check-circle{% else %}fa-times-circle{% endif %}"></i>
+							{% if is_crawler_working %}Operational{% else %}Error{% endif %}
+						</span>
+					</div>
+					<div class="card-body">
+						<div class="d-flex flex-wrap align-items-start justify-content-between mb-3 action-buttons">
+							<div>
+								<h5 class="mb-1">Test crawler connectivity (Web + Onion)</h5>
+								<p class="text-muted mb-0">Use this test to confirm that Lacus can reach both normal websites and Tor hidden services before you launch or troubleshoot crawls.</p>
+							</div>
+							<a href="{{ url_for('crawler_splash.crawler_settings_crawler_test') }}" class="btn btn-primary mt-2 mt-md-0">
+								Run Connectivity Test <i class="fas fa-rocket ml-1"></i>
+							</a>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6 mb-2 mb-md-0">
+								<div class="card network-result-card border-{% if web_available %}success{% else %}danger{% endif %}">
+									<div class="card-body d-flex justify-content-between align-items-center">
+										<div>
+											<div class="text-muted small text-uppercase">Web access</div>
+											<div class="font-weight-bold">Normal websites</div>
+										</div>
+										<span class="badge network-badge badge-{% if web_available %}success{% else %}danger{% endif %} px-3 py-2">
+											{% if web_available %}Available{% else %}Unavailable{% endif %}
+										</span>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="card network-result-card border-{% if onion_available %}success{% else %}danger{% endif %}">
+									<div class="card-body d-flex justify-content-between align-items-center">
+										<div>
+											<div class="text-muted small text-uppercase">Onion access</div>
+											<div class="font-weight-bold">Tor hidden services</div>
+										</div>
+										<span class="badge network-badge badge-{% if onion_available %}success{% else %}danger{% endif %} px-3 py-2">
+											{% if onion_available %}Available{% else %}Unavailable{% endif %}
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						{% if web_available and onion_available %}
+						<div class="alert alert-success mb-3">
+							<i class="fas fa-check-circle mr-1"></i>
+							Both connectivity checks passed. The crawler is ready for web and onion capture tasks.
+						</div>
+						{% elif not web_available or not onion_available %}
+						<div class="alert alert-warning mb-3">
+							<i class="fas fa-exclamation-triangle mr-1"></i>
+							One or more connectivity checks failed. Review the details below, then run the test again after applying fixes.
+						</div>
+						<pre class="bg-dark text-white p-3 test-output">{% if not web_available %}Web issue: {{ crawler_test_metadata['web_message'] }}{% endif %}
+{% if not web_available and not onion_available %}
+{% endif %}
+{% if not onion_available %}Onion issue: {{ crawler_test_metadata['onion_message'] }}{% endif %}</pre>
+						{% endif %}
+
+						<p class="text-muted mb-3"><strong>Last tested:</strong> {{ crawler_test_metadata['date_test'] }}</p>
+
+						<div class="alert alert-info">
+							<strong>How to read these results:</strong><br>
+							These values reflect the latest test run on <code>{{ crawler_test_metadata['date_test'] }}</code> and are not live telemetry.<br>
+							Web status indicates whether Lacus can crawl normal websites.<br>
+							Onion status indicates whether Lacus can crawl Tor hidden services.<br>
+							Re-run the test after configuration or infrastructure changes.
+						</div>
+					</div>
+				</div>
+
+				<div class="card mb-3 mt-1 settings-card">
+					<div class="card-header bg-dark text-white">
+						<h4 class="mb-0">Onion Safety Controls</h4>
+					</div>
+					<div class="card-body text-dark">
+						<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
+							<span>Filter Unsafe Onion</span>
+							<span class="badge badge-{% if is_onion_filter_enabled %}success{% else %}danger{% endif %} px-3 py-2">
+								{% if is_onion_filter_enabled %}Enabled{% else %}Disabled{% endif %}
+							</span>
+						</h5>
+						<p>
+							This option enables filtering of onion domains that are considered unsafe due to containing violent content, child sexual abuse material (CSAM), or other harmful materials. When enabled, the system will attempt to identify and exclude such domains from crawling.
+						</p>
+
+						<p class="alert alert-warning mb-3">
+							<span class="text-danger"><i class="fa-solid fa-triangle-exclamation fa-2x"></i></span>
+							<strong> Disabling this option may result in crawling and downloading content that includes CSAM, extreme violence, or other harmful materials.</strong><br>
+							Users are strongly advised to keep this feature enabled to avoid unintentional exposure to such content.
+						</p>
+
+						<p>
+							🔍 <strong>How It Works:</strong> The filtering mechanism leverages known blocklists, heuristics, and automated detection techniques to reduce the risk of crawling unsafe content. While no filtering system is perfect, we continuously strive to improve detection and minimize exposure to harmful materials.
+						</p>
+
+						<p class="mb-3">
+							By using this feature, you benefit from an added layer of protection, but please note that some unsafe onion domains may still bypass detection due to evolving content and obfuscation techniques.<br>
+							We encourage users to remain cautious and use this feature as an additional safeguard.
+						</p>
+						{% if is_onion_filter_enabled %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=disable" class="btn btn-danger my-2">
+								<i class="fa-solid fa-xmark"></i> Disable Unsafe Onion Filter
+							</a>
+						{% else %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=enable" class="btn btn-success my-2">
+								<i class="fa-solid fa-check"></i> Enable Unsafe Onion Filter
+							</a>
+						{% endif %}
+
+						<hr class="border-1 my-4">
+
+						<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
+							<span>Crawl Unknown Onion</span>
+							<span class="badge badge-{% if is_onion_filter_unknown %}warning{% else %}secondary{% endif %} px-3 py-2">
+								{% if is_onion_filter_unknown %}Enabled{% else %}Disabled{% endif %}
+							</span>
+						</h5>
+						<p>This option controls whether the crawler should proceed with crawling onion domains that have <strong>not yet been classified</strong> as safe or unsafe.</p>
+
+						<ul class="mb-3">
+							<li><strong>If disabled:</strong> The crawler will process domains that have never been checked, potentially discovering new useful content but also increasing the risk of encountering unsafe materials.</li>
+							<li><strong>If enabled:</strong> The crawler will only process domains that have been explicitly identified as safe, reducing risk but potentially missing new, unclassified domains.</li>
+						</ul>
+
+						<p class="text-muted">This option is useful for users who want to explore uncharted domains while still benefiting from the <code>filter_unsafe_onion</code> protection. However, enabling this option increases the likelihood of encountering harmful content, so caution is advised.</p>
+						{% if is_onion_filter_unknown %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=disable" class="btn btn-secondary my-2">
+								<i class="fa-solid fa-xmark"></i> Disable Unknown Onion Crawl
+							</a>
+						{% else %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=enable" class="btn btn-info my-2">
+								<i class="fa-solid fa-check"></i> Enable Unknown Onion Crawl
+							</a>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="card mb-3 mt-1 settings-card">
+					<div class="card-header bg-dark text-white">
+						<h4 class="mb-0">Logs & Diagnostics</h4>
+					</div>
+					<div class="card-body text-dark">
+						<h5 class="card-title mb-1">Recent crawler logs</h5>
+						<p class="text-muted mb-3">Recent crawler errors and status messages from <code>logs/crawlers.log</code> (last 100 lines).</p>
+						<pre class="bg-dark text-white p-3 crawler-logs-output">{% for line in crawler_logs %}{{ line }}
+{% endfor %}</pre>
+
 					</div>
 				</div>
 
