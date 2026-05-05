@@ -1,7 +1,7 @@
 <div class="my-4">
 	<div class="card border-secondary">
 		<div class="card-body text-dark">
-			<h5 class="card-title"><i class="fas fa-user-secret"></i><i class="fab fa-html5"></i> Search Domain by name:</h5>
+			<h5 class="card-title"><i class="fas fa-user-secret"></i><i class="fas fa-user-secret"></i><i class="fab fa-html5"></i> Search Domain by name:</h5>
 			<div class="input-group mb-3">
 				<input type="text" class="form-control" id="in_search_name" value="{{search}}" placeholder="Domain name" aria-label="Domain name" aria-describedby="btn_show_domain">
 				<div class="input-group-append">
@@ -19,6 +19,12 @@
 					</label>
 				</div>
 				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_i2p_switch" value="True" id="domain_i2p_switch" {%if not domains_types%}checked{%elif 'i2p' in domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_i2p_switch">
+						<span class="badge badge-info"><i class="fas fa-user-secret"></i> I2P Domains</span>
+					</label>
+				</div>
+				<div class="custom-control custom-switch">
 					<input class="custom-control-input" type="checkbox" name="domain_web_switch" value="True" id="domain_web_switch"{%if domains_types%}{%if 'web' in domains_types%}checked{%endif%}{%endif%}>
 					<label class="custom-control-label" for="domain_web_switch">
 						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
@@ -32,7 +38,7 @@
 
 <script>
     function searchDomainName() {
-        var all_domain_types = ['onion', 'web'] // TODO: load from flask
+        var all_domain_types = ['onion', 'i2p', 'web'] // TODO: load from flask
         var l_domains_types = [];
         console.log(document.getElementById('in_search_name'));
 

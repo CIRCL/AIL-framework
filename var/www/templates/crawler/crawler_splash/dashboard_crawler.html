@@ -121,17 +121,31 @@
 				</div>
 
 				<div class="row mb-3 mt-2">
-					<div class="col-12 col-md-6 mb-2 mb-md-0">
+					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
 						<div class="text-center">
 							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_onion')}}" role="button">
 								<i class="fas fa-user-secret"></i> Onion Domain Explorer
 							</a>
 						</div>
 					</div>
-					<div class="col-12 col-md-6">
+					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
+						<div class="text-center">
+							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_i2p')}}" role="button">
+								<i class="fas fa-user-secret"></i> I2P Domain Explorer
+							</a>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-md-0">
 						<div class="text-center">
 							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_web')}}" role="button">
 								<i class="fab fa-html5"></i> Web Domain Explorer
+							</a>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-xl-3">
+						<div class="text-center">
+							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_vanity_clusters')}}" role="button">
+								<i class="fas fa-dumbbell"></i> Vanity Explorer
 							</a>
 						</div>
 					</div>
