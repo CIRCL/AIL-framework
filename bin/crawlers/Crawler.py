@@ -414,6 +414,10 @@ class Crawler(AbstractModule):
 
         if 'last_redirected_url' in entries and entries.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
             last_url = entries['last_redirected_url']
+            if last_url == 'about:blank':
+                self.logger.warning(f'Error something fails, redirect: about:blank')
+                return False
+
             unpacked_last_url = crawlers.unpack_url(last_url)
             current_domain = unpacked_last_url['domain']
             # REDIRECTION TODO CHECK IF TYPE CHANGE

@@ -236,6 +236,12 @@ def import_crawler_capture():
     res = crawlers.api_add_lacus_capture_to_import(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+# @api_rest.route("api/v1/import/crawler/lookyloo", methods=['POST'])
+# @token_required('user')
+# def import_crawler_capture():
+#     data_json = request.get_json() # TODO get gzip file
+#     res = crawlers.api_add_lacus_capture_to_import(data_json)
+#     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # # # TODO LIST OBJ TYPES + SUBTYPES

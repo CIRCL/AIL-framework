@@ -18,6 +18,8 @@ import time
 import uuid
 from collections import deque
 
+# import orjson
+
 from multiprocessing import Process as Proc
 
 from enum import IntEnum, unique
@@ -25,6 +27,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
+from zipfile import ZipFile
 
 from pylacus import PyLacus
 
@@ -1031,7 +1034,7 @@ def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
     if not storage:
         return {'error': 'lacus storage not set'}, 400
 
-    cookiejar_uuid = None # TODO edit/replace cookiejar
+    cookiejar_uuid = None  # TODO edit/replace cookiejar
     cookies = storage.get('cookies')
     origins = storage.get('origins')
 
@@ -1569,6 +1572,96 @@ class CrawlerCapturesProcessor:
                 objs[0:0] = self.process_capture(parent_id, children)
         return objs
 
+    def process_lookyloo_archive(self, archive):
+        temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import', archive)
+        archive = os.path.join(temp_dir, archive)  # TODO sanityse
+        if not os.path.commonpath([archive, temp_dir]) == temp_dir:
+            self.logger.critical(f'Path Transversal {archive}')
+            return []
+
+        files_to_skip = ['cnames.json', 'ipasn.json', 'ips.json', 'mx.json',
+                         'nameservers.json', 'soa.json', 'hashlookup.json']
+        capture = {}
+
+        with ZipFile(archive, 'r') as lookyloo_capture:
+            for filename in lookyloo_capture.namelist():
+                if filename.endswith('0.har.gz'):
+                    # new formal
+                    capture['har'] = orjson.loads(gzip.decompress(lookyloo_capture.read(filename)))
+                elif filename.endswith('0.har'):
+                    # old format
+                    capture['har'] = orjson.loads(lookyloo_capture.read(filename))
+                elif filename.endswith('0.html'):
+                    capture['html'] = lookyloo_capture.read(filename).decode()
+                # elif filename.endswith('0.frames.json'):
+                #     frames = orjson.loads(lookyloo_capture.read(filename))
+                elif filename.endswith('0.last_redirect.txt'):
+                    capture['last_redirected_url'] = lookyloo_capture.read(filename).decode()
+                elif filename.endswith('0.png'):
+                    capture['png'] = lookyloo_capture.read(filename)
+                # elif filename.endswith('0.cookies.json'): # TODO # # # #
+                #     # Not required
+                #     capture{'cookies'} = orjson.loads(lookyloo_capture.read(filename))
+                # elif filename.endswith('0.storage.json'):
+                #     # Not required
+                #     storage = orjson.loads(lookyloo_capture.read(filename))
+                elif filename.endswith('potential_favicons.ico'):
+                    if not 'potential_favicons.ico':
+                        capture['potential_favicons'] = set()
+                    # We may have more than one favicon
+                    capture['potential_favicons'].add(lookyloo_capture.read(filename))
+                # elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
+                #     uuid = lookyloo_capture.read(filename).decode()
+                #     if self.uuid_exists(uuid):  # TODO Avoid duplicate and multiple Imports
+                #         messages['warnings'].append(f'UUID {uuid} already exists, set a new one.')
+                #         uuid = str(uuid4())
+                # elif filename.endswith('meta'):
+                #     meta = orjson.loads(lookyloo_capture.read(filename))
+                #     if 'os' in meta:
+                #         os = meta['os']
+                #     if 'browser' in meta:
+                #         browser = meta['browser']
+                # elif filename.endswith('parent'):
+                #     parent = lookyloo_capture.read(filename).decode()
+                # elif filename.endswith('categories'):  # # # # TAGS
+                #     categories = [c.strip() for c in lookyloo_capture.read(filename).decode().split("\n") if c.strip()]
+                # elif filename.endswith('0.data.filename'):
+                #     downloaded_filename = lookyloo_capture.read(filename).decode()
+                # elif filename.endswith('0.data'):
+                #     downloaded_file = lookyloo_capture.read(filename)
+                elif filename.endswith('error.txt'):
+                    capture['error'] = lookyloo_capture.read(filename).decode()
+                # elif filename.endswith('0.trusted_timestamps.json'):  # TODO handle trusted timestamp
+                #     trusted_timestamps = orjson.loads(lookyloo_capture.read(filename).decode())
+                # elif filename.endswith('capture_settings.json'):
+                #     _capture_settings = orjson.loads(lookyloo_capture.read(filename))
+                #     try:
+                #         capture_settings = LookylooCaptureSettings.model_validate(_capture_settings)
+                #     except CaptureSettingsError as e:
+                #         unrecoverable_error = True
+                #         messages['errors'].append(f'Invalid Capture Settings: {e}')
+                else:
+                    for to_skip in files_to_skip:
+                        if filename.endswith(to_skip):
+                            break
+                    else:
+                        self.logger.warning(f'Unexpected file in the capture archive: {filename}')
+            # require HAR + html + last_redirected_url
+            if not capture.get('har') or not not capture.get('html'):
+                unrecoverable_error = True
+                if not capture.get('last_redirected_url'):
+                    self.logger.warning('Incomplete submission: missing landing page')
+                self.logger.error('Invalid submission: missing HAR or html or last_redirected_url file')
+            elif not capture.get('png'):
+                if not capture.get('png'):
+                    self.logger.warning('Incomplete submission: missing screenshot')
+
+            if unrecoverable_error:
+                return []
+
+            return self.process(capture, capture_parent='lookyloo')
+
+
 def create_tm_dir():
     temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp')
     if not os.path.isdir(temp_dir):
@@ -1591,10 +1684,12 @@ def add_lacus_capture_to_import(capture):
 
 # API
 def api_add_lacus_capture_to_import(capture):
+    if not isinstance(capture, dict):
+        return {'status': 'invalid payload', 'error': 'Invalid JSON payload'}, 400
     if not capture.get('html'):
-        return {'error': 'Missing or empty HTML content'}, 400
+        return {'status': 'invalid payload', 'error': 'Missing or empty HTML content'}, 400
     if not capture.get('last_redirected_url'):
-        return {'error': 'Missing field: last_redirected_url'}, 400
+        return {'status': 'invalid payload', 'error': 'Missing field: last_redirected_url'}, 400
     return {'uuid': add_lacus_capture_to_import(capture)}, 200
 
 #### Blocklist ####
