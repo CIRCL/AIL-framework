@@ -118,18 +118,21 @@ class Favicon(AbstractDaterangeObject):
         dirname = os.path.dirname(filepath)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
+        print(filepath)
         with open(filepath, 'wb') as f:
             f.write(content)
         self._create()
 
 def create(b_content, size_limit=5000000, b64=False, force=False):
+    print(type(b_content))
     if isinstance(b_content, str):
         b_content = b_content.encode()
+    print(type(b_content))
     b64 = base64.encodebytes(b_content)  # newlines inserted after every 76 bytes of output
     favicon_id = str(mmh3.hash(b64))
     favicon = Favicon(favicon_id)
-    if not favicon.exists():
-        favicon.create(b_content)
+    # if not favicon.exists():
+    favicon.create(b_content)
     return favicon
 
 class Favicons(AbstractDaterangeObjects):

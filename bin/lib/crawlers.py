@@ -18,7 +18,7 @@ import time
 import uuid
 from collections import deque
 
-# import orjson
+import orjson
 
 from multiprocessing import Process as Proc
 
@@ -1573,8 +1573,8 @@ class CrawlerCapturesProcessor:
         return objs
 
     def process_lookyloo_archive(self, archive):
-        temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import', archive)
-        archive = os.path.join(temp_dir, archive)  # TODO sanityse
+        temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import')
+        archive = os.path.join(temp_dir, archive)  # TODO sanitise
         if not os.path.commonpath([archive, temp_dir]) == temp_dir:
             self.logger.critical(f'Path Transversal {archive}')
             return []
@@ -1582,6 +1582,7 @@ class CrawlerCapturesProcessor:
         files_to_skip = ['cnames.json', 'ipasn.json', 'ips.json', 'mx.json',
                          'nameservers.json', 'soa.json', 'hashlookup.json']
         capture = {}
+        unrecoverable_error= False
 
         with ZipFile(archive, 'r') as lookyloo_capture:
             for filename in lookyloo_capture.namelist():
@@ -1598,7 +1599,7 @@ class CrawlerCapturesProcessor:
                 elif filename.endswith('0.last_redirect.txt'):
                     capture['last_redirected_url'] = lookyloo_capture.read(filename).decode()
                 elif filename.endswith('0.png'):
-                    capture['png'] = lookyloo_capture.read(filename)
+                    capture['png'] = base64.b64encode(lookyloo_capture.read(filename))
                 # elif filename.endswith('0.cookies.json'): # TODO # # # #
                 #     # Not required
                 #     capture{'cookies'} = orjson.loads(lookyloo_capture.read(filename))
@@ -1606,9 +1607,10 @@ class CrawlerCapturesProcessor:
                 #     # Not required
                 #     storage = orjson.loads(lookyloo_capture.read(filename))
                 elif filename.endswith('potential_favicons.ico'):
-                    if not 'potential_favicons.ico':
+                    if 'potential_favicons' not in capture:
                         capture['potential_favicons'] = set()
                     # We may have more than one favicon
+                    print(lookyloo_capture.read(filename))
                     capture['potential_favicons'].add(lookyloo_capture.read(filename))
                 # elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
                 #     uuid = lookyloo_capture.read(filename).decode()
@@ -1647,11 +1649,12 @@ class CrawlerCapturesProcessor:
                     else:
                         self.logger.warning(f'Unexpected file in the capture archive: {filename}')
             # require HAR + html + last_redirected_url
-            if not capture.get('har') or not not capture.get('html'):
+            if not capture.get('har') or not capture.get('html'):
                 unrecoverable_error = True
                 if not capture.get('last_redirected_url'):
                     self.logger.warning('Incomplete submission: missing landing page')
                 self.logger.error('Invalid submission: missing HAR or html or last_redirected_url file')
+                print(capture.keys())
             elif not capture.get('png'):
                 if not capture.get('png'):
                     self.logger.warning('Incomplete submission: missing screenshot')
