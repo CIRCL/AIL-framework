@@ -37,8 +37,14 @@ def favicon(filename):
     if not filename:
         abort(404)
     filename = filename.replace('/', '')
-    if not 9 <= len(filename) <= 11 or not filename.isascii() or not filename.isalnum():
+    if not 9 <= len(filename) <= 11 or not filename.isascii():
         abort(404)
+    if filename.startswith('-'):
+        if not filename[1:].isalnum():
+            abort(404)
+    else:
+        if not filename.isalnum():
+            abort(404)
     fav = Favicons.Favicon(filename)
     return send_from_directory(Favicons.FAVICON_FOLDER, fav.get_rel_path(), as_attachment=False, mimetype='image')
 
