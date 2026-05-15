@@ -213,6 +213,9 @@
                             {% endif %}
                             <b>{{ meta['protocol']['id'] }}</b>
                         </h4>
+                        {% if meta['network'] or meta['address'] %}<h6 class="card-title">
+                            {% if meta['network'] %}{{ meta['network'] }} {% endif %}{% if meta['address'] %}{{ meta['address'] }} {% endif %}
+                        </h6>{% endif %}
                     </div>
                 </div>
 

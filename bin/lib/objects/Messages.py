@@ -80,6 +80,14 @@ class Message(AbstractObject):
         chat_instance = self.get_chat_instance()
         return r_obj.hget(f'chatSerIns:{chat_instance}', 'protocol')
 
+    def get_network(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'network')
+
+    def get_address(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'address')
+
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
         Returns content
@@ -344,6 +352,10 @@ class Message(AbstractObject):
             meta['content'] = self.get_content()
         if 'protocol':
             meta['protocol'] = self.get_protocol()
+        if 'network':
+            meta['network'] =  self.get_network()
+        if 'address':
+            meta['address'] =  self.get_address()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
             if meta['parent'] and 'parent_meta' in options:
