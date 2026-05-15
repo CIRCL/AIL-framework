@@ -529,6 +529,10 @@ class Domain(AbstractObject):
         # Create/Update crawler history
         r_crawler.zadd(f'domain:history:{self.id}', {root_item: epoch})
 
+    def exists_epoch_history(self, epoch):
+        nb = r_crawler.zcount(f'domain:history:{self.id}', epoch, epoch)
+        return nb > 0
+
     # if domain down -> root_item = epoch
     def add_history(self, epoch, root_item=None, date=None):
         if not date:

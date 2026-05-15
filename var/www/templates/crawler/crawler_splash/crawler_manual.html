@@ -34,6 +34,7 @@
 
 				{% include 'crawler/crawler_disabled.html' %}
 
+
 						<div class="card text-white bg-dark mb-3 mt-1">
 						  <div class="card-header">
 								<h5 class="card-title">Crawl a Domain</h5>
@@ -223,6 +224,44 @@
 						  </div>
 						</div>
 
+                {% if import_message %}
+					<div class="alert {% if import_status == 'success' %}alert-success{% else %}alert-danger{% endif %} mt-3" role="alert">
+						{{ import_message }}
+					</div>
+				{% endif %}
+
+                <div class="card text-white bg-dark mb-3 mt-1">
+                    <div class="card-header">
+                        <h5 class="card-title">Import Lookyloo Capture Archive</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1 pr-3">
+                                <p class="card-text">Upload a zipped capture archive exported from Lookyloo.</p>
+
+                                <form action="{{ url_for('crawler_splash.import_lookyloo_archive') }}" method="post" enctype="multipart/form-data">
+                                    <div class="input-group mb-2">
+                                        <div class="custom-file">
+                                            <input class="custom-file-input" type="file" id="lookyloo_archive" name="lookyloo_archive" accept=".zip,application/zip" required>
+                                            <label class="custom-file-label" for="lookyloo_archive">Choose Lookyloo archive (.zip)</label>
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-primary mt-1" type="submit">
+                                        <i class="fas fa-file-archive"></i> Import Archive
+                                    </button>
+                                </form>
+                            </div>
+
+                            <img src="{{ url_for('static', filename='image/lookyloo.png') }}"
+                                 alt="Lookyloo"
+                                 class="ml-3"
+                                 style="max-width: 140px; height: auto;">
+                        </div>
+                    </div>
+                </div>
+
 
 			</div>
 
@@ -248,6 +287,11 @@ $(document).ready(function(){
 
 	$('#queue_type_selector').on("change", function () {
 		queue_type_selector_input_controler();
+	});
+
+	$('#lookyloo_archive').on('change', function(){
+		const fileName = $(this).val().split('\\').pop();
+		$(this).next('.custom-file-label').html(fileName || 'Choose Lookyloo archive (.zip)');
 	});
 });
 

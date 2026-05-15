@@ -1388,7 +1388,6 @@ class CrawlerCapturesProcessor:
         if not self.date:
             self.date = get_current_date(separator=True)
             self.epoch = int(time.time())
-        print(self.date, self.epoch)
 
     def extract_title(self, item, html_content):
         title_content = extract_title(html_content)
@@ -1439,7 +1438,8 @@ class CrawlerCapturesProcessor:
             fav.add(item.get_date(), item)
 
     def process(self, capture, capture_parent='capture_importer'):
-        capture = self._decode_capture(capture)
+        if capture_parent != 'lookyloo':
+            capture = self._decode_capture(capture)
         self.extract_domain_from_capture(capture)
         # Filter unsafe onions
         if self.domain.id.endswith('.onion'):
@@ -1481,7 +1481,7 @@ class CrawlerCapturesProcessor:
             #     SSHKeys.save_passive_ssh_host(self.domain.id)
         return objs
 
-    def process_capture(self, parent_id, capture):
+    def process_capture(self, parent_id, capture, force=False):
         objs = []
         filter_page = False
         if not parent_id:
@@ -1520,8 +1520,17 @@ class CrawlerCapturesProcessor:
         else:
             last_url = f'http://{self.domain.id}'
 
+        # Filter duplicate
+        if not force and self.root_item_id is None:
+            if self.domain.exists_epoch_history(self.epoch):
+                self.logger.warning(f'Capture Already Imported, {self.domain.id} -> {self.epoch}')
+                return False
+
         if capture.get('html') and not filter_page:
-            item_id = create_item_id(self.items_dir, self.domain.id)
+            if capture.get('uuid') and parent_id is None:
+                item_id = create_item_id(self.items_dir, self.domain.id, c_uuid=capture['uuid'])
+            else:
+                item_id = create_item_id(self.items_dir, self.domain.id)
             item = Item(item_id)
             print(item.id)
 
@@ -1574,13 +1583,15 @@ class CrawlerCapturesProcessor:
 
     def process_lookyloo_archive(self, archive):
         temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import')
-        archive = os.path.join(temp_dir, archive)  # TODO sanitise
+        archive = os.path.join(temp_dir, archive)
         if not os.path.commonpath([archive, temp_dir]) == temp_dir:
             self.logger.critical(f'Path Transversal {archive}')
             return []
 
         files_to_skip = ['cnames.json', 'ipasn.json', 'ips.json', 'mx.json',
-                         'nameservers.json', 'soa.json', 'hashlookup.json']
+                         'nameservers.json', 'soa.json', 'hashlookup.json',
+                         'cookies.json', 'storage.json', 'meta', 'parent', 'categories', 'data.filename',  # TEMP
+                         'data', 'trusted_timestamps.json', 'capture_settings.json', 'frames.json']  # TEMP
         capture = {}
         unrecoverable_error= False
 
@@ -1599,8 +1610,8 @@ class CrawlerCapturesProcessor:
                 elif filename.endswith('0.last_redirect.txt'):
                     capture['last_redirected_url'] = lookyloo_capture.read(filename).decode()
                 elif filename.endswith('0.png'):
-                    capture['png'] = base64.b64encode(lookyloo_capture.read(filename))
-                # elif filename.endswith('0.cookies.json'): # TODO # # # #
+                    capture['png'] = lookyloo_capture.read(filename)
+                # elif filename.endswith('0.cookies.json'):
                 #     # Not required
                 #     capture{'cookies'} = orjson.loads(lookyloo_capture.read(filename))
                 # elif filename.endswith('0.storage.json'):
@@ -1608,13 +1619,12 @@ class CrawlerCapturesProcessor:
                 #     storage = orjson.loads(lookyloo_capture.read(filename))
                 elif filename.endswith('potential_favicons.ico'):
                     if 'potential_favicons' not in capture:
-                        capture['potential_favicons'] = set()
+                        capture['potential_favicons'] = []
                     # We may have more than one favicon
-                    print(lookyloo_capture.read(filename))
-                    capture['potential_favicons'].add(lookyloo_capture.read(filename))
-                # elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
-                #     uuid = lookyloo_capture.read(filename).decode()
-                #     if self.uuid_exists(uuid):  # TODO Avoid duplicate and multiple Imports
+                    capture['potential_favicons'].append(lookyloo_capture.read(filename))
+                elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
+                    capture['uuid'] = lookyloo_capture.read(filename).decode()
+                #     if self.uuid_exists(uuid):
                 #         messages['warnings'].append(f'UUID {uuid} already exists, set a new one.')
                 #         uuid = str(uuid4())
                 # elif filename.endswith('meta'):
@@ -2681,14 +2691,16 @@ def is_redirection(domain, last_url):
     last_domain = '{}.{}'.format(last_domain[-2], last_domain[-1])
     return domain != last_domain
 
-def create_item_id(item_dir, domain):
+def create_item_id(item_dir, domain, c_uuid=None):
+    if not c_uuid:
+        c_uuid = str(uuid.uuid4())
     # remove /
     domain = domain.replace('/', '_')
     if len(domain) > 215:
-        n_uuid = domain[-215:]+str(uuid.uuid4())
+        item_id = domain[-215:]+c_uuid
     else:
-        n_uuid = domain+str(uuid.uuid4())
-    return os.path.join(item_dir, n_uuid)
+        item_id = domain+c_uuid
+    return os.path.join(item_dir, item_id)
 
 # # # # # # # # # # # #
 #                     #

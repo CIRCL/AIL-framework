@@ -11,8 +11,9 @@ import random
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort, current_app
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -25,6 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ail_core import generate_uuid
 from lib import crawlers
 from lib import Language
 from lib.objects import Domains
@@ -51,6 +53,34 @@ crawler_splash = Blueprint('crawler_splash', __name__,
 def api_validator(message, code):
     if message and code:
         return Response(json.dumps(message, indent=2, sort_keys=True), mimetype='application/json'), code
+
+
+def _import_lookyloo_archive_from_upload(uploaded_file, logger):
+    if not uploaded_file or not uploaded_file.filename:
+        return False, 'No archive file was provided.'
+
+    filename = uploaded_file.filename.strip()
+    if not filename.lower().endswith('.zip'):
+        return False, 'Invalid file type: only .zip archives are supported.'
+
+    archive_name = f"{generate_uuid()}.zip"
+    imports_root = Path(os.environ['AIL_HOME']) / 'temp' / 'import'
+    archive_path = imports_root / archive_name
+
+    try:
+        imports_root.mkdir(parents=True, exist_ok=True)
+        uploaded_file.save(str(archive_path))
+
+        crawler_processor = crawlers.CrawlerCapturesProcessor(logger)
+        imported = crawler_processor.process_lookyloo_archive(archive_name)
+        if not imported:
+            return False, 'Invalid or unsupported Lacus capture archive format.'
+        return True, f'Lacus capture archive imported successfully ({len(imported)} object(s)).'
+    except Exception as e:
+        logger.exception(f'Error while importing lookyloo archive: {e}')
+        return False, f'Archive processing failed: {e}'
+    finally:
+        archive_path.unlink(missing_ok=True)
 
 
 def create_json_response(data, status_code):
@@ -113,7 +143,17 @@ def manual():
                            crawlers_types=crawlers_types,
                            proxies=proxies,
                            l_cookiejar=l_cookiejar,
+                           import_status=request.args.get('import_status'),
+                           import_message=request.args.get('import_message'),
                            tags_selector_data=Tag.get_tags_selector_data())
+
+
+@crawler_splash.route("/crawlers/import_lookyloo_archive", methods=['POST'])
+@login_required
+@login_user_no_api
+def import_lookyloo_archive():
+    success, message = _import_lookyloo_archive_from_upload(request.files.get('lookyloo_archive'), logger=current_app.logger)
+    return redirect(url_for('crawler_splash.manual', import_status='success' if success else 'error', import_message=message))
 
 
 @crawler_splash.route("/crawlers/send_to_spider", methods=['POST'])
