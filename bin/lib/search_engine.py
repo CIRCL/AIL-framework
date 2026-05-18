@@ -48,7 +48,14 @@ def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
 
 
-MESSAGES_INDEXES = {'cdiscord', 'ctelegram', 'cmatrix'}  # TODO dynamic load of chat name -> load all chat protocol
+def load_messages_indexes():
+    indexes = set()
+    for protocol in chats_viewer.get_chat_protocols():
+        indexes.add(f'c{protocol}')
+    return indexes
+
+
+MESSAGES_INDEXES = load_messages_indexes()
 DATERANGE_INDEXES = {'filename', 'title'}
 
 

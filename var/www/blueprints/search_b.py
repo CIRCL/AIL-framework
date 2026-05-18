@@ -21,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_core
+from lib import chats_viewer
 from lib import search_engine
 from lib.objects import SSHKeys
 
@@ -96,6 +97,7 @@ def search_dashboard():
 
     return render_template('search_dashboard.html',
                            bootstrap_label=bootstrap_label,
+                           chat_protocols=chats_viewer.get_chat_protocols_meta(),
                            indexes_str=indexes_str,
                            selected_scopes=indexes,
                            to_search=search,

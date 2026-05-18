@@ -135,6 +135,11 @@ class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
     def get_icon(self):
         if self.id == 'discord':
             icon = {'style': 'fab', 'icon': 'fa-discord'}
+        elif self.id == 'matrix':
+            icon = {'style': 'svg',
+                    'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 256 256"><path fill="currentColor" d="M72 216a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V40a8 8 0 0 1 8-8h24a8 8 0 0 1 0 16H48v160h16a8 8 0 0 1 8 8M216 32h-24a8 8 0 0 0 0 16h16v160h-16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-32 88a32 32 0 0 0-56-21.13a31.93 31.93 0 0 0-40.71-6.15A8 8 0 0 0 72 96v64a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0Z"/></svg>'}
+        elif self.id == 'rocket-chat':
+            icon = {'style': 'fab', 'icon': 'fa-rocketchat'}
         elif self.id == 'telegram':
             icon = {'style': 'fab', 'icon': 'fa-telegram'}
         else:

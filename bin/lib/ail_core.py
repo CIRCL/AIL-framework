@@ -101,7 +101,12 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
     if obj_type == 'pgp':
         return ['key', 'mail', 'name']
     if obj_type == 'username':
-        return ['telegram', 'discord', 'twitter', 'jabber']
+        chat_protocols = r_serv_db.smembers('chat:protocols')
+        if not chat_protocols:
+            chat_protocols = set()
+        chat_protocols.add('jabber')
+        chat_protocols.add('telegram')
+        return sorted(chat_protocols)
     if obj_type == 'user-account':
         return r_object.smembers(f'all_chat:subtypes')
     return []
