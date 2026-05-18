@@ -20,8 +20,7 @@
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
         <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
         <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
-        <script src="{{ url_for('static', filename='js/assets/SimulationWorker-kgekWV9K.js') }}"></script>
-		<script src="{{ url_for('static', filename='js/pivotick.umd.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
@@ -900,6 +899,7 @@ function create_graph(url){
                 },
                 UI: {
                     mode: 'full',
+                    theme: 'dark',
                     tooltip: {
                         enabled: true,
                         render: function(element){ return render_pivotick_tooltip(element); },
