@@ -24,6 +24,7 @@ from lib import chats_viewer
 from lib import Language
 from lib import Tag
 from lib import module_extractor
+from lib import ail_users
 from lib.objects import ail_objects
 from lib import images_engine
 
@@ -423,6 +424,7 @@ def objects_message():
 
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
+        target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)

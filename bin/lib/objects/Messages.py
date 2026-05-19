@@ -323,7 +323,7 @@ class Message(AbstractObject):
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self.get_default_meta(tags=True, options=options)
         # original_id
         meta['_id'] = self.id.rsplit('/', 1)[-1]
 

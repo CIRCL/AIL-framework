@@ -11,7 +11,7 @@ import sys
 import json
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file, send_from_directory
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_admin, login_read_only, no_cache
@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects import PDFs
 from lib import Language
 from lib import Tag
+from lib import ail_users
 from packages import Date
 
 # ============ BLUEPRINT ============
@@ -107,9 +108,11 @@ def pdf_view():
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     meta = r[0]
+    preferred_language = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
     return render_template("ShowPDF.html",
                            ail_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                            translation_languages=Language.get_translation_languages(),
+                           translation_target=preferred_language,
                            meta=meta)
 
 

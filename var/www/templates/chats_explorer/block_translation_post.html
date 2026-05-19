@@ -32,7 +32,7 @@
                             {% if not translation_target or translation_target == "Don't Translate" %}
                                 <option selected>Don't Translate</option>
                             {% else %}
-                                <option selected value="{{ translation_target }}">{{ translation_target }}</option>
+                                <option selected value="{{ translation_target }}">{{ translation_languages[translation_target] }}</option>
                                 <option>Don't Translate</option>
                             {% endif %}
                             {% for language in translation_languages %}
