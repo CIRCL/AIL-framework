@@ -171,6 +171,10 @@ class MeiliSearch:
             return None
         return r.content
 
+    def tasks_cancel_processing(self, task_uids):
+        cancel_task = self.client.cancel_tasks({"uids": task_uids, "statuses": ["processing"]})
+        print("Cancellation task:", cancel_task.task_uid)
+
     def _wait_task(self, task, timeout_in_ms=120000):
         task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
         return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
@@ -315,7 +319,10 @@ class MeiliSearch:
         r_search.hset(f'crawled:{index}:{cid}', domain.id, item.id)
 
     def index_chat_message(self, message):
-        index = f'c{message.get_protocol()}' # TODO check if index already exists
+        index = f'c{message.get_protocol()}'
+        if index not in MESSAGES_INDEXES:
+            self._create_index(index)
+            MESSAGES_INDEXES.add(index)
         timestamp = message.get_timestamp()
         chat_instance = message.get_chat_instance()
         chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
