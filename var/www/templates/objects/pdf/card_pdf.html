@@ -18,7 +18,39 @@
                 <button class="btn btn-primary"><i class="far fa-file-pdf fa-2x fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i> Open PDF (A)</button>
             </a>
         </div>
+
         {% if translation_languages %}
+            <div class="mb-2">
+                <span class="btn btn-outline-dark p-0 px-1" type="button" data-toggle="collapse" data-target="#collapsePdfLang{{ meta['id'] }}" aria-expanded="false" aria-controls="collapsePdfLang{{ meta['id'] }}">
+                    <i class="fas fa-language"></i> {% if meta['language'] %}{{ translation_languages[meta['language']] }}{% endif %}
+                </span>
+                <div class="collapse mt-1" id="collapsePdfLang{{ meta['id'] }}">
+                    <div class="card card-body">
+                        <form method="post" action="{{ url_for('languages_ui.translate_object') }}">
+                            <input type="text" id="type" name="type" value="{{meta['type']}}" hidden>
+                            <input type="text" id="id" name="id" value="{{meta['id']}}" hidden>
+                            <span class="badge badge-primary">Source:</span>
+                            <span class="">
+                                <select id="language_target" name="language_target" class="form-select" aria-label="PDF Language">
+                                    <option selected value="{{ meta['language'] }}">{{ meta['language'] }}</option>
+                                    {% for language in translation_languages %}
+                                        <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                            <button class="btn btn-dark" type="submit">
+                                <i class="fas fa-pen-alt"> Update Language</i>
+                            </button>
+                        </form>
+                        <div>
+                            <a class="btn btn-primary" href="{{ url_for('languages_ui.detect_object_language')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
+                                <i class="fas fa-redo"></i> Detect Language
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="mb-2">
                 {% if 'translated' in meta %}
                     {% set translated=meta['translated'] %}
@@ -30,6 +62,7 @@
                 {% endwith %}
             </div>
         {% endif %}
+
 		<ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <table class="table">

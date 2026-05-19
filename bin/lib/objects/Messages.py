@@ -270,13 +270,6 @@ class Message(AbstractObject):
     # message media
     # flag is deleted -> event or missing from feeder pass ???
 
-    def get_language(self):
-        languages = self.get_languages()
-        if languages:
-            return languages.pop()
-        else:
-            return None
-
     def get_search_document(self, timestamp=None):
         if not timestamp:
             timestamp = self.get_timestamp()
@@ -401,16 +394,12 @@ class Message(AbstractObject):
                 meta['files'] = self.get_files(file_names=meta['files-names'])
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
-        if 'language' in options:
-            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
             if meta.get('language'):
                 source = meta['language']
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-            if 'language' in options:
-                meta['language'] = self.get_language()
 
         # meta['encoding'] = None
         return meta

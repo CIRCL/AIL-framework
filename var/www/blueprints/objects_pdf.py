@@ -55,9 +55,8 @@ def pdf_pdfa(pdf_id):
 @no_cache
 def pdf_translate():
     obj_id = request.form.get('id')
-    source = request.form.get('source')
     target = request.form.get('target')
-    r = PDFs.api_create_translation_task(obj_id, source, target, force=True)
+    r = PDFs.api_create_translation_task(obj_id, target, force=True)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -104,7 +103,7 @@ def pdf_translated_progress():
 @login_read_only
 def pdf_view():
     obj_id = request.args.get('id')
-    r = PDFs.api_get_meta(obj_id, options={'author', 'file-meta', 'file-names', 'markdown_id', 'translated', 'svg_icon'}, flask_context=True)
+    r = PDFs.api_get_meta(obj_id, options={'author', 'file-meta', 'file-names', 'language', 'markdown_id', 'translated', 'svg_icon'}, flask_context=True)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     meta = r[0]

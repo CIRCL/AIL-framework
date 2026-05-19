@@ -93,6 +93,21 @@ class PDF(AbstractDaterangeObject):
     def get_base64(self):
         return base64.b64encode(self.get_file_content().read()).decode()
 
+    def get_content_sample(self, max_pages=5):
+        text = []
+        doc = pymupdf.open(self.get_filepath())
+        for page_index in range(doc.page_count):
+            if len(text) >= max_pages:
+                break
+            page = doc[page_index]
+            page_text = page.get_text("text")
+            if page_text:
+                page_text = page_text.strip()
+                if page_text:
+                    text.append(page_text)
+        doc.close()
+        return '\n'.join(text).strip()
+
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return None
@@ -399,12 +414,18 @@ def api_exists_translation_file(filename):
         return {'error': 'No Translation Found or Expired. Please Launch a new translation'}, 404
     return filename, 200
 
-def api_create_translation_task(obj_id, source, target, force=False):
+def api_create_translation_task(obj_id, target, force=False): # TODO AUTO DETECT LANGUAGE ????
     obj = PDF(obj_id)
     if not obj.exists():
         return {'error': 'PDF Not Found'}, 404
+    source = obj.get_language()
+    if not source:
+        source = obj.detect_language()
+        if not source:
+            return {'error': 'No source language available. Please set the PDF language manually or trigger language detection first.'}, 400
+    target = Language.normalize_bcp47_tag(target)
     if not Language.exists_lang_iso_target_source(source, target):
-        return {'error': 'Invalid Language code'}, 400
+        return {'error': 'Invalid source/target Language code'}, 400
     obj_gid = obj.get_global_id()
     if Language.exists_object_translation_language(obj_gid, target):
         if force:

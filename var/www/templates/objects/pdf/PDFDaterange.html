@@ -136,7 +136,7 @@
                         {% for obj_id in dict_objects %}
                             <tr>
                                 <td style="word-break: break-all;">
-                                    <a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=pdf&id={{ obj_id }}">{{ obj_id }}</a>
+                                    <a target="_blank" href="{{ url_for('objects_pdf.pdf_view') }}?id={{ obj_id }}">{{ obj_id }}</a>
                                 </td>
                                 <td>{{ dict_objects[obj_id]['first_seen'] }}</td>
                                 <td>{{ dict_objects[obj_id]['last_seen'] }}</td>

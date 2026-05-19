@@ -10,20 +10,22 @@
                             Translation
                         {% endif %}
                     </div>
-                    <div class="col-md-3 text-center pl-0 pt-1">
-                        Source:
-                        <select id="source" name="source" class="form-select" aria-label="Language Source">
-                            {% if not translation_target or translation_target == "Don't Translate" %}
-                                <option selected>Don't Translate</option>
-                            {% else %}
-                                <option selected value="{{ translation_target }}">{{ translation_target }}</option>
-                                <option>Don't Translate</option>
-                            {% endif %}
-                            {% for language in translation_languages %}
-                                <option value="{{ language }}">{{ translation_languages[language] }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    {% if language_source %}
+                        <div class="col-md-3 text-center pl-0 pt-1">
+                            Source:
+                            <select id="source" name="source" class="form-select" aria-label="Language Source">
+                                {% if not translation_source or translation_source == "Don't Translate" %}
+                                    <option selected>Don't Translate</option>
+                                {% else %}
+                                    <option selected value="{{ translation_source }}">{{ translation_source }}</option>
+                                    <option>Don't Translate</option>
+                                {% endif %}
+                                {% for language in translation_languages %}
+                                    <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
                     <div class="col-md-3 text-center pl-0 pt-1">
                         Target:
                         <select id="target" name="target" class="form-select" aria-label="Language Target">
