@@ -111,6 +111,56 @@ class MeiliSearch:
     def get_nb_tasks(self):
         return self.client.get_tasks().total
 
+    def tasks_enqueued(self):
+        tasks = self.client.get_tasks({"statuses": ["enqueued"],"limit": 100})
+        print("currently enqueued tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_processing(self):
+        tasks = self.client.get_tasks({"statuses": ["processing"],"limit": 10})
+        print("currently processing tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_failed(self):
+        tasks = self.client.get_tasks({"statuses": ["failed"], "limit": 10})
+        print("currently failed tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def task_status(self, task_id):
+        status = self.client.get_task(task_id)
+        print(status)
+        return status
+
     def _wait_task(self, task, timeout_in_ms=120000):
         task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
         return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
