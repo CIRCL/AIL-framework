@@ -111,6 +111,10 @@ class MeiliSearch:
     def get_nb_tasks(self):
         return self.client.get_tasks().total
 
+    def _wait_task(self, task, timeout_in_ms=120000):
+        task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
+        return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
+
     def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent'):
         # TODO investigate attributesToRetrieve speed
         end_query = []
@@ -184,7 +188,6 @@ class MeiliSearch:
         self.add(index_name, dummy_document)
         self.remove(index_name, 'dummy')
 
-
     def setup_indexes_searchable_filterable_sortable(self):
         for index_name in get_indexes_names():
             self.setup_index_searchable_filterable_sortable(index_name)
@@ -252,7 +255,7 @@ class MeiliSearch:
         r_search.hset(f'crawled:{index}:{cid}', domain.id, item.id)
 
     def index_chat_message(self, message):
-        index = f'c{message.get_protocol()}'
+        index = f'c{message.get_protocol()}' # TODO check if index already exists
         timestamp = message.get_timestamp()
         chat_instance = message.get_chat_instance()
         chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
@@ -428,7 +431,7 @@ def remove_document(index_name, obj_gid):
 
 def delete_index(index_name):
     Engine._delete(index_name)
-    Engine.client.create_index(index_name, {'primaryKey': 'uuid'})
+    Engine.client._create_index(index_name)
 
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')
