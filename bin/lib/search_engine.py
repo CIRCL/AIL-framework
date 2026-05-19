@@ -127,7 +127,7 @@ class MeiliSearch:
             print("error:      ", task.error)
 
     def tasks_processing(self):
-        tasks = self.client.get_tasks({"statuses": ["processing"],"limit": 10})
+        tasks = self.client.get_tasks({"statuses": ["processing"],"limit": 100})
         print("currently processing tasks:", len(tasks.results))
         for task in tasks.results:
             print("=" * 100)
@@ -142,7 +142,7 @@ class MeiliSearch:
             print("error:      ", task.error)
 
     def tasks_failed(self):
-        tasks = self.client.get_tasks({"statuses": ["failed"], "limit": 10})
+        tasks = self.client.get_tasks({"statuses": ["failed"], "limit": 100})
         print("currently failed tasks:", len(tasks.results))
         for task in tasks.results:
             print("=" * 100)
