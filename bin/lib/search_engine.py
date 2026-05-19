@@ -7,6 +7,7 @@ import sys
 import time
 import uuid
 
+import requests
 import meilisearch
 from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError
 from hashlib import sha256
@@ -156,10 +157,19 @@ class MeiliSearch:
             print("details:    ", task.details)
             print("error:      ", task.error)
 
-    def task_status(self, task_id):
-        status = self.client.get_task(task_id)
+    def task_status(self, task_uid):
+        status = self.client.get_task(task_uid)
         print(status)
         return status
+
+    def task_payload(self, task_uid):
+        url = f"{M_URL}/tasks/{task_uid}/documents"
+        r = requests.get(url, headers={"Authorization": f"Bearer {M_KEY}"})
+        if r.status_code != 200:
+            print(f"Could not dump documents for task {task_uid}: HTTP {r.status_code}")
+            print(r.text[:1000])
+            return None
+        return r.content
 
     def _wait_task(self, task, timeout_in_ms=120000):
         task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
