@@ -129,6 +129,10 @@ class Chat(AbstractChatObject):
             meta['origin_link'] = self.get_origin_link()
         if 'protocol' in options:
             meta['protocol'] = self.get_protocol()
+        if 'network' in options:
+            meta['network'] = self.get_network()
+        if 'address' in options:
+            meta['address'] = self.get_address()
         return meta
 
     def get_misp_object(self):

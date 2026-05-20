@@ -156,7 +156,7 @@ def api_get_object(obj_type, obj_subtype, obj_id):
     obj = get_object(obj_type, obj_subtype, obj_id)
     if not obj.exists():
         return {'status': 'error', 'reason': 'Object Not Found'}, 404
-    options = {'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
+    options = {'address', 'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'network', 'parent', 'parent_meta', 'protocol', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
     return obj.get_meta(options=options), 200
 
 

@@ -391,7 +391,7 @@ def get_obj_chat_from_global_id(chat_gid):
 def get_obj_chat_meta(obj_chat, new_options=set()):
     options = {}
     if obj_chat.type == 'chat':
-        options = {'created_at', 'icon', 'info', 'subchannels', 'threads', 'username'}
+        options = {'address', 'created_at', 'icon', 'info', 'network', 'protocol', 'subchannels', 'threads', 'username'}
     elif obj_chat.type == 'chat-subchannel':
         options = {'chat', 'created_at', 'icon', 'nb_messages', 'threads'}
     elif obj_chat.type == 'chat-thread':
@@ -742,7 +742,7 @@ def get_user_account_mentions_chord(subtype, user_id):
 
 
 def _get_chat_card_meta_options():
-    return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
+    return {'address', 'created_at', 'icon', 'info', 'nb_participants', 'network', 'origin_link', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 
 def _get_message_bloc_meta_options():
     return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
@@ -1086,7 +1086,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    meta = chat.get_meta({'address', 'created_at', 'icon', 'info', 'network', 'nb_participants', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     if meta['subchannels']:

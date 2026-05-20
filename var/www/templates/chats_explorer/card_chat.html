@@ -14,6 +14,17 @@
         {% if meta['icon'] %}
             <div><img src="{{ url_for('objects_image.image', filename=meta['icon'])}}" class="mb-2" alt="{{ meta['id'] }}" width="200" height="200"></div>
         {% endif %}
+        <div class="my-2 text-secondary">
+            {% if meta['protocol'] %}
+                <span class="mr-2"><b>Protocol:</b> {{ meta['protocol'] }}</span>
+            {% endif %}
+            {% if meta['network'] %}
+                <span class="mr-2"><b>Network:</b> {{ meta['network'] }}</span>
+            {% endif %}
+            {% if meta['address'] %}
+                <span><b>Address:</b> {{ meta['address'] }}</span>
+            {% endif %}
+        </div>
 		<ul class="list-group mb-2">
             <li class="list-group-item py-0">
                 <table class="table">
@@ -57,14 +68,6 @@
                             <hr class="m-1">
                             <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
                         {% endif %}
-                    </li>
-                {% endif %}
-
-                {% if meta['network'] or meta['address'] %}
-                    <li class="list-group-item py-0">
-                        <div class="my-2 text-secondary">
-                            {% if meta['network'] %}{{ meta['network'] }} {% endif %}{% if meta['address'] %}{{ meta['address'] }}{% endif %}
-                        </div>
                     </li>
                 {% endif %}
 
