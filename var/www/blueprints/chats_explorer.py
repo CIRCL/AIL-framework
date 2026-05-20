@@ -454,6 +454,21 @@ def objects_message_translate():
         else:
             return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
 
+@chats_explorer.route("/objects/message/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def objects_message_translate_json():
+    message_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    message, r_code = chats_viewer.api_get_message(message_id, translation_target=target)
+    if r_code != 200:
+        return create_json_response(message, r_code)
+
+    return jsonify({
+        'id': message_id,
+        'translation': message.get('translation')
+    })
+
 @chats_explorer.route("/objects/message/detect/language", methods=['GET'])
 @login_required
 @login_user_no_api
