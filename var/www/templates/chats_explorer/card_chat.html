@@ -60,6 +60,14 @@
                     </li>
                 {% endif %}
 
+                {% if meta['network'] or meta['address'] %}
+                    <li class="list-group-item py-0">
+                        <div class="my-2 text-secondary">
+                            {% if meta['network'] %}{{ meta['network'] }} {% endif %}{% if meta['address'] %}{{ meta['address'] }}{% endif %}
+                        </div>
+                    </li>
+                {% endif %}
+
 			<li class="list-group-item py-0">
 				<div class="my-2">
 					Tags:
@@ -98,6 +106,9 @@
                 <a href="{{ url_for('correlation.show_relationship')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
                     <button class="btn btn-secondary"><i class="far fa-eye"></i> Relationships &nbsp;
                     </button>
+                </a>
+                <a href="{{ url_for('chats_explorer.chats_explorer_instance') }}?subtype={{ meta['subtype'] }}">
+                    <button class="btn btn-primary"><i class="fas fa-comments"></i> Chats List</button>
                 </a>
             {% endif %}
         </span>
