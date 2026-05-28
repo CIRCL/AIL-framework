@@ -19,7 +19,8 @@ RELATIONSHIPS = {
     "forwarded_from",
     "forwarded_to",  # forwarded_to
     "in",
-    "mention"
+    "mention",
+    "quote"
 }
 
 RELATIONSHIPS_OBJS = { # TODO forward user-account
@@ -39,6 +40,9 @@ RELATIONSHIPS_OBJS = { # TODO forward user-account
         'chat': {'chat', 'user-account', 'message'},
         'message': {'chat', 'user-account'},
         'user-account': {'chat', 'message'},
+    },
+    "quote": {
+        'post': {'post'},
     },
 }
 

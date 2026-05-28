@@ -34,6 +34,10 @@ from lib.objects import Decodeds
 from lib.objects import Domains
 from lib.objects import Etags
 from lib.objects import Favicons
+from lib.objects import Forums
+from lib.objects import Subforums
+from lib.objects import ForumThreads
+from lib.objects import Posts
 from lib.objects import FilesNames
 from lib.objects import DomHashs
 from lib.objects import GTrackers
@@ -71,6 +75,10 @@ OBJECTS_CLASS = {
     'dom-hash': {'obj': DomHashs.DomHash, 'objs': DomHashs.DomHashs},
     'etag': {'obj': Etags.Etag, 'objs': Etags.Etags},
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
+    'forum': {'obj': Forums.Forum, 'objs': Forums.Forums},
+    'subforum': {'obj': Subforums.Subforum, 'objs': Subforums.Subforums},
+    'forum-thread': {'obj': ForumThreads.ForumThread, 'objs': ForumThreads.ForumThreads},
+    'post': {'obj': Posts.Post, 'objs': None},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
     'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},

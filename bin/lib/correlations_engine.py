@@ -54,6 +54,10 @@ CORRELATION_TYPES_BY_OBJ = {
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
+    "forum": ["subforum"],
+    "subforum": ["forum", "subforum", "forum-thread"],
+    "forum-thread": ["subforum", "post"],
+    "post": ["forum-thread", "post", "user-account"],
     "file-name": ["chat", "item", "message", "pdf"],
     "gtracker": ["domain", "item"],
     "hhhash": ["domain"],

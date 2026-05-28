@@ -17,17 +17,17 @@ r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 AIL_OBJECTS = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
-               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
-               'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
+               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'hhhash', 'ip',
+               'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot', 'ssh-key', 'subforum', 'title',
                'user-account', 'username'}
 
-AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
+AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'forum', 'forum-thread', 'pgp', 'subforum', 'username', 'user-account'}
 
 # TODO by object TYPE ???? correlation
 AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
-                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
-                                    'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'screenshot',
-                                    'ssh-key', 'title', 'user-account', 'username'}
+                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'item',
+                                    'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot',
+                                    'ssh-key', 'subforum', 'title', 'user-account', 'username'}
 
 AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
 
@@ -96,6 +96,12 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         return r_object.smembers(f'all_chat-subchannel:subtypes')
     if obj_type == 'chat-thread':
         return r_object.smembers(f'all_chat-thread:subtypes')
+    if obj_type == 'forum':
+        return r_object.smembers(f'all_forum:subtypes')
+    if obj_type == 'subforum':
+        return r_object.smembers(f'all_subforum:subtypes')
+    if obj_type == 'forum-thread':
+        return r_object.smembers(f'all_forum-thread:subtypes')
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'ripple', 'tron', 'zcash']
     if obj_type == 'pgp':
