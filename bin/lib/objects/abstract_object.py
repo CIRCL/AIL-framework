@@ -447,11 +447,18 @@ class AbstractObject(ABC):
     def add_relationship(self, obj2_global_id, relationship, source=True):
         # is source
         if source:
-            print(self.get_global_id(), obj2_global_id, relationship)
             add_obj_relationship(self.get_global_id(), obj2_global_id, relationship)
         # is target
         else:
             add_obj_relationship(obj2_global_id, self.get_global_id(), relationship)
+
+    def add_obj_relationship(self, obj1_global_id, obj2_global_id, relationship, source=True):
+        # is source
+        if source:
+            add_obj_relationship(obj1_global_id, obj2_global_id, relationship)
+        # is target
+        else:
+            add_obj_relationship(obj2_global_id, obj1_global_id, relationship)
 
     ## -Relationship- ##
 

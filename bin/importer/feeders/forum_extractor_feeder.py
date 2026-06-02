@@ -85,17 +85,12 @@ class ForumExtractorFeeder(DefaultFeeder):
 
         posts = extracted.get('posts') or []
         imported_posts = []
-        parent_thread = self._resolve_parent_thread(extracted, forum_type, forum_id)
+        parent_thread = self._resolve_parent_thread(extracted, forum_type, forum_id) # TODO warning not created
         for post_data in posts:
-            post = self._upsert_post(post_data, forum_type, forum_id, parent_thread)
+            post = self._upsert_post(post_data, forum_type, forum_id, parent_thread, forum)
             if post:
                 imported_posts.append((post, post_data))
                 imported['post'] += 1
-
-        for post, post_data in imported_posts:
-            unresolved = self._process_quotes(post, post_data, forum_type, forum_id)
-            if unresolved:
-                warnings.append(f'unresolved_quotes:{post.get_id()}:{"|".join(unresolved)}')
 
         seen_timestamps = [self._safe_timestamp(p[1].get('post_timestamp')) for p in imported_posts if self._safe_timestamp(p[1].get('post_timestamp'))]
         if seen_timestamps:
@@ -193,19 +188,19 @@ class ForumExtractorFeeder(DefaultFeeder):
             return None
         return ForumThread(f'{forum_id}/{thread_data.get("thread_id")}', forum_type)
 
-    def _upsert_post(self, post_data, forum_type, forum_id, parent_thread):
-        """Create/update one Post object."""
+    def _upsert_post(self, post_data, forum_type, forum_id, parent_thread, forum):
+        """Create/update one Post object and add it to its thread timeline."""
         post_id = post_data.get('post_id')
         post_timestamp = self._safe_timestamp(post_data.get('post_timestamp'))
         if not post_id or post_timestamp is None or not parent_thread:
-            return None
+            return None, []
         ts_int = int(post_timestamp)
         obj_id = f'{forum_type}/{forum_id}/{ts_int}/{post_id}'
         post = Post(obj_id)
-        post._set_field('content', (post_data.get('content') or {}).get('text') or '')
+        post.set_content((post_data.get('content') or {}).get('text') or '')
         post._set_field('timestamp', str(post_timestamp))
         if post_data.get('post_state'):
-            post._set_field('state', post_data.get('post_state'))
+            post.set_state(post_data.get('post_state'))
         # TODO CREATE MISSING FIELDS
         # post._set_field('custom', json.dumps({
         #     'url': post_data.get('post_url'),
@@ -218,35 +213,11 @@ class ForumExtractorFeeder(DefaultFeeder):
         #     'reactions': post_data.get('reactions') or [],
         #     'post_timestamp_raw': post_data.get('post_timestamp_raw'),
         # }))
-        post.set_parent(obj_global_id=parent_thread.get_global_id())
-
+        # TODO REPLACE by functions
+        quote_ids = (post_data.get('content') or {}).get('quoted_posts') or [] # TODO INVALID KEY
+        # TODO USE SELF.Forum for the object
+        parent_thread.add_post(post, post_id, post_timestamp, forum_obj, quote_ids=quote_ids)
         return post
-
-    def _process_quotes(self, post, post_data, forum_type, forum_id):  # TODO #################################
-        """Create quote relationships when quoted post lookup can be resolved."""
-        unresolved = []
-        # quoted_posts = ((post_data.get('content') or {}).get('quoted_posts') or [])
-        # for quoted in quoted_posts:
-        #     # TODO GET quoted timestamp to rebuild ID
-        #     quoted_id = quoted.get('post_id')
-        #     ts_int = ...
-        #     quoted_id = f'{forum_type}/{forum_id}/{ts_int}/{post_id}'
-        #     if not quoted_id:
-        #         continue
-        #     if Post(quoted_id).exists():
-        #         target = Post(quoted_id)
-        #         post.add_relationship(target.get_global_id(), 'quote')
-        #     else:
-        #         unresolved.append(str(quoted_id))
-        # if unresolved:
-        #     custom = post.get_custom_meta() or '{}'
-        #     try:
-        #         custom_data = json.loads(custom)
-        #     except Exception:
-        #         custom_data = {}
-        #     custom_data['unresolved_quote_post_ids'] = unresolved
-        #     post.set_custom_meta(custom_data)
-        return unresolved
 
     @staticmethod
     def _safe_timestamp(value):
