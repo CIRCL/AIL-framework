@@ -54,10 +54,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
-    "forum": ["subforum"],
+    "forum": ["post", "subforum", "user-account"],
     "subforum": ["forum", "subforum", "forum-thread"],
     "forum-thread": ["subforum", "post"],
-    "post": ["forum-thread", "post", "user-account"],
+    # TODO Extend to detection of text -> same as message
+    "post": ["forum", "forum-thread", "user-account"],
     "file-name": ["chat", "item", "message", "pdf"],
     "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
@@ -73,7 +74,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "screenshot": ["barcode", "domain", "item", "qrcode"],
     "ssh-key": ["domain", "ip"],
     "title": ["domain", "item"],
-    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
+    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "post", "username"],
     "username": ["domain", "item", "message", "user-account"],
 }
 

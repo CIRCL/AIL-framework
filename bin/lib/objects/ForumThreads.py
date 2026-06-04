@@ -221,8 +221,15 @@ class ForumThread(AbstractSubtypeObject):
     def add_post(self, post, post_id, timestamp, forum_obj, quote_ids=None):
         r_object.zadd(f'posts:forum-thread:{self.subtype}:{self.id}', {post.get_global_id(): float(timestamp)})
         post.set_parent(self.get_global_id())
-        forum_obj.add_post_global_id(post_id, forum_obj)
+        forum_obj.add_post_global_id(post_id, post.get_global_id())
 
+        date = post.get_date()
+
+        self.add(date, post)       # ForumThread <-> Post
+        forum_obj.add(date, post)  # Forum <-> Post
+        # TODO Correlation  Forum <-> ForumThread ???
+
+        # quoted Posts
         unresolved = []
         if quote_ids and forum_obj:
             for quoted_post_id in quote_ids:
@@ -258,8 +265,16 @@ class ForumThread(AbstractSubtypeObject):
             meta['nb_posts'] = self.get_nb_posts()
         return meta
 
-    def create(self): # TODO
-        pass
+    def create(self, title=None, url=None, info=None, parent_global_id=None):
+        if title:
+            self._set_field('title', title)
+        if url:
+            self.set_url(url)
+        if info:
+            self.set_info(info)
+        if parent_global_id:
+            self.set_parent(obj_global_id=parent_global_id)
+        return self
 
     def delete(self):
         pass

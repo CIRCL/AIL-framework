@@ -95,8 +95,22 @@ class Post(AbstractObject):
             meta['state'] = self.get_state()
         return meta
 
-    def create(self):
-        pass
+    def create(self, post_id, timestamp, content, parent_thread, forum_obj, state=None, quote_ids=None):
+        if content:
+            self.set_content(content)
+        if state:
+            self.set_state(state)
+        return parent_thread.add_post(self, post_id, timestamp, forum_obj, quote_ids=quote_ids)
 
     def delete(self):
         self._delete()
+
+# TODO function to create Post ID
+# def get_post():
+#     # build ID
+#     # Build object
+#     # check if exists
+#     #   create object
+#     # return post
+#
+#     pass

@@ -42,6 +42,15 @@ class UserAccount(AbstractSubtypeObject):
         # # TODO:
         pass
 
+    # TODO META + exists check
+    def create(self, date, obj, username=None, timestamp=None):
+        # daterange + correlation
+        self.add(date, obj)
+        if username:
+            username.add(date, self)
+            self.update_username_timeline(username.get_global_id(), timestamp)
+        return self
+
     def get_link(self, flask_context=False):
         if flask_context:
             url = url_for('chats_explorer.objects_user_account', type=self.type, subtype=self.subtype, id=self.id)

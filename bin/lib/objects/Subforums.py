@@ -87,8 +87,17 @@ class Subforum(AbstractSubtypeObject):
             meta['nb_threads'] = self.get_nb_threads()
         return meta
 
-    def create(self): # TODO
-        pass
+    # TODO ############################################################################
+    def create(self, name=None, url=None, info=None, parent_global_id=None):
+        if name:
+            self.set_name(name)
+        if url:
+            self.set_url(url)
+        if info:
+            self.set_info(info)
+        if parent_global_id:
+            self.set_parent(obj_global_id=parent_global_id)
+        return self
 
     def delete(self):
         pass
