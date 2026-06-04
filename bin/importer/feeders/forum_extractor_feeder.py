@@ -32,6 +32,8 @@ class ForumExtractorFeeder(DefaultFeeder):
         self.name = 'forum-extractor'
         self.logger = logging.getLogger(self.__class__.__name__)
         self.forum = None
+        self.seen_subforums = set()
+        self.root_subforums = set()
 
     def import_result(self):
         """Import one forum-extractor result dictionary from self.json_data."""
@@ -59,24 +61,33 @@ class ForumExtractorFeeder(DefaultFeeder):
             # TODO Exception + logs
             return {'status': 'error', 'imported': 0, 'error': 'missing_forum_type_or_forum_id'}
 
+        self.seen_subforums = set()
+        self.root_subforums = set()
+
         # Forum
         self.forum = self._upsert_forum(result, extracted, forum_type, forum_id)
         if not self.forum:  # TODO ERROR EXIT + logs
             return {'status': 'error', 'imported': 0, 'error': 'forum_upsert_failed'}
 
+        self.process_forum_hierarchy(result)
+
+        # if view is subforum
         parent_subforum = self._upsert_subforum(extracted.get('parent_subforum'))
-        current_subforum = self._upsert_subforum(extracted.get('current_subforum'), parent_subforum)
+        current_subforum = self._upsert_subforum(extracted.get('current_subforum'))
+        if parent_subforum and current_subforum:
+            self._set_parent_once(current_subforum, parent_subforum.get_global_id())
+            self.forum.remove_orphan_subforum(current_subforum.get_global_id())
 
         # Import SubForums
         for sub in extracted.get('subforums') or []:
-            self._upsert_subforum_recursive(sub, current_subforum or parent_subforum)
+            if result.get('page_type') == 'forum_index':
+                self._upsert_subforum_recursive(sub, self.forum, root=True)
+            else:
+                self._upsert_subforum_recursive(sub, current_subforum or parent_subforum)
 
-        if not current_subforum and result.get('page_type') in {'thread_page', 'forum_thread_list'}:
-            if extracted.get('thread') or extracted.get('threads'):
-                return {'status': 'error', 'imported': 0, 'error': 'missing_current_subforum'}
+        self._mark_seen_subforum_orphans()
 
         imported = {'forum': 1, 'subforum': 0, 'forum-thread': 0, 'post': 0}
-        warnings = []
 
         # Import Threads
         thread_objs = []
@@ -112,7 +123,7 @@ class ForumExtractorFeeder(DefaultFeeder):
                 if current_subforum:
                     current_subforum.update_daterange(date_value)
 
-        return {'status': 'success', 'imported': imported, 'warnings': warnings}
+        return {'status': 'success', 'imported': imported}
 
     def _upsert_forum(self, result, extracted, forum_type, forum_id):
         """Create/update a Forum object from extracted data."""
@@ -123,37 +134,101 @@ class ForumExtractorFeeder(DefaultFeeder):
         forum = Forum(forum_id)
         return forum.create(forum_type, name, url, info)
 
-    def _upsert_subforum_recursive(self, sub_data, parent_subforum=None):
+    def process_forum_hierarchy(self, result):
+        """Consume parser hierarchy edges before thread/post parent fallback logic."""
+        for edge in (result.get('extracted') or {}).get('forum_hierarchy') or []:
+            self.ensure_hierarchy_edge(edge)
+
+    def ensure_hierarchy_edge(self, edge):
+        """Create objects referenced by one hierarchy edge and set the child parent."""
+        parent_type = edge.get('parent_type')
+        child_type = edge.get('child_type')
+        if (parent_type, child_type) not in {
+            ('forum', 'subforum'),
+            ('subforum', 'subforum'),
+            ('subforum', 'forum-thread'),
+        }:
+            self.logger.warning(f'Invalid hierarchy type: parent {parent_type}, child {child_type}')
+            return None
+
+        parent_id = edge.get('parent_id')
+        child_id = edge.get('child_id')
+        if not parent_id or not child_id:
+            self.logger.warning(f'Invalid hierarchy edge id: parent {parent_id}, child {child_id}')
+            return None
+
+        parent_obj = self.create_hierarchy_object(edge)
+        child_obj = self.create_hierarchy_object(edge, parent=False)
+
+        if self._set_parent_once(child_obj, parent_obj.get_global_id()):
+            if child_type == 'subforum':
+                self.forum.remove_orphan_subforum(child_obj.get_global_id())
+                if parent_type == 'forum':
+                    self.root_subforums.add(child_obj.get_global_id())
+            return child_obj
+        return None
+
+    def create_hierarchy_object(self, hierarchy, parent=True):
+        if parent:
+            str_name = 'parent_'
+        else:
+            str_name = 'child_'
+        obj_type = hierarchy.get(f'{str_name}_type')
+        obj_id = hierarchy.get(f'{str_name}_id')
+        name = hierarchy.get(f'{str_name}_name')
+
+        if obj_type == 'forum':
+            return self.forum
+        if obj_type == 'subforum':
+            subforum = Subforum(obj_id, self.forum.type)
+            subforum.create(name=name)
+            self.seen_subforums.add(subforum.get_global_id())
+            return subforum
+        if obj_type == 'forum-thread':
+            thread = ForumThread(obj_id, self.forum.type)
+            thread.create()
+            return thread
+        return None
+
+    def _upsert_subforum_recursive(self, sub_data, parent_obj=None, root=False):
         """Recursively create/update subforums and parent links."""
-        subforum = self._upsert_subforum(sub_data, parent_subforum)
+        subforum = self._upsert_subforum(sub_data)
         if not subforum:
             return
+        if parent_obj:
+            if self._set_parent_once(subforum, parent_obj.get_global_id()):
+                self.forum.remove_orphan_subforum(subforum.get_global_id())
+                if root and parent_obj.get_type() == 'forum':
+                    self.root_subforums.add(subforum.get_global_id())
         for child in sub_data.get('subforums') or []:
             self._upsert_subforum_recursive(child, subforum)
 
-    def _upsert_subforum(self, sub_data, parent_subforum=None):
-        """Create/update one Subforum object and set parent."""
+    def _upsert_subforum(self, sub_data):
+        """Create/update one Subforum object without inventing a parent."""
         if not sub_data or not sub_data.get('subforum_id'):
             return None
-        subforum = Subforum(sub_data.get("subforum_id"), self.forum.id)
-        return subforum.create(
+        subforum = Subforum(sub_data.get('subforum_id'), self.forum.type)
+        subforum.create(
             name=sub_data.get('subforum_name'),
             url=sub_data.get('subforum_url'),
-            info=sub_data.get('description') or sub_data.get('info'),
-            parent_global_id=(parent_subforum or self.forum).get_global_id(),  # TODO #########################
+            info=sub_data.get('info'),
         )
+        self.seen_subforums.add(subforum.get_global_id())
+        return subforum
 
     def _upsert_thread(self, thread_data, subforum):
-        """Create/update one ForumThread object and set parent subforum."""
+        """Create/update one ForumThread object and set parent subforum when available."""
         if not thread_data or not thread_data.get('thread_id'):
             return None
-        if not subforum:
+        thread = ForumThread(thread_data.get('thread_id'), self.forum.type)
+        if subforum:
+            self._set_parent_once(thread, subforum.get_global_id())
+        if not thread.get_parent():
+            self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None
-        thread = ForumThread(thread_data.get("thread_id"), self.forum.id)
         thread.create(
             title=thread_data.get('thread_title'),
             url=thread_data.get('thread_url'),
-            parent_global_id=subforum.get_global_id(),
         )
         # if thread_data.get('thread_flags') is not None:
         #     thread._set_field('flags', json.dumps(thread_data.get('thread_flags')))
@@ -169,13 +244,32 @@ class ForumExtractorFeeder(DefaultFeeder):
         # }))
         return thread
 
+    def _set_parent_once(self, child_obj, parent_global_id):
+        existing_parent = child_obj.get_parent()
+        if existing_parent == parent_global_id:
+            return True
+        if existing_parent:
+            self.logger.warning(f'Hierarchy parent conflict for {child_obj.get_global_id()}: existing={existing_parent} new={parent_global_id}')
+            return False
+        child_obj.set_parent(obj_global_id=parent_global_id)
+        return True
+
+    def _mark_seen_subforum_orphans(self):
+        for subforum_global_id in self.seen_subforums:
+            if subforum_global_id in self.root_subforums:
+                continue
+            _, _, obj_id = subforum_global_id.split(':', 2)
+            subforum = Subforum(obj_id, 'subforum')
+            if not subforum.get_parent():
+                self.forum.add_orphan_subforum(subforum_global_id)
+
     # TODO REMOVE ME ???
     def _resolve_parent_thread(self, extracted):
         """Resolve thread parent object from extracted.thread."""
         thread_data = extracted.get('thread')
         if not thread_data or not thread_data.get('thread_id'):
             return None
-        return ForumThread(thread_data.get("thread_id"), self.forum.id)
+        return ForumThread(thread_data.get("thread_id"), self.forum.type)
 
     def _upsert_post(self, post_data, parent_thread):
         """Create/update one Post object and add it to its thread timeline."""

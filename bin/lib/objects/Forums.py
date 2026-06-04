@@ -54,6 +54,21 @@ class Forum(AbstractDaterangeObject):
     def get_nb_subforums(self):
         return len(self.get_subforums())
 
+    def get_orphan_subforums(self):
+        return r_object.smembers(f'subforums:orphans:{self.get_forum_type()}:{self.id}')
+
+    def get_nb_orphan_subforums(self):
+        return len(self.get_orphan_subforums())
+
+    def add_orphan_subforum(self, subforum_global_id):
+        r_object.sadd(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+
+    def remove_orphan_subforum(self, subforum_global_id):
+        r_object.srem(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+
+    def is_orphan_subforum(self, subforum_global_id):
+        return r_object.sismember(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+
     def add_post_global_id(self, post_id, post_global_id):
         r_object.hset(f'posts:{self.subtype}:{self.id}', post_id, post_global_id)
 
@@ -86,6 +101,10 @@ class Forum(AbstractDaterangeObject):
             meta['subforums'] = self.get_subforums()
         if 'nb_subforums' in options:
             meta['nb_subforums'] = self.get_nb_subforums()
+        if 'orphan_subforums' in options:
+            meta['orphan_subforums'] = self.get_orphan_subforums()
+        if 'nb_orphan_subforums' in options:
+            meta['nb_orphan_subforums'] = self.get_nb_orphan_subforums()
         return meta
 
     def create(self, forum_type, name=None, url=None, info=None):
