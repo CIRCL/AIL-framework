@@ -97,6 +97,8 @@ class Subforum(AbstractSubtypeObject):
             self.set_info(info)
         if parent_global_id:
             self.set_parent(obj_global_id=parent_global_id)
+        if name or url or info or parent_global_id:
+            self._add_subtype()
         return self
 
     def delete(self):

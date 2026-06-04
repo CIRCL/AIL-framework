@@ -161,6 +161,10 @@ class ForumExtractorFeeder(DefaultFeeder):
         child_obj = self.create_hierarchy_object(edge, parent=False)
 
         if self._set_parent_once(child_obj, parent_obj.get_global_id()):
+            if parent_obj.type == 'subforum':
+                parent_obj._add_subtype()
+            if child_obj.type == 'subforum':
+                child_obj._add_subtype()
             if child_type == 'subforum':
                 self.forum.remove_orphan_subforum(child_obj.get_global_id())
                 if parent_type == 'forum':

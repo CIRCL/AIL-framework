@@ -110,6 +110,7 @@ class Forum(AbstractDaterangeObject):
     def create(self, forum_type, name=None, url=None, info=None):
         if not self.exists():
             self._set_field('forum_type', forum_type)
+            self._add_create()
         if name:
             self.set_name(name)
         if url:
