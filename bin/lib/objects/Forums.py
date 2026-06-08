@@ -55,19 +55,19 @@ class Forum(AbstractDaterangeObject):
         return len(self.get_subforums())
 
     def get_orphan_subforums(self):
-        return r_object.smembers(f'subforums:orphans:{self.get_forum_type()}:{self.id}')
+        return r_object.smembers(f'subforums:orphans:{self.id}')
 
     def get_nb_orphan_subforums(self):
         return len(self.get_orphan_subforums())
 
     def add_orphan_subforum(self, subforum_global_id):
-        r_object.sadd(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+        r_object.sadd(f'subforums:orphans:{self.id}', subforum_global_id)
 
     def remove_orphan_subforum(self, subforum_global_id):
-        r_object.srem(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+        r_object.srem(f'subforums:orphans:{self.id}', subforum_global_id)
 
     def is_orphan_subforum(self, subforum_global_id):
-        return r_object.sismember(f'subforums:orphans:{self.get_forum_type()}:{self.id}', subforum_global_id)
+        return r_object.sismember(f'subforums:orphans:{self.id}', subforum_global_id)
 
     def add_post_global_id(self, post_id, post_global_id):
         r_object.hset(f'posts:{self.subtype}:{self.id}', post_id, post_global_id)
