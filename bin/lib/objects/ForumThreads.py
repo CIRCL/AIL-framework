@@ -277,7 +277,7 @@ class ForumThread(AbstractSubtypeObject):
         return self
 
     def delete(self):
-        pass
+        self._delete()
 
 
 class ForumThreads(AbstractSubtypeObjects):

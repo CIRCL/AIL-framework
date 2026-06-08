@@ -207,6 +207,11 @@ class AbstractDaterangeObject(AbstractObject, ABC):
                 r_object.zrem(f'{self.type}:date:{date}', self.id)
         r_object.delete(f'meta:{self.type}:{self.id}')
 
+    def _delete(self, meta=True):
+        self.delete_dates()
+        r_object.srem(f'{self.type}:all', self.id)
+        self._delete_object(meta=meta)
+
 
 class AbstractDaterangeObjects(ABC):
     """

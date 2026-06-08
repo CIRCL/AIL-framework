@@ -89,7 +89,7 @@ class Forum(AbstractDaterangeObject):
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags(r_list=True)
-        if 'forum' in options:
+        if 'forum_type' in options:
             meta['forum_type'] = self.get_forum_type()
         if 'name' in options:
             meta['name'] = self._get_field('name')
@@ -120,8 +120,10 @@ class Forum(AbstractDaterangeObject):
         return self
 
     def delete(self):
-        pass
+        self._delete()
 
+def get_forums():
+    return Forums().get_ids()
 
 class Forums(AbstractDaterangeObjects):
     def __init__(self):

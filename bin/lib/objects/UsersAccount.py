@@ -37,11 +37,6 @@ class UserAccount(AbstractSubtypeObject):
     #                 'compress': 'gzip'}
     #     return payload
 
-    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
-    def delete(self):
-        # # TODO:
-        pass
-
     # TODO META + exists check
     def create(self, date, obj, username=None, timestamp=None):
         # daterange + correlation
@@ -273,6 +268,9 @@ class UserAccount(AbstractSubtypeObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
+
+    def delete(self):
+        self._delete()
 
 
 def get_all_subtypes():

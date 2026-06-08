@@ -148,6 +148,9 @@ class Global(AbstractModule):
         elif self.obj.type == 'message':
             self.add_message_to_queue(obj=self.obj, queue='Item')
             self.add_message_to_queue(obj=self.obj, queue='Indexers')
+        elif self.obj.type == 'post':
+            self.add_message_to_queue(obj=self.obj, queue='Item')
+            self.add_message_to_queue(obj=self.obj, queue='Indexers')
         elif self.obj.type == 'ocr':
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':

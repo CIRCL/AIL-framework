@@ -102,7 +102,7 @@ class Subforum(AbstractSubtypeObject):
         return self
 
     def delete(self):
-        pass
+        self._delete()
 
 
 class Subforums(AbstractSubtypeObjects):

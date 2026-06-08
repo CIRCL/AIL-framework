@@ -34,7 +34,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         self.forum = None
         self.seen_subforums = set()
         self.root_subforums = set()
-        self.objs_to_process = []
+        self.objs_to_process = set()
 
     def process_meta(self):
         """Import one forum-extractor result dictionary from self.json_meta."""
@@ -116,7 +116,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 imported_posts.append((post, post_data))
                 imported['post'] += 1
                 print(post.id)
-                self.objs_to_process.append(post)
+                self.objs_to_process.add(post)
 
         # TODO Avoid reprocess -> use add for subtype  and create correlation
         seen_timestamps = [self._safe_timestamp(p[1].get('post_timestamp')) for p in imported_posts if self._safe_timestamp(p[1].get('post_timestamp'))]
