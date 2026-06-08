@@ -24,7 +24,7 @@ from lib.objects.UsersAccount import UserAccount
 from lib.objects.Usernames import Username
 
 # TODO IMAGES + USER ACCOUNTS + FILENAMES
-class ForumExtractorFeeder(DefaultFeeder):
+class Forum_ExtractorFeeder(DefaultFeeder):
     """Ingest forum-extractor output into AIL forum objects."""
 
     def __init__(self, json_data):
@@ -34,22 +34,26 @@ class ForumExtractorFeeder(DefaultFeeder):
         self.forum = None
         self.seen_subforums = set()
         self.root_subforums = set()
+        self.objs_to_process = []
 
-    def import_result(self):
-        """Import one forum-extractor result dictionary from self.json_data."""
-        status = self.json_data.get('status')
+    def process_meta(self):
+        """Import one forum-extractor result dictionary from self.json_meta."""
+        meta = self.get_meta()
+        status = meta.get('status')
 
         if status == 'success':
-            return self._import_success(self.json_data)
+            objs = self._import_success(meta)
+            print(objs)
+            return objs
         if status == 'unsupported_page_type':
-            self.logger.info('Forum extractor unsupported page type: %s', self.json_data.get('page_type'))
-            return {'status': 'unsupported_page_type', 'imported': 0, 'warnings': ['unsupported_page_type']}
+            self.logger.error(f"Forum extractor unsupported page type: {meta.get('page_type')}")
+            return set()
         if status == 'error':
-            self.logger.error('Forum extractor parser error: %s', self.json_data.get('error'))
-            return {'status': 'error', 'imported': 0, 'error': self.json_data.get('error')}
+            self.logger.error(f"Forum extractor parser error: {meta.get('error')}", meta.get('error'))
+            return set()
 
-        self.logger.error('Forum extractor unknown status: %s', status)
-        return {'status': 'error', 'imported': 0, 'error': f'unknown_status:{status}'}
+        self.logger.error(f'Forum extractor unknown status: {status}')
+        return set()
 
     def _import_success(self, result):
         """Import a successful parser result payload."""
@@ -111,6 +115,8 @@ class ForumExtractorFeeder(DefaultFeeder):
             if post:
                 imported_posts.append((post, post_data))
                 imported['post'] += 1
+                print(post.id)
+                self.objs_to_process.append(post)
 
         # TODO Avoid reprocess -> use add for subtype  and create correlation
         seen_timestamps = [self._safe_timestamp(p[1].get('post_timestamp')) for p in imported_posts if self._safe_timestamp(p[1].get('post_timestamp'))]
@@ -122,8 +128,8 @@ class ForumExtractorFeeder(DefaultFeeder):
             for date_value in date_values:
                 if current_subforum:
                     current_subforum.update_daterange(date_value)
-
-        return {'status': 'success', 'imported': imported}
+        print({'status': 'success', 'imported': imported})
+        return self.objs_to_process
 
     def _upsert_forum(self, result, extracted, forum_type, forum_id):
         """Create/update a Forum object from extracted data."""
@@ -177,19 +183,19 @@ class ForumExtractorFeeder(DefaultFeeder):
             str_name = 'parent_'
         else:
             str_name = 'child_'
-        obj_type = hierarchy.get(f'{str_name}_type')
-        obj_id = hierarchy.get(f'{str_name}_id')
-        name = hierarchy.get(f'{str_name}_name')
+        obj_type = hierarchy.get(f'{str_name}type')
+        obj_id = hierarchy.get(f'{str_name}id')
+        name = hierarchy.get(f'{str_name}name')
 
         if obj_type == 'forum':
             return self.forum
         if obj_type == 'subforum':
-            subforum = Subforum(obj_id, self.forum.type)
+            subforum = Subforum(obj_id, self.forum.id)
             subforum.create(name=name)
             self.seen_subforums.add(subforum.get_global_id())
             return subforum
         if obj_type == 'forum-thread':
-            thread = ForumThread(obj_id, self.forum.type)
+            thread = ForumThread(obj_id, self.forum.id)
             thread.create()
             return thread
         return None
@@ -211,7 +217,7 @@ class ForumExtractorFeeder(DefaultFeeder):
         """Create/update one Subforum object without inventing a parent."""
         if not sub_data or not sub_data.get('subforum_id'):
             return None
-        subforum = Subforum(sub_data.get('subforum_id'), self.forum.type)
+        subforum = Subforum(sub_data.get('subforum_id'), self.forum.id)
         subforum.create(
             name=sub_data.get('subforum_name'),
             url=sub_data.get('subforum_url'),
@@ -224,7 +230,7 @@ class ForumExtractorFeeder(DefaultFeeder):
         """Create/update one ForumThread object and set parent subforum when available."""
         if not thread_data or not thread_data.get('thread_id'):
             return None
-        thread = ForumThread(thread_data.get('thread_id'), self.forum.type)
+        thread = ForumThread(thread_data.get('thread_id'), self.forum.id)
         if subforum:
             self._set_parent_once(thread, subforum.get_global_id())
         if not thread.get_parent():
@@ -273,7 +279,7 @@ class ForumExtractorFeeder(DefaultFeeder):
         thread_data = extracted.get('thread')
         if not thread_data or not thread_data.get('thread_id'):
             return None
-        return ForumThread(thread_data.get("thread_id"), self.forum.type)
+        return ForumThread(thread_data.get("thread_id"), self.forum.id)
 
     def _upsert_post(self, post_data, parent_thread):
         """Create/update one Post object and add it to its thread timeline."""
@@ -282,7 +288,7 @@ class ForumExtractorFeeder(DefaultFeeder):
         if not post_id or post_timestamp is None or not parent_thread:
             return None, []
         ts_int = int(post_timestamp)
-        obj_id = f'{self.forum.type}/{self.forum.id}/{ts_int}/{post_id}' # TODO REMOVE FORUM TYPE ?????
+        obj_id = f'{self.forum.id}/{ts_int}/{post_id}'
         post = Post(obj_id)
         # TODO CREATE MISSING FIELDS
         # post._set_field('custom', json.dumdumpsdumpsdumpsdumpsps({
@@ -297,9 +303,9 @@ class ForumExtractorFeeder(DefaultFeeder):
         # TODO REPLACE by functions
         quote_ids = (post_data.get('content') or {}).get('quoted_posts') or []
         # TODO FUNCTION
-        content = (post_data.get('content') or {}).get('text'),
+        content = (post_data.get('content') or {}).get('text')
         post.create(post_id, post_timestamp, content, parent_thread, self.forum, state=post_data.get('post_state'), quote_ids=quote_ids)
-        self._create_post_user_account(post_data.get('author'), post, post_timestamp)
+        user_account = self._create_post_user_account(post_data.get('author'), post, post_timestamp)
         return post
 
     # TODO A POST MUST HAVE AN USER ACCOUNT
@@ -313,7 +319,9 @@ class ForumExtractorFeeder(DefaultFeeder):
             username = Username(username, self.forum.id)
         else:
             username = None
-        return user_account.create(post.get_date(), post, username, timestamp)
+        user_account.create(post.get_date(), post, username, timestamp)
+        user_account.add_correlation('forum', '', self.forum.id)
+        return user_account
 
     @staticmethod
     def _safe_timestamp(value):
@@ -330,4 +338,4 @@ class ForumExtractorFeeder(DefaultFeeder):
 
 def ingest_forum_extractor_result(result):
     """Convenience entrypoint to ingest a forum-extractor result dict."""
-    return ForumExtractorFeeder(result).import_result()
+    return Forum_ExtractorFeeder(result).process_meta()

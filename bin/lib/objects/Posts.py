@@ -36,8 +36,8 @@ class Post(AbstractObject):
 
     def get_timestamp(self):
         dirs = self.id.split('/')
-        if len(dirs) >= 3:
-            return dirs[2]
+        if len(dirs) >= 2:
+            return dirs[1]
         return None
 
     def get_date(self):
@@ -79,8 +79,10 @@ class Post(AbstractObject):
     #   - Images
     #   - Attachments
     def get_meta(self, options=set(), timestamp=None, flask_context=False):
-        meta = self._get_meta(options=options, flask_context=flask_context)
+        meta = self.get_default_meta(options=options)
         meta['tags'] = self.get_tags(r_list=True)
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         if not timestamp:
             timestamp = self.get_timestamp()
         timestamp = datetime.utcfromtimestamp(float(timestamp))
