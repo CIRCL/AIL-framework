@@ -220,6 +220,8 @@ class ForumThread(AbstractSubtypeObject):
     # post_id: real id of the forum post
     def add_post(self, post, post_id, timestamp, forum_obj, quote_ids=None):
         r_object.zadd(f'posts:forum-thread:{self.subtype}:{self.id}', {post.get_global_id(): float(timestamp)})
+        subforum_id = self.get_parent().split(':', 2)[2]
+        r_object.zadd(f'last:subforum:{self.subtype}:{subforum_id}', {self.id: float(timestamp)})
         post.set_parent(self.get_global_id())
         forum_obj.add_post_global_id(post_id, post.get_global_id())
 
@@ -258,16 +260,16 @@ class ForumThread(AbstractSubtypeObject):
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags(r_list=True)
-        for field in ('title', 'info', 'url', 'flags'):
+        for field in ('name', 'info', 'url', 'flags'):
             if field in options:
                 meta[field] = self._get_field(field)
         if 'nb_posts' in options:
             meta['nb_posts'] = self.get_nb_posts()
         return meta
 
-    def create(self, title=None, url=None, info=None, parent_global_id=None):
-        if title:
-            self._set_field('title', title)
+    def create(self, name=None, url=None, info=None, parent_global_id=None):
+        if name:
+            self._set_field('name', name)
         if url:
             self.set_url(url)
         if info:

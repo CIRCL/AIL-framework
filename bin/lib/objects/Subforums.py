@@ -8,7 +8,7 @@ from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, r_object
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -58,6 +58,9 @@ class Subforum(AbstractSubtypeObject):
 
     def get_nb_threads(self):
         return len(self.get_threads())
+
+    def get_thread_last_post_timestamp(self, thread_id):
+        return r_object.zscore(f'last:subforum:{self.subtype}:{self.id}', thread_id)
 
     def get_link(self, flask_context=False):
         if flask_context:

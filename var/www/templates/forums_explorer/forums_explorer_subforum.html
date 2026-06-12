@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Subforum - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <style>
+    .forum-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); }
+    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .forum-row { display: flex; align-items: center; padding: 1rem; border-top: 1px solid #e8ecef; color: inherit; }
+    .forum-row:hover { background: #f6f9fb; text-decoration: none; color: inherit; }
+    .forum-icon { width: 48px; height: 48px; border-radius: 50%; background: #d9edf7; color: #2f6f8f; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-right: 1rem; flex: 0 0 48px; }
+    .forum-stats { min-width: 140px; text-align: right; color: #6c757d; }
+    .thread-row .forum-icon { background: #fff3cd; color: #856404; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid">
+  <div class="row">
+    {% include 'sidebars/sidebar_objects.html' %}
+    <div class="col-12 col-lg-10" id="core_content">
+      {% set subforum = meta['subforum'] %}
+      <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+          {% for crumb in meta['breadcrumb'] %}
+            {% if crumb['type'] == 'forum' %}
+              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+            {% elif crumb['type'] == 'subforum' and crumb['id'] != subforum['id'] %}
+              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum') }}?subtype={{ crumb['subtype'] }}&id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+            {% endif %}
+          {% endfor %}
+          <li class="breadcrumb-item active">{{ subforum.get('name') or subforum['id'] }}</li>
+        </ol>
+      </nav>
+
+      <div class="forum-title-card p-4 mb-4">
+        <h1 class="mb-2"><i class="far fa-comments"></i> {{ subforum.get('name') or subforum['id'] }}</h1>
+        <div>
+          <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ subforum['id'] }}</span>
+          <span class="mr-3"><i class="fas fa-layer-group"></i> {{ subforum['subtype'] }}</span>
+          {% if subforum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ subforum['url'] }}</span>{% endif %}
+        </div>
+        {% if subforum.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ subforum['info'] }}</div>{% endif %}
+      </div>
+
+      {% with subforums=meta['subforums'], title='Child subforums', orphan=false %}
+        {% include 'forums_explorer/subforums_table.html' %}
+      {% endwith %}
+
+      {% if meta['threads'] %}
+        <div class="forum-board mb-4">
+          <div class="forum-board-header">Threads</div>
+          {% for thread in meta['threads'] %}
+            <a class="forum-row thread-row" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}">
+              <div class="forum-icon"><i class="fas fa-comment-dots"></i></div>
+              <div class="flex-grow-1">
+                <h5 class="mb-1">{{ thread.get('name') or thread['id'] }}</h5>
+                <div class="text-muted small">
+                  <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ thread['id'] }}</span>
+                  {% if thread.get('url') %}<span><i class="fas fa-link"></i> {{ thread['url'] }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="forum-stats">
+                <div><strong>{{ thread.get('nb_posts') or 0 }}</strong> posts</div>
+                <div class="small">{{ thread.get('last_seen') or '' }}</div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">No threads found.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+</body>
+</html>

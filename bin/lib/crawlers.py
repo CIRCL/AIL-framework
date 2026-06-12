@@ -758,6 +758,12 @@ class Cookiejar:
     def _set_date(self, date):
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'date', date)
 
+    def get_last_edit(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'last_edit')
+
+    def update_last_edit(self):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'last_edit', int(time.time()))
+
     def get_description(self):
         return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'description')
 
@@ -794,6 +800,7 @@ class Cookiejar:
         elif old_level == 2:
             ail_orgs.remove_obj_to_org(self.get_org(), 'cookiejar', self.uuid)
         self.set_level(new_level, new_org_uuid)
+        self.update_last_edit()
 
     ## --LEVEL-- ##
 
@@ -855,6 +862,7 @@ class Cookiejar:
     def set_local_storage(self, storage): # TODO check if file already exists
         with gzip.open(self.get_local_storage_file(), 'w+') as f:
             f.write(json.dumps(storage).encode())
+        self.update_last_edit()
 
     def delete_local_storage(self):
         try:
@@ -879,7 +887,7 @@ class Cookiejar:
             meta['local_storage'] = self.get_local_storage(r_json=r_json)
         return meta
 
-    def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, text=None):
+    def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, expires=None, samesite=None, text=None):
         if cookie_uuid:
             cookie = Cookie(cookie_uuid)
             if cookie.exists():
@@ -895,20 +903,30 @@ class Cookiejar:
         cookie.set_field('value', value)
         if domain:
             cookie.set_field('domain', domain)
-        if httponly:
+        if httponly is not None:
             cookie.set_field('httpOnly', str(httponly))
         if path:
             cookie.set_field('path', path)
-        if secure:
+        if secure is not None:
             cookie.set_field('secure', str(secure))
+        if expires:
+            cookie.set_field('expires', str(expires))
+        if samesite is not None:
+            cookie.set_field('sameSite', str(samesite))
         if text:
-            cookie.set_field('path', text)
+            cookie.set_field('text', text)
         return cookie_uuid
 
     def delete_cookie(self, cookie_uuid):
         if self.is_cookie_in_jar(cookie_uuid):
             cookie = Cookie(cookie_uuid)
             cookie.delete()
+
+    def delete_cookies(self):
+        for cookie_uuid in self.get_cookies_uuid():
+            cookie = Cookie(cookie_uuid)
+            cookie.delete()
+        self.update_last_edit()
 
     # TODO Last EDIT
     def create(self, user_org, user_id, level, description=None):
@@ -924,6 +942,7 @@ class Cookiejar:
         self._set_date(datetime.now().strftime("%Y%m%d"))  # TODO improve DATE
         if description:
             self.set_description(description)
+        self.update_last_edit()
 
     def delete(self):
         for cookie_uuid in self.get_cookies_uuid():
@@ -1021,35 +1040,45 @@ def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role,
 
 ####  API  ####
 
-
-#########################################################################
-
-# TODO edit existing cookiejat local storage
 def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
     url = data.get('url')
     storage = data.get('storage')
-
     if not url:
         return {'error': 'url not set'}, 400
     if not storage:
         return {'error': 'lacus storage not set'}, 400
 
-    cookiejar_uuid = None  # TODO edit/replace cookiejar
-    cookies = storage.get('cookies')
+    cookiejar_uuid = data.get('uuid')
+    level = data.get('level', 1)
+    description = data.get('description')
+    cookies = storage.get('cookies', [])
     origins = storage.get('origins')
 
     if not cookies and not origins:
         return {'error': 'No cookies or local storage to import'}, 400
 
-    # TODO check if is valid JSON
-
-    # TODO extract DOMAIN
-
     # Create new cookiejar
     if not cookiejar_uuid:
-        cookiejar_uuid = create_cookiejar(user_org, user_id, f"{url} - imported from lacus", 1, None)
-    cookiejar = Cookiejar(cookiejar_uuid)
-
+        if not description:
+            description = f"{url} - imported from lacus"
+        cookiejar_uuid = create_cookiejar(user_org, user_id, description, level, None)
+        cookiejar = Cookiejar(cookiejar_uuid)
+    else:
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if not cookiejar.exists():
+            return {'error': 'unknown cookiejar uuid'}, 404
+        cookiejar.delete_local_storage()
+    for cookie in cookies:
+        name = cookie.get('name')
+        value = cookie.get('value')
+        domain = cookie.get('domain')
+        path = cookie.get('path')
+        expires = cookie.get('expires')
+        httponly = cookie.get('httpOnly')
+        secure = cookie.get('secure')
+        samesite = cookie.get('sameSite')
+        if name and value:
+            cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, expires=expires, samesite=samesite)
     cookiejar.set_local_storage(storage)
 
     return {'cookiejar_uuid': cookiejar_uuid}, 200
@@ -1129,6 +1158,10 @@ class Cookie:
         for field in self.get_fields():
             value = self._get_field(field)
             if value:
+                if field == 'httpOnly':
+                    value = value == 'True'
+                elif field == 'secure':
+                    value = value == 'True'
                 meta[field] = value
         if r_json:
             data = json.dumps(meta, indent=4, sort_keys=True)
@@ -1263,8 +1296,11 @@ def api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, j
 #             #
 # # # # # # # #
 
-def get_default_user_agent():
-    return 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0'
+def get_default_user_agent(linux=False):
+    if linux:
+        return 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
+    else:
+        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0'
 
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0, -1)

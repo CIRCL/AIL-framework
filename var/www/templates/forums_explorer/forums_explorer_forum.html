@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forum - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <style>
+    .forum-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); }
+    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .forum-row { display: flex; align-items: center; padding: 1rem; border-top: 1px solid #e8ecef; color: inherit; }
+    .forum-row:hover { background: #f6f9fb; text-decoration: none; color: inherit; }
+    .forum-icon { width: 48px; height: 48px; border-radius: 50%; background: #d9edf7; color: #2f6f8f; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-right: 1rem; flex: 0 0 48px; }
+    .forum-stats { min-width: 150px; text-align: right; color: #6c757d; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid">
+  <div class="row">
+    {% include 'sidebars/sidebar_objects.html' %}
+    <div class="col-12 col-lg-10" id="core_content">
+      {% set forum = meta['forum'] %}
+      <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+          <li class="breadcrumb-item active">{{ forum.get('name') or forum['id'] }}</li>
+        </ol>
+      </nav>
+
+      <div class="forum-title-card p-4 mb-4">
+        <h1 class="mb-2"><i class="fas fa-comments"></i> {{ forum.get('name') or forum['id'] }}</h1>
+        <div>
+          <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
+          <span class="mr-3"><i class="fas fa-layer-group"></i> {{ forum.get('forum_type') or forum.get('subtype') or '' }}</span>
+          {% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+        </div>
+        {% if forum.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ forum['info'] }}</div>{% endif %}
+      </div>
+
+      {% with subforums=meta['subforums'], title='Root subforums', orphan=false %}
+        {% include 'forums_explorer/subforums_table.html' %}
+      {% endwith %}
+
+      <h4 class="mt-4 mb-2 text-secondary">Subforums with unknown parent</h4>
+      {% with subforums=meta['orphan_subforums'], title='Orphan subforums', orphan=true %}
+        {% include 'forums_explorer/subforums_table.html' %}
+      {% endwith %}
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+</body>
+</html>

@@ -118,6 +118,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 print(post.id)
                 self.objs_to_process.add(post)
 
+        # TODO REMOVE ME ###############################################################################################
         # TODO Avoid reprocess -> use add for subtype  and create correlation
         seen_timestamps = [self._safe_timestamp(p[1].get('post_timestamp')) for p in imported_posts if self._safe_timestamp(p[1].get('post_timestamp'))]
         if seen_timestamps:
@@ -171,7 +172,6 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 parent_obj._add_subtype()
             if child_obj.type == 'subforum':
                 child_obj._add_subtype()
-            if child_type == 'subforum':
                 self.forum.remove_orphan_subforum(child_obj.get_global_id())
                 if parent_type == 'forum':
                     self.root_subforums.add(child_obj.get_global_id())
@@ -237,7 +237,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None
         thread.create(
-            title=thread_data.get('thread_title'),
+            name=thread_data.get('thread_title'),
             url=thread_data.get('thread_url'),
         )
         # if thread_data.get('thread_flags') is not None:
@@ -269,7 +269,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             if subforum_global_id in self.root_subforums:
                 continue
             _, _, obj_id = subforum_global_id.split(':', 2)
-            subforum = Subforum(obj_id, 'subforum')
+            subforum = Subforum(obj_id, self.forum.id)
             if not subforum.get_parent():
                 self.forum.add_orphan_subforum(subforum_global_id)
 
@@ -316,7 +316,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         user_account = UserAccount(str(author.get('author_id')), self.forum.id)
         username = author.get('author_username')
         if username:
-            username = Username(username, self.forum.id)
+            username = Username(username.lower(), self.forum.id)
         else:
             username = None
         user_account.create(post.get_date(), post, username, timestamp)

@@ -8,8 +8,12 @@ from datetime import datetime
 from flask import url_for
 
 sys.path.append(os.environ['AIL_BIN'])
+##################################
+# Import Project packages
+##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_object import AbstractObject, r_object
+from lib.objects import UsersAccount
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -53,6 +57,16 @@ class Post(AbstractObject):
     def get_post_id(self):
         return os.path.basename(self.id)
 
+    def get_user_account(self, meta=False):
+        user_account = self.get_correlation('user-account')
+        if user_account.get('user-account'):
+            user_account = f'user-account:{user_account["user-account"].pop()}'
+            if meta:
+                _, user_account_subtype, user_account_id = user_account.split(':', 2)
+                user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype).get_meta(options={'icon', 'username', 'username_meta'})
+            return user_account
+        return None
+
     def set_content(self, content):
         self._set_field('content', content)
 
@@ -95,6 +109,10 @@ class Post(AbstractObject):
             meta['timestamp'] = self.get_timestamp()
         if 'state' in options:
             meta['state'] = self.get_state()
+        if 'user-account' in options:
+            meta['user-account'] = self.get_user_account(meta=True)
+            if not meta['user-account']:
+                meta['user-account'] = {'id': 'UNKNOWN'}
         return meta
 
     def create(self, post_id, timestamp, content, parent_thread, forum_obj, state=None, quote_ids=None):
