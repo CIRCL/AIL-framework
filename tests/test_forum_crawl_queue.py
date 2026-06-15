@@ -42,8 +42,8 @@ class TestForumCrawlQueue(unittest.TestCase):
                 'id': '27',
             },
             'page': page,
-            'url': 'https://breached.su/threads/example.777/page-3',
-            'referer': 'https://breached.su/forums/example.27/',
+            'url': 'https://forum0.com/threads/example.777/page-3',
+            'referer': 'https://forum0.com/forums/example.27/',
             'preferred_account_ids': ['acc_1'],
             'preferred_account_fallback': False,
         }
