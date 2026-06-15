@@ -15,7 +15,6 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects, r_object
-from lib.objects.Subforums import Subforum
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -239,6 +238,15 @@ class ForumAccount:
         self._set_field('current_referer', referer)
         self._set_field('current_task_uuid', task_uuid)
 
+    def get_last_used_at(self):
+        return self._get_field('last_used_at')
+
+    def set_last_used_at(self, last_used_at):
+        self._set_field('last_used_at', last_used_at)
+
+    def set_last_used_now(self):
+        self.set_last_used_at(int(time.time()))
+
     def clear_current_crawl(self):
         self._del_field('current_crawl_key')
         self._del_field('current_url')
@@ -398,20 +406,6 @@ class Forum(AbstractDaterangeObject):
             return True
         if subforum_id in allowed_roots:
             return True
-        # CHECK Child
-        # subforums = list(allowed_roots)
-        # seen = set()
-        # while subforums:
-        #     current_id = subforums.pop(0)
-        #     if current_id in seen:
-        #         continue
-        #     seen.add(current_id)
-        #     # CHECK children
-        #     for child_id in Subforum(current_id, self.id).get_subforums():
-        #         if child_id == subforum_id:
-        #             return True
-        #         if child_id not in seen:
-        #             subforums.append(child_id)
         return False
 
     def forum_allows_crawl_item(self, item):
