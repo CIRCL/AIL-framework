@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import time
 from datetime import datetime, timezone, timedelta
 
 from flask import url_for
@@ -381,6 +382,101 @@ class Forum(AbstractDaterangeObject):
             return None
         index = r_object.incr(f'forum:crawl:rr:{self.id}') - 1
         return accounts[index % len(accounts)]
+
+    def validate_crawl_item(self, item):
+        if not isinstance(item, dict):
+            return False, 'invalid_item'
+        if not item.get('crawl_key'):
+            return False, 'missing_crawl_key'
+        if item.get('type') not in {'forum', 'subforum', 'forum-thread'}:
+            return False, 'invalid_type'
+        if not item.get('id'):
+            return False, 'missing_id'
+        if not isinstance(item.get('page'), int) or item.get('page') < 1:
+            return False, 'invalid_page'
+        if not item.get('url'):
+            return False, 'missing_url'
+        parent = item.get('parent')
+        if parent is not None:
+            if not isinstance(parent, dict):
+                return False, 'invalid_parent'
+            if parent.get('type') not in {'forum', 'subforum'}:
+                return False, 'invalid_parent_type'
+            if not parent.get('id'):
+                return False, 'missing_parent_id'
+        return True, None
+
+    def enqueue_crawl_item(self, item, score=None):
+        valid, reason = self.validate_crawl_item(item)
+        if not valid:
+            return False, reason
+        crawl_key = item['crawl_key']
+        if self.is_crawl_item_queued(crawl_key):
+            return False, 'already_queued'
+        if score is None:
+            score = int(time.time())
+        r_object.hset(f'forum:crawl:items:{self.id}', crawl_key, json.dumps(item))
+        r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: score})
+        r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
+        return True, None
+
+    def get_crawl_item(self, crawl_key):
+        item = r_object.hget(f'forum:crawl:items:{self.id}', crawl_key)
+        if item:
+            return json.loads(item)
+        return None
+
+    def get_pending_crawl_keys(self, start=0, stop=100):
+        return r_object.zrange(f'forum:crawl:queue:{self.id}', start, stop)
+
+    def reserve_crawl_item(self, crawl_key, account_id, task_uuid=None):
+        if not r_object.zrem(f'forum:crawl:queue:{self.id}', crawl_key):
+            return False, 'not_pending'
+        item = self.get_crawl_item(crawl_key)
+        if not item:
+            self.complete_crawl_item(crawl_key)
+            return False, 'missing_item'
+        inflight = {
+            'account_id': account_id,
+            'task_uuid': task_uuid,
+            'started_at': int(time.time()),
+        }
+        r_object.hset(f'forum:crawl:inflight:{self.id}', crawl_key, json.dumps(inflight))
+        return True, item
+
+    def _cleanup_crawl_item(self, crawl_key):
+        r_object.zrem(f'forum:crawl:queue:{self.id}', crawl_key)
+        r_object.srem(f'forum:crawl:queued:{self.id}', crawl_key)
+        r_object.hdel(f'forum:crawl:items:{self.id}', crawl_key)
+        r_object.hdel(f'forum:crawl:inflight:{self.id}', crawl_key)
+        return True, None
+
+    def complete_crawl_item(self, crawl_key):
+        return self._cleanup_crawl_item(crawl_key)
+
+    def fail_crawl_item(self, crawl_key, error=None):
+        return self._cleanup_crawl_item(crawl_key)
+
+    def get_inflight_crawl_items(self):
+        inflight = {}
+        for crawl_key, meta in r_object.hgetall(f'forum:crawl:inflight:{self.id}').items():
+            inflight[crawl_key] = json.loads(meta)
+        return inflight
+
+    def get_inflight_crawl_item(self, crawl_key):
+        meta = r_object.hget(f'forum:crawl:inflight:{self.id}', crawl_key)
+        if meta:
+            return json.loads(meta)
+        return None
+
+    def get_nb_pending_crawl_items(self):
+        return r_object.zcard(f'forum:crawl:queue:{self.id}')
+
+    def get_nb_inflight_crawl_items(self):
+        return r_object.hlen(f'forum:crawl:inflight:{self.id}')
+
+    def is_crawl_item_queued(self, crawl_key):
+        return r_object.sismember(f'forum:crawl:queued:{self.id}', crawl_key)
 
     def get_link(self, flask_context=False):
         if flask_context:
