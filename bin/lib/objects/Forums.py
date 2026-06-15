@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects, r_object
+from lib.objects.Subforums import Subforum
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
@@ -383,6 +384,120 @@ class Forum(AbstractDaterangeObject):
         index = r_object.incr(f'forum:crawl:rr:{self.id}') - 1
         return accounts[index % len(accounts)]
 
+    def _get_crawl_item_subforum_id(self, item):
+        if item.get('type') == 'subforum':
+            return item.get('id')
+        if item.get('type') == 'forum-thread':
+            parent = item.get('parent') or {}
+            if parent.get('type') == 'subforum':
+                return parent.get('id')
+        return None
+
+    def is_subforum_in_scope(self, subforum_id, allowed_roots):
+        if not allowed_roots:
+            return True
+        if subforum_id in allowed_roots:
+            return True
+        # CHECK Child
+        # subforums = list(allowed_roots)
+        # seen = set()
+        # while subforums:
+        #     current_id = subforums.pop(0)
+        #     if current_id in seen:
+        #         continue
+        #     seen.add(current_id)
+        #     # CHECK children
+        #     for child_id in Subforum(current_id, self.id).get_subforums():
+        #         if child_id == subforum_id:
+        #             return True
+        #         if child_id not in seen:
+        #             subforums.append(child_id)
+        return False
+
+    def forum_allows_crawl_item(self, item):
+        config = self.get_crawl_config()
+        if not config.get('enabled'):
+            return False, 'forum_disabled'
+        if item.get('type') == 'forum':
+            return True, 'allowed'
+        subforum_id = self._get_crawl_item_subforum_id(item)
+        if not subforum_id:
+            return False, 'missing_subforum_id'
+        if subforum_id in config.get('subforums_excluded', set()):
+            return False, 'excluded_subforum'
+        subforums_to_crawl = config.get('subforums_to_crawl', set())
+        if self.is_subforum_in_scope(subforum_id, subforums_to_crawl):
+            return True, 'allowed'
+        return False, 'outside_forum_scope'
+
+    def account_allows_crawl_item(self, account_id, item):
+        if item.get('type') == 'forum':
+            return True, 'allowed'
+        subforum_id = self._get_crawl_item_subforum_id(item)
+        if not subforum_id:
+            return False, 'missing_subforum_id'
+        subforums_to_crawl = ForumAccount(self.id, account_id).get_subforums_to_crawl()
+        if self.is_subforum_in_scope(subforum_id, subforums_to_crawl):
+            return True, 'allowed'
+        return False, 'outside_account_scope'
+
+    def preferred_account_allows_item(self, account_id, item):
+        preferred_account_ids = item.get('preferred_account_ids', [])
+        if not preferred_account_ids:
+            return True, 'allowed'
+        if account_id in preferred_account_ids:
+            return True, 'allowed'
+        if item.get('preferred_account_fallback'):
+            return True, 'allowed_fallback'
+        return False, 'not_preferred_account'
+
+    def get_thread_crawl_account(self, thread_id):
+        return r_object.hget(f'forum:crawl:thread:account:{self.id}', thread_id)
+
+    def set_thread_crawl_account(self, thread_id, account_id):
+        return r_object.hset(f'forum:crawl:thread:account:{self.id}', thread_id, account_id)
+
+    def release_thread_crawl_account(self, thread_id):
+        return r_object.hdel(f'forum:crawl:thread:account:{self.id}', thread_id)
+
+    def thread_affinity_allows_account(self, thread_id, account_id):
+        assigned_account = self.get_thread_crawl_account(thread_id)
+        if not assigned_account or assigned_account == account_id:
+            return True, 'allowed'
+        return False, 'thread_assigned_to_other_account'
+
+    def account_can_reserve_crawl_item(self, account_id, item):
+        allowed, reason = self.forum_allows_crawl_item(item)
+        if not allowed:
+            return allowed, reason
+        allowed, reason = self.account_allows_crawl_item(account_id, item)
+        if not allowed:
+            return allowed, reason
+        allowed, reason = self.preferred_account_allows_item(account_id, item)
+        if not allowed:
+            return allowed, reason
+        if item.get('type') == 'forum-thread':
+            affinity_allowed, affinity_reason = self.thread_affinity_allows_account(item.get('id'), account_id)
+            if not affinity_allowed:
+                return affinity_allowed, affinity_reason
+        return allowed, reason
+
+    def reserve_crawl_item_for_account(self, crawl_key, account_id, task_uuid=None):
+        item = self.get_crawl_item(crawl_key)
+        if not item:
+            return False, 'missing_item'
+        allowed, reason = self.account_can_reserve_crawl_item(account_id, item)
+        if not allowed:
+            return allowed, reason
+        thread_affinity_set = False
+        if item.get('type') == 'forum-thread' and not self.get_thread_crawl_account(item.get('id')):
+            self.set_thread_crawl_account(item.get('id'), account_id)
+            thread_affinity_set = True
+        reserved, payload = self.reserve_crawl_item(crawl_key, account_id, task_uuid=task_uuid)
+        if not reserved and thread_affinity_set:
+            self.release_thread_crawl_account(item.get('id'))
+        return reserved, payload
+
     def validate_crawl_item(self, item):
         if not isinstance(item, dict):
             return False, 'invalid_item'
@@ -455,6 +570,9 @@ class Forum(AbstractDaterangeObject):
         return self._cleanup_crawl_item(crawl_key)
 
     def fail_crawl_item(self, crawl_key, error=None):
+        item = self.get_crawl_item(crawl_key)
+        if item and item.get('type') == 'forum-thread':
+            self.release_thread_crawl_account(item.get('id'))
         return self._cleanup_crawl_item(crawl_key)
 
     def get_inflight_crawl_items(self):
