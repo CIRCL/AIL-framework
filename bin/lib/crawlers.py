@@ -2091,6 +2091,44 @@ def api_delete_schedule(data):
         return {'error': 'unknown schedule uuid', 'uuid': schedule}, 404
     return {'uuid': schedule.delete()}, 200
 
+
+#### FORUM CRAWLER RUNNING ACCOUNTS ####
+
+
+def add_running_forum_crawler_account(forum_id, account_id, launch_time=None):
+    if launch_time is None:
+        launch_time = int(time.time())
+    r_crawler.zadd('forum:crawl:running', {f'{forum_id}:{account_id}': launch_time})
+
+def get_running_forum_crawler_account_time(forum_id, account_id):
+    return r_crawler.zscore('forum:crawl:running', f'{forum_id}:{account_id}')
+
+def remove_running_forum_crawler_account(forum_id, account_id):
+    return r_crawler.zrem('forum:crawl:running', f'{forum_id}:{account_id}')
+
+def get_running_forum_crawler_account_keys(withscores=False):
+    return r_crawler.zrange('forum:crawl:running', 0, -1, withscores=withscores)
+
+def get_running_forum_crawler_accounts(with_launch_time=False):
+    account_keys = get_running_forum_crawler_account_keys(withscores=with_launch_time)
+    accounts = []
+    for row in account_keys:
+        if with_launch_time:
+            account_key, launch_time = row
+        else:
+            account_key = row
+        forum_id, account_id = account_key.split(':', 1)
+        if with_launch_time:
+            accounts.append((forum_id, account_id, int(launch_time)))
+        else:
+            accounts.append((forum_id, account_id))
+    return accounts
+
+
+def get_nb_running_forum_crawler_accounts():
+    return r_crawler.zcard('forum:crawl:running')
+
+
 #### CRAWLER CAPTURE ####
 
 def get_nb_crawler_captures():

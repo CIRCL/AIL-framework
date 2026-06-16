@@ -20,6 +20,7 @@ from lib.objects import ForumThreads
 from lib.objects import Posts
 from lib.objects import UsersAccount
 from lib.objects import ail_objects
+from lib.crawlers import Cookiejar
 
 # config_loader = ConfigLoader()
 # config_loader = None
@@ -28,6 +29,15 @@ _FORUM_OPTIONS = {'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orpha
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'title', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'link', 'state', 'timestamp', 'user-account'}
+
+def update_account_local_storage(account, local_storage):
+    cookiejar_uuid = account.get_cookiejar_uuid()
+    if not cookiejar_uuid:
+        return False
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if local_storage:
+        cookiejar.set_local_storage(local_storage)
+    return True
 
 
 def _subforum_meta(subforum, flask_context=True):

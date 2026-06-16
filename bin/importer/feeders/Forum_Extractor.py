@@ -336,6 +336,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
     def _to_date_int(timestamp):
         return int(datetime.datetime.utcfromtimestamp(float(timestamp)).strftime('%Y%m%d'))
 
+# TODO SEND TO IMPORTER MODULE ????
 def ingest_forum_extractor_result(result):
     """Convenience entrypoint to ingest a forum-extractor result dict."""
     return Forum_ExtractorFeeder(result).process_meta()

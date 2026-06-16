@@ -260,7 +260,6 @@ class ForumAccount:
     def set_last_used_now(self):
         self.set_last_used_at(int(time.time()))
 
-
     def set_last_crawled_at(self, last_crawled_at):
         self._set_field('last_crawled_at', last_crawled_at)
 
@@ -349,6 +348,9 @@ class Forum(AbstractDaterangeObject):
 
     def get_post_global_id(self, post_id):
         return r_object.hget(f'posts:{self.subtype}:{self.id}', post_id)
+
+    def exists_post(self, post_id):
+        return r_object.hexists(f'posts:{self.subtype}:{self.id}', post_id)
 
     def get_crawl_config(self):
         config = {'id': self.id}
