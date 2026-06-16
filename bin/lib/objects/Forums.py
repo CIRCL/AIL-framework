@@ -60,6 +60,7 @@ class ForumAccount:
         account['enabled'] = self.is_enabled()
         account['status'] = self._get_field('status')
         account['error'] = self._get_field('error')
+        account['last_error'] = self._get_field('last_error')
         account['cookiejar_uuid'] = self._get_field('cookiejar_uuid')
         account['last_login'] = self._get_field('last_login')
         account['active_time'] = self.get_active_time()
@@ -81,7 +82,7 @@ class ForumAccount:
             meta['status'] = 'need_manual_login'
         if meta.get('active_time'):
             meta['active_time'] = self.normalize_active_time(meta.get('active_time'))
-        fields = ['status', 'error', 'cookiejar_uuid', 'last_login', 'current_task_uuid', 'current_crawl_key', 'current_url', 'current_referer', 'last_used_at', 'last_crawled_at', 'next_available_at', 'availability_reason', 'random_time_between_page']
+        fields = ['status', 'error', 'last_error', 'cookiejar_uuid', 'last_login', 'current_task_uuid', 'current_crawl_key', 'current_url', 'current_referer', 'last_used_at', 'last_crawled_at', 'next_available_at', 'availability_reason', 'random_time_between_page']
         for field in fields:  # edit
             if meta.get(field) is None:
                 self._del_field(field)
@@ -110,6 +111,18 @@ class ForumAccount:
 
     def get_cookiejar_uuid(self):
         return self._get_field('cookiejar_uuid')
+
+    def get_current_task_uuid(self):
+        return self._get_field('current_task_uuid')
+
+    def get_current_crawl_key(self):
+        return self._get_field('current_crawl_key')
+
+    def get_current_url(self):
+        return self._get_field('current_url')
+
+    def get_current_referer(self):
+        return self._get_field('current_referer')
 
     def set_cookiejar_uuid(self, cookiejar_uuid):
         self._set_field('cookiejar_uuid', cookiejar_uuid)
@@ -247,6 +260,23 @@ class ForumAccount:
     def set_last_used_now(self):
         self.set_last_used_at(int(time.time()))
 
+
+    def set_last_crawled_at(self, last_crawled_at):
+        self._set_field('last_crawled_at', last_crawled_at)
+
+    def set_last_extracted(self, result):
+        self._set_field('last_extracted', json.dumps(result))
+
+    def get_last_extracted(self):
+        last_extracted = self._get_field('last_extracted')
+        if last_extracted:
+            return json.loads(last_extracted)
+        return None
+
+    def set_last_error(self, error):
+        self._set_field('last_error', error)
+
+
     def clear_current_crawl(self):
         self._del_field('current_crawl_key')
         self._del_field('current_url')
@@ -255,7 +285,9 @@ class ForumAccount:
 
     def set_error(self, error):
         self.set_status('error')
+        self._del_field('last_error')
         self._set_field('error', error)
+        self._set_field('last_error', error)
 
     def clear_error(self):
         self._del_field('error')

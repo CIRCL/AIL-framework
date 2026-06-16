@@ -213,11 +213,11 @@ class TestForumCrawlQueue(unittest.TestCase):
         self._enable_forum(subforums_to_crawl=['27'])
         self.assertEqual(self.forum.forum_allows_crawl_item(self._subforum_item('27')), (True, 'allowed'))
 
-    def test_forum_scope_allows_descendant_root(self):
+    def test_forum_scope_rejects_descendant_root(self):
         self._enable_forum(subforums_to_crawl=['27'])
         self._set_subforum_parent('28', '27')
         self._set_subforum_parent('29', '28')
-        self.assertEqual(self.forum.forum_allows_crawl_item(self._subforum_item('29')), (True, 'allowed'))
+        self.assertEqual(self.forum.forum_allows_crawl_item(self._subforum_item('29')), (False, 'outside_forum_scope'))
 
     def test_forum_scope_rejects_outside_roots(self):
         self._enable_forum(subforums_to_crawl=['27'])
@@ -230,10 +230,10 @@ class TestForumCrawlQueue(unittest.TestCase):
         self.forum.add_crawl_account('acc_1', {'enabled': True, 'subforums_to_crawl': ['27']})
         self.assertEqual(self.forum.account_allows_crawl_item('acc_1', self._subforum_item('27')), (True, 'allowed'))
 
-    def test_account_scope_allows_descendant_root(self):
+    def test_account_scope_rejects_descendant_root(self):
         self.forum.add_crawl_account('acc_1', {'enabled': True, 'subforums_to_crawl': ['27']})
         self._set_subforum_parent('28', '27')
-        self.assertEqual(self.forum.account_allows_crawl_item('acc_1', self._subforum_item('28')), (True, 'allowed'))
+        self.assertEqual(self.forum.account_allows_crawl_item('acc_1', self._subforum_item('28')), (False, 'outside_account_scope'))
 
     def test_account_scope_rejects_outside_root(self):
         self.forum.add_crawl_account('acc_1', {'enabled': True, 'subforums_to_crawl': ['27']})
