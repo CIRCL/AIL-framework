@@ -76,6 +76,41 @@ def get_forums():
             forums.append(forum.get_meta(_FORUM_OPTIONS, flask_context=True))
     return sorted(forums, key=lambda m: ((m.get('name') or m.get('id')).lower(), m.get('id')))
 
+
+
+def get_forums_crawl_status():
+    """Return crawler status summaries for all imported Forum objects."""
+    forums = []
+    for forum_id in Forums.get_forums():
+        forum = Forums.Forum(forum_id)
+        if not forum.exists():
+            continue
+        meta = forum.get_meta(_FORUM_OPTIONS, flask_context=True)
+        status = forum.get_crawl_status(sample_size=0)
+        meta['crawler_status'] = status
+        forums.append(meta)
+    return sorted(forums, key=lambda m: ((m.get('name') or m.get('id')).lower(), m.get('id')))
+
+def api_get_forum_crawl_status(forum_id):
+    """Return read-only crawler status for one Forum object."""
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "reason": "Unknown forum"}, 404
+    config = forum.get_crawl_config()
+    return {
+        'forum': forum.get_meta(_FORUM_OPTIONS, flask_context=True),
+        'config': {
+            'enabled': config.get('enabled'),
+            'javascript': config.get('javascript'),
+            'proxy': config.get('proxy'),
+            'default_referer': config.get('default_referer'),
+            'timeout': config.get('timeout'),
+            'delta_subforum_refresh': config.get('delta_subforum_refresh'),
+            'delta_thread_refresh': config.get('delta_thread_refresh'),
+        },
+        'status': forum.get_crawl_status(sample_size=5),
+    }, 200
+
 def get_breadcrumb_for_object(obj):
     """Return parent breadcrumb entries from Forum to the given object."""
     breadcrumb = []

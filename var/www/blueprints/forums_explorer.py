@@ -13,7 +13,7 @@ from flask import render_template, request, Blueprint, Response, abort
 from flask_login import login_required
 
 # Import Role_Manager
-from Role_Manager import login_read_only
+from Role_Manager import login_read_only, login_admin
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -47,6 +47,21 @@ def forum_explorer_forums():
 
     forums = forums_viewer.get_forums()
     return render_template('forums_explorer_index.html', forums=forums, bootstrap_label=bootstrap_label)
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_status():
+    forum_id = request.args.get('id')
+    if forum_id:
+        meta = forums_viewer.api_get_forum_crawl_status(forum_id)
+        if meta[1] != 200:
+            return create_json_response(meta[0], meta[1])
+        return render_template('forums_explorer_crawler_forum.html', meta=meta[0], bootstrap_label=bootstrap_label)
+
+    forums = forums_viewer.get_forums_crawl_status()
+    return render_template('forums_explorer_crawler_index.html', forums=forums, bootstrap_label=bootstrap_label)
 
 
 @forums_explorer.route("/chats/explorer/forum/subforum", methods=['GET'])
