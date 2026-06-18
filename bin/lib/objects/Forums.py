@@ -18,11 +18,13 @@ from lib.objects.abstract_daterange_object import AbstractDaterangeObject, Abstr
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
+r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
 config_loader = None
 
 
 FORUM_CRAWL_ACCOUNT_STATUSES = {'waiting', 'crawling', 'error', 'need_manual_login', 'banned', 'disabled'}
 FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+FORUM_CRAWL_ITEM_TYPES = {'forum', 'subforum', 'forum-thread'}
 
 def _str_to_bool(value):
     return value == 'True'
@@ -296,6 +298,23 @@ class Forum(AbstractDaterangeObject):
     def __init__(self, id):
         super().__init__('forum', id)
 
+    # last post tracking
+    def get_subforum_last_time(self, subforum_id):
+        return r_object.zscore(f'forum:subforum:last_time:{self.id}', subforum_id)
+
+    def set_subforum_last_time(self, subforum_id, timestamp):
+        score = self.get_subforum_last_time(subforum_id)
+        if timestamp > score:
+            return r_object.zadd(f'forum:subforum:last_time:{self.id}', {subforum_id: int(timestamp)})
+
+    def get_thread_last_time(self, thread_id):
+        return r_object.zscore(f'forum:thread:last_time:{self.id}', thread_id)
+
+    def update_thread_last_time(self, thread_id, timestamp):
+        score = self.get_thread_last_time(thread_id)
+        if timestamp > score:
+            return r_object.zadd(f'forum:thread:last_time:{self.id}', {thread_id: int(timestamp)})
+
     def get_forum_type(self):
         return self._get_field('forum_type')
 
@@ -345,6 +364,15 @@ class Forum(AbstractDaterangeObject):
 
     def add_post_global_id(self, post_id, post_global_id):
         r_object.hset(f'posts:{self.subtype}:{self.id}', post_id, post_global_id)
+
+    def get_excluded_subforums(self):
+        return r_object.smembers(f'forum:crawl:config:subforums:excluded:{self.id}')
+
+    def add_excluded_subforum(self, subforum_id):
+        r_object.sadd(f'forum:crawl:config:subforums:excluded:{self.id}', subforum_id)
+
+    def remove_excluded_subforum(self, subforum_id):
+        r_object.srem(f'forum:crawl:config:subforums:excluded:{self.id}', subforum_id)
 
     def get_post_global_id(self, post_id):
         return r_object.hget(f'posts:{self.subtype}:{self.id}', post_id)
@@ -531,7 +559,8 @@ class Forum(AbstractDaterangeObject):
             return False, 'invalid_item'
         if not item.get('crawl_key'):
             return False, 'missing_crawl_key'
-        if item.get('type') not in {'forum', 'subforum', 'forum-thread'}:
+        item_type = item.get('type')
+        if item_type not in FORUM_CRAWL_ITEM_TYPES:
             return False, 'invalid_type'
         if not item.get('id'):
             return False, 'missing_id'
@@ -540,13 +569,15 @@ class Forum(AbstractDaterangeObject):
         if not item.get('url'):
             return False, 'missing_url'
         parent = item.get('parent')
+        if item_type in {'subforum', 'forum-thread'} and not parent:
+            return False, 'missing_parent'
         if parent is not None:
             if not isinstance(parent, dict):
                 return False, 'invalid_parent'
             if parent.get('type') not in {'forum', 'subforum'}:
                 return False, 'invalid_parent_type'
             if not parent.get('id'):
-                return False, 'missing_parent_id'
+                return False, 'invalid_parent'
         return True, None
 
     def enqueue_crawl_item(self, item, score=None):
@@ -579,13 +610,54 @@ class Forum(AbstractDaterangeObject):
         if not item:
             self.complete_crawl_item(crawl_key)
             return False, 'missing_item'
+        valid, reason = self.validate_crawl_item(item)
+        if not valid:
+            self.complete_crawl_item(crawl_key)
+            return False, reason
         inflight = {
             'account_id': account_id,
             'task_uuid': task_uuid,
             'started_at': int(time.time()),
+            'url': item.get('url'),
+            'referer': item.get('referer'),
         }
         r_object.hset(f'forum:crawl:inflight:{self.id}', crawl_key, json.dumps(inflight))
         return True, item
+
+    def update_inflight_crawl_item(self, crawl_key, task_uuid=None, url=None, referer=None):
+        inflight = self.get_inflight_crawl_item(crawl_key)
+        if not inflight:
+            return False, 'missing_inflight'
+        if task_uuid is not None:
+            inflight['task_uuid'] = task_uuid
+        if url is not None:
+            inflight['url'] = url
+        if referer is not None:
+            inflight['referer'] = referer
+        r_object.hset(f'forum:crawl:inflight:{self.id}', crawl_key, json.dumps(inflight))
+        return True, None
+
+    def cleanup_stale_crawl_state(self):
+        cleaned = []
+
+        for crawl_key in self.get_pending_crawl_keys(0, -1):
+            if not self.get_crawl_item(crawl_key):
+                self._cleanup_crawl_item(crawl_key)
+                cleaned.append({'crawl_key': crawl_key, 'reason': 'pending_missing_payload'})
+
+        for crawl_key in list(r_object.hkeys(f'forum:crawl:inflight:{self.id}')):
+            if not self.get_crawl_item(crawl_key):
+                self._cleanup_crawl_item(crawl_key)
+                cleaned.append({'crawl_key': crawl_key, 'reason': 'inflight_missing_payload'})
+
+        for crawl_key in list(r_object.smembers(f'forum:crawl:queued:{self.id}')):
+            is_pending = r_object.zscore(f'forum:crawl:queue:{self.id}', crawl_key) is not None
+            is_inflight = r_object.hexists(f'forum:crawl:inflight:{self.id}', crawl_key)
+            if not is_pending and not is_inflight:
+                self._cleanup_crawl_item(crawl_key)
+                cleaned.append({'crawl_key': crawl_key, 'reason': 'active_without_pending_or_inflight'})
+
+        return cleaned
 
     def _cleanup_crawl_item(self, crawl_key):
         r_object.zrem(f'forum:crawl:queue:{self.id}', crawl_key)
@@ -623,6 +695,110 @@ class Forum(AbstractDaterangeObject):
 
     def is_crawl_item_queued(self, crawl_key):
         return r_object.sismember(f'forum:crawl:queued:{self.id}', crawl_key)
+
+    def get_crawl_queue_status(self, sample_size=5):
+        sample_size = max(int(sample_size or 0), 0)
+        pending_sample = []
+        if sample_size:
+            for crawl_key in self.get_pending_crawl_keys(0, sample_size - 1):
+                pending_sample.append({
+                    'crawl_key': crawl_key,
+                    'item': self.get_crawl_item(crawl_key),
+                })
+
+        inflight_sample = []
+        if sample_size:
+            for crawl_key in r_object.hscan_iter(f'forum:crawl:inflight:{self.id}', count=sample_size):
+                crawl_key = crawl_key[0]
+                inflight_sample.append({
+                    'crawl_key': crawl_key,
+                    'inflight': self.get_inflight_crawl_item(crawl_key),
+                    'item': self.get_crawl_item(crawl_key),
+                })
+                if len(inflight_sample) >= sample_size:
+                    break
+
+        return {
+            'pending_count': self.get_nb_pending_crawl_items(),
+            'inflight_count': self.get_nb_inflight_crawl_items(),
+            'active_dedup_count': r_object.scard(f'forum:crawl:queued:{self.id}'),
+            'pending_sample': pending_sample,
+            'inflight_sample': inflight_sample,
+        }
+
+    def get_crawl_accounts_status(self):
+        accounts = []
+        available_accounts = set(self.get_available_accounts())
+        for account_id in sorted(self.get_crawl_accounts()):
+            account = self.get_crawl_account(account_id)
+            accounts.append({
+                'id': account_id,
+                'enabled': account.is_enabled(),
+                'status': account.get_status(),
+                'available': account_id in available_accounts,
+                'availability_reason': account._get_field('availability_reason'),
+                'current_task_uuid': account.get_current_task_uuid(),
+                'current_crawl_key': account.get_current_crawl_key(),
+                'current_url': account.get_current_url(),
+                'last_used_at': account.get_last_used_at(),
+                'last_crawled_at': account._get_field('last_crawled_at'),
+                'last_error': account._get_field('last_error'),
+            })
+        return accounts
+
+    def get_running_crawl_status(self):
+        running = []
+        crawl_accounts = self.get_crawl_accounts()
+        for account_key, launch_time in r_crawler.zrange('forum:crawl:running', 0, -1, withscores=True):
+            forum_id, account_id = account_key.split(':', 1)
+            if forum_id != self.id:
+                continue
+            launch_time = int(launch_time)
+            account = self.get_crawl_account(account_id)
+            crawl_key = account.get_current_crawl_key()
+            stale_reasons = []
+            if account_id not in crawl_accounts:
+                stale_reasons.append('missing_account')
+            if account.get_status() != 'crawling':
+                stale_reasons.append('account_not_crawling')
+            if not crawl_key:
+                stale_reasons.append('account_missing_crawl_key')
+            elif not self.get_crawl_item(crawl_key):
+                stale_reasons.append('account_crawl_payload_missing')
+            elif not self.get_inflight_crawl_item(crawl_key):
+                stale_reasons.append('account_crawl_not_inflight')
+            if not account.get_current_task_uuid():
+                stale_reasons.append('account_missing_task_uuid')
+            running.append({
+                'account_id': account_id,
+                'launch_time': launch_time,
+                'status': account.get_status(),
+                'current_task_uuid': account.get_current_task_uuid(),
+                'current_crawl_key': crawl_key,
+                'current_url': account.get_current_url(),
+                'stale': bool(stale_reasons),
+                'stale_reasons': stale_reasons,
+            })
+        return running
+
+    def get_crawl_status(self, sample_size=5):
+        running = self.get_running_crawl_status()
+        crawl_accounts = self.get_crawl_accounts()
+        available_accounts = self.get_available_accounts()
+        return {
+            'id': self.id,
+            'config_enabled': self.get_crawl_config().get('enabled'),
+            'nb_accounts': len(crawl_accounts),
+            'nb_available_accounts': len(available_accounts),
+            'nb_pending_crawl_items': self.get_nb_pending_crawl_items(),
+            'nb_inflight_crawl_items': self.get_nb_inflight_crawl_items(),
+            'nb_running_accounts': len(running),
+            'nb_orphan_subforums': self.get_nb_orphan_subforums(),
+            'nb_threads_last_time': r_object.zcard(f'forum:thread:last_time:{self.id}'),
+            'accounts': self.get_crawl_accounts_status(),
+            'queue': self.get_crawl_queue_status(sample_size=sample_size),
+            'running': running,
+        }
 
     def get_link(self, flask_context=False):
         if flask_context:

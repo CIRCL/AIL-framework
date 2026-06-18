@@ -168,7 +168,7 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50):
     }, 200
 
 def api_get_subforum_last_thread_post(forum_id, subforum_id, thread_id):
-    subforum = Subforums.Subforum(forum_id, subforum_id)
+    subforum = Subforums.Subforum(subforum_id, forum_id)
     if not subforum.exists():
         return {"status": "error", "reason": "Unknown subforum"}, 404
     return subforum.get_thread_last_post_timestamp(thread_id), 200

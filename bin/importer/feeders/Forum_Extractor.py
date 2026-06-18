@@ -117,6 +117,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 imported['post'] += 1
                 print(post.id)
                 self.objs_to_process.add(post)
+        if posts:
+            last_post = posts[-1]
+            last_timestamp = int(last_post.get('post_timestamp'))
+            self.forum.update_thread_last_time(parent_thread.id, int(last_timestamp))
 
         # TODO REMOVE ME ###############################################################################################
         # TODO Avoid reprocess -> use add for subtype  and create correlation
