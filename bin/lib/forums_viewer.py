@@ -20,6 +20,7 @@ from lib.objects import ForumThreads
 from lib.objects import Posts
 from lib.objects import UsersAccount
 from lib.objects import ail_objects
+from lib import crawlers
 from lib.crawlers import Cookiejar
 
 # config_loader = ConfigLoader()
@@ -29,6 +30,7 @@ _FORUM_OPTIONS = {'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orpha
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'title', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'link', 'state', 'timestamp', 'user-account'}
+_FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def update_account_local_storage(account, local_storage):
     cookiejar_uuid = account.get_cookiejar_uuid()
@@ -39,6 +41,182 @@ def update_account_local_storage(account, local_storage):
         cookiejar.set_local_storage(local_storage)
     return True
 
+def _split_lines(value):
+    if not value:
+        return []
+    if isinstance(value, (list, set, tuple)):
+        return [v.strip() for v in value if v and str(v).strip()]
+    return [line.strip() for line in str(value).replace(',', '\n').splitlines() if line.strip()]
+
+def _minute_to_time(value):
+    value = int(value or 0)
+    if value >= 1440:
+        return '23:59'
+    hour = value // 60
+    minute = value % 60
+    return f'{hour}:{minute:02d}'
+
+def _active_time_to_ui(active_time):
+    active_time_ui = {}
+    for weekday in _FORUM_CRAWL_WEEKDAYS:
+        ranges = []
+        for start, end in (active_time or {}).get(weekday) or []:
+            ranges.append({'start': _minute_to_time(start), 'end': _minute_to_time(end)})
+        active_time_ui[weekday] = {'enabled': bool(ranges), 'ranges': ranges or [{'start': '0:00', 'end': '23:59'}]}
+    return active_time_ui
+
+def _get_form_list(data, field):
+    value = data.getlist(field) if hasattr(data, 'getlist') else data.get(field, [])
+    if isinstance(value, str):
+        return [value]
+    return value or []
+
+# TODO Check overlapping
+def _active_time_from_form(data):
+    weekdays = _get_form_list(data, 'active_time_days')
+    if not weekdays:
+        return None
+    active_time = {weekday: [] for weekday in _FORUM_CRAWL_WEEKDAYS}
+    for weekday in weekdays:
+        if weekday not in active_time:
+            continue
+        starts = _get_form_list(data, f'active_time_start_{weekday}')
+        ends = _get_form_list(data, f'active_time_end_{weekday}')
+        for start, end in zip(starts, ends):
+            start = (start or '').strip()
+            end = (end or '').strip()
+            if start and end:
+                active_time[weekday].append([start, end])
+    return active_time
+
+
+def create_forum(data):
+    forum_id = (data.get('forum_id') or data.get('id')).strip()
+    forum_type = (data.get('forum_type', 'default')).strip()
+    name = (data.get('name', '')).strip()
+    url = (data.get('url', '')).strip()
+    info = (data.get('info', '')).strip()
+    if not forum_id:
+        return {"status": "error", "error": "Missing forum_id"}, 400
+    if not forum_type:
+        return {"status": "error", "error": "Missing forum_type"}, 400
+    forum = Forums.Forum(forum_id)
+    if forum.exists():
+        return {"status": "error", "error": "Forum already exists", "forum_id": forum_id}, 409
+    forum.create(forum_type, name=name, url=url, info=info)
+    return forum.get_meta(_FORUM_OPTIONS, flask_context=True), 200
+
+def get_forum_crawl_management(forum_id):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "error": "Unknown forum"}, 404
+    config = forum.get_crawl_config()
+    accounts = []
+    for account_id in sorted(config.get('accounts', [])):
+        account_meta = forum.get_crawl_account(account_id).get_meta()
+        if account_meta.get('active_time'):
+            account_meta['active_time_ui'] = _active_time_to_ui(account_meta.get('active_time'))
+        else:
+            account_meta['active_time_ui'] = None
+        accounts.append(account_meta)
+    return {
+        'forum': forum.get_meta(options=_FORUM_OPTIONS, flask_context=True),
+        'config': config,
+        'accounts': accounts,
+    }, 200
+
+def update_forum_crawl_config(forum_id, data):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "error": "Unknown forum"}, 404
+    config = {
+        'proxy': data.get('proxy'),
+        'delta_subforum_refresh': data.get('delta_subforum_refresh'),
+        'delta_thread_refresh': data.get('delta_thread_refresh'),
+        'default_referer': data.get('default_referer'),
+        'timeout': data.get('timeout'),
+        'subforums_excluded': _split_lines(data.get('subforums_excluded')),
+        'subforums_to_crawl': _split_lines(data.get('subforums_to_crawl')),
+    }
+    if data.get('enabled') == 'on':
+        config['enabled'] = 1
+    else:
+        config['enabled'] = 0
+    if data.get('javascript') == 'on':
+        config['javascript'] = 1
+    else:
+        config['javascript'] = 0
+    meta = forum.set_crawl_config(config)
+    forum.refresh_accounts_availability()
+    return meta, 200
+
+def _account_form_to_meta(data, meta=None):
+    if not meta:
+        meta = {}
+    if data.get('enabled') == 'on':
+        meta['enabled'] = 1
+    else:
+        meta['enabled'] = 0
+    meta['status'] = data.get('status', 'need_manual_login')
+    meta['cookiejar_uuid'] = data.get('cookiejar_uuid', None)
+    meta['random_time_between_page'] = data.get('random_time_between_page', None)
+    meta['subforums_to_crawl'] = _split_lines(data.get('subforums_to_crawl'))
+    if data.get('active_time_mode') == 'limited':
+        meta['active_time'] = _active_time_from_form(data)
+    else:
+        meta['active_time'] = None
+    return meta
+
+def save_forum_crawl_account(forum_id, account_id, data):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "error": "Unknown forum"}, 404
+    if not account_id:
+        return {"status": "error", "error": "Missing account_id"}, 400
+    if account_id in forum.get_crawl_accounts():
+        account = forum.get_crawl_account(account_id)
+        account.set_meta(_account_form_to_meta(data, meta=account.get_meta()))
+    else:
+        account = forum.add_crawl_account(account_id, _account_form_to_meta(data))
+    forum.refresh_account_availability(account_id)
+    return account.get_meta(), 200
+
+def delete_forum_crawl_account(forum_id, account_id):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "error": "Unknown forum"}, 404
+    if account_id not in forum.get_crawl_accounts():
+        return {"status": "error", "error": "Unknown account"}, 404
+    account = forum.get_crawl_account(account_id)
+    account.clear_current_crawl()
+    forum.remove_crawl_account(account_id)
+    account.delete_meta()
+    return {'forum_id': forum_id, 'account_id': account_id}, 200
+
+def api_set_forum_account_local_storage(user_org, user_id, data):
+    if not isinstance(data, dict):
+        return {'status': 'error', 'error': 'Invalid JSON body'}, 400
+    forum_id = data.get('forum_id')
+    account_id = data.get('account_id')
+    local_storage = data.get('local_storage')
+    if not isinstance(local_storage, dict):
+        return {'status': 'error', 'error': 'local_storage must be a JSON object'}, 400
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {'status': 'error', 'error': 'Unknown forum'}, 404
+    if not forum.exists_account(account_id):
+        return {'status': 'error', 'error': 'Unknown account'}, 404
+    account = forum.get_crawl_account(account_id)
+    cookiejar_uuid = account.get_cookiejar_uuid()
+    if not cookiejar_uuid:
+        cookiejar_uuid = crawlers.create_cookiejar(user_org, user_id, f'Forum {forum_id} account {account_id} browser state', 0, None)
+        account.set_cookiejar_uuid(cookiejar_uuid)
+    cookiejar = Cookiejar(cookiejar_uuid)
+    if not cookiejar.exists():
+        return {'status': 'error', 'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+    cookiejar.set_local_storage(local_storage)
+    forum.refresh_account_availability(account_id)
+    return {'forum_id': forum_id, 'account_id': account_id, 'cookiejar_uuid': cookiejar_uuid}, 200
 
 def _subforum_meta(subforum, flask_context=True):
     meta = subforum.get_meta(_SUBFORUM_OPTIONS, flask_context=flask_context)

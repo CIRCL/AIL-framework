@@ -9,8 +9,8 @@ import os
 import sys
 import json
 
-from flask import render_template, request, Blueprint, Response, abort
-from flask_login import login_required
+from flask import render_template, request, Blueprint, Response, abort, redirect, url_for
+from flask_login import login_required, current_user
 
 # Import Role_Manager
 from Role_Manager import login_read_only, login_admin
@@ -46,7 +46,17 @@ def forum_explorer_forums():
         return render_template('forums_explorer_forum.html', meta=meta[0], bootstrap_label=bootstrap_label)
 
     forums = forums_viewer.get_forums()
-    return render_template('forums_explorer_index.html', forums=forums, bootstrap_label=bootstrap_label)
+    return render_template('forums_explorer_index.html', forums=forums, bootstrap_label=bootstrap_label, is_admin=current_user.is_in_role('admin'))
+
+
+@forums_explorer.route("/chats/explorer/forums/create", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_forum_create():
+    res = forums_viewer.create_forum(request.form)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=res[0]['id']))
 
 
 @forums_explorer.route("/chats/explorer/forums/crawler", methods=['GET'])
@@ -62,6 +72,52 @@ def forum_explorer_crawler_status():
 
     forums = forums_viewer.get_forums_crawl_status()
     return render_template('forums_explorer_crawler_index.html', forums=forums, bootstrap_label=bootstrap_label)
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler/manage", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_manage():
+    forum_id = request.args.get('id')
+    meta = forums_viewer.get_forum_crawl_management(forum_id)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    return render_template('forums_explorer_crawler_manage.html', meta=meta[0], bootstrap_label=bootstrap_label)
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler/config/edit", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_config_edit():
+    forum_id = request.form.get('forum_id')
+    res = forums_viewer.update_forum_crawl_config(forum_id, request.form)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler/account/save", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_save():
+    forum_id = request.form.get('forum_id')
+    account_id = request.form.get('account_id')
+    res = forums_viewer.save_forum_crawl_account(forum_id, account_id, request.form)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler/account/delete", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_delete():
+    forum_id = request.form.get('forum_id')
+    account_id = request.form.get('account_id')
+    res = forums_viewer.delete_forum_crawl_account(forum_id, account_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 
 @forums_explorer.route("/chats/explorer/forum/subforum", methods=['GET'])

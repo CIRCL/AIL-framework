@@ -30,6 +30,24 @@
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}"><i class="fas fa-spider"></i> Forum crawler status</a>
       </div>
 
+      {% if is_admin %}
+      <div class="forum-board mb-4">
+        <div class="forum-board-header">Create Forum manually</div>
+        <div class="p-3">
+          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_forum_create') }}">
+            <div class="form-row">
+              <div class="form-group col-md-3"><label>forum_id</label><input class="form-control" name="forum_id" placeholder="forum identifier" required></div>
+              <div class="form-group col-md-3"><label>forum_type</label><input class="form-control" name="forum_type" value="generic" required></div>
+              <div class="form-group col-md-3"><label>name</label><input class="form-control" name="name" placeholder="Display name"></div>
+              <div class="form-group col-md-3"><label>url</label><input class="form-control" name="url" placeholder="https://forum.example/"></div>
+            </div>
+            <div class="form-group"><label>info</label><textarea class="form-control" name="info" rows="2" placeholder="Optional operator notes"></textarea></div>
+            <button class="btn btn-primary"><i class="fas fa-plus"></i> Create Forum</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
       {% if forums %}
         <div class="forum-board mb-4">
           <div class="forum-board-header">Imported forums</div>

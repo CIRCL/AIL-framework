@@ -26,9 +26,6 @@ FORUM_CRAWL_ACCOUNT_STATUSES = {'waiting', 'crawling', 'error', 'need_manual_log
 FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 FORUM_CRAWL_ITEM_TYPES = {'forum', 'subforum', 'forum-thread'}
 
-def _str_to_bool(value):
-    return value == 'True'
-
 
 def _active_time_ranges_to_str(ranges):
     return ','.join([f'{start}-{end}' for start, end in ranges])
@@ -91,7 +88,8 @@ class ForumAccount:
             else:
                 self._set_field(field, meta.get(field))
         self._set_field('enabled', meta.get('enabled'))
-        self._set_field('available', meta.get('available'))
+        if meta.get('available'):
+            self._set_field('available', meta.get('available'))
         self.set_active_time(meta.get('active_time'))
         self.set_subforums_to_crawl(meta.get('subforums_to_crawl', []))
 
@@ -103,10 +101,16 @@ class ForumAccount:
         self._set_field('status', status)
 
     def is_available(self):
-        return _str_to_bool(self._get_field('available'))
+        available = self._get_field('available')
+        if available:
+            return int(available) == 1
+        return False
 
     def is_enabled(self):
-        return _str_to_bool(self._get_field('enabled'))
+        enabled = self._get_field('enabled')
+        if enabled:
+            return int(enabled) == 1
+        return False
 
     def set_enabled(self, enabled):
         self._set_field('enabled', enabled)
@@ -240,7 +244,11 @@ class ForumAccount:
         elif not self.is_in_active_time(now=now):
             reason = 'outside_active_time'
             next_available_at = self.get_next_active_time(now=now)
-        self._set_field('available', reason == 'available')
+        if reason == 'available':
+            available = 1
+        else:
+            available = 0
+        self._set_field('available', available)
         self._set_field('availability_reason', reason)
         if reason == 'available':
             r_object.zadd(f'forum:accounts:available:{self.forum_id}', {self.id: next_available_at})
@@ -277,7 +285,6 @@ class ForumAccount:
     def set_last_error(self, error):
         self._set_field('last_error', error)
 
-
     def clear_current_crawl(self):
         self._del_field('current_crawl_key')
         self._del_field('current_url')
@@ -293,6 +300,10 @@ class ForumAccount:
     def clear_error(self):
         self._del_field('error')
         self.set_status('waiting')
+
+    def delete_meta(self):
+        r_object.delete(f'forum:crawl:account:{self.forum_id}:{self.id}')
+        r_object.delete(f'forum:crawl:account:subforums:{self.forum_id}:{self.id}')
 
 class Forum(AbstractDaterangeObject):
     def __init__(self, id):
@@ -380,10 +391,22 @@ class Forum(AbstractDaterangeObject):
     def exists_post(self, post_id):
         return r_object.hexists(f'posts:{self.subtype}:{self.id}', post_id)
 
+    def is_enabled(self):
+        enabled = self._get_field('enabled')
+        if enabled:
+            return int(enabled) == 1
+        return False
+
+    def is_javascript_enabled(self):
+        enabled = self._get_field('javascript')
+        if enabled:
+            return int(enabled) == 1
+        return False
+
     def get_crawl_config(self):
         config = {'id': self.id}
-        config['enabled'] = _str_to_bool(self._get_field('enabled'))
-        config['javascript'] = _str_to_bool(self._get_field('javascript'))
+        config['enabled'] = self.is_enabled()
+        config['javascript'] = self.is_javascript_enabled()
         config['delta_subforum_refresh'] = self._get_field('delta_subforum_refresh')
         config['delta_thread_refresh'] = self._get_field('delta_thread_refresh')
         config['default_referer'] = self._get_field('default_referer')
@@ -419,6 +442,9 @@ class Forum(AbstractDaterangeObject):
     def get_crawl_accounts(self):
         return r_object.smembers(f'forum:crawl:accounts:{self.id}')
 
+    def exists_account(self, account_id):
+        return r_object.sismember(f'forum:crawl:accounts:{self.id}', account_id)
+
     def get_crawl_account(self, account_id):
         return ForumAccount(self.id, account_id)
 
@@ -436,7 +462,7 @@ class Forum(AbstractDaterangeObject):
         r_object.zrem(f'forum:accounts:available:{self.id}', account_id)
 
     def refresh_account_availability(self, account_id):
-        ForumAccount(self.id, account_id).refresh_availability(forum_enabled=self.get_crawl_config().get('enabled'))
+        ForumAccount(self.id, account_id).refresh_availability(forum_enabled=self.is_enabled())
 
     def refresh_accounts_availability(self):
         for account_id in self.get_crawl_accounts():
