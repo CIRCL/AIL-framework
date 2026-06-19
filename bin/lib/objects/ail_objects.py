@@ -269,6 +269,8 @@ def get_obj_from_global_id(global_id):
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
     obj = get_object(obj_type, subtype, id)
+    # link = obj.get_link(flask_context=flask_context)
+    # obj.delete()
     return obj.get_link(flask_context=flask_context)
 
 

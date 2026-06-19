@@ -49,6 +49,14 @@ def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
 
 
+# TODO One index for all forums ???
+# def load_forum_indexes():
+#     indexes = set()
+#     for protocol in chats_viewer.get_chat_protocols():
+#         indexes.add(f'c{protocol}')
+#     return indexes
+
+
 def load_messages_indexes():
     indexes = set()
     for protocol in chats_viewer.get_chat_protocols():
@@ -56,6 +64,7 @@ def load_messages_indexes():
     return indexes
 
 
+# FORUMS_INDEXES = load_forums_indexes()
 MESSAGES_INDEXES = load_messages_indexes()
 DATERANGE_INDEXES = {'filename', 'title'}
 
