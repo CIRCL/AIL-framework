@@ -74,6 +74,32 @@ def forum_explorer_crawler_status():
     return render_template('forums_explorer_crawler_index.html', forums=forums, bootstrap_label=bootstrap_label)
 
 
+@forums_explorer.route("/chats/explorer/forums/crawler/queue", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_queue():
+    forum_id = request.args.get('id')
+    sample_size = request.args.get('sample_size') or 50
+    meta = forums_viewer.api_get_forum_crawl_queue(forum_id, sample_size=sample_size)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    return render_template('forums_explorer_crawler_queue.html', meta=meta[0], bootstrap_label=bootstrap_label, success=request.args.get('success'), error=request.args.get('error'))
+
+
+@forums_explorer.route("/chats/explorer/forums/crawler/queue/purge", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_queue_purge():
+    forum_id = request.form.get('forum_id')
+    res = forums_viewer.purge_forum_crawl_queue(forum_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+        # return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, error=res[0]))
+    deleted = res[0].get('deleted', {}) or {}
+    success = f"Purged Forum crawl queue: pending={deleted.get('pending_count', 0)}, inflight={deleted.get('inflight_count', 0)}, active={deleted.get('active_dedup_count', 0)}"
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, success=success))
+
+
 @forums_explorer.route("/chats/explorer/forums/crawler/manage", methods=['GET'])
 @login_required
 @login_admin

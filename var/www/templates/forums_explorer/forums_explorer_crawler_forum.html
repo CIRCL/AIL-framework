@@ -42,6 +42,7 @@
           {% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
         </div>
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_manage') }}?id={{ forum['id'] }}"><i class="fas fa-cogs"></i> Manage crawler config/accounts</a>
+        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_queue') }}?id={{ forum['id'] }}"><i class="fas fa-list"></i> Inspect crawl queue</a>
       </div>
 
       <div class="row">

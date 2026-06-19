@@ -726,9 +726,10 @@ class Forum(AbstractDaterangeObject):
         sample_size = max(int(sample_size or 0), 0)
         pending_sample = []
         if sample_size:
-            for crawl_key in self.get_pending_crawl_keys(0, sample_size - 1):
+            for crawl_key, score in r_object.zrange(f'forum:crawl:queue:{self.id}', 0, sample_size - 1, withscores=True):
                 pending_sample.append({
                     'crawl_key': crawl_key,
+                    'score': score,
                     'item': self.get_crawl_item(crawl_key),
                 })
 
@@ -751,6 +752,19 @@ class Forum(AbstractDaterangeObject):
             'pending_sample': pending_sample,
             'inflight_sample': inflight_sample,
         }
+
+    def purge_crawl_queue(self):
+        deleted = {
+            'pending_count': self.get_nb_pending_crawl_items(),
+            'inflight_count': self.get_nb_inflight_crawl_items(),
+            'active_dedup_count': r_object.scard(f'forum:crawl:queued:{self.id}'),
+        }
+        r_object.delete(f'forum:crawl:queue:{self.id}')
+        r_object.delete(f'forum:crawl:items:{self.id}')
+        r_object.delete(f'forum:crawl:queued:{self.id}')
+        r_object.delete(f'forum:crawl:inflight:{self.id}')
+        r_object.delete(f'forum:crawl:thread:account:{self.id}')
+        return deleted
 
     def get_crawl_accounts_status(self):
         accounts = []
