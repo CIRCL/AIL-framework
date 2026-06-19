@@ -174,6 +174,10 @@ def object_item_diff():
     id2 = request.args.get('s2', '')
     item1 = Item(id1)
     item2 = Item(id2)
+    if not item1.exists():
+        return jsonify({'status': 'error', 'error': "Unknow Item"}), 404
+    if not item2.exists():
+        return jsonify({'status': 'error', 'error': "Unknow Item"}), 404
     item1_content = item1.get_content()
     item2_content = item2.get_content()
     i1_max_len = item1.get_meta_lines(content=item1_content)['max_length']
