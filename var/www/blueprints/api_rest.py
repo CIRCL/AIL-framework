@@ -190,6 +190,17 @@ def forum_crawler_account_login():
     return create_json_response(res[0], res[1])
 
 
+@api_rest.route("api/v1/crawler/user-agent/default", methods=['GET'])
+@token_required('admin')
+def crawler_user_agent_default():
+    # data = request.get_json()
+    # if data.get('os', '').lower() == 'linux':
+    #     linux = True
+    # else:
+    linux = False
+    res = {'user-agent': crawlers.get_default_user_agent(linux=linux)}
+    return create_json_response(res, 200)
+
 #### SCHEDULER ####
 
 @api_rest.route("api/v1/crawler/scheduler", methods=['GET'])

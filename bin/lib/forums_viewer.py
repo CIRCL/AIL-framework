@@ -215,6 +215,7 @@ def api_set_forum_account_local_storage(user_org, user_id, data):
     if not cookiejar.exists():
         return {'status': 'error', 'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
     cookiejar.set_local_storage(local_storage)
+    account.set_status('waiting')
     forum.refresh_account_availability(account_id)
     return {'forum_id': forum_id, 'account_id': account_id, 'cookiejar_uuid': cookiejar_uuid}, 200
 
@@ -287,6 +288,31 @@ def api_get_forum_crawl_status(forum_id):
             'delta_thread_refresh': config.get('delta_thread_refresh'),
         },
         'status': forum.get_crawl_status(sample_size=5),
+    }, 200
+
+
+def api_get_forum_crawl_queue(forum_id, sample_size=50):
+    """Return read-only crawler queue details for one Forum object."""
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "reason": "Unknown forum"}, 404
+    try:
+        sample_size = max(int(sample_size), 1)
+    except (TypeError, ValueError):
+        sample_size = 50
+    return {
+        'forum': forum.get_meta(_FORUM_OPTIONS, flask_context=True),
+        'queue': forum.get_crawl_queue_status(sample_size=sample_size),
+        'sample_size': sample_size,
+    }, 200
+
+def purge_forum_crawl_queue(forum_id):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "reason": "Unknown forum"}, 404
+    return {
+        'forum_id': forum_id,
+        'deleted': forum.purge_crawl_queue(),
     }, 200
 
 def get_breadcrumb_for_object(obj):
