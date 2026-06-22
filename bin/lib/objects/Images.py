@@ -66,7 +66,10 @@ class Image(AbstractDaterangeObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(IMAGE_FOLDER, self.get_rel_path())
+        filename = os.path.realpath(os.path.join(IMAGE_FOLDER, self.get_rel_path()))
+        image_dir = IMAGE_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, image_dir]) != image_dir:
+            return None
         return os.path.realpath(filename)
 
     def is_gif(self, filepath=None):

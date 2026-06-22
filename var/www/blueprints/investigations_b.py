@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_config
+from lib import ail_core
 from lib import Investigations
 from lib.objects import ail_objects
 from lib import Tag
@@ -226,10 +227,19 @@ def register_investigation():
     investigations_uuid = request.args.get('uuids')
     investigations_uuid = investigations_uuid.split(',')
 
-    object_type = request.args.get('type')
+    object_type = request.args.get('type', '')
     object_subtype = request.args.get('subtype')
-    object_id = request.args.get('id')
+    object_id = request.args.get('id', '')
     comment = request.args.get('comment')
+
+    object_type = object_type.replace(' ', '')
+    if object_type not in ail_core.get_all_objects():
+        return {"status": "error", "reason": f"Invalid Object Type: {object_type}"}, 400
+    if object_subtype == 'None':
+        object_type = ''
+    object_id = object_id.rstrip()
+    if not ail_objects.exists_obj(object_type, object_subtype, object_id):
+        return {"status": "error", "reason": f"Unknown Object: {object_type}:{object_subtype}:{object_id}"}, 404
 
     for investigation_uuid in investigations_uuid:
         input_dict = {"uuid": investigation_uuid, "id": object_id,

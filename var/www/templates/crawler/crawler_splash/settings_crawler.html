@@ -234,6 +234,34 @@
 				</div>
 
 				<div class="card mb-3 mt-1 settings-card">
+					<div class="card-body text-dark">
+						<div class="d-flex justify-content-between align-items-center flex-wrap mb-2">
+							<div>
+								<h5 class="mb-1">Filter Local IPs</h5>
+								<p class="text-muted mb-0">Reject invalid URLs and targets that resolve to non-public addresses.</p>
+							</div>
+							<span class="badge badge-{% if is_crawler_filter_local_ips_enabled %}success{% else %}danger{% endif %} px-3 py-2 mt-2 mt-md-0">
+								{% if is_crawler_filter_local_ips_enabled %}Enabled{% else %}Disabled{% endif %}
+							</span>
+						</div>
+
+						<p>
+							When enabled, crawler tasks are rejected if the submitted URL is invalid, cannot be resolved, or resolves to a non-global address such as localhost, a private network, or a link-local range.
+						</p>
+
+						{% if is_crawler_filter_local_ips_enabled %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_local_ips') }}?state=disable" class="btn btn-info">
+								<i class="fas fa-times mr-1"></i> Disable Local IP Filter
+							</a>
+						{% else %}
+							<a href="{{ url_for('crawler_splash.crawler_filter_local_ips') }}?state=enable" class="btn btn-info">
+								<i class="fas fa-check mr-1"></i> Enable Local IP Filter
+							</a>
+						{% endif %}
+					</div>
+				</div>
+
+				<div class="card mb-3 mt-1 settings-card">
 					<div class="card-header bg-dark text-white">
 						<h4 class="mb-0">Onion Safety Controls</h4>
 					</div>
@@ -249,7 +277,7 @@
 						</p>
 
 						<p class="alert alert-warning mb-3">
-							<span class="text-danger"><i class="fa-solid fa-triangle-exclamation fa-2x"></i></span>
+							<span class="text-danger"><i class="fas fa-exclamation-triangle fa-2x"></i></span>
 							<strong> Disabling this option may result in crawling and downloading content that includes CSAM, extreme violence, or other harmful materials.</strong><br>
 							Users are strongly advised to keep this feature enabled to avoid unintentional exposure to such content.
 						</p>
@@ -264,11 +292,11 @@
 						</p>
 						{% if is_onion_filter_enabled %}
 							<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=disable" class="btn btn-danger my-2">
-								<i class="fa-solid fa-xmark"></i> Disable Unsafe Onion Filter
+								<i class="fas fa-times"></i> Disable Unsafe Onion Filter
 							</a>
 						{% else %}
 							<a href="{{ url_for('crawler_splash.crawler_filter_unsafe_onion') }}?state=enable" class="btn btn-success my-2">
-								<i class="fa-solid fa-check"></i> Enable Unsafe Onion Filter
+								<i class="fas fa-check"></i> Enable Unsafe Onion Filter
 							</a>
 						{% endif %}
 
@@ -276,25 +304,25 @@
 
 						<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
 							<span>Crawl Unknown Onion</span>
-							<span class="badge badge-{% if is_onion_filter_unknown %}warning{% else %}secondary{% endif %} px-3 py-2">
+							<span class="badge badge-{% if is_onion_filter_unknown %}success{% else %}warning{% endif %} px-3 py-2">
 								{% if is_onion_filter_unknown %}Enabled{% else %}Disabled{% endif %}
 							</span>
 						</h5>
 						<p>This option controls whether the crawler should proceed with crawling onion domains that have <strong>not yet been classified</strong> as safe or unsafe.</p>
 
 						<ul class="mb-3">
-							<li><strong>If disabled:</strong> The crawler will process domains that have never been checked, potentially discovering new useful content but also increasing the risk of encountering unsafe materials.</li>
-							<li><strong>If enabled:</strong> The crawler will only process domains that have been explicitly identified as safe, reducing risk but potentially missing new, unclassified domains.</li>
+							<li><strong>If enabled:</strong> The crawler will process domains that have never been checked, potentially discovering new useful content but also increasing the risk of encountering unsafe materials.</li>
+							<li><strong>If disabled:</strong> The crawler will only process domains that have been explicitly identified as safe, reducing risk but potentially missing new, unclassified domains.</li>
 						</ul>
 
-						<p class="text-muted">This option is useful for users who want to explore uncharted domains while still benefiting from the <code>filter_unsafe_onion</code> protection. However, enabling this option increases the likelihood of encountering harmful content, so caution is advised.</p>
+						<p class="text-muted">This option is useful for users who want to explore uncharted domains while still benefiting from the filter_unsafe_onion protection. However, enabling this option increases the likelihood of encountering harmful content, so caution is advised.</p>
 						{% if is_onion_filter_unknown %}
-							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=disable" class="btn btn-secondary my-2">
-								<i class="fa-solid fa-xmark"></i> Disable Unknown Onion Crawl
+							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=disable" class="btn btn-outline-warning my-2">
+								<i class="fas fa-times mr-1"></i> Disable Unknown Onion Filter
 							</a>
 						{% else %}
-							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=enable" class="btn btn-info my-2">
-								<i class="fa-solid fa-check"></i> Enable Unknown Onion Crawl
+							<a href="{{ url_for('crawler_splash.crawler_filter_unknown_onion') }}?state=enable" class="btn btn-warning my-2">
+								<i class="fas fa-check mr-1"></i> Enable Unknown Onion Filter
 							</a>
 						{% endif %}
 					</div>
