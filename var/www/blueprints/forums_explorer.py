@@ -86,6 +86,19 @@ def forum_explorer_crawler_queue():
     return render_template('forums_explorer_crawler_queue.html', meta=meta[0], bootstrap_label=bootstrap_label, success=request.args.get('success'), error=request.args.get('error'))
 
 
+
+@forums_explorer.route("/chats/explorer/forums/crawler/queue/enqueue", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_queue_enqueue():
+    forum_id = request.form.get('forum_id')
+    res = forums_viewer.enqueue_forum_root_crawl(forum_id)
+    if res[1] != 200:
+        error = res[0].get('reason') or res[0].get('error') or 'Unable to enqueue forum crawl'
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, error=error))
+    success = f"Queued Forum URL for crawl: {res[0].get('url')}"
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, success=success))
+
 @forums_explorer.route("/chats/explorer/forums/crawler/queue/purge", methods=['POST'])
 @login_required
 @login_admin

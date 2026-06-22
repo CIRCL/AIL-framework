@@ -887,6 +887,21 @@ class Cookiejar:
             meta['local_storage'] = self.get_local_storage(r_json=r_json)
         return meta
 
+    def set_cookies(self, cookies):
+        self.delete_cookies()
+        for cookie in cookies:
+            name = cookie.get('name')
+            value = cookie.get('value')
+            domain = cookie.get('domain')
+            path = cookie.get('path')
+            expires = cookie.get('expires')
+            httponly = cookie.get('httpOnly')
+            secure = cookie.get('secure')
+            samesite = cookie.get('sameSite')
+            if name and value:
+                self.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure,
+                                     expires=expires, samesite=samesite)
+
     def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, expires=None, samesite=None, text=None):
         if cookie_uuid:
             cookie = Cookie(cookie_uuid)

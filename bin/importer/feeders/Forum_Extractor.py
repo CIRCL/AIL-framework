@@ -138,12 +138,8 @@ class Forum_ExtractorFeeder(DefaultFeeder):
 
     def _upsert_forum(self, result, extracted, forum_type, forum_id):
         """Create/update a Forum object from extracted data."""
-        fdata = extracted.get('forum') or {}
-        name = fdata.get('forum_name')
-        url = fdata.get('forum_url') or result.get('url')
-        info = fdata.get('info')
         forum = Forum(forum_id)
-        return forum.create(forum_type, name, url, info)
+        return forum.create(forum_type)
 
     def process_forum_hierarchy(self, result):
         """Consume parser hierarchy edges before thread/post parent fallback logic."""

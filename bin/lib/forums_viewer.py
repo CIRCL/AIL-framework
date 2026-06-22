@@ -32,12 +32,13 @@ _THREAD_OPTIONS = {'title', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'link', 'state', 'timestamp', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
-def update_account_local_storage(account, local_storage):
+def update_account_cookies_local_storage(account, cookies, local_storage):
     cookiejar_uuid = account.get_cookiejar_uuid()
     if not cookiejar_uuid:
         return False
     cookiejar = Cookiejar(cookiejar_uuid)
     if local_storage:
+        cookiejar.set_cookies(cookies)
         cookiejar.set_local_storage(local_storage)
     return True
 
@@ -214,6 +215,7 @@ def api_set_forum_account_local_storage(user_org, user_id, data):
     cookiejar = Cookiejar(cookiejar_uuid)
     if not cookiejar.exists():
         return {'status': 'error', 'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
+    cookiejar.set_cookies(local_storage.get('cookies', []))
     cookiejar.set_local_storage(local_storage)
     account.set_status('waiting')
     forum.refresh_account_availability(account_id)
@@ -305,6 +307,28 @@ def api_get_forum_crawl_queue(forum_id, sample_size=50):
         'queue': forum.get_crawl_queue_status(sample_size=sample_size),
         'sample_size': sample_size,
     }, 200
+
+
+def enqueue_forum_root_crawl(forum_id):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "reason": "Unknown forum"}, 404
+    url = forum.get_url()
+    if not url:
+        return {"status": "error", "reason": "Forum URL is missing"}, 400
+    item = {
+        'crawl_key': f'forum:{forum_id}',
+        'type': 'forum',
+        'id': forum_id,
+        'url': url,
+        'referer': forum.get_default_referer(),
+        'crawl_mode': 'discovery',
+    }
+    queued, reason = forum.enqueue_crawl_item(item, 10)
+    if not queued:
+        status_code = 409 if reason == 'already_queued' else 400
+        return {'status': 'error', 'reason': reason, 'forum_id': forum_id, 'crawl_key': item['crawl_key']}, status_code
+    return {'forum_id': forum_id, 'crawl_key': item['crawl_key'], 'url': url}, 200
 
 def purge_forum_crawl_queue(forum_id):
     forum = Forums.Forum(forum_id)

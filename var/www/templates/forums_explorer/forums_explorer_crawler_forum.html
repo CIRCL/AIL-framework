@@ -34,6 +34,9 @@
         </ol>
       </nav>
 
+      {% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
+      {% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
+
       <div class="forum-title-card p-4 mb-4">
         <h1 class="mb-2"><i class="fas fa-spider"></i> {{ forum.get('name') or forum['id'] }}</h1>
         <div>
@@ -41,6 +44,10 @@
           <span class="mr-3"><i class="fas fa-toggle-on"></i> enabled: {{ config.get('enabled') }}</span>
           {% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
         </div>
+        <form class="mt-3 d-inline-block" method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_queue_enqueue') }}">
+          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+          <button class="btn btn-sm btn-success" {% if not forum.get('url') %}disabled title="Forum URL is missing"{% else %}onclick="return confirm('Send this forum URL to the crawl queue?')"{% endif %}><i class="fas fa-paper-plane"></i> Send forum URL to crawl queue</button>
+        </form>
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_manage') }}?id={{ forum['id'] }}"><i class="fas fa-cogs"></i> Manage crawler config/accounts</a>
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_queue') }}?id={{ forum['id'] }}"><i class="fas fa-list"></i> Inspect crawl queue</a>
       </div>

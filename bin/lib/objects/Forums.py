@@ -403,13 +403,16 @@ class Forum(AbstractDaterangeObject):
             return int(enabled) == 1
         return False
 
+    def get_default_referer(self):
+        return self._get_field('default_referer')
+
     def get_crawl_config(self):
         config = {'id': self.id}
         config['enabled'] = self.is_enabled()
         config['javascript'] = self.is_javascript_enabled()
         config['delta_subforum_refresh'] = self._get_field('delta_subforum_refresh')
         config['delta_thread_refresh'] = self._get_field('delta_thread_refresh')
-        config['default_referer'] = self._get_field('default_referer')
+        config['default_referer'] = self.get_default_referer()
         config['timeout'] = self._get_field('timeout')
         config['proxy'] = self._get_field('proxy')
         config['accounts'] = self.get_crawl_accounts()
@@ -590,8 +593,9 @@ class Forum(AbstractDaterangeObject):
             return False, 'invalid_type'
         if not item.get('id'):
             return False, 'missing_id'
-        if not isinstance(item.get('page'), int) or item.get('page') < 1:
-            return False, 'invalid_page'
+        if item.get('page'):
+            if not isinstance(item.get('page'), int) or item.get('page') < 1:
+                return False, 'invalid_page'
         if not item.get('url'):
             return False, 'missing_url'
         parent = item.get('parent')
@@ -606,15 +610,13 @@ class Forum(AbstractDaterangeObject):
                 return False, 'invalid_parent'
         return True, None
 
-    def enqueue_crawl_item(self, item, score=None):
+    def enqueue_crawl_item(self, item, score):
         valid, reason = self.validate_crawl_item(item)
         if not valid:
             return False, reason
         crawl_key = item['crawl_key']
         if self.is_crawl_item_queued(crawl_key):
             return False, 'already_queued'
-        if score is None:
-            score = int(time.time())
         r_object.hset(f'forum:crawl:items:{self.id}', crawl_key, json.dumps(item))
         r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: score})
         r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
@@ -627,7 +629,7 @@ class Forum(AbstractDaterangeObject):
         return None
 
     def get_pending_crawl_keys(self, start=0, stop=100):
-        return r_object.zrange(f'forum:crawl:queue:{self.id}', start, stop)
+        return r_object.zrevrange(f'forum:crawl:queue:{self.id}', start, stop)
 
     def reserve_crawl_item(self, crawl_key, account_id, task_uuid=None):
         if not r_object.zrem(f'forum:crawl:queue:{self.id}', crawl_key):
