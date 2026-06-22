@@ -27,6 +27,7 @@ from lib import ail_queues
 from lib import ail_users
 from lib import d4
 from lib import passivedns
+from lib.ConfigLoader import ConfigLoader
 # from exporter.MailExporter import MailExporterUsers
 from lib.objects import SSHKeys
 from packages import git_status
@@ -36,6 +37,9 @@ settings_b = Blueprint('settings_b', __name__, template_folder=os.path.join(os.e
 
 # ============ VARIABLES ============
 # bootstrap_label = Flask_config.bootstrap_label
+config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+config_loader = None
 
 # ============ FUNCTIONS ============
 
@@ -346,6 +350,28 @@ def delete_rulezet():
 
 ## --USER RULEZET-- ##
 
+
+@settings_b.route("/settings/users/purge_failed_login", methods=['GET'])
+@login_required
+@login_admin
+def purge_failed_login():
+    purged = 0
+    for pattern in ('failed_login_ip:*', 'failed_login_user_id:*'):
+        for key in r_cache.scan_iter(pattern):
+            r_cache.delete(key)
+            purged += 1
+    return redirect(url_for('settings_b.users_list', purged_failed_login=purged))
+
+
+@settings_b.route("/settings/user/purge_otp_timeout", methods=['GET'])
+@login_required
+@login_admin
+def purge_user_otp_timeout():
+    user_id = request.args.get('user_id')
+    if user_id:
+        r_cache.delete(f'failed_otp_user_id:{user_id}')
+    return redirect(url_for('settings_b.users_list', purged_otp_user=user_id))
+
 @settings_b.route("/settings/user/logout", methods=['GET'])
 @login_required
 @login_admin
@@ -514,7 +540,9 @@ def delete_user():
 @login_admin
 def users_list():
     meta = ail_users.api_get_users_meta()
-    return render_template("users_list.html", meta=meta, acl_admin=True)
+    return render_template("users_list.html", meta=meta, acl_admin=True,
+                           purged_failed_login=request.args.get('purged_failed_login'),
+                           purged_otp_user=request.args.get('purged_otp_user'))
 
 #############################################
 

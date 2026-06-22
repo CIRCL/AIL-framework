@@ -41,6 +41,11 @@ kill_sessions()
 # LOGS
 access_logger = ail_logger.get_access_config()
 
+LOGIN_MAX_FAILED_ATTEMPTS = 5
+LOGIN_FAILED_TIMEOUT = 300
+OTP_MAX_FAILED_ATTEMPTS = 30
+OTP_FAILED_TIMEOUT = 3600
+
 
 # ============ BLUEPRINT ============
 
@@ -60,7 +65,7 @@ def login():
     # brute force by IP
     if login_failed_ip:
         login_failed_ip = int(login_failed_ip)
-        if login_failed_ip >= 5:
+        if login_failed_ip >= LOGIN_MAX_FAILED_ATTEMPTS:
             wait_time = r_cache.ttl(f'failed_login_ip:{current_ip}')
             username = request.form.get('username')
             if not username:
@@ -84,7 +89,7 @@ def login():
             login_failed_user_id = r_cache.get(f'failed_login_user_id:{username}')
             if login_failed_user_id:
                 login_failed_user_id = int(login_failed_user_id)
-                if login_failed_user_id >= 5:
+                if login_failed_user_id >= LOGIN_MAX_FAILED_ATTEMPTS:
                     wait_time = r_cache.ttl(f'failed_login_user_id:{username}')
                     access_logger.warning(f'Max login attempts reached', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
                     logging_error = f'Max Connection Attempts reached, Please wait {wait_time}s'
@@ -138,9 +143,9 @@ def login():
                 # set brute force protection
                 # logger.warning("Login failed, ip={}, username={}".format(current_ip, username))
                 r_cache.incr(f'failed_login_ip:{current_ip}')
-                r_cache.expire(f'failed_login_ip:{current_ip}', 300)
+                r_cache.expire(f'failed_login_ip:{current_ip}', LOGIN_FAILED_TIMEOUT)
                 r_cache.incr(f'failed_login_user_id:{username}')
-                r_cache.expire(f'failed_login_user_id:{username}', 300)
+                r_cache.expire(f'failed_login_user_id:{username}', LOGIN_FAILED_TIMEOUT)
                 #
 
                 access_logger.info(f'Login Failed', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0], 'user_agent': request.user_agent})
@@ -179,12 +184,25 @@ def verify_2fa():
     if not user.is_2fa_setup():
         return redirect(url_for('root.setup_2fa'))
 
+    current_ip = request.access_route[0]
+    failed_otp_user_key = f'failed_otp_user_id:{user_id}'
+
+    failed_otp_user = r_cache.get(failed_otp_user_key)
+    if failed_otp_user and int(failed_otp_user) >= OTP_MAX_FAILED_ATTEMPTS:
+        wait_time = r_cache.ttl(failed_otp_user_key)
+        access_logger.warning(f'Max 2FA attempts reached', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
+        error = f'Max 2FA attempts reached, Please wait {wait_time}s'
+        htop_counter = user.get_htop_counter()
+        next_page = request.form.get('next_page') or request.args.get('next')
+        return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
+
     if request.method == 'POST':
 
         code = request.form.get('otp')
         next_page = request.form.get('next_page')
 
         if user.is_valid_otp(code):
+            r_cache.delete(failed_otp_user_key)
             session.pop('user_id', None)
             session.pop('otp_expire', None)
 
@@ -203,8 +221,10 @@ def verify_2fa():
                     return redirect(next_page)
                 return redirect(url_for('dashboard.index'))
         else:
+            r_cache.incr(failed_otp_user_key)
+            r_cache.expire(failed_otp_user_key, OTP_FAILED_TIMEOUT)
             htop_counter = user.get_htop_counter()
-            access_logger.info(f'Invalid OTP', extra={'user_id': user.get_user_id(), 'ip_address': request.access_route[0], 'user_agent': request.user_agent})
+            access_logger.info(f'Invalid OTP', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
             error = "The OTP is incorrect or has expired"
             return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
 
