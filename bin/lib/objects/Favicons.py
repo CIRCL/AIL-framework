@@ -59,7 +59,10 @@ class Favicon(AbstractDaterangeObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(FAVICON_FOLDER, self.get_rel_path())
+        filename = os.path.realpath(os.path.join(FAVICON_FOLDER, self.get_rel_path()))
+        favicon_dir = FAVICON_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, favicon_dir]) != favicon_dir:
+            return None
         return os.path.realpath(filename)
 
     def get_file_content(self, r_type='str'):
