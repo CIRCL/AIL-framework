@@ -1123,7 +1123,7 @@ def crawler_settings():
                            crawler_test_metadata=crawler_test_metadata,
                            is_onion_filter_enabled=is_onion_filter_enabled,
                            is_onion_filter_unknown=is_onion_filter_unknown,
-                           crawler_logs=crawler_logs
+                           crawler_logs=crawler_logs,
                            is_crawler_filter_local_ips_enabled=is_crawler_filter_local_ips_enabled
                            )
 
