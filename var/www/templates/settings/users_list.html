@@ -163,14 +163,34 @@
                         <h3 class="mb-1">AIL Users</h3>
                         <p class="users-subtitle">Manage accounts, user access, sessions, and multi-factor authentication.</p>
                     </div>
-                    <a class="btn btn-danger confirm-action"
-                       href="{{ url_for('settings_b.users_logout') }}"
-                       data-confirm-title="Log out all users?"
-                       data-confirm-message="This will log out every active user session."
-                       data-confirm-button="Log out everyone">
-                        <i class="fas fa-sign-out-alt"></i> Logout All Users
-                    </a>
+                    <div class="users-actions-group">
+                        <a class="btn btn-outline-warning confirm-action"
+                           href="{{ url_for('settings_b.purge_failed_login') }}"
+                           data-confirm-title="Purge login lockouts?"
+                           data-confirm-message="This will clear all login/password brute-force timeout counters."
+                           data-confirm-button="Purge lockouts">
+                            <i class="fas fa-broom"></i> Purge Login Timeouts
+                        </a>
+                        <a class="btn btn-danger confirm-action"
+                           href="{{ url_for('settings_b.users_logout') }}"
+                           data-confirm-title="Log out all users?"
+                           data-confirm-message="This will log out every active user session."
+                           data-confirm-button="Log out everyone">
+                            <i class="fas fa-sign-out-alt"></i> Logout All Users
+                        </a>
+                    </div>
                 </div>
+
+                {% if purged_failed_login %}
+                    <div class="alert alert-success" role="alert">
+                        Purged {{ purged_failed_login }} login/password brute-force timeout counter(s).
+                    </div>
+                {% endif %}
+                {% if purged_otp_user %}
+                    <div class="alert alert-success" role="alert">
+                        Purged 2FA timeout for {{ purged_otp_user }}.
+                    </div>
+                {% endif %}
 
                 <div class="row mb-2">
                     <div class="col-12 col-md-6 col-xl-3">
@@ -271,6 +291,14 @@
                                                data-confirm-message="The user will need to set up their authenticator app again."
                                                data-confirm-button="Reset 2FA">
                                                 <i class="fas fa-random"></i>
+                                            </a>
+                                            <a class="btn btn-outline-warning px-2 py-0 confirm-action"
+                                               href="{{ url_for('settings_b.purge_user_otp_timeout', user_id=user['id']) }}"
+                                               title="Purge 2FA timeout"
+                                               data-confirm-title="Purge 2FA timeout for {{ user['id'] }}?"
+                                               data-confirm-message="This will clear this user's 2FA brute-force timeout counter."
+                                               data-confirm-button="Purge 2FA timeout">
+                                                <i class="fas fa-broom"></i>
                                             </a>
                                         {% else %}
                                             <span class="badge badge-warning users-2fa-badge"><b>Enforced</b></span>

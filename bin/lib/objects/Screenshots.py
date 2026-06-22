@@ -84,7 +84,10 @@ class Screenshot(AbstractObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(SCREENSHOT_FOLDER, self.get_rel_path(add_extension=True))
+        filename = os.path.realpath(os.path.join(SCREENSHOT_FOLDER, self.get_rel_path(add_extension=True)))
+        image_dir = SCREENSHOT_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, image_dir]) != image_dir:
+            return None
         return os.path.realpath(filename)
 
     def get_file_content(self):

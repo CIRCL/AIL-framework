@@ -168,6 +168,9 @@ def send_to_spider():
     urls = request.form.get('urls_to_crawl')
     if urls:
         urls = crawlers.extract_url_from_text(urls)
+        res = crawlers.api_validate_global_urls(urls=urls)
+        if res:
+            return create_json_response(res[0], res[1])
         l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
         crawlers_types = crawlers.get_crawler_all_types()
         proxies = []  # TODO HANDLE PROXIES
@@ -1104,6 +1107,7 @@ def crawler_settings():
     is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
     is_onion_filter_unknown = crawlers.is_onion_filter_unknown(cache=False)
     crawler_logs = crawlers.get_last_crawler_logs(lines=100)
+    is_crawler_filter_local_ips_enabled = crawlers.is_crawler_filter_local_ips_enabled(cache=False)
 
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
@@ -1120,6 +1124,7 @@ def crawler_settings():
                            is_onion_filter_enabled=is_onion_filter_enabled,
                            is_onion_filter_unknown=is_onion_filter_unknown,
                            crawler_logs=crawler_logs
+                           is_crawler_filter_local_ips_enabled=is_crawler_filter_local_ips_enabled
                            )
 
 
@@ -1188,6 +1193,18 @@ def crawler_filter_unknown_onion():
     else:
         filter_unknown_onion = False
     crawlers.change_onion_filter_unknown_state(filter_unknown_onion)
+    return redirect(url_for('crawler_splash.crawler_settings'))
+
+@crawler_splash.route('/crawler/settings/crawler/filter_local_ips', methods=['GET'])
+@login_required
+@login_admin
+def crawler_filter_local_ips():
+    filter_local_ips = request.args.get('state')
+    if filter_local_ips == 'enable':
+        filter_local_ips = True
+    else:
+        filter_local_ips = False
+    crawlers.change_crawler_filter_local_ips_state(filter_local_ips)
     return redirect(url_for('crawler_splash.crawler_settings'))
 
 
