@@ -285,6 +285,10 @@ class ForumAccount:
     def set_last_error(self, error):
         self._set_field('last_error', error)
 
+    def reset_crawl(self):
+        self.clear_current_crawl()
+        self.set_status('waiting')
+
     def clear_current_crawl(self):
         self._del_field('current_crawl_key')
         self._del_field('current_url')
@@ -323,7 +327,9 @@ class Forum(AbstractDaterangeObject):
 
     def update_thread_last_time(self, thread_id, timestamp):
         score = self.get_thread_last_time(thread_id)
-        if timestamp > score:
+        if not score:
+            return r_object.zadd(f'forum:thread:last_time:{self.id}', {thread_id: int(timestamp)})
+        elif timestamp > score:
             return r_object.zadd(f'forum:thread:last_time:{self.id}', {thread_id: int(timestamp)})
 
     def get_forum_type(self):
@@ -482,6 +488,23 @@ class Forum(AbstractDaterangeObject):
             return None
         index = r_object.incr(f'forum:crawl:rr:{self.id}') - 1
         return accounts[index % len(accounts)]
+
+    def cleanup_stale_crawl_accounts(self):
+        cleaned = []
+        for account_id in self.get_crawl_accounts():
+            account = self.get_crawl_account(account_id)
+            crawl_key = account.get_current_crawl_key()
+            if not crawl_key:
+                continue
+            if self.get_crawl_item(crawl_key) and self.get_inflight_crawl_item(crawl_key):
+                continue
+            self.fail_crawl_item(crawl_key, error='stale_crawl')
+            r_crawler.zrem('forum:crawl:running', f'{self.id}:{account_id}')
+            account.reset_crawl()
+            self.refresh_account_availability(account_id)
+            cleaned.append(account_id)
+
+        return cleaned
 
     def _get_crawl_item_subforum_id(self, item):
         if item.get('type') == 'subforum':

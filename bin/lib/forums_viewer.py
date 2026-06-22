@@ -28,7 +28,7 @@ from lib.crawlers import Cookiejar
 
 _FORUM_OPTIONS = {'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orphan_subforums'}
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
-_THREAD_OPTIONS = {'title', 'info', 'url', 'flags', 'nb_posts'}
+_THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'link', 'state', 'timestamp', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
@@ -223,12 +223,12 @@ def api_set_forum_account_local_storage(user_org, user_id, data):
 
 def _subforum_meta(subforum, flask_context=True):
     meta = subforum.get_meta(_SUBFORUM_OPTIONS, flask_context=flask_context)
-    meta['title'] = meta.get('name') or meta.get('id')
+    meta['name'] = meta.get('name') or meta.get('id')
     return meta
 
 def _thread_meta(thread, flask_context=True):
     meta = thread.get_meta(_THREAD_OPTIONS, flask_context=flask_context)
-    meta['name'] = meta.get('title') or meta.get('id')
+    meta['name'] = meta.get('name') or meta.get('id')
     return meta
 
 def _children_meta(parent, child_type):
