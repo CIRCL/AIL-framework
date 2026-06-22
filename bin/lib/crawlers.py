@@ -13,6 +13,7 @@ import json
 import os
 import pickle
 import re
+import socket
 import sys
 import time
 import uuid
@@ -24,7 +25,8 @@ from multiprocessing import Process as Proc
 from enum import IntEnum, unique
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from urllib.parse import urlparse, urljoin
+from ipaddress import ip_address
+from urllib.parse import urlparse, urljoin, urlsplit
 from bs4 import BeautifulSoup
 from zipfile import ZipFile
 
@@ -289,6 +291,83 @@ def get_url_domain(url):
     if not url_decoded:
         return None
     return url_decoded['domain'].lower()
+
+def is_global_url(url):
+    """Return True when the URL resolves only to global IP addresses."""
+    parsed_url = urlsplit(url)
+
+    if parsed_url.scheme in {'data', 'file'}:
+        return True
+
+    hostname = parsed_url.hostname
+    if not parsed_url.netloc or not hostname:
+        return False
+
+    if hostname.rsplit('.', 1)[-1].lower() in {'onion', 'i2p'}:
+        return True
+
+    try:
+        # The hostname may already be an IPv4 or IPv6 address.
+        addresses = [ip_address(hostname)]
+    except ValueError:
+        try:
+            resolved = socket.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
+        except OSError:
+            return False
+        addresses = []
+        for record in resolved:
+            address = record[4][0]
+            try:
+                addresses.append(ip_address(address))
+            except ValueError:
+                return False
+
+    return bool(addresses) and all(address.is_global for address in addresses)
+
+def _is_crawler_filter_local_ips_enabled():
+    enabled = r_crawler.hget('crawler:filter_local_ips', 'enabled')
+    if enabled is None:
+        r_crawler.hset('crawler:filter_local_ips', 'enabled', str(True))
+        filter_enabled = True
+    else:
+        filter_enabled = enabled == 'True'
+    r_cache.set('crawler:filter_local_ips:state', str(filter_enabled))
+    return filter_enabled
+
+def is_crawler_filter_local_ips_enabled(cache=True):
+    if cache:
+        res = r_cache.get('crawler:filter_local_ips:state')
+        if res is None:
+            enabled = _is_crawler_filter_local_ips_enabled()
+            r_cache.set('crawler:filter_local_ips:state', str(enabled))
+            return enabled
+        else:
+            return res == 'True'
+    else:
+        return _is_crawler_filter_local_ips_enabled()
+
+def change_crawler_filter_local_ips_state(new_state):
+    old_state = is_crawler_filter_local_ips_enabled(cache=False)
+    if old_state != new_state:
+        r_crawler.hset('crawler:filter_local_ips', 'enabled', str(new_state))
+        r_cache.set('crawler:filter_local_ips:state', str(new_state))
+        update_time = time.time()
+        r_crawler.hset('crawler:filter_local_ips', 'update_time', update_time)
+        return True
+    return False
+
+def api_validate_global_urls(url=None, urls=None):
+    if not is_crawler_filter_local_ips_enabled():
+        return None
+    to_check = []
+    if url:
+        to_check.append(url)
+    if urls:
+        to_check.extend(urls)
+    for url_to_check in to_check:
+        if not is_global_url(url_to_check):
+            return {'error': 'URL resolves to a non-public IP address or cannot be resolved', 'url': url_to_check}, 400
+    return None
 
 # TODO options to only extract domains
 # TODO extract onions
@@ -2584,6 +2663,10 @@ def api_add_crawler_task(data, user_org, user_id=None):
                 if max(months, weeks, days, hours, minutes) <= 0:
                     return {'error': 'Invalid frequency'}, 400
                 frequency = f'{months}:{weeks}:{days}:{hours}:{minutes}'
+    filter_local_ips_error = api_validate_global_urls(url=url, urls=urls)
+    if filter_local_ips_error:
+        return filter_local_ips_error
+
     if url:
         if frequency:
             # TODO verify user

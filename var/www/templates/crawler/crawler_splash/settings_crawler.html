@@ -163,6 +163,27 @@
 						<div class="card border-secondary my-4">
 							<div class="card-body text-dark">
 								<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
+									<span>Filter Local IPs</span>
+									<span class="badge badge-{% if is_crawler_filter_local_ips_enabled %}success{% else %}danger{% endif %} px-3 py-2">
+										{% if is_crawler_filter_local_ips_enabled %}Enabled{% else %}Disabled{% endif %}
+									</span>
+								</h5>
+								<p>
+									This option prevents crawler tasks from being added when the submitted URL is invalid, cannot be resolved, or resolves to non-public IP addresses such as localhost, private network ranges, link-local addresses, or other non-global addresses.
+								</p>
+								{% if is_crawler_filter_local_ips_enabled %}
+									<a href="{{ url_for('crawler_splash.crawler_filter_local_ips') }}?state=disable" class="btn btn-info my-2">
+										<i class="fa-solid fa-xmark"></i> Disable Local IP Filter
+									</a>
+								{% else %}
+									<a href="{{ url_for('crawler_splash.crawler_filter_local_ips') }}?state=enable" class="btn btn-info my-2">
+										<i class="fa-solid fa-check"></i> Enable Local IP Filter
+									</a>
+								{% endif %}
+
+								<hr class="border-1 my-4">
+
+								<h5 class="card-title d-flex justify-content-between align-items-center flex-wrap">
 									<span>Filter Unsafe Onion</span>
 									<span class="badge badge-{% if is_onion_filter_enabled %}success{% else %}danger{% endif %} px-3 py-2">
 										{% if is_onion_filter_enabled %}Enabled{% else %}Disabled{% endif %}
