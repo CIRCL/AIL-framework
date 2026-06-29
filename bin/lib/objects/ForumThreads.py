@@ -255,7 +255,11 @@ class ForumThread(AbstractSubtypeObject):
         return f'{baseurl}/correlation/show?type={self.type}&subtype={self.subtype}&id={self.id}'
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf0e6', 'color': '#4dffff', 'radius': 5}
+        icon = '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+    <path d="M0 0h24v24H0z" fill="none" />
+    <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
+</svg>'''
+        return {'style': 'svg', 'icon': icon, 'color': '#7E57C2', 'radius': 5}
 
     def get_misp_object(self):
         pass

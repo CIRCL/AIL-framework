@@ -627,7 +627,14 @@ function get_icon_codepoint(iconValue) {
     return cp.toString(16).toUpperCase();
 }
 
+function is_svg_icon(nodeStyle) {
+    return nodeStyle && nodeStyle.style === 'svg' && nodeStyle.icon;
+}
+
 function build_icon_class(nodeStyle, index) {
+    if (is_svg_icon(nodeStyle)) {
+        return '';
+    }
     const baseClass = (nodeStyle && (nodeStyle.icon_class || nodeStyle.style)) || '';
     const iconValue = get_icon_unicode_value(nodeStyle);
     const codepoint = get_icon_codepoint(iconValue);
@@ -635,6 +642,13 @@ function build_icon_class(nodeStyle, index) {
         return baseClass;
     }
     return (baseClass + ' pvt-ail-icon-' + index).trim();
+}
+
+function build_svg_icon(nodeStyle) {
+    if (is_svg_icon(nodeStyle)) {
+        return nodeStyle.icon;
+    }
+    return undefined;
 }
 
 function inject_icon_css_rules(nodes) {
@@ -701,6 +715,7 @@ function create_graph(url){
                     color: n.style.node_color || n.style.color,
                     size: n.style.node_radius || n.style.radius || 5,
                     iconClass: build_icon_class(n.style, idx),
+                    svgIcon: build_svg_icon(n.style),
                     textColor: '#000000',
                 });
                 return nodeById[n.id];

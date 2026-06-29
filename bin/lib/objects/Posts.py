@@ -33,7 +33,11 @@ class Post(AbstractObject):
         return f'{baseurl}/correlation/show?type={self.type}&subtype=&id={self.id}'
 
     def get_svg_icon(self):
-        return {'style': 'fas', 'icon': '\uf075', 'color': '#4dffff', 'radius': 5}
+        icon = '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+    <path d="M0 0h24v24H0z" fill="none" />
+    <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
+</svg>'''
+        return {'style': 'svg', 'icon': icon, 'color': '#7E57C2', 'radius': 5}
 
     def get_misp_object(self):
         pass
