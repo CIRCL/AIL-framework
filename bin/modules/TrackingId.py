@@ -48,9 +48,9 @@ class TrackingId(AbstractModule):
         content = obj.get_content()
         to_tag = False
         nb = 0
-        source = self.obj.get_source()
         if not self.obj.type == 'item':
             return None
+        source = self.obj.get_source()
         if source != 'crawled':
             return None
 

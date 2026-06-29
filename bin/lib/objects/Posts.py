@@ -136,8 +136,14 @@ class Post(AbstractObject):
                 objs_containers.add(user_account)
         return objs_containers
 
+    def get_reactions(self):
+        return r_object.hgetall(f'meta:reactions:{self.type}::{self.id}')
+
+    # TODO sanitize reactions
+    def add_reaction(self, reaction, nb_reaction):
+        r_object.hset(f'meta:reactions:{self.type}::{self.id}', reaction, nb_reaction)
+
     # TODO:
-    #   - Reactions
     #   - URLs
     #   - Images
     #   - Attachments
@@ -165,6 +171,8 @@ class Post(AbstractObject):
         if 'translation' in options and translation_target:
             source = meta.get('language')
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
+        if 'reactions' in options:
+            meta['reactions'] = self.get_reactions()
         return meta
 
     def create(self, post_id, timestamp, content, parent_thread, forum_obj, state=None, quote_ids=None):

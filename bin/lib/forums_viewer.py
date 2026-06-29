@@ -30,7 +30,7 @@ from lib.crawlers import Cookiejar
 _FORUM_OPTIONS = {'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orphan_subforums'}
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
-_POST_OPTIONS = {'content', 'language', 'link', 'state', 'timestamp', 'translation', 'user-account'}
+_POST_OPTIONS = {'content', 'language', 'link', 'reactions', 'state', 'timestamp', 'translation', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def update_account_cookies_local_storage(account, cookies, local_storage):
