@@ -45,6 +45,9 @@ class ForumAccount:
         self.forum_id = forum_id
         self.id = account_id
 
+    def exists(self):
+        return r_object.exists(f'forum:crawl:account:{self.forum_id}:{self.id}')
+
     def _get_field(self, field):
         return r_object.hget(f'forum:crawl:account:{self.forum_id}:{self.id}', field)
 

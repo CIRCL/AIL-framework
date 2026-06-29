@@ -147,6 +147,22 @@ def forum_explorer_crawler_account_save():
     return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 
+
+@forums_explorer.route("/chats/explorer/forums/crawler/account/reactivate", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_reactivate():
+    forum_id = request.form.get('forum_id')
+    account_id = request.form.get('account_id')
+    next_page = request.form.get('next') or 'manage'
+    res = forums_viewer.api_reactivate_errored_forum_crawl_account(forum_id, account_id)
+    target = 'forums_explorer.forum_explorer_crawler_status' if next_page == 'status' else 'forums_explorer.forum_explorer_crawler_manage'
+    if res[1] != 200:
+        error = res[0].get('error') or 'Unable to send account back to crawler queue'
+        return redirect(url_for(target, id=forum_id, error=error))
+    success = f"Account {account_id} status updated to waiting and sent back to the forum crawler queue"
+    return redirect(url_for(target, id=forum_id, success=success))
+
 @forums_explorer.route("/chats/explorer/forums/crawler/account/delete", methods=['POST'])
 @login_required
 @login_admin

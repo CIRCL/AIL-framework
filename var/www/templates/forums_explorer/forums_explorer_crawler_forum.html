@@ -84,13 +84,23 @@
         {% if status['accounts'] %}
           <div class="table-responsive">
             <table class="table table-sm table-striped mb-0">
-              <thead><tr><th>account_id</th><th>enabled</th><th>status</th><th>available</th><th>availability_reason</th><th>current_task_uuid</th><th>current_crawl_key</th><th>current_url</th><th>last_used_at</th><th>last_crawled_at</th><th>last_error</th></tr></thead>
+              <thead><tr><th>account_id</th><th>enabled</th><th>status</th><th>action</th><th>available</th><th>availability_reason</th><th>current_task_uuid</th><th>current_crawl_key</th><th>current_url</th><th>last_used_at</th><th>last_crawled_at</th><th>last_error</th></tr></thead>
               <tbody>
                 {% for account in status['accounts'] %}
                   <tr>
                     <td>{{ account.get('id') }}</td>
                     <td>{{ account.get('enabled') }}</td>
                     <td>{{ account.get('status') }}</td>
+                    <td>
+                      {% if account.get('status') == 'error' %}
+                        <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}">
+                          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+                          <input type="hidden" name="account_id" value="{{ account.get('id') }}">
+                          <input type="hidden" name="next" value="status">
+                          <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account {{ account.get('id') }} back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+                        </form>
+                      {% endif %}
+                    </td>
                     <td>{{ account.get('available') }}</td>
                     <td>{{ account.get('availability_reason') }}</td>
                     <td class="text-break">{{ account.get('current_task_uuid') }}</td>

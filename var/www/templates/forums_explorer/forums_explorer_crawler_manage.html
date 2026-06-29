@@ -73,6 +73,8 @@
 </ol></nav>
 
 <h1 class="mb-3"><i class="fas fa-cogs"></i> Forum crawler management</h1>
+{% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
+{% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
 <div class="forum-board mb-4"><div class="forum-board-header">Crawl config</div><div class="p-3">
 <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_config_edit') }}">
   <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
@@ -132,7 +134,18 @@
           <button class="btn btn-sm btn-primary mt-2">Save</button>
         </form>
       </td>
-      <td>{{ account.get('status') }}<br><small class="text-break">last_error: {{ account.get('last_error') }}</small></td>
+      <td>
+        {{ account.get('status') }}
+        {% if account.get('status') == 'error' %}
+          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}" class="mt-2">
+            <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+            <input type="hidden" name="account_id" value="{{ account['id'] }}">
+            <input type="hidden" name="next" value="manage">
+            <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account {{ account['id'] }} back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+          </form>
+        {% endif %}
+        <br><small class="text-break">last_error: {{ account.get('last_error') }}</small>
+      </td>
       <td>available: {{ account.get('available') }}<br>reason: {{ account.get('availability_reason') }}</td>
       <td class="text-break">task: {{ account.get('current_task_uuid') }}<br>crawl: {{ account.get('current_crawl_key') }}<br>url: {{ account.get('current_url') }}<br>referer: {{ account.get('current_referer') }}<br>last_used_at: {{ account.get('last_used_at') }}<br>last_crawled_at: {{ account.get('last_crawled_at') }}<br>active_time: {{ account.get('active_time') }}</td>
       <td><form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_delete') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-danger" onclick="return confirm('Delete account {{ account['id'] }}?')"><i class="fas fa-trash"></i></button></form></td>

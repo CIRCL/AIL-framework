@@ -194,6 +194,21 @@ def delete_forum_crawl_account(forum_id, account_id):
     account.delete_meta()
     return {'forum_id': forum_id, 'account_id': account_id}, 200
 
+
+def api_reactivate_errored_forum_crawl_account(forum_id, account_id):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "error": "Unknown forum"}, 404
+    account = forum.get_crawl_account(account_id)
+    if not account.exists():
+        return {"status": "error", "error": "Unknown account"}, 404
+    if account.get_status() != 'error':
+        return {"status": "error", "error": "Account is not in error status"}, 400
+    account.clear_current_crawl()
+    account.clear_error()
+    forum.refresh_account_availability(account_id)
+    return account.get_meta(), 200
+
 def api_set_forum_account_local_storage(user_org, user_id, data):
     if not isinstance(data, dict):
         return {'status': 'error', 'error': 'Invalid JSON body'}, 400

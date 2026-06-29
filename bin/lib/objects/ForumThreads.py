@@ -47,6 +47,9 @@ class ForumThread(AbstractSubtypeObject):
     def set_url(self, url):
         self._set_field('url', url)
 
+    def contain_posts(self):
+        return r_object.exists(f'posts:forum-thread:{self.subtype}:{self.id}')
+
     def get_nb_posts(self):
         return r_object.zcard(f'posts:forum-thread:{self.subtype}:{self.id}')
 
