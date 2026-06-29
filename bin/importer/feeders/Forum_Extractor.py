@@ -313,8 +313,12 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         """Create/update the post author user-account and username metadata."""
         if not author or not author.get('author_id'):
             return None
-        user_account = UserAccount(str(author.get('author_id')), self.forum.id)
         username = author.get('author_username')
+        user_id = str(author.get('author_id'))
+        # user without id are set to 0
+        if user_id == '0' and username:
+            user_id = username.lower()
+        user_account = UserAccount(user_id, self.forum.id)
         if username:
             username = Username(username.lower(), self.forum.id)
         else:
