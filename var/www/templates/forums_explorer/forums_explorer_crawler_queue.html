@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forum crawl queue - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <style>
+    .forum-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); background: white; }
+    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .table td, .table th { vertical-align: middle; }
+    .text-break { word-break: break-word; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid"><div class="row">
+{% include 'sidebars/sidebar_objects.html' %}
+<div class="col-12 col-lg-10" id="core_content">
+{% set forum = meta['forum'] %}{% set queue = meta['queue'] %}
+<nav aria-label="breadcrumb" class="mt-3"><ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}?id={{ forum['id'] }}">Crawler status</a></li>
+  <li class="breadcrumb-item active">Queue {{ forum.get('name') or forum['id'] }}</li>
+</ol></nav>
+
+{% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+<div class="forum-title-card p-4 mb-4">
+  <h1 class="mb-2"><i class="fas fa-list"></i> Forum crawl queue</h1>
+  <div><span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>{% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}</div>
+  <form class="mt-3 d-inline-block" method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_queue_enqueue') }}">
+    <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+    <button class="btn btn-sm btn-success" {% if not forum.get('url') %}disabled title="Forum URL is missing"{% else %}onclick="return confirm('Send this forum URL to the crawl queue?')"{% endif %}><i class="fas fa-paper-plane"></i> Send forum URL to crawl queue</button>
+  </form>
+  <form class="mt-3 d-inline-block" method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_queue_purge') }}">
+    <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+    <button class="btn btn-sm btn-danger" onclick="return confirm('Purge crawl queue runtime state for Forum {{ forum['id'] }}?')"><i class="fas fa-trash"></i> Purge crawl queue</button>
+  </form>
+</div>
+
+<div class="forum-board mb-4">
+  <div class="forum-board-header">Queue state</div>
+  <table class="table table-sm mb-0"><tbody>
+    <tr><th style="width: 240px;">forum_id</th><td class="text-break">{{ forum['id'] }}</td></tr>
+    <tr><th>pending queue count</th><td>{{ queue.get('pending_count') or 0 }}</td></tr>
+    <tr><th>inflight count</th><td>{{ queue.get('inflight_count') or 0 }}</td></tr>
+    <tr><th>active/dedup count</th><td>{{ queue.get('active_dedup_count') or 0 }}</td></tr>
+    <tr><th>display limit</th><td>{{ meta.get('sample_size') }}</td></tr>
+  </tbody></table>
+</div>
+
+<div class="forum-board mb-4">
+  <div class="forum-board-header">Pending crawl items</div>
+  {% if queue.get('pending_sample') %}
+    <div class="table-responsive"><table class="table table-sm table-striped mb-0">
+      <thead><tr><th>crawl_key</th><th>score</th><th>type</th><th>id</th><th>page</th><th>url</th><th>referer</th><th>crawl_mode</th><th>parent</th></tr></thead>
+      <tbody>{% for pending in queue.get('pending_sample') %}{% set item = pending.get('item') or {} %}
+        <tr>
+          <td class="text-break">{{ pending.get('crawl_key') }}</td>
+          <td>{{ pending.get('score') }}</td>
+          <td>{{ item.get('type') }}</td>
+          <td class="text-break">{{ item.get('id') }}</td>
+          <td>{{ item.get('page') }}</td>
+          <td class="text-break">{{ item.get('url') }}</td>
+          <td class="text-break">{{ item.get('referer') }}</td>
+          <td>{{ item.get('crawl_mode') }}</td>
+          <td class="text-break">{{ item.get('parent') }}</td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+  {% else %}<div class="alert alert-info m-3">No pending crawl items.</div>{% endif %}
+</div>
+
+<div class="forum-board mb-4">
+  <div class="forum-board-header">Inflight crawl items</div>
+  {% if queue.get('inflight_sample') %}
+    <div class="table-responsive"><table class="table table-sm table-striped mb-0">
+      <thead><tr><th>crawl_key</th><th>account_id</th><th>task_uuid</th><th>started_at</th><th>url</th><th>referer</th></tr></thead>
+      <tbody>{% for row in queue.get('inflight_sample') %}{% set inflight = row.get('inflight') or {} %}
+        <tr>
+          <td class="text-break">{{ row.get('crawl_key') }}</td>
+          <td>{{ inflight.get('account_id') }}</td>
+          <td class="text-break">{{ inflight.get('task_uuid') }}</td>
+          <td>{{ inflight.get('started_at') }}</td>
+          <td class="text-break">{{ inflight.get('url') }}</td>
+          <td class="text-break">{{ inflight.get('referer') }}</td>
+        </tr>
+      {% endfor %}</tbody>
+    </table></div>
+  {% else %}<div class="alert alert-info m-3">No inflight crawl items.</div>{% endif %}
+</div>
+</div></div></div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+</body>
+</html>

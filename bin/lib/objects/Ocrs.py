@@ -169,16 +169,12 @@ class Ocr(AbstractDaterangeObject):
             meta['img'] = self.draw_bounding_boxs()
         if 'map' in options:
             meta['map'] = self.get_img_map_coords()
-        if 'language' in options:
-            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
             if meta.get('language'):
                 source = meta['language']
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-            if 'language' in options:
-                meta['language'] = self.get_language()
         return meta
 
     def get_objs_container(self):

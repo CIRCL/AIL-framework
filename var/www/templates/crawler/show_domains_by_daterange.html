@@ -1,4 +1,4 @@
-<div class="card text-white bg-dark mb-3 mt-1">
+<div class="card text-white bg-dark mb-0 shadow-sm h-100">
     {% if crawler_stats %}
         <div class="card-header">
             <div class="row">
@@ -14,7 +14,7 @@
         </div>
     {% endif %}
   <div class="card-body">
-    <h5 class="card-title">Search Domains by Date :</h5>
+    <h5 class="card-title">Search Domains by Date</h5>
     <form action="{{ url_for('crawler_splash.domains_search_date_post') }}" id="hash_selector_form" method='post'>
       <div class="row">
         <div class="col-6">
@@ -43,9 +43,9 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-primary">
+      <button class="btn btn-primary mt-2">
         <i class="fas fa-eye"></i> Show {{ type }} Domains
       </button>
-    <form>
+    </form>
   </div>
 </div>

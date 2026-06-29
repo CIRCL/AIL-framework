@@ -1,106 +1,460 @@
 <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
 <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+<style>
+.chat-object-stat-action {
+    position: relative;
+    border-color: rgba(0, 123, 255, .22);
+    background: #f8fbff;
+}
+
+.chat-object-stat-action .chat-object-stat-value {
+    color: #0056b3;
+}
+
+.chat-object-stat-hint {
+    display: block;
+    margin-top: .35rem;
+    color: #0069d9;
+    font-size: .75rem;
+    font-weight: 600;
+}
+
+.chat-object-stat-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-left: .5rem;
+    border-radius: 50%;
+    background: rgba(0, 123, 255, .1);
+    color: #0069d9;
+    font-size: .75rem;
+}
+
+.chat-object-stat-action:hover,
+.chat-object-stat-action:focus {
+    border-color: rgba(0, 123, 255, .45);
+    background: #eef6ff;
+    box-shadow: 0 .25rem .75rem rgba(0, 123, 255, .1);
+}
+
+.chat-object-stat-action:hover .chat-object-stat-hint,
+.chat-object-stat-action:focus .chat-object-stat-hint {
+    text-decoration: underline;
+}
+    .chat-object-card {
+    overflow: hidden;
+}
+
+.chat-object-header {
+    background: linear-gradient(135deg, #f8fbff 0%, #ffffff 70%);
+    padding: 1rem 1.25rem;
+}
+
+.chat-object-avatar {
+    object-fit: cover;
+    background: #fff;
+}
+
+.chat-object-address {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+}
+
+.chat-object-stat {
+    display: block;
+    height: 100%;
+    padding: .85rem 1rem;
+    border: 1px solid rgba(0, 0, 0, .075);
+    border-radius: .75rem;
+    background: #fff;
+    color: inherit;
+}
+
+.chat-object-stat-link:hover {
+    border-color: rgba(0, 123, 255, .35);
+    box-shadow: 0 .25rem .75rem rgba(0, 123, 255, .08);
+}
+
+.chat-object-stat-label {
+    display: block;
+    margin-bottom: .25rem;
+    color: #6c757d;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.chat-object-stat-value {
+    display: block;
+    color: #212529;
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+
+.chat-object-section {
+    margin-top: 1rem;
+}
+
+.chat-object-section-title {
+    margin-bottom: .5rem;
+    color: #495057;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.chat-object-info {
+    padding: .85rem 1rem;
+    border: 1px solid rgba(0, 0, 0, .075);
+    border-radius: .75rem;
+    background: #f8f9fa;
+}
+
+.chat-object-info pre {
+    margin: 0;
+    color: #212529;
+    font-size: .875rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.chat-object-tags {
+    min-height: 2rem;
+}
+
+.chat-object-actions .btn,
+.chat-object-section .btn {
+    font-weight: 600;
+}
+
+@media (max-width: 575.98px) {
+    .chat-object-header {
+        padding: 1rem;
+    }
+
+    .chat-object-stat,
+    .chat-object-info {
+        padding: .75rem;
+    }
+}
+.chat-object-timeline-compact {
+    position: relative;
+    padding: .65rem .85rem;
+    border: 1px solid rgba(0, 0, 0, .075);
+    border-radius: .75rem;
+    background: #f8f9fa;
+}
+
+.chat-object-timeline-compact::before {
+    content: "";
+    position: absolute;
+    top: 1rem;
+    bottom: 1rem;
+    left: 1.48rem;
+    width: 1px;
+    background: rgba(0, 0, 0, .12);
+}
+
+.chat-object-timeline-compact-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 1.55rem;
+    margin-bottom: .35rem;
+}
+
+.chat-object-timeline-compact-item:last-child {
+    margin-bottom: 0;
+}
+
+.chat-object-timeline-compact-icon {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1.3rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    margin-right: .65rem;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 123, 255, .25);
+    background: #f0f7ff;
+    font-size: .7rem;
+}
+
+.chat-object-timeline-compact-content {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    min-width: 0;
+    flex: 1;
+    gap: .75rem;
+}
+
+.chat-object-timeline-compact-label {
+    flex: 0 0 auto;
+    color: #6c757d;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.chat-object-timeline-compact-value {
+    min-width: 0;
+    color: #212529;
+    font-size: .85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: right;
+}
+</style>
+
 {% with modal_add_tags=ail_tags %}
-	{% include 'modals/add_tags.html' %}
+    {% include 'modals/add_tags.html' %}
 {% endwith %}
 
 {% include 'modals/edit_tag.html' %}
 
+{% set display_name = meta['username']['id'] if meta['username'] else meta['name'] %}
 
-<div class="card my-1">
-	<div class="card-header">
-        <h4 class="text-secondary">{% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['name'] }}{% endif %} :</h4>
-        {% if meta['icon'] %}
-            <div><img src="{{ url_for('objects_image.image', filename=meta['icon'])}}" class="mb-2" alt="{{ meta['id'] }}" width="200" height="200"></div>
-        {% endif %}
-		<ul class="list-group mb-2">
-            <li class="list-group-item py-0">
-                <table class="table">
-                    <thead class="">
-                    <tr>
-                        <th>Name</th>
-                        <th>ID</th>
-                        <th>Created at</th>
-                        <th>First Seen</th>
-                        <th>Last Seen</th>
-                        <th>NB Sub-Channels</th>
-                        <th>Participants</th>
-                    </tr>
-                    </thead>
-                    <tbody style="font-size: 15px;">
-                    <tr>
-                        <td>{{ meta['name'] }}</td>
-                        <td>{{ meta['id']  }}</td>
-                        <td>{{ meta['created_at'] }}</td>
-                        <td>
-                            {% if meta['first_seen'] %}
-                                {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if meta['last_seen'] %}
-                                {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
-                            {% endif %}
-                        </td>
-                        <td>{{ meta['nb_subchannels'] }}</td>
-                        <td>
-                            <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants')}}?type=chat&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"><i class="far fa-user-circle"></i> {{ meta['nb_participants']}}</a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-                {% if meta['info'] %}
-                    <li class="list-group-item py-0">
-                        <pre class="my-0">{{ meta['info'] }}</pre>
-                        {% if meta['translation_info'] %}
-                            <hr class="m-1">
-                            <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
+<div class="card my-3 shadow-sm border-0 rounded-lg chat-object-card">
+    <div class="card-header bg-white border-0 chat-object-header">
+        <div class="d-flex flex-column flex-md-row align-items-md-start">
+            {% if meta['icon'] %}
+                <img src="{{ url_for('objects_image.image', filename=meta['icon']) }}"
+                     class="chat-object-avatar rounded-lg border shadow-sm mr-md-3 mb-3 mb-md-0"
+                     alt="Icon for {{ display_name }}"
+                     width="96"
+                     height="96">
+            {% endif %}
+
+            <div class="flex-grow-1 min-width-0">
+                <div class="d-flex flex-column flex-lg-row justify-content-between">
+                    <div class="pr-lg-3">
+                        <h4 class="mb-1 font-weight-bold text-dark text-break">
+                            {{ meta['name'] }}
+                        </h4>
+
+                        {% if meta['username'] and meta['username']['id'] != meta['name'] %}
+                            <div class="mb-2 text-muted text-break">
+                                <i class="far fa-user-circle mr-1" aria-hidden="true"></i>
+                                {{ meta['username']['id'] }}
+                            </div>
                         {% endif %}
-                    </li>
+
+                        <div class="small text-muted text-break">
+                            ID:
+                            <code>{{ meta['id'] }}</code>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 mt-lg-0 text-lg-right flex-shrink-0">
+                        {% if meta['protocol'] %}
+                            <span class="badge badge-info badge-pill px-3 py-2 mb-1">
+                                {{ meta['protocol'] }}
+                            </span>
+                        {% endif %}
+
+                        {% if meta['network'] %}
+                            <span class="badge badge-secondary badge-pill px-3 py-2 mb-1">
+                                {{ meta['network'] }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if meta['address'] %}
+                    <div class="mt-3">
+                        <span class="badge badge-light border text-muted px-3 py-2 text-break chat-object-address">
+                            <i class="fas fa-map-marker-alt mr-1" aria-hidden="true"></i>
+                            {{ meta['address'] }}
+                        </span>
+                    </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
 
-			<li class="list-group-item py-0">
-				<div class="my-2">
-					Tags:
-					{% for tag in meta['tags'] %}
-                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
-                                data-toggle="modal" data-target="#edit_tags_modal"
-						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="{{ meta['subtype'] }}" data-objid="{{ meta["id"] }}">
-                                {{ tag }}
-						</button>
-					{%  endfor %}
-					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-                        <i class="far fa-plus-square"></i>
-                    </button>
-				</div>
-			</li>
-		</ul>
+    <div class="card-body pt-0">
+        <div class="row">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="chat-object-stat">
+                    <span class="chat-object-stat-label">Sub-Channels</span>
+                    <strong class="chat-object-stat-value">{{ meta['nb_subchannels'] }}</strong>
+                </div>
+            </div>
 
-		{% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'] %}
-			{% include 'modals/investigations_register_obj.html' %}
-		{% endwith %}
-		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
-			<i class="fas fa-microscope"></i> Investigations
-		</button>
+            <div class="col-6 col-md-3 mb-3">
+                <a href="{{ url_for('chats_explorer.chats_explorer_chat_participants') }}?type=chat&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"
+                   class="chat-object-stat chat-object-stat-link chat-object-stat-action text-decoration-none"
+                   title="Open participants list">
+                    <span class="chat-object-stat-label">Participants</span>
 
-        <span class="mb-2 float-right">
+                    <span class="d-flex align-items-center justify-content-between">
+                        <strong class="chat-object-stat-value">
+                            <i class="far fa-user-circle mr-1" aria-hidden="true"></i>
+                            {{ meta['nb_participants'] }}
+                        </strong>
+
+                        <span class="chat-object-stat-arrow" aria-hidden="true">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                    </span>
+
+                    <span class="chat-object-stat-hint">
+                        View participants
+                    </span>
+                </a>
+            </div>
+
+            <div class="col-12 col-md-6 mb-3">
+    <div class="chat-object-timeline-compact h-100">
+        <div class="chat-object-timeline-compact-item">
+            <div class="chat-object-timeline-compact-icon">
+                <i class="far fa-calendar-plus" aria-hidden="true"></i>
+            </div>
+
+            <div class="chat-object-timeline-compact-content">
+                <span class="chat-object-timeline-compact-label">Created</span>
+                <span class="chat-object-timeline-compact-value text-break">
+                    {{ meta['created_at'] if meta['created_at'] else '-' }}
+                </span>
+            </div>
+        </div>
+
+        <div class="chat-object-timeline-compact-item">
+            <div class="chat-object-timeline-compact-icon">
+                <i class="far fa-eye" aria-hidden="true"></i>
+            </div>
+
+            <div class="chat-object-timeline-compact-content">
+                <span class="chat-object-timeline-compact-label">First seen</span>
+                <span class="chat-object-timeline-compact-value">
+                    {{ meta['first_seen'][0:4] ~ '-' ~ meta['first_seen'][4:6] ~ '-' ~ meta['first_seen'][6:8] if meta['first_seen'] else '-' }}
+                </span>
+            </div>
+        </div>
+
+        <div class="chat-object-timeline-compact-item">
+            <div class="chat-object-timeline-compact-icon">
+                <i class="far fa-clock" aria-hidden="true"></i>
+            </div>
+
+            <div class="chat-object-timeline-compact-content">
+                <span class="chat-object-timeline-compact-label">Last seen</span>
+                <span class="chat-object-timeline-compact-value">
+                    {{ meta['last_seen'][0:4] ~ '-' ~ meta['last_seen'][4:6] ~ '-' ~ meta['last_seen'][6:8] if meta['last_seen'] else '-' }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+
+        {% if meta['info'] %}
+            <div class="chat-object-section mt-1">
+                <div class="chat-object-section-title">
+                    <i class="far fa-comment-alt mr-1" aria-hidden="true"></i>
+                    Description
+                </div>
+
+                <div class="chat-object-info">
+                    <pre class="mb-0">{{ meta['info'] }}</pre>
+
+                    {% if meta['translation_info'] %}
+                        <hr class="my-3">
+                        <pre class="mb-0 text-secondary">{{ meta['translation_info'] }}</pre>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="chat-object-section">
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between mb-2">
+                <div class="chat-object-section-title mb-2 mb-sm-0">
+                    <i class="fas fa-tags mr-1" aria-hidden="true"></i>
+                    Tags
+                </div>
+
+                <button type="button"
+                        class="btn btn-outline-primary btn-sm rounded-pill font-weight-bold px-3"
+                        data-toggle="modal"
+                        data-target="#add_tags_modal">
+                    <i class="fas fa-plus mr-1" aria-hidden="true"></i>
+                    Add tag
+                </button>
+            </div>
+
+            <div class="chat-object-tags d-flex flex-wrap align-items-center">
+                {% if meta['tags'] %}
+                    {% for tag in meta['tags'] %}
+                        <button class="btn btn-outline-{{ bootstrap_label[loop.index0 % 5] }} btn-sm rounded-pill mr-2 mb-2"
+                                data-toggle="modal"
+                                data-target="#edit_tags_modal"
+                                data-tagid="{{ tag }}"
+                                data-objtype="{{ meta['type'] }}"
+                                data-objsubtype="{{ meta['subtype'] }}"
+                                data-objid="{{ meta['id'] }}"
+                                title="Edit tag {{ tag }}">
+                            {{ tag }}
+                        </button>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-muted small">
+                        No tags yet.
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'] %}
+            {% include 'modals/investigations_register_obj.html' %}
+        {% endwith %}
+
+        <div class="chat-object-actions d-flex flex-wrap align-items-center pt-3 mt-3 border-top">
+            <button type="button"
+                    class="btn btn-primary btn-sm rounded-pill mr-2 mb-2"
+                    data-toggle="modal"
+                    data-target="#investigations_register_obj_modal">
+                <i class="fas fa-microscope mr-1" aria-hidden="true"></i>
+                Investigations
+            </button>
+
             {% if is_correlation %}
-                <a href="{{ url_for('chats_explorer.chats_explorer_chat')}}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-info"><i class="fas fa-comments"></i> Show Object</button>
+                <a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"
+                   class="btn btn-info btn-sm rounded-pill mr-2 mb-2">
+                    <i class="fas fa-comments mr-1" aria-hidden="true"></i>
+                    Show object
                 </a>
             {% else %}
-                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
-{#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
-                    </button>
+                <a href="{{ url_for('correlation.show_correlation') }}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"
+                   class="btn btn-info btn-sm rounded-pill mr-2 mb-2">
+                    <i class="far fa-eye mr-1" aria-hidden="true"></i>
+                    Correlations
                 </a>
-                <a href="{{ url_for('correlation.show_relationship')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-secondary"><i class="far fa-eye"></i> Relationships &nbsp;
-                    </button>
+
+                <a href="{{ url_for('correlation.show_relationship') }}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}"
+                   class="btn btn-secondary btn-sm rounded-pill mr-2 mb-2">
+                    <i class="fas fa-project-diagram mr-1" aria-hidden="true"></i>
+                    Relationships
+                </a>
+
+                <a href="{{ url_for('chats_explorer.chats_explorer_instance') }}?subtype={{ meta['subtype'] }}"
+                   class="btn btn-outline-primary btn-sm rounded-pill mb-2">
+                    <i class="fas fa-comments mr-1" aria-hidden="true"></i>
+                    Chats list
                 </a>
             {% endif %}
-        </span>
-
-	</div>
+        </div>
+    </div>
 </div>

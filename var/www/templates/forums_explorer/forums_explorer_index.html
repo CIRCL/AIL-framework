@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forums - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <style>
+    .forum-hero { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); }
+    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .forum-row { display: flex; align-items: center; padding: 1rem; border-top: 1px solid #e8ecef; color: inherit; }
+    .forum-row:hover { background: #f6f9fb; text-decoration: none; color: inherit; }
+    .forum-icon { width: 48px; height: 48px; border-radius: 50%; background: #d9edf7; color: #2f6f8f; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-right: 1rem; flex: 0 0 48px; }
+    .forum-stats { min-width: 170px; text-align: right; color: #6c757d; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid">
+  <div class="row">
+    {% include 'sidebars/sidebar_objects.html' %}
+    <div class="col-12 col-lg-10" id="core_content">
+      <div class="forum-hero my-3 p-4">
+        <h1 class="mb-1"><i class="fas fa-comments"></i> Forums Explorer</h1>
+        <p class="mb-0">Browse imported forum archives like a live forum: forums, subforums, threads, and posts.</p>
+        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}"><i class="fas fa-spider"></i> Forum crawler status</a>
+      </div>
+
+      {% if is_admin %}
+      <div class="forum-board mb-4">
+        <div class="forum-board-header">Create Forum manually</div>
+        <div class="p-3">
+          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_forum_create') }}">
+            <div class="form-row">
+              <div class="form-group col-md-3"><label>forum_id</label><input class="form-control" name="forum_id" placeholder="forum identifier" required></div>
+              <div class="form-group col-md-3"><label>forum_type</label><input class="form-control" name="forum_type" value="generic" required></div>
+              <div class="form-group col-md-3"><label>name</label><input class="form-control" name="name" placeholder="Display name"></div>
+              <div class="form-group col-md-3"><label>url</label><input class="form-control" name="url" placeholder="https://forum.example/"></div>
+            </div>
+            <div class="form-group"><label>info</label><textarea class="form-control" name="info" rows="2" placeholder="Optional operator notes"></textarea></div>
+            <button class="btn btn-primary"><i class="fas fa-plus"></i> Create Forum</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if forums %}
+        <div class="forum-board mb-4">
+          <div class="forum-board-header">Imported forums</div>
+          {% for forum in forums %}
+            <a class="forum-row" href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ forum['id'] }}">
+              <div class="forum-icon"><i class="fas fa-comments"></i></div>
+              <div class="flex-grow-1">
+                <h5 class="mb-1">{{ forum.get('name') or forum['id'] }}</h5>
+                <div class="text-muted">
+                  <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
+                  <span class="mr-3"><i class="fas fa-layer-group"></i> {{ forum.get('forum_type') or '' }}</span>
+                  {% if forum.get('url') %}<span><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+                </div>
+              </div>
+              <div class="forum-stats">
+                <div><strong>{{ forum.get('nb_subforums') or 0 }}</strong> root subforums</div>
+                <div><strong>{{ forum.get('nb_orphan_subforums') or 0 }}</strong> orphan subforums</div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">No imported forums found.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+
+</body>
+</html>

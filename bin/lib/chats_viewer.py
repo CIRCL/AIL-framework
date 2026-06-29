@@ -135,6 +135,11 @@ class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
     def get_icon(self):
         if self.id == 'discord':
             icon = {'style': 'fab', 'icon': 'fa-discord'}
+        elif self.id == 'matrix':
+            icon = {'style': 'svg',
+                    'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 256 256"><path fill="currentColor" d="M72 216a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V40a8 8 0 0 1 8-8h24a8 8 0 0 1 0 16H48v160h16a8 8 0 0 1 8 8M216 32h-24a8 8 0 0 0 0 16h16v160h-16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-32 88a32 32 0 0 0-56-21.13a31.93 31.93 0 0 0-40.71-6.15A8 8 0 0 0 72 96v64a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0Z"/></svg>'}
+        elif self.id == 'rocket-chat':
+            icon = {'style': 'fab', 'icon': 'fa-rocketchat'}
         elif self.id == 'telegram':
             icon = {'style': 'fab', 'icon': 'fa-telegram'}
         else:
@@ -386,7 +391,7 @@ def get_obj_chat_from_global_id(chat_gid):
 def get_obj_chat_meta(obj_chat, new_options=set()):
     options = {}
     if obj_chat.type == 'chat':
-        options = {'created_at', 'icon', 'info', 'subchannels', 'threads', 'username'}
+        options = {'address', 'created_at', 'icon', 'info', 'network', 'protocol', 'subchannels', 'threads', 'username'}
     elif obj_chat.type == 'chat-subchannel':
         options = {'chat', 'created_at', 'icon', 'nb_messages', 'threads'}
     elif obj_chat.type == 'chat-thread':
@@ -737,7 +742,7 @@ def get_user_account_mentions_chord(subtype, user_id):
 
 
 def _get_chat_card_meta_options():
-    return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
+    return {'address', 'created_at', 'icon', 'info', 'nb_participants', 'network', 'origin_link', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 
 def _get_message_bloc_meta_options():
     return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
@@ -1081,7 +1086,7 @@ def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, pa
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    meta = chat.get_meta({'address', 'created_at', 'icon', 'info', 'network', 'nb_participants', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     if meta['subchannels']:
@@ -1197,7 +1202,7 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'address', 'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'network', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})

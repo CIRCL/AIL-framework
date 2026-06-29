@@ -22,6 +22,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_logger
 from lib import ail_orgs
+from lib import Language
 from lib.ConfigLoader import ConfigLoader
 from exporter import MailExporter
 
@@ -511,6 +512,8 @@ class AILUser(UserMixin):
             meta['role'] = get_user_role(self.user_id)
         if 'rulezet_api_key' in options:
             meta['rulezet_api_key'] = self.get_rulezet_api_key()
+        if 'preferred_language' in options:
+            meta['preferred_language'] = self.get_preferred_language()
         if '2fa' in options:
             meta['2fa'] = self.is_2fa_enabled()
         if 'otp_setup' in options:
@@ -601,6 +604,15 @@ class AILUser(UserMixin):
     def delete_rulezet_api_key(self):
         r_serv_db.hdel(f'ail:user:settings:{self.user_id}', 'rulezet:api_key')
 
+    def get_preferred_language(self):
+        language = r_serv_db.hget(f'ail:user:settings:{self.user_id}', 'preferred_language')
+        if language:
+            return language
+        return 'en'
+
+    def set_preferred_language(self, language):
+        r_serv_db.hset(f'ail:user:settings:{self.user_id}', 'preferred_language', language)
+
     ## OTP ##
 
     def is_2fa_setup(self):
@@ -686,7 +698,7 @@ def api_get_users_meta():
     return meta
 
 def api_get_user_profile(user_id):
-    options = {'api_key', 'role', '2fa', 'org', 'org_name', 'rulezet_api_key'}
+    options = {'api_key', 'role', '2fa', 'org', 'org_name', 'rulezet_api_key', 'preferred_language'}
     user = AILUser(user_id)
     if not user.exists():
         return {'status': 'error', 'reason': 'User not found'}, 404
@@ -793,6 +805,16 @@ def api_edit_user_rulezet_api_key(user_id, api_key):
     if not is_valid_rulezet_api_key(api_key):
         return {'status': 'error', 'reason': 'Invalid Rulezet API key format. The key must contain exactly 60 alphanumeric characters.'}, 400
     user.set_rulezet_api_key(api_key)
+    return {'status': 'success'}, 200
+
+def api_edit_user_preferred_language(user_id, language):
+    user = AILUser(user_id)
+    if not user.exists():
+        return {'status': 'error', 'reason': 'User not found'}, 404
+    language = Language.normalize_bcp47_tag(language)
+    if not language:
+        return {'status': 'error', 'reason': 'Invalid preferred language'}, 400
+    user.set_preferred_language(language)
     return {'status': 'success'}, 200
 
 def api_delete_user_rulezet_api_key(user_id):

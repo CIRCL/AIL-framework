@@ -54,11 +54,16 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
     # last imported/updated
 
     # TODO get instance
-    # TODO get network
-    # TODO get address
+    # TODO get instance
 
     def get_protocol(self):
         return get_chat_protocol(self.subtype)
+
+    def get_network(self):
+        return r_object.hget(f'chatSerIns:{self.subtype}', 'network')
+
+    def get_address(self):
+        return r_object.hget(f'chatSerIns:{self.subtype}', 'address')
 
     def get_chat(self):  # require ail object TODO ##
         if self.type != 'chat':

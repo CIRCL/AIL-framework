@@ -10,15 +10,14 @@
 	  <!-- Core CSS -->
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-		<script src="{{ url_for('static', filename='js/assets/SimulationWorker-kgekWV9K.js') }}"></script>
-		<script src="{{ url_for('static', filename='js/pivotick.umd.js') }}"></script>
-		<link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
+        <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
 
@@ -628,7 +627,14 @@ function get_icon_codepoint(iconValue) {
     return cp.toString(16).toUpperCase();
 }
 
+function is_svg_icon(nodeStyle) {
+    return nodeStyle && nodeStyle.style === 'svg' && nodeStyle.icon;
+}
+
 function build_icon_class(nodeStyle, index) {
+    if (is_svg_icon(nodeStyle)) {
+        return '';
+    }
     const baseClass = (nodeStyle && (nodeStyle.icon_class || nodeStyle.style)) || '';
     const iconValue = get_icon_unicode_value(nodeStyle);
     const codepoint = get_icon_codepoint(iconValue);
@@ -636,6 +642,13 @@ function build_icon_class(nodeStyle, index) {
         return baseClass;
     }
     return (baseClass + ' pvt-ail-icon-' + index).trim();
+}
+
+function build_svg_icon(nodeStyle) {
+    if (is_svg_icon(nodeStyle)) {
+        return nodeStyle.icon;
+    }
+    return undefined;
 }
 
 function inject_icon_css_rules(nodes) {
@@ -702,6 +715,7 @@ function create_graph(url){
                     color: n.style.node_color || n.style.color,
                     size: n.style.node_radius || n.style.radius || 5,
                     iconClass: build_icon_class(n.style, idx),
+                    svgIcon: build_svg_icon(n.style),
                     textColor: '#000000',
                 });
                 return nodeById[n.id];
@@ -739,6 +753,7 @@ function create_graph(url){
                 },
                 UI: {
                     mode: 'full',
+                    theme: 'dark',
                     tooltip: {
                         enabled: true,
                         render: function(element){ return render_pivotick_tooltip(element); },

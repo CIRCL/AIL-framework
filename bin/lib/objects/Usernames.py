@@ -37,11 +37,6 @@ class Username(AbstractSubtypeObject):
     #                 'compress': 'gzip'}
     #     return payload
 
-    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
-    def delete(self):
-        # # TODO:
-        pass
-
     def get_link(self, flask_context=False):
         if flask_context:
             url = url_for('correlation.show_correlation', type=self.type, subtype=self.subtype, id=self.id)
@@ -97,6 +92,9 @@ class Username(AbstractSubtypeObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
+
+    def delete(self):
+        self._delete()
 
     ############################################################################
     ############################################################################

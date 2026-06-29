@@ -23,6 +23,7 @@ from lib import ail_users
 from lib import ail_logger
 from lib import crawlers
 from lib import chats_viewer
+from lib import forums_viewer
 
 from lib import Investigations
 from lib import Tag
@@ -178,6 +179,27 @@ def lacus_cookiejar_import():
     res = crawlers.api_import_lacus_cookiejar(user_org, user_id, data)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+
+@api_rest.route("api/v1/forum/crawler/account/login", methods=['POST'])
+@token_required('admin')
+def forum_crawler_account_login():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
+    res = forums_viewer.api_set_forum_account_local_storage(user_org, user_id, data)
+    return create_json_response(res[0], res[1])
+
+
+@api_rest.route("api/v1/crawler/user-agent/default", methods=['GET'])
+@token_required('admin')
+def crawler_user_agent_default():
+    # data = request.get_json()
+    # if data.get('os', '').lower() == 'linux':
+    #     linux = True
+    # else:
+    linux = False
+    res = {'user-agent': crawlers.get_default_user_agent(linux=linux)}
+    return create_json_response(res, 200)
 
 #### SCHEDULER ####
 

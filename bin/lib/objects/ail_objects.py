@@ -34,6 +34,10 @@ from lib.objects import Decodeds
 from lib.objects import Domains
 from lib.objects import Etags
 from lib.objects import Favicons
+from lib.objects import Forums
+from lib.objects import Subforums
+from lib.objects import ForumThreads
+from lib.objects import Posts
 from lib.objects import FilesNames
 from lib.objects import DomHashs
 from lib.objects import GTrackers
@@ -71,6 +75,10 @@ OBJECTS_CLASS = {
     'dom-hash': {'obj': DomHashs.DomHash, 'objs': DomHashs.DomHashs},
     'etag': {'obj': Etags.Etag, 'objs': Etags.Etags},
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
+    'forum': {'obj': Forums.Forum, 'objs': Forums.Forums},
+    'subforum': {'obj': Subforums.Subforum, 'objs': Subforums.Subforums},
+    'forum-thread': {'obj': ForumThreads.ForumThread, 'objs': ForumThreads.ForumThreads},
+    'post': {'obj': Posts.Post, 'objs': None},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
     'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},
@@ -156,7 +164,7 @@ def api_get_object(obj_type, obj_subtype, obj_id):
     obj = get_object(obj_type, obj_subtype, obj_id)
     if not obj.exists():
         return {'status': 'error', 'reason': 'Object Not Found'}, 404
-    options = {'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
+    options = {'address', 'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'network', 'parent', 'parent_meta', 'protocol', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
     return obj.get_meta(options=options), 200
 
 
@@ -262,6 +270,8 @@ def get_obj_from_global_id(global_id):
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
     obj = get_object(obj_type, subtype, id)
+    # link = obj.get_link(flask_context=flask_context)
+    # obj.delete()
     return obj.get_link(flask_context=flask_context)
 
 
@@ -328,7 +338,7 @@ def get_objects_meta(objs, options=set(), flask_context=False):
 
 def get_object_card_meta(obj_type, subtype, id, related_btc=False):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'map', 'nb_messages', 'nb_participants', 'threads', 'username'})
+    meta = obj.get_meta(options={'address', 'chat', 'chats', 'created_at', 'icon', 'info', 'map', 'nb_messages', 'nb_participants', 'network', 'protocol', 'threads', 'username'})
     # meta['icon'] = obj.get_svg_icon()
     meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':

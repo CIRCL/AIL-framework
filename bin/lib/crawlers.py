@@ -17,8 +17,9 @@ import socket
 import sys
 import time
 import uuid
+from collections import deque
 
-# import orjson
+import orjson
 
 from multiprocessing import Process as Proc
 
@@ -192,6 +193,23 @@ def get_date_crawled_items_source(date):
 
 def get_har_dir():
     return HAR_DIR
+
+
+def get_last_crawler_logs(lines=100):
+    log_path = os.path.join(os.environ['AIL_HOME'], 'logs', 'crawlers.log')
+    if not os.path.exists(log_path):
+        return ['No crawler logs available.']
+    if os.path.getsize(log_path) == 0:
+        return ['Crawler log file is empty.']
+    try:
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+            last_lines = deque(f, maxlen=lines)
+    except OSError:
+        return ['No crawler logs available.']
+
+    if not last_lines:
+        return ['Crawler log file is empty.']
+    return [line.rstrip('\n') for line in last_lines]
 
 def is_valid_onion_v3_domain(domain):
     if len(domain) == 62:  # v3 address
@@ -819,6 +837,12 @@ class Cookiejar:
     def _set_date(self, date):
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'date', date)
 
+    def get_last_edit(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'last_edit')
+
+    def update_last_edit(self):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'last_edit', int(time.time()))
+
     def get_description(self):
         return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'description')
 
@@ -855,6 +879,7 @@ class Cookiejar:
         elif old_level == 2:
             ail_orgs.remove_obj_to_org(self.get_org(), 'cookiejar', self.uuid)
         self.set_level(new_level, new_org_uuid)
+        self.update_last_edit()
 
     ## --LEVEL-- ##
 
@@ -916,6 +941,7 @@ class Cookiejar:
     def set_local_storage(self, storage): # TODO check if file already exists
         with gzip.open(self.get_local_storage_file(), 'w+') as f:
             f.write(json.dumps(storage).encode())
+        self.update_last_edit()
 
     def delete_local_storage(self):
         try:
@@ -940,7 +966,22 @@ class Cookiejar:
             meta['local_storage'] = self.get_local_storage(r_json=r_json)
         return meta
 
-    def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, text=None):
+    def set_cookies(self, cookies):
+        self.delete_cookies()
+        for cookie in cookies:
+            name = cookie.get('name')
+            value = cookie.get('value')
+            domain = cookie.get('domain')
+            path = cookie.get('path')
+            expires = cookie.get('expires')
+            httponly = cookie.get('httpOnly')
+            secure = cookie.get('secure')
+            samesite = cookie.get('sameSite')
+            if name and value:
+                self.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure,
+                                     expires=expires, samesite=samesite)
+
+    def add_cookie(self, name, value, cookie_uuid=None, domain=None, httponly=None, path=None, secure=None, expires=None, samesite=None, text=None):
         if cookie_uuid:
             cookie = Cookie(cookie_uuid)
             if cookie.exists():
@@ -956,20 +997,30 @@ class Cookiejar:
         cookie.set_field('value', value)
         if domain:
             cookie.set_field('domain', domain)
-        if httponly:
+        if httponly is not None:
             cookie.set_field('httpOnly', str(httponly))
         if path:
             cookie.set_field('path', path)
-        if secure:
+        if secure is not None:
             cookie.set_field('secure', str(secure))
+        if expires:
+            cookie.set_field('expires', str(expires))
+        if samesite is not None:
+            cookie.set_field('sameSite', str(samesite))
         if text:
-            cookie.set_field('path', text)
+            cookie.set_field('text', text)
         return cookie_uuid
 
     def delete_cookie(self, cookie_uuid):
         if self.is_cookie_in_jar(cookie_uuid):
             cookie = Cookie(cookie_uuid)
             cookie.delete()
+
+    def delete_cookies(self):
+        for cookie_uuid in self.get_cookies_uuid():
+            cookie = Cookie(cookie_uuid)
+            cookie.delete()
+        self.update_last_edit()
 
     # TODO Last EDIT
     def create(self, user_org, user_id, level, description=None):
@@ -985,6 +1036,7 @@ class Cookiejar:
         self._set_date(datetime.now().strftime("%Y%m%d"))  # TODO improve DATE
         if description:
             self.set_description(description)
+        self.update_last_edit()
 
     def delete(self):
         for cookie_uuid in self.get_cookies_uuid():
@@ -1082,35 +1134,45 @@ def api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role,
 
 ####  API  ####
 
-
-#########################################################################
-
-# TODO edit existing cookiejat local storage
 def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
     url = data.get('url')
     storage = data.get('storage')
-
     if not url:
         return {'error': 'url not set'}, 400
     if not storage:
         return {'error': 'lacus storage not set'}, 400
 
-    cookiejar_uuid = None  # TODO edit/replace cookiejar
-    cookies = storage.get('cookies')
+    cookiejar_uuid = data.get('uuid')
+    level = data.get('level', 1)
+    description = data.get('description')
+    cookies = storage.get('cookies', [])
     origins = storage.get('origins')
 
     if not cookies and not origins:
         return {'error': 'No cookies or local storage to import'}, 400
 
-    # TODO check if is valid JSON
-
-    # TODO extract DOMAIN
-
     # Create new cookiejar
     if not cookiejar_uuid:
-        cookiejar_uuid = create_cookiejar(user_org, user_id, f"{url} - imported from lacus", 1, None)
-    cookiejar = Cookiejar(cookiejar_uuid)
-
+        if not description:
+            description = f"{url} - imported from lacus"
+        cookiejar_uuid = create_cookiejar(user_org, user_id, description, level, None)
+        cookiejar = Cookiejar(cookiejar_uuid)
+    else:
+        cookiejar = Cookiejar(cookiejar_uuid)
+        if not cookiejar.exists():
+            return {'error': 'unknown cookiejar uuid'}, 404
+        cookiejar.delete_local_storage()
+    for cookie in cookies:
+        name = cookie.get('name')
+        value = cookie.get('value')
+        domain = cookie.get('domain')
+        path = cookie.get('path')
+        expires = cookie.get('expires')
+        httponly = cookie.get('httpOnly')
+        secure = cookie.get('secure')
+        samesite = cookie.get('sameSite')
+        if name and value:
+            cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, expires=expires, samesite=samesite)
     cookiejar.set_local_storage(storage)
 
     return {'cookiejar_uuid': cookiejar_uuid}, 200
@@ -1190,6 +1252,10 @@ class Cookie:
         for field in self.get_fields():
             value = self._get_field(field)
             if value:
+                if field == 'httpOnly':
+                    value = value == 'True'
+                elif field == 'secure':
+                    value = value == 'True'
                 meta[field] = value
         if r_json:
             data = json.dumps(meta, indent=4, sort_keys=True)
@@ -1324,8 +1390,11 @@ def api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, j
 #             #
 # # # # # # # #
 
-def get_default_user_agent():
-    return 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0'
+def get_default_user_agent(linux=False):
+    if linux:
+        return 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
+    else:
+        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0'
 
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0, -1)
@@ -1449,7 +1518,6 @@ class CrawlerCapturesProcessor:
         if not self.date:
             self.date = get_current_date(separator=True)
             self.epoch = int(time.time())
-        print(self.date, self.epoch)
 
     def extract_title(self, item, html_content):
         title_content = extract_title(html_content)
@@ -1500,7 +1568,8 @@ class CrawlerCapturesProcessor:
             fav.add(item.get_date(), item)
 
     def process(self, capture, capture_parent='capture_importer'):
-        capture = self._decode_capture(capture)
+        if capture_parent != 'lookyloo':
+            capture = self._decode_capture(capture)
         self.extract_domain_from_capture(capture)
         # Filter unsafe onions
         if self.domain.id.endswith('.onion'):
@@ -1542,7 +1611,7 @@ class CrawlerCapturesProcessor:
             #     SSHKeys.save_passive_ssh_host(self.domain.id)
         return objs
 
-    def process_capture(self, parent_id, capture):
+    def process_capture(self, parent_id, capture, force=False):
         objs = []
         filter_page = False
         if not parent_id:
@@ -1581,8 +1650,17 @@ class CrawlerCapturesProcessor:
         else:
             last_url = f'http://{self.domain.id}'
 
+        # Filter duplicate
+        if not force and self.root_item_id is None:
+            if self.domain.exists_epoch_history(self.epoch):
+                self.logger.warning(f'Capture Already Imported, {self.domain.id} -> {self.epoch}')
+                return False
+
         if capture.get('html') and not filter_page:
-            item_id = create_item_id(self.items_dir, self.domain.id)
+            if capture.get('uuid') and parent_id is None:
+                item_id = create_item_id(self.items_dir, self.domain.id, c_uuid=capture['uuid'])
+            else:
+                item_id = create_item_id(self.items_dir, self.domain.id)
             item = Item(item_id)
             print(item.id)
 
@@ -1634,15 +1712,18 @@ class CrawlerCapturesProcessor:
         return objs
 
     def process_lookyloo_archive(self, archive):
-        temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import', archive)
-        archive = os.path.join(temp_dir, archive)  # TODO sanityse
+        temp_dir = os.path.join(os.environ['AIL_HOME'], 'temp/import')
+        archive = os.path.join(temp_dir, archive)
         if not os.path.commonpath([archive, temp_dir]) == temp_dir:
             self.logger.critical(f'Path Transversal {archive}')
             return []
 
         files_to_skip = ['cnames.json', 'ipasn.json', 'ips.json', 'mx.json',
-                         'nameservers.json', 'soa.json', 'hashlookup.json']
+                         'nameservers.json', 'soa.json', 'hashlookup.json',
+                         'cookies.json', 'storage.json', 'meta', 'parent', 'categories', 'data.filename',  # TEMP
+                         'data', 'trusted_timestamps.json', 'capture_settings.json', 'frames.json']  # TEMP
         capture = {}
+        unrecoverable_error= False
 
         with ZipFile(archive, 'r') as lookyloo_capture:
             for filename in lookyloo_capture.namelist():
@@ -1660,20 +1741,20 @@ class CrawlerCapturesProcessor:
                     capture['last_redirected_url'] = lookyloo_capture.read(filename).decode()
                 elif filename.endswith('0.png'):
                     capture['png'] = lookyloo_capture.read(filename)
-                # elif filename.endswith('0.cookies.json'): # TODO # # # #
+                # elif filename.endswith('0.cookies.json'):
                 #     # Not required
                 #     capture{'cookies'} = orjson.loads(lookyloo_capture.read(filename))
                 # elif filename.endswith('0.storage.json'):
                 #     # Not required
                 #     storage = orjson.loads(lookyloo_capture.read(filename))
                 elif filename.endswith('potential_favicons.ico'):
-                    if not 'potential_favicons.ico':
-                        capture['potential_favicons'] = set()
+                    if 'potential_favicons' not in capture:
+                        capture['potential_favicons'] = []
                     # We may have more than one favicon
-                    capture['potential_favicons'].add(lookyloo_capture.read(filename))
-                # elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
-                #     uuid = lookyloo_capture.read(filename).decode()
-                #     if self.uuid_exists(uuid):  # TODO Avoid duplicate and multiple Imports
+                    capture['potential_favicons'].append(lookyloo_capture.read(filename))
+                elif filename.endswith('uuid'): # TODO Avoid duplicate and multiple Imports
+                    capture['uuid'] = lookyloo_capture.read(filename).decode()
+                #     if self.uuid_exists(uuid):
                 #         messages['warnings'].append(f'UUID {uuid} already exists, set a new one.')
                 #         uuid = str(uuid4())
                 # elif filename.endswith('meta'):
@@ -1708,11 +1789,12 @@ class CrawlerCapturesProcessor:
                     else:
                         self.logger.warning(f'Unexpected file in the capture archive: {filename}')
             # require HAR + html + last_redirected_url
-            if not capture.get('har') or not not capture.get('html'):
+            if not capture.get('har') or not capture.get('html'):
                 unrecoverable_error = True
                 if not capture.get('last_redirected_url'):
                     self.logger.warning('Incomplete submission: missing landing page')
                 self.logger.error('Invalid submission: missing HAR or html or last_redirected_url file')
+                print(capture.keys())
             elif not capture.get('png'):
                 if not capture.get('png'):
                     self.logger.warning('Incomplete submission: missing screenshot')
@@ -2102,6 +2184,44 @@ def api_delete_schedule(data):
     if not schedule.exists():
         return {'error': 'unknown schedule uuid', 'uuid': schedule}, 404
     return {'uuid': schedule.delete()}, 200
+
+
+#### FORUM CRAWLER RUNNING ACCOUNTS ####
+
+
+def add_running_forum_crawler_account(forum_id, account_id, launch_time=None):
+    if launch_time is None:
+        launch_time = int(time.time())
+    r_crawler.zadd('forum:crawl:running', {f'{forum_id}:{account_id}': launch_time})
+
+def get_running_forum_crawler_account_time(forum_id, account_id):
+    return r_crawler.zscore('forum:crawl:running', f'{forum_id}:{account_id}')
+
+def remove_running_forum_crawler_account(forum_id, account_id):
+    return r_crawler.zrem('forum:crawl:running', f'{forum_id}:{account_id}')
+
+def get_running_forum_crawler_account_keys(withscores=False):
+    return r_crawler.zrange('forum:crawl:running', 0, -1, withscores=withscores)
+
+def get_running_forum_crawler_accounts(with_launch_time=False):
+    account_keys = get_running_forum_crawler_account_keys(withscores=with_launch_time)
+    accounts = []
+    for row in account_keys:
+        if with_launch_time:
+            account_key, launch_time = row
+        else:
+            account_key = row
+        forum_id, account_id = account_key.split(':', 1)
+        if with_launch_time:
+            accounts.append((forum_id, account_id, int(launch_time)))
+        else:
+            accounts.append((forum_id, account_id))
+    return accounts
+
+
+def get_nb_running_forum_crawler_accounts():
+    return r_crawler.zcard('forum:crawl:running')
+
 
 #### CRAWLER CAPTURE ####
 
@@ -2743,14 +2863,16 @@ def is_redirection(domain, last_url):
     last_domain = '{}.{}'.format(last_domain[-2], last_domain[-1])
     return domain != last_domain
 
-def create_item_id(item_dir, domain):
+def create_item_id(item_dir, domain, c_uuid=None):
+    if not c_uuid:
+        c_uuid = str(uuid.uuid4())
     # remove /
     domain = domain.replace('/', '_')
     if len(domain) > 215:
-        n_uuid = domain[-215:]+str(uuid.uuid4())
+        item_id = domain[-215:]+c_uuid
     else:
-        n_uuid = domain+str(uuid.uuid4())
-    return os.path.join(item_dir, n_uuid)
+        item_id = domain+c_uuid
+    return os.path.join(item_dir, item_id)
 
 # # # # # # # # # # # #
 #                     #
@@ -2852,9 +2974,12 @@ def ping_lacus():
     else:
         try:
             ping = lacus.is_up
-        except:
-            req_error = {'error': 'Failed to connect Lacus URL', 'status_code': 400}
+        except Exception as e:
+            req_error = {'error': f'Unexpected error while checking Lacus availability, {type(e).__name__}: {e}', 'status_code': 503}
             ping = False
+    if not ping:
+        req_error = {'error': 'Unable to reach Lacus. Please verify that the Lacus service is running and that the configured URL and port are reachable.', 'status_code': 503}
+
     update_lacus_connection_status(ping, req_error=req_error)
     return ping
 
@@ -2917,61 +3042,85 @@ def api_set_crawler_max_captures(data):
 ## TEST ##
 
 def is_test_ail_crawlers_successful():
-    return r_db.hget('crawler:tor:test', 'success') == 'True'
+    web_success = r_db.hget('crawler:tor:test', 'web_success')
+    onion_success = r_db.hget('crawler:tor:test', 'onion_success')
+    return web_success == 'True' or onion_success == 'True'
 
 def get_test_ail_crawlers_message():
-    return r_db.hget('crawler:tor:test', 'message')
+    metadata = get_test_ail_crawlers_metadata()
+    return f"Web: {metadata['web_message']}\nOnion: {metadata['onion_message']}"
 
-def save_test_ail_crawlers_result(test_success, message):
-    r_db.hset('crawler:tor:test', 'success', str(test_success))
-    r_db.hset('crawler:tor:test', 'message', message)
+def get_test_ail_crawlers_metadata():
+    metadata = {
+        'web_success': r_db.hget('crawler:tor:test', 'web_success'),
+        'web_message': r_db.hget('crawler:tor:test', 'web_message'),
+        'onion_success': r_db.hget('crawler:tor:test', 'onion_success'),
+        'onion_message': r_db.hget('crawler:tor:test', 'onion_message'),
+        'date_test': r_db.hget('crawler:tor:test', 'date_test')
+    }
+    if metadata['web_success'] is None:
+        metadata['web_success'] = 'False'
+    if not metadata['web_message']:
+        metadata['web_message'] = 'Web crawler test has not been run yet.'
+    if metadata['onion_success'] is None:
+        metadata['onion_success'] = 'False'
+    if not metadata['onion_message']:
+        metadata['onion_message'] = 'Onion crawler test has not been run yet.'
+    if not metadata['date_test']:
+        metadata['date_test'] = 'Unknown'
+    return metadata
+
+def save_test_ail_crawlers_result(web_success, web_message, onion_success, onion_message, date_test):
+    r_db.hset('crawler:tor:test', 'web_success', str(web_success))
+    r_db.hset('crawler:tor:test', 'web_message', web_message)
+    r_db.hset('crawler:tor:test', 'onion_success', str(onion_success))
+    r_db.hset('crawler:tor:test', 'onion_message', onion_message)
+    r_db.hset('crawler:tor:test', 'date_test', date_test)
+
+def _run_lacus_network_test(lacus, user_agent, url, expected_text, proxy=None):
+    enqueue_kwargs = {'url': url, 'depth': 0, 'user_agent': user_agent, 'force': True, 'general_timeout_in_sec': 90}
+    if proxy:
+        enqueue_kwargs['proxy'] = proxy
+    capture_uuid = lacus.enqueue(**enqueue_kwargs)
+    status = lacus.get_capture_status(capture_uuid)
+    launch_time = int(time.time())
+    while int(time.time()) - launch_time < 90 and status != CaptureStatus.DONE:
+        time.sleep(1)
+        status = lacus.get_capture_status(capture_uuid)
+    entries = lacus.get_capture(capture_uuid)
+    if 'error' in entries:
+        return False, entries['error']
+    if 'html' in entries and entries['html']:
+        if expected_text in entries['html']:
+            return True, f'Expected content "{expected_text}" found.'
+        return False, f'Expected content "{expected_text}" not found.'
+    if status == 2:
+        return False, 'Timeout Error'
+    return False, 'Error'
 
 def test_ail_crawlers():
-    # # TODO: test web domain
+    date_test = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if not ping_lacus():
         lacus_url = get_lacus_url()
         error_message = f'Error: Can\'t connect to AIL Lacus, {lacus_url}'
         print(error_message)
-        save_test_ail_crawlers_result(False, error_message)
+        save_test_ail_crawlers_result(False, error_message, False, error_message, date_test)
         return False
 
     lacus = get_lacus()
     commit_id = git_status.get_last_commit_id_from_local()
     user_agent = f'{commit_id}-AIL LACUS CRAWLER'
-    # domain = 'eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
-    url = 'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion'
 
-    ## LAUNCH CRAWLER, TEST MODE ##
-    # set_current_crawler_status(splash_url, 'CRAWLER TEST', started_time=True,
-    # crawled_domain='TEST DOMAIN', crawler_type='onion')
-    capture_uuid = lacus.enqueue(url=url, depth=0, user_agent=user_agent, proxy='force_tor',
-                                 force=True, general_timeout_in_sec=90)
-    status = lacus.get_capture_status(capture_uuid)
-    launch_time = int(time.time())  # capture timeout
-    while int(time.time()) - launch_time < 90 and status != CaptureStatus.DONE:
-        # DEBUG
-        print(int(time.time()) - launch_time)
-        print(status)
-        time.sleep(1)
-        status = lacus.get_capture_status(capture_uuid)
-
-    # TODO CRAWLER STATUS OR QUEUED CAPTURE LIST
-    entries = lacus.get_capture(capture_uuid)
-    if 'error' in entries:
-        save_test_ail_crawlers_result(False, entries['error'])
-        return False
-    elif 'html' in entries and entries['html']:
-        mess = 'It works!'
-        if mess in entries['html']:
-            save_test_ail_crawlers_result(True, mess)
-            return True
-        else:
-            return False
-    elif status == 2:
-        save_test_ail_crawlers_result(False, 'Timeout Error')
-    else:
-        save_test_ail_crawlers_result(False, 'Error')
-    return False
+    web_success, web_message = _run_lacus_network_test(lacus, user_agent, 'https://ail-project.org/', 'AIL Project')
+    onion_success, onion_message = _run_lacus_network_test(
+        lacus,
+        user_agent,
+        'http://eswpccgr5xyovsahffkehgleqthrasfpfdblwbs4lstd345dwq5qumqd.onion',
+        'It works!',
+        proxy='force_tor'
+    )
+    save_test_ail_crawlers_result(web_success, web_message, onion_success, onion_message, date_test)
+    return web_success or onion_success
 
 #### ---- ####
 

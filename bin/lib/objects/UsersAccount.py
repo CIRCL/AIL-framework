@@ -37,10 +37,14 @@ class UserAccount(AbstractSubtypeObject):
     #                 'compress': 'gzip'}
     #     return payload
 
-    # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
-    def delete(self):
-        # # TODO:
-        pass
+    # TODO META + exists check
+    def create(self, date, obj, username=None, timestamp=None):
+        # daterange + correlation
+        self.add(date, obj)
+        if username:
+            username.add(date, self)
+            self.update_username_timeline(username.get_global_id(), timestamp)
+        return self
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -264,6 +268,9 @@ class UserAccount(AbstractSubtypeObject):
             for tag in self.get_tags():
                 obj_attr.add_tag(tag)
         return obj
+
+    def delete(self):
+        self._delete()
 
 
 def get_all_subtypes():

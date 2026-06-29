@@ -25,6 +25,7 @@ from lib import ail_orgs
 from lib import ail_config
 from lib import ail_queues
 from lib import ail_users
+from lib import Language
 from lib import d4
 from lib import passivedns
 from lib.ConfigLoader import ConfigLoader
@@ -84,6 +85,7 @@ def user_profile():
     meta = r[0]
     global_2fa = ail_users.is_2fa_enabled()
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
+                           all_languages=Language.get_all_languages(),
                            misps=ail_config.get_user_config_misps(user_id),
                            flowintels=ail_config.get_user_config_flowintels(user_id),
                            rulezet_error=request.args.get('rulezet_error'),
@@ -350,6 +352,16 @@ def delete_rulezet():
 
 ## --USER RULEZET-- ##
 
+@settings_b.route("/settings/user/preferred_language/edit", methods=['POST'])
+@login_required
+@login_user
+def edit_preferred_language():
+    user_id = current_user.get_user_id()
+    preferred_language = request.form.get('preferred_language')
+    r = ail_users.api_edit_user_preferred_language(user_id, preferred_language)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Preferred language saved successfully'))
 
 @settings_b.route("/settings/users/purge_failed_login", methods=['GET'])
 @login_required

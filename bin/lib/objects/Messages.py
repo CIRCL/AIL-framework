@@ -80,6 +80,14 @@ class Message(AbstractObject):
         chat_instance = self.get_chat_instance()
         return r_obj.hget(f'chatSerIns:{chat_instance}', 'protocol')
 
+    def get_network(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'network')
+
+    def get_address(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'address')
+
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
         Returns content
@@ -262,13 +270,6 @@ class Message(AbstractObject):
     # message media
     # flag is deleted -> event or missing from feeder pass ???
 
-    def get_language(self):
-        languages = self.get_languages()
-        if languages:
-            return languages.pop()
-        else:
-            return None
-
     def get_search_document(self, timestamp=None):
         if not timestamp:
             timestamp = self.get_timestamp()
@@ -322,7 +323,7 @@ class Message(AbstractObject):
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self.get_default_meta(tags=True, options=options)
         # original_id
         meta['_id'] = self.id.rsplit('/', 1)[-1]
 
@@ -344,6 +345,10 @@ class Message(AbstractObject):
             meta['content'] = self.get_content()
         if 'protocol':
             meta['protocol'] = self.get_protocol()
+        if 'network':
+            meta['network'] =  self.get_network()
+        if 'address':
+            meta['address'] =  self.get_address()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
             if meta['parent'] and 'parent_meta' in options:
@@ -389,16 +394,12 @@ class Message(AbstractObject):
                 meta['files'] = self.get_files(file_names=meta['files-names'])
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
-        if 'language' in options:
-            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
             if meta.get('language'):
                 source = meta['language']
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-            if 'language' in options:
-                meta['language'] = self.get_language()
 
         # meta['encoding'] = None
         return meta

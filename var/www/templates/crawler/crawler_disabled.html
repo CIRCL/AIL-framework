@@ -1,31 +1,76 @@
 {%if not is_manager_connected['status']%}
-    <div class="alert alert-secondary text-center my-2" role="alert">
-        <h1><i class="fas fa-times-circle text-danger"></i> Crawler Disabled</h1>
-        <p>
+<div class="card border-0 shadow-sm my-3">
+    <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+            <div>
+                <h2 class="mb-2">
+                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                    Crawler unavailable
+                </h2>
+                <p class="text-muted mb-0">
+                    The crawler service cannot be reached right now. Configure Lacus to enable crawling and capture features.
+                </p>
+            </div>
+            <span class="badge badge-secondary px-3 py-2">
+                <i class="fas fa-plug mr-1"></i> Service offline
+            </span>
+        </div>
+
+        <div class="alert alert-light border mb-4" role="alert">
             {%if 'error' in is_manager_connected%}
-                <b>{{is_manager_connected['status_code']}}</b>
-                <br>
-                <b>Error:</b> {{is_manager_connected['error']}}
+                <div class="font-weight-bold mb-1">
+                    <i class="fas fa-info-circle text-info mr-1"></i>
+                    Status code: {{is_manager_connected['status_code']}}
+                </div>
+                <div>
+                    <b>Error:</b> {{is_manager_connected['error']}}
+                </div>
             {%else%}
-                <b>Error:</b> Lacus not connected
+                <div>
+                    <b>Error:</b> Lacus is not connected.
+                </div>
             {%endif%}
-        </p>
-        <div style="max-width: 500px;">
-            <ul class="list-group my-3">
-                <li class="list-group-item bg-dark text-white"><h3>Lacus Features:</h3></li>
-                <li class="list-group-item">Install and run crawlers on another server</li>
-                <li class="list-group-item">Handle proxies ( <i class="fab fa-html5"></i> Web and <i class="fas fa-user-secret"></i> tor)</li>
-                <li class="list-group-item">Multiple Concurrent Captures</li>
-                <li class="list-group-item">HOW TO</li>
-                <li class="list-group-item">
-                    <div class="d-flex justify-content-center">
-                        <a class="btn btn-info" href="https://github.com/ail-project/lacus" role="button">
-                            <i class="fab fa-github"></i> Install and Configure Lacus
-                        </a>
-                    </div>
-                </li>
-            </ul>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <h5 class="mb-3">What you unlock with Lacus</h5>
+                <ul class="list-group list-group-flush border rounded">
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-server text-primary mr-2"></i>
+                        Run crawlers on dedicated remote servers
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-random text-primary mr-2"></i>
+                        Use multiple proxy types (web and Tor)
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-tasks text-primary mr-2"></i>
+                        Launch concurrent captures at scale
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <h6 class="mb-2">Getting started</h6>
+                    <p class="text-muted small mb-2">
+                        Install and configure Lacus, then refresh this page to activate the crawler interface.
+                    </p>
+                    <p class="small mb-3">
+                        Crawler configuration instructions are available in AIL's documentation:
+                        <a href="https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler" target="_blank" rel="noopener noreferrer">
+                            HOWTO.md → Crawler section
+                        </a>.
+                    </p>
+                    <a class="btn btn-info btn-block mb-2" href="https://github.com/ail-project/lacus" role="button" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-github mr-1"></i> Install Lacus
+                    </a>
+                    <a class="btn btn-outline-secondary btn-block" href="https://github.com/ail-project/ail-framework/blob/master/HOWTO.md#crawler" role="button" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-book mr-1"></i> Open crawler configuration guide
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-
+</div>
 {%endif%}

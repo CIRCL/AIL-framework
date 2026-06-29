@@ -17,23 +17,23 @@ r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
 AIL_OBJECTS = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
-               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
-               'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
+               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'hhhash', 'ip',
+               'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot', 'ssh-key', 'subforum', 'title',
                'user-account', 'username'}
 
-AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
+AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'forum', 'forum-thread', 'pgp', 'subforum', 'username', 'user-account'}
 
 # TODO by object TYPE ???? correlation
 AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
-                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
-                                    'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'qrcode', 'screenshot',
-                                    'ssh-key', 'title', 'user-account', 'username'}
+                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'item',
+                                    'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot',
+                                    'ssh-key', 'subforum', 'title', 'user-account', 'username'}
 
-AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
+AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'post', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
 
-AIL_OBJS_TRACKED = {'barcode', 'decoded', 'file-name', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title'}
+AIL_OBJS_TRACKED = {'barcode', 'decoded', 'file-name', 'item', 'message', 'ocr', 'pgp', 'post', 'qrcode', 'title'}
 
-AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr'}  # TODO PGP, TITLE
+AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr', 'post'}  # TODO PGP, TITLE
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
@@ -96,12 +96,23 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         return r_object.smembers(f'all_chat-subchannel:subtypes')
     if obj_type == 'chat-thread':
         return r_object.smembers(f'all_chat-thread:subtypes')
+    if obj_type == 'forum':
+        return r_object.smembers('forum:all')
+    if obj_type == 'subforum':
+        return r_object.smembers(f'all_subforum:subtypes')
+    if obj_type == 'forum-thread':
+        return r_object.smembers(f'all_forum-thread:subtypes')
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'ripple', 'tron', 'zcash']
     if obj_type == 'pgp':
         return ['key', 'mail', 'name']
     if obj_type == 'username':
-        return ['telegram', 'discord', 'twitter', 'jabber']
+        chat_protocols = r_serv_db.smembers('chat:protocols')
+        if not chat_protocols:
+            chat_protocols = set()
+        chat_protocols.add('jabber')
+        chat_protocols.add('telegram')
+        return sorted(chat_protocols)
     if obj_type == 'user-account':
         return r_object.smembers(f'all_chat:subtypes')
     return []

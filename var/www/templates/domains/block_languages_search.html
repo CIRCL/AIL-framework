@@ -1,7 +1,7 @@
-<div class="card mb-3 mt-1">
+<div class="card mb-0 shadow-sm h-100">
 	<div class="card-header text-white bg-dark">
 		<h5 class="card-title mb-0">
-			<i class="fas fa-language" style="font-size: 1.8rem;"></i> Domains by Languages :
+			<i class="fas fa-language" style="font-size: 1.8rem;"></i> Domains by Languages
 		</h5>
 	</div>
 		<div class="card-body">
@@ -20,6 +20,12 @@
 					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if not domains_types%}checked{%elif 'onion' in domains_types%}checked{%endif%}>
 					<label class="custom-control-label" for="domain_onion_switch">
 						<span class="badge badge-danger"><i class="fas fa-user-secret"></i> Onion Domains</span>
+					</label>
+				</div>
+				<div class="custom-control custom-switch">
+					<input class="custom-control-input" type="checkbox" name="domain_i2p_switch" value="True" id="domain_i2p_switch" {%if not domains_types%}checked{%elif 'i2p' in domains_types%}checked{%endif%}>
+					<label class="custom-control-label" for="domain_i2p_switch">
+						<span class="badge badge-info"><i class="fas fa-user-secret"></i> I2P Domains</span>
 					</label>
 				</div>
 				<div class="custom-control custom-switch">
@@ -54,7 +60,7 @@
   });
 
   function searchLanguages() {
-		var all_domain_types = ['onion', 'web'] // TODO: load from flask
+		var all_domain_types = ['onion', 'i2p', 'web'] // TODO: load from flask
 		var l_domains_types = [];
 
   	var data = llanguages.getValue();

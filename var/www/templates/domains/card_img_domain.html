@@ -1,99 +1,127 @@
 <style>
+    .domain-grid {
+        margin: 0 -0.5rem;
+    }
+
+    .domain-grid-col {
+        padding: 0.5rem;
+    }
+
+    .domain-card {
+        border: 1px solid #e7edf3;
+        border-radius: 0.6rem;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(31, 45, 61, 0.06);
+        height: 100%;
+    }
+
+    .domain-card-up {
+        box-shadow: 0 2px 8px rgba(31, 45, 61, 0.06), inset 0 0 0 1px rgba(40, 167, 69, 0.25);
+    }
+
+    .domain-card-down {
+        box-shadow: 0 2px 8px rgba(31, 45, 61, 0.06), inset 0 0 0 1px rgba(220, 53, 69, 0.25);
+    }
+
+    .domain-card-media {
+        min-height: 180px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+    }
+
     .object_image {
-        max-height: 400px;
+        max-height: 260px;
         max-width: 100%;
+        border-radius: 0.35rem;
         filter: blur(var(--object-image-blur, 5px));
+    }
+
+    .domain-card-title {
+        font-size: 1rem;
+        word-break: break-all;
+        margin-bottom: 0.5rem;
+    }
+
+    .domain-status-badge {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.45rem;
+        border-radius: 0.35rem;
+    }
+
+    .domain-meta {
+        margin-bottom: 0.5rem;
+        line-height: 1.5;
+        font-size: 0.9rem;
+    }
+
+    .domain-tag-wrap {
+        margin-top: 0.5rem;
     }
 </style>
 
+<div class="row domain-grid">
 {% for dict_domain in l_dict_domains %}
-    {% if loop.index0 % 4 == 0 %}
-        <div class="card-deck mt-3">
-    {% endif %}
-
-    <div class="card {% if dict_domain["status"] %}border-success{% else %}border-danger{% endif %}">
-        <div class="text-center">
-            {% if dict_domain["is_tags_safe"] %}
-                <img class="object_image mb-1" src="{{ url_for('objects_item.screenshot', filename="") }}{{dict_domain['screenshot']}}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='image/AIL.png') }}';">
-            {% else %}
-                <span class="my-2 fa-stack fa-8x">
-                    <i class="fas fa-stack-1x fa-image"></i>
-                    <i class="fas fa-stack-2x fa-ban" style="color:Red"></i>
-                </span>
-            {% endif %}
-        </div>
-        <div class="card-body pb-0">
-            <h5 class="card-title">
-                <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{dict_domain["id"]}}">
-                    {% if 'hl-start' in  dict_domain %}
-                        {{dict_domain["id"][:dict_domain['hl-start']]}}
-                        <span class="hg-text">{{dict_domain["id"][dict_domain['hl-start']:dict_domain['hl-end']]}}</span>
-                        {{dict_domain["id"][dict_domain['hl-end']:]}}
-                    {% else %}
-                        {{dict_domain["id"]}}
-                    {% endif %}
-                </a>
-
-                {% if dict_domain["status"] %}
-                    <span style="color:Green;">
-                        <i class="fas fa-check-circle"></i> UP
-      				</span>
+    <div class="col-12 col-md-6 col-xl-3 domain-grid-col d-flex">
+        <div class="card domain-card {% if dict_domain['status'] %}domain-card-up{% else %}domain-card-down{% endif %}">
+            <div class="domain-card-media text-center">
+                {% if dict_domain['is_tags_safe'] %}
+                    <img class="object_image" src="{{ url_for('objects_item.screenshot', filename='') }}{{ dict_domain['screenshot'] }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='image/AIL.png') }}';">
                 {% else %}
-                    <span style="color:Red;">
-                        <i class="fas fa-times-circle"></i>	DOWN
-      				</span>
-      			{% endif %}
-            </h5>
-            <div>
-                <span class="badge badge-dark">
-                    <span data-toggle="tooltip" data-placement="top" title="Tooltip on top">
-                        <span class="badge badge-info" style="font-size: 0.8rem;">
-                            <i class="fas fa-hourglass-start"></i>
-                        </span>
-                        {{dict_domain["first_seen"]}}
+                    <span class="my-2 fa-stack fa-5x text-muted">
+                        <i class="fas fa-stack-1x fa-image"></i>
+                        <i class="fas fa-stack-2x fa-ban text-danger"></i>
                     </span>
-                    <span class="badge badge-light mx-1" style="font-size: 1rem;">
-                        <i class="far fa-calendar-alt"></i>
-                    </span>
-                    {{dict_domain["last_seen"]}}{{dict_domain["last_check"]}}
-                    <span class="badge badge-secondary" style="font-size: 0.8rem;">
-                        <i class="fas fa-hourglass-end"></i>
-                    </span>
-                </span>
+                {% endif %}
             </div>
-            <p class="card-text">
-                <small class="text-muted">
-                    <b>
-                        {% if dict_domain['languages'] %}
-                            Languages:
-                            {% for language in dict_domain['languages'] %}
-                                <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ language }}</span>
-                            {%  endfor %}
+
+            <div class="card-body pb-2 d-flex flex-column">
+                <h5 class="domain-card-title">
+                    <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ dict_domain['id'] }}">
+                        {% if 'hl-start' in dict_domain %}
+                            {{ dict_domain['id'][:dict_domain['hl-start']] }}<span class="hg-text">{{ dict_domain['id'][dict_domain['hl-start']:dict_domain['hl-end']] }}</span>{{ dict_domain['id'][dict_domain['hl-end']:] }}
+                        {% else %}
+                            {{ dict_domain['id'] }}
                         {% endif %}
-                    </b>
-                </small>
-            </p>
-
-            <div>
-                {% for tag in dict_domain['tags'] %}
-                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
-                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
                     </a>
-                {%  endfor %}
+                </h5>
+
+                <div class="mb-2">
+                    {% if dict_domain['status'] %}
+                        <span class="badge badge-success domain-status-badge"><i class="fas fa-check-circle"></i> UP</span>
+                    {% else %}
+                        <span class="badge badge-danger domain-status-badge"><i class="fas fa-times-circle"></i> DOWN</span>
+                    {% endif %}
+                </div>
+
+                <div class="domain-meta text-muted">
+                    <div><i class="fas fa-hourglass-start"></i> First seen: {{ dict_domain['first_seen'] }}</div>
+                    <div><i class="far fa-calendar-alt"></i> Last seen: {{ dict_domain['last_seen'] }}{{ dict_domain['last_check'] }}</div>
+                </div>
+
+                {% if dict_domain['languages'] %}
+                    <div class="mb-2">
+                        {% for language in dict_domain['languages'] %}
+                            <span class="badge badge-secondary" style="font-size: 0.75rem;">{{ language }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="domain-tag-wrap mt-auto">
+                    {% for tag in dict_domain['tags'] %}
+                        <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
+                            <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
             </div>
+
+            {% with obj_type='domain', obj_id=dict_domain['id'], obj_lvl=0 %}
+                {% include 'import_export/block_add_user_object_to_export_small.html' %}
+            {% endwith %}
         </div>
-        {% with obj_type='domain', obj_id=dict_domain["id"], obj_lvl=0%}
-            {% include 'import_export/block_add_user_object_to_export_small.html' %}
-        {% endwith %}
-
     </div>
-
-    {% if loop.index0 % 4 == 3 %}
-    </div>
-    {% endif %}
-
 {% endfor %}
-
-{% if l_dict_domains|length % 4 != 0 %}
-    </div>
-{% endif %}
+</div>

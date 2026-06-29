@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib import chats_viewer
 from lib import item_basic
+from lib import Language
 from lib.objects.Items import Item
 from lib.objects.Screenshots import Screenshot
 from lib import Tag
@@ -126,6 +127,7 @@ def showItem():  # # TODO: support post
                            is_hive_connected=False,
                            ollama_enabled=images_engine.is_ollama_enabled(),
                            meta=meta, message=message,
+                           all_languages=Language.get_all_languages(),
                            extracted=extracted, extracted_matches=extracted_matches)
 
     # kvrocks data

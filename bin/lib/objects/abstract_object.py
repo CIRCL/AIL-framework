@@ -93,6 +93,8 @@ class AbstractObject(ABC):
             dict_meta['file-meta'] = self.get_file_meta()
         if 'investigations' in options:
             dict_meta['investigations'] = self.get_investigations()
+        if 'language' in options:
+            dict_meta['language'] = self.get_language()
         if 'svg_icon' in options:
             dict_meta['svg_icon'] = self.get_svg_icon()
         return dict_meta
@@ -445,11 +447,18 @@ class AbstractObject(ABC):
     def add_relationship(self, obj2_global_id, relationship, source=True):
         # is source
         if source:
-            print(self.get_global_id(), obj2_global_id, relationship)
             add_obj_relationship(self.get_global_id(), obj2_global_id, relationship)
         # is target
         else:
             add_obj_relationship(obj2_global_id, self.get_global_id(), relationship)
+
+    def add_obj_relationship(self, obj1_global_id, obj2_global_id, relationship, source=True):
+        # is source
+        if source:
+            add_obj_relationship(obj1_global_id, obj2_global_id, relationship)
+        # is target
+        else:
+            add_obj_relationship(obj2_global_id, obj1_global_id, relationship)
 
     ## -Relationship- ##
 
@@ -460,6 +469,13 @@ class AbstractObject(ABC):
 
     def get_languages(self):
         return get_obj_languages(self.type, self.get_subtype(r_str=True), self.id)
+
+    def get_language(self):
+        languages = self.get_languages()
+        if languages:
+            return languages.pop()
+        else:
+            return None
 
     def get_language_objs(self, language):
         return get_container_language_objs(language, self.get_global_id())
@@ -479,7 +495,11 @@ class AbstractObject(ABC):
         self.add_language(new_language)
 
     def detect_language(self, field=''):
-        return detect_obj_language(self.type, self.get_subtype(r_str=True), self.id, self.get_content(), objs_containers=self.get_objs_container())
+        if self.type == 'pdf':
+            content = self.get_content_sample()
+        else:
+            content = self.get_content()
+        return detect_obj_language(self.type, self.get_subtype(r_str=True), self.id, content, objs_containers=self.get_objs_container())
 
     def get_obj_language_stats(self):
         return get_obj_language_stats(self.type, self.get_subtype(r_str=True), self.id)

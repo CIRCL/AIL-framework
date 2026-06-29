@@ -7,6 +7,7 @@ import sys
 import time
 import uuid
 
+import requests
 import meilisearch
 from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError
 from hashlib import sha256
@@ -48,7 +49,23 @@ def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
 
 
-MESSAGES_INDEXES = {'cdiscord', 'ctelegram', 'cmatrix'}  # TODO dynamic load of chat name -> load all chat protocol
+# TODO One index for all forums ???
+# def load_forum_indexes():
+#     indexes = set()
+#     for protocol in chats_viewer.get_chat_protocols():
+#         indexes.add(f'c{protocol}')
+#     return indexes
+
+
+def load_messages_indexes():
+    indexes = set()
+    for protocol in chats_viewer.get_chat_protocols():
+        indexes.add(f'c{protocol}')
+    return indexes
+
+
+# FORUMS_INDEXES = load_forums_indexes()
+MESSAGES_INDEXES = load_messages_indexes()
 DATERANGE_INDEXES = {'filename', 'title'}
 
 
@@ -103,6 +120,73 @@ class MeiliSearch:
 
     def get_nb_tasks(self):
         return self.client.get_tasks().total
+
+    def tasks_enqueued(self):
+        tasks = self.client.get_tasks({"statuses": ["enqueued"],"limit": 100})
+        print("currently enqueued tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_processing(self):
+        tasks = self.client.get_tasks({"statuses": ["processing"],"limit": 100})
+        print("currently processing tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_failed(self):
+        tasks = self.client.get_tasks({"statuses": ["failed"], "limit": 100})
+        print("currently failed tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def task_status(self, task_uid):
+        status = self.client.get_task(task_uid)
+        print(status)
+        return status
+
+    def task_payload(self, task_uid):
+        url = f"{M_URL}/tasks/{task_uid}/documents"
+        r = requests.get(url, headers={"Authorization": f"Bearer {M_KEY}"})
+        if r.status_code != 200:
+            print(f"Could not dump documents for task {task_uid}: HTTP {r.status_code}")
+            print(r.text[:1000])
+            return None
+        return r.content
+
+    def tasks_cancel_processing(self, task_uids):
+        cancel_task = self.client.cancel_tasks({"uids": task_uids, "statuses": ["processing"]})
+        print("Cancellation task:", cancel_task.task_uid)
+
+    def _wait_task(self, task, timeout_in_ms=120000):
+        task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
+        return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
 
     def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent'):
         # TODO investigate attributesToRetrieve speed
@@ -177,7 +261,6 @@ class MeiliSearch:
         self.add(index_name, dummy_document)
         self.remove(index_name, 'dummy')
 
-
     def setup_indexes_searchable_filterable_sortable(self):
         for index_name in get_indexes_names():
             self.setup_index_searchable_filterable_sortable(index_name)
@@ -246,6 +329,9 @@ class MeiliSearch:
 
     def index_chat_message(self, message):
         index = f'c{message.get_protocol()}'
+        if index not in MESSAGES_INDEXES:
+            self._create_index(index)
+            MESSAGES_INDEXES.add(index)
         timestamp = message.get_timestamp()
         chat_instance = message.get_chat_instance()
         chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
@@ -421,7 +507,7 @@ def remove_document(index_name, obj_gid):
 
 def delete_index(index_name):
     Engine._delete(index_name)
-    Engine.client.create_index(index_name, {'primaryKey': 'uuid'})
+    Engine.client._create_index(index_name)
 
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')

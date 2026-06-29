@@ -204,6 +204,21 @@
                                                 <td class="profile-value">{{meta['role']}}</td>
                                             </tr>
                                             <tr>
+                                                <td class="profile-label">Translation language</td>
+                                                <td class="profile-value">
+                                                    <form action="{{ url_for('settings_b.edit_preferred_language') }}" method="post" class="form-inline">
+                                                        <select class="form-control form-control-sm mr-2" name="preferred_language" required>
+                                                            {% for code, label in all_languages|dictsort(by='value') %}
+                                                            <option value="{{ code }}" {% if meta.get('preferred_language', 'en') == code %}selected{% endif %}>{{ label }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-save"></i> Save
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <td class="profile-label">API Key</td>
                                                 <td class="profile-value">
                                                     <span id="censored_key">

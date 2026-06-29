@@ -15,8 +15,70 @@
  	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 
     <style>
-        .card-columns {
-            column-count: 4;
+        body {
+            background-color: #f8f9fb;
+        }
+
+        .domain-explorer-header {
+            border: 1px solid #e8ecf2;
+            border-radius: 0.6rem;
+            background: linear-gradient(120deg, #ffffff 0%, #f5f8ff 100%);
+            box-shadow: 0 4px 18px rgba(31, 45, 61, 0.06);
+        }
+
+        .domain-explorer-title {
+            font-weight: 600;
+            color: #22313f;
+            margin-bottom: 0.35rem;
+        }
+
+        .domain-explorer-subtitle {
+            color: #6c7a89;
+            margin-bottom: 0;
+        }
+
+        .control-panel {
+            border: 1px solid #e8ecf2;
+            border-radius: 0.6rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(31, 45, 61, 0.04);
+            height: 100%;
+        }
+
+        .result-section {
+            margin-top: 1.5rem;
+            border: 1px solid #e8ecf2;
+            border-radius: 0.6rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(31, 45, 61, 0.04);
+            padding: 1rem;
+        }
+
+        .result-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #edf1f6;
+            padding-bottom: 0.75rem;
+        }
+
+        .result-title {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .result-meta {
+            margin: 0;
+            color: #6c7a89;
+            font-size: 0.95rem;
+        }
+
+        .pagination-wrap {
+            margin-top: 1rem;
         }
     </style>
 
@@ -30,51 +92,59 @@
 
 			{% include 'crawler/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12 col-lg-10 py-3 py-lg-4" id="core_content">
+
+                <div class="domain-explorer-header p-3 p-lg-4 mb-3">
+                    <h1 class="h4 domain-explorer-title">Domain Explorer</h1>
+                    <p class="domain-explorer-subtitle">Browse crawled domains with clearer filters, improved image controls, and streamlined navigation.</p>
+                </div>
 
                 <div class="row">
-                    <div class="col-12 col-lg-6">
-
-                        {% with domain_type=dict_data['domain_type'], date_from=dict_data['date_from'], date_to=dict_data['date_to'], domain_type=domain_type%}
-                            {% include 'domains/filter_domains.html' %}
-                        {% endwith %}
+                    <div class="col-12 col-xl-7 mb-3">
+                        <div class="control-panel p-3 p-lg-4">
+                            {% with domain_type=dict_data['domain_type'], date_from=dict_data['date_from'], date_to=dict_data['date_to'], domain_type=domain_type%}
+                                {% include 'domains/filter_domains.html' %}
+                            {% endwith %}
+                        </div>
                     </div>
-                    <div class="col-12 col-xl-6">
-
-                        <div class="my-3">
+                    <div class="col-12 col-xl-5 mb-3">
+                        <div class="control-panel p-3 p-lg-4">
                             {% include 'objects/image/block_blur_img_slider.html' %}
                         </div>
-
                     </div>
                 </div>
 
+                <section class="result-section" aria-label="Domain results">
+                    <div class="result-header">
+                        <h2 class="result-title">Discovered Domains</h2>
+                        {% if 'nb_all_elem' in dict_data %}
+                            <p class="result-meta mb-0">Total: {{ dict_data['nb_all_elem'] }}</p>
+                        {% endif %}
+                    </div>
 
-                {% with l_dict_domains=dict_data['list_elem'], bootstrap_label=bootstrap_label %}
-                    {% include 'domains/card_img_domain.html' %}
-                {% endwith %}
-
-                <br>
-                <br>
-
-                {%if 'list_elem' in dict_data%}
-                    {% with page=dict_data['page'], nb_page_max=dict_data['nb_pages'],  nb_first_elem=dict_data['nb_first_elem'], nb_last_elem=dict_data['nb_last_elem'], nb_all_elem=dict_data['nb_all_elem'] %}
-                        {% set object_name="domain" %}
-                        {%if domain_type=='onion'%}
-                            {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
-                        {%elif domain_type=='i2p'%}
-                            {% set target_url=url_for('crawler_splash.domains_explorer_i2p') + "?domain_type=i2p" %}
-                        {%else%}
-                            {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
-                        {%endif%}
-                        {%if 'date_from' in dict_data %}
-                            {% set target_url = target_url + '&date_from=' + dict_data['date_from'] + '&date_to=' + dict_data['date_to'] %}
-                        {%endif%}
-                        {% include 'pagination.html' %}
+                    {% with l_dict_domains=dict_data['list_elem'], bootstrap_label=bootstrap_label %}
+                        {% include 'domains/card_img_domain.html' %}
                     {% endwith %}
-                {%endif%}
 
-
-
+                    {%if 'list_elem' in dict_data%}
+                        <div class="pagination-wrap">
+                            {% with page=dict_data['page'], nb_page_max=dict_data['nb_pages'],  nb_first_elem=dict_data['nb_first_elem'], nb_last_elem=dict_data['nb_last_elem'], nb_all_elem=dict_data['nb_all_elem'] %}
+                                {% set object_name="domain" %}
+                                {%if domain_type=='onion'%}
+                                    {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
+                                {%elif domain_type=='i2p'%}
+                                    {% set target_url=url_for('crawler_splash.domains_explorer_i2p') + "?domain_type=i2p" %}
+                                {%else%}
+                                    {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
+                                {%endif%}
+                                {%if 'date_from' in dict_data %}
+                                    {% set target_url = target_url + '&date_from=' + dict_data['date_from'] + '&date_to=' + dict_data['date_to'] %}
+                                {%endif%}
+                                {% include 'pagination.html' %}
+                            {% endwith %}
+                        </div>
+                    {%endif%}
+                </section>
 			</div>
 		</div>
 	</div>

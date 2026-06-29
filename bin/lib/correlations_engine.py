@@ -40,6 +40,18 @@ config_loader = None
 # CORRELATION MIGRATION
 ##################################
 
+COMMON_TEXT_OBJECT_CORRELATIONS = [
+    "cve",
+    "cryptocurrency",
+    "decoded",
+    "domain",
+    "file-name",
+    "mail",
+    "pdf",
+    "pgp",
+    "username",
+]
+
 CORRELATION_TYPES_BY_OBJ = {
     "author": ["pdf"],
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
@@ -54,6 +66,11 @@ CORRELATION_TYPES_BY_OBJ = {
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
+    "forum": ["post", "subforum", "user-account"],
+    "subforum": ["forum", "subforum", "forum-thread"],
+    "forum-thread": ["subforum", "post"],
+    # TODO Extend to detection of text -> same as message
+    "post": ["forum", "forum-thread", "user-account", *COMMON_TEXT_OBJECT_CORRELATIONS],
     "file-name": ["chat", "item", "message", "pdf"],
     "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
@@ -69,7 +86,7 @@ CORRELATION_TYPES_BY_OBJ = {
     "screenshot": ["barcode", "domain", "item", "qrcode"],
     "ssh-key": ["domain", "ip"],
     "title": ["domain", "item"],
-    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
+    "user-account": ["chat", "chat-subchannel", "chat-thread", "forum", "image", "message", "ocr", "post", "username"],
     "username": ["domain", "item", "message", "user-account"],
 }
 

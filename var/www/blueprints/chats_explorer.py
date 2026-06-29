@@ -24,6 +24,7 @@ from lib import chats_viewer
 from lib import Language
 from lib import Tag
 from lib import module_extractor
+from lib import ail_users
 from lib.objects import ail_objects
 from lib import images_engine
 
@@ -423,6 +424,7 @@ def objects_message():
 
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
+        target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)
@@ -451,6 +453,21 @@ def objects_message_translate():
             return redirect(request.referrer)
         else:
             return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+
+@chats_explorer.route("/objects/message/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def objects_message_translate_json():
+    message_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    message, r_code = chats_viewer.api_get_message(message_id, translation_target=target)
+    if r_code != 200:
+        return create_json_response(message, r_code)
+
+    return jsonify({
+        'id': message_id,
+        'translation': message.get('translation')
+    })
 
 @chats_explorer.route("/objects/message/detect/language", methods=['GET'])
 @login_required

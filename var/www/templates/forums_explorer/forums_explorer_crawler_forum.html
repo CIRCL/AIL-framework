@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forum crawler - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <style>
+    .forum-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); background: white; }
+    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .table td, .table th { vertical-align: middle; }
+    .text-break { word-break: break-word; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid">
+  <div class="row">
+    {% include 'sidebars/sidebar_objects.html' %}
+    <div class="col-12 col-lg-10" id="core_content">
+      {% set forum = meta['forum'] %}
+      {% set status = meta['status'] %}
+      {% set config = meta['config'] %}
+      {% set queue = status['queue'] %}
+      <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}">Crawler status</a></li>
+          <li class="breadcrumb-item active">{{ forum.get('name') or forum['id'] }}</li>
+        </ol>
+      </nav>
+
+      {% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
+      {% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
+
+      <div class="forum-title-card p-4 mb-4">
+        <h1 class="mb-2"><i class="fas fa-spider"></i> {{ forum.get('name') or forum['id'] }}</h1>
+        <div>
+          <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
+          <span class="mr-3"><i class="fas fa-toggle-on"></i> enabled: {{ config.get('enabled') }}</span>
+          {% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+        </div>
+        <form class="mt-3 d-inline-block" method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_queue_enqueue') }}">
+          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+          <button class="btn btn-sm btn-success" {% if not forum.get('url') %}disabled title="Forum URL is missing"{% else %}onclick="return confirm('Send this forum URL to the crawl queue?')"{% endif %}><i class="fas fa-paper-plane"></i> Send forum URL to crawl queue</button>
+        </form>
+        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_manage') }}?id={{ forum['id'] }}"><i class="fas fa-cogs"></i> Manage crawler config/accounts</a>
+        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_queue') }}?id={{ forum['id'] }}"><i class="fas fa-list"></i> Inspect crawl queue</a>
+      </div>
+
+      <div class="row">
+        <div class="col-xl-6 mb-4">
+          <div class="forum-board">
+            <div class="forum-board-header">Crawl config</div>
+            <table class="table table-sm mb-0">
+              <tbody>
+                {% for field in ['enabled', 'javascript', 'proxy', 'default_referer', 'timeout', 'delta_subforum_refresh', 'delta_thread_refresh'] %}
+                  <tr><th style="width: 220px;">{{ field }}</th><td class="text-break">{{ config.get(field) }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="col-xl-6 mb-4">
+          <div class="forum-board">
+            <div class="forum-board-header">Queue</div>
+            <table class="table table-sm mb-0">
+              <tbody>
+                <tr><th>pending_count</th><td>{{ queue.get('pending_count') or 0 }}</td></tr>
+                <tr><th>inflight_count</th><td>{{ queue.get('inflight_count') or 0 }}</td></tr>
+                <tr><th>active_dedup_count</th><td>{{ queue.get('active_dedup_count') or 0 }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="forum-board mb-4">
+        <div class="forum-board-header">Accounts</div>
+        {% if status['accounts'] %}
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>account_id</th><th>enabled</th><th>status</th><th>action</th><th>available</th><th>availability_reason</th><th>current_task_uuid</th><th>current_crawl_key</th><th>current_url</th><th>last_used_at</th><th>last_crawled_at</th><th>last_error</th></tr></thead>
+              <tbody>
+                {% for account in status['accounts'] %}
+                  <tr>
+                    <td>{{ account.get('id') }}</td>
+                    <td>{{ account.get('enabled') }}</td>
+                    <td>{{ account.get('status') }}</td>
+                    <td>
+                      {% if account.get('status') == 'error' %}
+                        <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}">
+                          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
+                          <input type="hidden" name="account_id" value="{{ account.get('id') }}">
+                          <input type="hidden" name="next" value="status">
+                          <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account {{ account.get('id') }} back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+                        </form>
+                      {% endif %}
+                    </td>
+                    <td>{{ account.get('available') }}</td>
+                    <td>{{ account.get('availability_reason') }}</td>
+                    <td class="text-break">{{ account.get('current_task_uuid') }}</td>
+                    <td class="text-break">{{ account.get('current_crawl_key') }}</td>
+                    <td class="text-break">{{ account.get('current_url') }}</td>
+                    <td>{{ account.get('last_used_at') }}</td>
+                    <td>{{ account.get('last_crawled_at') }}</td>
+                    <td class="text-break">{{ account.get('last_error') }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="alert alert-info m-3">No crawl accounts found.</div>
+        {% endif %}
+      </div>
+
+      <div class="forum-board mb-4">
+        <div class="forum-board-header">Running accounts</div>
+        {% if status['running'] %}
+          <div class="table-responsive">
+            <table class="table table-sm table-striped mb-0">
+              <thead><tr><th>account_id</th><th>launch_time</th><th>status</th><th>current_task_uuid</th><th>current_crawl_key</th><th>current_url</th><th>stale</th></tr></thead>
+              <tbody>
+                {% for account in status['running'] %}
+                  <tr>
+                    <td>{{ account.get('account_id') }}</td>
+                    <td>{{ account.get('launch_time') }}</td>
+                    <td>{{ account.get('status') }}</td>
+                    <td class="text-break">{{ account.get('current_task_uuid') }}</td>
+                    <td class="text-break">{{ account.get('current_crawl_key') }}</td>
+                    <td class="text-break">{{ account.get('current_url') }}</td>
+                    <td>{% if account.get('stale') %}<span class="badge badge-warning">stale</span> {{ account.get('stale_reasons')|join(', ') }}{% else %}False{% endif %}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="alert alert-info m-3">No running crawler accounts found.</div>
+        {% endif %}
+      </div>
+
+      <div class="row">
+        <div class="col-xl-6 mb-4">
+          <div class="forum-board">
+            <div class="forum-board-header">Pending sample</div>
+            {% if queue.get('pending_sample') %}
+              <table class="table table-sm mb-0"><tbody>{% for item in queue.get('pending_sample') %}{% set crawl_item = item.get('item') or {} %}<tr><th class="text-break">{{ item.get('crawl_key') }}</th><td class="text-break">{{ crawl_item.get('url') }}</td></tr>{% endfor %}</tbody></table>
+            {% else %}<div class="alert alert-info m-3">No pending sample.</div>{% endif %}
+          </div>
+        </div>
+        <div class="col-xl-6 mb-4">
+          <div class="forum-board">
+            <div class="forum-board-header">Inflight sample</div>
+            {% if queue.get('inflight_sample') %}
+              <table class="table table-sm mb-0"><tbody>{% for item in queue.get('inflight_sample') %}{% set inflight = item.get('inflight') or {} %}<tr><th class="text-break">{{ item.get('crawl_key') }}</th><td class="text-break">{{ inflight.get('url') }}</td></tr>{% endfor %}</tbody></table>
+            {% else %}<div class="alert alert-info m-3">No inflight sample.</div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+</body>
+</html>

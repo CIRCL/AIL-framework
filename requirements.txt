@@ -12,6 +12,7 @@ redis>4.4.4
 python-magic>0.4.15
 yara-python>4.0.2
 pyfaup-rs
+orjson
 
 # AIL Sync
 websockets>9.0
