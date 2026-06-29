@@ -90,17 +90,17 @@ class ForumThread(AbstractSubtypeObject):
             nb_last = total
         return posts, {'nb': nb, 'page': page, 'nb_pages': nb_pages, 'total': total, 'nb_first': nb_first, 'nb_last': nb_last}
 
-    def get_post_meta(self, post_global_id, timestamp=None, options=None):
+    def get_post_meta(self, post_global_id, timestamp=None, options=None, translation_target=None):
         _, _, post_id = post_global_id.split(':', 2)
         post = Posts.Post(post_id)
         if not options:
             options = {'content', 'link', 'state', 'timestamp'}  # TODO GET QUOTES
-        meta = post.get_meta(options=options)
+        meta = post.get_meta(options=options, translation_target=translation_target)
         if timestamp is not None:
             meta['timestamp'] = timestamp
         return meta
 
-    def get_posts(self, page=-1, nb=50, post_gid=None, options=None):
+    def get_posts(self, page=-1, nb=50, post_gid=None, options=None, translation_target=None):
         tags = {}
         posts = {}
         curr_date = None
@@ -124,7 +124,7 @@ class ForumThread(AbstractSubtypeObject):
             if date_day != curr_date:
                 posts[date_day] = []
                 curr_date = date_day
-            post_dict = self.get_post_meta(post_item[0], timestamp=timestamp, options=options)
+            post_dict = self.get_post_meta(post_item[0], timestamp=timestamp, options=options, translation_target=translation_target)
             posts[date_day].append(post_dict)
 
             if post_dict.get('tags'):

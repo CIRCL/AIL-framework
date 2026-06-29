@@ -21,6 +21,7 @@ from lib.objects import Posts
 from lib.objects import UsersAccount
 from lib.objects import ail_objects
 from lib import crawlers
+from lib import Language
 from lib.crawlers import Cookiejar
 
 # config_loader = ConfigLoader()
@@ -29,7 +30,7 @@ from lib.crawlers import Cookiejar
 _FORUM_OPTIONS = {'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orphan_subforums'}
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
-_POST_OPTIONS = {'content', 'link', 'state', 'timestamp', 'user-account'}
+_POST_OPTIONS = {'content', 'language', 'link', 'state', 'timestamp', 'translation', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
 def update_account_cookies_local_storage(account, cookies, local_storage):
@@ -419,7 +420,7 @@ def api_get_subforum(subtype, subforum_id):
         'threads': _children_meta(subforum, 'forum-thread'),
     }, 200
 
-def api_get_forum_thread(subtype, thread_id, page=1, nb=50):
+def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=None):
     """Return thread metadata and timestamp-ordered posts."""
     thread = ForumThreads.ForumThread(thread_id, subtype)
     if not thread.exists():
@@ -436,7 +437,7 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50):
         nb = 50
     if page < 1:
         nb = 50
-    posts, pagination, tags = thread.get_posts(page=page, nb=nb, options=_POST_OPTIONS)
+    posts, pagination, tags = thread.get_posts(page=page, nb=nb, options=_POST_OPTIONS, translation_target=translation_target)
     return {
         'thread': _thread_meta(thread),
         'breadcrumb': get_breadcrumb_for_object(thread),
@@ -444,6 +445,39 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50):
         'pagination': pagination,
         'tags': tags,
     }, 200
+
+
+
+def api_get_post(post_id, translation_target=None):
+    post = Posts.Post(post_id)
+    if not post.exists():
+        return {"status": "error", "reason": "Unknown post"}, 404
+    return post.get_meta(_POST_OPTIONS, translation_target=translation_target, flask_context=True), 200
+
+def api_post_detect_language(post_id):
+    post = Posts.Post(post_id)
+    if not post.exists():
+        return {"status": "error", "reason": "Unknown post"}, 404
+    lang = post.detect_language()
+    return {"language": lang}, 200
+
+def api_manually_translate_post(post_id, source, translation_target, translation):
+    post = Posts.Post(post_id)
+    if not post.exists():
+        return {"status": "error", "reason": "Unknown post"}, 404
+    if translation and len(translation) > 200000:
+        return {"status": "error", "reason": "Max Size reached"}, 400
+    all_languages = Language.get_all_languages()
+    if source not in all_languages:
+        return {"status": "error", "reason": "Unknown source Language"}, 400
+    post_language = post.get_language()
+    if post_language != source:
+        post.edit_language(post_language, source)
+    if translation:
+        if translation_target not in all_languages:
+            return {"status": "error", "reason": "Unknown target Language"}, 400
+        post.set_translation(translation_target, translation)
+    return None, 200
 
 def api_get_subforum_last_thread_post(forum_id, subforum_id, thread_id):
     subforum = Subforums.Subforum(subforum_id, forum_id)

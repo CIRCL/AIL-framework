@@ -56,7 +56,20 @@
       {% set pagination = meta['pagination'] %}
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Posts</h3>
-        <span class="text-muted">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>
+        <div class="d-flex align-items-center">
+          <span class="text-muted mr-3">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>
+          <select id="translation_selector_target" class="form-control form-control-sm" style="width: auto;">
+            {% if not translation_target or translation_target == "Don't Translate" %}
+              <option selected value="Don't Translate">Don't Translate</option>
+            {% else %}
+              <option value="Don't Translate">Don't Translate</option>
+              <option selected value="{{ translation_target }}">{{ translation_languages.get(translation_target, translation_target) }}</option>
+            {% endif %}
+            {% for language in translation_languages %}
+              <option value="{{ language }}">{{ translation_languages[language] }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
       {% if meta['posts'] %}
@@ -88,6 +101,53 @@
                 </div>
                 <div class="p-3">
                   <div class="forum-post-content">{{ post.get('content') or '' }}</div>
+                  {% set post_id_escape = post['id'] | replace('/', '_') %}
+                  <div id="postTranslationBlock{{ post_id_escape }}" {% if not post.get('translation') %}style="display: none;"{% endif %}>
+                    <hr class="m-1">
+                    <div id="postTranslationText{{ post_id_escape }}" class="forum-post-content text-secondary">{{ post.get('translation') or '' }}</div>
+                  </div>
+                  <div class="mt-2">
+                    <span class="btn btn-outline-dark p-0 px-1" type="button" data-toggle="collapse" data-target="#collapseTrans{{ post_id_escape }}" aria-expanded="false" aria-controls="collapseTrans{{ post_id_escape }}">
+                      <i class="fas fa-language"></i> {% if post.get('language') %}{{ post['language'] }}{% endif %}
+                    </span>
+                    {% if post.get('language') %}
+                      <button class="btn btn-outline-dark p-0 px-1" type="button" title="Translate to preferred language" onclick="translatePostToPreferredLanguage('{{ post['id'] }}', '{{ post_id_escape }}', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                          <path d="M0 0h24v24H0z" fill="none" />
+                          <path fill="currentColor" d="m11.9 22l4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4l5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45l-.75 2.05l-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z" />
+                        </svg>
+                      </button>
+                    {% endif %}
+                    <div class="collapse mt-2" id="collapseTrans{{ post_id_escape }}">
+                      <div class="card card-body">
+                        <form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
+                          <input type="text" name="id" value="{{ post['id'] }}" hidden>
+                          <span class="badge badge-primary">Source:</span>
+                          <select name="language_target" class="form-select" aria-label="Post Language" onchange="$(this).closest('form').find('textarea[name=translation]').val('');">
+                            {% if post.get('language') and post['language'] in all_languages %}
+                              <option selected value="{{ post['language'] }}">{{ all_languages[post['language']] }}</option>
+                            {% else %}
+                              <option selected disabled value="">Unknown</option>
+                            {% endif %}
+                            {% for language in all_languages %}
+                              <option value="{{ language }}">{{ all_languages[language] }}</option>
+                            {% endfor %}
+                          </select>
+                          {% if translation_target %}
+                            <input type="text" name="target" value="{{ translation_target }}" hidden>
+                            &nbsp;&nbsp;<span class="badge badge-primary">Target:</span><span>{{ translation_target }}</span>
+                            <textarea class="form-control mt-2" name="translation">{{ post.get('translation') or '' }}</textarea>
+                            <button class="btn btn-dark mt-2" type="submit"><i class="fas fa-pen-alt"></i> Update Language or Translation</button>
+                          {% else %}
+                            <button class="btn btn-dark ml-2" type="submit"><i class="fas fa-pen-alt"></i> Update Language</button>
+                          {% endif %}
+                        </form>
+                        <div class="mt-2">
+                          <a class="btn btn-primary" href="{{ url_for('forums_explorer.objects_post_detect_language') }}?id={{ post['id'] }}"><i class="fas fa-redo"></i> Detect Language</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   {% if post.get('tags') %}
                     <div class="mt-3">
                       {% for tag in post['tags'] %}<span class="badge badge-info mr-1">{{ tag }}</span>{% endfor %}
@@ -106,11 +166,11 @@
         <nav>
           <ul class="pagination justify-content-center">
             <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
-              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] - 1 }}&nb={{ pagination['nb'] }}">Previous</a>
+              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] - 1 }}&nb={{ pagination['nb'] }}{% if translation_target %}&target={{ translation_target }}{% endif %}">Previous</a>
             </li>
             <li class="page-item disabled"><span class="page-link">Page {{ pagination['page'] }} / {{ pagination['nb_pages'] }}</span></li>
             <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
-              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] + 1 }}&nb={{ pagination['nb'] }}">Next</a>
+              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] + 1 }}&nb={{ pagination['nb'] }}{% if translation_target %}&target={{ translation_target }}{% endif %}">Next</a>
             </li>
           </ul>
         </nav>
@@ -120,6 +180,40 @@
 </div>
 <script>
 $(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+
+$('#translation_selector_target').change(function(){
+  const url = new URL(window.location.href);
+  const target = this.value;
+  if (!target || target === "Don't Translate") { url.searchParams.delete('target'); }
+  else { url.searchParams.set('target', target); }
+  window.location.href = url.toString();
+});
+
+function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
+  if (!postId) { return; }
+
+  const formData = new URLSearchParams();
+  formData.append('id', postId);
+  buttonElement.disabled = true;
+
+  fetch("{{ url_for('forums_explorer.objects_post_translate_json') }}", {
+    method: 'POST',
+    body: formData.toString()
+  })
+  .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+  .then(({ ok, data }) => {
+    if (!ok || !data || !data.translation) { return; }
+    const translationBlock = document.getElementById('postTranslationBlock' + postIdEscape);
+    const translationText = document.getElementById('postTranslationText' + postIdEscape);
+    if (translationBlock && translationText) {
+      translationText.textContent = data.translation;
+      translationBlock.style.display = '';
+    }
+  })
+  .finally(() => {
+    buttonElement.disabled = false;
+  });
+}
 function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
 </script>
 </body>

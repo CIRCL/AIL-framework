@@ -44,6 +44,23 @@ class Post(AbstractObject):
             return dirs[1]
         return None
 
+    def get_forum_id(self):
+        return self.id.split('/', 1)[0]
+
+    def get_subforum(self):
+        subforum = self.get_correlation('subforum')
+        if subforum.get('subforum'):
+            subforum = f'subforum:{self.get_forum_id()}:{subforum["subforum"].pop()}'
+            return subforum
+        return None
+
+    def get_thread(self):
+        thread = self.get_correlation('forum-thread')
+        if thread.get('forum-thread'):
+            thread = f'forum-thread:{self.get_forum_id()}:{thread["forum-thread"].pop()}'
+            return thread
+        return None
+
     def get_date(self):
         timestamp = self.get_timestamp()
         if timestamp:
@@ -85,14 +102,42 @@ class Post(AbstractObject):
     def set_state(self, state):
         self._set_field('state', state)
 
+    def get_container(self):
+        thread = self.get_thread()
+        if thread:
+            return thread
+        else:
+            parent_gid = self.get_parent()
+            if parent_gid:
+                return parent_gid
+        return None
+
+    # TODO ADD SUBFORUMS PARENT ???
+    def get_objs_container(self, root=False):
+        objs_containers = set()
+        # forum
+        objs_containers.add(f'forum::{self.get_forum_id()}')
+        if not root:
+            # subforum s ????
+            subforum = self.get_subforum()
+            if subforum:
+                objs_containers.add(subforum)
+            # thread
+            thread = self.get_thread()
+            if thread:
+                objs_containers.add(thread)
+            # user account
+            user_account = self.get_user_account()
+            if user_account:
+                objs_containers.add(user_account)
+        return objs_containers
+
     # TODO:
-    #   - Language
-    #   - Translation
     #   - Reactions
     #   - URLs
     #   - Images
     #   - Attachments
-    def get_meta(self, options=set(), timestamp=None, flask_context=False):
+    def get_meta(self, options=set(), timestamp=None, translation_target=None, flask_context=False):
         meta = self.get_default_meta(options=options)
         meta['tags'] = self.get_tags(r_list=True)
         if 'link' in options:
@@ -113,6 +158,9 @@ class Post(AbstractObject):
             meta['user-account'] = self.get_user_account(meta=True)
             if not meta['user-account']:
                 meta['user-account'] = {'id': 'UNKNOWN'}
+        if 'translation' in options and translation_target:
+            source = meta.get('language')
+            meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
         return meta
 
     def create(self, post_id, timestamp, content, parent_thread, forum_obj, state=None, quote_ids=None):

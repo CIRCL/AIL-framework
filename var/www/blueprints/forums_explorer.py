@@ -9,17 +9,19 @@ import os
 import sys
 import json
 
-from flask import render_template, request, Blueprint, Response, abort, redirect, url_for
+from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_read_only, login_admin
+from Role_Manager import login_read_only, login_admin, login_user_no_api
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib import forums_viewer
+from lib import Language
+from lib import ail_users
 
 # ============ BLUEPRINT ============
 forums_explorer = Blueprint('forums_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/forums_explorer'))
@@ -175,6 +177,51 @@ def forum_explorer_crawler_account_delete():
     return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 
+
+@forums_explorer.route("/objects/post/translate", methods=['POST'])
+@login_required
+@login_user_no_api
+def objects_post_translate():
+    post_id = request.form.get('id')
+    source = request.form.get('language_target')
+    target = request.form.get('target')
+    translation = request.form.get('translation')
+    if target == "Don't Translate":
+        target = None
+    resp = forums_viewer.api_manually_translate_post(post_id, source, target, translation)
+    if resp[1] != 200:
+        return create_json_response(resp[0], resp[1])
+    if request.referrer:
+        return redirect(request.referrer)
+    return redirect(url_for('forums_explorer.forum_explorer_forums'))
+
+
+@forums_explorer.route("/objects/post/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def objects_post_translate_json():
+    post_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    post, r_code = forums_viewer.api_get_post(post_id, translation_target=target)
+    if r_code != 200:
+        return create_json_response(post, r_code)
+    return jsonify({
+        'id': post_id,
+        'translation': post.get('translation')
+    })
+
+@forums_explorer.route("/objects/post/detect/language", methods=['GET'])
+@login_required
+@login_user_no_api
+def objects_post_detect_language():
+    post_id = request.args.get('id')
+    resp = forums_viewer.api_post_detect_language(post_id)
+    if resp[1] != 200:
+        return create_json_response(resp[0], resp[1])
+    if request.referrer:
+        return redirect(request.referrer)
+    return redirect(url_for('forums_explorer.forum_explorer_forums'))
+
 @forums_explorer.route("/chats/explorer/forum/subforum", methods=['GET'])
 @login_required
 @login_read_only
@@ -195,7 +242,11 @@ def forum_explorer_thread():
     thread_id = request.args.get('id')
     page = request.args.get('page')
     nb = request.args.get('nb')
-    meta = forums_viewer.api_get_forum_thread(subtype, thread_id, page=page, nb=nb)
+    target = request.args.get('target')
+    meta = forums_viewer.api_get_forum_thread(subtype, thread_id, page=page, nb=nb, translation_target=target)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
-    return render_template('forums_explorer_thread.html', meta=meta[0], bootstrap_label=bootstrap_label)
+    languages = Language.get_all_languages()
+    translation_languages = Language.get_translation_languages()
+    return render_template('forums_explorer_thread.html', meta=meta[0], bootstrap_label=bootstrap_label,
+                           all_languages=languages, translation_languages=translation_languages, translation_target=target)

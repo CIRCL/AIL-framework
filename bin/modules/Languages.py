@@ -43,6 +43,11 @@ class Languages(AbstractModule):
             lang = obj.detect_language()
             print(self.obj.id, lang)
 
+        # Detect Forum Post Language
+        elif obj.type == 'post':
+            lang = obj.detect_language()
+            print(self.obj.id, lang)
+
 
 if __name__ == '__main__':
     module = Languages()
