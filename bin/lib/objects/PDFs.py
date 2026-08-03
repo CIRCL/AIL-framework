@@ -320,7 +320,10 @@ class PDF(AbstractDaterangeObject):
                             translated = translated.replace('\n', '\\n')
                             translated = h.handle(translated.strip()).replace('\\n', '<br>').replace('\n', ' ').replace('\\.', '.')
                             page.draw_rect(bbox, color=None, fill=pymupdf.pdfcolor['white'], oc=ocg_xref)
-                            page.insert_htmlbox(bbox, translated, oc=ocg_xref)
+                            try:
+                                page.insert_htmlbox(bbox, translated, oc=ocg_xref)
+                            except OverflowError:
+                                page.insert_htmlbox(bbox, translated, oc=ocg_xref, scale_low=0.05)
 
             # add table
             if html_box_tables:
