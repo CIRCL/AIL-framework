@@ -118,7 +118,10 @@ class PDF(AbstractDaterangeObject):
             return self.get_file_content()
 
     def get_markdown_id(self):
-        return self.get_correlation('item').get('item', []).pop()[1:]
+        markdown_id = self.get_correlation('item').get('item', [])
+        if markdown_id:
+            return markdown_id.pop()[1:]
+        return markdown_id
 
     def get_author(self):
         author = self.get_correlation('author').get('author', [])
