@@ -11,9 +11,23 @@
 	<div class="card-header">
         <div class=""><b>PDF original SHA-256:</b> {{ meta["id"] }}</div>
         <div class="my-3">
+            {% if meta['markdown_id'] %}
             <a href="{{ url_for('objects_item.showItem')}}?id={{ meta['markdown_id'] }}">
                 <button class="btn btn-primary"><i class="fa-border fa-2x bg-white text-primary" style="--fa-border-padding: .1em .20em .10em;"><i class="far fa-m"></i><i class="far fa-d"></i></i> PDF Markdown</button>
             </a>
+            {% else %}
+                <span class="alert alert-warning d-inline-block py-2 mb-0" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> No markdown was extracted for this PDF.
+                </span>
+                {% if current_user.is_admin() %}
+                    <form class="d-inline-block ml-1" method="post" action="{{ url_for('objects_pdf.pdf_extract_markdown') }}">
+                        <input type="hidden" name="id" value="{{ meta['id'] }}">
+                        <button class="btn btn-warning" type="submit">
+                            <i class="fas fa-redo"></i> Retry Markdown Extraction
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
             <a target="_blank" href="{{ url_for('objects_pdf.pdf_pdfa', pdf_id=meta['id']) }}">
                 <button class="btn btn-primary"><i class="far fa-file-pdf fa-2x fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i> Open PDF (A)</button>
             </a>

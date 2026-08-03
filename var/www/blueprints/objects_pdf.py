@@ -116,6 +116,17 @@ def pdf_view():
                            meta=meta)
 
 
+@objects_pdf.route("/pdf/markdown/extract", methods=['POST'])
+@login_required
+@login_admin
+def pdf_extract_markdown():
+    obj_id = request.form.get('id')
+    r = PDFs.api_extract_markdown(obj_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    return redirect(url_for('objects_pdf.pdf_view', id=obj_id))
+
+
 @objects_pdf.route("/objects/pdfs", methods=['GET'])
 @login_required
 @login_read_only

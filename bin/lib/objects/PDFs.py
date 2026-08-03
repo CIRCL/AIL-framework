@@ -8,6 +8,7 @@ import sys
 import time
 
 import pymupdf
+import pymupdf4llm
 import html2text
 
 from io import BytesIO
@@ -21,6 +22,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
+from lib.objects import Items
+from lib import ail_queues
 from lib import Language
 from packages import Date
 # from lib.ail_core import get_default_image_description_model
@@ -121,7 +124,19 @@ class PDF(AbstractDaterangeObject):
         markdown_id = self.get_correlation('item').get('item', [])
         if markdown_id:
             return markdown_id.pop()[1:]
-        return markdown_id
+        return None
+
+    def extract_markdown(self, date=None):
+        """Extract this PDF as markdown and link the resulting item."""
+        markdown = pymupdf4llm.to_markdown(self.get_filepath())
+        date = date or self.get_first_seen() or Date.get_today_date_str()
+        item_id = f'pdf/{date[0:4]}/{date[4:6]}/{date[6:8]}/{self.id}.gz'
+        item = Items.Item(item_id)
+        if not item.exists():
+            item.create(markdown, content_type='str')
+            self.add_children('item', '', item_id)
+            self.add_correlation('item', '', item_id)
+        return item_id
 
     def get_author(self):
         author = self.get_correlation('author').get('author', [])
@@ -416,6 +431,15 @@ def api_get_meta(obj_id, options=set(), flask_context=False):
     if not obj.exists():
         return {'error': 'PDF Not Found'}, 404
     return obj.get_meta(options=options, flask_context=flask_context), 200
+
+def api_extract_markdown(obj_id):
+    obj = PDF(obj_id)
+    if not obj.exists():
+        return {'error': 'PDF Not Found'}, 404
+    markdown_id = obj.extract_markdown()
+    item = Items.Item(markdown_id)
+    ail_queues.send_message_from_module('FeederModuleImporter', item.get_global_id(), message='pdf-markdown')
+    return {'markdown_id': markdown_id}, 200
 
 def api_exists_translation_file(filename):
     filename = os.path.basename(filename)

@@ -12,8 +12,6 @@ import os
 import sys
 import time
 
-import pymupdf4llm
-
 from abc import ABC
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -467,15 +465,9 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
                                 author = Authors.create(pdf_meta['Author'], obj)
                                 author.add(date, obj)
 
-                        md_content = pymupdf4llm.to_markdown(obj.get_filepath())
-                        item_id = f'pdf/{date[0:4]}/{date[4:6]}/{date[6:8]}/{obj.id}.gz'
-                        item = Items.Item(item_id)
-                        if not item.exists():
-                            item.create(md_content, content_type='str')
-                            objs.add(item)
-                            print(item_id)
-                        obj.add_children('item', '', item_id)
-                        obj.add_correlation('item', '', item_id)
+                        item_id = obj.extract_markdown(date=date)
+                        objs.add(Items.Item(item_id))
+                        print(item_id)
 
                     self.obj.add(date, message)
 

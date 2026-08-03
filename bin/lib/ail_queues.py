@@ -171,6 +171,20 @@ class AILQueue:
         self._stop_module()
 
 
+def send_message_from_module(module_name, obj_global_id, message=''):
+    """Publish an object through the queues configured for a source module.
+
+    This is intended for one-shot producers, such as web actions, which do not
+    run an ``AbstractModule`` process of their own.
+    """
+    queue = AILQueue(module_name, -1)
+    try:
+        queue.send_message(obj_global_id, message=message)
+    finally:
+        # Do not call end(): it clears the module's inbound queue.
+        queue._stop_module()
+
+
 def get_queues_modules():
     return r_queues.hkeys('queues')
 
