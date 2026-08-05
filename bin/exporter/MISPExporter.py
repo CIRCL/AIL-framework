@@ -282,7 +282,6 @@ class MISPExporterInvestigation(MISPExporter):
         event = self.create_event(objs,
                                   date=investigation.get_date(),
                                   distribution=0,
-                                  threat_level=investigation.get_threat_level(),
                                   analysis=investigation.get_analysis(),
                                   info=investigation.get_info(), # TODO Name + Description
                                   tags=investigation.get_tags(),
@@ -343,7 +342,7 @@ class MISPExporterAutoDaily(MISPExporter):
             return -1
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # exporter = MISPExporterAILObjects()
     # from lib.objects.Cves import Cve
     from lib.objects.Items import Item
@@ -362,8 +361,8 @@ if __name__ == '__main__':
     #     # print()
     #     print()
 
-    obj = Item('submitted/2023/05/15/submitted_aed90c6f-c620-4437-93d7-5ff17d1a8eef.gz')
-    obj = Item('submitted/2023/05/15/submitted_8a6136c2-c7f2-4c9e-8f29-e1a62315b482.gz')
-    tag = 'infoleak:automatic-detection="credit-card"'
-    exporter = MISPExporterAutoDaily()
-    exporter.export(obj, tag)
+    # obj = Item('submitted/2023/05/15/submitted_aed90c6f-c620-4437-93d7-5ff17d1a8eef.gz')
+    # obj = Item('submitted/2023/05/15/submitted_8a6136c2-c7f2-4c9e-8f29-e1a62315b482.gz')
+    # tag = 'infoleak:automatic-detection="credit-card"'
+    # exporter = MISPExporterAutoDaily()
+    # exporter.export(obj, tag)

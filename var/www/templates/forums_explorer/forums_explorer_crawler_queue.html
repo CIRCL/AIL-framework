@@ -40,7 +40,7 @@
   </form>
   <form class="mt-3 d-inline-block" method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_queue_purge') }}">
     <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-    <button class="btn btn-sm btn-danger" onclick="return confirm('Purge crawl queue runtime state for Forum {{ forum['id'] }}?')"><i class="fas fa-trash"></i> Purge crawl queue</button>
+    <button class="btn btn-sm btn-danger" onclick="return confirm('Purge crawl queue runtime state for Forum ' + {{ forum['id']|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i> Purge crawl queue</button>
   </form>
 </div>
 
@@ -76,7 +76,7 @@
               <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
               <input type="hidden" name="crawl_key" value="{{ pending.get('crawl_key') }}">
               <input type="hidden" name="sample_size" value="{{ meta.get('sample_size') }}">
-              <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove pending crawl item {{ pending.get('crawl_key') }} from the queue?')">
+              <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove pending crawl item ' + {{ pending.get('crawl_key')|tojson|forceescape }} + ' from the queue?')">
                 <i class="fas fa-times"></i> Remove
               </button>
             </form>

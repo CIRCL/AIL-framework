@@ -534,7 +534,7 @@ def objects_user_account():
         if tempolocus_requested and not is_forum_account:
             tempolocus_predictions = chats_viewer.get_user_account_tempolocus_predictions(user_id, instance_uuid)
             tempolocus_holiday_predictions = chats_viewer.get_user_account_tempolocus_holiday_predictions(user_id, instance_uuid, holiday_profile=tempolocus_holiday_profile, activity_signal=tempolocus_activity_signal)
-        lang_endpoint = url_for('chats_explorer.objects_user_account_lang') + f'?subtype={instance_uuid}&id={user_id}&lang='
+        lang_endpoint = url_for('chats_explorer.objects_user_account_lang', subtype=instance_uuid, id=user_id)
         account_context = 'forum' if is_forum_account else 'chat'
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
