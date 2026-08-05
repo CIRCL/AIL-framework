@@ -61,6 +61,13 @@ def get_safe_next_page(next_page):
     if not next_page or next_page in {'None', '/'}:
         return None
 
+    if any(ord(character) < 0x20 or ord(character) == 0x7f
+           for character in next_page):
+        return None
+
+    if next_page != next_page.strip():
+        return None
+
     try:
         parsed_next_page = urlsplit(next_page)
     except ValueError:
@@ -69,7 +76,10 @@ def get_safe_next_page(next_page):
     if parsed_next_page.scheme or parsed_next_page.netloc:
         return None
 
-    if not parsed_next_page.path.startswith('/') or next_page.startswith('//'):
+    if not next_page.startswith('/') or next_page.startswith('//'):
+        return None
+
+    if '\\' in parsed_next_page.path:
         return None
 
     return next_page
