@@ -196,7 +196,7 @@ def add_tags():
                                object_id=object_id, object_type=object_type, object_subtype=object_subtype)
     # error
     if res[1] != 200:
-        return str(res[0])
+        return jsonify(res[0])
 
     if request.referrer:
         return redirect(request.referrer)
