@@ -149,7 +149,7 @@ def chats_explorer_chat():
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
-        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
+        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang', type='chat', subtype=instance_uuid, id=chat_id)
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
@@ -249,7 +249,7 @@ def objects_subchannel_messages():
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat-subchannel', instance_uuid, subchannel_id)
-        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
+        lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang', type='chat-subchannel', subtype=instance_uuid, id=subchannel_id)
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ollama_enabled=images_engine.is_ollama_enabled(),
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
@@ -510,7 +510,7 @@ def objects_user_account():
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('user-account', instance_uuid, user_id)
-        lang_endpoint = url_for('chats_explorer.objects_user_account_lang') + f'?subtype={instance_uuid}&id={user_id}&lang='
+        lang_endpoint = url_for('chats_explorer.objects_user_account_lang', subtype=instance_uuid, id=user_id)
         account_context = 'forum' if is_forum_account else 'chat'
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),

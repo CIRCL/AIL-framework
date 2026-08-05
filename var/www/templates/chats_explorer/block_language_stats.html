@@ -59,7 +59,9 @@ optionlangpie = {
 langPieChart.setOption(optionlangpie);
 langPieChart.on('click', function (params) {
     console.log(params.name);
-    window.open('{{ lang_endpoint|safe }}' + params.name)
+    const langUrl = new URL({{ lang_endpoint|tojson }}, window.location.origin);
+    langUrl.searchParams.set('lang', params.name);
+    window.open(langUrl.toString());
 });
 
 </script>
