@@ -97,7 +97,7 @@
                           <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
                           <input type="hidden" name="account_id" value="{{ account.get('id') }}">
                           <input type="hidden" name="next" value="status">
-                          <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account {{ account.get('id') }} back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+                          <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account ' + {{ account.get('id')|tojson|forceescape }} + ' back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
                         </form>
                       {% endif %}
                     </td>

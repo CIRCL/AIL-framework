@@ -102,7 +102,7 @@
         <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
         <input type="hidden" name="next" value="manage">
         <input type="hidden" name="action" value="delete">
-        <button class="btn btn-outline-danger" onclick="return confirm('Remove banner for {{ forum.get('name') or forum['id'] }}?')"><i class="fas fa-trash"></i> Remove banner</button>
+        <button class="btn btn-outline-danger" onclick="return confirm('Remove banner for ' + {{ (forum.get('name') or forum['id'])|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i> Remove banner</button>
       </form>
       {% endif %}
     </div>
@@ -171,7 +171,7 @@
           <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
           <input type="hidden" name="account_id" value="{{ account['id'] }}">
           <input type="hidden" name="url" value="{{ forum.get('url') or account.get('current_url') }}">
-          <button class="btn btn-sm btn-warning" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser to create a user-level cookiejar for account {{ account['id'] }}?')"><i class="fas fa-desktop"></i> Create cookiejar interactively</button>
+          <button class="btn btn-sm btn-warning" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser to create a user-level cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-desktop"></i> Create cookiejar interactively</button>
         </form>
       </td>
       <td>
@@ -181,7 +181,7 @@
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
             <input type="hidden" name="next" value="manage">
-            <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account {{ account['id'] }} back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+            <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account ' + {{ account['id']|tojson|forceescape }} + ' back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
           </form>
         {% endif %}
         <br><small class="text-break">last_error: {{ account.get('last_error') }}</small>
@@ -193,18 +193,18 @@
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_resend') }}" class="mb-2">
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            <button class="btn btn-sm btn-warning" onclick="return confirm('Resend current inflight crawl for account {{ account['id'] }} ?')"><i class="fas fa-arrow-up"></i> Resend</button>
+            <button class="btn btn-sm btn-warning" onclick="return confirm('Resend current inflight crawl for account ' + {{ account['id']|tojson|forceescape }} + ' ?')"><i class="fas fa-arrow-up"></i> Resend</button>
           </form>
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_purge') }}">
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Purge current inflight crawl for account {{ account['id'] }}?')"><i class="fas fa-ban"></i> Purge inflight</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Purge current inflight crawl for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-ban"></i> Purge inflight</button>
           </form>
         {% else %}
           <span class="text-muted">No current inflight crawl</span>
         {% endif %}
       </td>
-      <td><form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_delete') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-danger" onclick="return confirm('Delete account {{ account['id'] }}?')"><i class="fas fa-trash"></i></button></form></td>
+      <td><form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_delete') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-danger" onclick="return confirm('Delete account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i></button></form></td>
     </tr>
   {% endfor %}
   </tbody></table></div>
