@@ -440,7 +440,7 @@
                                     </div>
                                 </td>
                                 {%if item['crawler']["screenshot"]%}
-                                    <td class="text-center icon_img" title="Show Screenshot" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
+                                    <td class="text-center icon_img" title="Show Screenshot" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] | tojson }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
                                         <span class="">
                                             <i class="far fa-image"></i>
                                         </span>
