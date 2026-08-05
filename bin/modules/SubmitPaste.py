@@ -14,6 +14,7 @@ import os
 import sys
 import gzip
 import base64
+import html
 import datetime
 import time
 
@@ -318,8 +319,11 @@ class SubmitPaste(AbstractModule):
         self.logger.debug(errorMessage)
         print(errorMessage)
         error = self.r_serv_log_submit.get(f'{uuid}:error')
+        escaped_error_message = html.escape(errorMessage)
         if error is not None:
-            self.r_serv_log_submit.set(f'{uuid}:error', error + '<br></br>' + errorMessage)
+            self.r_serv_log_submit.set(f'{uuid}:error', error + '<br></br>' + escaped_error_message)
+        else:
+            self.r_serv_log_submit.set(f'{uuid}:error', escaped_error_message)
         self.r_serv_log_submit.incr(f'{uuid}:nb_end')
 
     def abord_file_submission(self, uuid, errorMessage):
