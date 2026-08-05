@@ -9,6 +9,7 @@ import json
 import os
 import sys
 import time
+from urllib.parse import urlsplit
 
 from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response
 from flask import session
@@ -56,6 +57,23 @@ root = Blueprint('root', __name__, template_folder='templates')
 
 # ============ FUNCTIONS ============
 
+def get_safe_next_page(next_page):
+    if not next_page or next_page in {'None', '/'}:
+        return None
+
+    try:
+        parsed_next_page = urlsplit(next_page)
+    except ValueError:
+        return None
+
+    if parsed_next_page.scheme or parsed_next_page.netloc:
+        return None
+
+    if not parsed_next_page.path.startswith('/') or next_page.startswith('//'):
+        return None
+
+    return next_page
+
 # ============= ROUTES ==============
 @root.route('/login', methods=['POST', 'GET'])   # TODO LOG BRUTEFORCE ATTEMPT
 def login():
@@ -77,7 +95,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username', '').lower()
         password = request.form.get('password')
-        next_page = request.form.get('next_page')
+        next_page = get_safe_next_page(request.form.get('next_page'))
 
         if password is None:
             return render_template("login.html", error='Password is required.')
@@ -115,7 +133,7 @@ def login():
                         return redirect(url_for('root.setup_2fa'))
                     else:
                         access_logger.info(f'First Login', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
-                        if next_page and next_page != 'None' and next_page != '/':
+                        if next_page:
                             return redirect(url_for('root.verify_2fa', next=next_page))
                         else:
                             return redirect(url_for('root.verify_2fa'))
@@ -132,7 +150,7 @@ def login():
                     else:
                         # update note
                         # next page
-                        if next_page and next_page != 'None' and next_page != '/':
+                        if next_page:
                             return redirect(next_page)
                         # dashboard
                         else:
@@ -160,7 +178,7 @@ def login():
             return redirect(url_for('dashboard.index'))
         else:
             # print(current_user)
-            next_page = request.args.get('next')
+            next_page = get_safe_next_page(request.args.get('next'))
             error = request.args.get('error')
             return render_template("login.html", next_page=next_page, error=error)
 
@@ -193,13 +211,13 @@ def verify_2fa():
         access_logger.warning(f'Max 2FA attempts reached', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
         error = f'Max 2FA attempts reached, Please wait {wait_time}s'
         htop_counter = user.get_htop_counter()
-        next_page = request.form.get('next_page') or request.args.get('next')
+        next_page = get_safe_next_page(request.form.get('next_page') or request.args.get('next'))
         return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page, error=error)
 
     if request.method == 'POST':
 
         code = request.form.get('otp')
-        next_page = request.form.get('next_page')
+        next_page = get_safe_next_page(request.form.get('next_page'))
 
         if user.is_valid_otp(code):
             r_cache.delete(failed_otp_user_key)
@@ -217,7 +235,7 @@ def verify_2fa():
                 return redirect(url_for('root.change_password'))
             else:
                 # NEXT PAGE
-                if next_page and next_page != 'None' and next_page != '/':
+                if next_page:
                     return redirect(next_page)
                 return redirect(url_for('dashboard.index'))
         else:
@@ -230,7 +248,7 @@ def verify_2fa():
 
     else:
         htop_counter = user.get_htop_counter()
-        next_page = request.args.get('next')
+        next_page = get_safe_next_page(request.args.get('next'))
         return render_template("verify_otp.html", htop_counter=htop_counter, next_page=next_page)
 
 @root.route('/2fa/setup', methods=['POST', 'GET'])
