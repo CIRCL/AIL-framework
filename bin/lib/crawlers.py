@@ -2315,17 +2315,35 @@ def api_delete_schedule(data):
 
 #### FORUM CRAWLER RUNNING ACCOUNTS ####
 
+def schedule_forum_crawl_check(forum_id, next_check=None):
+    """Schedule a forum for a crawl-queue check in the Redis cache."""
+    if next_check is None:
+        next_check = int(time.time())
+    return r_cache.zadd('forum:crawl:scheduled', {forum_id: int(next_check)})
+
+def get_forum_crawl_checks_due(now=None, limit=20):
+    if now is None:
+        now = int(time.time())
+    return r_cache.zrangebyscore('forum:crawl:scheduled', '-inf', int(now), start=0, num=limit)
+
+def remove_forum_crawl_check(forum_id):
+    return r_cache.zrem('forum:crawl:scheduled', forum_id)
+
 
 def add_running_forum_crawler_account(forum_id, account_id, launch_time=None):
     if launch_time is None:
         launch_time = int(time.time())
-    r_crawler.zadd('forum:crawl:running', {f'{forum_id}:{account_id}': launch_time})
+    account_key = f'{forum_id}:{account_id}'
+    r_crawler.zadd('forum:crawl:running', {account_key: launch_time})
+    r_cache.zadd('forum:crawl:status_check', {account_key: launch_time})
 
 def get_running_forum_crawler_account_time(forum_id, account_id):
     return r_crawler.zscore('forum:crawl:running', f'{forum_id}:{account_id}')
 
 def remove_running_forum_crawler_account(forum_id, account_id):
-    return r_crawler.zrem('forum:crawl:running', f'{forum_id}:{account_id}')
+    account_key = f'{forum_id}:{account_id}'
+    r_cache.zrem('forum:crawl:status_check', account_key)
+    return r_crawler.zrem('forum:crawl:running', account_key)
 
 def get_running_forum_crawler_account_keys(withscores=False):
     return r_crawler.zrange('forum:crawl:running', 0, -1, withscores=withscores)
@@ -2344,6 +2362,29 @@ def get_running_forum_crawler_accounts(with_launch_time=False):
         else:
             accounts.append((forum_id, account_id))
     return accounts
+
+
+def sync_forum_crawler_status_check_cache():
+    """Rebuild the cache polling queue from persistent running captures."""
+    running = dict(get_running_forum_crawler_account_keys(withscores=True))
+    r_cache.delete('forum:crawl:status_check')
+    if running:
+        r_cache.zadd('forum:crawl:status_check', running)
+
+
+def get_forum_crawler_account_to_check():
+    """Pop the account whose capture status was checked least recently."""
+    account = r_cache.zpopmin('forum:crawl:status_check')
+    if not account:
+        return None
+    return account[0][0].split(':', 1)
+
+def mark_forum_crawler_account_checked(forum_id, account_id, checked_at=None):
+    if checked_at is None:
+        checked_at = int(time.time())
+    account_key = f'{forum_id}:{account_id}'
+    if r_crawler.zscore('forum:crawl:running', account_key) is not None:
+        r_cache.zadd('forum:crawl:status_check', {account_key: checked_at})
 
 
 def get_nb_running_forum_crawler_accounts():

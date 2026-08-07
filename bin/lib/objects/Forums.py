@@ -4,6 +4,7 @@
 import os
 import sys
 import json
+import random
 import time
 from datetime import datetime, timezone, timedelta
 
@@ -19,6 +20,7 @@ from lib.objects.abstract_daterange_object import AbstractDaterangeObject, Abstr
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 
 
@@ -74,6 +76,7 @@ class ForumAccount:
         account['current_referer'] = self._get_field('current_referer')
         account['last_used_at'] = self._get_field('last_used_at')
         account['last_crawled_at'] = self._get_field('last_crawled_at')
+        account['next_available_at'] = self.get_next_available_at()
         account['last_extracted'] = self._get_field('last_extracted')
         account['available'] = self.is_available()
         account['availability_reason'] = self._get_field('availability_reason')
@@ -226,6 +229,32 @@ class ForumAccount:
         for subforum_id in subforum_ids or []:
             r_object.sadd(f'forum:crawl:account:subforums:{self.forum_id}:{self.id}', subforum_id)
 
+    def get_random_time_between_page(self):
+        value = self._get_field('random_time_between_page')
+        return int(value) if value else 0
+
+    def get_next_available_at(self):
+        value = self._get_field('next_available_at')
+        return int(value) if value else 0
+
+    def set_next_available_at(self, timestamp):
+        self._set_field('next_available_at', int(timestamp))
+
+    def clear_next_available_at(self):
+        self._del_field('next_available_at')
+
+    def apply_success_delay(self, now=None):
+        maximum = self.get_random_time_between_page()
+        if maximum <= 0:
+            self.clear_next_available_at()
+            return 0, 0
+        if now is None:
+            now = int(time.time())
+        delay = random.randint(0, maximum)
+        next_available_at = now + delay
+        self.set_next_available_at(next_available_at)
+        return delay, next_available_at
+
     def refresh_availability(self, forum_enabled=True, now=None):
         if now is None:
             now = datetime.now(timezone.utc)
@@ -244,16 +273,21 @@ class ForumAccount:
             reason = 'missing_cookiejar'
         elif self._get_field('current_crawl_key'):
             reason = 'already_crawling'
+        elif self.get_next_available_at() > int(now.timestamp()):
+            reason = 'page_delay'
+            next_available_at = self.get_next_available_at()
         elif not self.is_in_active_time(now=now):
             reason = 'outside_active_time'
             next_available_at = self.get_next_active_time(now=now)
+        elif self.get_next_available_at():
+            self.clear_next_available_at()
         if reason == 'available':
             available = 1
         else:
             available = 0
         self._set_field('available', available)
         self._set_field('availability_reason', reason)
-        if reason == 'available':
+        if reason in {'available', 'page_delay'}:
             r_object.zadd(f'forum:accounts:available:{self.forum_id}', {self.id: next_available_at})
         else:
             r_object.zrem(f'forum:accounts:available:{self.forum_id}', self.id)
@@ -489,8 +523,16 @@ class Forum(AbstractDaterangeObject):
         for account_id in self.get_crawl_accounts():
             self.refresh_account_availability(account_id)
 
-    def get_available_accounts(self):
-        return r_object.zrange(f'forum:accounts:available:{self.id}', 0, -1)
+    def get_available_accounts(self, now=None):
+        if now is None:
+            now = int(time.time())
+        return r_object.zrangebyscore(f'forum:accounts:available:{self.id}', '-inf', now)
+
+    def get_next_account_available_at(self):
+        accounts = r_object.zrange(f'forum:accounts:available:{self.id}', 0, 0, withscores=True)
+        if accounts:
+            return int(accounts[0][1])
+        return None
 
     # TODO
     def get_next_available_account_round_robin(self):
@@ -655,6 +697,9 @@ class Forum(AbstractDaterangeObject):
         r_object.hset(f'forum:crawl:items:{self.id}', crawl_key, json.dumps(item))
         r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: score})
         r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
+        # Wake the crawler scheduler. This cache index avoids scanning every
+        # forum to discover that a queue has become non-empty.
+        r_cache.zadd('forum:crawl:scheduled', {self.id: int(time.time())})
         return True, None
 
     def get_crawl_item(self, crawl_key):
@@ -667,6 +712,7 @@ class Forum(AbstractDaterangeObject):
         return r_object.zrevrange(f'forum:crawl:queue:{self.id}', start, stop)
 
     def reserve_crawl_item(self, crawl_key, account_id, task_uuid=None):
+        queue_score = r_object.zscore(f'forum:crawl:queue:{self.id}', crawl_key)
         if not r_object.zrem(f'forum:crawl:queue:{self.id}', crawl_key):
             return False, 'not_pending'
         item = self.get_crawl_item(crawl_key)
@@ -683,9 +729,24 @@ class Forum(AbstractDaterangeObject):
             'started_at': int(time.time()),
             'url': item.get('url'),
             'referer': item.get('referer'),
+            'queue_score': queue_score,
         }
         r_object.hset(f'forum:crawl:inflight:{self.id}', crawl_key, json.dumps(inflight))
         return True, item
+
+    def retry_crawl_item(self, crawl_key):
+        item = self.get_crawl_item(crawl_key)
+        inflight = self.get_inflight_crawl_item(crawl_key)
+        if not item or not inflight:
+            return False
+        queue_score = inflight.get('queue_score')
+        if queue_score is None:
+            queue_score = 0
+        r_object.hdel(f'forum:crawl:inflight:{self.id}', crawl_key)
+        r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: queue_score})
+        r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
+        r_cache.zadd('forum:crawl:scheduled', {self.id: int(time.time())})
+        return True
 
     def update_inflight_crawl_item(self, crawl_key, task_uuid=None, url=None, referer=None):
         inflight = self.get_inflight_crawl_item(crawl_key)
@@ -844,6 +905,7 @@ class Forum(AbstractDaterangeObject):
                 'current_url': account.get_current_url(),
                 'last_used_at': account.get_last_used_at(),
                 'last_crawled_at': account._get_field('last_crawled_at'),
+                'next_available_at': account.get_next_available_at(),
                 'last_error': account._get_field('last_error'),
             })
         return accounts

@@ -140,7 +140,7 @@
     <div class="form-group col-md-4"><label>cookiejar_uuid</label><input class="form-control" name="cookiejar_uuid"></div>
   </div>
   <div class="form-row">
-    <div class="form-group col-md-4"><label>random_time_between_page</label><input class="form-control" name="random_time_between_page"></div>
+    <div class="form-group col-md-4"><label>random_time_between_page (maximum seconds)</label><input class="form-control" type="number" min="0" step="1" name="random_time_between_page"></div>
     <div class="form-group col-md-4"><label>subforums_to_crawl (one per line)</label><textarea class="form-control" name="subforums_to_crawl" rows="2"></textarea></div>
     <div class="form-group col-md-4"><label>active_time</label>{{ active_time_selector('new') }}</div>
   </div>
@@ -162,7 +162,7 @@
             <div class="col"><label>status</label><select class="form-control" name="status">{% for status in ['waiting','need_manual_login','disabled','banned','error','crawling'] %}<option {% if account.get('status') == status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
           </div>
           <label class="mt-2">cookiejar_uuid</label><input class="form-control" name="cookiejar_uuid" value="{{ account.get('cookiejar_uuid') or '' }}">
-          <label class="mt-2">random_time_between_page</label><input class="form-control" name="random_time_between_page" value="{{ account.get('random_time_between_page') or '' }}">
+          <label class="mt-2">random_time_between_page (maximum seconds)</label><input class="form-control" type="number" min="0" step="1" name="random_time_between_page" value="{{ account.get('random_time_between_page') or '' }}">
           <label class="mt-2">active_time</label>{{ active_time_selector('account_' ~ loop.index, account.get('active_time_ui')) }}
           <label class="mt-2">subforums_to_crawl</label><textarea class="form-control" name="subforums_to_crawl" rows="2">{{ (account.get('subforums_to_crawl') or [])|join('\n') }}</textarea>
           <button class="btn btn-sm btn-primary mt-2">Save</button>

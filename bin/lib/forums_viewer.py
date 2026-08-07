@@ -190,7 +190,17 @@ def _account_form_to_meta(data, meta=None):
         meta['enabled'] = 0
     meta['status'] = data.get('status', 'need_manual_login')
     meta['cookiejar_uuid'] = data.get('cookiejar_uuid', None)
-    meta['random_time_between_page'] = data.get('random_time_between_page', None)
+    random_time_between_page = data.get('random_time_between_page')
+    if random_time_between_page in (None, ''):
+        meta['random_time_between_page'] = None
+    else:
+        try:
+            random_time_between_page = int(random_time_between_page)
+        except (TypeError, ValueError) as exc:
+            raise ValueError('random_time_between_page must be a positive integer or zero') from exc
+        if random_time_between_page < 0:
+            raise ValueError('random_time_between_page must be a positive integer or zero')
+        meta['random_time_between_page'] = random_time_between_page
     meta['subforums_to_crawl'] = _split_lines(data.get('subforums_to_crawl'))
     if data.get('active_time_mode') == 'limited':
         meta['active_time'] = _active_time_from_form(data)
@@ -204,11 +214,14 @@ def save_forum_crawl_account(forum_id, account_id, data):
         return {"status": "error", "error": "Unknown forum"}, 404
     if not account_id:
         return {"status": "error", "error": "Missing account_id"}, 400
-    if account_id in forum.get_crawl_accounts():
-        account = forum.get_crawl_account(account_id)
-        account.set_meta(_account_form_to_meta(data, meta=account.get_meta()))
-    else:
-        account = forum.add_crawl_account(account_id, _account_form_to_meta(data))
+    try:
+        if account_id in forum.get_crawl_accounts():
+            account = forum.get_crawl_account(account_id)
+            account.set_meta(_account_form_to_meta(data, meta=account.get_meta()))
+        else:
+            account = forum.add_crawl_account(account_id, _account_form_to_meta(data))
+    except ValueError as exc:
+        return {'status': 'error', 'error': str(exc)}, 400
     forum.refresh_account_availability(account_id)
     return account.get_meta(), 200
 
