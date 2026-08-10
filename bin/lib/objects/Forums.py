@@ -476,6 +476,9 @@ class Forum(AbstractDaterangeObject):
     def get_subforum_threads_refresh_delta(self):
         return int(self._get_field('delta_subforum_threads_refresh') or 0)
 
+    def get_forum_structure_refresh_delta(self):
+        return int(self._get_field('delta_forum_structure_refresh') or 0)
+
     def get_crawl_config(self):
         config = {'id': self.id}
         config['enabled'] = self.is_enabled()
@@ -967,6 +970,11 @@ class Forum(AbstractDaterangeObject):
         running = self.get_running_crawl_status()
         crawl_accounts = self.get_crawl_accounts()
         available_accounts = self.get_available_accounts()
+        accounts = self.get_crawl_accounts_status()
+        account_errors = [
+            {'account_id': account.get('id'), 'error': account.get('last_error')}
+            for account in accounts if account.get('status') == 'error'
+        ]
         return {
             'id': self.id,
             'config_enabled': self.get_crawl_config().get('enabled'),
@@ -975,9 +983,12 @@ class Forum(AbstractDaterangeObject):
             'nb_pending_crawl_items': self.get_nb_pending_crawl_items(),
             'nb_inflight_crawl_items': self.get_nb_inflight_crawl_items(),
             'nb_running_accounts': len(running),
+            'nb_error_accounts': len(account_errors),
+            'nb_stale_accounts': sum(account.get('stale', False) for account in running),
             'nb_orphan_subforums': self.get_nb_orphan_subforums(),
             'nb_threads_last_time': r_object.zcard(f'forum:thread:last_time:{self.id}'),
-            'accounts': self.get_crawl_accounts_status(),
+            'accounts': accounts,
+            'account_errors': account_errors,
             'queue': self.get_crawl_queue_status(sample_size=sample_size),
             'running': running,
         }

@@ -95,6 +95,23 @@ def forum_explorer_crawler_status():
     return render_template('forums_explorer_crawler_index.html', forums=forums, bootstrap_label=bootstrap_label)
 
 
+@forums_explorer.route("/forums/explorer/crawler/logs", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_logs():
+    try:
+        lines = min(max(int(request.args.get('lines') or 100), 10), 1000)
+    except (TypeError, ValueError):
+        lines = 100
+    logs = crawlers.get_last_forum_crawler_logs(lines=lines)
+    return render_template(
+        'forums_explorer_crawler_logs.html',
+        logs=logs,
+        lines=lines,
+        bootstrap_label=bootstrap_label,
+    )
+
+
 @forums_explorer.route("/forums/explorer/crawler/queue", methods=['GET', 'POST'])
 @login_required
 @login_admin

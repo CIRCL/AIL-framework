@@ -7,6 +7,7 @@ Forums Viewer
 """
 import os
 import sys
+import time
 import magic
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -555,12 +556,28 @@ def get_forums_crawl_status():
         forums.append(meta)
     return sorted(forums, key=lambda m: ((m.get('name') or m.get('id')).lower(), m.get('id')))
 
+
+def _get_forum_refresh_schedule(delta, next_check, now):
+    delta = int(delta or 0)
+    if delta <= 0:
+        return {'state': 'disabled', 'next_check': None, 'next_check_date': None}
+    if next_check is None:
+        return {'state': 'not_scheduled', 'next_check': None, 'next_check_date': None}
+    next_check = int(next_check)
+    return {
+        'state': 'due' if next_check <= now else 'waiting',
+        'next_check': next_check,
+        'next_check_date': Date.get_utc_datetime_from_timestamp(next_check),
+    }
+
+
 def api_get_forum_crawl_status(forum_id):
     """Return read-only crawler status for one Forum object."""
     forum = Forums.Forum(forum_id)
     if not forum.exists():
         return {"status": "error", "reason": "Unknown forum"}, 404
     config = forum.get_crawl_config()
+    now = int(time.time())
     return {
         'forum': forum.get_meta(_FORUM_OPTIONS, flask_context=True),
         'config': {
@@ -571,6 +588,18 @@ def api_get_forum_crawl_status(forum_id):
             'timeout': config.get('timeout'),
             'delta_forum_structure_refresh': config.get('delta_forum_structure_refresh'),
             'delta_subforum_threads_refresh': config.get('delta_subforum_threads_refresh'),
+        },
+        'refresh_schedule': {
+            'forum_structure': _get_forum_refresh_schedule(
+                config.get('delta_forum_structure_refresh'),
+                crawlers.get_forum_structure_refresh_check(forum_id),
+                now,
+            ),
+            'subforum_threads': _get_forum_refresh_schedule(
+                config.get('delta_subforum_threads_refresh'),
+                crawlers.get_forum_thread_refresh_check(forum_id),
+                now,
+            ),
         },
         'status': forum.get_crawl_status(sample_size=5),
     }, 200

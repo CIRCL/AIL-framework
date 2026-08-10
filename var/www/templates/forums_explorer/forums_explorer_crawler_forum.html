@@ -25,6 +25,7 @@
       {% set forum = meta['forum'] %}
       {% set status = meta['status'] %}
       {% set config = meta['config'] %}
+      {% set refresh_schedule = meta['refresh_schedule'] %}
       {% set queue = status['queue'] %}
       <nav aria-label="breadcrumb" class="mt-3">
         <ol class="breadcrumb">
@@ -76,6 +77,25 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div class="forum-board mb-4">
+        <div class="forum-board-header">Refresh scheduler</div>
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Refresh</th><th>State</th><th>Next check (UTC)</th><th>Timestamp</th></tr></thead>
+            <tbody>
+              {% for name, schedule in [('Forum structure', refresh_schedule.get('forum_structure') or {}), ('Subforum threads', refresh_schedule.get('subforum_threads') or {})] %}
+                <tr>
+                  <th>{{ name }}</th>
+                  <td><span class="badge {% if schedule.get('state') == 'due' %}badge-warning{% elif schedule.get('state') == 'waiting' %}badge-success{% else %}badge-secondary{% endif %}">{{ schedule.get('state') }}</span></td>
+                  <td>{{ schedule.get('next_check_date') or '-' }}</td>
+                  <td>{{ schedule.get('next_check') or '-' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -158,7 +178,7 @@
           <div class="forum-board">
             <div class="forum-board-header">Inflight sample</div>
             {% if queue.get('inflight_sample') %}
-              <table class="table table-sm mb-0"><tbody>{% for item in queue.get('inflight_sample') %}{% set inflight = item.get('inflight') or {} %}<tr><th class="text-break">{{ item.get('crawl_key') }}</th><td class="text-break">{{ inflight.get('url') }}</td></tr>{% endfor %}</tbody></table>
+              <table class="table table-sm mb-0"><tbody>{% for item in queue.get('inflight_sample') %}{% set inflight = item.get('inflight') or {} %}{% set crawl_item = item.get('item') or {} %}<tr><th class="text-break">{{ item.get('crawl_key') }}</th><td>{{ crawl_item.get('crawl_mode') }}</td><td class="text-break">{{ inflight.get('url') }}</td></tr>{% endfor %}</tbody></table>
             {% else %}<div class="alert alert-info m-3">No inflight sample.</div>{% endif %}
           </div>
         </div>

@@ -224,6 +224,27 @@ def get_last_crawler_logs(lines=100):
         return ['Crawler log file is empty.']
     return [line.rstrip('\n') for line in last_lines]
 
+
+def get_last_forum_crawler_logs(lines=100):
+    log_path = os.path.join(os.environ['AIL_HOME'], 'logs', 'crawlers.log')
+    if not os.path.exists(log_path):
+        return ['No crawler logs available.']
+    if os.path.getsize(log_path) == 0:
+        return ['Crawler log file is empty.']
+    try:
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+            last_lines = deque(
+                (line for line in f if ' ForumCrawler ' in line),
+                maxlen=lines,
+            )
+    except OSError:
+        return ['No crawler logs available.']
+
+    if not last_lines:
+        return ['No ForumCrawler logs available.']
+    return [line.rstrip('\n') for line in last_lines]
+
+
 def is_valid_onion_v3_domain(domain):
     if len(domain) == 62:  # v3 address
         return domain[:56].isalnum()
@@ -2340,6 +2361,18 @@ def get_forum_thread_refresh_check(forum_id):
 
 def remove_forum_thread_refresh_check(forum_id):
     return r_cache.zrem('forum:thread_refresh:scheduled', forum_id)
+
+
+def schedule_forum_structure_refresh_check(forum_id, next_check=None):
+    if next_check is None:
+        next_check = int(time.time())
+    return r_cache.zadd('forum:structure_refresh:scheduled', {forum_id: int(next_check)})
+
+def get_forum_structure_refresh_check(forum_id):
+    return r_cache.zscore('forum:structure_refresh:scheduled', forum_id)
+
+def remove_forum_structure_refresh_check(forum_id):
+    return r_cache.zrem('forum:structure_refresh:scheduled', forum_id)
 
 
 def add_running_forum_crawler_account(forum_id, account_id, launch_time=None):

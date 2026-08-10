@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Forum crawler logs - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+  <style>
+    .forum-hero { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .log-output { max-height: 70vh; overflow: auto; white-space: pre-wrap; word-break: break-word; background: #1e2529; color: #f1f3f5; padding: 1rem; border-radius: .35rem; }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid">
+  <div class="row">
+    {% include 'sidebars/sidebar_objects.html' %}
+    <div class="col-12 col-lg-10" id="core_content">
+      <nav aria-label="breadcrumb" class="mt-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}">Crawler status</a></li>
+          <li class="breadcrumb-item active">Logs</li>
+        </ol>
+      </nav>
+
+      <div class="forum-hero my-3 p-4">
+        <h1 class="mb-1"><i class="fas fa-file-alt"></i> Forum crawler logs</h1>
+        <p class="mb-0">Warnings and errors from the active rotating crawler log.</p>
+      </div>
+
+      <form method="get" class="form-inline mb-3">
+        <label for="lines" class="mr-2">Lines</label>
+        <input id="lines" name="lines" type="number" min="10" max="1000" value="{{ lines }}" class="form-control form-control-sm mr-2">
+        <button class="btn btn-sm btn-primary mr-2"><i class="fas fa-sync"></i> Refresh</button>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}">Back to status</a>
+      </form>
+
+      <pre class="log-output">{% for line in logs %}{{ line }}{% if not loop.last %}
+{% endif %}{% endfor %}</pre>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+</script>
+</body>
+</html>

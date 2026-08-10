@@ -36,6 +36,7 @@
       <div class="forum-hero my-3 p-4">
         <h1 class="mb-1"><i class="fas fa-spider"></i> Forum crawler status</h1>
         <p class="mb-0">Read-only status for configured Forum crawlers.</p>
+        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_logs') }}"><i class="fas fa-file-alt"></i> Forum crawler logs</a>
       </div>
 
 
@@ -96,6 +97,11 @@
               <div class="forum-stats">
                 <div><strong>{{ status.get('nb_accounts') or 0 }}</strong> accounts · <strong>{{ status.get('nb_available_accounts') or 0 }}</strong> available · <strong>{{ status.get('nb_running_accounts') or 0 }}</strong> running</div>
                 <div><strong>{{ status.get('nb_pending_crawl_items') or 0 }}</strong> pending · <strong>{{ status.get('nb_inflight_crawl_items') or 0 }}</strong> inflight</div>
+                {% if status.get('nb_error_accounts') %}<div><span class="badge badge-danger">{{ status.get('nb_error_accounts') }} errored</span></div>{% endif %}
+                {% if status.get('nb_stale_accounts') %}<div><span class="badge badge-warning">{{ status.get('nb_stale_accounts') }} stale</span></div>{% endif %}
+                {% for account_error in (status.get('account_errors') or [])[:2] %}
+                  <div class="text-danger small"><strong>{{ account_error.get('account_id') }}:</strong> {{ (account_error.get('error') or 'unknown error')|truncate(120) }}</div>
+                {% endfor %}
               </div>
             </a>
           {% endfor %}

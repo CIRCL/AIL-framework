@@ -91,10 +91,11 @@
   <div class="forum-board-header">Inflight crawl items</div>
   {% if queue.get('inflight_sample') %}
     <div class="table-responsive"><table class="table table-sm table-striped mb-0">
-      <thead><tr><th>crawl_key</th><th>account_id</th><th>task_uuid</th><th>started_at</th><th>url</th><th>referer</th></tr></thead>
-      <tbody>{% for row in queue.get('inflight_sample') %}{% set inflight = row.get('inflight') or {} %}
+      <thead><tr><th>crawl_key</th><th>crawl_mode</th><th>account_id</th><th>task_uuid</th><th>started_at</th><th>url</th><th>referer</th></tr></thead>
+      <tbody>{% for row in queue.get('inflight_sample') %}{% set inflight = row.get('inflight') or {} %}{% set item = row.get('item') or {} %}
         <tr>
           <td class="text-break">{{ row.get('crawl_key') }}</td>
+          <td>{{ item.get('crawl_mode') }}</td>
           <td>{{ inflight.get('account_id') }}</td>
           <td class="text-break">{{ inflight.get('task_uuid') }}</td>
           <td>{{ inflight.get('started_at') }}</td>
