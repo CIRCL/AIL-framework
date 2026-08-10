@@ -119,8 +119,8 @@
     <div class="form-group col-md-4"><label>default_referer</label><input class="form-control" name="default_referer" value="{{ config.get('default_referer') or '' }}"></div>
   </div>
   <div class="form-row">
-    <div class="form-group col-md-4"><label>delta_subforum_refresh</label><input type="number" class="form-control" name="delta_subforum_refresh" value="{{ config.get('delta_subforum_refresh') or 0 }}"></div>
-    <div class="form-group col-md-4"><label>delta_thread_refresh</label><input type="number" class="form-control" name="delta_thread_refresh" value="{{ config.get('delta_thread_refresh') or 0 }}"></div>
+    <div class="form-group col-md-4"><label>delta_forum_structure_refresh</label><input type="number" class="form-control" name="delta_forum_structure_refresh" value="{{ config.get('delta_forum_structure_refresh') or 0 }}"></div>
+    <div class="form-group col-md-4"><label>delta_subforum_threads_refresh</label><input type="number" class="form-control" name="delta_subforum_threads_refresh" value="{{ config.get('delta_subforum_threads_refresh') or 0 }}"></div>
     <div class="form-group col-md-4"><label>timeout</label><input type="number" class="form-control" name="timeout" value="{{ config.get('timeout') or 60 }}"></div>
   </div>
   <div class="form-row">

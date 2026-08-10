@@ -47,6 +47,26 @@ class ForumThread(AbstractSubtypeObject):
     def set_url(self, url):
         self._set_field('url', url)
 
+    def move_to_subforum(self, subforum):
+        old_parent = self.get_parent()
+        new_parent = subforum.get_global_id()
+        if old_parent == new_parent:
+            return False
+
+        last_post_timestamp = None
+        if old_parent:
+            old_parent_type, old_parent_subtype, old_parent_id = old_parent.split(':', 2)
+            if old_parent_type == 'subforum' and old_parent_subtype == self.subtype:
+                old_index = f'last:subforum:{self.subtype}:{old_parent_id}'
+                last_post_timestamp = r_object.zscore(old_index, self.id)
+                r_object.zrem(old_index, self.id)
+            r_object.srem(f'child:{old_parent}', self.get_global_id())
+
+        self.set_parent(obj_global_id=new_parent)
+        if last_post_timestamp is not None:
+            r_object.zadd(f'last:subforum:{self.subtype}:{subforum.id}', {self.id: last_post_timestamp})
+        return True
+
     def contain_posts(self):
         return r_object.exists(f'posts:forum-thread:{self.subtype}:{self.id}')
 

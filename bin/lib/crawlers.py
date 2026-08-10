@@ -2330,6 +2330,18 @@ def remove_forum_crawl_check(forum_id):
     return r_cache.zrem('forum:crawl:scheduled', forum_id)
 
 
+def schedule_forum_thread_refresh_check(forum_id, next_check=None):
+    if next_check is None:
+        next_check = int(time.time())
+    return r_cache.zadd('forum:thread_refresh:scheduled', {forum_id: int(next_check)})
+
+def get_forum_thread_refresh_check(forum_id):
+    return r_cache.zscore('forum:thread_refresh:scheduled', forum_id)
+
+def remove_forum_thread_refresh_check(forum_id):
+    return r_cache.zrem('forum:thread_refresh:scheduled', forum_id)
+
+
 def add_running_forum_crawler_account(forum_id, account_id, launch_time=None):
     if launch_time is None:
         launch_time = int(time.time())

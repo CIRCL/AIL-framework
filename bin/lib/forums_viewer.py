@@ -162,8 +162,8 @@ def update_forum_crawl_config(forum_id, data):
         return {"status": "error", "error": "Unknown forum"}, 404
     config = {
         'proxy': data.get('proxy'),
-        'delta_subforum_refresh': data.get('delta_subforum_refresh'),
-        'delta_thread_refresh': data.get('delta_thread_refresh'),
+        'delta_forum_structure_refresh': data.get('delta_forum_structure_refresh'),
+        'delta_subforum_threads_refresh': data.get('delta_subforum_threads_refresh'),
         'default_referer': data.get('default_referer'),
         'timeout': data.get('timeout'),
         'subforums_excluded': _split_lines(data.get('subforums_excluded')),
@@ -569,8 +569,8 @@ def api_get_forum_crawl_status(forum_id):
             'proxy': config.get('proxy'),
             'default_referer': config.get('default_referer'),
             'timeout': config.get('timeout'),
-            'delta_subforum_refresh': config.get('delta_subforum_refresh'),
-            'delta_thread_refresh': config.get('delta_thread_refresh'),
+            'delta_forum_structure_refresh': config.get('delta_forum_structure_refresh'),
+            'delta_subforum_threads_refresh': config.get('delta_subforum_threads_refresh'),
         },
         'status': forum.get_crawl_status(sample_size=5),
     }, 200

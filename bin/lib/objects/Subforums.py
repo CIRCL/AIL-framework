@@ -3,6 +3,7 @@
 
 import os
 import sys
+import time
 
 from flask import url_for
 
@@ -36,6 +37,23 @@ class Subforum(AbstractSubtypeObject):
 
     def set_url(self, url):
         self._set_field('url', url)
+
+    def get_threads_last_crawled_at(self):
+        timestamp = self._get_field('threads_last_crawled_at')
+        return int(timestamp) if timestamp else 0
+
+    def set_threads_last_crawled_at(self, timestamp=None):
+        if timestamp is None:
+            timestamp = int(time.time())
+        self._set_field('threads_last_crawled_at', int(timestamp))
+
+    def is_thread_refresh_due(self, delta, now=None):
+        delta = int(delta or 0)
+        if delta <= 0:
+            return False
+        if now is None:
+            now = int(time.time())
+        return self.get_threads_last_crawled_at() + delta <= int(now)
 
     def get_subforums(self):
         subforums = []

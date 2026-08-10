@@ -407,6 +407,21 @@ class Forum(AbstractDaterangeObject):
                 subforums.append(obj_id)
         return subforums
 
+    # TODO improve
+    def get_all_subforums(self):
+        subforums = []
+        parents = [self.get_global_id()]
+        seen = set()
+        while parents:
+            parent = parents.pop()
+            for child in r_object.smembers(f'child:{parent}'):
+                obj_type, _, obj_id = child.split(':', 2)
+                if obj_type == 'subforum' and child not in seen:
+                    seen.add(child)
+                    subforums.append(obj_id)
+                    parents.append(child)
+        return subforums
+
     def get_nb_subforums(self):
         return len(self.get_subforums())
 
@@ -458,12 +473,15 @@ class Forum(AbstractDaterangeObject):
     def get_default_referer(self):
         return self._get_field('default_referer')
 
+    def get_subforum_threads_refresh_delta(self):
+        return int(self._get_field('delta_subforum_threads_refresh') or 0)
+
     def get_crawl_config(self):
         config = {'id': self.id}
         config['enabled'] = self.is_enabled()
         config['javascript'] = self.is_javascript_enabled()
-        config['delta_subforum_refresh'] = self._get_field('delta_subforum_refresh')
-        config['delta_thread_refresh'] = self._get_field('delta_thread_refresh')
+        config['delta_forum_structure_refresh'] = self._get_field('delta_forum_structure_refresh')
+        config['delta_subforum_threads_refresh'] = self._get_field('delta_subforum_threads_refresh')
         config['default_referer'] = self.get_default_referer()
         config['timeout'] = self._get_field('timeout')
         config['proxy'] = self._get_field('proxy')
@@ -475,8 +493,8 @@ class Forum(AbstractDaterangeObject):
     def set_crawl_config(self, config):
         self._set_field('enabled', config.get('enabled'))
         self._set_field('javascript', config.get('javascript'))
-        self._set_field('delta_subforum_refresh', int(config.get('delta_subforum_refresh') or 0))
-        self._set_field('delta_thread_refresh', int(config.get('delta_thread_refresh') or 0))
+        self._set_field('delta_forum_structure_refresh', int(config.get('delta_forum_structure_refresh') or 0))
+        self._set_field('delta_subforum_threads_refresh', int(config.get('delta_subforum_threads_refresh') or 0))
         self._set_field('timeout', int(config.get('timeout') or 60))
         if config.get('default_referer'):
             self._set_field('default_referer', config.get('default_referer'))

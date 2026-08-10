@@ -235,7 +235,12 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             return None
         thread = ForumThread(thread_data.get('thread_id'), self.forum.id)
         if subforum:
-            self._set_parent_once(thread, subforum.get_global_id())
+            current_parent = thread.get_parent()
+            if current_parent and current_parent != subforum.get_global_id():
+                thread.move_to_subforum(subforum)
+                self.logger.warning(f'Moved {thread.get_global_id()} from {current_parent} to {subforum.get_global_id()}')
+            else:
+                self._set_parent_once(thread, subforum.get_global_id())
         if not thread.get_parent():
             self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None

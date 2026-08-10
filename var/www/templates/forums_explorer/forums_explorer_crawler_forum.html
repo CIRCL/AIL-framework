@@ -58,7 +58,7 @@
             <div class="forum-board-header">Crawl config</div>
             <table class="table table-sm mb-0">
               <tbody>
-                {% for field in ['enabled', 'javascript', 'proxy', 'default_referer', 'timeout', 'delta_subforum_refresh', 'delta_thread_refresh'] %}
+                {% for field in ['enabled', 'javascript', 'proxy', 'default_referer', 'timeout', 'delta_forum_structure_refresh', 'delta_subforum_threads_refresh'] %}
                   <tr><th style="width: 220px;">{{ field }}</th><td class="text-break">{{ config.get(field) }}</td></tr>
                 {% endfor %}
               </tbody>
