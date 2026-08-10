@@ -226,22 +226,19 @@ def get_last_crawler_logs(lines=100):
 
 
 def get_last_forum_crawler_logs(lines=100):
-    log_path = os.path.join(os.environ['AIL_HOME'], 'logs', 'crawlers.log')
+    log_path = os.path.join(os.environ['AIL_HOME'], 'logs', 'forum_crawlers.log')
     if not os.path.exists(log_path):
-        return ['No crawler logs available.']
+        return ['No ForumCrawler logs available.']
     if os.path.getsize(log_path) == 0:
-        return ['Crawler log file is empty.']
+        return ['ForumCrawler log file is empty.']
     try:
         with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
-            last_lines = deque(
-                (line for line in f if ' ForumCrawler ' in line),
-                maxlen=lines,
-            )
+            last_lines = deque(f, maxlen=lines)
     except OSError:
-        return ['No crawler logs available.']
+        return ['No ForumCrawler logs available.']
 
     if not last_lines:
-        return ['No ForumCrawler logs available.']
+        return ['ForumCrawler log file is empty.']
     return [line.rstrip('\n') for line in last_lines]
 
 
