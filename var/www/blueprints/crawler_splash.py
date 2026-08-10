@@ -179,6 +179,7 @@ def interactive_capture_start():
         'depth': 0,
         'har': request.form.get('har'),
         'screenshot': request.form.get('screenshot'),
+        'javascript': request.form.get('javascript', False),
     }
     crawler_type = request.form.get('crawler_queue_type')
     proxy = request.form.get('proxy_name')
@@ -267,6 +268,7 @@ def send_to_spider():
     crawler_type = request.form.get('crawler_queue_type')
     screenshot = request.form.get('screenshot')
     har = request.form.get('har')
+    javascript = request.form.get('javascript', False)
     depth_limit = request.form.get('depth_limit')
     cookiejar_uuid = request.form.get('cookiejar')
 
@@ -327,7 +329,7 @@ def send_to_spider():
             cookiejar_uuid = cookiejar_uuid.rsplit(':')
             cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
 
-    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'frequency': frequency}
+    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'javascript': javascript, 'frequency': frequency}
     if url:
         data['url']= url
     if urls:

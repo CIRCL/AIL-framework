@@ -2106,6 +2106,7 @@ class CrawlerScheduler:
                 return None
             meta = schedule.get_meta()
             task_uuid = create_task(meta['url'], depth=meta['depth'], har=meta['har'], screenshot=meta['screenshot'],
+                                    javascript=meta['javascript'],
                                     header=meta['header'],
                                     cookiejar=meta['cookiejar'], proxy=meta['proxy'],
                                     tags=meta['tags'],
@@ -2196,6 +2197,10 @@ class CrawlerSchedule:
     def get_screenshot(self):
         return r_crawler.hget(f'schedule:{self.uuid}', 'screenshot') == 'True'
 
+    def get_javascript(self):
+        javascript = r_crawler.hget(f'schedule:{self.uuid}', 'javascript')
+        return javascript != '0'
+
     def get_header(self):
         r_crawler.hget(f'schedule:{self.uuid}', 'header')
 
@@ -2229,6 +2234,7 @@ class CrawlerSchedule:
             'depth': self.get_depth(),
             'har': self.get_har(),
             'screenshot': self.get_screenshot(),
+            'javascript': self.get_javascript(),
             'user_agent': self.get_user_agent(),
             'cookiejar': self.get_cookiejar(),
             'header': self.get_header(),
@@ -2259,7 +2265,7 @@ class CrawlerSchedule:
         return meta
 
     def create(self, frequency, user, url,
-               depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
+               depth=1, har=True, screenshot=True, javascript=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
 
         if self.exists():
             raise Exception('Error: Monitor already exists')
@@ -2274,6 +2280,7 @@ class CrawlerSchedule:
         self._set_field('depth', int(depth))
         self._set_field('har', str(har))
         self._set_field('screenshot', str(screenshot))
+        self._set_field('javascript', int(javascript))
 
         if cookiejar:
             self._set_field('cookiejar', cookiejar)
@@ -2311,10 +2318,10 @@ class CrawlerSchedule:
         r_crawler.srem('scheduler:schedules', self.uuid)
         return self.uuid
 
-def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
+def create_schedule(frequency, user, url, depth=1, har=True, screenshot=True, javascript=True, header=None, cookiejar=None, proxy=None, user_agent=None, tags=[]):
     schedule_uuid = gen_uuid()
     schedule = CrawlerSchedule(schedule_uuid)
-    schedule.create(frequency, user, url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar, proxy=proxy, user_agent=user_agent, tags=tags)
+    schedule.create(frequency, user, url, depth=depth, har=har, screenshot=screenshot, javascript=javascript, header=header, cookiejar=cookiejar, proxy=proxy, user_agent=user_agent, tags=tags)
     return schedule_uuid
 
 def _delete_schedules():
@@ -3047,6 +3054,10 @@ class CrawlerTask:
     def get_screenshot(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'screenshot') == '1'
 
+    def get_javascript(self):
+        javascript = r_crawler.hget(f'crawler:task:{self.uuid}', 'javascript')
+        return javascript != '0'
+
     def is_cookiejar_only(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'cookiejar_only') == '1'
 
@@ -3128,6 +3139,7 @@ class CrawlerTask:
             'depth': self.get_depth(),
             'har': self.get_har(),
             'screenshot': self.get_screenshot(),
+            'javascript': self.get_javascript(),
             'type': self.get_queue(),
             'user_agent': self.get_user_agent(),
             'cookiejar': self.get_cookiejar(),
@@ -3142,7 +3154,7 @@ class CrawlerTask:
     # TODO SANITIZE PRIORITY
     # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
     def create(self, url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-               user_agent=None, tags=[], parent='manual', priority=0, external=False, new_task=False):
+               javascript=True, user_agent=None, tags=[], parent='manual', priority=0, external=False, new_task=False):
         if self.exists():
             raise Exception('Error: Task already exists')
 
@@ -3164,6 +3176,7 @@ class CrawlerTask:
 
         har = int(har)
         screenshot = int(screenshot)
+        javascript = int(javascript)
 
         if domain.endswith('i2p'):
             proxy = None
@@ -3175,7 +3188,7 @@ class CrawlerTask:
         # TODO SANITIZE COOKIEJAR -> UUID
 
         # Check if already in queue
-        hash_query = get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header, tags)
+        hash_query = get_task_hash(url, domain, depth, har, screenshot, javascript, priority, proxy, cookiejar, user_agent, header, tags)
         if r_crawler.hexists(f'crawler:queue:hash', hash_query):
             if new_task:
                 return None
@@ -3188,6 +3201,7 @@ class CrawlerTask:
         self._set_field('depth', int(depth))
         self._set_field('har', har)
         self._set_field('screenshot', screenshot)
+        self._set_field('javascript', javascript)
         self._set_field('parent', parent)
 
         if cookiejar:
@@ -3246,9 +3260,9 @@ class CrawlerTask:
 
 
 # TODO move to class ???
-def get_task_hash(url, domain, depth, har, screenshot, priority, proxy, cookiejar, user_agent, header, tags):
+def get_task_hash(url, domain, depth, har, screenshot, javascript, priority, proxy, cookiejar, user_agent, header, tags):
     to_enqueue = {'domain': domain, 'depth': depth, 'har': har, 'screenshot': screenshot,
-                  'priority': priority, 'proxy': proxy, 'cookiejar': cookiejar, 'user_agent': user_agent,
+                  'javascript': javascript, 'priority': priority, 'proxy': proxy, 'cookiejar': cookiejar, 'user_agent': user_agent,
                   'header': header, 'tags': tags}
     if priority != 0:
         to_enqueue['url'] = url
@@ -3264,7 +3278,7 @@ def add_task_to_lacus_queue():
 
 # PRIORITY:  discovery = 0/10, feeder = 10, manual = 50, auto = 40, test = 100
 def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=None, proxy=None,
-                user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None, external=False, new_task=False):
+                javascript=True, user_agent=None, tags=[], parent='manual', priority=0, task_uuid=None, external=False, new_task=False):
     """
     Create a crawler task.
     new_task: return task_uuid only if a new task is created
@@ -3276,7 +3290,7 @@ def create_task(url, depth=1, har=True, screenshot=True, header=None, cookiejar=
         task_uuid = gen_uuid()
     task = CrawlerTask(task_uuid)
     task_uuid = task.create(url, depth=depth, har=har, screenshot=screenshot, header=header, cookiejar=cookiejar,
-                            proxy=proxy, user_agent=user_agent, tags=tags, parent=parent, priority=priority,
+                            proxy=proxy, javascript=javascript, user_agent=user_agent, tags=tags, parent=parent, priority=priority,
                             external=external, new_task=new_task)
     return task_uuid
 
@@ -3386,6 +3400,7 @@ def api_add_crawler_task(data, user_org, user_id=None):
     depth_limit = task['depth_limit']
     proxy = task['proxy']
     tags = task['tags']
+    javascript = task['javascript']
 
     cookiejar_uuid = data.get('cookiejar', None)
     if cookiejar_uuid:
@@ -3438,17 +3453,17 @@ def api_add_crawler_task(data, user_org, user_id=None):
         if frequency:
             # TODO verify user
             task_uuid = create_schedule(frequency, user_id, url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                                        cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
+                                        javascript=javascript, cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags)
         else:
             # TODO HEADERS
             # TODO USER AGENT
             task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
+                                    javascript=javascript, cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
                                     parent='manual', priority=90)
     elif urls:
         for url in urls:
             task_uuid = create_task(url, depth=depth_limit, har=har, screenshot=screenshot, header=None,
-                                    cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
+                                    javascript=javascript, cookiejar=cookiejar_uuid, proxy=proxy, user_agent=None, tags=tags,
                                     parent='manual', priority=90)
 
     return {'uuid': task_uuid}, 200
