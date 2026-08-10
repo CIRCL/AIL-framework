@@ -494,10 +494,16 @@ class Forum(AbstractDaterangeObject):
         return config
 
     def set_crawl_config(self, config):
+        was_enabled = self.is_enabled()
+        previous_structure_delta = self.get_forum_structure_refresh_delta()
+        previous_threads_delta = self.get_subforum_threads_refresh_delta()
+        enabled = int(config.get('enabled') or 0) == 1
+        structure_delta = int(config.get('delta_forum_structure_refresh') or 0)
+        threads_delta = int(config.get('delta_subforum_threads_refresh') or 0)
         self._set_field('enabled', config.get('enabled'))
         self._set_field('javascript', config.get('javascript'))
-        self._set_field('delta_forum_structure_refresh', int(config.get('delta_forum_structure_refresh') or 0))
-        self._set_field('delta_subforum_threads_refresh', int(config.get('delta_subforum_threads_refresh') or 0))
+        self._set_field('delta_forum_structure_refresh', structure_delta)
+        self._set_field('delta_subforum_threads_refresh', threads_delta)
         self._set_field('timeout', int(config.get('timeout') or 60))
         if config.get('default_referer'):
             self._set_field('default_referer', config.get('default_referer'))
@@ -513,6 +519,22 @@ class Forum(AbstractDaterangeObject):
             r_object.delete(f'forum:crawl:config:subforums:to_crawl:{self.id}')
             for subforum_id in config.get('subforums_to_crawl', []):
                 r_object.sadd(f'forum:crawl:config:subforums:to_crawl:{self.id}', subforum_id)
+
+        now = int(time.time())
+        r_cache.zadd('forum:crawl:scheduled', {self.id: now})
+        schedules = (
+            ('forum:structure_refresh:scheduled', structure_delta, previous_structure_delta),
+            ('forum:thread_refresh:scheduled', threads_delta, previous_threads_delta),
+        )
+        for schedule_key, delta, previous_delta in schedules:
+            if enabled and delta > 0:
+                next_check = r_cache.zscore(schedule_key, self.id)
+                if next_check is None or not was_enabled or previous_delta <= 0:
+                    r_cache.zadd(schedule_key, {self.id: now})
+                elif delta != previous_delta:
+                    r_cache.zadd(schedule_key, {self.id: now + delta})
+            else:
+                r_cache.zrem(schedule_key, self.id)
         return self.get_crawl_config()
 
     def get_crawl_accounts(self):
@@ -606,15 +628,17 @@ class Forum(AbstractDaterangeObject):
         subforum_id = self._get_crawl_item_subforum_id(item)
         if not subforum_id:
             return False, 'missing_subforum_id'
-        if subforum_id in config.get('subforums_excluded', set()):
-            return False, 'excluded_subforum'
+        if item.get('crawl_mode') == 'discovery':
+            if subforum_id in config.get('subforums_excluded', set()):
+                return False, 'excluded_subforum'
+            return True, 'allowed'
         subforums_to_crawl = config.get('subforums_to_crawl', set())
         if self.is_subforum_in_scope(subforum_id, subforums_to_crawl):
             return True, 'allowed'
         return False, 'outside_forum_scope'
 
     def account_allows_crawl_item(self, account_id, item):
-        if item.get('type') == 'forum':
+        if item.get('type') == 'forum' or item.get('crawl_mode') == 'discovery':
             return True, 'allowed'
         subforum_id = self._get_crawl_item_subforum_id(item)
         if not subforum_id:
@@ -650,9 +674,6 @@ class Forum(AbstractDaterangeObject):
         return False, 'thread_assigned_to_other_account'
 
     def account_can_reserve_crawl_item(self, account_id, item):
-        allowed, reason = self.forum_allows_crawl_item(item)
-        if not allowed:
-            return allowed, reason
         allowed, reason = self.account_allows_crawl_item(account_id, item)
         if not allowed:
             return allowed, reason
@@ -669,6 +690,10 @@ class Forum(AbstractDaterangeObject):
         item = self.get_crawl_item(crawl_key)
         if not item:
             return False, 'missing_item'
+        allowed, reason = self.forum_allows_crawl_item(item)
+        if not allowed:
+            self.remove_pending_crawl_item(crawl_key)
+            return allowed, reason
         allowed, reason = self.account_can_reserve_crawl_item(account_id, item)
         if not allowed:
             return allowed, reason
@@ -1035,6 +1060,7 @@ class Forum(AbstractDaterangeObject):
         if not self.exists():
             self._set_field('forum_type', forum_type)
             self._add_create()
+            r_cache.zadd('forum:crawl:scheduled', {self.id: int(time.time())})
         if name:
             self.set_name(name)
         if url:
