@@ -62,10 +62,16 @@ def _normalize_forum_domain(value):
 
 
 def apply_forum_current_domain(url, current_domain):
-    if not url or not current_domain:
+    if not url:
         return url
     parsed = urlsplit(url)
-    return urlunsplit((parsed.scheme, current_domain, parsed.path, parsed.query, parsed.fragment))
+    domain = current_domain or parsed.hostname
+    if not domain:
+        return url
+    scheme = 'http' if domain.endswith('.onion') else parsed.scheme
+    if not current_domain and scheme == parsed.scheme:
+        return url
+    return urlunsplit((scheme, current_domain or parsed.netloc, parsed.path, parsed.query, parsed.fragment))
 
 def update_account_cookies_local_storage(account, cookies, local_storage):
     cookiejar_uuid = account.get_cookiejar_uuid()

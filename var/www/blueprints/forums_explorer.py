@@ -192,12 +192,14 @@ def forum_explorer_crawler_manage():
                 '--url', login_url,
                 '--forum-id', forum_id,
                 '--account-id', account['id'],
-                '--ail-url', ail_url,
             ]
             referer = config.get('default_referer') or account.get('current_referer')
             if referer:
                 command.extend(['--referer', referer])
-            command.extend(['--api-key', 'YOUR_AIL_API_KEY'])
+            command.extend([
+                '--ail-url', ail_url,
+                '--api-key', 'YOUR_AIL_API_KEY',
+            ])
             account['local_login_command'] = ' '.join(shlex.quote(value) for value in command)
     return render_template('forums_explorer_crawler_manage.html', meta=meta[0], bootstrap_label=bootstrap_label)
 
