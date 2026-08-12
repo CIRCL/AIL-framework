@@ -1535,11 +1535,14 @@ def api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, j
 #             #
 # # # # # # # #
 
+DEFAULT_TOR_BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0'
+DEFAULT_TOR_BROWSER_USER_AGENT_LINUX = 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
+
+
 def get_default_user_agent(linux=False):
     if linux:
-        return 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'
-    else:
-        return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0'
+        return DEFAULT_TOR_BROWSER_USER_AGENT_LINUX
+    return DEFAULT_TOR_BROWSER_USER_AGENT
 
 def get_last_crawled_domains(domain_type):
     return r_crawler.lrange(f'last_{domain_type}', 0, -1)
@@ -2766,6 +2769,8 @@ def api_start_interactive_capture(data, user_org, user_id):
     if error:
         return error, code
     try:
+        browser = data.get('browser') or 'firefox'
+        user_agent = data.get('user_agent') or get_default_user_agent()
         cookiejar_only = bool(data.get('cookiejar_only'))
         if cookiejar_only:
             har = False
@@ -2778,7 +2783,8 @@ def api_start_interactive_capture(data, user_org, user_id):
             tags = task['tags']
             with_favicon = True
 
-        task_uuid = create_task(task['url'], depth=0, har=har, screenshot=screenshot, proxy=task['proxy'], tags=tags, parent='interactive', priority=90, external=True)
+        task_uuid = create_task(task['url'], depth=0, har=har, screenshot=screenshot, proxy=task['proxy'],
+                                user_agent=user_agent, tags=tags, parent='interactive', priority=90, external=True)
         if not task_uuid:
             session.release(status='error')
             return {'error': 'Aborted by Crawler'}, 400
@@ -2788,7 +2794,10 @@ def api_start_interactive_capture(data, user_org, user_id):
             session.set('cookiejar_only', '1')
         capture_uuid = session.uuid
         lacus = get_lacus()
-        returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon, force=True, uuid=capture_uuid, remote_headfull=True, java_script_enabled=task['javascript'], general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
+        returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon,
+                                      force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
+                                      user_agent=user_agent, java_script_enabled=task['javascript'],
+                                      general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
         r_cache.hset('crawler:interactive:captures', capture_uuid, session.uuid)
