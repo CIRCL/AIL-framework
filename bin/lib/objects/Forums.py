@@ -27,6 +27,7 @@ config_loader = None
 FORUM_CRAWL_ACCOUNT_STATUSES = {'waiting', 'crawling', 'error', 'need_manual_login', 'banned', 'disabled'}
 FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 FORUM_CRAWL_ITEM_TYPES = {'forum', 'subforum', 'forum-thread'}
+FORUM_CRAWL_MODES = {'discovery', 'subforum_refresh', 'thread_import', 'thread_update'}
 
 
 def _active_time_ranges_to_str(ranges):
@@ -473,6 +474,9 @@ class Forum(AbstractDaterangeObject):
     def get_default_referer(self):
         return self._get_field('default_referer')
 
+    def get_current_domain(self):
+        return self._get_field('current_domain')
+
     def get_subforum_threads_refresh_delta(self):
         return int(self._get_field('delta_subforum_threads_refresh') or 0)
 
@@ -486,6 +490,7 @@ class Forum(AbstractDaterangeObject):
         config['delta_forum_structure_refresh'] = self._get_field('delta_forum_structure_refresh')
         config['delta_subforum_threads_refresh'] = self._get_field('delta_subforum_threads_refresh')
         config['default_referer'] = self.get_default_referer()
+        config['current_domain'] = self.get_current_domain()
         config['timeout'] = self._get_field('timeout')
         config['proxy'] = self._get_field('proxy')
         config['accounts'] = self.get_crawl_accounts()
@@ -507,6 +512,10 @@ class Forum(AbstractDaterangeObject):
         self._set_field('timeout', int(config.get('timeout') or 60))
         if config.get('default_referer'):
             self._set_field('default_referer', config.get('default_referer'))
+        if config.get('current_domain'):
+            self._set_field('current_domain', config.get('current_domain'))
+        else:
+            self._del_field('current_domain')
         if config.get('proxy'):
             self._set_field('proxy', config.get('proxy'))
         else:
@@ -714,6 +723,8 @@ class Forum(AbstractDaterangeObject):
         item_type = item.get('type')
         if item_type not in FORUM_CRAWL_ITEM_TYPES:
             return False, 'invalid_type'
+        if item.get('crawl_mode') not in FORUM_CRAWL_MODES:
+            return False, 'invalid_crawl_mode'
         if not item.get('id'):
             return False, 'missing_id'
         if item.get('page'):

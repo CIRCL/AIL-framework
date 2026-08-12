@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import magic
+from urllib.parse import urlsplit, urlunsplit
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -36,6 +37,35 @@ _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'images', 'language', 'link', 'reactions', 'state', 'timestamp', 'translation', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+
+def _normalize_forum_domain(value):
+    value = (value or '').strip().lower()
+    if not value:
+        return None
+    parsed = urlsplit(value if '://' in value else f'//{value}')
+    try:
+        port = parsed.port
+    except ValueError:
+        return None
+    if (
+            not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or port is not None
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in ('', '/')
+    ):
+        return None
+    return parsed.hostname.lower()
+
+
+def apply_forum_current_domain(url, current_domain):
+    if not url or not current_domain:
+        return url
+    parsed = urlsplit(url)
+    return urlunsplit((parsed.scheme, current_domain, parsed.path, parsed.query, parsed.fragment))
 
 def update_account_cookies_local_storage(account, cookies, local_storage):
     cookiejar_uuid = account.get_cookiejar_uuid()
@@ -161,7 +191,12 @@ def update_forum_crawl_config(forum_id, data):
     forum = Forums.Forum(forum_id)
     if not forum.exists():
         return {"status": "error", "error": "Unknown forum"}, 404
+    current_domain_input = data.get('current_domain')
+    current_domain = _normalize_forum_domain(current_domain_input)
+    if current_domain_input and not current_domain:
+        return {"status": "error", "error": "Invalid current forum domain"}, 400
     config = {
+        'current_domain': current_domain,
         'proxy': data.get('proxy'),
         'delta_forum_structure_refresh': data.get('delta_forum_structure_refresh'),
         'delta_subforum_threads_refresh': data.get('delta_subforum_threads_refresh'),
@@ -585,6 +620,7 @@ def api_get_forum_crawl_status(forum_id):
             'javascript': config.get('javascript'),
             'proxy': config.get('proxy'),
             'default_referer': config.get('default_referer'),
+            'current_domain': config.get('current_domain'),
             'timeout': config.get('timeout'),
             'delta_forum_structure_refresh': config.get('delta_forum_structure_refresh'),
             'delta_subforum_threads_refresh': config.get('delta_subforum_threads_refresh'),

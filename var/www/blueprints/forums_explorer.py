@@ -208,7 +208,15 @@ def forum_explorer_crawler_account_interactive_cookiejar():
     if not forum.exists_account(account_id):
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown account'))
     config = forum.get_crawl_config()
-    url = forum.get_url() or request.form.get('url')
+    account = forum.get_crawl_account(account_id)
+    url = forum.get_url() or account.get_current_url()
+    url = forums_viewer.apply_forum_current_domain(url, config.get('current_domain'))
+    if not url:
+        return redirect(url_for(
+            'forums_explorer.forum_explorer_crawler_manage',
+            id=forum_id,
+            error='Forum login URL is missing',
+        ))
     data = {
         'url': url,
         'description': f'Forum {forum_id} account {account_id} browser state',
