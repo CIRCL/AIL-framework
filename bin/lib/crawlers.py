@@ -2794,6 +2794,7 @@ def api_start_interactive_capture(data, user_org, user_id):
             session.set('cookiejar_only', '1')
         capture_uuid = session.uuid
         lacus = get_lacus()
+        print('url', task['url'], 'depth', 0, 'proxy', task['proxy'], 'with_favicon', with_favicon,'force',True, 'uuid',capture_uuid, 'remote_headfull',True, 'browser',browser,'user_agent',user_agent, 'java_script_enabled',task['javascript'], 'general_timeout_in_sec',int(data.get('general_timeout_in_sec') or 90))
         returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon,
                                       force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
                                       user_agent=user_agent, java_script_enabled=task['javascript'],
