@@ -331,6 +331,7 @@ def api_resend_forum_account_current_inflight_crawl(forum_id, account_id):
     if not valid:
         return False, {'status': 'error', 'error': reason, 'crawl_key': crawl_key}
     forum.resend_account_current_inflight_crawl(account, crawl_key)
+    crawlers.remove_running_forum_crawler_account(forum.id, account.id)
     return account_id, 200
 
 def api_set_forum_account_local_storage(user_org, user_id, data):
