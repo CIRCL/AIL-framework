@@ -194,7 +194,7 @@ def forum_explorer_crawler_manage():
                 '--account-id', account['id'],
                 '--ail-url', ail_url,
             ]
-            referer = account.get('current_referer') or config.get('default_referer')
+            referer = config.get('default_referer') or account.get('current_referer')
             if referer:
                 command.extend(['--referer', referer])
             command.extend(['--api-key', 'YOUR_AIL_API_KEY'])
