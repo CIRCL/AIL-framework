@@ -176,6 +176,11 @@
           <input type="hidden" name="url" value="{{ forum.get('url') or account.get('current_url') }}">
           <button class="btn btn-sm btn-warning" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser to create a user-level cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-desktop"></i> Create cookiejar interactively</button>
         </form>
+        <div class="mt-2">
+          {% if account.get('local_login_command') %}
+            <button type="button" class="btn btn-sm btn-outline-secondary copy-local-login-command" data-command="{{ account['local_login_command'] }}"><i class="fas fa-copy"></i> Copy command for local interactive forum login</button>
+          {% endif %}
+        </div>
       </td>
       <td>
         {{ account.get('status') }}
@@ -250,6 +255,15 @@ $(document).ready(function(){
   });
   $(document).on('change', '.active-time-day select, .active-time-day input[type="checkbox"]', function(){
     $(this).closest('.active-time-selector').find('input[value="limited"]').prop('checked', true);
+  });
+  $('.copy-local-login-command').on('click', function(){
+    var button = $(this);
+    var command = button.data('command');
+    navigator.clipboard.writeText(command).then(function(){
+      var original = button.html();
+      button.html('<i class="fas fa-check"></i> Copied');
+      setTimeout(function(){ button.html(original); }, 1500);
+    });
   });
 });
 function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }

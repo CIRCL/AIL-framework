@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+import shlex
 
 from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for
 from flask_login import login_required, current_user
@@ -20,11 +21,16 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import forums_viewer
+from lib.ConfigLoader import ConfigLoader
 from lib.objects import Forums
 from lib import crawlers
 from lib import Language
 from lib import ail_users
 from lib import images_engine
+
+config_loader = ConfigLoader()
+ail_base_url = config_loader.get_config_str("Notifications", "ail_domain")
+config_loader = None
 
 # ============ BLUEPRINT ============
 forums_explorer = Blueprint('forums_explorer', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/forums_explorer'))
@@ -170,6 +176,29 @@ def forum_explorer_crawler_manage():
     meta = forums_viewer.get_forum_crawl_management(forum_id)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
+    management = meta[0]
+    forum = Forums.Forum(forum_id)
+    config = management.get('config', {})
+    ail_url = ail_base_url.rstrip('/')
+    for account in management.get('accounts', []):
+        login_url = forum.get_url() or account.get('current_url')
+        login_url = forums_viewer.apply_forum_current_domain(
+            login_url, config.get('current_domain')
+        )
+        account['local_login_url'] = login_url
+        if login_url:
+            command = [
+                './tools/forum_account_local_login.py',
+                '--url', login_url,
+                '--forum-id', forum_id,
+                '--account-id', account['id'],
+                '--ail-url', ail_url,
+            ]
+            referer = account.get('current_referer') or config.get('default_referer')
+            if referer:
+                command.extend(['--referer', referer])
+            command.extend(['--api-key', 'YOUR_AIL_API_KEY'])
+            account['local_login_command'] = ' '.join(shlex.quote(value) for value in command)
     return render_template('forums_explorer_crawler_manage.html', meta=meta[0], bootstrap_label=bootstrap_label)
 
 
