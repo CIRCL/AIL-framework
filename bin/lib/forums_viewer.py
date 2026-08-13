@@ -795,6 +795,56 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=N
     }, 200
 
 
+def api_enqueue_forum_thread_crawl(subtype, thread_id, priority=100):
+    """Queue a full thread recrawl from page one with an elevated priority."""
+    thread = ForumThreads.ForumThread(thread_id, subtype)
+    if not thread.exists():
+        return {'status': 'error', 'error': 'unknown_forum_thread'}, 404
+    forum = Forums.Forum(subtype)
+    if not forum.exists():
+        return {'status': 'error', 'error': 'unknown_forum'}, 404
+    url = thread.get_url()
+    if not url:
+        return {'status': 'error', 'error': 'missing_thread_url'}, 400
+    parent_gid = thread.get_parent()
+    if not parent_gid:
+        return {'status': 'error', 'error': 'missing_thread_parent'}, 400
+    try:
+        parent_type, parent_subtype, parent_id = unpack_obj_global_id(parent_gid)
+    except (TypeError, ValueError):
+        return {'status': 'error', 'error': 'invalid_thread_parent'}, 400
+    if parent_type != 'subforum' or parent_subtype != subtype or not parent_id:
+        return {'status': 'error', 'error': 'invalid_thread_parent'}, 400
+    task = {
+        'crawl_key': f'forum-thread:{thread.id}:page:1',
+        'type': 'forum-thread',
+        'id': str(thread.id),
+        'parent': {'type': 'subforum', 'id': parent_id},
+        'page': 1,
+        'url': url,
+        'referer': forum.get_default_referer(),
+        'crawl_mode': 'thread_import',
+    }
+    allowed, reason = forum.forum_allows_crawl_item(task)
+    if not allowed:
+        return {'status': 'error', 'error': reason}, 400
+    queued, reason = forum.enqueue_crawl_item(task, int(priority))
+    if not queued:
+        status_code = 409 if reason == 'already_queued' else 400
+        return {
+            'status': 'error',
+            'error': reason or 'unable_to_queue_thread',
+            'crawl_key': task['crawl_key'],
+        }, status_code
+    return {
+        'status': 'success',
+        'forum_id': forum.id,
+        'thread_id': str(thread.id),
+        'crawl_key': task['crawl_key'],
+        'priority': int(priority),
+    }, 200
+
+
 def api_get_post(post_id, translation_target=None):
     post = Posts.Post(post_id)
     if not post.exists():

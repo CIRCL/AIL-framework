@@ -400,4 +400,23 @@ def forum_explorer_thread():
     translation_languages = Language.get_translation_languages()
     return render_template('forums_explorer_thread.html', meta=meta[0], bootstrap_label=bootstrap_label,
                            ollama_enabled=images_engine.is_ollama_enabled(),
-                           all_languages=languages, translation_languages=translation_languages, translation_target=target)
+                           all_languages=languages, translation_languages=translation_languages, translation_target=target,
+                           is_admin=current_user.is_admin())
+
+
+@forums_explorer.route("/forums/explorer/thread/crawl", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_thread_crawl():
+    subtype = request.form.get('subtype')
+    thread_id = request.form.get('id')
+    result, status_code = forums_viewer.api_enqueue_forum_thread_crawl(subtype, thread_id)
+    redirect_args = {'subtype': subtype, 'id': thread_id}
+    if status_code == 200:
+        redirect_args['success'] = 'Thread queued with high priority'
+    else:
+        error = result.get('error')
+        if error == 'already_queued':
+            error = 'Thread is already queued'
+        redirect_args['error'] = error
+    return redirect(url_for('forums_explorer.forum_explorer_thread', **redirect_args))

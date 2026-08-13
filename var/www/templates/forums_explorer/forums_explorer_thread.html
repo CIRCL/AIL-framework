@@ -44,11 +44,23 @@
         </ol>
       </nav>
 
+      {% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
+      {% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
+
       <div class="thread-title-card p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-start">
         <h1 class="mb-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                    <path d="M0 0h24v24H0z" fill="none" />
                    <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
                  </svg> {{ thread.get('name') or thread['id'] }}</h1>
+        {% if is_admin %}
+          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_crawl') }}" class="ml-3">
+            <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
+            <input type="hidden" name="id" value="{{ thread['id'] }}">
+            <button type="submit" class="btn btn-warning" onclick="return confirm('Queue this complete thread for a high-priority recrawl?')"><i class="fas fa-spider"></i> Recrawl thread</button>
+          </form>
+        {% endif %}
+        </div>
         <div>
           <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ thread['id'] }}</span>
           <span class="mr-3"><i class="fas fa-layer-group"></i> {{ thread['subtype'] }}</span>
