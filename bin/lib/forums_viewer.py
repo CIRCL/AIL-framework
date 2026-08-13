@@ -845,6 +845,28 @@ def api_enqueue_forum_thread_crawl(subtype, thread_id, priority=100):
     }, 200
 
 
+def api_update_forum_thread_url(subtype, thread_id, url):
+    thread = ForumThreads.ForumThread(thread_id, subtype)
+    if not thread.exists():
+        return {'status': 'error', 'error': 'unknown_forum_thread'}, 404
+    url = (url or '').strip()
+    parsed = urlsplit(url)
+    if (
+            parsed.scheme not in {'http', 'https'}
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+    ):
+        return {'status': 'error', 'error': 'invalid_thread_url'}, 400
+    thread.set_url(url)
+    return {
+        'status': 'success',
+        'subtype': subtype,
+        'thread_id': str(thread.id),
+        'url': url,
+    }, 200
+
+
 def api_get_post(post_id, translation_target=None):
     post = Posts.Post(post_id)
     if not post.exists():

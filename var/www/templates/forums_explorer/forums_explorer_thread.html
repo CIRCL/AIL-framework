@@ -69,9 +69,34 @@
                      <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
                    </svg> {{ thread.get('nb_posts') or 0 }} posts</span>
           {% if thread.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ thread['url'] }}</span>{% endif %}
+          {% if is_admin %}<button type="button" class="btn btn-sm btn-link text-white p-0 ml-1" data-toggle="modal" data-target="#editThreadUrlModal" title="Edit thread URL" aria-label="Edit thread URL"><i class="fas fa-pencil-alt" aria-hidden="true"></i></button>{% endif %}
         </div>
         {% if thread.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ thread['info'] }}</div>{% endif %}
       </div>
+
+      {% if is_admin %}
+      <div class="modal fade" id="editThreadUrlModal" tabindex="-1" role="dialog" aria-labelledby="editThreadUrlModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content text-dark">
+            <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_url_edit') }}">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editThreadUrlModalLabel">Edit thread URL</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
+                <input type="hidden" name="id" value="{{ thread['id'] }}">
+                <input type="url" class="form-control" name="url" value="{{ thread.get('url') or '' }}" required>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
 
       {% set pagination = meta['pagination'] %}
       <div class="d-flex justify-content-between align-items-center mb-3">

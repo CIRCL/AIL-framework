@@ -420,3 +420,20 @@ def forum_explorer_thread_crawl():
             error = 'Thread is already queued'
         redirect_args['error'] = error
     return redirect(url_for('forums_explorer.forum_explorer_thread', **redirect_args))
+
+
+@forums_explorer.route("/forums/explorer/thread/url/edit", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_thread_url_edit():
+    subtype = request.form.get('subtype')
+    thread_id = request.form.get('id')
+    result, status_code = forums_viewer.api_update_forum_thread_url(
+        subtype, thread_id, request.form.get('url')
+    )
+    redirect_args = {'subtype': subtype, 'id': thread_id}
+    if status_code == 200:
+        redirect_args['success'] = 'Thread URL updated'
+    else:
+        redirect_args['error'] = result.get('error')
+    return redirect(url_for('forums_explorer.forum_explorer_thread', **redirect_args))
