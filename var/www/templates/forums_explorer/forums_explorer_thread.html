@@ -57,7 +57,7 @@
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_crawl') }}" class="ml-3">
             <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
             <input type="hidden" name="id" value="{{ thread['id'] }}">
-            <button type="submit" class="btn btn-warning" onclick="return confirm('Queue this complete thread for a high-priority recrawl?')"><i class="fas fa-spider"></i> Recrawl thread</button>
+            <button type="submit" class="btn btn-sm btn-outline-light px-2" title="Recrawl this complete thread with high priority" aria-label="Recrawl this complete thread with high priority" onclick="return confirm('Queue this complete thread for a high-priority recrawl?')"><i class="fas fa-spider" aria-hidden="true"></i></button>
           </form>
         {% endif %}
         </div>
