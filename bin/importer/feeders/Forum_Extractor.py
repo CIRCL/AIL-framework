@@ -23,6 +23,7 @@ from lib.objects.Posts import Post
 from lib.objects.UsersAccount import UserAccount
 from lib.objects.Usernames import Username
 from lib.objects import Images
+from lib import forums_viewer
 
 # TODO IMAGES + USER ACCOUNTS + FILENAMES
 class Forum_ExtractorFeeder(DefaultFeeder):
@@ -144,6 +145,11 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         forum = Forum(forum_id)
         return forum.create(forum_type)
 
+    def _apply_current_domain(self, url):
+        return forums_viewer.apply_forum_current_domain(
+            url, self.forum.get_current_domain()
+        )
+
     def process_forum_hierarchy(self, result):
         """Consume parser hierarchy edges before thread/post parent fallback logic."""
         for edge in (result.get('extracted') or {}).get('forum_hierarchy') or []:
@@ -223,7 +229,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         subforum = Subforum(sub_data.get('subforum_id'), self.forum.id)
         subforum.create(
             name=sub_data.get('subforum_name'),
-            url=sub_data.get('subforum_url'),
+            url=self._apply_current_domain(sub_data.get('subforum_url')),
             info=sub_data.get('info'),
         )
         self.seen_subforums.add(subforum.get_global_id())
@@ -244,9 +250,14 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         if not thread.get_parent():
             self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None
+        thread_url = self._apply_current_domain(thread_data.get('thread_url'))
+        existing_url = thread.get_url()
+        if self.get_meta().get('page_type') == 'thread_page' and existing_url:
+            rebased_existing_url = self._apply_current_domain(existing_url)
+            thread_url = rebased_existing_url if rebased_existing_url != existing_url else None
         thread.create(
             name=thread_data.get('thread_title'),
-            url=thread_data.get('thread_url'),
+            url=thread_url,
         )
         # if thread_data.get('thread_flags') is not None:
         #     thread._set_field('flags', json.dumps(thread_data.get('thread_flags')))
