@@ -12,6 +12,7 @@ import datetime
 import logging  # TODO USE AIL LOGGER
 import os
 import sys
+from urllib.parse import urlsplit
 
 sys.path.append(os.environ['AIL_BIN'])
 
@@ -63,7 +64,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         forum_type = result.get('forum_type')
         forum_id = result.get('forum_id')
         extracted = result.get('extracted') or {}
-        self.har_images = result.get('har_images')
+        self.har_images = result.get('har_images') or {}
 
         if not forum_type or not forum_id:
             # TODO Exception + logs
@@ -342,7 +343,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             print('URL:', url)
             if url in self.har_images:
                 image = self._create_image_from_har_url(url, post.get_date(), post)
-                self.objs_to_process.add(image)
+                if image:
+                    self.objs_to_process.add(image)
+            else:
+                self._log_missing_har_image('post', post_id, url)
 
         user_account = self._create_post_user_account(post_data.get('author'), post, post_timestamp)
         if user_account:
@@ -352,8 +356,30 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 if image:
                     user_account.set_icon(image.get_global_id())
                     self.objs_to_process.add(image)
+            elif author_image_url:
+                self._log_missing_har_image('profile', post_id, author_image_url)
             user_account.add_correlation(parent_thread.type, parent_thread.subtype, parent_thread.id)
         return post
+
+    def _log_missing_har_image(self, image_type, post_id, url):
+        parsed = urlsplit(url)
+        filename = parsed.path.rsplit('/', 1)[-1]
+        candidates = []
+        for har_url in self.har_images:
+            har_parsed = urlsplit(har_url)
+            har_filename = har_parsed.path.rsplit('/', 1)[-1]
+            if (
+                    (filename and har_filename == filename)
+                    or (parsed.hostname and har_parsed.hostname == parsed.hostname)
+            ):
+                candidates.append(har_url)
+                if len(candidates) == 5:
+                    break
+        self.logger.warning(
+            'Forum %s image not found in extracted HAR images: forum=%s post=%s '
+            'url=%r har_images=%d candidates=%r',
+            image_type, self.forum.id, post_id, url, len(self.har_images), candidates,
+        )
 
     def _create_image_from_har_url(self, url, date, obj):
         print(url)
