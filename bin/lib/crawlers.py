@@ -785,10 +785,8 @@ def _gzip_all_hars():
 def extract_images_from_har(har, size_limit=MAX_IMAGE_SIZE):
     images = {}
     if not har:
-        print('HAR IMAGE DEBUG: empty HAR')
         return images
     entries = har.get('log', {}).get('entries', [])
-    print('HAR IMAGE DEBUG: entries', len(entries))
     for entry in entries:
         request = entry.get('request', {})
         response = entry.get('response', {})
@@ -797,28 +795,20 @@ def extract_images_from_har(har, size_limit=MAX_IMAGE_SIZE):
         mime_type = content.get('mimeType', '')
         body = content.get('text')
         if not url:
-            print('HAR IMAGE DEBUG: skipped missing URL')
             continue
         if not body:
-            if mime_type.startswith('image/'):
-                print('HAR IMAGE DEBUG: skipped missing body', mime_type, url)
             continue
         is_b64 = content.get('encoding') == 'base64'
         status = response.get('status')
         if status != 200:
-            if mime_type.startswith('image/'):
-                print('HAR IMAGE DEBUG: skipped HTTP status', status, mime_type, url)
             continue
         if mime_type not in ACCEPTED_IMAGE_MIME_TYPES:
-            if mime_type.startswith('image/'):
-                print('HAR IMAGE DEBUG: skipped MIME type', mime_type, url)
             continue
         image_content = _get_image_content_bytes(body, is_b64)
         if not image_content:
-            print('HAR IMAGE DEBUG: skipped decode failure', mime_type, 'base64=', is_b64, url)
             continue
         if 0 < size_limit < len(image_content):
-            print('HAR IMAGE SIZE LIMIT', len(image_content), 'limit=', size_limit, url)
+            print('HAR IMAGE SIZE LIMIT', url)
             continue
         detected_mime_type = magic.from_buffer(image_content, mime=True)
         if detected_mime_type not in ACCEPTED_IMAGE_MIME_TYPES:
@@ -829,8 +819,6 @@ def extract_images_from_har(har, size_limit=MAX_IMAGE_SIZE):
             'b64': is_b64,
             'mime_type': detected_mime_type,
         }
-        print('HAR IMAGE DEBUG: accepted', detected_mime_type, len(image_content), url)
-    print('HAR IMAGE DEBUG: accepted total', len(images))
     return images
 
 def _get_image_content_bytes(content, b64=False):
