@@ -219,6 +219,8 @@ def update_forum_crawl_config(forum_id, data):
         config['javascript'] = 1
     else:
         config['javascript'] = 0
+    if current_domain and forum.get_url():
+        forum.set_url(apply_forum_current_domain(forum.get_url(), current_domain))
     meta = forum.set_crawl_config(config)
     forum.refresh_accounts_availability()
     return meta, 200
