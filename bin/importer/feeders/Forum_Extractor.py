@@ -12,6 +12,7 @@ import datetime
 import logging  # TODO USE AIL LOGGER
 import os
 import sys
+from urllib.parse import urlsplit, urlunsplit
 
 sys.path.append(os.environ['AIL_BIN'])
 
@@ -150,6 +151,16 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             url, self.forum.get_current_domain()
         )
 
+    def _normalize_thread_url(self, url):
+        url = self._apply_current_domain(url)
+        if not url or self.forum.get_forum_type() != 'xenforo_v2':
+            return url
+        parsed = urlsplit(url)
+        path = parsed.path
+        if path.rstrip('/').endswith('/unread'):
+            path = f"{path.rstrip('/').removesuffix('/unread')}/"
+        return urlunsplit((parsed.scheme, parsed.netloc, path, parsed.query, parsed.fragment))
+
     def process_forum_hierarchy(self, result):
         """Consume parser hierarchy edges before thread/post parent fallback logic."""
         for edge in (result.get('extracted') or {}).get('forum_hierarchy') or []:
@@ -250,10 +261,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         if not thread.get_parent():
             self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None
-        thread_url = self._apply_current_domain(thread_data.get('thread_url'))
+        thread_url = self._normalize_thread_url(thread_data.get('thread_url'))
         existing_url = thread.get_url()
         if self.get_meta().get('page_type') == 'thread_page' and existing_url:
-            rebased_existing_url = self._apply_current_domain(existing_url)
+            rebased_existing_url = self._normalize_thread_url(existing_url)
             thread_url = rebased_existing_url if rebased_existing_url != existing_url else None
         thread.create(
             name=thread_data.get('thread_title'),
