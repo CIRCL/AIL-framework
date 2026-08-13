@@ -117,6 +117,10 @@
         </div>
       </div>
 
+      {% with pagination_position='top', show_page_jump=false %}
+        {% include 'forums_explorer/thread_pagination.html' %}
+      {% endwith %}
+
       {% if meta['posts'] %}
         <div class="mb-3">
           {% include 'objects/image/block_blur_img_slider.html' %}
@@ -238,19 +242,9 @@
         <div class="alert alert-info">No posts found.</div>
       {% endif %}
 
-      {% if pagination.get('nb_pages', 0) > 1 %}
-        <nav>
-          <ul class="pagination justify-content-center">
-            <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
-              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] - 1 }}&nb={{ pagination['nb'] }}{% if translation_target %}&target={{ translation_target }}{% endif %}">Previous</a>
-            </li>
-            <li class="page-item disabled"><span class="page-link">Page {{ pagination['page'] }} / {{ pagination['nb_pages'] }}</span></li>
-            <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
-              <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}&page={{ pagination['page'] + 1 }}&nb={{ pagination['nb'] }}{% if translation_target %}&target={{ translation_target }}{% endif %}">Next</a>
-            </li>
-          </ul>
-        </nav>
-      {% endif %}
+      {% with pagination_position='bottom', show_page_jump=true %}
+        {% include 'forums_explorer/thread_pagination.html' %}
+      {% endwith %}
     </div>
   </div>
 </div>

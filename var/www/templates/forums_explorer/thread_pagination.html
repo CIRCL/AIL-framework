@@ -1,0 +1,51 @@
+{% if pagination.get('nb_pages', 0) > 1 %}
+  <nav aria-label="Forum thread pages{% if pagination_position == 'top' %} above posts{% endif %}" class="d-flex flex-column align-items-center {% if pagination_position == 'top' %}mb-3{% else %}my-4 pb-2{% endif %}">
+    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-{% if show_page_jump %}3{% else %}0{% endif %}">
+      <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
+        {% if pagination['page'] <= 1 %}
+          <span class="page-link" aria-disabled="true"><i class="fas fa-angle-double-left" aria-hidden="true"></i> First</span>
+        {% else %}
+          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=1, nb=pagination['nb'], target=translation_target) }}" aria-label="Go to first page"><i class="fas fa-angle-double-left" aria-hidden="true"></i> First</a>
+        {% endif %}
+      </li>
+      <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
+        {% if pagination['page'] <= 1 %}
+          <span class="page-link" aria-disabled="true"><i class="fas fa-angle-left" aria-hidden="true"></i> Previous</span>
+        {% else %}
+          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['page'] - 1, nb=pagination['nb'], target=translation_target) }}" rel="prev"><i class="fas fa-angle-left" aria-hidden="true"></i> Previous</a>
+        {% endif %}
+      </li>
+      <li class="page-item active" aria-current="page"><span class="page-link">{{ pagination['page'] }} <span class="sr-only">(current page)</span></span></li>
+      <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
+        {% if pagination['page'] >= pagination['nb_pages'] %}
+          <span class="page-link" aria-disabled="true">Next <i class="fas fa-angle-right" aria-hidden="true"></i></span>
+        {% else %}
+          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['page'] + 1, nb=pagination['nb'], target=translation_target) }}" rel="next">Next <i class="fas fa-angle-right" aria-hidden="true"></i></a>
+        {% endif %}
+      </li>
+      <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
+        {% if pagination['page'] >= pagination['nb_pages'] %}
+          <span class="page-link" aria-disabled="true">Last <i class="fas fa-angle-double-right" aria-hidden="true"></i></span>
+        {% else %}
+          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['nb_pages'], nb=pagination['nb'], target=translation_target) }}" aria-label="Go to last page">Last <i class="fas fa-angle-double-right" aria-hidden="true"></i></a>
+        {% endif %}
+      </li>
+    </ul>
+    {% if show_page_jump %}
+      <form method="get" action="{{ url_for('forums_explorer.forum_explorer_thread') }}" class="form-inline justify-content-center rounded border bg-light px-3 py-2">
+        <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
+        <input type="hidden" name="id" value="{{ thread['id'] }}">
+        <input type="hidden" name="nb" value="{{ pagination['nb'] }}">
+        {% if translation_target %}<input type="hidden" name="target" value="{{ translation_target }}">{% endif %}
+        <label for="thread-page-jump" class="font-weight-bold mr-2 mb-0">Jump to page</label>
+        <div class="input-group input-group-sm">
+          <input id="thread-page-jump" class="form-control text-center" style="width: 5rem;" type="number" name="page" value="{{ pagination['page'] }}" min="1" max="{{ pagination['nb_pages'] }}" required aria-describedby="thread-page-count">
+          <div class="input-group-append">
+            <span id="thread-page-count" class="input-group-text">of {{ pagination['nb_pages'] }}</span>
+            <button type="submit" class="btn btn-primary px-3">Go</button>
+          </div>
+        </div>
+      </form>
+    {% endif %}
+  </nav>
+{% endif %}
