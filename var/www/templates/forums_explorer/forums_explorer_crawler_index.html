@@ -11,13 +11,40 @@
   <style>
     .forum-hero { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
     .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); }
-    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
-    .forum-row { display: flex; align-items: center; padding: 1rem; border-top: 1px solid #e8ecef; color: inherit; }
+    .forum-board-header { align-items: center; background: #2f3d46; color: white; display: flex; font-weight: 600; justify-content: space-between; padding: .75rem 1rem; }
+    .forum-board-header .badge { font-size: .78rem; padding: .35rem .55rem; }
+    .overview-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 1.5rem; }
+    .overview-card { background: white; border: 1px solid #dce2e5; border-radius: .35rem; box-shadow: 0 .1rem .3rem rgba(0,0,0,.05); padding: 1rem; }
+    .overview-card i { color: #78909c; float: right; font-size: 1.35rem; }
+    .overview-value { color: #263238; font-size: 1.75rem; font-weight: 700; line-height: 1; }
+    .overview-label { color: #6c757d; font-size: .72rem; font-weight: 600; letter-spacing: .04em; margin-top: .4rem; text-transform: uppercase; }
+    .forum-row { align-items: center; border-top: 1px solid #e8ecef; color: inherit; display: grid; gap: 1rem; grid-template-columns: minmax(260px, 1fr) minmax(320px, auto) 1.25rem; padding: 1rem; }
     .forum-row:hover { background: #f6f9fb; text-decoration: none; color: inherit; }
     .forum-icon { width: 48px; height: 48px; border-radius: 50%; background: #d9edf7; color: #2f6f8f; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-right: 1rem; flex: 0 0 48px; }
-    .forum-stats { min-width: 440px; text-align: right; color: #6c757d; }
+    .forum-main { align-items: center; display: flex; min-width: 0; }
+    .forum-name { color: #263238; font-weight: 600; }
+    .forum-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .forum-stats { display: grid; gap: .5rem; grid-template-columns: repeat(5, minmax(58px, 1fr)); text-align: center; }
+    .forum-stat { background: #f6f8f9; border-radius: .3rem; padding: .45rem .55rem; }
+    .forum-stat strong { color: #263238; display: block; font-size: 1.05rem; line-height: 1.1; }
+    .forum-stat span { color: #76858c; font-size: .65rem; font-weight: 600; text-transform: uppercase; }
+    .forum-alerts { margin-top: .45rem; }
+    .status-dot { border-radius: 50%; display: inline-block; height: .55rem; margin-right: .35rem; width: .55rem; }
+    .status-dot.enabled { background: #28a745; }
+    .status-dot.disabled { background: #adb5bd; }
+    .status-table thead th { background: #f4f6f7; color: #52616a; font-size: .7rem; letter-spacing: .04em; text-transform: uppercase; }
+    .empty-state { color: #6c757d; padding: 2rem; text-align: center; }
+    .empty-state i { color: #aeb8bd; display: block; font-size: 1.5rem; margin-bottom: .5rem; }
     .table-status-wrapper { overflow-x: auto; }
     .text-break { word-break: break-word; }
+    @media (max-width: 991.98px) {
+      .forum-row { grid-template-columns: 1fr 1.25rem; }
+      .forum-stats { grid-column: 1 / -1; grid-row: 2; }
+    }
+    @media (max-width: 575.98px) {
+      .forum-stats { grid-template-columns: repeat(3, 1fr); }
+      .forum-hero { padding: 1.25rem !important; }
+    }
   </style>
 </head>
 <body>
@@ -39,12 +66,29 @@
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_logs') }}"><i class="fas fa-file-alt"></i> Forum crawler logs</a>
       </div>
 
+      {% set totals = namespace(accounts=0, running=0, pending=0, inflight=0, issues=0) %}
+      {% for forum in forums %}
+        {% set crawler = forum['crawler_status'] %}
+        {% set totals.accounts = totals.accounts + (crawler.get('nb_accounts') or 0) %}
+        {% set totals.running = totals.running + (crawler.get('nb_running_accounts') or 0) %}
+        {% set totals.pending = totals.pending + (crawler.get('nb_pending_crawl_items') or 0) %}
+        {% set totals.inflight = totals.inflight + (crawler.get('nb_inflight_crawl_items') or 0) %}
+        {% set totals.issues = totals.issues + (crawler.get('nb_error_accounts') or 0) + (crawler.get('nb_stale_accounts') or 0) %}
+      {% endfor %}
+      <div class="overview-grid">
+        <div class="overview-card"><i class="fas fa-comments"></i><div class="overview-value">{{ forums|length }}</div><div class="overview-label">Forums</div></div>
+        <div class="overview-card"><i class="fas fa-users"></i><div class="overview-value">{{ totals.accounts }}</div><div class="overview-label">Crawler accounts</div></div>
+        <div class="overview-card"><i class="fas fa-running"></i><div class="overview-value">{{ totals.running }}</div><div class="overview-label">Running now</div></div>
+        <div class="overview-card"><i class="fas fa-clock"></i><div class="overview-value">{{ totals.pending }}</div><div class="overview-label">Pending</div></div>
+        <div class="overview-card"><i class="fas fa-spinner"></i><div class="overview-value">{{ totals.inflight }}</div><div class="overview-label">Inflight</div></div>
+        <div class="overview-card"><i class="fas fa-exclamation-triangle"></i><div class="overview-value {% if totals.issues %}text-danger{% endif %}">{{ totals.issues }}</div><div class="overview-label">Needs attention</div></div>
+      </div>
 
-      <h5 class="mt-3 mb-2"><i class="fas fa-running"></i> Currently crawling forum accounts</h5>
       <div class="forum-board mb-4">
         {% set has_running = namespace(value=false) %}
+        <div class="forum-board-header"><span><i class="fas fa-running mr-2"></i>Currently crawling</span><span class="badge badge-light">{{ totals.running }}</span></div>
         <div class="table-status-wrapper">
-          <table class="table table-sm table-hover mb-0">
+          <table class="table table-sm table-hover status-table mb-0">
             <thead>
               <tr>
                 <th>Forum</th>
@@ -72,7 +116,7 @@
                 {% endfor %}
               {% endfor %}
               {% if not has_running.value %}
-                <tr><td colspan="7" class="text-muted text-center py-3">No forum accounts are currently crawling.</td></tr>
+                <tr><td colspan="7" class="empty-state"><i class="fas fa-pause-circle"></i>No forum accounts are currently crawling.</td></tr>
               {% endif %}
             </tbody>
           </table>
@@ -81,28 +125,29 @@
 
       {% if forums %}
         <div class="forum-board mb-4">
-          <div class="forum-board-header">Forums</div>
+          <div class="forum-board-header"><span><i class="fas fa-comments mr-2"></i>Configured forums</span><span class="badge badge-light">{{ forums|length }}</span></div>
           {% for forum in forums %}
             {% set status = forum['crawler_status'] %}
             <a class="forum-row" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}?id={{ forum['id'] }}">
-              <div class="forum-icon"><i class="fas fa-spider"></i></div>
-              <div class="flex-grow-1">
-                <h5 class="mb-1">{{ forum.get('name') or forum['id'] }}</h5>
-                <div class="text-muted small">
-                  <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
-                  <span class="mr-3"><i class="fas fa-toggle-on"></i> enabled: {{ status.get('config_enabled') }}</span>
-                  {% if forum.get('url') %}<span><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+              <div class="forum-main">
+                <div class="forum-icon"><i class="fas fa-spider"></i></div>
+                <div class="flex-grow-1 overflow-hidden">
+                  <h5 class="forum-name mb-1">{{ forum.get('name') or forum['id'] }}</h5>
+                  <div class="forum-meta text-muted small">
+                    <span class="mr-3"><span class="status-dot {% if status.get('config_enabled') %}enabled{% else %}disabled{% endif %}"></span>{% if status.get('config_enabled') %}Enabled{% else %}Disabled{% endif %}</span>
+                    {% if forum.get('url') %}<span title="{{ forum['url'] }}"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% else %}<span><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>{% endif %}
+                  </div>
+                  {% if status.get('nb_error_accounts') or status.get('nb_stale_accounts') %}<div class="forum-alerts">{% if status.get('nb_error_accounts') %}<span class="badge badge-danger mr-1">{{ status.get('nb_error_accounts') }} errored</span>{% endif %}{% if status.get('nb_stale_accounts') %}<span class="badge badge-warning">{{ status.get('nb_stale_accounts') }} stale</span>{% endif %}</div>{% endif %}
                 </div>
               </div>
               <div class="forum-stats">
-                <div><strong>{{ status.get('nb_accounts') or 0 }}</strong> accounts · <strong>{{ status.get('nb_available_accounts') or 0 }}</strong> available · <strong>{{ status.get('nb_running_accounts') or 0 }}</strong> running</div>
-                <div><strong>{{ status.get('nb_pending_crawl_items') or 0 }}</strong> pending · <strong>{{ status.get('nb_inflight_crawl_items') or 0 }}</strong> inflight</div>
-                {% if status.get('nb_error_accounts') %}<div><span class="badge badge-danger">{{ status.get('nb_error_accounts') }} errored</span></div>{% endif %}
-                {% if status.get('nb_stale_accounts') %}<div><span class="badge badge-warning">{{ status.get('nb_stale_accounts') }} stale</span></div>{% endif %}
-                {% for account_error in (status.get('account_errors') or [])[:2] %}
-                  <div class="text-danger small"><strong>{{ account_error.get('account_id') }}:</strong> {{ (account_error.get('error') or 'unknown error')|truncate(120) }}</div>
-                {% endfor %}
+                <div class="forum-stat"><strong>{{ status.get('nb_accounts') or 0 }}</strong><span>Accounts</span></div>
+                <div class="forum-stat"><strong>{{ status.get('nb_available_accounts') or 0 }}</strong><span>Available</span></div>
+                <div class="forum-stat"><strong>{{ status.get('nb_running_accounts') or 0 }}</strong><span>Running</span></div>
+                <div class="forum-stat"><strong>{{ status.get('nb_pending_crawl_items') or 0 }}</strong><span>Pending</span></div>
+                <div class="forum-stat"><strong>{{ status.get('nb_inflight_crawl_items') or 0 }}</strong><span>Inflight</span></div>
               </div>
+              <i class="fas fa-chevron-right text-muted"></i>
             </a>
           {% endfor %}
         </div>
