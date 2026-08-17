@@ -251,7 +251,7 @@ def is_valid_i2p_b32_domain(domain):
     dom = domain[:-8]
     # Distinguish old from new flavors by length. Old b32 addresses are always {52 chars}.b32.i2p.
     # New ones are {56+ chars}.b32.i2p
-    if len(dom) == 52 or 56 >= len(dom) <= 64:
+    if len(dom) == 52 or 56 <= len(dom) <= 64:
         return dom.isalnum()
     else:
         return False
