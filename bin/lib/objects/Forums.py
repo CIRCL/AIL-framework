@@ -66,6 +66,7 @@ class ForumAccount:
         account['status'] = self._get_field('status')
         account['error'] = self._get_field('error')
         account['last_error'] = self._get_field('last_error')
+        account['last_error_screenshot'] = self.get_last_error_screenshot()
         account['cookiejar_uuid'] = self._get_field('cookiejar_uuid')
         account['last_login'] = self._get_field('last_login')
         account['active_time'] = self.get_active_time()
@@ -322,6 +323,22 @@ class ForumAccount:
 
     def set_last_error(self, error):
         self._set_field('last_error', error)
+
+    def get_last_error_screenshot(self):
+        screenshot = self._get_field('last_error_screenshot')
+        if screenshot:
+            return json.loads(screenshot)
+        return None
+
+    def set_last_error_screenshot(self, crawl_key, error):
+        self._set_field('last_error_screenshot', json.dumps({
+            'crawl_key': crawl_key,
+            'error': error,
+            'created_at': int(time.time()),
+        }))
+
+    def clear_last_error_screenshot(self):
+        self._del_field('last_error_screenshot')
 
     def reset_crawl(self):
         self.clear_current_crawl()
@@ -764,6 +781,17 @@ class Forum(AbstractDaterangeObject):
         if item:
             return json.loads(item)
         return None
+
+    def update_crawl_item(self, crawl_key, item):
+        valid, reason = self.validate_crawl_item(item)
+        if not valid:
+            return False, reason
+        if item.get('crawl_key') != crawl_key:
+            return False, 'crawl_key_mismatch'
+        if not self.get_crawl_item(crawl_key):
+            return False, 'missing_item'
+        r_object.hset(f'forum:crawl:items:{self.id}', crawl_key, json.dumps(item))
+        return True, None
 
     def get_pending_crawl_keys(self, start=0, stop=100):
         return r_object.zrevrange(f'forum:crawl:queue:{self.id}', start, stop)

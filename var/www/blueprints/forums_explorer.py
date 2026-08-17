@@ -10,7 +10,7 @@ import sys
 import json
 import shlex
 
-from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for
+from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for, send_file
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -286,6 +286,28 @@ def forum_explorer_crawler_account_reactivate():
         return redirect(url_for(target, id=forum_id, error=error))
     success = f"Account {account_id} status updated to waiting and sent back to the forum crawler queue"
     return redirect(url_for(target, id=forum_id, success=success))
+
+
+@forums_explorer.route("/forums/explorer/crawler/account/error/screenshot", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_error_screenshot():
+    forum_id = request.args.get('forum_id')
+    account_id = request.args.get('account_id')
+    forum = Forums.Forum(forum_id)
+    if not forum.exists() or not forum.exists_account(account_id):
+        abort(404)
+    account = forum.get_crawl_account(account_id)
+    if not account.get_last_error_screenshot():
+        abort(404)
+    path = crawlers.get_forum_error_screenshot_path(forum_id, account_id)
+    if not os.path.isfile(path):
+        abort(404)
+    return send_file(
+        path,
+        mimetype='image/png',
+        download_name=f'{forum_id}_{account_id}_last_error.png',
+    )
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/inflight/purge", methods=['POST'])

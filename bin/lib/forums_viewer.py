@@ -278,6 +278,7 @@ def delete_forum_crawl_account(forum_id, account_id):
     account = forum.get_crawl_account(account_id)
     account.clear_current_crawl()
     forum.remove_crawl_account(account_id)
+    crawlers.delete_forum_error_screenshot(forum_id, account_id)
     account.delete_meta()
     return {'forum_id': forum_id, 'account_id': account_id}, 200
 

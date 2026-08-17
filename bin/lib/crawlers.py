@@ -69,6 +69,7 @@ r_cache = config_loader.get_redis_conn("Redis_Cache")
 ITEMS_FOLDER = config_loader.get_config_str("Directories", "pastes")
 HAR_DIR = config_loader.get_files_directory('har')
 COOKIEJAR_LOCAL_STORAGE = config_loader.get_files_directory('cookiejar_local_storage')
+FORUM_ERROR_SCREENSHOT_DIR = os.path.join(config_loader.get_files_directory('screenshot'), 'forum_errors')
 activate_crawler = config_loader.get_config_str("Crawler", "activate_crawler")
 D_HAR = config_loader.get_config_boolean('Crawler', 'default_har')
 D_SCREENSHOT = config_loader.get_config_boolean('Crawler', 'default_screenshot')
@@ -84,6 +85,31 @@ ACCEPTED_IMAGE_MIME_TYPES = {
     'image/webp',
 }
 
+
+def get_forum_error_screenshot_path(forum_id, account_id):
+    screenshot_id = hashlib.sha256(f'{forum_id}:{account_id}'.encode()).hexdigest()
+    return os.path.join(FORUM_ERROR_SCREENSHOT_DIR, f'{screenshot_id}.png')
+
+def save_forum_error_screenshot(forum_id, account_id, screenshot):
+    if isinstance(screenshot, str):
+        try:
+            screenshot = base64.b64decode(screenshot, validate=True)
+        except (binascii.Error, ValueError):
+            return False
+    if not isinstance(screenshot, bytes):
+        return False
+    os.makedirs(FORUM_ERROR_SCREENSHOT_DIR, exist_ok=True)
+    path = get_forum_error_screenshot_path(forum_id, account_id)
+    with open(path, 'wb') as screenshot_file:
+        screenshot_file.write(screenshot)
+    return True
+
+def delete_forum_error_screenshot(forum_id, account_id):
+    path = get_forum_error_screenshot_path(forum_id, account_id)
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
 
 # logger_crawler = logging.getLogger('crawlers.log')
 

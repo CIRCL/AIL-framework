@@ -193,6 +193,13 @@
           </form>
         {% endif %}
         <br><small class="text-break">last_error: {{ account.get('last_error') }}</small>
+        {% if account.get('last_error_screenshot') %}
+          <a class="btn btn-sm btn-link text-muted p-0 ml-1"
+             href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_screenshot', forum_id=forum['id'], account_id=account['id']) }}"
+             target="_blank" title="View the screenshot captured on the last repeated page error">
+            <i class="fas fa-camera"></i>
+          </a>
+        {% endif %}
       </td>
       <td>available: {{ account.get('available') }}<br>reason: {{ account.get('availability_reason') }}</td>
       <td class="text-break">task: {{ account.get('current_task_uuid') }}<br>crawl: {{ account.get('current_crawl_key') }}<br>url: {{ account.get('current_url') }}<br>referer: {{ account.get('current_referer') }}<br>last_used_at: {{ account.get('last_used_at') }}<br>last_crawled_at: {{ account.get('last_crawled_at') }}<br>active_time: {{ account.get('active_time') }}</td>
