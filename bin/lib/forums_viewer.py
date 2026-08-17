@@ -279,6 +279,7 @@ def delete_forum_crawl_account(forum_id, account_id):
     account.clear_current_crawl()
     forum.remove_crawl_account(account_id)
     crawlers.delete_forum_error_screenshot(forum_id, account_id)
+    crawlers.delete_forum_error_html(forum_id, account_id)
     account.delete_meta()
     return {'forum_id': forum_id, 'account_id': account_id}, 200
 
@@ -292,8 +293,15 @@ def api_reactivate_errored_forum_crawl_account(forum_id, account_id):
         return {"status": "error", "error": "Unknown account"}, 404
     if account.get_status() != 'error':
         return {"status": "error", "error": "Account is not in error status"}, 400
+    crawl_key = account.get_current_crawl_key()
+    if crawl_key:
+        forum.fail_crawl_item(crawl_key, error='manual_reactivate')
     account.clear_current_crawl()
     account.clear_error()
+    crawlers.delete_forum_error_screenshot(forum_id, account_id)
+    crawlers.delete_forum_error_html(forum_id, account_id)
+    account.clear_last_error_screenshot_metadata()
+    account.clear_last_error_html_metadata()
     forum.refresh_account_availability(account_id)
     return account.get_meta(), 200
 

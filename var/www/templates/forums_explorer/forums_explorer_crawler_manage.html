@@ -189,26 +189,33 @@
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
             <input type="hidden" name="next" value="manage">
-            <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account ' + {{ account['id']|tojson|forceescape }} + ' back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
+            <button class="btn btn-sm btn-outline-secondary" title="Discard the failed crawl without retrying it, then make this account available for other tasks" onclick="return confirm('Discard the failed crawl and reactivate account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-user-check"></i> Discard crawl &amp; reactivate</button>
           </form>
         {% endif %}
         <br><small class="text-break">last_error: {{ account.get('last_error') }}</small>
-        {% if account.get('last_error_screenshot') %}
+        {% if account.get('last_error_screenshot_metadata') %}
           <a class="btn btn-sm btn-link text-muted p-0 ml-1"
              href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_screenshot', forum_id=forum['id'], account_id=account['id']) }}"
              target="_blank" title="View the screenshot captured on the last repeated page error">
             <i class="fas fa-camera"></i>
           </a>
         {% endif %}
+        {% if account.get('last_error_html_metadata') %}
+          <a class="btn btn-sm btn-link text-muted p-0 ml-1" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_html', forum_id=forum['id'], account_id=account['id']) }}" title="Download the HTML from the first failed capture"><i class="fas fa-file-code"></i></a>
+        {% endif %}
       </td>
       <td>available: {{ account.get('available') }}<br>reason: {{ account.get('availability_reason') }}</td>
       <td class="text-break">task: {{ account.get('current_task_uuid') }}<br>crawl: {{ account.get('current_crawl_key') }}<br>url: {{ account.get('current_url') }}<br>referer: {{ account.get('current_referer') }}<br>last_used_at: {{ account.get('last_used_at') }}<br>last_crawled_at: {{ account.get('last_crawled_at') }}<br>active_time: {{ account.get('active_time') }}</td>
       <td>
-        {% if account.get('current_crawl_key') %}
+        {% if account.get('has_inflight_crawl') %}
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_resend') }}" class="mb-2">
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            <button class="btn btn-sm btn-warning" onclick="return confirm('Resend current inflight crawl for account ' + {{ account['id']|tojson|forceescape }} + ' ?')"><i class="fas fa-arrow-up"></i> Resend</button>
+            {% if account.get('status') == 'error' %}
+              <button class="btn btn-sm btn-warning" title="Retry the failed page manually and request a screenshot" onclick="return confirm('Retry the failed page with a screenshot for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-camera"></i> Retry failed page</button>
+            {% else %}
+              <button class="btn btn-sm btn-warning" title="Stop and queue this active capture again" onclick="return confirm('Restart the active capture for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-redo"></i> Restart active capture</button>
+            {% endif %}
           </form>
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_purge') }}">
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">

@@ -122,12 +122,7 @@
                     <td>{% if account.get('last_error') %}<span class="account-secondary text-danger" title="{{ account.get('last_error') }}"><i class="fas fa-history mr-1"></i>{{ account.get('last_error')|truncate(90) }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
                     <td class="text-right">
                       {% if account.get('status') == 'error' %}
-                        <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}">
-                          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-                          <input type="hidden" name="account_id" value="{{ account.get('id') }}">
-                          <input type="hidden" name="next" value="status">
-                          <button class="btn btn-sm btn-warning" onclick="return confirm('Confirm that the issue is fixed and send account ' + {{ account.get('id')|tojson|forceescape }} + ' back to the forum crawler queue?')"><i class="fas fa-redo"></i> Send back to queue</button>
-                        </form>
+                        <a class="btn btn-sm btn-warning" href="{{ url_for('forums_explorer.forum_explorer_crawler_manage', id=forum['id']) }}" title="Review the failed crawl and choose whether to retry or discard it"><i class="fas fa-exclamation-circle"></i> Review error</a>
                       {% endif %}
                     </td>
                   </tr>

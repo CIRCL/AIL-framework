@@ -90,13 +90,17 @@ def get_forum_error_screenshot_path(forum_id, account_id):
     screenshot_id = hashlib.sha256(f'{forum_id}:{account_id}'.encode()).hexdigest()
     return os.path.join(FORUM_ERROR_SCREENSHOT_DIR, f'{screenshot_id}.png')
 
+def get_forum_error_html_path(forum_id, account_id):
+    html_id = hashlib.sha256(f'{forum_id}:{account_id}'.encode()).hexdigest()
+    return os.path.join(FORUM_ERROR_SCREENSHOT_DIR, f'{html_id}.html')
+
 def save_forum_error_screenshot(forum_id, account_id, screenshot):
     if isinstance(screenshot, str):
         try:
             screenshot = base64.b64decode(screenshot, validate=True)
         except (binascii.Error, ValueError):
             return False
-    if not isinstance(screenshot, bytes):
+    if not isinstance(screenshot, bytes) or len(screenshot) > MAX_IMAGE_SIZE:
         return False
     os.makedirs(FORUM_ERROR_SCREENSHOT_DIR, exist_ok=True)
     path = get_forum_error_screenshot_path(forum_id, account_id)
@@ -104,10 +108,26 @@ def save_forum_error_screenshot(forum_id, account_id, screenshot):
         screenshot_file.write(screenshot)
     return True
 
+def save_forum_error_html(forum_id, account_id, html):
+    if isinstance(html, str):
+        html = html.encode()
+    if not isinstance(html, bytes) or len(html) > MAX_IMAGE_SIZE:
+        return False
+    os.makedirs(FORUM_ERROR_SCREENSHOT_DIR, exist_ok=True)
+    with open(get_forum_error_html_path(forum_id, account_id), 'wb') as html_file:
+        html_file.write(html)
+    return True
+
 def delete_forum_error_screenshot(forum_id, account_id):
     path = get_forum_error_screenshot_path(forum_id, account_id)
     try:
         os.remove(path)
+    except FileNotFoundError:
+        pass
+
+def delete_forum_error_html(forum_id, account_id):
+    try:
+        os.remove(get_forum_error_html_path(forum_id, account_id))
     except FileNotFoundError:
         pass
 

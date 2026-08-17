@@ -181,6 +181,7 @@ def forum_explorer_crawler_manage():
     config = management.get('config', {})
     ail_url = ail_base_url.rstrip('/')
     for account in management.get('accounts', []):
+        account['has_inflight_crawl'] = bool(account.get('current_crawl_key') and forum.get_inflight_crawl_item(account['current_crawl_key']))
         login_url = forum.get_url() or account.get('current_url')
         login_url = forums_viewer.apply_forum_current_domain(
             login_url, config.get('current_domain')
@@ -284,7 +285,7 @@ def forum_explorer_crawler_account_reactivate():
     if res[1] != 200:
         error = res[0].get('error') or 'Unable to send account back to crawler queue'
         return redirect(url_for(target, id=forum_id, error=error))
-    success = f"Account {account_id} status updated to waiting and sent back to the forum crawler queue"
+    success = f"Discarded the failed crawl and reactivated account {account_id}"
     return redirect(url_for(target, id=forum_id, success=success))
 
 
@@ -298,7 +299,7 @@ def forum_explorer_crawler_account_error_screenshot():
     if not forum.exists() or not forum.exists_account(account_id):
         abort(404)
     account = forum.get_crawl_account(account_id)
-    if not account.get_last_error_screenshot():
+    if not account.get_last_error_screenshot_metadata():
         abort(404)
     path = crawlers.get_forum_error_screenshot_path(forum_id, account_id)
     if not os.path.isfile(path):
@@ -308,6 +309,24 @@ def forum_explorer_crawler_account_error_screenshot():
         mimetype='image/png',
         download_name=f'{forum_id}_{account_id}_last_error.png',
     )
+
+
+@forums_explorer.route("/forums/explorer/crawler/account/error/html", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_error_html():
+    forum_id = request.args.get('forum_id')
+    account_id = request.args.get('account_id')
+    forum = Forums.Forum(forum_id)
+    if not forum.exists() or not forum.exists_account(account_id):
+        abort(404)
+    account = forum.get_crawl_account(account_id)
+    if not account.get_last_error_html_metadata():
+        abort(404)
+    path = crawlers.get_forum_error_html_path(forum_id, account_id)
+    if not os.path.isfile(path):
+        abort(404)
+    return send_file(path, mimetype='text/plain', as_attachment=True, download_name=f'{forum_id}_{account_id}_first_error.html.txt')
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/inflight/purge", methods=['POST'])
@@ -334,7 +353,7 @@ def forum_explorer_crawler_account_inflight_resend():
     if res[1] != 200:
         error = res[0].get('error')
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
-    success = f"Resent current inflight crawl for account {account_id}"
+    success = f"Queued the current crawl again for account {account_id}"
     return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
 
 @forums_explorer.route("/forums/explorer/crawler/account/delete", methods=['POST'])

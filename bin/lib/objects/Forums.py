@@ -66,7 +66,8 @@ class ForumAccount:
         account['status'] = self._get_field('status')
         account['error'] = self._get_field('error')
         account['last_error'] = self._get_field('last_error')
-        account['last_error_screenshot'] = self.get_last_error_screenshot()
+        account['last_error_screenshot_metadata'] = self.get_last_error_screenshot_metadata()
+        account['last_error_html_metadata'] = self.get_last_error_html_metadata()
         account['cookiejar_uuid'] = self._get_field('cookiejar_uuid')
         account['last_login'] = self._get_field('last_login')
         account['active_time'] = self.get_active_time()
@@ -324,21 +325,31 @@ class ForumAccount:
     def set_last_error(self, error):
         self._set_field('last_error', error)
 
-    def get_last_error_screenshot(self):
+    def get_last_error_screenshot_metadata(self):
         screenshot = self._get_field('last_error_screenshot')
         if screenshot:
             return json.loads(screenshot)
         return None
 
-    def set_last_error_screenshot(self, crawl_key, error):
+    def set_last_error_screenshot_metadata(self, crawl_key, error):
         self._set_field('last_error_screenshot', json.dumps({
             'crawl_key': crawl_key,
             'error': error,
             'created_at': int(time.time()),
         }))
 
-    def clear_last_error_screenshot(self):
+    def clear_last_error_screenshot_metadata(self):
         self._del_field('last_error_screenshot')
+
+    def get_last_error_html_metadata(self):
+        html = self._get_field('last_error_html')
+        return json.loads(html) if html else None
+
+    def set_last_error_html_metadata(self, crawl_key, error):
+        self._set_field('last_error_html', json.dumps({'crawl_key': crawl_key, 'error': error, 'created_at': int(time.time())}))
+
+    def clear_last_error_html_metadata(self):
+        self._del_field('last_error_html')
 
     def reset_crawl(self):
         self.clear_current_crawl()
@@ -971,6 +982,7 @@ class Forum(AbstractDaterangeObject):
         r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
         r_crawler.zrem('forum:crawl:running', f'{self.id}:{account.id}')
         account.reset_crawl()
+        account.clear_error()
         self.refresh_account_availability(account.id)
         return account
 
