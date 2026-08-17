@@ -321,12 +321,12 @@ def forum_explorer_crawler_account_error_html():
     if not forum.exists() or not forum.exists_account(account_id):
         abort(404)
     account = forum.get_crawl_account(account_id)
-    if not account.get_last_error_html_metadata():
+    if not account.get_error_html_metadata():
         abort(404)
     path = crawlers.get_forum_error_html_path(forum_id, account_id)
     if not os.path.isfile(path):
         abort(404)
-    return send_file(path, mimetype='text/plain', as_attachment=True, download_name=f'{forum_id}_{account_id}_first_error.html.txt')
+    return send_file(path, mimetype='text/plain', as_attachment=True, download_name=f'{forum_id}_{account_id}_error.html.txt')
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/inflight/purge", methods=['POST'])

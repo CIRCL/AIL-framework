@@ -301,7 +301,7 @@ def api_reactivate_errored_forum_crawl_account(forum_id, account_id):
     crawlers.delete_forum_error_screenshot(forum_id, account_id)
     crawlers.delete_forum_error_html(forum_id, account_id)
     account.clear_last_error_screenshot_metadata()
-    account.clear_last_error_html_metadata()
+    account.clear_error_html_metadata()
     forum.refresh_account_availability(account_id)
     return account.get_meta(), 200
 

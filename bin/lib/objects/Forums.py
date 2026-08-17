@@ -67,7 +67,7 @@ class ForumAccount:
         account['error'] = self._get_field('error')
         account['last_error'] = self._get_field('last_error')
         account['last_error_screenshot_metadata'] = self.get_last_error_screenshot_metadata()
-        account['last_error_html_metadata'] = self.get_last_error_html_metadata()
+        account['error_html_metadata'] = self.get_error_html_metadata()
         account['cookiejar_uuid'] = self._get_field('cookiejar_uuid')
         account['last_login'] = self._get_field('last_login')
         account['active_time'] = self.get_active_time()
@@ -341,15 +341,15 @@ class ForumAccount:
     def clear_last_error_screenshot_metadata(self):
         self._del_field('last_error_screenshot')
 
-    def get_last_error_html_metadata(self):
-        html = self._get_field('last_error_html')
+    def get_error_html_metadata(self):
+        html = self._get_field('error_html')
         return json.loads(html) if html else None
 
-    def set_last_error_html_metadata(self, crawl_key, error):
-        self._set_field('last_error_html', json.dumps({'crawl_key': crawl_key, 'error': error, 'created_at': int(time.time())}))
+    def set_error_html_metadata(self, crawl_key, error):
+        self._set_field('error_html', json.dumps({'crawl_key': crawl_key, 'error': error, 'created_at': int(time.time())}))
 
-    def clear_last_error_html_metadata(self):
-        self._del_field('last_error_html')
+    def clear_error_html_metadata(self):
+        self._del_field('error_html')
 
     def reset_crawl(self):
         self.clear_current_crawl()
