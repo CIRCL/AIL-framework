@@ -43,7 +43,8 @@ var/www/submitted
 var/www/server.crt
 var/www/server.key
 
-# Local config
+# Local config / secrets
+.ail-api-key
 configs/keys
 configs/core.cfg
 configs/core.cfg.backup
@@ -74,3 +75,5 @@ doc/data-flow.png
 doc/ail_queues.dot
 doc/ail_queues.svg
 doc/statistics
+docs/PR319_REMAINING_FILES_COMPARISON.md
+pr319change.md

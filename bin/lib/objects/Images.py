@@ -18,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib import image_similarity
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ail_core import get_default_image_description_model
 
@@ -45,8 +46,8 @@ class Image(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
-        # # TODO:
-        pass
+        image_similarity.delete(self.id)
+        # TODO: delete the image and its remaining metadata and correlations.
 
     def exists(self):
         return os.path.isfile(self.get_filepath())
@@ -148,6 +149,8 @@ class Image(AbstractDaterangeObject):
             meta['content'] = self.get_content()
         if 'description' in options:
             meta['description'] = self.get_description()
+        if 'similarity' in options:
+            meta['similarity'] = image_similarity.get_image_similarity_meta(self.id)
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

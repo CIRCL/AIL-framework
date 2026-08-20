@@ -29,11 +29,11 @@ AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchanne
                                     'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot',
                                     'ssh-key', 'subforum', 'title', 'user-account', 'username'}
 
-AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'post', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
+AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
 
-AIL_OBJS_TRACKED = {'barcode', 'decoded', 'file-name', 'item', 'message', 'ocr', 'pgp', 'post', 'qrcode', 'title'}
+AIL_OBJS_TRACKED = {'barcode', 'decoded', 'file-name', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title'}
 
-AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr', 'post'}  # TODO PGP, TITLE
+AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr'}  # TODO PGP, TITLE
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')

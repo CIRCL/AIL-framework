@@ -90,6 +90,10 @@ DiffMaxLineLength = 10000
 ollama_url = http://127.0.0.1:11434
 ollama_enabled = True
 
+[ImageSimilarity]
+phash_enabled = False
+photodna_enabled = False
+
 ##### Users #####
 [Users]
 force_2fa = False
@@ -217,6 +221,11 @@ password = ail_langs
 host = localhost
 port = 6383
 password = ail_objs
+
+[Kvrocks_ImageSimilarity]
+host = localhost
+port = 6383
+password = ail_image_similarity
 
 [Kvrocks_Relationships]
 host = localhost

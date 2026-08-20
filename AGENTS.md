@@ -71,4 +71,5 @@ AIL is organized around an ingestion-to-analysis pipeline:
 - When changing configuration behavior, update the relevant sample files in `configs/` and document any migration or update step in `update/` if existing deployments need it.
 - Do not commit secrets, API keys, private crawler credentials, generated logs, or local runtime database/cache content.
 - Keep imports straightforward; do not wrap imports in broad `try`/`catch` or `try`/`except` blocks.
+- Avoid creating helper functions solely to construct Redis keys. Write Redis key formats directly at their call sites so the accessed data structure remains visible and readable.
 - Do not create a pull request
