@@ -146,19 +146,24 @@ function show_search_helper_tooltip(container) {
 
 }
 
-function show_text_tooltip(container, text) {
+function show_text_tooltip(container, text, label) {
     container = $(container);
 
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = $("<p>").css("white-space", "pre-wrap").text(text).prop("outerHTML");
+        let content = $("<div>");
+        if (label) {
+            content.append($("<div>").addClass("small text-muted mb-2").text(label));
+        }
+        content.append($("<p>").css("white-space", "pre-wrap").text(text));
+        let c_helper = content.prop("outerHTML");
 
         container.popover({
             content: c_helper,
             html: true,
             container: 'body',
-            trigger: 'focus',
+            trigger: 'hover focus',
             template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
         })
         container.popover('show');

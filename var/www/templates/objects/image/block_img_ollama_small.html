@@ -4,13 +4,17 @@
         {% if descriptions %}
             {% for model, description in descriptions.items() %}
                 <button type="button" class="btn btn-link p-0 mr-1" title="Read description ({{ model }})"
-                        data-tooltip="{{ description }}" onclick="show_text_tooltip(this, this.dataset.tooltip)">
+                        data-tooltip="{{ description }}" data-tooltip-model="{{ model }}"
+                        onmouseenter="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                        onclick="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
                     <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
                 </button>
             {% endfor %}
         {% elif ollama_description %}
             <button type="button" class="btn btn-link p-0" title="Read description" data-tooltip="{{ ollama_description }}"
-                    onclick="show_text_tooltip(this, this.dataset.tooltip)">
+                    data-tooltip-model="qwen2.5vl"
+                    onmouseenter="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                    onclick="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
                 <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
             </button>
         {% endif %}
