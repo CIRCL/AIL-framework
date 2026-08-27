@@ -22,19 +22,41 @@ from lib import search_engine
 config_loader = ConfigLoader()
 OLLAMA_URL = config_loader.get_config_str('Images', 'ollama_url')
 IS_OLLAMA_ENABLED = config_loader.get_config_boolean('Images', 'ollama_enabled')
+DEFAULT_IMAGE_DESCRIPTION_MODEL = get_default_image_description_model()
+OLLAMA_MODELS = [DEFAULT_IMAGE_DESCRIPTION_MODEL]
+if config_loader.has_option('Images', 'ollama_models'):
+    for model in config_loader.get_config_str('Images', 'ollama_models').split(','):
+        model = model.strip()
+        if model and model not in OLLAMA_MODELS:
+            OLLAMA_MODELS.append(model)
 config_loader = None
 
 def is_ollama_enabled():
     return IS_OLLAMA_ENABLED
 
+def get_ollama_models():
+    return OLLAMA_MODELS
+
+
+def get_image_description_model(model=None):
+    if not model:
+        return DEFAULT_IMAGE_DESCRIPTION_MODEL
+    if model not in OLLAMA_MODELS:
+        return None
+    return model
+
 
 def get_image_obj(obj_gid):
-    if obj_gid.startswith('image:'):
-        return Images.Image(obj_gid.split(':')[2])
-    elif obj_gid.startswith('screenshot:'):
-        return Screenshots.Screenshot(obj_gid.split(':')[2])
-    else:
+    if not obj_gid:
         return None
+    gid = obj_gid.split(':', 2)
+    if len(gid) != 3 or not gid[2]:
+        return None
+    if gid[0] == 'image':
+        return Images.Image(gid[2])
+    if gid[0] == 'screenshot':
+        return Screenshots.Screenshot(gid[2])
+    return None
 
 def create_ollama_domain_data(model, descriptions):
     return json.dumps({'model': model,
@@ -69,8 +91,10 @@ def create_ollama_domain_csam_classification(model, descriptions):
                        })
 
 # screenshot + image
-def api_get_image_description(obj_gid):
-    model = get_default_image_description_model()
+def api_get_image_description(obj_gid, model=None):
+    model = get_image_description_model(model)
+    if not model:
+        return {"status": "error", "reason": "Unknown image description model"}, 400
 
     image = get_image_obj(obj_gid)
     if not image:

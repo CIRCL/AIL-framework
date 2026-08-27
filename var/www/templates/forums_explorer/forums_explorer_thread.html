@@ -172,7 +172,7 @@
                               <a class="btn btn-info btn-sm" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=post_image['id']) }}"><i class="fas fa-expand"></i> OCR</a>
                             {% endif %}
                             {% if ollama_enabled or post_image.get('description') %}
-                              {% with ollama_description=post_image['description'], image_gid='image::'+post_image['id'] %}
+                              {% with ollama_description=post_image['description'], ollama_descriptions=post_image.get('descriptions', {}), image_gid='image::'+post_image['id'] %}
                                 {% include 'objects/image/block_img_ollama_small.html' %}
                               {% endwith %}
                             {% endif %}

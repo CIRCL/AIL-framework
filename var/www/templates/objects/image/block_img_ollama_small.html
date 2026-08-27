@@ -1,11 +1,28 @@
-{% if ollama_enabled or ollama_description %}
+{% set descriptions = ollama_descriptions|default({}) %}
+{% if ollama_enabled or descriptions or ollama_description %}
     <span>
-        {% if ollama_description %}
-            <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, `{{ ollama_description }}`)" onmouseleave="hide_obj_tooltip(this)"></i>
-        {% elif ollama_enabled %}
-            <span>
-                <a class="btn btn-info" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝</a>
-            </span>
+        {% if descriptions %}
+            {% for model, description in descriptions.items() %}
+                <i class="fa-solid fa-circle-info fa-2x mr-1" style="color: #c0bfbc;" title="{{ model }}"
+                   data-tooltip="{{ description }}" onmouseenter="show_text_tooltip(this, this.dataset.tooltip)" onmouseleave="hide_obj_tooltip(this)"></i>
+            {% endfor %}
+        {% elif ollama_description %}
+            <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" data-tooltip="{{ ollama_description }}"
+               onmouseenter="show_text_tooltip(this, this.dataset.tooltip)" onmouseleave="hide_obj_tooltip(this)"></i>
+        {% endif %}
+        {% if ollama_enabled %}
+            {% set available_models = ollama_models|default(['qwen2.5vl']) %}
+            {% set missing_models = available_models|reject('in', descriptions)|list %}
+            {% if missing_models %}
+                <span class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Add image description"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                    <span class="dropdown-menu">
+                        {% for model in missing_models %}
+                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model) }}">Generate with {{ model }}</a>
+                        {% endfor %}
+                    </span>
+                </span>
+            {% endif %}
         {% endif %}
     </span>
 {% endif %}

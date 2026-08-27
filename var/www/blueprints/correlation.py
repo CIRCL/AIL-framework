@@ -189,6 +189,7 @@ def show_correlation():
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
                                    ollama_enabled=images_engine.is_ollama_enabled(),
+                                   ollama_models=images_engine.get_ollama_models(),
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
 
 @correlation.route('/correlation/get/description')
@@ -436,4 +437,3 @@ def show_relationship():
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
-

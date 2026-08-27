@@ -113,6 +113,9 @@ class Screenshot(AbstractObject):
     def add_description_model(self, model, description):
         self._set_field(f'desc:{model}', description)
 
+    def get_descriptions(self):
+        return {model: self.get_description(model) for model in self.get_description_models()}
+
     def get_description(self, model=None):
         if not model:
             model = get_default_image_description_model()
@@ -143,6 +146,7 @@ class Screenshot(AbstractObject):
         meta['tags'] = self.get_tags(r_list=True)
         if 'description' in options:
             meta['description'] = self.get_description()
+            meta['descriptions'] = self.get_descriptions()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'link' in options:

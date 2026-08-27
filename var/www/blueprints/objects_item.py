@@ -105,6 +105,7 @@ def showItem():  # # TODO: support post
         if meta['crawler']['screenshot']:
             img = Screenshot(meta['crawler']['screenshot_id'])
             meta['description'] = img.get_description()
+            meta['descriptions'] = img.get_descriptions()
             meta['image_gid'] = img.get_global_id()
 
     if meta.get('investigations'):
@@ -126,6 +127,7 @@ def showItem():  # # TODO: support post
                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                            is_hive_connected=False,
                            ollama_enabled=images_engine.is_ollama_enabled(),
+                           ollama_models=images_engine.get_ollama_models(),
                            meta=meta, message=message,
                            all_languages=Language.get_all_languages(),
                            extracted=extracted, extracted_matches=extracted_matches)
@@ -223,7 +225,8 @@ def item_preview():
 @login_read_only
 def image_describe():
     gid = request.args.get('gid')
-    r = images_engine.api_get_image_description(gid)
+    model = request.args.get('model')
+    r = images_engine.api_get_image_description(gid, model=model)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:

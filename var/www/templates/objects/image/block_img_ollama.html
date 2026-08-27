@@ -1,12 +1,46 @@
-{% if ollama_enabled or ollama_description %}
+{% set descriptions = ollama_descriptions|default({}) %}
+{% if ollama_enabled or descriptions or ollama_description %}
     <div class="card border-secondary">
         <div class="card-body py-2">
-            {% if ollama_description %}
-                <p style="white-space: pre-line">{{ ollama_description }}</p>
-            {% elif ollama_enabled %}
-                <span>
-                    <a class="btn btn-primary" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝Image Description</a>
-                </span>
+            {% if descriptions %}
+                {% for model, description in descriptions.items() %}
+                    <p class="ail-image-description mb-2" data-description-model="{{ model }}"
+                       style="white-space: pre-line;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</p>
+                {% endfor %}
+                {% if descriptions|length > 1 %}
+                    <div class="text-right">
+                        <label class="small text-muted mb-0 mr-1">Description</label>
+                        <select class="custom-select custom-select-sm d-inline-block w-auto text-muted"
+                                onchange="this.closest('.card-body').querySelectorAll('.ail-image-description').forEach(function (description) { description.style.display = description.dataset.descriptionModel === this.value ? '' : 'none'; }, this)">
+                            {% for model in descriptions %}
+                                <option value="{{ model }}" {% if model == 'qwen2.5vl' %}selected{% endif %}>{{ model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+            {% elif ollama_description %}
+                <p class="mb-2" style="white-space: pre-line">{{ ollama_description }}</p>
+            {% endif %}
+
+            {% if ollama_enabled %}
+                {% set available_models = ollama_models|default(['qwen2.5vl']) %}
+                {% set missing_models = available_models|reject('in', descriptions)|list %}
+                {% if missing_models %}
+                    <form class="form-inline justify-content-end mt-2" method="get" action="{{ url_for('objects_item.image_describe') }}">
+                        <input type="hidden" name="gid" value="{{ image_gid }}">
+                        {% if missing_models|length > 1 %}
+                            <select class="custom-select custom-select-sm mr-1" name="model" aria-label="Description model">
+                                {% for model in missing_models %}<option value="{{ model }}">{{ model }}</option>{% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="hidden" name="model" value="{{ missing_models[0] }}">
+                        {% endif %}
+                        <button class="btn btn-sm {% if descriptions or ollama_description %}btn-outline-secondary{% else %}btn-primary{% endif %}" type="submit">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i>
+                            {% if descriptions or ollama_description %}Add description{% else %}Generate description{% endif %}
+                        </button>
+                    </form>
+                {% endif %}
             {% endif %}
         </div>
     </div>

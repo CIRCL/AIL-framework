@@ -152,7 +152,7 @@ function show_text_tooltip(container, text) {
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = "<p style=\"white-space: pre-wrap\">" + text + "</p>";
+        let c_helper = $("<p>").css("white-space", "pre-wrap").text(text).prop("outerHTML");
 
         container.popover({
             content: c_helper,

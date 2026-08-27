@@ -168,6 +168,7 @@ def chats_explorer_chat():
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                tempolocus_predictions=tempolocus_predictions, tempolocus_holiday_predictions=tempolocus_holiday_predictions,
@@ -270,6 +271,7 @@ def objects_subchannel_messages():
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                bootstrap_label=bootstrap_label, all_languages=languages,
@@ -303,6 +305,7 @@ def objects_thread_messages():
         translation_languages = Language.get_translation_languages()
         return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                message_id=message_id, all_languages=languages,
                                translation_languages=translation_languages, translation_target=target)
 
@@ -451,6 +454,7 @@ def objects_message():
         message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(), all_languages=languages,
+                               ollama_models=images_engine.get_ollama_models(),
                                translation_languages=translation_languages, translation_target=target, container_url=container_url,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
@@ -611,6 +615,7 @@ def objects_user_account_chat():
         translation_languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
                                all_languages=languages, translation_languages=translation_languages, translation_target=target)
 

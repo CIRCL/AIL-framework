@@ -112,6 +112,9 @@ class Image(AbstractDaterangeObject):
     def add_description_model(self, model, description):
         self._set_field(f'desc:{model}', description)
 
+    def get_descriptions(self):
+        return {model: self.get_description(model) for model in self.get_description_models()}
+
     def get_description(self, model=None):
         if model is None:
             model = get_default_image_description_model()
@@ -148,6 +151,7 @@ class Image(AbstractDaterangeObject):
             meta['content'] = self.get_content()
         if 'description' in options:
             meta['description'] = self.get_description()
+            meta['descriptions'] = self.get_descriptions()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

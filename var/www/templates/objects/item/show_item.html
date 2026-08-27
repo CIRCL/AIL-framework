@@ -479,7 +479,7 @@
               </table>
             </div>
 
-              {% with ollama_description=meta['description'], image_gid=meta['image_gid'] %}
+              {% with ollama_description=meta['description'], ollama_descriptions=meta.get('descriptions', {}), image_gid=meta['image_gid'] %}
                 {% include 'block_img_ollama.html' %}
               {% endwith %}
 

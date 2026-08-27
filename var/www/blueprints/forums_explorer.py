@@ -441,6 +441,7 @@ def forum_explorer_thread():
     translation_languages = Language.get_translation_languages()
     return render_template('forums_explorer_thread.html', meta=meta[0], bootstrap_label=bootstrap_label,
                            ollama_enabled=images_engine.is_ollama_enabled(),
+                           ollama_models=images_engine.get_ollama_models(),
                            all_languages=languages, translation_languages=translation_languages, translation_target=target,
                            is_admin=current_user.is_admin())
 
