@@ -92,6 +92,7 @@ ollama_enabled = True
 
 [ImageSimilarity]
 phash_enabled = False
+phash_hamming_distance = 8
 photodna_enabled = False
 
 ##### Users #####

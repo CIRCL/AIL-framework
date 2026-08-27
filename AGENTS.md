@@ -45,6 +45,7 @@ AIL is organized around an ingestion-to-analysis pipeline:
 - `tools/` - Operator and maintenance utilities such as import helpers, user creation, reindexing, reprocessing, and crawler task submission.
 - `tests/` - Pytest-based regression and API/module tests.
 - `doc/` - Project documentation, API notes, screenshots, and architecture diagrams.
+  - `doc/handoff/` contains session handoff documents for follow-up agents.
 - `samples/` - Sample input data.
 - `update/` - Versioned update and migration scripts.
 - `other_installers/` - Alternative installation assets for platforms such as Docker, LXD, Ansible, and CentOS.
@@ -73,3 +74,4 @@ AIL is organized around an ingestion-to-analysis pipeline:
 - Keep imports straightforward; do not wrap imports in broad `try`/`catch` or `try`/`except` blocks.
 - Avoid creating helper functions solely to construct Redis keys. Write Redis key formats directly at their call sites so the accessed data structure remains visible and readable.
 - Do not create a pull request
+- Store repository handoff documents under `doc/handoff/`, not in the OS temporary directory.

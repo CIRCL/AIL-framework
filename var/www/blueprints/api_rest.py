@@ -24,6 +24,7 @@ from lib import ail_logger
 from lib import crawlers
 from lib import chats_viewer
 from lib import forums_viewer
+from lib import image_similarity
 
 from lib import Investigations
 from lib import Tag
@@ -115,6 +116,13 @@ def v1_version():
 def v1_pyail_version():
     ail_version = 'v1.0.0'
     return create_json_response({'version': ail_version}, 200)
+
+
+@api_rest.route("api/v1/image/similarity/phash/search", methods=['POST'])
+@token_required('user')
+def v1_image_similarity_phash_search():
+    response, status = image_similarity.api_search_phash(request.get_json(silent=True))
+    return create_json_response(response, status)
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -407,4 +415,3 @@ def v1_user_create():
         return create_json_response(r[0], r[1])
     else:
         return create_json_response({'status': 'error', 'reason': 'Invalid user_id'}, 400)
-

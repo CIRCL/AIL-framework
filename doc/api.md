@@ -1239,6 +1239,49 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 
 
 
+## Image similarity
+
+### Search images by pHash: `api/v1/image/similarity/phash/search`
+
+Returns all image SHA-256 IDs whose indexed pHash is within the requested exact Hamming radius. Only newly processed images are present in the first-version MIH index.
+
+**Method**: `POST`
+
+#### Parameters
+
+- `phash`
+  - nonzero 64-bit pHash;
+  - exactly 16 hexadecimal characters;
+  - mandatory.
+
+The maximum Hamming distance is configured by the server as `phash_hamming_distance` under `[ImageSimilarity]`. It cannot be overridden by the request.
+
+#### Example
+
+```text
+curl https://127.0.0.1:7000/api/v1/image/similarity/phash/search \
+  --header "Authorization: YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"phash":"a91c45ef00981234"}' \
+  --request POST
+```
+
+#### Success response
+
+**HTTP status code**: `200`
+
+```json
+{
+  "phash": "a91c45ef00981234",
+  "hamming_distance": 10,
+  "images": [
+    "<image SHA-256>"
+  ]
+}
+```
+
+Invalid input returns `400`. An unavailable image-similarity Kvrocks backend returns `503`.
+
 # FUTURE endpoints
 
 <details>
@@ -1292,4 +1335,3 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 </details>
 
 -----
-

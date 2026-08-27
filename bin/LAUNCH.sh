@@ -290,11 +290,9 @@ function launching_scripts {
     # IMAGES
     screen -S "Script_AIL" -X screen -t "Exif" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Exif.py; read x"
     sleep 0.1
-    screen -S "Script_AIL" -X screen -t "ImagePhash" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ImagePhash.py; read x"
+    screen -S "Script_AIL" -X screen -t "ImageSimilarity" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ImageSimilarity.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "OcrExtractor" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./OcrExtractor.py; read x"
-    sleep 0.1
-    screen -S "Script_AIL" -X screen -t "PhashCorrelation" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./PhashCorrelation.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "CodeReader" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./CodeReader.py; read x"
     sleep 0.1
@@ -560,6 +558,7 @@ function set_kvrocks_namespaces() {
   if checking_kvrocks; then
     _set_kvrocks_namespace "cor"  "ail_correls"
     _set_kvrocks_namespace "obj"  "ail_objs"
+    _set_kvrocks_namespace "isim" "ail_image_similarity"
     _set_kvrocks_namespace "tag"  "ail_tags"
   else
     echo -e $RED"\t* Error: Please launch Kvrocks server"$DEFAULT

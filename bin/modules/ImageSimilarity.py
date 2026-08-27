@@ -69,7 +69,8 @@ class ImageSimilarity(AbstractModule):
             return None
 
         for algorithm, fingerprint in fingerprints.items():
-            image_similarity.set_fingerprint(image.id, algorithm, fingerprint)
+            if not image_similarity.set_fingerprint(image.id, algorithm, fingerprint):
+                self.logger.warning(f'Unable to store {algorithm} fingerprint for image {image.id}')
 
         if r_result:
             return fingerprints
