@@ -3,12 +3,16 @@
     <span>
         {% if descriptions %}
             {% for model, description in descriptions.items() %}
-                <i class="fa-solid fa-circle-info fa-2x mr-1" style="color: #c0bfbc;" title="{{ model }}"
-                   data-tooltip="{{ description }}" onmouseenter="show_text_tooltip(this, this.dataset.tooltip)" onmouseleave="hide_obj_tooltip(this)"></i>
+                <button type="button" class="btn btn-link p-0 mr-1" title="Read description ({{ model }})"
+                        data-tooltip="{{ description }}" onclick="show_text_tooltip(this, this.dataset.tooltip)">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
+                </button>
             {% endfor %}
         {% elif ollama_description %}
-            <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" data-tooltip="{{ ollama_description }}"
-               onmouseenter="show_text_tooltip(this, this.dataset.tooltip)" onmouseleave="hide_obj_tooltip(this)"></i>
+            <button type="button" class="btn btn-link p-0" title="Read description" data-tooltip="{{ ollama_description }}"
+                    onclick="show_text_tooltip(this, this.dataset.tooltip)">
+                <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
+            </button>
         {% endif %}
         {% if ollama_enabled %}
             {% set available_models = ollama_models|default(['qwen2.5vl']) %}

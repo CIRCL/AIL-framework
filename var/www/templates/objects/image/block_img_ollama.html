@@ -5,7 +5,7 @@
             {% if descriptions %}
                 {% for model, description in descriptions.items() %}
                     <p class="ail-image-description mb-2" data-description-model="{{ model }}"
-                       style="white-space: pre-line;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</p>
+                       style="white-space: pre-wrap; overflow-wrap: anywhere;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</p>
                 {% endfor %}
                 {% if descriptions|length > 1 %}
                     <div class="text-right">
@@ -19,7 +19,7 @@
                     </div>
                 {% endif %}
             {% elif ollama_description %}
-                <p class="mb-2" style="white-space: pre-line">{{ ollama_description }}</p>
+                <p class="mb-2" style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ ollama_description }}</p>
             {% endif %}
 
             {% if ollama_enabled %}

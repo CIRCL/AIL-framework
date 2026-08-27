@@ -158,6 +158,8 @@ function show_text_tooltip(container, text) {
             content: c_helper,
             html: true,
             container: 'body',
+            trigger: 'focus',
+            template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
         })
         container.popover('show');
     }

@@ -89,7 +89,8 @@ DiffMaxLineLength = 10000
 [Images]
 ollama_url = http://127.0.0.1:11434
 ollama_enabled = True
-# Optional comma-separated Ollama vision models available in the image description UI.
+# For multiple optional Ollama vision models, add them with "," without space.
+# e.g.: ollama_models = ornith:35b,qwen2.5vl:32b
 # qwen2.5vl is always available and remains the default.
 ollama_models =
 
