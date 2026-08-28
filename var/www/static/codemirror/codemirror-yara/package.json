@@ -20,6 +20,7 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "@codemirror/lang-markdown": "6.5.0",
     "codemirror": "6.0.2"
   }
 }
