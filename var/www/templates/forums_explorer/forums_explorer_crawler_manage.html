@@ -10,276 +10,131 @@
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
   <style>
     .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); background: white; }
-    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
+    .forum-board-header { align-items: center; background: #2f3d46; color: white; display: flex; font-weight: 600; justify-content: space-between; padding: .75rem 1rem; }
+    .forum-banner-preview { width: 100%; max-height: 300px; object-fit: cover; display: block; }
+    .forum-banner-empty { background: #f4f6f7; color: #6c757d; padding: 2.5rem 1rem; text-align: center; }
     .text-break { word-break: break-word; }
-    .active-time-row { border-bottom: 1px solid #edf1f3; padding: .35rem 0; }
-    .active-time-row:last-child { border-bottom: 0; }
-    .forum-banner-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: .25rem; border: 1px solid #d7dee2; }
+    .definition-label { color: #6c757d; font-size: .8rem; margin-bottom: 0; text-transform: uppercase; }
+    .detail-item { border-bottom: 1px solid #edf1f3; padding: .45rem 0; }
+    .detail-item:last-child { border-bottom: 0; }
+    .config-item { background: #f7f9fa; border-radius: .3rem; height: 100%; padding: .65rem .75rem; }
+    .account-card { border: 1px solid #dfe5e8; border-radius: .35rem; margin: 1rem; overflow: hidden; }
+    .account-card-header { align-items: center; background: #f4f6f7; border-bottom: 1px solid #dfe5e8; display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; padding: .65rem .85rem; }
+    .account-state { align-items: stretch; display: flex; flex-wrap: wrap; gap: .5rem; }
+    .account-state-item { background: white; border: 1px solid #d7dee2; border-radius: .3rem; min-width: 9rem; padding: .4rem .65rem; }
+    .account-state-item .definition-label { display: block; line-height: 1; margin-bottom: .3rem; }
+    .account-state-value { font-size: 1rem; font-weight: 600; }
+    .account-card-body { padding: .75rem .85rem; }
+    .account-actions form { margin: 0; }
+    .account-actions { align-items: center; background: #fafbfb; border-top: 1px solid #edf1f3; display: flex; flex-wrap: wrap; gap: .4rem; padding: .65rem .85rem; }
+    .status-dot { border-radius: 50%; display: inline-block; height: .55rem; margin-right: .35rem; width: .55rem; }
   </style>
 </head>
 <body>
 {% include 'nav_bar.html' %}
-{% macro time_options(selected) -%}
-  {% for hour in range(0, 24) %}
-    {% for minute in [0, 30] %}
-      {% set value = hour ~ ':' ~ '%02d'|format(minute) %}
-      <option value="{{ value }}" {% if selected == value %}selected{% endif %}>{{ value }}</option>
-    {% endfor %}
-  {% endfor %}
-  <option value="23:59" {% if selected == '23:59' %}selected{% endif %}>23:59</option>
-{%- endmacro %}
-{% macro active_time_selector(prefix, active_time_ui=None) -%}
-  {% set weekdays = [('mon', 'Monday'), ('tue', 'Tuesday'), ('wed', 'Wednesday'), ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')] %}
-  <div class="border rounded p-2 bg-light active-time-selector" data-prefix="{{ prefix }}">
-    <div class="custom-control custom-radio custom-control-inline">
-      <input type="radio" class="custom-control-input" name="active_time_mode" id="active_time_always_{{ prefix }}" value="always" {% if not active_time_ui %}checked{% endif %}>
-      <label class="custom-control-label" for="active_time_always_{{ prefix }}">Always active</label>
-    </div>
-    <div class="custom-control custom-radio custom-control-inline">
-      <input type="radio" class="custom-control-input" name="active_time_mode" id="active_time_limited_{{ prefix }}" value="limited" {% if active_time_ui %}checked{% endif %}>
-      <label class="custom-control-label" for="active_time_limited_{{ prefix }}">Limit to selected days/times</label>
-    </div>
-    <div class="mt-2">
-      {% for day, label in weekdays %}
-        {% set day_ui = (active_time_ui or {}).get(day) or {'enabled': False, 'ranges': [{'start': '0:00', 'end': '23:59'}]} %}
-        <div class="active-time-day active-time-row" data-day="{{ day }}">
-          <div class="custom-control custom-checkbox mb-1">
-            <input type="checkbox" class="custom-control-input" id="active_time_{{ prefix }}_{{ day }}" name="active_time_days" value="{{ day }}" {% if day_ui.get('enabled') %}checked{% endif %}>
-            <label class="custom-control-label" for="active_time_{{ prefix }}_{{ day }}">{{ label }}</label>
-          </div>
-          <div class="active-time-ranges">
-            {% for range in day_ui.get('ranges') %}
-              <div class="form-row align-items-center mb-1 active-time-range">
-                <div class="col-5"><select class="form-control form-control-sm" name="active_time_start_{{ day }}">{{ time_options(range.get('start') or '0:00') }}</select></div>
-                <div class="col-5"><select class="form-control form-control-sm" name="active_time_end_{{ day }}">{{ time_options(range.get('end') or '23:59') }}</select></div>
-                <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger active-time-remove-range" title="Remove range"><i class="fas fa-times"></i></button></div>
-              </div>
-            {% endfor %}
-          </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary active-time-add-range" data-day="{{ day }}"><i class="fas fa-plus"></i> Add range</button>
-        </div>
-      {% endfor %}
-    </div>
-    <small class="form-text text-muted">Use 24-hour UTC ranges from 0:00 to 23:59. Add multiple non-overlapping ranges for the same day when needed.</small>
-  </div>
-{%- endmacro %}
 <div class="container-fluid"><div class="row">
 {% include 'sidebars/sidebar_objects.html' %}
 <div class="col-12 col-lg-10" id="core_content">
 {% set forum = meta['forum'] %}{% set config = meta['config'] %}
 <nav aria-label="breadcrumb" class="mt-3"><ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
-  <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}?id={{ forum['id'] }}">Crawler status</a></li>
+  <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_crawler_status', id=forum['id']) }}">Crawler status</a></li>
   <li class="breadcrumb-item active">Manage {{ forum.get('name') or forum['id'] }}</li>
 </ol></nav>
 
-<h1 class="mb-3"><i class="fas fa-cogs"></i> Forum crawler management</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+  <h1 class="mb-2 mb-md-0"><i class="fas fa-cogs"></i> Forum crawler management</h1>
+  <a class="btn btn-primary" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}"><i class="fas fa-edit"></i> Edit configuration</a>
+</div>
 {% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
 {% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
 
-<div class="forum-board mb-4"><div class="forum-board-header">Forum banner</div><div class="p-3">
-  <div class="row align-items-center">
-    <div class="col-md-5 mb-3 mb-md-0">
-      {% if forum.get('banner') %}
-        <img class="forum-banner-preview" src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="{{ forum.get('name') or forum['id'] }} banner">
-      {% else %}
-        <div class="alert alert-secondary mb-0"><i class="fas fa-image"></i> No banner configured for this forum.</div>
-      {% endif %}
-    </div>
-    <div class="col-md-7">
-      <form method="post" action="{{ url_for('forums_explorer.forum_explorer_banner_edit') }}" enctype="multipart/form-data">
-        <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-        <input type="hidden" name="next" value="manage">
-        <div class="form-group">
-          <label>{% if forum.get('banner') %}Replace banner{% else %}Add banner{% endif %}</label>
-          <input class="form-control-file" type="file" name="banner" accept="image/*" required>
-          <small class="form-text text-muted">The banner is visible to all users on this forum page.</small>
-        </div>
-        <button class="btn btn-primary"><i class="fas fa-upload"></i> {% if forum.get('banner') %}Replace banner{% else %}Add banner{% endif %}</button>
-      </form>
-      {% if forum.get('banner') %}
-      <form method="post" action="{{ url_for('forums_explorer.forum_explorer_banner_edit') }}" class="mt-2">
-        <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-        <input type="hidden" name="next" value="manage">
-        <input type="hidden" name="action" value="delete">
-        <button class="btn btn-outline-danger" onclick="return confirm('Remove banner for ' + {{ (forum.get('name') or forum['id'])|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i> Remove banner</button>
-      </form>
-      {% endif %}
-    </div>
+<div class="forum-board mb-4">
+  <div class="forum-board-header"><span><i class="fas fa-image mr-2"></i>Forum banner</span><a class="btn btn-sm btn-outline-light" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#forum-banner"><i class="fas fa-pencil-alt"></i> Edit banner</a></div>
+  {% if forum.get('banner') %}<img class="forum-banner-preview" src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="{{ forum.get('name') or forum['id'] }} banner">
+  {% else %}<div class="forum-banner-empty"><i class="far fa-image fa-3x mb-2"></i><br>No banner configured</div>{% endif %}
+</div>
+
+<div class="row">
+<div class="col-xl-4 mb-4"><div class="forum-board h-100">
+  <div class="forum-board-header"><span>Forum</span></div>
+  <div class="p-3">
+    <div class="detail-item"><p class="definition-label">Name</p><strong>{{ forum.get('name') or '-' }}</strong></div>
+    <div class="detail-item"><p class="definition-label">Forum ID</p><span class="text-break">{{ forum['id'] }}</span></div>
+    <div class="detail-item"><p class="definition-label">URL</p><span class="text-break">{{ forum.get('url') or '-' }}</span></div>
   </div>
 </div></div>
 
-<div class="forum-board mb-4"><div class="forum-board-header">Crawl config</div><div class="p-3">
-<form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_config_edit') }}">
-  <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-  <div class="form-row">
-    <div class="form-group col-md-2"><label>enabled</label><input type="checkbox" name="enabled" class="form-control" {% if config.get('enabled') %}checked{% endif %}></div>
-    <div class="form-group col-md-2"><label>javascript</label><input type="checkbox" name="javascript" class="form-control" {% if config.get('javascript') %}checked{% endif %}></div>
-    <div class="form-group col-md-4"><label>current_domain</label><input class="form-control" name="current_domain" placeholder="forum.example" value="{{ config.get('current_domain') or '' }}"></div>
-    <div class="form-group col-md-4"><label>proxy</label><input class="form-control" name="proxy" value="{{ config.get('proxy') or '' }}"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-12"><label>default_referer</label><input class="form-control" name="default_referer" value="{{ config.get('default_referer') or '' }}"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-4"><label>delta_forum_structure_refresh</label><input type="number" class="form-control" name="delta_forum_structure_refresh" value="{{ config.get('delta_forum_structure_refresh') or 0 }}"></div>
-    <div class="form-group col-md-4"><label>delta_subforum_threads_refresh</label><input type="number" class="form-control" name="delta_subforum_threads_refresh" value="{{ config.get('delta_subforum_threads_refresh') or 0 }}"></div>
-    <div class="form-group col-md-4"><label>timeout</label><input type="number" class="form-control" name="timeout" value="{{ config.get('timeout') or 60 }}"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-6"><label>subforums_excluded (one per line)</label><textarea class="form-control" name="subforums_excluded" rows="4">{{ (config.get('subforums_excluded') or [])|join('\n') }}</textarea></div>
-    <div class="form-group col-md-6"><label>subforums_to_crawl (one per line)</label><textarea class="form-control" name="subforums_to_crawl" rows="4">{{ (config.get('subforums_to_crawl') or [])|join('\n') }}</textarea></div>
-  </div>
-  <button class="btn btn-primary"><i class="fas fa-save"></i> Save config</button>
-</form></div></div>
+<div class="col-xl-8 mb-4"><div class="forum-board h-100">
+  <div class="forum-board-header"><span>Crawl configuration</span><a class="btn btn-sm btn-outline-light" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#crawl-config"><i class="fas fa-pencil-alt"></i> Edit</a></div>
+  <div class="p-3"><div class="row no-gutters">
+    {% for label, value in [('Enabled', config.get('enabled')), ('JavaScript', config.get('javascript')), ('Current domain', config.get('current_domain')), ('Proxy', config.get('proxy')), ('Default referer', config.get('default_referer')), ('Timeout', config.get('timeout')), ('Forum structure refresh', config.get('delta_forum_structure_refresh')), ('Subforum threads refresh', config.get('delta_subforum_threads_refresh'))] %}
+      <div class="col-sm-6 col-lg-4 p-1"><div class="config-item"><p class="definition-label">{{ label }}</p><div class="text-break">{% if value is sameas true %}<span class="text-success"><i class="fas fa-check-circle"></i> Yes</span>{% elif value is sameas false %}<span class="text-muted"><i class="fas fa-times-circle"></i> No</span>{% else %}{{ value if value is not none and value != '' else '-' }}{% endif %}</div></div></div>
+    {% endfor %}
+    <div class="col-sm-6 p-1"><div class="config-item"><p class="definition-label">Excluded subforums</p><div class="text-break">{{ (config.get('subforums_excluded') or [])|join(', ') or '-' }}</div></div></div>
+    <div class="col-sm-6 p-1"><div class="config-item"><p class="definition-label">Subforums to crawl</p><div class="text-break">{{ (config.get('subforums_to_crawl') or [])|join(', ') or '-' }}</div></div></div>
+  </div></div>
+</div></div></div>
 
-<div class="forum-board mb-4"><div class="forum-board-header">Create account</div><div class="p-3">
-<form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_save') }}">
-  <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-  <div class="form-row">
-    <div class="form-group col-md-3"><label>account_id</label><input class="form-control" name="account_id" required></div>
-    <div class="form-group col-md-2"><label>enabled</label><input type="checkbox" class="form-control" name="enabled" checked></div>
-    <div class="form-group col-md-3"><label>status</label><select class="form-control" name="status"><option>need_manual_login</option><option>waiting</option><option>disabled</option><option>banned</option><option>error</option><option>crawling</option></select></div>
-    <div class="form-group col-md-4"><label>cookiejar_uuid</label><input class="form-control" name="cookiejar_uuid"></div>
-  </div>
-  <div class="form-row">
-    <div class="form-group col-md-4"><label>random_time_between_page (maximum seconds)</label><input class="form-control" type="number" min="0" step="1" name="random_time_between_page"></div>
-    <div class="form-group col-md-4"><label>subforums_to_crawl (one per line)</label><textarea class="form-control" name="subforums_to_crawl" rows="2"></textarea></div>
-    <div class="form-group col-md-4"><label>active_time</label>{{ active_time_selector('new') }}</div>
-  </div>
-  <button class="btn btn-success"><i class="fas fa-plus"></i> Create account</button>
-</form></div></div>
-
-<div class="forum-board mb-4"><div class="forum-board-header">Accounts</div>
-{% if meta['accounts'] %}
-  <div class="table-responsive"><table class="table table-sm table-striped mb-0"><thead><tr><th>edit</th><th>status</th><th>availability</th><th>runtime</th><th>inflight actions</th><th>delete</th></tr></thead><tbody>
-  {% for account in meta['accounts'] %}
-    <tr>
-      <td style="min-width:720px">
-        <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_save') }}">
-          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-          <input type="hidden" name="account_id" value="{{ account['id'] }}">
-          <b>{{ account['id'] }}</b>
-          <div class="form-row mt-2">
-            <div class="col"><label>enabled</label><input type="checkbox" class="form-control" name="enabled" {% if account.get('enabled') %}checked{% endif %}></div>
-            <div class="col"><label>status</label><select class="form-control" name="status">{% for status in ['waiting','need_manual_login','disabled','banned','error','crawling'] %}<option {% if account.get('status') == status %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
-          </div>
-          <label class="mt-2">cookiejar_uuid</label><input class="form-control" name="cookiejar_uuid" value="{{ account.get('cookiejar_uuid') or '' }}">
-          <label class="mt-2">random_time_between_page (maximum seconds)</label><input class="form-control" type="number" min="0" step="1" name="random_time_between_page" value="{{ account.get('random_time_between_page') or '' }}">
-          <label class="mt-2">active_time</label>{{ active_time_selector('account_' ~ loop.index, account.get('active_time_ui')) }}
-          <label class="mt-2">subforums_to_crawl</label><textarea class="form-control" name="subforums_to_crawl" rows="2">{{ (account.get('subforums_to_crawl') or [])|join('\n') }}</textarea>
-          <button class="btn btn-sm btn-primary mt-2">Save</button>
-        </form>
-        <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_interactive_cookiejar') }}" class="mt-2">
-          <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-          <input type="hidden" name="account_id" value="{{ account['id'] }}">
-          <input type="hidden" name="url" value="{{ forum.get('url') or account.get('current_url') }}">
-          <button class="btn btn-sm btn-warning" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser to create a user-level cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-desktop"></i> Create cookiejar interactively</button>
-        </form>
-        <div class="mt-2">
-          {% if account.get('local_login_command') %}
-            <button type="button" class="btn btn-sm btn-outline-secondary copy-local-login-command" data-command="{{ account['local_login_command'] }}"><i class="fas fa-copy"></i> Copy command for local interactive forum login</button>
-          {% endif %}
-        </div>
-      </td>
-      <td>
-        {{ account.get('status') }}
-        {% if account.get('status') == 'error' %}
-          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}" class="mt-2">
-            <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-            <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            <input type="hidden" name="next" value="manage">
-            <button class="btn btn-sm btn-outline-secondary" title="Discard the failed crawl without retrying it, then make this account available for other tasks" onclick="return confirm('Discard the failed crawl and reactivate account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-user-check"></i> Discard crawl &amp; reactivate</button>
-          </form>
-        {% endif %}
-        <br><small class="text-break">last_error: {{ account.get('last_error') }}</small>
-        {% if account.get('last_error_screenshot_metadata') %}
-          <a class="btn btn-sm btn-link text-muted p-0 ml-1"
-             href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_screenshot', forum_id=forum['id'], account_id=account['id']) }}"
-             target="_blank" title="View the screenshot captured on the last repeated page error">
-            <i class="fas fa-camera"></i>
-          </a>
-        {% endif %}
-        {% if account.get('error_html_metadata') %}
-          <a class="btn btn-sm btn-link text-muted p-0 ml-1" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_html', forum_id=forum['id'], account_id=account['id']) }}" title="Download error HTML"><i class="fas fa-file-code"></i></a>
-        {% endif %}
-      </td>
-      <td>available: {{ account.get('available') }}<br>reason: {{ account.get('availability_reason') }}</td>
-      <td class="text-break">task: {{ account.get('current_task_uuid') }}<br>crawl: {{ account.get('current_crawl_key') }}<br>url: {{ account.get('current_url') }}<br>referer: {{ account.get('current_referer') }}<br>last_used_at: {{ account.get('last_used_at') }}<br>last_crawled_at: {{ account.get('last_crawled_at') }}<br>active_time: {{ account.get('active_time') }}</td>
-      <td>
-        {% if account.get('has_inflight_crawl') %}
-          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_resend') }}" class="mb-2">
-            <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-            <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            {% if account.get('status') == 'error' %}
-              <button class="btn btn-sm btn-warning" title="Retry the failed page manually and request a screenshot" onclick="return confirm('Retry the failed page with a screenshot for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-camera"></i> Retry failed page</button>
-            {% else %}
-              <button class="btn btn-sm btn-warning" title="Stop and queue this active capture again" onclick="return confirm('Restart the active capture for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-redo"></i> Restart active capture</button>
-            {% endif %}
-          </form>
-          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_purge') }}">
-            <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
-            <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Purge current inflight crawl for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-ban"></i> Purge inflight</button>
-          </form>
-        {% else %}
-          <span class="text-muted">No current inflight crawl</span>
-        {% endif %}
-      </td>
-      <td><form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_delete') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-danger" onclick="return confirm('Delete account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i></button></form></td>
-    </tr>
-  {% endfor %}
-  </tbody></table></div>
-{% else %}<div class="alert alert-info m-3">No crawl accounts found.</div>{% endif %}
+<div class="forum-board mb-4">
+  <div class="forum-board-header"><span>Accounts <span class="badge badge-light ml-1">{{ meta['accounts']|length }}</span></span><a class="btn btn-sm btn-success" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#create-account"><i class="fas fa-plus"></i> Create account</a></div>
+  {% if meta['accounts'] %}
+  {% for account in meta['accounts'] %}<div class="account-card">
+    <div class="account-card-header"><div><i class="fas fa-user-circle fa-lg text-muted mr-1"></i><strong>{{ account['id'] }}</strong></div>
+      <div class="account-state">
+        <div class="account-state-item"><span class="definition-label">Status</span><span class="account-state-value text-{% if account.get('status') == 'error' %}danger{% elif account.get('status') == 'waiting' %}success{% elif account.get('status') == 'crawling' %}primary{% else %}warning{% endif %}"><i class="fas fa-{% if account.get('status') == 'error' %}exclamation-circle{% elif account.get('status') == 'waiting' %}check-circle{% elif account.get('status') == 'crawling' %}spinner fa-spin{% else %}pause-circle{% endif %}"></i> {{ account.get('status') or 'unknown' }}</span></div>
+        <div class="account-state-item"><span class="definition-label">Availability</span>{% if account.get('available') %}<span class="account-state-value text-success"><i class="fas fa-check-circle"></i> Available</span>{% else %}<span class="account-state-value text-danger"><i class="fas fa-times-circle"></i> Unavailable</span><br><small class="text-muted">{{ account.get('availability_reason') or 'No reason provided' }}</small>{% endif %}</div>
+      </div>
+    </div>
+    <div class="account-card-body"><div class="row">
+      <div class="col-lg-4 mb-2 mb-lg-0"><p class="definition-label">Account settings</p><div><span class="status-dot bg-{% if account.get('enabled') %}success{% else %}secondary{% endif %}"></span>{{ 'Enabled' if account.get('enabled') else 'Disabled' }}</div><small class="text-muted text-break">Cookiejar: {{ account.get('cookiejar_uuid') or '-' }}<br>Maximum delay: {{ account.get('random_time_between_page') or 0 }}s</small></div>
+      <div class="col-lg-4 mb-2 mb-lg-0"><p class="definition-label">Schedule</p><div class="text-break">{{ account.get('active_time') or 'Always active' }}</div><small class="text-muted">Last used: {{ account.get('last_used_at') or '-' }}<br>Last crawled: {{ account.get('last_crawled_at') or '-' }}</small></div>
+      <div class="col-lg-4"><p class="definition-label">Current activity</p><div class="text-break"><small>Task: {{ account.get('current_task_uuid') or '-' }}<br>Crawl: {{ account.get('current_crawl_key') or '-' }}<br>URL: {{ account.get('current_url') or '-' }}</small></div></div>
+    </div>
+    {% if account.get('error') %}<div class="alert alert-danger py-2 px-3 mt-2 mb-0"><strong><i class="fas fa-exclamation-triangle"></i> Current error:</strong> {{ account.get('error') }}
+      {% if account.get('last_error_screenshot_metadata') %}<a class="btn btn-sm btn-link p-0" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_screenshot', forum_id=forum['id'], account_id=account['id']) }}" target="_blank" title="View error screenshot"><i class="fas fa-camera"></i></a>{% endif %}
+      {% if account.get('error_html_metadata') %}<a class="btn btn-sm btn-link p-0" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_html', forum_id=forum['id'], account_id=account['id']) }}" title="Download error HTML"><i class="fas fa-file-code"></i></a>{% endif %}
+    </div>{% elif account.get('last_error') %}<div class="alert alert-light border py-2 px-3 mt-2 mb-0 text-muted"><strong><i class="fas fa-history"></i> Last error:</strong> {{ account.get('last_error') }}
+      {% if account.get('last_error_screenshot_metadata') %}<a class="btn btn-sm btn-link text-muted p-0" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_screenshot', forum_id=forum['id'], account_id=account['id']) }}" target="_blank" title="View last error screenshot"><i class="fas fa-camera"></i></a>{% endif %}
+      {% if account.get('error_html_metadata') %}<a class="btn btn-sm btn-link text-muted p-0" href="{{ url_for('forums_explorer.forum_explorer_crawler_account_error_html', forum_id=forum['id'], account_id=account['id']) }}" title="Download last error HTML"><i class="fas fa-file-code"></i></a>{% endif %}
+    </div>{% endif %}</div>
+    <div class="account-actions">
+      <a class="btn btn-sm btn-primary" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#account-{{ loop.index }}"><i class="fas fa-edit"></i> Edit</a>
+      <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_interactive_cookiejar') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-outline-primary" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-desktop"></i> Interactive login</button></form>
+      {% if account.get('local_login_command') %}<button type="button" class="btn btn-sm btn-outline-secondary copy-local-login-command" data-command="{{ account['local_login_command'] }}"><i class="fas fa-copy"></i> Local login command</button>{% endif %}
+      {% if account.get('status') == 'error' %}<form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_reactivate') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-outline-secondary" onclick="return confirm('Discard the failed crawl and reactivate account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-user-check"></i> Reactivate</button></form>{% endif %}
+      {% if account.get('has_inflight_crawl') %}<form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_resend') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-warning" onclick="return confirm('Queue the current crawl again for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-redo"></i> Retry crawl</button></form><form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_purge') }}"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Purge the inflight crawl for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-ban"></i> Purge inflight</button></form>{% endif %}
+      <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_delete') }}" class="ml-md-auto"><input type="hidden" name="forum_id" value="{{ forum['id'] }}"><input type="hidden" name="account_id" value="{{ account['id'] }}"><button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-trash"></i> Delete</button></form>
+    </div>
+  </div>{% endfor %}
+  {% else %}<div class="alert alert-info m-3">No crawl accounts found. <a href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#create-account">Create the first account</a>.</div>{% endif %}
 </div>
 </div></div></div>
 <script>
-function activeTimeOptions(selected){
-  var html = '';
-  for(var hour = 0; hour < 24; hour++){
-    ['00', '30'].forEach(function(minute){
-      var value = hour + ':' + minute;
-      html += '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + value + '</option>';
-    });
-  }
-  html += '<option value="23:59"' + (selected === '23:59' ? ' selected' : '') + '>23:59</option>';
-  return html;
-}
-function newActiveTimeRange(day){
-  return '<div class="form-row align-items-center mb-1 active-time-range">' +
-    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_start_' + day + '">' + activeTimeOptions('0:00') + '</select></div>' +
-    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_end_' + day + '">' + activeTimeOptions('23:59') + '</select></div>' +
-    '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger active-time-remove-range" title="Remove range"><i class="fas fa-times"></i></button></div>' +
-    '</div>';
-}
-$(document).ready(function(){
+$(document).ready(function() {
   $('#page-Decoded').addClass('active');
   $('#nav_explorer_forum').addClass('active');
-  $('.active-time-add-range').on('click', function(){
-    var day = $(this).data('day');
-    $(this).closest('.active-time-day').find('.active-time-ranges').append(newActiveTimeRange(day));
-    $(this).closest('.active-time-day').find('input[name="active_time_days"]').prop('checked', true);
-    $(this).closest('.active-time-selector').find('input[value="limited"]').prop('checked', true);
-  });
-  $(document).on('click', '.active-time-remove-range', function(){
-    var day = $(this).closest('.active-time-day');
-    if(day.find('.active-time-range').length > 1){
-      $(this).closest('.active-time-range').remove();
-    }
-  });
-  $(document).on('change', '.active-time-day select, .active-time-day input[type="checkbox"]', function(){
-    $(this).closest('.active-time-selector').find('input[value="limited"]').prop('checked', true);
-  });
-  $('.copy-local-login-command').on('click', function(){
-    var button = $(this);
-    var command = button.data('command');
-    navigator.clipboard.writeText(command).then(function(){
-      var original = button.html();
+
+  $('.copy-local-login-command').on('click', function() {
+    const button = $(this);
+    const command = button.data('command');
+
+    navigator.clipboard.writeText(command).then(function() {
       button.html('<i class="fas fa-check"></i> Copied');
-      setTimeout(function(){ button.html(original); }, 1500);
     });
   });
 });
-function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+
+function toggle_sidebar() {
+  if ($('#nav_menu').is(':visible')) {
+    $('#nav_menu').hide();
+    $('#side_menu').removeClass('border-right col-lg-2');
+    $('#core_content').removeClass('col-lg-10');
+  } else {
+    $('#nav_menu').show();
+    $('#side_menu').addClass('border-right col-lg-2');
+    $('#core_content').addClass('col-lg-10');
+  }
+}
 </script>
 </body></html>

@@ -83,7 +83,7 @@
       </div>
 
       <div class="forum-board mb-4">
-        <div class="forum-board-header"><span><i class="fas fa-sliders-h mr-2"></i>Crawl configuration</span><a class="btn btn-sm btn-outline-light" href="{{ url_for('forums_explorer.forum_explorer_crawler_manage') }}?id={{ forum['id'] }}"><i class="fas fa-pencil-alt"></i> Edit</a></div>
+        <div class="forum-board-header"><span><i class="fas fa-sliders-h mr-2"></i>Crawl configuration</span><a class="btn btn-sm btn-outline-light" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#crawl-config"><i class="fas fa-pencil-alt"></i> Edit</a></div>
         <div class="table-responsive"><table class="table table-sm config-table mb-0">
           <thead><tr>{% for field, label in [('enabled', 'Enabled'), ('javascript', 'JavaScript'), ('proxy', 'Proxy'), ('timeout', 'Timeout'), ('default_referer', 'Default referer'), ('delta_forum_structure_refresh', 'Structure refresh'), ('delta_subforum_threads_refresh', 'Threads refresh')] %}<th>{{ label }}</th>{% endfor %}</tr></thead>
           <tbody><tr>{% for field, label in [('enabled', 'Enabled'), ('javascript', 'JavaScript'), ('proxy', 'Proxy'), ('timeout', 'Timeout'), ('default_referer', 'Default referer'), ('delta_forum_structure_refresh', 'Structure refresh'), ('delta_subforum_threads_refresh', 'Threads refresh')] %}<td class="text-break">{{ config.get(field) if config.get(field) is not none else '—' }}</td>{% endfor %}</tr></tbody>

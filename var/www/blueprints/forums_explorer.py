@@ -42,6 +42,40 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
+
+def _get_forum_crawl_management():
+    forum_id = request.args.get('id')
+    meta = forums_viewer.get_forum_crawl_management(forum_id)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    management = meta[0]
+    forum = Forums.Forum(forum_id)
+    config = management.get('config', {})
+    ail_url = ail_base_url.rstrip('/')
+    for account in management.get('accounts', []):
+        account['has_inflight_crawl'] = bool(account.get('current_crawl_key') and forum.get_inflight_crawl_item(account['current_crawl_key']))
+        login_url = forum.get_url() or account.get('current_url')
+        login_url = forums_viewer.apply_forum_current_domain(
+            login_url, config.get('current_domain')
+        )
+        account['local_login_url'] = login_url
+        if login_url:
+            command = [
+                './tools/forum_account_local_login.py',
+                '--url', login_url,
+                '--forum-id', forum_id,
+                '--account-id', account['id'],
+            ]
+            referer = config.get('default_referer') or account.get('current_referer')
+            if referer:
+                command.extend(['--referer', referer])
+            command.extend([
+                '--ail-url', ail_url,
+                '--api-key', 'YOUR_AIL_API_KEY',
+            ])
+            account['local_login_command'] = ' '.join(shlex.quote(value) for value in command)
+    return management
+
 # ============= ROUTES ==============
 
 @forums_explorer.route("/forums/explorer", methods=['GET'])
@@ -67,7 +101,7 @@ def forum_explorer_forum_create():
     res = forums_viewer.create_forum(request.form)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=res[0]['id']))
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_edit', id=res[0]['id']))
 
 
 
@@ -83,7 +117,7 @@ def forum_explorer_banner_edit():
         res = forums_viewer.update_forum_banner(forum_id, request.files.get('banner'))
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_edit', id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler", methods=['GET'])
@@ -172,38 +206,20 @@ def forum_explorer_crawler_queue_purge():
 @login_required
 @login_admin
 def forum_explorer_crawler_manage():
-    forum_id = request.args.get('id')
-    meta = forums_viewer.get_forum_crawl_management(forum_id)
-    if meta[1] != 200:
-        return create_json_response(meta[0], meta[1])
-    management = meta[0]
-    forum = Forums.Forum(forum_id)
-    config = management.get('config', {})
-    ail_url = ail_base_url.rstrip('/')
-    for account in management.get('accounts', []):
-        account['has_inflight_crawl'] = bool(account.get('current_crawl_key') and forum.get_inflight_crawl_item(account['current_crawl_key']))
-        login_url = forum.get_url() or account.get('current_url')
-        login_url = forums_viewer.apply_forum_current_domain(
-            login_url, config.get('current_domain')
-        )
-        account['local_login_url'] = login_url
-        if login_url:
-            command = [
-                './tools/forum_account_local_login.py',
-                '--url', login_url,
-                '--forum-id', forum_id,
-                '--account-id', account['id'],
-            ]
-            referer = config.get('default_referer') or account.get('current_referer')
-            if referer:
-                command.extend(['--referer', referer])
-            command.extend([
-                '--ail-url', ail_url,
-                '--api-key', 'YOUR_AIL_API_KEY',
-            ])
-            account['local_login_command'] = ' '.join(shlex.quote(value) for value in command)
-    return render_template('forums_explorer_crawler_manage.html', meta=meta[0], bootstrap_label=bootstrap_label)
+    meta = _get_forum_crawl_management()
+    if isinstance(meta, tuple):
+        return meta
+    return render_template('forums_explorer_crawler_manage.html', meta=meta, bootstrap_label=bootstrap_label)
 
+
+@forums_explorer.route("/forums/explorer/crawler/manage/edit", methods=['GET'])
+@login_required
+@login_admin
+def forum_explorer_crawler_edit():
+    meta = _get_forum_crawl_management()
+    if isinstance(meta, tuple):
+        return meta
+    return render_template('forums_explorer_crawler_edit.html', meta=meta, bootstrap_label=bootstrap_label)
 
 @forums_explorer.route("/forums/explorer/crawler/config/edit", methods=['POST'])
 @login_required
@@ -213,7 +229,7 @@ def forum_explorer_crawler_config_edit():
     res = forums_viewer.update_forum_crawl_config(forum_id, request.form)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_edit', id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/save", methods=['POST'])
@@ -225,7 +241,7 @@ def forum_explorer_crawler_account_save():
     res = forums_viewer.save_forum_crawl_account(forum_id, account_id, request.form)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_edit', id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/cookiejar/interactive", methods=['POST'])
