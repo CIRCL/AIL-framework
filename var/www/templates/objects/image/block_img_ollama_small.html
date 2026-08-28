@@ -5,16 +5,16 @@
             {% for model, description in descriptions.items() %}
                 <button type="button" class="btn btn-link p-0 mr-1" title="Read description ({{ model }})"
                         data-tooltip="{{ description }}" data-tooltip-model="{{ model }}"
-                        onmouseenter="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
-                        onclick="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
+                        onmouseenter="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                        onclick="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
                     <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
                 </button>
             {% endfor %}
         {% elif ollama_description %}
             <button type="button" class="btn btn-link p-0" title="Read description" data-tooltip="{{ ollama_description }}"
                     data-tooltip-model="qwen2.5vl"
-                    onmouseenter="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
-                    onclick="show_text_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
+                    onmouseenter="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                    onclick="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
                 <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
             </button>
         {% endif %}
@@ -33,4 +33,39 @@
             {% endif %}
         {% endif %}
     </span>
+    <script type="module">
+        import { createMarkdownRenderer } from "{{ url_for('static', filename='js/codemirror-yara.es.js') }}";
+
+        window.show_image_description_tooltip = function(container, description, model) {
+            const trigger = $(container);
+            if (trigger.data('bs.popover')) {
+                trigger.popover('show');
+                return;
+            }
+
+            // Both values originate from object metadata. Build the popover with
+            // text nodes so neither HTML nor Markdown can inject DOM elements.
+            const content = $('<div>');
+            if (model) {
+                content.append($('<div>').addClass('small text-muted mb-2').text(model));
+            }
+            content.append($('<div>').addClass('ail-image-description-markdown').text(description));
+
+            trigger.popover({
+                content: content[0],
+                html: true,
+                container: 'body',
+                trigger: 'hover focus',
+                template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
+            });
+            trigger.popover('show');
+
+            const popoverId = trigger.attr('aria-describedby');
+            const popover = popoverId && document.getElementById(popoverId);
+            const markdownElement = popover && popover.querySelector('.ail-image-description-markdown');
+            if (markdownElement) {
+                createMarkdownRenderer(markdownElement);
+            }
+        };
+    </script>
 {% endif %}
