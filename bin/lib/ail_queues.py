@@ -85,7 +85,7 @@ class AILQueue:
                 # raise Exception(f'Error: queue {self.name}, no AIL object provided')
             else:
                 obj_global_id, mess = row_mess
-                m_hash = xxhash.xxh3_64_hexdigest(message)
+                m_hash = xxhash.xxh3_64_hexdigest(message.encode())
                 add_processed_obj(obj_global_id, m_hash, module=self.name)
                 return obj_global_id, m_hash, mess
 
@@ -104,7 +104,7 @@ class AILQueue:
 
         message = f'{obj_gid};{message}'
         if obj_gid != '::':
-            m_hash = xxhash.xxh3_64_hexdigest(message)
+            m_hash = xxhash.xxh3_64_hexdigest(message.encode())
         else:
             m_hash = None
         self._send_message_to_module(self.name, obj_gid, m_hash, message)
@@ -139,7 +139,7 @@ class AILQueue:
 
         message = f'{obj_global_id};{message}'
         if obj_global_id != '::':
-            m_hash = xxhash.xxh3_64_hexdigest(message)
+            m_hash = xxhash.xxh3_64_hexdigest(message.encode())
         else:
             m_hash = None
 
