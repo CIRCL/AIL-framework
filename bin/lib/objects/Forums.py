@@ -628,6 +628,23 @@ class Forum(AbstractDaterangeObject):
         for account_id in self.get_crawl_accounts():
             account = self.get_crawl_account(account_id)
             crawl_key = account.get_current_crawl_key()
+            running_key = f'{self.id}:{account_id}'
+            incomplete_running_state = (
+                account.get_status() == 'crawling'
+                and (
+                    not crawl_key
+                    or not account.get_current_task_uuid()
+                    or r_crawler.zscore('forum:crawl:running', running_key) is None
+                )
+            )
+            if incomplete_running_state:
+                if crawl_key:
+                    self.fail_crawl_item(crawl_key, error='stale_crawl')
+                r_crawler.zrem('forum:crawl:running', f'{self.id}:{account_id}')
+                account.reset_crawl()
+                self.refresh_account_availability(account_id)
+                cleaned.append(account_id)
+                continue
             if not crawl_key:
                 continue
             if self.get_crawl_item(crawl_key) and self.get_inflight_crawl_item(crawl_key):
