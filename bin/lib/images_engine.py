@@ -59,18 +59,11 @@ def get_image_obj(obj_gid):
     return None
 
 def _remove_thinking(text):
-    tag_pos = text.find("</think>")
-    if tag_pos == -1:
+    closing_tag = '</think>'
+    closing_pos = text.rfind(closing_tag)
+    if closing_pos == -1:
         return text
-    # Start of the </think> line
-    think_line_start = text.rfind("\n", 0, tag_pos) + 1
-    # Start of the line before it
-    previous_line_start = text.rfind("\n", 0, max(0, think_line_start - 1)) + 1
-    # End of the </think> line
-    think_line_end = text.find("\n", tag_pos)
-    if think_line_end == -1:
-        return text[:previous_line_start].rstrip()
-    return text[:previous_line_start] + text[think_line_end + 1:]
+    return text[closing_pos + len(closing_tag):].strip()
 
 def create_ollama_domain_data(model, descriptions):
     return json.dumps({'model': model,
