@@ -58,6 +58,20 @@ def get_image_obj(obj_gid):
         return Screenshots.Screenshot(gid[2])
     return None
 
+def _remove_thinking(text):
+    tag_pos = text.find("</think>")
+    if tag_pos == -1:
+        return text
+    # Start of the </think> line
+    think_line_start = text.rfind("\n", 0, tag_pos) + 1
+    # Start of the line before it
+    previous_line_start = text.rfind("\n", 0, max(0, think_line_start - 1)) + 1
+    # End of the </think> line
+    think_line_end = text.find("\n", tag_pos)
+    if think_line_end == -1:
+        return text[:previous_line_start].rstrip()
+    return text[:previous_line_start] + text[think_line_end + 1:]
+
 def create_ollama_domain_data(model, descriptions):
     return json.dumps({'model': model,
                        'prompt': f'From this list of images descriptions of one domain, describe this domain.\n\n{descriptions}',
@@ -90,8 +104,7 @@ def create_ollama_domain_csam_classification(model, descriptions):
                        'stream': False
                        })
 
-# screenshot + image
-def api_get_image_description(obj_gid, model=None):
+def _get_image_description(obj_gid, model=None, reprocess=False):
     model = get_image_description_model(model)
     if not model:
         return {"status": "error", "reason": "Unknown image description model"}, 400
@@ -100,9 +113,10 @@ def api_get_image_description(obj_gid, model=None):
     if not image:
         return {"status": "error", "reason": "Unknown image"}, 404
 
-    description = image.get_description(model)
-    if description:
-        return description, 200
+    if not reprocess:
+        description = image.get_description(model)
+        if description:
+            return description, 200
 
     b64 = image.get_base64()
     if not b64:
@@ -119,7 +133,8 @@ def api_get_image_description(obj_gid, model=None):
     else:
         r = res.json()
         if r:
-            image.add_description_model(model, r['response'])
+            response = _remove_thinking(r['response'])
+            image.add_description_model(model, response)
             # index
             if search_engine.is_meilisearch_enabled():
                 if image.type == 'image':
@@ -127,8 +142,20 @@ def api_get_image_description(obj_gid, model=None):
                 else:
                     search_engine.index_screenshot_description(image)
 
-            return r['response'], 200
+            return response, 200
     return None, 200
+
+
+# screenshot + image
+def api_get_image_description(obj_gid, model=None):
+    return _get_image_description(obj_gid, model=model)
+
+
+def reprocess_image_description(model, image_id):
+    """Manually regenerate an image description with an allowed Ollama model."""
+    if not image_id:
+        return {"status": "error", "reason": "Unknown image"}, 404
+    return _get_image_description(f'image::{image_id}', model=model, reprocess=True)
 
 def get_domain_description(domain_id, reprocess=True):
     model = get_default_image_description_model()
@@ -164,13 +191,14 @@ def get_domain_description(domain_id, reprocess=True):
     else:
         r = res.json()
         if r:
-            domain.add_description_model(model, r['response'])
+            response = _remove_thinking(r['response'])
+            domain.add_description_model(model, response)
             # index
             if search_engine.is_meilisearch_enabled():
                 search_engine.index_domain_description(domain_id)
 
-            print(r['response'])
-            return r['response'], 200
+            print(response)
+            return response, 200
     return None, 200
 
 def _create_domains_up_description():
@@ -245,7 +273,7 @@ def check_is_image_csam(obj_gid, image_description=False):
             # TODO LOG
             return {"status": "error", "reason": f"ollama requests error: {res.status_code}, {res.text}"}, 400
         else:
-            r = res.json()['response'].lower()
+            r = _remove_thinking(res.json()['response']).lower()
             print(r)
             if r:
                 if 'yes' in r:
@@ -281,7 +309,8 @@ def check_if_domain_csam(domain_id):
     else:
         r = res.json()
         if r:
-            if r['response'] == 'yes':
+            response = _remove_thinking(r['response']).lower()
+            if response == 'yes':
                 print('yes')
                 domain.add_tag('dark-web:topic="pornography-child-exploitation"')
 
