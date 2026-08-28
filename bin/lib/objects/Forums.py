@@ -629,18 +629,24 @@ class Forum(AbstractDaterangeObject):
             account = self.get_crawl_account(account_id)
             crawl_key = account.get_current_crawl_key()
             running_key = f'{self.id}:{account_id}'
-            incomplete_running_state = (
-                account.get_status() == 'crawling'
-                and (
-                    not crawl_key
-                    or not account.get_current_task_uuid()
-                    or r_crawler.zscore('forum:crawl:running', running_key) is None
+            status = account.get_status()
+            task_uuid = account.get_current_task_uuid()
+            is_registered_running = r_crawler.zscore('forum:crawl:running', running_key) is not None
+            inconsistent_running_state = (
+                (status == 'crawling' and not crawl_key)
+                or (
+                    crawl_key
+                    and (
+                        status != 'crawling'
+                        or not task_uuid
+                        or not is_registered_running
+                    )
                 )
             )
-            if incomplete_running_state:
+            if inconsistent_running_state:
                 if crawl_key:
                     self.fail_crawl_item(crawl_key, error='stale_crawl')
-                r_crawler.zrem('forum:crawl:running', f'{self.id}:{account_id}')
+                r_crawler.zrem('forum:crawl:running', running_key)
                 account.reset_crawl()
                 self.refresh_account_availability(account_id)
                 cleaned.append(account_id)
