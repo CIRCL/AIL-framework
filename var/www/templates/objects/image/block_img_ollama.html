@@ -4,8 +4,8 @@
         <div class="card-body py-2">
             {% if descriptions %}
                 {% for model, description in descriptions.items() %}
-                    <div class="ail-image-description ail-markdown mb-2" data-description-model="{{ model }}"
-                       style="white-space: pre-wrap; overflow-wrap: anywhere;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</div>
+                    <div class="ail-image-description ail-markdown mb-2 text-left" data-description-model="{{ model }}"
+                       style="overflow-wrap: anywhere;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</div>
                 {% endfor %}
                 {% if descriptions|length > 1 %}
                     <div class="text-right">
@@ -19,7 +19,7 @@
                     </div>
                 {% endif %}
             {% elif ollama_description %}
-                <div class="ail-markdown mb-2">{{ ollama_description }}</div>
+                <div class="ail-markdown mb-2 text-left">{{ ollama_description }}</div>
             {% endif %}
 
             {% if ollama_enabled %}
