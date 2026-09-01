@@ -2,19 +2,16 @@
 {% if ollama_enabled or descriptions or ollama_description %}
     <div class="card border-secondary">
         <div class="card-body py-2">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <strong><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Image description</strong>
-                {% if descriptions|length > 1 %}
-                    <span class="badge badge-light">{{ descriptions|length }} models</span>
-                {% endif %}
-            </div>
             {% if descriptions %}
                 {% set selected_model = 'qwen2.5vl' if 'qwen2.5vl' in descriptions else descriptions|list|first %}
                 {% for model, description in descriptions.items() %}
                     <div class="ail-image-description text-left" data-description-model="{{ model|e }}"
                          style="overflow-wrap: anywhere;{% if model != selected_model %} display: none;{% endif %}">
-                        <div class="small text-muted mb-2">
-                            Generated with <span class="badge badge-secondary">{{ model|e }}</span>
+                        <div class="small text-muted mb-2 d-flex align-items-center justify-content-between">
+                            <span>Generated with <span class="badge badge-secondary">{{ model|e }}</span></span>
+                            {% if descriptions|length > 1 %}
+                                <span class="badge badge-light">{{ descriptions|length }} models</span>
+                            {% endif %}
                         </div>
                         <div class="ail-markdown mb-2">{{ description|e }}</div>
                     </div>
@@ -54,10 +51,10 @@
                         {% else %}
                             <input type="hidden" name="model" value="{{ missing_models[0]|e }}">
                             <span class="small text-muted mr-2">
-                                Available model <span class="badge badge-secondary">{{ missing_models[0]|e }}</span>
+                                Generate another with <span class="badge badge-secondary">{{ missing_models[0]|e }}</span>
                             </span>
                         {% endif %}
-                        <button class="btn btn-sm {% if descriptions or ollama_description %}btn-outline-primary{% else %}btn-primary{% endif %}" type="submit">
+                        <button class="btn btn-sm btn-primary" type="submit">
                             <i class="fa-solid fa-magnifying-glass-plus"></i>
                             Generate description
                         </button>
