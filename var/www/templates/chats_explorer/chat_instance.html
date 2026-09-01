@@ -114,7 +114,7 @@
                         <tr data-chat-id="{{ chat['id'] }}">
                             <td>
                                 <img src="{% if chat['icon'] %}{{ url_for('objects_image.image', filename=chat['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
-                                     class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40">
+                                     class="rounded-circle mr-1" alt="{{ chat['id'] }}" width="40" height="40" loading="lazy">
                             </td>
                             <td><a href="{{ url_for('chats_explorer.chats_explorer_chat') }}?subtype={{ chat_instance['uuid'] }}&id={{ chat['id'] }}">{{ chat['id'] }}</a></td>
                             <td>
