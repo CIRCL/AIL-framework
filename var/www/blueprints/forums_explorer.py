@@ -27,6 +27,7 @@ from lib import crawlers
 from lib import Language
 from lib import ail_users
 from lib import images_engine
+from packages import Date
 
 config_loader = ConfigLoader()
 ail_base_url = config_loader.get_config_str("Notifications", "ail_domain")
@@ -53,6 +54,10 @@ def _get_forum_crawl_management():
     config = management.get('config', {})
     ail_url = ail_base_url.rstrip('/')
     for account in management.get('accounts', []):
+        last_used_at = account.get('last_used_at')
+        last_crawled_at = account.get('last_crawled_at')
+        account['last_used_at_display'] = Date.get_utc_datetime_from_timestamp(last_used_at) if last_used_at else None
+        account['last_crawled_at_display'] = Date.get_utc_datetime_from_timestamp(last_crawled_at) if last_crawled_at else None
         account['has_inflight_crawl'] = bool(account.get('current_crawl_key') and forum.get_inflight_crawl_item(account['current_crawl_key']))
         login_url = forum.get_url() or account.get('current_url')
         login_url = forums_viewer.apply_forum_current_domain(
