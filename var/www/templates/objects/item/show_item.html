@@ -634,11 +634,17 @@
 
       <ul class="nav nav-pills" id="pills-tab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" id="pills-content-tab" data-toggle="pill" href="#pills-content" role="tab" aria-controls="pills-content" aria-selected="true">Content</a>
+          <a class="nav-link active" id="pills-content-tab" data-toggle="pill" href="#pills-content" role="tab" aria-controls="pills-content" aria-selected="true">{% if meta['source'] == 'pdf' %}Markdown{% else %}Content{% endif %}</a>
         </li>
+        {% if meta['source'] == 'pdf' %}
+        <li class="nav-item">
+          <a class="nav-link" id="pills-text-tab" data-toggle="pill" href="#pills-text" role="tab" aria-controls="pills-text" aria-selected="false">Text</a>
+        </li>
+        {% else %}
         <li class="nav-item">
           <a class="nav-link" id="pills-html2text-tab" data-toggle="pill" href="#pills-html2text" role="tab" aria-controls="pills-html2text" aria-selected="false">html2text</a>
         </li>
+        {% endif %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Others</a>
           <div class="dropdown-menu">
@@ -653,15 +659,23 @@
 
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-content" role="tabpanel" aria-labelledby="pills-content-tab">
-            {% if not extracted %}
+            {% if meta['source'] == 'pdf' %}
+                <div class="border p-3 ail-markdown">{{ meta['content']|e }}</div>
+            {% elif not extracted %}
                 <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
             {% else %}
                 <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Matched indicators" data-content="<ul class=&quot;list-group list-group-flush&quot;>{% for r in row[3] %}<li class=&quot;list-group-item px-2 py-2&quot;><div class=&quot;d-flex align-items-start&quot;><svg height=&quot;26&quot; width=&quot;26&quot; class=&quot;mr-2 mt-1 flex-shrink-0&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg><div><div class=&quot;font-weight-bold text-capitalize&quot;>{{ extracted_matches[r[0]]['subtype']|replace('_', ' ') }}</div><div><span class=&quot;badge badge-light border&quot;>{{ extracted_matches[r[0]]['id'] }}</span></div>{% if extracted_matches[r[0]]['subtype'] == 'tracker' or extracted_matches[r[0]]['subtype'] == 'retro_hunt' %}{% if 'name' in extracted_matches[r[0]] %}<div class=&quot;small font-weight-bold mt-1&quot;>{{ extracted_matches[r[0]]['name'] }}</div>{% endif %}{% if 'description' in extracted_matches[r[0]] %}<div class=&quot;small text-muted mt-1&quot;>{{ extracted_matches[r[0]]['description'] }}</div>{% endif %}{% endif %}<div class=&quot;small mt-1&quot;><span class=&quot;text-muted&quot;>Matched value:</span> <b>{{ r[1] }}</b></div></div></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
         </div>
+        {% if meta['source'] == 'pdf' %}
+        <div class="tab-pane fade" id="pills-text" role="tabpanel" aria-labelledby="pills-text-tab">
+          <p class="my-0"><pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
+        </div>
+        {% else %}
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
           <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
         </div>
+        {% endif %}
       </div>
 
 
@@ -733,6 +747,13 @@
     });
     // $('[data-toggle="popover"]').popover();
 </script>
+
+{% if meta['source'] == 'pdf' %}
+<script type="module">
+    import { renderMarkdownElements } from "{{ url_for('static', filename='js/markdown-renderer.es.js') }}";
+    renderMarkdownElements();
+</script>
+{% endif %}
 
 </body>
 
