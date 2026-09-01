@@ -86,7 +86,7 @@
 </div></div></div>
 
 <div class="forum-board mb-4">
-  <div class="forum-board-header"><span>Accounts <span class="badge badge-light ml-1">{{ meta['accounts']|length }}</span> <small class="ml-2 font-weight-normal"><i class="far fa-clock"></i> All schedule times are UTC</small></span><a class="btn btn-sm btn-success" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#create-account"><i class="fas fa-plus"></i> Create account</a></div>
+  <div class="forum-board-header"><span>Accounts <span class="badge badge-light ml-1">{{ meta['accounts']|length }}</span> <small class="ml-2 font-weight-normal"><i class="far fa-clock"></i> All schedule times are UTC · Current time: {{ current_utc_time }}</small></span><a class="btn btn-sm btn-success" href="{{ url_for('forums_explorer.forum_explorer_crawler_edit', id=forum['id']) }}#create-account"><i class="fas fa-plus"></i> Create account</a></div>
   {% if meta['accounts'] %}
   {% for account in meta['accounts'] %}<div class="account-card">
     <div class="account-card-header"><div><i class="fas fa-user-circle fa-lg text-muted mr-1"></i><strong>{{ account['id'] }}</strong></div>

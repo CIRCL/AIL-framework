@@ -214,7 +214,12 @@ def forum_explorer_crawler_manage():
     meta = _get_forum_crawl_management()
     if isinstance(meta, tuple):
         return meta
-    return render_template('forums_explorer_crawler_manage.html', meta=meta, bootstrap_label=bootstrap_label)
+    return render_template(
+        'forums_explorer_crawler_manage.html',
+        meta=meta,
+        bootstrap_label=bootstrap_label,
+        current_utc_time=Date.get_current_utc_full_time(),
+    )
 
 
 @forums_explorer.route("/forums/explorer/crawler/manage/edit", methods=['GET'])
