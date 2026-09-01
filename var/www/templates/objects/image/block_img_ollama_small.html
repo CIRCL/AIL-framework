@@ -34,7 +34,7 @@
         {% endif %}
     </span>
     <script type="module">
-        import { createMarkdownRenderer } from "{{ url_for('static', filename='js/codemirror-yara.es.js') }}";
+        import { createMarkdownRenderer } from "{{ url_for('static', filename='js/markdown-renderer.es.js') }}";
 
         window.show_image_description_tooltip = function(container, description, model) {
             const trigger = $(container);
@@ -43,8 +43,8 @@
                 return;
             }
 
-            // Both values originate from object metadata. Build the popover with
-            // text nodes so neither HTML nor Markdown can inject DOM elements.
+            // Both values originate from object metadata. Use text nodes here;
+            // the Markdown renderer sanitizes its generated HTML before display.
             const content = $('<div>');
             if (model) {
                 content.append($('<div>').addClass('small text-muted mb-2').text(model));

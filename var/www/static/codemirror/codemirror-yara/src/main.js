@@ -1,8 +1,6 @@
 import { StreamLanguage } from "@codemirror/language";
 import { EditorView, basicSetup } from "codemirror"
 import { EditorState } from "@codemirror/state"
-import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language"
-import { markdown } from "@codemirror/lang-markdown"
 
 
 const yara = StreamLanguage.define({
@@ -81,45 +79,6 @@ const fixedHeightEditor = EditorView.theme({
   ".cm-scroller": { overflow: "auto" },
 })
 
-const markdownRendererTheme = EditorView.theme({
-  "&": { backgroundColor: "transparent" },
-  ".cm-scroller": { fontFamily: "inherit", overflow: "visible" },
-  ".cm-content": { padding: "0", whiteSpace: "pre-wrap", overflowWrap: "anywhere" },
-  ".cm-line": { padding: "0" },
-  ".cm-cursor, .cm-dropCursor": { display: "none" },
-  "&.cm-focused": { outline: "none" },
-})
-
-function createMarkdownRenderer(element, options={}) {
-  // Descriptions are untrusted. Keep them as text and let CodeMirror decorate
-  // its own DOM; never parse the Markdown as HTML or assign it to innerHTML.
-  const content = options.content ?? element.textContent
-  element.textContent = ''
-  element.dataset.markdownRendered = 'true'
-
-  return new EditorView({
-    state: EditorState.create({
-      doc: content,
-      extensions: [
-        markdown(),
-        syntaxHighlighting(defaultHighlightStyle),
-        EditorState.readOnly.of(true),
-        EditorView.editable.of(false),
-        EditorView.lineWrapping,
-        markdownRendererTheme,
-        ...(options.codemirror_extensions || [])
-      ],
-    }),
-    parent: element,
-  })
-}
-
-function renderMarkdownElements(root=document) {
-  return Array.from(root.querySelectorAll('.ail-markdown:not([data-markdown-rendered])'), (element) => {
-    return createMarkdownRenderer(element)
-  })
-}
-
 function createYaraEditor(textarea, options={}) {
   const parent = document.createElement('div')
   textarea.parentNode.appendChild(parent)
@@ -163,4 +122,4 @@ function createYaraEditor(textarea, options={}) {
   return view
 }
 
-export { createMarkdownRenderer, createYaraEditor, renderMarkdownElements }
+export { createYaraEditor }

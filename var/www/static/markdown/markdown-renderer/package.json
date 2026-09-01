@@ -1,14 +1,14 @@
 {
-  "name": "codemirror-yara",
+  "name": "ail-markdown-renderer",
   "private": true,
   "version": "0.0.0",
   "files": [
     "dist"
   ],
-  "module": "./dist/codemirror-yara.es.js",
+  "module": "./dist/markdown-renderer.es.js",
   "exports": {
     ".": {
-      "import": "./dist/codemirror-yara.es.js"
+      "import": "./dist/markdown-renderer.es.js"
     }
   },
   "scripts": {
@@ -20,6 +20,7 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
-    "codemirror": "6.0.2"
+    "dompurify": "3.4.14",
+    "marked": "18.0.11"
   }
 }
