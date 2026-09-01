@@ -2,42 +2,64 @@
 {% if ollama_enabled or descriptions or ollama_description %}
     <div class="card border-secondary">
         <div class="card-body py-2">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <strong><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Image description</strong>
+                {% if descriptions|length > 1 %}
+                    <span class="badge badge-light">{{ descriptions|length }} models</span>
+                {% endif %}
+            </div>
             {% if descriptions %}
+                {% set selected_model = 'qwen2.5vl' if 'qwen2.5vl' in descriptions else descriptions|list|first %}
                 {% for model, description in descriptions.items() %}
-                    <div class="ail-image-description ail-markdown mb-2 text-left" data-description-model="{{ model }}"
-                       style="overflow-wrap: anywhere;{% if model != 'qwen2.5vl' and ollama_description %} display: none;{% elif not ollama_description and not loop.first %} display: none;{% endif %}">{{ description }}</div>
+                    <div class="ail-image-description text-left" data-description-model="{{ model|e }}"
+                         style="overflow-wrap: anywhere;{% if model != selected_model %} display: none;{% endif %}">
+                        <div class="small text-muted mb-2">
+                            Generated with <span class="badge badge-secondary">{{ model|e }}</span>
+                        </div>
+                        <div class="ail-markdown mb-2">{{ description|e }}</div>
+                    </div>
                 {% endfor %}
                 {% if descriptions|length > 1 %}
-                    <div class="text-right">
-                        <label class="small text-muted mb-0 mr-1">Description</label>
+                    <div class="d-flex align-items-center justify-content-end border-top pt-2">
+                        <label class="small text-muted mb-0 mr-2">View description from</label>
                         <select class="custom-select custom-select-sm d-inline-block w-auto text-muted"
+                                aria-label="Select the model description to display"
                                 onchange="this.closest('.card-body').querySelectorAll('.ail-image-description').forEach(function (description) { description.style.display = description.dataset.descriptionModel === this.value ? '' : 'none'; }, this)">
                             {% for model in descriptions %}
-                                <option value="{{ model }}" {% if model == 'qwen2.5vl' %}selected{% endif %}>{{ model }}</option>
+                                <option value="{{ model|e }}" {% if model == selected_model %}selected{% endif %}>{{ model|e }}</option>
                             {% endfor %}
                         </select>
                     </div>
                 {% endif %}
             {% elif ollama_description %}
-                <div class="ail-markdown mb-2 text-left">{{ ollama_description }}</div>
+                <div class="small text-muted mb-2">
+                    Generated with <span class="badge badge-secondary">qwen2.5vl</span>
+                </div>
+                <div class="ail-markdown mb-2 text-left">{{ ollama_description|e }}</div>
+            {% else %}
+                <p class="small text-muted text-left mb-2">Generate a description of this image with an available vision model.</p>
             {% endif %}
 
             {% if ollama_enabled %}
                 {% set available_models = ollama_models|default(['qwen2.5vl']) %}
                 {% set missing_models = available_models|reject('in', descriptions)|list %}
                 {% if missing_models %}
-                    <form class="form-inline justify-content-end mt-2" method="get" action="{{ url_for('objects_item.image_describe') }}">
-                        <input type="hidden" name="gid" value="{{ image_gid }}">
+                    <form class="form-inline justify-content-end border-top pt-2 mt-2" method="get" action="{{ url_for('objects_item.image_describe') }}">
+                        <input type="hidden" name="gid" value="{{ image_gid|e }}">
                         {% if missing_models|length > 1 %}
-                            <select class="custom-select custom-select-sm mr-1" name="model" aria-label="Description model">
-                                {% for model in missing_models %}<option value="{{ model }}">{{ model }}</option>{% endfor %}
+                            <label class="small text-muted mb-0 mr-2" for="description-model-{{ image_gid|replace(':', '-')|e }}">Generate another with</label>
+                            <select class="custom-select custom-select-sm mr-2" id="description-model-{{ image_gid|replace(':', '-')|e }}" name="model">
+                                {% for model in missing_models %}<option value="{{ model|e }}">{{ model|e }}</option>{% endfor %}
                             </select>
                         {% else %}
-                            <input type="hidden" name="model" value="{{ missing_models[0] }}">
+                            <input type="hidden" name="model" value="{{ missing_models[0]|e }}">
+                            <span class="small text-muted mr-2">
+                                Available model <span class="badge badge-secondary">{{ missing_models[0]|e }}</span>
+                            </span>
                         {% endif %}
-                        <button class="btn btn-sm {% if descriptions or ollama_description %}btn-outline-secondary{% else %}btn-primary{% endif %}" type="submit">
+                        <button class="btn btn-sm {% if descriptions or ollama_description %}btn-outline-primary{% else %}btn-primary{% endif %}" type="submit">
                             <i class="fa-solid fa-magnifying-glass-plus"></i>
-                            {% if descriptions or ollama_description %}Add description{% else %}Generate description{% endif %}
+                            Generate description
                         </button>
                     </form>
                 {% endif %}
