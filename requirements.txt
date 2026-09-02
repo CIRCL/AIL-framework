@@ -11,7 +11,7 @@ git+https://github.com/MISP/PyMISPGalaxies
 redis>4.4.4,<=7.4.1
 python-magic>0.4.15
 yara-python>4.0.2
-pyfaup-rs
+pyfaup-rs>=0.4.18
 orjson
 
 # AIL Sync
@@ -103,8 +103,6 @@ PySocks>=1.7.1
 pycountry>=20.7.3
 tempolocus>=1.0.0
 
-idna
-publicsuffixlist
 requests
 
 chardet

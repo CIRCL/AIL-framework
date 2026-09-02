@@ -25,7 +25,6 @@ from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Domains import Domain
 from lib import crawlers
-from lib import psl_faup
 
 class Onion(AbstractModule):
     """docstring for Onion module."""
@@ -62,9 +61,8 @@ class Onion(AbstractModule):
             # url
             if value.startswith("://"):
                 value = value[3:]
-            url_unpack = crawlers.unpack_url(value)
-            if url_unpack:
-                domain = url_unpack['domain']
+            domain = crawlers.get_url_domain(value)
+            if domain:
                 if crawlers.is_valid_onion_domain(domain):
                     extracted.append([start, end, value, f'tag:{tag}'])
         return extracted
@@ -95,7 +93,7 @@ class Onion(AbstractModule):
                     domains.add(domain)
                     onion_urls.append(url)
                 else:
-                    domain = psl_faup.get_domain(url)
+                    domain = crawlers.get_url_domain(url)
                     if domain:
                         if crawlers.is_valid_onion_domain(domain):
                             domains.add(domain)
@@ -129,7 +127,7 @@ class Onion(AbstractModule):
                         i2p_urls.append(dom_url)
                         continue
 
-            domain = psl_faup.get_domain(url)
+            domain = crawlers.get_url_domain(url)
             if domain:
                 if crawlers.is_valid_i2p_domain(domain):
                     domains.add(domain)

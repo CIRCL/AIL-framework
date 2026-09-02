@@ -15,6 +15,8 @@ import os
 import sys
 import pylibinjection
 
+from pyfaup import Url
+
 from urllib.parse import unquote
 
 
@@ -23,7 +25,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
-from lib import psl_faup
 
 class LibInjection(AbstractModule):
     """docstring for LibInjection module."""
@@ -36,18 +37,18 @@ class LibInjection(AbstractModule):
     def compute(self, message):
         url = message
 
-        url_parsed = psl_faup.unparse_url(url)
+        url_parsed = Url(url)
         # # TODO: # FIXME: remove me
         try:
-            resource_path = url_parsed['resource_path'].encode()
+            resource_path = url_parsed.path.encode()
         except:
-            resource_path = url_parsed['resource_path']
+            resource_path = url_parsed.path
 
         # # TODO: # FIXME: remove me
         try:
-            query_string = url_parsed['query_string'].encode()
+            query_string = url_parsed.query.encode()
         except:
-            query_string = url_parsed['query_string']
+            query_string = url_parsed.query
 
         result_path = {'sqli': False}
         result_query = {'sqli': False}

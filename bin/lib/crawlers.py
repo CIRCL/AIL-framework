@@ -30,6 +30,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from ipaddress import ip_address
 from urllib.parse import urlparse, urljoin, urlsplit
+from pyfaup import Host, Url
 from bs4 import BeautifulSoup
 from zipfile import ZipFile
 
@@ -59,7 +60,6 @@ from lib.objects import Screenshots
 from lib.objects import Titles
 from lib.objects.Items import Item
 from lib import Tag
-from lib import psl_faup
 
 config_loader = ConfigLoader()
 r_db = config_loader.get_db_conn("Kvrocks_DB")
@@ -143,20 +143,22 @@ def delete_forum_error_html(forum_id, account_id):
 # TODO FILTER URL ???
 
 def api_get_onion_lookup(domain):  # TODO check if object process done ???
-    domain = domain.lower().strip()
-    words = domain.split()
-    if len(words) > 1:
-        for word in words:
-            if '.onion' in word:
-                domain = word
-    
-    if '.onion' not in domain:
-        return {'error': 'Invalid Onion Domain', 'domain': domain}, 404
+    value = domain.lower().strip()
+    try:
+        if '://' in value[:10]:
+            parsed_url = Url(value)
+            if parsed_url.scheme not in {'http', 'https'} or parsed_url.username or parsed_url.password:
+                raise ValueError
+            host = parsed_url.host
+        else:
+            host = Host(value)
+    except ValueError:
+        return {'error': 'Invalid Onion Domain', 'domain': value}, 404
 
-    url_unpack = unpack_url(domain)
-    if not url_unpack:
-        return {'error': 'Invalid Domain', 'domain': domain}, 404
-    domain = url_unpack['domain']
+    if not host.is_hostname() or not host.suffix() or str(host.suffix()) != 'onion':
+        return {'error': 'Invalid Onion Domain', 'domain': value}, 404
+
+    domain = str(host)
     dom = Domains.Domain(domain)
     if not is_valid_onion_v3_domain(domain):
         return {'error': 'Invalid Domain', 'domain': domain}, 404
@@ -194,13 +196,9 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
 def api_get_domain_from_url(url):
     url = url.lower()
     try:
-        url_unpack = unpack_url(url)
-    except AttributeError:
+        return get_url_domain(url)
+    except (AttributeError, ValueError):
         return url
-    if url_unpack:
-        return url_unpack['domain']
-    else:
-        return None
 
 ## onion correlation cache ##
 
@@ -352,40 +350,22 @@ def is_filtered_i2p_page(dom_hash_id):
 
 
 def is_valid_domain(domain):
-    unpack_domain = psl_faup.get_domain(domain)
-    return domain == unpack_domain
-
-def unpack_url(url):
-    url_decoded = psl_faup.unparse_url(url)
-    if not url_decoded:
-        return None
-    port = url_decoded['port']
-    if not port:
-        if url_decoded['scheme'] == 'http':
-            port = 80
-        elif url_decoded['scheme'] == 'https':
-            port = 443
-        else:
-            port = 80
-        url_decoded['port'] = port
-    # decode URL
     try:
-        url = url_decoded['url'].decode()
-    except AttributeError:
-        url = url_decoded['url']
-    # if not url_decoded['scheme']:
-    #     url = f'http://{url}'
-
-    # Fix case
-    url_decoded['domain'] = url_decoded['domain'].lower()
-    url_decoded['url'] = url.replace(url_decoded['host'], url_decoded['host'].lower(), 1)
-    return url_decoded
+        host = Host(domain)
+    except ValueError:
+        return False
+    return domain == (host.domain() or str(host))
 
 def get_url_domain(url):
-    url_decoded = psl_faup.unparse_url(url)
-    if not url_decoded:
+    if '://' not in url[:10]:
+        url = f'http://{url}'
+    try:
+        host = Url(url).host
+    except ValueError:
         return None
-    return url_decoded['domain'].lower()
+    if host is None:
+        return None
+    return (host.domain() or str(host)).lower()
 
 def is_global_url(url):
     """Return True when the URL resolves only to global IP addresses."""
@@ -519,8 +499,8 @@ def extract_favicon_from_html(html, url):
     #   - <meta name="msapplication-config" content="/icons/browserconfig.xml">
 
     # Root Favicon
-    url_decoded = psl_faup.unparse_url(url)
-    root_domain = f"{url_decoded['scheme']}://{url_decoded['domain']}"
+    parsed_url = Url(url)
+    root_domain = f'{parsed_url.scheme}://{parsed_url.host.domain() or parsed_url.host}'
     default_icon = f'{root_domain}/favicon.ico'
     favicons_urls.add(default_icon)
     # print(default_icon)
@@ -773,7 +753,8 @@ def extract_hhhash(har, domain, date):
             if entrie.get('response').get('status') == 200:  # != 301:
                 # print(url, entrie.get('response').get('status'))
 
-                domain_url = psl_faup.get_domain(url)
+                host = Url(url).host
+                domain_url = host.domain() or str(host)
                 if domain_url == domain:
 
                     headers = entrie.get('response').get('headers')
@@ -1825,8 +1806,7 @@ class CrawlerCapturesProcessor:
         # CHECK LAST URL
         if capture.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
             last_url = capture['last_redirected_url']
-            unpacked_last_url = unpack_url(last_url)
-            new_domain = unpacked_last_url['domain']
+            new_domain = get_url_domain(last_url)
             # CHECK REDIRECTION
             if new_domain != self.domain.id and not self.root_item_id:
                 if new_domain == 'localhost':
@@ -2325,9 +2305,7 @@ class CrawlerSchedule:
         if self.exists():
             raise Exception('Error: Monitor already exists')
 
-        url_decoded = unpack_url(url)
-        url = url_decoded['url']
-
+        domain = get_url_domain(url)
         self._set_field('date', datetime.now().strftime("%Y-%m-%d"))
         self._set_field('frequency', frequency)
         self._set_field('user', user)
@@ -2342,7 +2320,7 @@ class CrawlerSchedule:
         if header:
             self._set_field('header', header)
 
-        if url_decoded['domain'].endswith('i2p'):
+        if domain and domain.endswith('i2p'):
             proxy = None
         if proxy:
             if proxy == 'web' or proxy == 'i2p':
@@ -3220,9 +3198,9 @@ class CrawlerTask:
         if self.exists():
             raise Exception('Error: Task already exists')
 
-        url_decoded = unpack_url(url)
-        url = url_decoded['url']
-        domain = url_decoded['domain']
+        domain = get_url_domain(url)
+        if not domain:
+            raise ValueError(f'Invalid URL or domain: {url}')
 
         dom = Domains.Domain(domain)
 
@@ -3581,11 +3559,9 @@ def get_crawler_all_types():
 
 
 def is_redirection(domain, last_url):
-    url = urlparse(last_url)
-    last_domain = url.netloc
-    last_domain = last_domain.split('.')
-    last_domain = '{}.{}'.format(last_domain[-2], last_domain[-1])
-    return domain != last_domain
+    host = Url(last_url).host
+    last_domain = host.domain() or str(host)
+    return domain.lower() != last_domain.lower() if last_domain else True
 
 def create_item_id(item_dir, domain, c_uuid=None):
     if not c_uuid:

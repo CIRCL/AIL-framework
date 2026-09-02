@@ -472,8 +472,7 @@ class Crawler(AbstractModule):
                 self.logger.warning(f'Error something fails, redirect: about:blank')
                 return False
 
-            unpacked_last_url = crawlers.unpack_url(last_url)
-            current_domain = unpacked_last_url['domain']
+            current_domain = crawlers.get_url_domain(last_url)
             # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
                 if current_domain == 'localhost':
