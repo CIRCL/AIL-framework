@@ -625,7 +625,9 @@ function reset_password() {
 
 function launch_all {
     checking_configuration;
-    update;
+    if [[ "${AIL_SKIP_UPDATE:-0}" != "1" ]]; then
+        update;
+    fi
     launch_redis;
     launch_kvrocks;
     launch_scripts;
