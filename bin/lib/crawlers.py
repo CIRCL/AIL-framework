@@ -153,21 +153,21 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
         else:
             host = Host(value)
     except ValueError:
-        return {'error': 'Invalid Onion Domain', 'domain': value}, 404
+        return {'error': 'Invalid Onion Domain', 'domain': value}, 400
 
     if not host.is_hostname() or not host.suffix() or str(host.suffix()) != 'onion':
-        return {'error': 'Invalid Onion Domain', 'domain': value}, 404
+        return {'error': 'Invalid Onion Domain', 'domain': value}, 400
 
     domain = str(host)
     if not is_valid_onion_v3_domain(domain):
-        return {'error': 'Invalid Domain', 'domain': domain}, 404
+        return {'error': 'Invalid Domain', 'domain': domain}, 400
     dom = Domains.Domain(domain)
     if not dom.exists():
         if is_crawler_activated():
             create_task(domain, parent='lookup', priority=0, har=D_HAR, screenshot=D_SCREENSHOT)
-        return {'error': 'domain not found', 'domain': domain}, 404
+        return {'error': 'domain not found', 'domain': domain}, 200
     if not dom.was_up():
-        return {'error': 'domain not found', 'domain': domain}, 404
+        return {'error': 'domain not found', 'domain': domain}, 200
     # else
     ## TODO check if object process done -> return result if more than one history
     #   #-> check item history
