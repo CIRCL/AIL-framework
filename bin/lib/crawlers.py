@@ -159,9 +159,9 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
         return {'error': 'Invalid Onion Domain', 'domain': value}, 404
 
     domain = str(host)
-    dom = Domains.Domain(domain)
     if not is_valid_onion_v3_domain(domain):
         return {'error': 'Invalid Domain', 'domain': domain}, 404
+    dom = Domains.Domain(domain)
     if not dom.exists():
         if is_crawler_activated():
             create_task(domain, parent='lookup', priority=0, har=D_HAR, screenshot=D_SCREENSHOT)
@@ -191,7 +191,7 @@ def api_get_onion_lookup(domain):  # TODO check if object process done ???
         for h in dom.get_correlation('title').get('title', []):
             t = Titles.Title(h[1:])
             meta['titles'].append(t.get_content())
-    return meta
+    return meta, 200
 
 def api_get_domain_from_url(url):
     url = url.lower()
