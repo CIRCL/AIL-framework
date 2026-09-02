@@ -193,7 +193,7 @@
                             {% if not meta['enabled'] %}
                                 <span class="badge badge-danger"><i class="fas fa-pause-circle"></i> Disabled</span>
                             {% elif meta['paused'] %}
-                                <span class="badge badge-warning"><i class="fas fa-pause-circle"></i> Paused</span>
+                                <span class="badge badge-info"><i class="fas fa-pause-circle"></i> Paused</span>
                             {% else %}
                                 <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
                             {% endif %}
@@ -434,7 +434,7 @@
                                         <input type="hidden" name="enabled" value="{% if meta['enabled'] %}false{% else %}true{% endif %}">
                                         {% if meta['enabled'] %}
                                             <button type="submit" class="btn btn-danger">
-                                                <i class="fas fa-pause-circle"></i> Disable Tracker
+                                                <i class="fas fa-ban"></i> Disable Tracker
                                             </button>
                                         {% else %}
                                             <button type="submit" class="btn btn-success">

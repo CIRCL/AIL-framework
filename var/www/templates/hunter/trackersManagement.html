@@ -286,6 +286,16 @@
                 {% endif %}
             </td>
 
+            <td class="text-center align-middle">
+                {% if not tracker['enabled'] %}
+                    <span class="badge badge-danger"><i class="fas fa-ban"></i> Disabled</span>
+                {% elif tracker['paused'] %}
+                    <span class="badge badge-info"><i class="fas fa-pause-circle"></i> Paused</span>
+                {% else %}
+                    <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
+                {% endif %}
+            </td>
+
             {% if is_admin %}
                 <td>
                     {% if tracker['user'] %}
@@ -339,6 +349,7 @@
                             <tr>
                                 <th>Type</th>
                                 <th>What is being tracked</th>
+                                <th>Status</th>
                                 {% if is_admin %}<th>Owner</th>{% endif %}
                                 <th>Created</th>
                                 <th>First match</th>
