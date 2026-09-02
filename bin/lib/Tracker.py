@@ -117,6 +117,83 @@ class Tracker:
     def exists(self):
         return r_tracker.exists(f'tracker:{self.uuid}')
 
+    def is_enabled(self):
+        return not r_tracker.sismember('trackers:disabled', self.uuid)
+
+    def is_paused(self):
+        return r_tracker.sismember('trackers:paused', self.uuid)
+
+    def is_active(self):
+        return self.is_enabled() and not self.is_paused()
+
+    def _get_tracked_obj_types(self):
+        filters = self.get_filters()
+        return filters.keys() if filters else get_objects_tracked()
+
+    def _add_active_indexes(self, tracker_type=None, tracked=None, obj_types=None):
+        tracker_type = tracker_type or self.get_type()
+        tracked = tracked or self.get_tracked()
+        obj_types = obj_types or self._get_tracked_obj_types()
+        for obj_type in obj_types:
+            r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
+            r_tracker.sadd(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
+
+    def _remove_active_indexes(self, tracker_type=None, tracked=None, obj_types=None):
+        tracker_type = tracker_type or self.get_type()
+        tracked = tracked or self.get_tracked()
+        obj_types = obj_types or self._get_tracked_obj_types()
+        tracker_key = f'trackers:uuid:{tracker_type}:{tracked}'
+        for obj_type in obj_types:
+            r_tracker.srem(tracker_key, f'{self.uuid}:{obj_type}')
+            if not any(res.rsplit(':', 1)[-1] == obj_type for res in r_tracker.smembers(tracker_key)):
+                r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
+
+    def _sync_active_indexes(self):
+        if self.is_active():
+            self._add_active_indexes()
+        else:
+            self._remove_active_indexes()
+
+    def enable(self):
+        if self.is_enabled():
+            return False
+        r_tracker.srem('trackers:disabled', self.uuid)
+        if self.exists():
+            tracker_type = self.get_type()
+            self._sync_active_indexes()
+            trigger_trackers_refresh(tracker_type)
+        return True
+
+    def disable(self):
+        if not self.is_enabled():
+            return False
+        r_tracker.sadd('trackers:disabled', self.uuid)
+        if self.exists():
+            tracker_type = self.get_type()
+            self._sync_active_indexes()
+            trigger_trackers_refresh(tracker_type)
+        return True
+
+    def pause(self):
+        if self.is_paused():
+            return False
+        r_tracker.sadd('trackers:paused', self.uuid)
+        if self.exists():
+            tracker_type = self.get_type()
+            self._sync_active_indexes()
+            trigger_trackers_refresh(tracker_type)
+        return True
+
+    def resume(self):
+        if not self.is_paused():
+            return False
+        r_tracker.srem('trackers:paused', self.uuid)
+        if self.exists():
+            tracker_type = self.get_type()
+            self._sync_active_indexes()
+            trigger_trackers_refresh(tracker_type)
+        return True
+
     def _exists_field(self, field):
         return r_tracker.hexists(f'tracker:{self.uuid}', field)
 
@@ -322,9 +399,7 @@ class Tracker:
         filters = self.get_filters()
         if not filters:
             filters = get_objects_tracked()
-        for obj_type in filters:
-            r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
-            r_tracker.srem(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
+        self._remove_active_indexes(tracker_type=tracker_type, tracked=to_track, obj_types=filters)
         r_tracker.hdel(f'tracker:{self.uuid}', 'filters')
 
     def get_tracked(self):
@@ -426,6 +501,12 @@ class Tracker:
                 'date': self.get_date(),
                 'first_seen': self.get_first_seen(),
                 'last_seen': self.get_last_seen()}
+        if 'enabled' in options:
+            meta['enabled'] = self.is_enabled()
+        if 'paused' in options:
+            meta['paused'] = self.is_paused()
+        if 'active' in options:
+            meta['active'] = self.is_active()
         if 'org' in options:
             meta['org'] = self.get_org()
             if 'org_name' in options:
@@ -658,6 +739,9 @@ class Tracker:
         if self.exists():
             raise Exception('Error: Tracker already exists')
 
+        self.enable()
+        r_tracker.srem('trackers:paused', self.uuid)
+
         # YARA
         if tracker_type == 'yara_custom' or tracker_type == 'yara_default':
             to_track = save_yara_rule(tracker_type, to_track, tracker_uuid=self.uuid)
@@ -709,9 +793,7 @@ class Tracker:
                 filters[obj_type] = {}
         else:
             self.set_filters(filters)
-        for obj_type in filters:
-            r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
-            r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
+        self._sync_active_indexes()
 
         self._set_field('last_change', time.time())
         self._add_to_owner_dashboard(user_id)
@@ -803,9 +885,7 @@ class Tracker:
                 filters[obj_type] = {}
         else:
             self.set_filters(filters)
-        for obj_type in filters:
-            r_tracker.sadd(f'trackers:objs:{tracker_type}:{obj_type}', to_track)
-            r_tracker.sadd(f'trackers:uuid:{tracker_type}:{to_track}', f'{self.uuid}:{obj_type}')
+        self._sync_active_indexes()
 
         self._set_field('last_change', time.time())
 
@@ -831,9 +911,8 @@ class Tracker:
                     os.remove(filepath)
 
         # Filters
-        for obj_type in get_objects_tracked():
-            r_tracker.srem(f'trackers:objs:{tracker_type}:{obj_type}', tracked)
-            r_tracker.srem(f'trackers:uuid:{tracker_type}:{tracked}', f'{self.uuid}:{obj_type}')
+        self._remove_active_indexes(tracker_type=tracker_type, tracked=tracked,
+                                    obj_types=get_objects_tracked())
 
         self._del_mails()
         self._del_tags()
@@ -859,6 +938,8 @@ class Tracker:
         r_tracker.srem(f'all:tracker_uuid:{tracker_type}:{tracked}', self.uuid)
         r_tracker.srem('trackers:all', self.uuid)
         r_tracker.srem(f'trackers:all:{tracker_type}', self.uuid)
+        r_tracker.srem('trackers:disabled', self.uuid)
+        r_tracker.srem('trackers:paused', self.uuid)
         ail_orgs.remove_obj_to_org(self.get_org(), 'tracker', self.uuid)
         # meta
         r_tracker.delete(f'tracker:{self.uuid}')
@@ -1429,6 +1510,58 @@ def api_delete_tracker(data, user_org, user_id, user_role):
 
     tracker = Tracker(tracker_uuid)
     return tracker.delete(), 200
+
+def api_set_tracker_enabled(data, user_role):
+    if user_role != 'admin':
+        return {"status": "error", "reason": "Access Denied"}, 403
+
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_uuid(tracker_uuid)
+    if res:
+        return res
+
+    enabled = data.get('enabled')
+    if isinstance(enabled, str):
+        if enabled.lower() in {'1', 'true'}:
+            enabled = True
+        elif enabled.lower() in {'0', 'false'}:
+            enabled = False
+    if not isinstance(enabled, bool):
+        return {"status": "error", "reason": "Invalid tracker state"}, 400
+
+    tracker = Tracker(tracker_uuid)
+    if enabled:
+        tracker.enable()
+    else:
+        tracker.disable()
+    return {'uuid': tracker_uuid, 'enabled': tracker.is_enabled()}, 200
+
+def api_set_tracker_paused(data, user_org, user_id, user_role):
+    tracker_uuid = data.get('uuid')
+    res = api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    paused = data.get('paused')
+    if isinstance(paused, str):
+        if paused.lower() in {'1', 'true'}:
+            paused = True
+        elif paused.lower() in {'0', 'false'}:
+            paused = False
+    if not isinstance(paused, bool):
+        return {"status": "error", "reason": "Invalid tracker state"}, 400
+
+    tracker = Tracker(tracker_uuid)
+    if paused:
+        tracker.pause()
+    else:
+        tracker.resume()
+    return {
+        'uuid': tracker_uuid,
+        'enabled': tracker.is_enabled(),
+        'paused': tracker.is_paused(),
+        'active': tracker.is_active()
+    }, 200
 
 def api_tracker_add_object(data, user_org, user_id, user_role):
     tracker_uuid = data.get('uuid')

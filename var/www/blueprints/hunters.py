@@ -252,9 +252,10 @@ def show_tracker():
         date_to = date_to.replace('-', '')
 
     tracker = Tracker.Tracker(tracker_uuid)
-    meta = tracker.get_meta(options={'description', 'level', 'mails', 'org', 'org_name', 'filters', 'sparkline', 'tags',
+    meta = tracker.get_meta(options={'active', 'description', 'enabled', 'level', 'mails', 'org', 'org_name', 'paused', 'filters', 'sparkline', 'tags',
                                      'filter_duplicate_notification',
                                      'user', 'webhooks', 'nb_objs', 'objs_stats', 'years'})
+    can_edit = Tracker.api_check_tracker_acl(tracker_uuid, user_org, user_id, user_role, 'edit') is None
 
     if meta['type'] == 'yara':
         yara_rule_content = Tracker.get_yara_rule_content(meta['tracked'])
@@ -293,7 +294,9 @@ def show_tracker():
                             rule_content=yara_rule_content,
                             typo_squatting=typo_squatting,
                             filter_obj_types=filter_obj_types,
-                            bootstrap_label=bootstrap_label)
+                            bootstrap_label=bootstrap_label,
+                            is_admin=current_user.is_admin(),
+                            can_edit=can_edit)
 
 
 @hunters.route('/tracker/export/markdown', methods=['GET'])
@@ -555,6 +558,34 @@ def tracker_delete():
         return create_json_response(res[0], res[1])
     else:
         return redirect(url_for('hunters.trackers_dashboard'))
+
+@hunters.route('/tracker/status', methods=['POST'])
+@login_required
+@login_admin
+def tracker_status():
+    tracker_uuid = request.form.get('uuid')
+    res = Tracker.api_set_tracker_enabled(
+        {'uuid': tracker_uuid, 'enabled': request.form.get('enabled')},
+        current_user.get_role()
+    )
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
+
+@hunters.route('/tracker/pause', methods=['POST'])
+@login_required
+@login_user_no_api
+def tracker_pause():
+    tracker_uuid = request.form.get('uuid')
+    res = Tracker.api_set_tracker_paused(
+        {'uuid': tracker_uuid, 'paused': request.form.get('paused')},
+        current_user.get_org(),
+        current_user.get_user_id(),
+        current_user.get_role()
+    )
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid))
 
 
 @hunters.route("/tracker/graph/json", methods=['GET'])

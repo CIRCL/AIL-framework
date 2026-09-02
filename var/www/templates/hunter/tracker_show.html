@@ -157,6 +157,27 @@
 
             <div class="row">
                 <div class="col-12 my-2">
+                    {% if not meta['enabled'] %}
+                        <div class="alert alert-danger border-danger shadow-sm py-4" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-pause-circle fa-3x mr-3" aria-hidden="true"></i>
+                                <div>
+                                    <h4 class="alert-heading mb-1">This tracker is disabled</h4>
+                                    <p class="lead mb-0">An administrator disabled this tracker. New objects are not being matched.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif meta['paused'] %}
+                        <div class="alert alert-warning border-warning shadow-sm py-4" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-pause-circle fa-3x mr-3" aria-hidden="true"></i>
+                                <div>
+                                    <h4 class="alert-heading mb-1">This tracker is paused</h4>
+                                    <p class="lead mb-0">New objects are not being matched while this tracker is paused.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                     <div class="card">
                         <div class="card-header bg-dark text-white">
                             <span class="badge badge-light lex-row-reverse float-right">
@@ -169,6 +190,13 @@
                                     {{ meta['uuid'] }}
                                 {% endif %}
                             </h4>
+                            {% if not meta['enabled'] %}
+                                <span class="badge badge-danger"><i class="fas fa-pause-circle"></i> Disabled</span>
+                            {% elif meta['paused'] %}
+                                <span class="badge badge-warning"><i class="fas fa-pause-circle"></i> Paused</span>
+                            {% else %}
+                                <span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>
+                            {% endif %}
                         </div>
                         <div class="card-body bg-light">
                             <div class="tracker-dashboard-grid">
@@ -385,6 +413,36 @@
 
                         <div class="card-footer bg-white border-0 pt-0">
                             <div class="d-flex flex-wrap justify-content-end">
+                                {% if can_edit %}
+                                    <form action="{{ url_for('hunters.tracker_pause') }}" method="post" class="mr-2">
+                                        <input type="hidden" name="uuid" value="{{ meta['uuid'] }}">
+                                        <input type="hidden" name="paused" value="{% if meta['paused'] %}false{% else %}true{% endif %}">
+                                        {% if meta['paused'] %}
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-play-circle"></i> Resume Tracker
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-pause-circle"></i> Pause Tracker
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                {% endif %}
+                                {% if is_admin %}
+                                    <form action="{{ url_for('hunters.tracker_status') }}" method="post" class="mr-2">
+                                        <input type="hidden" name="uuid" value="{{ meta['uuid'] }}">
+                                        <input type="hidden" name="enabled" value="{% if meta['enabled'] %}false{% else %}true{% endif %}">
+                                        {% if meta['enabled'] %}
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-pause-circle"></i> Disable Tracker
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-play-circle"></i> Enable Tracker
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                {% endif %}
                                 <a href="{{ url_for('hunters.tracker_delete') }}?uuid={{ meta['uuid'] }}" style="font-size: 15px">
                                     <button class='btn btn-danger'><i class="fas fa-trash-alt"></i></button>
                                 </a>
