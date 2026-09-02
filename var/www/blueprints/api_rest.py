@@ -330,7 +330,8 @@ def objects_chat_thread_messages():
 @api_rest.route("api/v1/lookup/onion/<domain>", methods=['GET'])
 @token_required('user')
 def api_lookup_onion(domain):
-    return create_json_response(crawlers.api_get_onion_lookup(domain), 200)
+    response, status_code = crawlers.api_get_onion_lookup(domain)
+    return create_json_response(response, status_code)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW
@@ -407,4 +408,3 @@ def v1_user_create():
         return create_json_response(r[0], r[1])
     else:
         return create_json_response({'status': 'error', 'reason': 'Invalid user_id'}, 400)
-
