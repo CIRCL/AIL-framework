@@ -418,11 +418,11 @@
                                         <input type="hidden" name="uuid" value="{{ meta['uuid'] }}">
                                         <input type="hidden" name="paused" value="{% if meta['paused'] %}false{% else %}true{% endif %}">
                                         {% if meta['paused'] %}
-                                            <button type="submit" class="btn btn-success">
+                                            <button type="submit" class="btn btn-primary">
                                                 <i class="fas fa-play-circle"></i> Resume Tracker
                                             </button>
                                         {% else %}
-                                            <button type="submit" class="btn btn-warning">
+                                            <button type="submit" class="btn btn-secondary">
                                                 <i class="fas fa-pause-circle"></i> Pause Tracker
                                             </button>
                                         {% endif %}
@@ -433,7 +433,7 @@
                                         <input type="hidden" name="uuid" value="{{ meta['uuid'] }}">
                                         <input type="hidden" name="enabled" value="{% if meta['enabled'] %}false{% else %}true{% endif %}">
                                         {% if meta['enabled'] %}
-                                            <button type="submit" class="btn btn-warning">
+                                            <button type="submit" class="btn btn-danger">
                                                 <i class="fas fa-pause-circle"></i> Disable Tracker
                                             </button>
                                         {% else %}
