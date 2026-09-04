@@ -11,6 +11,8 @@ import time
 import magic
 from urllib.parse import urlsplit, urlunsplit
 
+from forum_extractor import list_forum_types
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -191,6 +193,7 @@ def get_forum_crawl_management(forum_id):
         'forum': forum.get_meta(options=_FORUM_OPTIONS, flask_context=True),
         'config': config,
         'accounts': accounts,
+        'parser_types': sorted(list_forum_types()),
     }, 200
 
 def update_forum_crawl_config(forum_id, data):
@@ -201,6 +204,11 @@ def update_forum_crawl_config(forum_id, data):
     current_domain = _normalize_forum_domain(current_domain_input)
     if current_domain_input and not current_domain:
         return {"status": "error", "error": "Invalid current forum domain"}, 400
+    forum_type = None
+    if 'forum_type' in data:
+        forum_type = (data.get('forum_type') or '').strip()
+        if forum_type not in list_forum_types():
+            return {"status": "error", "error": "Invalid forum parser type"}, 400
     config = {
         'current_domain': current_domain,
         'proxy': data.get('proxy'),
@@ -222,6 +230,8 @@ def update_forum_crawl_config(forum_id, data):
     if current_domain and forum.get_url():
         forum.set_url(apply_forum_current_domain(forum.get_url(), current_domain))
     meta = forum.set_crawl_config(config)
+    if forum_type:
+        forum.set_forum_type(forum_type)
     forum.refresh_accounts_availability()
     return meta, 200
 

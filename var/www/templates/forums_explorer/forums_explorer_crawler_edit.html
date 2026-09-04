@@ -119,8 +119,9 @@
   <div class="form-row">
     <div class="form-group col-md-2"><label>enabled</label><input type="checkbox" name="enabled" class="form-control" {% if config.get('enabled') %}checked{% endif %}></div>
     <div class="form-group col-md-2"><label>javascript</label><input type="checkbox" name="javascript" class="form-control" {% if config.get('javascript') %}checked{% endif %}></div>
-    <div class="form-group col-md-4"><label>current_domain</label><input class="form-control" name="current_domain" placeholder="forum.example" value="{{ config.get('current_domain') or '' }}"></div>
-    <div class="form-group col-md-4"><label>proxy</label><input class="form-control" name="proxy" value="{{ config.get('proxy') or '' }}"></div>
+    <div class="form-group col-md-3"><label>Parser type</label><select class="form-control" name="forum_type" required>{% for parser_type in meta['parser_types'] %}<option value="{{ parser_type }}" {% if forum.get('forum_type') == parser_type %}selected{% endif %}>{{ parser_type }}</option>{% endfor %}</select></div>
+    <div class="form-group col-md-3"><label>current_domain</label><input class="form-control" name="current_domain" placeholder="forum.example" value="{{ config.get('current_domain') or '' }}"></div>
+    <div class="form-group col-md-2"><label>proxy</label><input class="form-control" name="proxy" value="{{ config.get('proxy') or '' }}"></div>
   </div>
   <div class="form-row">
     <div class="form-group col-md-12"><label>default_referer</label><input class="form-control" name="default_referer" value="{{ config.get('default_referer') or '' }}"></div>

@@ -401,6 +401,9 @@ class Forum(AbstractDaterangeObject):
     def get_forum_type(self):
         return self._get_field('forum_type')
 
+    def set_forum_type(self, forum_type):
+        self._set_field('forum_type', forum_type)
+
     def get_name(self):
         return self._get_field('name')
 
@@ -543,7 +546,7 @@ class Forum(AbstractDaterangeObject):
         if config.get('current_domain'):
             self._set_field('current_domain', config.get('current_domain'))
         else:
-            self._del_field('current_domain')
+            self._delete_field('current_domain')
         if config.get('proxy'):
             self._set_field('proxy', config.get('proxy'))
         else:
