@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_core import generate_uuid, get_chat_instance_uuid
+from lib.ail_core import generate_uuid, get_chat_instance_uuid, is_valid_uuid_v5, paginate_iterator, validate_pagination
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -270,8 +270,101 @@ class ChatServiceInstance:
 
         return languages
 
+
+def api_check_chat_instance_uuid(instance_uuid):
+    if not is_valid_uuid_v5(instance_uuid):
+        return {'status': 'error', 'reason': 'Invalid instance_uuid'}, 400
+    if not ChatServiceInstance(instance_uuid).exists():
+        return {'status': 'error', 'reason': 'Unknown chat instance'}, 404
+
+
+def api_check_chat_container(container_type, instance_uuid, container_id):
+    res = api_check_chat_instance_uuid(instance_uuid)
+    if res:
+        return res
+    container_classes = {
+        'chat': Chats.Chat,
+        'chat-subchannel': ChatSubChannels.ChatSubChannel,
+        'chat-thread': ChatThreads.ChatThread,
+    }
+    container_class = container_classes.get(container_type)
+    if not container_class:
+        return {'status': 'error', 'reason': 'Invalid chat container type'}, 400
+    if not isinstance(container_id, str) or not container_id:
+        return {'status': 'error', 'reason': f'{container_type} id is required'}, 400
+
+    if not container_class(container_id, instance_uuid).exists():
+        return {'status': 'error', 'reason': f'Unknown {container_type}'}, 404
+
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
+
+
+def api_get_chat_service_instances(page=1, nb=50):
+    page, nb = validate_pagination(page, nb, default_nb=50, max_nb=500)
+    instances = paginate_iterator(sorted(get_chat_service_instances()), nb_obj=nb, page=page)
+    metas = []
+    for instance_uuid in instances['list_elem']:
+        instance = ChatServiceInstance(instance_uuid)
+        meta = instance.get_meta()
+        meta['chat_count'] = instance.get_nb_chats()
+        metas.append(meta)
+    pagination = {
+        'page': instances['page'] or 1,
+        'page_size': nb,
+        'page_count': instances['nb_pages'],
+        'total': instances['nb_all_elem']
+    }
+    return {'instances': metas, 'pagination': pagination}, 200
+
+
+def api_get_chat_service_instance_chats(instance_uuid, page=1, nb=50, languages=None):
+    res = api_check_chat_instance_uuid(instance_uuid)
+    if res:
+        return res
+    try:
+        languages = Language.normalize_bcp47_tags(languages)
+    except (TypeError, ValueError) as error:
+        return {'status': 'error', 'reason': str(error)}, 400
+    page, nb = validate_pagination(page, nb, default_nb=50, max_nb=500)
+
+    instance = ChatServiceInstance(instance_uuid)
+    chats = []
+    chats_languages = {}
+    for chat_id in sorted(instance.get_chats()):
+        chat = Chats.Chat(chat_id, instance_uuid)
+        if languages:
+            chat_languages = set(chat.get_languages())
+            if not chat_languages.intersection(languages):
+                continue
+            chats_languages[chat_id] = sorted(chat_languages)
+        chats.append(chat)
+
+    paginated = paginate_iterator(chats, nb_obj=nb, page=page)
+    pagination = {
+        'page': paginated['page'] or 1,
+        'page_size': nb,
+        'page_count': paginated['nb_pages'],
+        'total': paginated['nb_all_elem']
+    }
+    chats_meta = []
+    for chat in paginated['list_elem']:
+        options = {'nb_messages', 'str_username', 'username'}
+        if not languages:
+            options.add('languages')
+        meta = chat.get_meta(options)
+        if languages:
+            meta['languages'] = chats_languages[chat.id]
+        chats_meta.append(meta)
+    return {
+        'instance': {
+            **instance.get_meta(),
+            'chat_count': instance.get_nb_chats()
+        },
+        'chats': chats_meta,
+        'pagination': pagination
+    }, 200
+
 
 def get_chat_service_instances_by_protocol(protocol):
     instance_uuids = {}
@@ -1372,44 +1465,62 @@ def api_get_user_account_nb_year_messages(user_id, instance_uuid, year):
     nb = [[date, value] for date, value in nb.items()]
     return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
-def api_chat_messages(subtype, chat_id):
-    chat = Chats.Chat(chat_id, subtype)
-    if not chat.exists():
-        return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'info', 'nb_participants', 'subchannels', 'threads', 'username'})  # 'icon' 'translation'
-    if meta['username']:
-        meta['username'] = get_username_meta_from_global_id(meta['username'])
-    if meta['subchannels']:
-        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
-    else:
-        options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-        meta['messages'], _, _ = chat.get_messages(nb=-1, options=options)
-    return meta, 200
 
-def api_subchannel_messages(subtype, subchannel_id):
-    subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, subtype)
-    if not subchannel.exists():
-        return {"status": "error", "reason": "Unknown subchannel"}, 404
-    meta = subchannel.get_meta(
-        {'chat', 'created_at', 'nb_messages', 'nb_participants', 'threads'})
-    if meta['chat']:
-        meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
-    if meta.get('threads'):
-        meta['threads'] = get_threads_metas(meta['threads'])
+def api_get_chat_object_messages(chat_type, instance_uuid, object_id, page=1, nb=500, languages=None):
+    res = api_check_chat_container(chat_type, instance_uuid, object_id)
+    if res:
+        return res
+    try:
+        languages = Language.normalize_bcp47_tags(languages)
+    except (TypeError, ValueError) as error:
+        return {'status': 'error', 'reason': str(error)}, 400
+    page, nb = validate_pagination(page, nb, default_nb=500, max_nb=500)
+
+    obj = get_obj_chat(chat_type, instance_uuid, object_id)
+    options = {'languages', 'nb_messages'}
+    if chat_type == 'chat':
+        options.update({'created_at', 'subchannels', 'threads', 'username'})
+    elif chat_type == 'chat-subchannel':
+        options.update({'chat', 'created_at', 'threads'})
+    meta = obj.get_meta(options)
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-    meta['messages'], _, _ = subchannel.get_messages(nb=-1, options=options)
-    return meta, 200
+    if meta.get('subchannels'):
+        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
+    if meta.get('threads'):
+        meta['threads'] = get_threads_metas(meta['threads'])
+    if meta.get('chat'):
+        meta['chat'] = meta['chat'].split(':', 2)[2]
 
-def api_thread_messages(subtype, thread_id):
-    thread = ChatThreads.ChatThread(thread_id, subtype)
-    if not thread.exists():
-        return {"status": "error", "reason": "Unknown thread"}, 404
-    meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
-    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-    meta['messages'], _, _ = thread.get_messages(nb=-1, options=options)
-    return meta, 200
+    message_options = {'content', 'files', 'files-names', 'forwarded_from', 'images',
+                       'language', 'parent', 'thread', 'user-account-id'}
+    messages, pagination, _ = obj.get_messages(
+        page=page, nb=nb, languages=languages, options=message_options)
+    pagination = {
+        'page': pagination['page'] or 1,
+        'page_size': pagination['nb'],
+        'page_count': pagination['nb_pages'],
+        'total': pagination['total']
+    }
+    response_key = {
+        'chat': 'chat',
+        'chat-subchannel': 'subchannel',
+        'chat-thread': 'thread'
+    }[chat_type]
+    return {response_key: meta, 'messages': messages, 'pagination': pagination}, 200
+
+
+def api_get_chat_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
+
+def api_get_chat_subchannel_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat-subchannel', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
+
+def api_get_chat_thread_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat-thread', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
 
 # # # # # # # # # # LATER
 #                 #

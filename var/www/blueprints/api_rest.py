@@ -299,28 +299,58 @@ def v1_object_type_id(object_type, object_id):
 # # # # # # # # # # # # # # #      CHATS      # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+@api_rest.route("api/v1/chat/instances", methods=['GET'])
+@token_required('user')
+def chat_instances():
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    r = chats_viewer.api_get_chat_service_instances(page=page, nb=nb)
+    return create_json_response(r[0], r[1])
+
+
+@api_rest.route("api/v1/chat/instances/<instance_uuid>/chats", methods=['GET'])
+@token_required('user')
+def chat_instance_chats(instance_uuid):
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_service_instance_chats(instance_uuid, page=page, nb=nb, languages=languages)
+    return create_json_response(r[0], r[1])
+
+
 @api_rest.route("api/v1/chat/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_chat_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
-@api_rest.route("api/v1/chat-subchannel/messages", methods=['GET'])
+
+@api_rest.route("api/v1/chat/subchannel/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_subchannel_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_subchannel_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_subchannel_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
-@api_rest.route("api/v1/chat-thread/messages", methods=['GET'])
+
+@api_rest.route("api/v1/chat/thread/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_thread_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_thread_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_thread_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

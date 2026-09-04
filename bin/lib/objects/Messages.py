@@ -216,24 +216,24 @@ class Message(AbstractObject):
             for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
                 if file_name not in files:
                     files[file_name] = []
-                files[file_name].append({'type': 'item', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('item', '', it[1:])})
+                files[file_name].append({'type': 'item', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('item', '', it[1:], r_list=True)})
                 s_files.add(it[1:])
                 nb_files += 1
             # pdf
             for it in self.get_correlation_iter('file-name', '', file_name, 'pdf'):
                 if file_name not in files:
                     files[file_name] = []
-                files[file_name].append({'type': 'pdf', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('pdf', '', it[1:])})
+                files[file_name].append({'type': 'pdf', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('pdf', '', it[1:], r_list=True)})
                 s_files.add(it[1:])
                 nb_files += 1
         if nb_files < self.get_nb_files():
             files['undefined'] = []
             for f in self.get_correlation('item').get('item'):
                 if f[1:] not in s_files:
-                    files['undefined'].append({'type': 'item', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('item', '', f[1:])})
+                    files['undefined'].append({'type': 'item', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('item', '', f[1:], r_list=True)})
             for f in self.get_correlation('pdf').get('pdf'):
                 if f[1:] not in s_files:
-                    files['undefined'].append({'type': 'pdf', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('pdf', '', f[1:])})
+                    files['undefined'].append({'type': 'pdf', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('pdf', '', f[1:], r_list=True)})
         return files
 
     def get_reactions(self):
@@ -373,6 +373,8 @@ class Message(AbstractObject):
             meta['user-account'] = self.get_user_account(meta=True)
             if not meta['user-account']:
                 meta['user-account'] = {'id': 'UNKNOWN'}
+        elif 'user-account-id' in options:
+            meta['user-account'] = self.get_user_account()
         if 'container' in options:
             meta['container'] = self.get_container()
         if 'chat' in options:

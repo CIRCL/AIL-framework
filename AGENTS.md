@@ -71,4 +71,5 @@ AIL is organized around an ingestion-to-analysis pipeline:
 - When changing configuration behavior, update the relevant sample files in `configs/` and document any migration or update step in `update/` if existing deployments need it.
 - Do not commit secrets, API keys, private crawler credentials, generated logs, or local runtime database/cache content.
 - Keep imports straightforward; do not wrap imports in broad `try`/`catch` or `try`/`except` blocks.
+- Do not split function definitions, function calls, or argument descriptions across multiple lines when they remain readable on one line; avoid adding line breaks solely to enforce a line-length convention.
 - Do not create a pull request

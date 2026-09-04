@@ -385,6 +385,28 @@ def normalize_bcp47_tag(language_tag):
         canonical.append(region)
     return '-'.join(canonical)
 
+
+def normalize_bcp47_tags(language_tags):
+    if language_tags is None or language_tags == '':
+        return []
+    if isinstance(language_tags, str):
+        language_tags = [language_tags]
+
+    normalized = set()
+    for value in language_tags:
+        if not isinstance(value, str):
+            raise ValueError('Invalid languages')
+        for language_tag in value.split(','):
+            language_tag = language_tag.strip()
+            if not language_tag:
+                continue
+            language = normalize_bcp47_tag(language_tag)
+            if not language:
+                raise ValueError(f'Invalid BCP 47 language tag: {language_tag}')
+            normalized.add(language)
+    return sorted(normalized)
+
+
 def is_valid_bcp47_tag(language_tag):
     return normalize_bcp47_tag(language_tag) is not None
 
@@ -572,6 +594,9 @@ def get_container_subtype_languages(obj_type, obj_subtype):
 
 def get_container_language_objs(language, global_id):
     return r_lang.smembers(f'obj:lang:{language}:{global_id}')
+
+def get_container_languages(global_id):
+    return r_lang.zrange(f'obj:langs:stat:{global_id}', 0, -1)
 
 def _add_container_language(language, global_id, obj_gid):
     r_lang.sadd(f'obj:lang:{language}:{global_id}', obj_gid)

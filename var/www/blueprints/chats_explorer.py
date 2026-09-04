@@ -328,14 +328,14 @@ def chats_explorer_chat_participants():
 @login_required
 @login_read_only
 def chats_explorer_chat_download():
-    chat_id = request.args.get('id')
-    chat_subtype = request.args.get('subtype')
-    chat = chats_viewer.api_chat_messages(chat_subtype, chat_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    chat = chats_viewer.api_get_chat_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if chat[1] != 200:
-        if chat[1] == 404:
-            abort(404)
-        else:
-            return create_json_response(chat[0], chat[1])
+        return create_json_response(chat[0], chat[1])
     else:
         return jsonify(chat[0])
 
@@ -343,9 +343,12 @@ def chats_explorer_chat_download():
 @login_required
 @login_read_only
 def objects_subchannel_messages_download():
-    subchannel_id = request.args.get('id')
-    instance_uuid = request.args.get('subtype')
-    subchannel = chats_viewer.api_subchannel_messages(instance_uuid, subchannel_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    subchannel = chats_viewer.api_get_chat_subchannel_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
@@ -356,9 +359,12 @@ def objects_subchannel_messages_download():
 @login_required
 @login_read_only
 def objects_thread_messages_download():
-    thread_id = request.args.get('id')
-    instance_uuid = request.args.get('subtype')
-    thread = chats_viewer.api_thread_messages(instance_uuid, thread_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    thread = chats_viewer.api_get_chat_thread_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:

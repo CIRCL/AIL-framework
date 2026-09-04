@@ -234,6 +234,26 @@ def rreplace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
     return new.join(li)
 
+
+def validate_pagination(page=None, nb=None, default_nb=50, max_nb=None):
+    """Return normalized one-based pagination values."""
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    if page < 1:
+        page = 1
+    try:
+        nb = int(nb)
+    except (TypeError, ValueError):
+        nb = default_nb
+    if nb < 1:
+        nb = 1
+    if max_nb is not None and nb > max_nb:
+        nb = max_nb
+    return page, nb
+
+
 def get_template_pagination(elems, total, page=1, nb=50):
     if len(elems) > nb:
         return paginate_iterator(elems, nb_obj=nb, page=page)
