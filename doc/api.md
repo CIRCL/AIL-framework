@@ -11,6 +11,16 @@ The authorization is performed by using the following header:
 ~~~~
 Authorization: YOUR_API_KEY
 ~~~~
+
+When a reverse proxy uses the `Authorization` header for HTTP authentication,
+the AIL API key can instead be sent in `X-AIL-AUTH`:
+
+~~~~
+X-AIL-AUTH: YOUR_API_KEY
+~~~~
+
+If both headers are present, `X-AIL-AUTH` is used for the AIL API key.
+
 ### Accept and Content-Type headers
 
 When submitting data in a POST, PUT or DELETE operation you need to specify in what content-type you encoded the payload. This is done by setting the below Content-Type headers:
@@ -1257,6 +1267,7 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 
 
 
+
 ### Get domain tags
 ##### ``api/get/domain/tags/<domain>`` POST
 
@@ -1292,4 +1303,3 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 </details>
 
 -----
-

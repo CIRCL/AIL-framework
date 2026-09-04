@@ -45,9 +45,14 @@ api_rest = Blueprint('api_rest', __name__, template_folder=os.path.join(os.envir
 
 # ============ AUTH FUNCTIONS ============
 
+API_AUTH_HEADERS = ('X-AIL-AUTH', 'Authorization')
+
+
 def get_auth_from_header():
-    token = request.headers.get('Authorization').replace(' ', '')  # remove space
-    return token
+    for header_name in API_AUTH_HEADERS:
+        token = request.headers.get(header_name)
+        if token:
+            return token.replace(' ', '')  # remove space
 
 
 def token_required(user_role):
@@ -55,14 +60,14 @@ def token_required(user_role):
         @wraps(funct)
         def api_token(*args, **kwargs):
             # Check AUTH Header
-            if not request.headers.get('Authorization'):
+            token = get_auth_from_header()
+            if not token:
                 return create_json_response({'status': 'error', 'reason': 'Authentication needed'}, 401)
 
             # Check Role
             if not user_role:
                 return create_json_response({'status': 'error', 'reason': 'Invalid Role'}, 401)
 
-            token = get_auth_from_header()
             ip_source = request.access_route[0]
             data, status_code = ail_api.authenticate_user(token, ip_address=ip_source)
             if status_code != 200:

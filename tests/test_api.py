@@ -5,6 +5,8 @@ import os
 import sys
 import unittest
 
+import requests
+
 from pyail import PyAIL, PyAILError
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -22,8 +24,10 @@ class TestApiV1(unittest.TestCase):
     def setUp(self):
         config = ConfigLoader()
         port = config.get_config_str('Flask', 'port')
+        self.url = f'https://localhost:{port}'
+        self.api_key = ail_users.get_user_token('admin@admin.test')
         try:
-            self.ail = PyAIL(f'https://localhost:{port}', ail_users.get_user_token('admin@admin.test'), ssl=False)
+            self.ail = PyAIL(self.url, self.api_key, ssl=False)
         except Exception as e:
             print()
             print('----------------------------------------------------')
@@ -45,6 +49,12 @@ class TestApiV1(unittest.TestCase):
             raise ae
         print('----------------------------------------------------')
         print()
+
+    # GET /api/v1/ping with reverse-proxy authentication
+    def test_0002_api_ping_x_ail_auth(self):
+        response = requests.get(f'{self.url}/api/v1/ping', headers={'Authorization': 'Basic reverse-proxy-credentials', 'X-AIL-AUTH': self.api_key}, verify=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('status'), 'pong')
 
     # # GET /api/v1/uuid
     # def test_0001_api_uuid(self):
