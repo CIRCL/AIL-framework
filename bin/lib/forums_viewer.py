@@ -383,7 +383,7 @@ def api_set_forum_account_local_storage(user_org, user_id, data):
         return {'status': 'error', 'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
     cookiejar.set_cookies(local_storage.get('cookies', []))
     cookiejar.set_local_storage(local_storage)
-    account.set_status('waiting')
+    account.clear_error()
     forum.refresh_account_availability(account_id)
     return {'forum_id': forum_id, 'account_id': account_id, 'cookiejar_uuid': cookiejar_uuid}, 200
 

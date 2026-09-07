@@ -58,7 +58,10 @@ def _get_forum_crawl_management():
         last_crawled_at = account.get('last_crawled_at')
         account['last_used_at_display'] = Date.get_utc_datetime_from_timestamp(last_used_at) if last_used_at else None
         account['last_crawled_at_display'] = Date.get_utc_datetime_from_timestamp(last_crawled_at) if last_crawled_at else None
-        account['has_inflight_crawl'] = bool(account.get('current_crawl_key') and forum.get_inflight_crawl_item(account['current_crawl_key']))
+        crawl_key = account.get('current_crawl_key')
+        account['has_inflight_crawl'] = bool(crawl_key and forum.get_inflight_crawl_item(crawl_key))
+        crawl_item = forum.get_crawl_item(crawl_key) if account['has_inflight_crawl'] else None
+        account['retry_with_screenshot'] = bool(crawl_item and crawl_item.get('error_screenshot'))
         login_url = forum.get_url() or account.get('current_url')
         login_url = forums_viewer.apply_forum_current_domain(
             login_url, config.get('current_domain')

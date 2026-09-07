@@ -216,7 +216,7 @@
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_inflight_resend') }}" class="mb-2">
             <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
             <input type="hidden" name="account_id" value="{{ account['id'] }}">
-            {% if account.get('status') == 'error' %}
+            {% if account.get('retry_with_screenshot') %}
               <button class="btn btn-sm btn-warning" title="Retry the failed page manually and request a screenshot" onclick="return confirm('Retry the failed page with a screenshot for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-camera"></i> Retry failed page</button>
             {% else %}
               <button class="btn btn-sm btn-warning" title="Stop and queue this active capture again" onclick="return confirm('Restart the active capture for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-redo"></i> Restart active capture</button>
