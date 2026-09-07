@@ -5,13 +5,18 @@ Forums Viewer
 ===================
 
 """
+import magic
 import os
 import sys
 import time
-import magic
+from importlib.util import find_spec
 from urllib.parse import urlsplit, urlunsplit
 
-from forum_extractor import list_forum_types
+if find_spec('forum_extractor'):
+    from forum_extractor import list_forum_types
+    FORUM_PARSER_TYPES = sorted(list_forum_types())
+else:
+    FORUM_PARSER_TYPES = []
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -193,7 +198,7 @@ def get_forum_crawl_management(forum_id):
         'forum': forum.get_meta(options=_FORUM_OPTIONS, flask_context=True),
         'config': config,
         'accounts': accounts,
-        'parser_types': sorted(list_forum_types()),
+        'parser_types': FORUM_PARSER_TYPES,
     }, 200
 
 def update_forum_crawl_config(forum_id, data):
@@ -207,7 +212,7 @@ def update_forum_crawl_config(forum_id, data):
     forum_type = None
     if 'forum_type' in data:
         forum_type = (data.get('forum_type') or '').strip()
-        if forum_type not in list_forum_types():
+        if forum_type not in FORUM_PARSER_TYPES:
             return {"status": "error", "error": "Invalid forum parser type"}, 400
     config = {
         'current_domain': current_domain,
