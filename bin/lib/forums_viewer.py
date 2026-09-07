@@ -100,7 +100,7 @@ def _split_lines(value):
 def _minute_to_time(value):
     value = int(value or 0)
     if value >= 1440:
-        return '23:59'
+        return '24:00'
     hour = value // 60
     minute = value % 60
     return f'{hour}:{minute:02d}'
@@ -111,7 +111,7 @@ def _active_time_to_ui(active_time):
         ranges = []
         for start, end in (active_time or {}).get(weekday) or []:
             ranges.append({'start': _minute_to_time(start), 'end': _minute_to_time(end)})
-        active_time_ui[weekday] = {'enabled': bool(ranges), 'ranges': ranges or [{'start': '0:00', 'end': '23:59'}]}
+        active_time_ui[weekday] = {'enabled': bool(ranges), 'ranges': ranges or [{'start': '0:00', 'end': '24:00'}]}
     return active_time_ui
 
 def _get_form_list(data, field):
@@ -185,6 +185,7 @@ def get_forum_crawl_management(forum_id):
     forum = Forums.Forum(forum_id)
     if not forum.exists():
         return {"status": "error", "error": "Unknown forum"}, 404
+    forum.refresh_accounts_availability()
     config = forum.get_crawl_config()
     accounts = []
     for account_id in sorted(config.get('accounts', [])):

@@ -173,7 +173,7 @@ class ForumAccount:
             for start, end in active_time.get(weekday, []):
                 start = self._active_time_to_minute(start)
                 end = self._active_time_to_minute(end)
-                if start < 0 or start > 1440 or end < 0 or end > 1440 or start == end:
+                if start < 0 or start >= 1440 or end < 0 or end > 1440 or start == end:
                     continue
                 if start < end:
                     normalized[weekday].append([start, end])
@@ -213,7 +213,7 @@ class ForumAccount:
             now = datetime.now(timezone.utc)
         now = now.astimezone(timezone.utc)
         minute = now.hour * 60 + now.minute
-        for delta in range(0, 7):
+        for delta in range(0, 8):
             day = now + timedelta(days=delta)
             weekday = FORUM_CRAWL_WEEKDAYS[day.weekday()]
             start_min = minute + 1 if delta == 0 else 0
@@ -290,7 +290,7 @@ class ForumAccount:
             available = 0
         self._set_field('available', available)
         self._set_field('availability_reason', reason)
-        if reason in {'available', 'page_delay'}:
+        if reason in {'available', 'page_delay', 'outside_active_time'} and next_available_at is not None:
             r_object.zadd(f'forum:accounts:available:{self.forum_id}', {self.id: next_available_at})
         else:
             r_object.zrem(f'forum:accounts:available:{self.forum_id}', self.id)
@@ -633,36 +633,50 @@ class Forum(AbstractDaterangeObject):
             crawl_key = account.get_current_crawl_key()
             running_key = f'{self.id}:{account_id}'
             status = account.get_status()
+            if status == 'error':
+                continue
             task_uuid = account.get_current_task_uuid()
             is_registered_running = r_crawler.zscore('forum:crawl:running', running_key) is not None
+            has_crawl_item = bool(crawl_key and self.get_crawl_item(crawl_key))
+            has_inflight_crawl = bool(crawl_key and self.get_inflight_crawl_item(crawl_key))
             inconsistent_running_state = (
                 (status == 'crawling' and not crawl_key)
                 or (
-                    crawl_key
+                    status == 'crawling'
+                    and crawl_key
                     and (
-                        status != 'crawling'
-                        or not task_uuid
+                        not task_uuid
                         or not is_registered_running
+                        or not has_crawl_item
+                        or not has_inflight_crawl
                     )
+                )
+                or (
+                    status == 'waiting'
+                    and crawl_key
+                    and not has_inflight_crawl
                 )
             )
             if inconsistent_running_state:
+                before_repair = {
+                    'account_id': account_id,
+                    'status': status,
+                    'available': account.is_available(),
+                    'availability_reason': account._get_field('availability_reason'),
+                    'current_crawl_key': crawl_key,
+                    'current_task_uuid': task_uuid,
+                    'current_url': account.get_current_url(),
+                    'has_crawl_item': has_crawl_item,
+                    'has_inflight_crawl': has_inflight_crawl,
+                    'registered_running': is_registered_running,
+                }
                 if crawl_key:
                     self.fail_crawl_item(crawl_key, error='stale_crawl')
                 r_crawler.zrem('forum:crawl:running', running_key)
                 account.reset_crawl()
                 self.refresh_account_availability(account_id)
-                cleaned.append(account_id)
+                cleaned.append(before_repair)
                 continue
-            if not crawl_key:
-                continue
-            if self.get_crawl_item(crawl_key) and self.get_inflight_crawl_item(crawl_key):
-                continue
-            self.fail_crawl_item(crawl_key, error='stale_crawl')
-            r_crawler.zrem('forum:crawl:running', f'{self.id}:{account_id}')
-            account.reset_crawl()
-            self.refresh_account_availability(account_id)
-            cleaned.append(account_id)
 
         return cleaned
 
@@ -990,6 +1004,16 @@ class Forum(AbstractDaterangeObject):
         r_object.delete(f'forum:crawl:queued:{self.id}')
         r_object.delete(f'forum:crawl:inflight:{self.id}')
         r_object.delete(f'forum:crawl:thread:account:{self.id}')
+        for account_id in self.get_crawl_accounts():
+            account = self.get_crawl_account(account_id)
+            if not account.get_current_crawl_key():
+                continue
+            r_crawler.zrem('forum:crawl:running', f'{self.id}:{account_id}')
+            if account.get_status() == 'error':
+                account.clear_current_crawl()
+            else:
+                account.reset_crawl()
+            self.refresh_account_availability(account_id)
         return deleted
 
     def purge_account_current_inflight_crawl(self, account, crawl_key):
@@ -1017,12 +1041,13 @@ class Forum(AbstractDaterangeObject):
         available_accounts = set(self.get_available_accounts())
         for account_id in sorted(self.get_crawl_accounts()):
             account = self.get_crawl_account(account_id)
+            available = account_id in available_accounts
             accounts.append({
                 'id': account_id,
                 'enabled': account.is_enabled(),
                 'status': account.get_status(),
-                'available': account_id in available_accounts,
-                'availability_reason': account._get_field('availability_reason'),
+                'available': available,
+                'availability_reason': 'available' if available else account._get_field('availability_reason'),
                 'current_task_uuid': account.get_current_task_uuid(),
                 'current_crawl_key': account.get_current_crawl_key(),
                 'current_url': account.get_current_url(),

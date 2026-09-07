@@ -19,14 +19,14 @@
 </head>
 <body>
 {% include 'nav_bar.html' %}
-{% macro time_options(selected) -%}
+{% macro time_options(selected, allow_end_of_day=false) -%}
   {% for hour in range(0, 24) %}
     {% for minute in [0, 30] %}
       {% set value = hour ~ ':' ~ '%02d'|format(minute) %}
       <option value="{{ value }}" {% if selected == value %}selected{% endif %}>{{ value }}</option>
     {% endfor %}
   {% endfor %}
-  <option value="23:59" {% if selected == '23:59' %}selected{% endif %}>23:59</option>
+  {% if allow_end_of_day %}<option value="24:00" {% if selected == '24:00' %}selected{% endif %}>24:00</option>{% endif %}
 {%- endmacro %}
 {% macro active_time_selector(prefix, active_time_ui=None) -%}
   {% set weekdays = [('mon', 'Monday'), ('tue', 'Tuesday'), ('wed', 'Wednesday'), ('thu', 'Thursday'), ('fri', 'Friday'), ('sat', 'Saturday'), ('sun', 'Sunday')] %}
@@ -41,7 +41,7 @@
     </div>
     <div class="mt-2">
       {% for day, label in weekdays %}
-        {% set day_ui = (active_time_ui or {}).get(day) or {'enabled': False, 'ranges': [{'start': '0:00', 'end': '23:59'}]} %}
+        {% set day_ui = (active_time_ui or {}).get(day) or {'enabled': False, 'ranges': [{'start': '0:00', 'end': '24:00'}]} %}
         <div class="active-time-day active-time-row" data-day="{{ day }}">
           <div class="custom-control custom-checkbox mb-1">
             <input type="checkbox" class="custom-control-input" id="active_time_{{ prefix }}_{{ day }}" name="active_time_days" value="{{ day }}" {% if day_ui.get('enabled') %}checked{% endif %}>
@@ -51,7 +51,7 @@
             {% for range in day_ui.get('ranges') %}
               <div class="form-row align-items-center mb-1 active-time-range">
                 <div class="col-5"><select class="form-control form-control-sm" name="active_time_start_{{ day }}">{{ time_options(range.get('start') or '0:00') }}</select></div>
-                <div class="col-5"><select class="form-control form-control-sm" name="active_time_end_{{ day }}">{{ time_options(range.get('end') or '23:59') }}</select></div>
+                <div class="col-5"><select class="form-control form-control-sm" name="active_time_end_{{ day }}">{{ time_options(range.get('end') or '24:00', true) }}</select></div>
                 <div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger active-time-remove-range" title="Remove range"><i class="fas fa-times"></i></button></div>
               </div>
             {% endfor %}
@@ -60,7 +60,7 @@
         </div>
       {% endfor %}
     </div>
-    <small class="form-text text-muted">Use 24-hour UTC ranges from 0:00 to 23:59. Add multiple non-overlapping ranges for the same day when needed.</small>
+    <small class="form-text text-muted">Use 24-hour UTC ranges from 0:00 to 24:00. The 24:00 value is available only as an end time. Add multiple non-overlapping ranges for the same day when needed.</small>
   </div>
 {%- endmacro %}
 <div class="container-fluid"><div class="row">
@@ -239,7 +239,7 @@
 </div>
 </div></div></div>
 <script>
-function activeTimeOptions(selected){
+function activeTimeOptions(selected, allowEndOfDay){
   var html = '';
   for(var hour = 0; hour < 24; hour++){
     ['00', '30'].forEach(function(minute){
@@ -247,13 +247,15 @@ function activeTimeOptions(selected){
       html += '<option value="' + value + '"' + (value === selected ? ' selected' : '') + '>' + value + '</option>';
     });
   }
-  html += '<option value="23:59"' + (selected === '23:59' ? ' selected' : '') + '>23:59</option>';
+  if(allowEndOfDay){
+    html += '<option value="24:00"' + (selected === '24:00' ? ' selected' : '') + '>24:00</option>';
+  }
   return html;
 }
 function newActiveTimeRange(day){
   return '<div class="form-row align-items-center mb-1 active-time-range">' +
-    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_start_' + day + '">' + activeTimeOptions('0:00') + '</select></div>' +
-    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_end_' + day + '">' + activeTimeOptions('23:59') + '</select></div>' +
+    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_start_' + day + '">' + activeTimeOptions('0:00', false) + '</select></div>' +
+    '<div class="col-5"><select class="form-control form-control-sm" name="active_time_end_' + day + '">' + activeTimeOptions('24:00', true) + '</select></div>' +
     '<div class="col-2"><button type="button" class="btn btn-sm btn-outline-danger active-time-remove-range" title="Remove range"><i class="fas fa-times"></i></button></div>' +
     '</div>';
 }

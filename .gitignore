@@ -57,6 +57,7 @@ bin/trackers/yara/custom-rules/*
 
 # Tools
 tools
+bin/crawlers/forum_crawler.py
 
 # Helper
 tools/gen_cert/rootCA.*
