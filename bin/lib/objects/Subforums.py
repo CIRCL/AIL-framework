@@ -38,6 +38,12 @@ class Subforum(AbstractSubtypeObject):
     def set_url(self, url):
         self._set_field('url', url)
 
+    def get_category(self):
+        return self._get_field('category')
+
+    def set_category(self, category):
+        self._set_field('category', category)
+
     def get_threads_last_crawled_at(self):
         timestamp = self._get_field('threads_last_crawled_at')
         return int(timestamp) if timestamp else 0
@@ -103,6 +109,7 @@ class Subforum(AbstractSubtypeObject):
         meta['tags'] = self.get_tags(r_list=True)
         meta['name'] = self._get_field('name')
         meta['info'] = self._get_field('info')
+        meta['category'] = self.get_category()
         if 'url' in options:
             meta['url'] = self._get_field('url')
         if 'subforums' in options:

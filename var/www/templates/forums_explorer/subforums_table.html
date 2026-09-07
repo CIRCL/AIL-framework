@@ -1,7 +1,12 @@
 {% if subforums %}
 <div class="forum-board mb-4">
   <div class="forum-board-header">{{ title }}</div>
+  {% set category_group = namespace(current=none) %}
   {% for subforum in subforums %}
+    {% if subforum.get('category') and subforum.get('category') != category_group.current %}
+      <div class="px-3 py-2 bg-light border-top text-uppercase font-weight-bold text-muted small">{{ subforum['category'] }}</div>
+      {% set category_group.current = subforum['category'] %}
+    {% endif %}
     <a class="forum-row" href="{{ url_for('forums_explorer.forum_explorer_subforum') }}?subtype={{ subforum['subtype'] }}&id={{ subforum['id'] }}">
       <div class="forum-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path d="M0 0h24v24H0z" fill="none" />

@@ -410,7 +410,7 @@ def _children_meta(parent, child_type):
             children.append(_subforum_meta(obj))
         elif obj_type == 'forum-thread':
             children.append(_thread_meta(obj))
-    return sorted(children, key=lambda m: ((m.get('name') or m.get('title') or m.get('id')).lower(), m.get('id')))
+    return sorted(children, key=lambda m: ((m.get('category') or '').lower(), (m.get('name') or m.get('title') or m.get('id')).lower(), m.get('id')))
 
 
 def _subforum_threads_meta(subforum):

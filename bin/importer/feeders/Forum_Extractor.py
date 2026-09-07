@@ -243,6 +243,8 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             url=self._apply_current_domain(sub_data.get('subforum_url')),
             info=sub_data.get('info'),
         )
+        if sub_data.get('category'):
+            subforum.set_category(sub_data.get('category'))
         self.seen_subforums.add(subforum.get_global_id())
         return subforum
 
