@@ -114,7 +114,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         posts = extracted.get('posts') or []
         imported_posts = []
         parent_thread = self._resolve_parent_thread(extracted)  # TODO warning not created
-        for post_data in posts:
+        for post_index, post_data in enumerate(posts):
+            if self._is_post_content_empty(post_data):
+                self._log_empty_post(result, post_data, post_index)
+                continue
             # TODO PASS SUBFORUMS LIST
             post = self._upsert_post(post_data, parent_thread)
             if post:
@@ -122,8 +125,8 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                 imported['post'] += 1
                 print(post.id)
                 self.objs_to_process.add(post)
-        if posts:
-            last_post = posts[-1]
+        if imported_posts:
+            last_post = imported_posts[-1][1]
             last_timestamp = int(last_post.get('post_timestamp'))
             self.forum.update_thread_last_time(parent_thread.id, int(last_timestamp))
 
@@ -140,6 +143,33 @@ class Forum_ExtractorFeeder(DefaultFeeder):
                     current_subforum.update_daterange(date_value)
         print({'status': 'success', 'imported': imported})
         return self.objs_to_process
+
+    @staticmethod
+    def _is_post_content_empty(post_data):
+        """Detect parser output that has no importable post material."""
+        content = (post_data or {}).get('content') or {}
+        text = content.get('text')
+        if isinstance(text, str):
+            text = text.strip()
+        return not (text or content.get('images') or content.get('files') or content.get('quoted_posts'))
+
+    def _log_empty_post(self, result, post_data, post_index):
+        """Keep the complete parser metadata needed to diagnose an empty post."""
+        post_data = post_data or {}
+        content = post_data.get('content') or {}
+        self.logger.warning({
+            'event': 'forum_import_empty_post',
+            'forum_type': result.get('forum_type'),
+            'forum_id': result.get('forum_id'),
+            'page_type': result.get('page_type'),
+            'url': result.get('url'),
+            'timestamp': result.get('timestamp'),
+            'post_index': post_index,
+            'post_id': post_data.get('post_id'),
+            'post_url': post_data.get('post_url'),
+            'post_html': content.get('html'),
+            'post': post_data,
+        })
 
     def _upsert_forum(self, result, extracted, forum_type, forum_id):
         """Create/update a Forum object from extracted data."""
