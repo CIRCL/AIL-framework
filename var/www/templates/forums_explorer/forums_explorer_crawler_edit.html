@@ -178,8 +178,8 @@
         <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_account_interactive_cookiejar') }}" class="mt-2">
           <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
           <input type="hidden" name="account_id" value="{{ account['id'] }}">
-          <input type="hidden" name="url" value="{{ forum.get('url') or account.get('current_url') }}">
-          <button class="btn btn-sm btn-warning" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Start an interactive browser to create a user-level cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-desktop"></i> Create cookiejar interactively</button>
+          <button class="btn btn-sm btn-outline-primary" name="mode" value="create" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Create and select a new cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-plus"></i> Create new cookiejar</button>
+          <button class="btn btn-sm btn-warning" name="mode" value="repair" {% if not account.get('cookiejar_uuid') or (not forum.get('url') and not account.get('current_url')) %}disabled{% endif %} onclick="return confirm('Open the current cookiejar to repair the login for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-tools"></i> Repair current cookiejar</button>
         </form>
         <div class="mt-2">
           {% if account.get('local_login_command') %}

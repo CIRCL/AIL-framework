@@ -2668,9 +2668,15 @@ def finalize_interactive_cookiejar_session(capture_uuid, storage, session=None):
         if not storage or not isinstance(storage, dict):
             session.set('error', 'No cookies or local storage returned by the interactive browser')
             return False
-        cookiejar_uuid = create_cookiejar(session.get('user_org'), session.get_user(), session.get('cookiejar_description'), 0, None)
-        print(f'New cookiejar {cookiejar_uuid}')
-        cookiejar = Cookiejar(cookiejar_uuid)
+        cookiejar_uuid = session.get('cookiejar_uuid')
+        if cookiejar_uuid:
+            cookiejar = Cookiejar(cookiejar_uuid)
+            if not cookiejar.exists():
+                session.set('error', f'Cookiejar {cookiejar_uuid} no longer exists')
+                return False
+        else:
+            cookiejar_uuid = create_cookiejar(session.get('user_org'), session.get_user(), session.get('cookiejar_description'), 0, None)
+            cookiejar = Cookiejar(cookiejar_uuid)
         cookiejar.set_cookies(storage.get('cookies', []))
         cookiejar.set_local_storage(storage)
         session.set('cookiejar_uuid', cookiejar_uuid)
@@ -2785,7 +2791,7 @@ class InteractiveCrawlerSession:
         self.release(status='expired')
 
 
-def api_start_interactive_capture(data, user_org, user_id):
+def api_start_interactive_capture(data, user_org, user_id, user_role=None):
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
@@ -2795,6 +2801,13 @@ def api_start_interactive_capture(data, user_org, user_id):
     filter_local_ips_error = api_validate_global_urls(url=task.get('url'))
     if filter_local_ips_error:
         return filter_local_ips_error
+    cookiejar_uuid = data.get('cookiejar')
+    cookiejar = None
+    if cookiejar_uuid:
+        acl_error = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, action='edit')
+        if acl_error:
+            return acl_error
+        cookiejar = Cookiejar(cookiejar_uuid)
     session, error, code = reserve_interactive_session(user_id, task['url'])
     if error:
         return error, code
@@ -2828,6 +2841,8 @@ def api_start_interactive_capture(data, user_org, user_id):
         returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon,
                                       force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
                                       user_agent=user_agent, java_script_enabled=task['javascript'],
+                                      cookies=cookiejar.get_cookies() if cookiejar else None,
+                                      storage=cookiejar.get_local_storage() if cookiejar else None,
                                       general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
@@ -2838,6 +2853,8 @@ def api_start_interactive_capture(data, user_org, user_id):
             session.set('save_cookiejar', '1')
             session.set('user_org', user_org)
             session.set('cookiejar_description', data.get('description') or f"{data.get('url')} - interactive cookiejar")
+            if cookiejar:
+                session.set('cookiejar_uuid', cookiejar.uuid)
             if data.get('forum_id') and data.get('forum_account_id'):
                 session.set('forum_id', data.get('forum_id'))
                 session.set('forum_account_id', data.get('forum_account_id'))

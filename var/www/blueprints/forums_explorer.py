@@ -270,7 +270,13 @@ def forum_explorer_crawler_account_interactive_cookiejar():
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown account'))
     config = forum.get_crawl_config()
     account = forum.get_crawl_account(account_id)
-    url = forum.get_url() or account.get_current_url()
+    mode = request.form.get('mode') or 'create'
+    if mode not in {'create', 'repair'}:
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown interactive login mode'))
+    cookiejar_uuid = account.get_cookiejar_uuid()
+    if mode == 'repair' and not cookiejar_uuid:
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Account has no cookiejar to repair'))
+    url = (account.get_current_url() or forum.get_url()) if mode == 'repair' else (forum.get_url() or account.get_current_url())
     url = forums_viewer.apply_forum_current_domain(url, config.get('current_domain'))
     if not url:
         return redirect(url_for(
@@ -292,9 +298,11 @@ def forum_explorer_crawler_account_interactive_cookiejar():
         'save_cookiejar': True,
         'cookiejar_only': True,
     }
+    if mode == 'repair':
+        data['cookiejar'] = cookiejar_uuid
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    res = crawlers.api_start_interactive_capture(data, user_org, user_id)
+    res = crawlers.api_start_interactive_capture(data, user_org, user_id, current_user.get_role())
     if res[1] != 200:
         print(res)
         error = res[0].get('error') or 'Unable to start interactive cookiejar session'
