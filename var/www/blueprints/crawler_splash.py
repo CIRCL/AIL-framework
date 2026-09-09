@@ -1055,12 +1055,18 @@ def crawler_cookiejar_json_import():
     user_role = current_user.get_role()
     cookiejar_uuid = request.form.get('uuid')
 
-    if 'file' not in request.files:
-        return create_json_response({'error': 'cookiejar JSON file not set'}, 400)
+    json_data = request.form.get('json_data', '').strip()
+    if not json_data:
+        file = request.files.get('file')
+        if not file or not file.filename:
+            return create_json_response({'error': 'cookiejar JSON not set'}, 400)
+        try:
+            json_data = file.read().decode()
+        except UnicodeDecodeError:
+            return create_json_response({'error': 'invalid cookiejar JSON encoding'}, 400)
 
-    file = request.files['file']
     try:
-        data = json.loads(file.read().decode())
+        data = json.loads(json_data)
     except json.decoder.JSONDecodeError:
         return create_json_response({'error': 'invalid cookiejar JSON'}, 400)
 

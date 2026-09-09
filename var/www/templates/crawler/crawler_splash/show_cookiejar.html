@@ -53,13 +53,9 @@
                             <a class="btn btn-secondary" href="{{ url_for('crawler_splash.crawler_cookiejar_json_export') }}?uuid={{cookiejar_metadata['uuid']}}">
                                 Export JSON <i class="fas fa-file-export"></i>
                             </a>
-                            <form class="d-inline-block" action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post" enctype="multipart/form-data">
-                                <input type="hidden" name="uuid" value="{{cookiejar_metadata['uuid']}}">
-                                <label class="btn btn-warning mb-0">
-                                    Import JSON <i class="fas fa-file-import"></i>
-                                    <input type="file" name="file" accept="application/json,.json" onchange="this.form.submit();" hidden>
-                                </label>
-                            </form>
+                            {% with cookiejar_uuid=cookiejar_metadata['uuid'], import_label='Import JSON' %}
+                                {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+                            {% endwith %}
                         {% endif %}
 
 						<span class="mt-1" id="description-edit-block">
