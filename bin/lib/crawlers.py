@@ -1076,9 +1076,9 @@ class Cookiejar:
         meta = {'uuid': self.uuid,
                 'date': self.get_date(),
                 'last_edit': last_edit,
-                'last_edit_date': datetime.fromtimestamp(int(last_edit)).strftime('%Y/%m/%d') if last_edit else None,
+                'last_edit_date': datetime.fromtimestamp(int(last_edit)).strftime('%Y/%m/%d %H:%M:%S') if last_edit else None,
                 'last_used': last_used,
-                'last_used_date': datetime.fromtimestamp(int(last_used)).strftime('%Y/%m/%d') if last_used else None,
+                'last_used_date': datetime.fromtimestamp(int(last_used)).strftime('%Y/%m/%d %H:%M:%S') if last_used else None,
                 'description': self.get_description(),
                 'org': self.get_org(),
                 'user': self.get_user()}
