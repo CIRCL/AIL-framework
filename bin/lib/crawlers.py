@@ -2827,13 +2827,14 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
             with_favicon = True
 
         task_uuid = create_task(task['url'], depth=0, har=har, screenshot=screenshot, proxy=task['proxy'],
-                                user_agent=user_agent, tags=tags, parent='interactive', priority=90, external=True)
+                                cookiejar=cookiejar_uuid, user_agent=user_agent, tags=tags, parent='interactive', priority=90, external=True)
         if not task_uuid:
             session.release(status='error')
             return {'error': 'Aborted by Crawler'}, 400
         session.set('task_uuid', task_uuid)
+        crawler_task = CrawlerTask(task_uuid)
         if cookiejar_only:
-            CrawlerTask(task_uuid).set_cookiejar_only()
+            crawler_task.set_cookiejar_only()
             session.set('cookiejar_only', '1')
         capture_uuid = session.uuid
         lacus = get_lacus()
@@ -2841,8 +2842,7 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
         returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon,
                                       force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
                                       user_agent=user_agent, java_script_enabled=task['javascript'],
-                                      cookies=cookiejar.get_cookies() if cookiejar else None,
-                                      storage=cookiejar.get_local_storage() if cookiejar else None,
+                                      cookies=crawler_task.get_cookies(), storage=crawler_task.get_local_storage(),
                                       general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
