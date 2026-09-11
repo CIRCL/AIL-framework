@@ -306,6 +306,8 @@ class Crawler(AbstractModule):
                                           with_favicon=True,
                                           force=force,
                                           general_timeout_in_sec=90)  # TODO increase timeout if onion ????
+        if capture_uuid:
+            task.update_cookiejar_last_used()
 
         capture = crawlers.create_capture(capture_uuid, task_uuid)
         self._update_capture_status(capture)

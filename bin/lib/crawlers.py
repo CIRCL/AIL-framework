@@ -956,11 +956,18 @@ class Cookiejar:
     def update_last_edit(self):
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'last_edit', int(time.time()))
 
+    def get_last_used(self):
+        return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'last_used')
+
+    def update_last_used(self):
+        r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'last_used', int(time.time()))
+
     def get_description(self):
         return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'description')
 
     def set_description(self, description):
         r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'description', description)
+        self.update_last_edit()
 
     def get_user(self):
         return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'user')
@@ -1059,12 +1066,19 @@ class Cookiejar:
     def delete_local_storage(self):
         try:
             os.remove(self.get_local_storage_file())
+            self.update_last_edit()
         except Exception as e:
             print(e)
 
     def get_meta(self, level=False, nb_cookies=False, cookies=False, local_storage=False, r_json=False):
+        last_edit = self.get_last_edit()
+        last_used = self.get_last_used()
         meta = {'uuid': self.uuid,
                 'date': self.get_date(),
+                'last_edit': last_edit,
+                'last_edit_date': datetime.fromtimestamp(int(last_edit)).strftime('%Y/%m/%d') if last_edit else None,
+                'last_used': last_used,
+                'last_used_date': datetime.fromtimestamp(int(last_used)).strftime('%Y/%m/%d') if last_used else None,
                 'description': self.get_description(),
                 'org': self.get_org(),
                 'user': self.get_user()}
@@ -1122,12 +1136,14 @@ class Cookiejar:
             cookie.set_field('sameSite', str(samesite))
         if text:
             cookie.set_field('text', text)
+        self.update_last_edit()
         return cookie_uuid
 
     def delete_cookie(self, cookie_uuid):
         if self.is_cookie_in_jar(cookie_uuid):
             cookie = Cookie(cookie_uuid)
             cookie.delete()
+            self.update_last_edit()
 
     def delete_cookies(self):
         for cookie_uuid in self.get_cookies_uuid():
@@ -2677,8 +2693,10 @@ def finalize_interactive_cookiejar_session(capture_uuid, storage, session=None):
         else:
             cookiejar_uuid = create_cookiejar(session.get('user_org'), session.get_user(), session.get('cookiejar_description'), 0, None)
             cookiejar = Cookiejar(cookiejar_uuid)
-        cookiejar.set_cookies(storage.get('cookies', []))
-        cookiejar.set_local_storage(storage)
+        import_error = _import_storage_in_cookiejar(cookiejar, storage)
+        if import_error:
+            session.set('error', import_error[0]['error'])
+            return False
         session.set('cookiejar_uuid', cookiejar_uuid)
         forum_id = session.get('forum_id')
         account_id = session.get('forum_account_id')
@@ -2846,6 +2864,7 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
                                       cookies=crawler_task.get_cookies(), storage=crawler_task.get_local_storage(),
                                       referer=referer,
                                       general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
+        crawler_task.update_cookiejar_last_used()
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
         r_cache.hset('crawler:interactive:captures', capture_uuid, session.uuid)
@@ -3150,6 +3169,11 @@ class CrawlerTask:
             return cookiejar.get_local_storage()
         else:
             return None
+
+    def update_cookiejar_last_used(self):
+        cookiejar = self.get_cookiejar()
+        if cookiejar:
+            Cookiejar(cookiejar).update_last_used()
 
     def get_header(self):
         return r_crawler.hget(f'crawler:task:{self.uuid}', 'header')
