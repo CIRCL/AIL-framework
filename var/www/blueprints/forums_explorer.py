@@ -10,7 +10,7 @@ import sys
 import json
 import shlex
 
-from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for, send_file
+from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for, send_file, flash
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -265,27 +265,31 @@ def forum_explorer_crawler_account_interactive_cookiejar():
     account_id = request.form.get('account_id')
     forum = Forums.Forum(forum_id)
     if not forum.exists():
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown forum'))
+        flash('Unknown forum', 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     if not forum.exists_account(account_id):
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown account'))
+        flash('Unknown account', 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     config = forum.get_crawl_config()
     account = forum.get_crawl_account(account_id)
     mode = request.form.get('mode') or 'create'
     if mode not in {'create', 'repair'}:
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Unknown interactive login mode'))
+        flash('Unknown interactive login mode', 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     cookiejar_uuid = account.get_cookiejar_uuid()
     if mode == 'repair' and not cookiejar_uuid:
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Account has no cookiejar to repair'))
+        flash('Account has no cookiejar to repair', 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     if mode == 'repair':
         url = account.get_current_url() or forum.get_url()
     else:
         url = forum.get_url() or account.get_current_url()
     url = forums_viewer.apply_forum_current_domain(url, config.get('current_domain'))
     if not url:
+        flash('Forum login URL is missing', 'danger')
         return redirect(url_for(
             'forums_explorer.forum_explorer_crawler_manage',
             id=forum_id,
-            error='Forum login URL is missing',
         ))
     data = {
         'url': url,
@@ -310,7 +314,8 @@ def forum_explorer_crawler_account_interactive_cookiejar():
     if res[1] != 200:
         print(res)
         error = res[0].get('error') or 'Unable to start interactive cookiejar session'
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
+        flash(error, 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     return redirect(url_for('crawler_splash.interactive_capture_show', uuid=res[0]['uuid']))
 
 
@@ -325,9 +330,11 @@ def forum_explorer_crawler_account_reactivate():
     target = 'forums_explorer.forum_explorer_crawler_status' if next_page == 'status' else 'forums_explorer.forum_explorer_crawler_manage'
     if res[1] != 200:
         error = res[0].get('error') or 'Unable to send account back to crawler queue'
-        return redirect(url_for(target, id=forum_id, error=error))
+        flash(error, 'danger')
+        return redirect(url_for(target, id=forum_id))
     success = f"Discarded the failed crawl and reactivated account {account_id}"
-    return redirect(url_for(target, id=forum_id, success=success))
+    flash(success, 'success')
+    return redirect(url_for(target, id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/error/screenshot", methods=['GET'])
@@ -379,9 +386,11 @@ def forum_explorer_crawler_account_inflight_purge():
     res = forums_viewer.api_purge_forum_account_current_inflight_crawl(forum_id, account_id)
     if res[1] != 200:
         error = res[0].get('error')
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
+        flash(error, 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     success = f"Purged current inflight crawl for account {account_id}"
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
+    flash(success, 'success')
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/inflight/resend", methods=['POST'])
@@ -393,9 +402,11 @@ def forum_explorer_crawler_account_inflight_resend():
     res = forums_viewer.api_resend_forum_account_current_inflight_crawl(forum_id, account_id)
     if res[1] != 200:
         error = res[0].get('error')
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
+        flash(error, 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     success = f"Queued the current crawl again for account {account_id}"
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
+    flash(success, 'success')
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 
 @forums_explorer.route("/forums/explorer/crawler/account/inflight/requeue", methods=['POST'])
@@ -407,9 +418,11 @@ def forum_explorer_crawler_account_inflight_requeue():
     res = forums_viewer.api_resend_forum_account_current_inflight_crawl(forum_id, account_id, priority=15)
     if res[1] != 200:
         error = res[0].get('error')
-        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
+        flash(error, 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     success = f"Resent the current crawl to the queue for account {account_id} with priority 15"
-    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
+    flash(success, 'success')
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
 
 @forums_explorer.route("/forums/explorer/crawler/account/delete", methods=['POST'])
 @login_required
