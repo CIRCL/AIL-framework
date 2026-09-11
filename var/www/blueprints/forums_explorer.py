@@ -296,7 +296,7 @@ def forum_explorer_crawler_account_interactive_cookiejar():
         'proxy': config.get('proxy') or 'force_tor',
         'javascript': config.get('javascript'),
         'browser': 'firefox',
-        'user_agent': crawlers.get_default_user_agent(linux=True),
+        'user_agent': crawlers.get_default_user_agent(),
         'referer': account.get_current_referer() if mode == 'repair' else None,
         'general_timeout_in_sec': 300,
         'save_cookiejar': True,
