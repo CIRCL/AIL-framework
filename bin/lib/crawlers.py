@@ -2813,7 +2813,8 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
         return error, code
     try:
         browser = data.get('browser') or 'firefox'
-        user_agent = data.get('user_agent') or get_default_user_agent()
+        user_agent = data.get('user_agent') if 'user_agent' in data else get_default_user_agent()
+        referer = data.get('referer')
         cookiejar_only = bool(data.get('cookiejar_only'))
         if cookiejar_only:
             har = False
@@ -2843,6 +2844,7 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
                                       force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
                                       user_agent=user_agent, java_script_enabled=task['javascript'],
                                       cookies=crawler_task.get_cookies(), storage=crawler_task.get_local_storage(),
+                                      referer=referer,
                                       general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
