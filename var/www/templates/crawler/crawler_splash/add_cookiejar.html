@@ -31,6 +31,15 @@
 							<h5 class="card-title"><i class="fas fa-box"></i> Create Cookiejar <i class="fas fa-cookie"></i></h5>
 						</div>
 						<div class="card-body">
+							{% if current_user.is_admin() %}
+								<div class="mb-3">
+									<h5>Import a complete cookiejar</h5>
+									{% with cookiejar_uuid=None, import_label='Import Cookiejar JSON' %}
+										{% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+									{% endwith %}
+								</div>
+								<hr>
+							{% endif %}
 
 							<form action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
 
