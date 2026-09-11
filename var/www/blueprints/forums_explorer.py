@@ -276,7 +276,10 @@ def forum_explorer_crawler_account_interactive_cookiejar():
     cookiejar_uuid = account.get_cookiejar_uuid()
     if mode == 'repair' and not cookiejar_uuid:
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error='Account has no cookiejar to repair'))
-    url = forum.get_url() or account.get_current_url()
+    if mode == 'repair':
+        url = account.get_current_url() or forum.get_url()
+    else:
+        url = forum.get_url() or account.get_current_url()
     url = forums_viewer.apply_forum_current_domain(url, config.get('current_domain'))
     if not url:
         return redirect(url_for(
