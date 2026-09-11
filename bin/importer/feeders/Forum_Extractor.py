@@ -217,7 +217,12 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         parent_obj = self.create_hierarchy_object(edge)
         child_obj = self.create_hierarchy_object(edge, parent=False)
 
-        if self._set_parent_once(child_obj, parent_obj.get_global_id()):
+        if child_type == 'forum-thread':
+            parent_set = self._set_thread_parent(child_obj, parent_obj)
+        else:
+            parent_set = self._set_parent_once(child_obj, parent_obj.get_global_id())
+
+        if parent_set:
             if parent_obj.type == 'subforum':
                 parent_obj._add_subtype()
             if child_obj.type == 'subforum':
@@ -284,12 +289,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             return None
         thread = ForumThread(thread_data.get('thread_id'), self.forum.id)
         if subforum:
-            current_parent = thread.get_parent()
-            if current_parent and current_parent != subforum.get_global_id():
-                thread.move_to_subforum(subforum)
-                self.logger.warning(f'Moved {thread.get_global_id()} from {current_parent} to {subforum.get_global_id()}')
-            else:
-                self._set_parent_once(thread, subforum.get_global_id())
+            self._set_thread_parent(thread, subforum)
         if not thread.get_parent():
             self.logger.warning(f'ForumThread has no parent for {thread.get_global_id()}')
             return None
@@ -315,6 +315,16 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         #     'current_page': thread_data.get('thread_current_page'),
         # }))
         return thread
+
+    def _set_thread_parent(self, thread, subforum):
+        """Set a thread parent, moving it when the forum reports a new subforum."""
+        current_parent = thread.get_parent()
+        new_parent = subforum.get_global_id()
+        if current_parent and current_parent != new_parent:
+            thread.move_to_subforum(subforum)
+            self.logger.warning(f'Moved {thread.get_global_id()} from {current_parent} to {new_parent}')
+            return True
+        return self._set_parent_once(thread, new_parent)
 
     def _set_parent_once(self, child_obj, parent_global_id):
         existing_parent = child_obj.get_parent()
