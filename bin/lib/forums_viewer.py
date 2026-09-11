@@ -338,7 +338,7 @@ def api_purge_forum_account_current_inflight_crawl(forum_id, account_id):
     forum.purge_account_current_inflight_crawl(account, crawl_key)
     return account_id, 200
 
-def api_resend_forum_account_current_inflight_crawl(forum_id, account_id):
+def api_resend_forum_account_current_inflight_crawl(forum_id, account_id, priority=100):
     forum = Forums.Forum(forum_id)
     if not forum.exists():
         return {"status": "error", "error": "Unknown forum"}, 404
@@ -357,7 +357,7 @@ def api_resend_forum_account_current_inflight_crawl(forum_id, account_id):
     valid, reason = forum.validate_crawl_item(item)
     if not valid:
         return False, {'status': 'error', 'error': reason, 'crawl_key': crawl_key}
-    forum.resend_account_current_inflight_crawl(account, crawl_key)
+    forum.resend_account_current_inflight_crawl(account, crawl_key, score=priority)
     crawlers.remove_running_forum_crawler_account(forum.id, account.id)
     return account_id, 200
 

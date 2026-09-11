@@ -397,6 +397,20 @@ def forum_explorer_crawler_account_inflight_resend():
     success = f"Queued the current crawl again for account {account_id}"
     return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
 
+
+@forums_explorer.route("/forums/explorer/crawler/account/inflight/requeue", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_account_inflight_requeue():
+    forum_id = request.form.get('forum_id')
+    account_id = request.form.get('account_id')
+    res = forums_viewer.api_resend_forum_account_current_inflight_crawl(forum_id, account_id, priority=15)
+    if res[1] != 200:
+        error = res[0].get('error')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, error=error))
+    success = f"Resent the current crawl to the queue for account {account_id} with priority 15"
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id, success=success))
+
 @forums_explorer.route("/forums/explorer/crawler/account/delete", methods=['POST'])
 @login_required
 @login_admin

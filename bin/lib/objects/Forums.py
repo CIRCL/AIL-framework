@@ -1023,10 +1023,9 @@ class Forum(AbstractDaterangeObject):
         self.refresh_account_availability(account.id)
         return account
 
-    def resend_account_current_inflight_crawl(self, account, crawl_key):
+    def resend_account_current_inflight_crawl(self, account, crawl_key, score=100):
         if not crawl_key:
             crawl_key = account.get_current_crawl_key()
-        score = 100
         r_object.hdel(f'forum:crawl:inflight:{self.id}', crawl_key)
         r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: score})
         r_object.sadd(f'forum:crawl:queued:{self.id}', crawl_key)
