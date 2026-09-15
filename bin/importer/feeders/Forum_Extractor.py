@@ -392,7 +392,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         # print('--------------------------------------------------')
         # print(post_data.get('content', {}).get('images', []))
         for url in post_data.get('content', {}).get('images', []):
-            print('URL:', url)
+            # print('URL:', url)
             if url in self.har_images:
                 image = self._create_image_from_har_url(url, post.get_date(), post)
                 if image:
@@ -410,7 +410,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         return post
 
     def _create_image_from_har_url(self, url, date, obj):
-        print(url)
+        # print(url)
         image_payload = self.har_images[url]
         content = image_payload['content']
         if not image_payload['b64'] and isinstance(content, str):
