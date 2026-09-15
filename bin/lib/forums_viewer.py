@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ail_core import unpack_obj_global_id
+from lib import ail_core
 # from lib.ConfigLoader import ConfigLoader
 from lib.objects import Forums
 from lib.objects import Subforums
@@ -249,7 +250,12 @@ def _account_form_to_meta(data, meta=None):
     else:
         meta['enabled'] = 0
     meta['status'] = data.get('status', 'need_manual_login')
-    meta['cookiejar_uuid'] = data.get('cookiejar_uuid', None)
+    cookiejar_uuid = data.get('cookiejar_uuid')
+    if isinstance(cookiejar_uuid, str):
+        cookiejar_uuid = cookiejar_uuid.strip()
+    if cookiejar_uuid and not ail_core.is_valid_uuid_v4(cookiejar_uuid):
+        raise ValueError('cookiejar_uuid must be a valid UUIDv4')
+    meta['cookiejar_uuid'] = cookiejar_uuid or None
     random_time_between_page = data.get('random_time_between_page')
     if random_time_between_page in (None, ''):
         meta['random_time_between_page'] = None
