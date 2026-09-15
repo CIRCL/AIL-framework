@@ -27,8 +27,8 @@
                 <td>{{ session.status }}{% if session.remote_status %}<br><small class="text-muted">remote: {{ session.remote_status }}</small>{% endif %}</td>
                 <td>{% if session.remote_url %}<a class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" href="{{ session.remote_url }}">open</a>{% endif %}</td>
                 <td>
-                    <form method="post" action="{{ url_for('crawler_splash.interactive_capture_admin_close', uuid=session.uuid) }}" onsubmit="return confirm('Close this interactive session and remove its task/capture?');">
-                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-times"></i> Close</button>
+                    <form method="post" action="{{ url_for('crawler_splash.interactive_capture_admin_close', uuid=session.uuid) }}" onsubmit="return confirm('Cancel this session? Cookies, local storage, and page content will be discarded.');">
+                        <button class="btn btn-sm btn-danger" type="submit"><i class="fas fa-times"></i> Cancel</button>
                     </form>
                 </td>
             </tr>

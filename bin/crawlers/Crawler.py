@@ -363,6 +363,11 @@ class Crawler(AbstractModule):
 
         print(entries.get('status'))
         if task.is_cookiejar_only():
+            if self.interactive_session and self.interactive_session.is_cancelled():
+                task.remove()
+                self.interactive_session = None
+                self.root_item = None
+                return None
             if entries.get('error'):
                 error_message = str(entries['error'])
                 self.logger.warning(error_message)
@@ -373,8 +378,12 @@ class Crawler(AbstractModule):
                 if self.interactive_session:
                     cookiejar_saved = crawlers.finalize_interactive_cookiejar_session(capture.uuid, entries.get('storage', {}), session=self.interactive_session)
                 if self.interactive_session:
-                    if cookiejar_saved is False:
+                    if self.interactive_session.is_cancelled():
+                        pass
+                    elif cookiejar_saved is False:
                         crawlers.release_interactive_session_by_capture(capture.uuid, status='error', session=self.interactive_session)
+                    elif crawlers.enqueue_interactive_forum_capture(capture.uuid, self.interactive_session):
+                        self.interactive_session.set('status', 'processing')
                     else:
                         crawlers.release_interactive_session_by_capture(capture.uuid, status='completed', session=self.interactive_session)
             task.remove()

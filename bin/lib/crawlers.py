@@ -2526,8 +2526,8 @@ def can_launch_forum_crawler_account():
 
 INTERACTIVE_SESSION_TTL = 3600
 INTERACTIVE_SESSION_META_TTL = 3600
-INTERACTIVE_ACTIVE_STATES = {'starting', 'ready', 'finishing'}
-INTERACTIVE_FINAL_STATES = {'completed', 'expired', 'error', 'closed'}
+INTERACTIVE_ACTIVE_STATES = {'starting', 'ready', 'finishing', 'processing'}
+INTERACTIVE_FINAL_STATES = {'completed', 'cancelled', 'expired', 'error', 'closed'}
 
 def get_max_interactive_crawler():
     nb = r_cache.hget('crawler:lacus', 'max_interactive_crawler')
@@ -2622,6 +2622,53 @@ def release_interactive_session_by_capture(capture_uuid, status='completed', ses
             session.set('capture_status', CaptureStatus.DONE.name)
         session.release(status=status)
 
+def enqueue_interactive_forum_capture(capture_uuid, session):
+    if not session or session.is_cancelled() or session.get('import_forum_page') != '1':
+        return False
+    if r_cache.sismember('crawler:interactive:forum_import:done', capture_uuid):
+        return False
+    if not r_cache.sadd('crawler:interactive:forum_import:queued', capture_uuid):
+        return False
+    message = {
+        'interactive': True,
+        'capture_uuid': capture_uuid,
+        'session_uuid': session.uuid,
+        'forum_id': session.get('forum_id'),
+        'account_id': session.get('forum_account_id'),
+        'url': session.get('url'),
+        'referer': session.get('referer'),
+    }
+    r_cache.lpush('crawler:interactive:forum_import', json.dumps(message))
+    return True
+
+def get_interactive_forum_capture_to_process():
+    message = r_cache.rpop('crawler:interactive:forum_import')
+    if message:
+        return json.loads(message)
+    return None
+
+def mark_interactive_forum_capture_processed(capture_uuid):
+    r_cache.srem('crawler:interactive:forum_import:queued', capture_uuid)
+    r_cache.sadd('crawler:interactive:forum_import:done', capture_uuid)
+
+def discard_interactive_forum_capture(capture_uuid):
+    r_cache.srem('crawler:interactive:forum_import:queued', capture_uuid)
+
+def _release_interactive_forum_account(session, restore_previous=False):
+    forum_id = session.get('forum_id')
+    account_id = session.get('forum_account_id')
+    if not forum_id or not account_id:
+        return
+    from lib.objects import Forums
+    forum = Forums.Forum(forum_id)
+    if not forum.exists() or not forum.exists_account(account_id):
+        return
+    account = forum.get_crawl_account(account_id)
+    if account.get_status() == 'interactive':
+        previous_status = session.get('forum_account_previous_status')
+        account.set_status(previous_status if restore_previous and previous_status else 'waiting')
+    forum.refresh_account_availability(account_id)
+
 def get_active_interactive_sessions():
     cleanup_stale_interactive_sessions()
     sessions = []
@@ -2678,7 +2725,7 @@ def _remote_headed_response_to_meta(response):
 def finalize_interactive_cookiejar_session(capture_uuid, storage, session=None):
     if session is None:
         session = get_interactive_session_by_capture(capture_uuid)
-    if not session or session.get('save_cookiejar') != '1':
+    if not session or session.is_cancelled() or session.get('save_cookiejar') != '1':
         return None
     try:
         if not storage or not isinstance(storage, dict):
@@ -2706,8 +2753,9 @@ def finalize_interactive_cookiejar_session(capture_uuid, storage, session=None):
             if forum.exists() and forum.exists_account(account_id):
                 account = forum.get_crawl_account(account_id)
                 account.set_cookiejar_uuid(cookiejar_uuid)
-                account.set_status('waiting')
-                forum.refresh_account_availability(account_id)
+                if session.get('import_forum_page') != '1':
+                    account.set_status('waiting')
+                    forum.refresh_account_availability(account_id)
         return True
     except Exception as e:
         session.set('error', str(e))
@@ -2770,6 +2818,9 @@ class InteractiveCrawlerSession:
     def is_active(self):
         return self.exists() and self.get_status() in INTERACTIVE_ACTIVE_STATES
 
+    def is_cancelled(self):
+        return self.get_status() == 'cancelled' or self.get('cancelled') == '1'
+
     def get_capture_uuid(self):
         return self.get('capture_uuid')
 
@@ -2802,8 +2853,10 @@ class InteractiveCrawlerSession:
             r_cache.hdel('crawler:interactive:captures', capture_uuid)
         if user:
             r_cache.hdel('crawler:interactive:users', user)
-        if status in {'error', 'expired', 'closed'}:
+        if status in {'cancelled', 'error', 'expired', 'closed'}:
             _cleanup_interactive_task_capture(task_uuid=task_uuid, capture_uuid=capture_uuid)
+        if status != 'processing':
+            _release_interactive_forum_account(self, restore_previous=status == 'cancelled')
 
     def expire(self):
         self.release(status='expired')
@@ -2879,6 +2932,17 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
             if data.get('forum_id') and data.get('forum_account_id'):
                 session.set('forum_id', data.get('forum_id'))
                 session.set('forum_account_id', data.get('forum_account_id'))
+                session.set('interactive_mode', data.get('interactive_mode') or 'cookiejar_create')
+                if data.get('import_forum_page'):
+                    session.set('import_forum_page', '1')
+                if referer:
+                    session.set('referer', referer)
+                from lib.objects import Forums
+                forum = Forums.Forum(data.get('forum_id'))
+                account = forum.get_crawl_account(data.get('forum_account_id'))
+                session.set('forum_account_previous_status', account.get_status() or 'waiting')
+                account.set_status('interactive')
+                forum.refresh_account_availability(account.id)
         refresh_interactive_session_status(session)
         return session.get_meta(), 200
     except Exception as e:
@@ -2939,6 +3003,33 @@ def api_admin_close_interactive_session(session_uuid):
         except Exception as e:
             session.set('error', str(e))
     session.release(status='closed')
+    return session.get_meta(), 200
+
+def api_cancel_interactive_session(session_uuid, user_id=None, is_admin=False):
+    session = InteractiveCrawlerSession(session_uuid)
+    if not session.exists():
+        return {'error': 'Unknown interactive session'}, 404
+    if not is_admin and session.get_user() != user_id:
+        return {'error': 'Forbidden'}, 403
+    if session.is_cancelled():
+        return session.get_meta(), 200
+    if session.get_status() in INTERACTIVE_FINAL_STATES:
+        return {'error': 'Interactive session is already finished'}, 409
+    if session.get_status() == 'processing':
+        return {'error': 'Interactive session can no longer be cancelled'}, 409
+    if session.get_status() not in INTERACTIVE_ACTIVE_STATES:
+        return {'error': 'Interactive session can no longer be cancelled'}, 409
+    session.set('cancelled', '1')
+    session.set('status', 'cancelled')
+    capture_uuid = session.get_capture_uuid()
+    if capture_uuid:
+        discard_interactive_forum_capture(capture_uuid)
+        try:
+            lacus = get_lacus()
+            lacus.finish_remote_headed_session(capture_uuid)
+        except Exception as e:
+            session.set('last_status_error', str(e))
+    session.release(status='cancelled')
     return session.get_meta(), 200
 
 

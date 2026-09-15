@@ -17,7 +17,7 @@
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
             <div>
                 <p class="text-uppercase text-info font-weight-bold mb-2"><i class="fas fa-desktop"></i> Interactive crawler session</p>
-                <h1 class="display-4 mb-2" id="interactive_title">{% if session.status == 'completed' %}Capture completed{% elif session.status == 'finishing' %}Capture finishing{% elif session.status in ['expired', 'error', 'closed'] %}Session {{ session.status }}{% else %}Interactive capture{% endif %}</h1>
+                <h1 class="display-4 mb-2" id="interactive_title">{% if session.status == 'completed' %}Capture completed{% elif session.status == 'processing' %}Capture processing{% elif session.status == 'finishing' %}Capture finishing{% elif session.status in ['cancelled', 'expired', 'error', 'closed'] %}Session {{ session.status }}{% else %}Interactive capture{% endif %}</h1>
                 <p class="lead mb-0 text-break">{{ session.url }}</p>
             </div>
             <div class="mt-4 mt-lg-0 text-lg-right">
@@ -38,7 +38,7 @@
                     <div id="remote_starting" class="alert alert-info" {% if session.remote_url or session.status in ['finishing', 'completed', 'expired', 'error', 'closed'] %}style="display:none;"{% endif %}>
                         <i class="fas fa-spinner fa-spin"></i> The interactive browser is starting. This page updates automatically; the browser link will appear as soon as it is ready.
                     </div>
-                    <div id="capture_processing" class="alert alert-success" {% if session.status not in ['finishing', 'completed'] %}style="display:none;"{% endif %}>
+                    <div id="capture_processing" class="alert alert-success" {% if session.status not in ['finishing', 'processing', 'completed'] %}style="display:none;"{% endif %}>
                         <i class="fas fa-check-circle"></i> The interactive session is completed. AIL is saving and processing the browser state; results URL will appear in AIL when processing is finished.
                     </div>
                     <div id="capture_stopped_pending_import" class="alert alert-info" {% if session.remote_status|lower != 'stopped' or session.status in ['completed', 'expired', 'error', 'closed'] %}style="display:none;"{% endif %}>
@@ -68,6 +68,9 @@
                     {% if session.status in ['starting', 'ready'] and session.capture_status != 'DONE' and session.remote_status|lower != 'stopped' %}
                         <form id="finish_capture_form" class="d-inline-block ml-lg-2 mt-3 mt-lg-0" method="post" action="{{ url_for('crawler_splash.interactive_capture_finish', uuid=session.uuid) }}">
                             <button id="finish_capture_btn" class="btn btn-success btn-lg" type="submit"><i class="fas fa-check"></i> Finish capture</button>
+                        </form>
+                        <form id="cancel_capture_form" class="d-inline-block ml-lg-2 mt-3 mt-lg-0" method="post" action="{{ url_for('crawler_splash.interactive_capture_cancel', uuid=session.uuid) }}" onsubmit="return confirm('Cancel this session? Cookies, local storage, and page content from this session will be discarded.');">
+                            <button id="cancel_capture_btn" class="btn btn-danger btn-lg" type="submit"><i class="fas fa-times"></i> Cancel</button>
                         </form>
                     {% endif %}
                 </div>
@@ -113,7 +116,7 @@
 </div></div>
 </body>
 <script>
-const interactiveFinalStates = ['completed', 'expired', 'error', 'closed'];
+const interactiveFinalStates = ['completed', 'cancelled', 'expired', 'error', 'closed'];
 let interactiveStatusTimer = null;
 
 $(document).ready(function(){
@@ -136,7 +139,9 @@ function stop_interactive_status_refresh(){
 function update_interactive_title(status){
     const titles = {
         finishing: 'Capture finishing',
+        processing: 'Capture processing',
         completed: 'Capture completed',
+        cancelled: 'Session cancelled',
         expired: 'Session expired',
         error: 'Session error',
         closed: 'Session closed'
@@ -147,6 +152,11 @@ function update_interactive_title(status){
 function hide_finish_capture_button(){
     $('#finish_capture_btn').prop('disabled', true).hide().addClass('d-none');
     $('#finish_capture_form').hide().addClass('d-none');
+}
+
+function hide_cancel_capture_button(){
+    $('#cancel_capture_btn').prop('disabled', true).hide().addClass('d-none');
+    $('#cancel_capture_form').hide().addClass('d-none');
 }
 
 function is_capture_done(captureStatus){
@@ -202,16 +212,18 @@ function update_interactive_controls(status, captureStatus, remoteStatus){
     }
     if(remoteStopped){
         hide_finish_capture_button();
+        hide_cancel_capture_button();
         hide_remote_browser_controls();
         $('#remote_starting').hide();
     }
-    if(['finishing', 'completed', 'expired', 'error', 'closed'].includes(normalizedStatus)){
+    if(['finishing', 'completed', 'cancelled', 'expired', 'error', 'closed'].includes(normalizedStatus)){
         hide_finish_capture_button();
+        hide_cancel_capture_button();
         hide_remote_browser_controls();
         $('#remote_starting').hide();
         $('#remote_status_row').hide();
     }
-    if(['finishing', 'completed'].includes(normalizedStatus)){
+    if(['finishing', 'processing', 'completed'].includes(normalizedStatus)){
         $('#capture_processing').show();
     }
     update_stopped_pending_import_message(normalizedStatus, remoteStatus);

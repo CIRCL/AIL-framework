@@ -180,6 +180,7 @@
           <input type="hidden" name="account_id" value="{{ account['id'] }}">
           <button class="btn btn-sm btn-outline-primary" name="mode" value="create" {% if not forum.get('url') and not account.get('current_url') %}disabled{% endif %} onclick="return confirm('Create and select a new cookiejar for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-plus"></i> Create new cookiejar</button>
           <button class="btn btn-sm btn-warning" name="mode" value="repair" {% if not account.get('cookiejar_uuid') or (not forum.get('url') and not account.get('current_url')) %}disabled{% endif %} onclick="return confirm('Open the current cookiejar to repair the login for account ' + {{ account['id']|tojson|forceescape }} + '?')"><i class="fas fa-tools"></i> Repair current cookiejar</button>
+          <button class="btn btn-sm btn-outline-info" name="mode" value="browse" {% if not account.get('cookiejar_uuid') or not forum.get('url') %}disabled{% endif %}><i class="fas fa-globe"></i> Browse forum</button>
         </form>
         <div class="mt-2">
           {% if account.get('local_login_command') %}

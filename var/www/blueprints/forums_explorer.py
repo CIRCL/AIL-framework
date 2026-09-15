@@ -273,11 +273,14 @@ def forum_explorer_crawler_account_interactive_cookiejar():
     config = forum.get_crawl_config()
     account = forum.get_crawl_account(account_id)
     mode = request.form.get('mode') or 'create'
-    if mode not in {'create', 'repair'}:
+    if mode not in {'create', 'repair', 'browse'}:
         flash('Unknown interactive login mode', 'danger')
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
+    if account.get_status() in {'crawling', 'interactive'}:
+        flash('This forum account is already in use', 'danger')
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     cookiejar_uuid = account.get_cookiejar_uuid()
-    if mode == 'repair' and not cookiejar_uuid:
+    if mode in {'repair', 'browse'} and not cookiejar_uuid:
         flash('Account has no cookiejar to repair', 'danger')
         return redirect(url_for('forums_explorer.forum_explorer_crawler_manage', id=forum_id))
     if mode == 'repair':
@@ -301,12 +304,18 @@ def forum_explorer_crawler_account_interactive_cookiejar():
         'javascript': config.get('javascript'),
         'browser': 'firefox',
         'user_agent': crawlers.get_default_user_agent(linux=True),
-        'referer': account.get_current_referer() if mode == 'repair' else None,
+        'referer': account.get_current_referer() if mode == 'repair' else config.get('default_referer'),
         'general_timeout_in_sec': 300,
         'save_cookiejar': True,
         'cookiejar_only': True,
+        'interactive_mode': {
+            'create': 'cookiejar_create',
+            'repair': 'cookiejar_repair',
+            'browse': 'forum_browse',
+        }[mode],
+        'import_forum_page': mode in {'repair', 'browse'},
     }
-    if mode == 'repair':
+    if mode in {'repair', 'browse'}:
         data['cookiejar'] = cookiejar_uuid
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()

@@ -223,6 +223,16 @@ def interactive_capture_finish(uuid):
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.interactive_capture_show', uuid=uuid))
 
+@crawler_splash.route("/crawlers/interactive/<uuid>/cancel", methods=['POST'])
+@login_required
+@login_user_no_api
+def interactive_capture_cancel(uuid):
+    user_id = current_user.get_user_id()
+    res = crawlers.api_cancel_interactive_session(uuid, user_id=user_id, is_admin=current_user.get_role() == 'admin')
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=uuid))
+
 @crawler_splash.route("/crawlers/interactive/admin", methods=['GET'])
 @login_required
 @login_admin
@@ -234,7 +244,7 @@ def interactive_capture_admin():
 @login_required
 @login_admin
 def interactive_capture_admin_close(uuid):
-    res = crawlers.api_admin_close_interactive_session(uuid)
+    res = crawlers.api_cancel_interactive_session(uuid, is_admin=True)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.interactive_capture_admin'))
