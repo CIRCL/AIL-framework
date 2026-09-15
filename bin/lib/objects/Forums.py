@@ -268,7 +268,7 @@ class ForumAccount:
             reason = 'forum_disabled'
         elif not self.is_enabled():
             reason = 'disabled'
-        elif status in ['error', 'need_manual_login', 'banned', 'disabled']:
+        elif status in ['error', 'need_manual_login', 'banned', 'disabled', 'crawling']:
             reason = status
         elif status != 'waiting':
             reason = 'not_waiting'
