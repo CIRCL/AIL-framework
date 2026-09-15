@@ -38,6 +38,15 @@ class Subforum(AbstractSubtypeObject):
     def set_url(self, url):
         self._set_field('url', url)
 
+    def move_to_parent(self, parent_global_id):
+        old_parent = self.get_parent()
+        if old_parent == parent_global_id:
+            return False
+        if old_parent:
+            r_object.srem(f'child:{old_parent}', self.get_global_id())
+        self.set_parent(obj_global_id=parent_global_id)
+        return True
+
     def get_category(self):
         return self._get_field('category')
 

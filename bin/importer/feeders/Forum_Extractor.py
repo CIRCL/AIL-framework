@@ -331,6 +331,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         if existing_parent == parent_global_id:
             return True
         if existing_parent:
+            if child_obj.type == 'subforum':
+                child_obj.move_to_parent(parent_global_id)
+                self.logger.warning(f'Moved {child_obj.get_global_id()} from {existing_parent} to {parent_global_id}')
+                return True
             self.logger.warning(f'Hierarchy parent conflict for {child_obj.get_global_id()}: existing={existing_parent} new={parent_global_id}')
             return False
         child_obj.set_parent(obj_global_id=parent_global_id)
