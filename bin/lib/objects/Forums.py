@@ -600,7 +600,16 @@ class Forum(AbstractDaterangeObject):
         r_object.zrem(f'forum:accounts:available:{self.id}', account_id)
 
     def refresh_account_availability(self, account_id):
-        ForumAccount(self.id, account_id).refresh_availability(forum_enabled=self.is_enabled())
+        account = self.get_crawl_account(account_id)
+        account.refresh_availability(forum_enabled=self.is_enabled())
+        if not self.get_pending_crawl_keys(0, 0):
+            return
+        account_available_at = r_object.zscore(f'forum:accounts:available:{self.id}', account_id)
+        if account_available_at is None:
+            return
+        forum_scheduled_at = r_cache.zscore('forum:crawl:scheduled', self.id)
+        if forum_scheduled_at is None or account_available_at < forum_scheduled_at:
+            r_cache.zadd('forum:crawl:scheduled', {self.id: int(account_available_at)})
 
     def refresh_accounts_availability(self):
         for account_id in self.get_crawl_accounts():

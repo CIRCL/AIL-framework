@@ -47,7 +47,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
 
         if status == 'success':
             objs = self._import_success(meta)
-            print(objs)
+            # print(objs)
             return objs
         if status == 'unsupported_page_type':
             self.logger.error(f"Forum extractor unsupported page type: {meta.get('page_type')}")
@@ -96,7 +96,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
 
         self._mark_seen_subforum_orphans()
 
-        imported = {'forum': 1, 'subforum': 0, 'forum-thread': 0, 'post': 0}
+        imported = {'forum': 1, 'subforum': 0, 'forum-thread': 0, 'post': 0, 'image': 0}
 
         # Import Threads
         thread_objs = []
@@ -123,7 +123,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             if post:
                 imported_posts.append((post, post_data))
                 imported['post'] += 1
-                print(post.id)
+                # print(post.id)
                 self.objs_to_process.add(post)
         if imported_posts:
             last_post = imported_posts[-1][1]
@@ -141,6 +141,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             for date_value in date_values:
                 if current_subforum:
                     current_subforum.update_daterange(date_value)
+        imported['image'] = sum(1 for obj in self.objs_to_process if obj.type == 'image')
         print({'status': 'success', 'imported': imported})
         return self.objs_to_process
 
@@ -424,7 +425,7 @@ class Forum_ExtractorFeeder(DefaultFeeder):
             # create correlation image - obj # TODO correlation forum ?
             image.add(date, obj)
             self.objs_to_process.add(image)
-            print(image.id)
+            # print(image.id)
         return image
 
     # TODO A POST MUST HAVE AN USER ACCOUNT
