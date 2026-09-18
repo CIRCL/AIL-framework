@@ -117,6 +117,9 @@
 <form method="post" action="{{ url_for('forums_explorer.forum_explorer_crawler_config_edit') }}">
   <input type="hidden" name="forum_id" value="{{ forum['id'] }}">
   <div class="form-row">
+    <div class="form-group col-md-12"><label>Forum name</label><input class="form-control" name="name" value="{{ forum.get('name') or '' }}" placeholder="Forum display name"></div>
+  </div>
+  <div class="form-row">
     <div class="form-group col-md-2"><label>enabled</label><input type="checkbox" name="enabled" class="form-control" {% if config.get('enabled') %}checked{% endif %}></div>
     <div class="form-group col-md-2"><label>javascript</label><input type="checkbox" name="javascript" class="form-control" {% if config.get('javascript') %}checked{% endif %}></div>
     <div class="form-group col-md-3"><label>Parser type</label>{% if meta['parser_types'] %}<select class="form-control" name="forum_type" required>{% for parser_type in meta['parser_types'] %}<option value="{{ parser_type }}" {% if forum.get('forum_type') == parser_type %}selected{% endif %}>{{ parser_type }}</option>{% endfor %}</select>{% else %}<input class="form-control" disabled>{% endif %}</div>

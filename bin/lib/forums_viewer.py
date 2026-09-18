@@ -150,6 +150,8 @@ def create_forum(data):
         return {"status": "error", "error": "Missing forum_id"}, 400
     if not forum_type:
         return {"status": "error", "error": "Missing forum_type"}, 400
+    if forum_type not in FORUM_PARSER_TYPES:
+        return {"status": "error", "error": "Invalid forum parser type"}, 400
     forum = Forums.Forum(forum_id)
     if forum.exists():
         return {"status": "error", "error": "Forum already exists", "forum_id": forum_id}, 409
@@ -237,6 +239,8 @@ def update_forum_crawl_config(forum_id, data):
     if current_domain and forum.get_url():
         forum.set_url(apply_forum_current_domain(forum.get_url(), current_domain))
     meta = forum.set_crawl_config(config)
+    if 'name' in data:
+        forum.set_name((data.get('name') or '').strip())
     if forum_type:
         forum.set_forum_type(forum_type)
     forum.refresh_accounts_availability()
@@ -735,6 +739,17 @@ def remove_forum_pending_crawl_item(forum_id, crawl_key):
     if not removed:
         return {'status': 'error', 'reason': 'not_pending'}, 404
     return {'forum_id': forum_id, 'crawl_key': crawl_key}, 200
+
+
+def prioritize_forum_pending_crawl_item(forum_id, crawl_key):
+    forum = Forums.Forum(forum_id)
+    if not forum.exists():
+        return {"status": "error", "reason": "Unknown forum"}, 404
+    prioritized, reason = forum.set_pending_crawl_item_priority(crawl_key, 100)
+    if not prioritized:
+        status_code = 409 if reason == 'already_crawling' else 404
+        return {'status': 'error', 'reason': reason}, status_code
+    return {'forum_id': forum_id, 'crawl_key': crawl_key, 'priority': 100}, 200
 
 def get_breadcrumb_for_object(obj):
     """Return parent breadcrumb entries from Forum to the given object."""

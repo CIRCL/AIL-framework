@@ -944,6 +944,14 @@ class Forum(AbstractDaterangeObject):
         self._cleanup_crawl_item(crawl_key)
         return True
 
+    def set_pending_crawl_item_priority(self, crawl_key, priority):
+        if self.get_inflight_crawl_item(crawl_key):
+            return False, 'already_crawling'
+        updated = r_object.zadd(f'forum:crawl:queue:{self.id}', {crawl_key: priority}, xx=True, ch=True)
+        if not updated:
+            return False, 'not_pending'
+        return True, None
+
     def fail_crawl_item(self, crawl_key, error=None):
         item = self.get_crawl_item(crawl_key)
         if item and item.get('type') == 'forum-thread':

@@ -99,7 +99,7 @@ def forum_explorer_forums():
         return render_template('forums_explorer_forum.html', meta=meta[0], bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
 
     forums = forums_viewer.get_forums()
-    return render_template('forums_explorer_index.html', forums=forums, bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
+    return render_template('forums_explorer_index.html', forums=forums, parser_types=forums_viewer.FORUM_PARSER_TYPES, bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
 
 
 @forums_explorer.route("/forums/explorer/create", methods=['POST'])
@@ -181,6 +181,21 @@ def forum_explorer_crawler_queue():
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
     return render_template('forums_explorer_crawler_queue.html', meta=meta[0], bootstrap_label=bootstrap_label, success=request.args.get('success'), error=request.args.get('error'))
+
+
+@forums_explorer.route("/forums/explorer/crawler/queue/priority", methods=['POST'])
+@login_required
+@login_admin
+def forum_explorer_crawler_queue_priority():
+    forum_id = request.form.get('forum_id')
+    crawl_key = request.form.get('crawl_key')
+    sample_size = request.form.get('sample_size') or 50
+    res = forums_viewer.prioritize_forum_pending_crawl_item(forum_id, crawl_key)
+    if res[1] != 200:
+        error = res[0].get('reason') or 'Unable to update crawl priority'
+        return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, sample_size=sample_size, error=error))
+    success = f"Set pending crawl item priority to 100: {crawl_key}"
+    return redirect(url_for('forums_explorer.forum_explorer_crawler_queue', id=forum_id, sample_size=sample_size, success=success))
 
 
 

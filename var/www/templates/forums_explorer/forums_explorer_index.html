@@ -46,7 +46,7 @@
             <form method="post" action="{{ url_for('forums_explorer.forum_explorer_forum_create') }}">
               <div class="form-row">
                 <div class="form-group col-md-3"><label>forum_id</label><input class="form-control" name="forum_id" placeholder="forum identifier" required></div>
-                <div class="form-group col-md-3"><label>forum_type</label><input class="form-control" name="forum_type" value="generic" required></div>
+                <div class="form-group col-md-3"><label>Parser type</label>{% if parser_types %}<select class="form-control" name="forum_type" required>{% for parser_type in parser_types %}<option value="{{ parser_type }}" {% if parser_type == 'generic' %}selected{% endif %}>{{ parser_type }}</option>{% endfor %}</select>{% else %}<input class="form-control" disabled>{% endif %}</div>
                 <div class="form-group col-md-3"><label>name</label><input class="form-control" name="name" placeholder="Display name"></div>
                 <div class="form-group col-md-3"><label>url</label><input class="form-control" name="url" placeholder="https://forum.example/"></div>
               </div>
