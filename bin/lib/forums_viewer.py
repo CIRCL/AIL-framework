@@ -346,6 +346,7 @@ def api_purge_forum_account_current_inflight_crawl(forum_id, account_id):
     if not inflight:
         return {'status': 'error', 'error': 'current_crawl_not_inflight', 'crawl_key': crawl_key}, 400
     forum.purge_account_current_inflight_crawl(account, crawl_key)
+    crawlers.remove_running_forum_crawler_account(forum.id, account.id)
     return account_id, 200
 
 def api_resend_forum_account_current_inflight_crawl(forum_id, account_id, priority=100):
