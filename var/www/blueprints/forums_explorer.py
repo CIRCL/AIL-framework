@@ -27,6 +27,8 @@ from lib import crawlers
 from lib import Language
 from lib import ail_users
 from lib import images_engine
+from lib import module_extractor
+from lib import Tag
 from packages import Date
 
 config_loader = ConfigLoader()
@@ -477,6 +479,29 @@ def objects_post_translate():
     if request.referrer:
         return redirect(request.referrer)
     return redirect(url_for('forums_explorer.forum_explorer_forums'))
+
+
+@forums_explorer.route("/objects/post", methods=['GET'])
+@login_required
+@login_read_only
+def objects_post():
+    post_id = request.args.get('id')
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    post = forums_viewer.api_get_post(post_id, translation_target=target)
+    if post[1] != 200:
+        return create_json_response(post[0], post[1])
+    post = post[0]
+    languages = Language.get_all_languages()
+    translation_languages = Language.get_translation_languages()
+    extracted = module_extractor.extract(current_user.get_user_id(), 'post', '', post['id'], content=post.get('content') or '')
+    post['extracted_matches'] = module_extractor.get_extracted_by_match(extracted)
+    return render_template('forums_explorer_post.html', meta=post, bootstrap_label=bootstrap_label,
+                           ollama_enabled=images_engine.is_ollama_enabled(), ollama_models=images_engine.get_ollama_models(),
+                           all_languages=languages, translation_languages=translation_languages,
+                           translation_target=target,
+                           modal_add_tags=Tag.get_modal_add_tags(post['id'], object_type='post'))
 
 
 @forums_explorer.route("/objects/post/translate/json", methods=['POST'])

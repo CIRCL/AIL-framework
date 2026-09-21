@@ -56,7 +56,8 @@ REGEX_MAX_SECONDS = 5
 
 CORRELATION_TO_EXTRACT = {
     'item': ['cve', 'cryptocurrency', 'title', 'username'],
-    'message': ['cve', 'cryptocurrency', 'username']
+    'message': ['cve', 'cryptocurrency', 'username'],
+    'post': ['cve', 'cryptocurrency', 'username'],
 }
 
 MODULES = {
@@ -123,17 +124,22 @@ def get_correl_match(extract_type, obj, content, start_time=None, max_seconds=EX
     map_subtype = {}
     map_value_id = {}
     for c in correl:
-        subtype, value = c.split(':', 1)
+        subtype, separator, value = c.partition(':')
+        if not separator or not value:
+            continue
         if extract_type == 'title':
             title = Title(value).get_content()
-            to_extract.append(title)
+            if not title:
+                continue
+            to_extract.append(regex_helper.regex_escape(title))
             sha256_val = sha256(title.encode()).hexdigest()
         else:
             map_subtype[value] = subtype
-            to_extract.append(value)
+            to_extract.append(regex_helper.regex_escape(value))
             sha256_val = sha256(value.encode()).hexdigest()
         map_value_id[sha256_val] = value
     if to_extract:
+        to_extract.sort(key=len, reverse=True)
         objs = _regex_finditer_safe('|'.join(to_extract), obj.get_global_id(), content, start_time or time.monotonic(),
                                     max_seconds=max_seconds)
         if extract_type == 'title' and objs:
@@ -377,7 +383,7 @@ def extract(user_id, obj_type, subtype, obj_id, content=None, priority=None, mat
                     if matches:
                         extracted = extracted + matches
 
-            for obj_t in CORRELATION_TO_EXTRACT[obj.type]:
+            for obj_t in CORRELATION_TO_EXTRACT.get(obj.type, []):
                 if deadline_exceeded(start_time):
                     logger.warning(f'module_extractor: global extraction timeout reached while processing correlations for {obj_gid}')
                     break

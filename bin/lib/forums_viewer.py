@@ -920,7 +920,35 @@ def api_get_post(post_id, translation_target=None):
     post = Posts.Post(post_id)
     if not post.exists():
         return {"status": "error", "reason": "Unknown post"}, 404
-    return post.get_meta(_POST_OPTIONS, translation_target=translation_target, flask_context=True), 200
+    meta = post.get_meta(_POST_OPTIONS, translation_target=translation_target, flask_context=True)
+    thread_gid = post.get_thread()
+    if thread_gid:
+        _, subtype, thread_id = unpack_obj_global_id(thread_gid)
+        thread = ForumThreads.ForumThread(thread_id, subtype)
+        if thread.exists():
+            page = thread.get_post_page(post.get_global_id(), 50)
+            breadcrumb = get_breadcrumb_for_object(thread)
+            meta['thread'] = _thread_meta(thread)
+            meta['thread_page'] = page if page > 0 else 1
+            meta['thread_post_number'] = thread.get_post_number(post.get_global_id())
+            meta['breadcrumb'] = breadcrumb
+            for entry in breadcrumb:
+                if entry.get('type') == 'forum':
+                    meta['forum'] = entry
+                elif entry.get('type') == 'subforum':
+                    meta['subforum'] = entry
+    if not meta.get('forum'):
+        forum = Forums.Forum(post.get_forum_id())
+        if forum.exists():
+            meta['forum'] = forum.get_meta(_FORUM_OPTIONS, flask_context=True)
+    if not meta.get('subforum'):
+        subforum_gid = post.get_subforum()
+        if subforum_gid:
+            _, subtype, subforum_id = unpack_obj_global_id(subforum_gid)
+            subforum = Subforums.Subforum(subforum_id, subtype)
+            if subforum.exists():
+                meta['subforum'] = _subforum_meta(subforum)
+    return meta, 200
 
 def api_post_detect_language(post_id):
     post = Posts.Post(post_id)

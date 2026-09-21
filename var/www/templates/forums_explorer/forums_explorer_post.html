@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% if meta.get('subforum') %}{{ meta['subforum'].get('name') or meta['subforum']['id'] }}{% else %}Post{% endif %} - AIL</title>
+  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+  <style>
+    .post-card { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.07); }
+    .post-author { background: #f6f9fb; border-right: 1px solid #d7dee2; min-width: 210px; }
+    .post-header { background: #eef3f6; border-bottom: 1px solid #d7dee2; }
+    .post-content { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
+    .post-image { max-height: 520px; max-width: 100%; object-fit: contain; }
+    .object_image { filter: blur(var(--object-image-blur, 5px)); }
+    .avatar { height: 82px; object-fit: cover; width: 82px; }
+    .forum-summary { background: linear-gradient(135deg, #263238, #455a64); border-radius: .35rem; color: white; overflow: hidden; }
+    .forum-banner { height: 150px; object-fit: cover; width: 100%; }
+    @media (max-width: 767.98px) { .post-card { display: block !important; } .post-author { border-bottom: 1px solid #d7dee2; border-right: 0; } }
+  </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid"><div class="row">
+{% include 'sidebars/sidebar_objects.html' %}
+<div class="col-12 col-lg-10" id="core_content">
+  <nav aria-label="breadcrumb" class="mt-3"><ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
+    {% if meta.get('forum') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=meta['forum']['id']) }}">{{ meta['forum'].get('name') or meta['forum']['id'] }}</a></li>{% endif %}
+    {% if meta.get('subforum') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=meta['subforum']['subtype'], id=meta['subforum']['id']) }}">{{ meta['subforum'].get('name') or meta['subforum']['id'] }}</a></li>{% endif %}
+    {% if meta.get('thread') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ meta['thread'].get('name') or meta['thread']['id'] }}</a></li>{% endif %}
+    <li class="breadcrumb-item active">Post{% if meta.get('thread_post_number') %} #{{ meta['thread_post_number'] }}{% endif %}</li>
+  </ol></nav>
+
+  <div class="row mb-3">
+    <div class="col-md-6 mb-2 mb-md-0">{% include 'objects/image/block_blur_img_slider.html' %}</div>
+    <div class="col-md-6">{% with translate_url=url_for('forums_explorer.objects_post', id=meta['id']), obj_id=meta['id'] %}{% include 'chats_explorer/block_translation.html' %}{% endwith %}</div>
+  </div>
+
+  {% if meta.get('forum') %}
+    {% set forum = meta['forum'] %}
+    <section class="forum-summary mb-4">
+      {% if forum.get('banner') %}<a href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) }}"><img class="forum-banner" src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="{{ forum.get('name') or forum['id'] }} banner"></a>{% endif %}
+      <div class="p-3 d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+          <h3 class="mb-1"><a class="text-white" href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) }}"><i class="fas fa-comments"></i> {{ forum.get('name') or forum['id'] }}</a></h3>
+          <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
+          {% if forum.get('forum_type') %}<span class="mr-3"><i class="fas fa-layer-group"></i> {{ forum['forum_type'] }}</span>{% endif %}
+          {% if forum.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+        </div>
+        <a class="btn btn-sm btn-outline-light mt-2" href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) }}">Open forum</a>
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+    <div>
+      <h2 class="mb-1">{% if meta.get('subforum') %}{{ meta['subforum'].get('name') or meta['subforum']['id'] }}{% else %}Post{% endif %}</h2>
+      <div class="d-flex flex-wrap align-items-center mt-2">
+        {% if meta.get('thread') %}<h4 class="mb-0 mr-3"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ meta['thread'].get('name') or meta['thread']['id'] }}</a></h4>{% endif %}
+        {% if meta.get('thread_post_number') %}<span class="badge badge-secondary px-2 py-1">Post #{{ meta['thread_post_number'] }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="mt-2">
+      {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype='' %}{% include 'modals/investigations_register_obj.html' %}{% endwith %}
+      <button class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal"><i class="fas fa-microscope"></i> Investigations</button>
+      {% if meta.get('thread') %}<a class="btn btn-outline-primary" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}"><i class="fas fa-comments"></i> View in thread</a>{% endif %}
+      <a class="btn btn-info" href="{{ url_for('correlation.show_correlation', type='post', id=meta['id']) }}"><i class="fas fa-project-diagram"></i> Correlations</a>
+    </div>
+  </div>
+
+  {% if meta.get('extracted_matches') %}
+    <div class="card mb-3">
+      <div class="card-header"><i class="fas fa-filter"></i> Extracted matches <span class="badge badge-warning">{{ meta['extracted_matches']|length }}</span></div>
+      <div class="card-body p-0"><div class="table-responsive"><table class="table table-sm table-striped mb-0">
+        <thead><tr><th>Type</th><th>Value</th><th>Matches</th></tr></thead>
+        <tbody>{% for match, extracted in meta['extracted_matches'].items() %}<tr>
+          <td>{{ extracted.get('subtype') or match.split(':', 1)[0] }}</td>
+          <td>{% if extracted.get('link') %}<a href="{{ extracted['link'] }}">{{ extracted.get('name') or extracted.get('id') }}</a>{% else %}{{ extracted.get('name') or extracted.get('id') }}{% endif %}</td>
+          <td>{{ extracted.get('matches')|length }}</td>
+        </tr>{% endfor %}</tbody>
+      </table></div></div>
+    </div>
+  {% endif %}
+
+  {% set user = meta.get('user-account') or {} %}
+  <div class="post-card d-flex mb-4">
+    <aside class="post-author text-center p-3">
+      {% if user.get('subtype') and user.get('id') != 'UNKNOWN' %}<a href="{{ url_for('chats_explorer.objects_user_account', subtype=user['subtype'], id=user['id']) }}"><img class="avatar rounded-circle mb-2" src="{% if user.get('icon') %}{{ url_for('objects_image.image', filename=user['icon']) }}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}" alt="{{ user['id'] }}"></a>{% else %}<img class="avatar rounded-circle mb-2" src="{{ url_for('static', filename='image/ail-icon.png') }}" alt="Unknown user">{% endif %}
+      <div class="font-weight-bold">{% if user.get('username') %}{{ user['username']['id'] }}{% else %}{{ user.get('id') or 'UNKNOWN' }}{% endif %}</div>
+      <div class="text-muted small">{{ user.get('id') or 'UNKNOWN' }}</div>
+    </aside>
+    <main class="flex-grow-1">
+      <div class="post-header d-flex justify-content-between align-items-center px-3 py-2"><span><i class="far fa-clock"></i> {{ meta.get('full_date') }}</span>{% if meta.get('state') and meta.get('state') != 'visible' %}<span class="badge badge-info">{{ meta['state'] }}</span>{% endif %}</div>
+      <div class="p-3">
+        <div class="post-content">{{ meta.get('content') or '' }}</div>
+        {% if meta.get('reactions') %}<div class="mt-3">{% for reaction, count in meta['reactions'].items() %}<span class="border rounded px-2 py-1 mr-1">{{ reaction }} {{ count }}</span>{% endfor %}</div>{% endif %}
+        {% if meta.get('images') %}<div class="mt-3 d-flex flex-wrap">{% for image in meta['images'] %}<div class="mr-3 mb-3"><a href="{{ url_for('correlation.show_correlation', type='image', id=image['id']) }}"><img class="object_image post-image border rounded" src="{{ url_for('objects_image.image', filename=image['id']) }}" alt="Post image {{ loop.index }}"></a></div>{% endfor %}</div>{% endif %}
+        {% set post_id_escape = meta['id'] | replace('/', '_') %}
+        <div id="postTranslationBlock{{ post_id_escape }}" {% if not meta.get('translation') %}style="display: none;"{% endif %}><hr><div id="postTranslationText{{ post_id_escape }}" class="post-content text-secondary">{{ meta.get('translation') or '' }}</div></div>
+        <div class="mt-3">
+          <button class="btn btn-sm btn-outline-dark" data-toggle="collapse" data-target="#translation"><i class="fas fa-language"></i> {{ meta.get('language') or 'Language' }}</button>
+          {% if meta.get('language') %}<button class="btn btn-sm btn-outline-dark" type="button" title="Translate to preferred language" aria-label="Translate to preferred language" onclick='translatePostToPreferredLanguage({{ meta['id'] | tojson }}, {{ post_id_escape | tojson }}, this)'><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"/><path fill="currentColor" d="m11.9 22l4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4l5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45l-.75 2.05l-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg></button>{% endif %}
+          <div class="collapse mt-2" id="translation"><div class="card card-body"><form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
+            <input type="hidden" name="id" value="{{ meta['id'] }}"><label>Source language</label><select name="language_target" class="form-control">{% for code, name in all_languages.items() %}<option value="{{ code }}" {% if code == meta.get('language') %}selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+            {% if translation_target %}<input type="hidden" name="target" value="{{ translation_target }}"><label class="mt-2">Translation ({{ translation_target }})</label><textarea class="form-control" name="translation">{{ meta.get('translation') or '' }}</textarea>{% endif %}
+            <button class="btn btn-dark mt-2" type="submit"><i class="fas fa-save"></i> Save</button> <a class="btn btn-primary mt-2" href="{{ url_for('forums_explorer.objects_post_detect_language', id=meta['id']) }}"><i class="fas fa-redo"></i> Detect language</a>
+          </form></div></div>
+        </div>
+        <div class="mt-3">
+          {% include 'modals/edit_tag.html' %}
+          {% for tag in meta.get('tags', []) %}<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }} btn-sm mr-1" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="post" data-objsubtype="" data-objid="{{ meta['id'] }}">{{ tag }}</button>{% endfor %}
+          {% include 'modals/add_tags.html' %}
+          <button class="btn btn-light btn-sm" data-toggle="modal" data-target="#add_tags_modal" title="Add tag" aria-label="Add tag"><i class="fas fa-tag"></i></button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div></div></div>
+<script>
+$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+function toggle_sidebar(){ $('#nav_menu').toggle(); }
+function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
+  if (!postId) { return; }
+  const formData = new URLSearchParams();
+  formData.append('id', postId);
+  buttonElement.disabled = true;
+  fetch("{{ url_for('forums_explorer.objects_post_translate_json') }}", {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+    credentials: 'same-origin',
+    body: formData.toString()
+  })
+  .then(response => response.json().then(data => ({ok: response.ok, data: data})))
+  .then(({ok, data}) => {
+    if (!ok || !data || !data.translation) { return; }
+    const block = document.getElementById('postTranslationBlock' + postIdEscape);
+    const text = document.getElementById('postTranslationText' + postIdEscape);
+    if (block && text) { text.textContent = data.translation; block.style.display = ''; }
+  })
+  .finally(() => { buttonElement.disabled = false; });
+}
+</script>
+</body>
+</html>

@@ -162,6 +162,50 @@ class FakeModule:
 
 class TestModuleExtractor(unittest.TestCase):
 
+    def test_correlation_values_are_escaped_before_building_regex(self):
+        fake_obj = FakeObj()
+        captured = []
+
+        def fake_regex_finditer(_key, regex, _obj_gid, _content, max_time=30):
+            captured.append(regex)
+            return []
+
+        with patch.object(module_extractor.correlations_engine, 'get_correlation_by_correl_type', return_value=['forum:a+b[1]']):
+            with patch.object(module_extractor.regex_helper, 'regex_escape', side_effect=lambda value: f'escaped({value})'):
+                with patch.object(module_extractor.regex_helper, 'regex_finditer', side_effect=fake_regex_finditer):
+                    module_extractor.get_correl_match('username', fake_obj, 'a+b[1]')
+
+        self.assertEqual(captured, ['escaped(a+b[1])'])
+
+    def test_post_uses_message_correlation_extractors(self):
+        fake_obj = FakeObj()
+        fake_obj.type = 'post'
+        fake_obj.id = 'forum.example/1000/42'
+        calls = []
+
+        def fake_get_correl_match(extract_type, obj, content, start_time=None, max_seconds=60):
+            calls.append(extract_type)
+            return []
+
+        with patch.object(module_extractor.ail_objects, 'get_object', return_value=fake_obj):
+            with patch.object(module_extractor, 'get_user_org', return_value='org-1'):
+                with patch.object(module_extractor, 'get_tracker_match', return_value=[]):
+                    with patch.object(module_extractor, 'get_correl_match', side_effect=fake_get_correl_match):
+                        result = module_extractor.extract('user-1', 'post', '', fake_obj.id, content='safe content')
+
+        self.assertEqual(result, [])
+        self.assertEqual(calls, ['cve', 'cryptocurrency', 'username'])
+
+    def test_unknown_object_type_does_not_raise_key_error(self):
+        fake_obj = FakeObj()
+        fake_obj.type = 'unknown'
+        with patch.object(module_extractor.ail_objects, 'get_object', return_value=fake_obj):
+            with patch.object(module_extractor, 'get_user_org', return_value='org-1'):
+                with patch.object(module_extractor, 'get_tracker_match', return_value=[]):
+                    result = module_extractor.extract('user-1', 'unknown', '', fake_obj.id, content='safe content')
+
+        self.assertEqual(result, [])
+
     def test_regex_timeout_is_routed_through_regex_helper(self):
         calls = []
 

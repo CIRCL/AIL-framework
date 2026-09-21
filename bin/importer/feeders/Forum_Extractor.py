@@ -381,7 +381,10 @@ class Forum_ExtractorFeeder(DefaultFeeder):
         quote_ids = (post_data.get('content', {})).get('quoted_posts', [])
         # TODO FUNCTION
         content = (post_data.get('content') or {}).get('text')
-        post.create(post_id, post_timestamp, content, parent_thread, self.forum, state=post_data.get('post_state'), quote_ids=quote_ids)
+        post_state = post_data.get('post_state')
+        if post_state == 'visible':
+            post_state = None
+        post.create(post_id, post_timestamp, content, parent_thread, self.forum, state=post_state, quote_ids=quote_ids)
         for reaction in post_data.get('reactions', []):
             if isinstance(reaction, dict):
                 reaction_name = reaction.get('reaction_type')

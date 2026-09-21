@@ -6,6 +6,7 @@ import sys
 
 from datetime import datetime
 from flask import url_for
+from urllib.parse import urlencode
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -30,8 +31,8 @@ class Post(AbstractObject):
 
     def get_link(self, flask_context=False):
         if flask_context:
-            return url_for('correlation.show_correlation', type=self.type, subtype='', id=self.id)
-        return f'{baseurl}/correlation/show?type={self.type}&subtype=&id={self.id}'
+            return url_for('forums_explorer.objects_post', id=self.id)
+        return f'{baseurl}/objects/post?{urlencode({"id": self.id})}'
 
     def get_svg_icon(self):
         icon = '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
@@ -52,25 +53,23 @@ class Post(AbstractObject):
     def get_forum_id(self):
         return self.id.split('/', 1)[0]
 
-    def get_subforum(self):
-        subforum = self.get_correlation('subforum')
-        if subforum.get('subforum'):
-            subforum = f'subforum:{self.get_forum_id()}:{subforum["subforum"].pop()}'
-            return subforum
+    def _get_forum_container(self, obj_type):
+        correlations = self.get_correlation(obj_type).get(obj_type) or set()
+        for correlation in correlations:
+            subtype, separator, obj_id = correlation.partition(':')
+            if separator and subtype and obj_id and subtype == self.get_forum_id():
+                return f'{obj_type}:{subtype}:{obj_id}'
         return None
+
+    def get_subforum(self):
+        return self._get_forum_container('subforum')
 
     def get_thread(self):
-        thread = self.get_correlation('forum-thread')
-        if thread.get('forum-thread'):
-            thread = f'forum-thread:{self.get_forum_id()}:{thread["forum-thread"].pop()}'
-            return thread
-        return None
+        return self._get_forum_container('forum-thread')
 
     def get_thread_sub_id(self):
-        thread = self.get_correlation('forum-thread')
-        if thread.get('forum-thread'):
-            return thread["forum-thread"].pop().split(':', 1)[1]
-        return None
+        thread = self.get_thread()
+        return thread.split(':', 1)[1] if thread else None
 
     def get_date(self):
         timestamp = self.get_timestamp()

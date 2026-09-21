@@ -81,6 +81,12 @@ class ForumThread(AbstractSubtypeObject):
             return -1
         return int(rank / nb) + 1
 
+    def get_post_number(self, post_gid):
+        if not post_gid:
+            return None
+        rank = r_object.zrank(f'posts:forum-thread:{self.subtype}:{self.id}', post_gid)
+        return rank + 1 if rank is not None else None
+
     def _get_posts(self, nb=-1, page=-1):
         if nb < 1:
             posts = r_object.zrange(f'posts:forum-thread:{self.subtype}:{self.id}', 0, -1, withscores=True)

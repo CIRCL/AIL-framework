@@ -6,7 +6,10 @@
         <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
       </svg> Forum post
     </div>
-    {% if obj.get('link') %}<a class="btn btn-sm btn-outline-secondary" href="{{ obj['link'] }}"><i class="fas fa-project-diagram"></i> Correlation</a>{% endif %}
+    <div>
+      {% if obj.get('link') %}<a class="btn btn-sm btn-outline-primary" href="{{ obj['link'] }}"><i class="fas fa-eye"></i> View post</a>{% endif %}
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('correlation.show_correlation', type='post', id=obj['id']) }}"><i class="fas fa-project-diagram"></i> Correlation</a>
+    </div>
   </div>
   <div class="card-body">
     {% if obj.get('full_date') %}
