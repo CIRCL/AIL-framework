@@ -101,20 +101,7 @@
       {% set pagination = meta['pagination'] %}
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Posts</h3>
-        <div class="d-flex align-items-center">
-          <span class="text-muted mr-3">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>
-          <select id="translation_selector_target" class="form-control form-control-sm" style="width: auto;">
-            {% if not translation_target or translation_target == "Don't Translate" %}
-              <option selected value="Don't Translate">Don't Translate</option>
-            {% else %}
-              <option value="Don't Translate">Don't Translate</option>
-              <option selected value="{{ translation_target }}">{{ translation_languages.get(translation_target, translation_target) }}</option>
-            {% endif %}
-            {% for language in translation_languages %}
-              <option value="{{ language }}">{{ translation_languages[language] }}</option>
-            {% endfor %}
-          </select>
-        </div>
+        <span class="text-muted">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>
       </div>
 
       {% with pagination_position='top', show_page_jump=false %}
@@ -122,8 +109,9 @@
       {% endwith %}
 
       {% if meta['posts'] %}
-        <div class="mb-3">
-          {% include 'objects/image/block_blur_img_slider.html' %}
+        <div class="row mb-3">
+          <div class="col-md-6 mb-2 mb-md-0">{% include 'objects/image/block_blur_img_slider.html' %}</div>
+          <div class="col-md-6">{% with translate_url=url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype']), obj_id=thread['id'], pagination=pagination %}{% include 'chats_explorer/block_translation.html' %}{% endwith %}</div>
         </div>
         {% for date, posts in meta['posts'].items() %}
           <div class="date-divider my-4"><span>{{ date }}</span></div>
@@ -252,14 +240,6 @@
 <script>
 $(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
 
-$('#translation_selector_target').change(function(){
-  const url = new URL(window.location.href);
-  const target = this.value;
-  if (!target || target === "Don't Translate") { url.searchParams.delete('target'); }
-  else { url.searchParams.set('target', target); }
-  window.location.href = url.toString();
-});
-
 function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
   if (!postId) { return; }
 
@@ -269,6 +249,8 @@ function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
 
   fetch("{{ url_for('forums_explorer.objects_post_translate_json') }}", {
     method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+    credentials: 'same-origin',
     body: formData.toString()
   })
   .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
