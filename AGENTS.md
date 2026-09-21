@@ -72,4 +72,5 @@ AIL is organized around an ingestion-to-analysis pipeline:
 - Do not commit secrets, API keys, private crawler credentials, generated logs, or local runtime database/cache content.
 - Keep imports straightforward; do not wrap imports in broad `try`/`catch` or `try`/`except` blocks.
 - Do not split function definitions, function calls, or argument descriptions across multiple lines when they remain readable on one line; avoid adding line breaks solely to enforce a line-length convention.
+- Properly and consistently indent all added or modified JavaScript; do not compress statements, callbacks, or control-flow blocks onto a single line.
 - Do not create a pull request

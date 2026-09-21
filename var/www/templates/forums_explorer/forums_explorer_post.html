@@ -30,9 +30,11 @@
 <div class="col-12 col-lg-10" id="core_content">
   <nav aria-label="breadcrumb" class="mt-3"><ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
-    {% if meta.get('forum') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=meta['forum']['id']) }}">{{ meta['forum'].get('name') or meta['forum']['id'] }}</a></li>{% endif %}
-    {% if meta.get('subforum') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=meta['subforum']['subtype'], id=meta['subforum']['id']) }}">{{ meta['subforum'].get('name') or meta['subforum']['id'] }}</a></li>{% endif %}
-    {% if meta.get('thread') %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ meta['thread'].get('name') or meta['thread']['id'] }}</a></li>{% endif %}
+    {% for crumb in meta.get('breadcrumb', []) %}
+      {% if crumb.get('type') == 'forum' %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+      {% elif crumb.get('type') == 'subforum' %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation {% if loop.revindex == 2 %}forum-subforum-name-translation {% endif %}{% if crumb.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ crumb.get('name_translation') or '' }}</small></li>
+      {% elif crumb.get('type') == 'forum-thread' %}<li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=crumb['subtype'], id=crumb['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation forum-thread-name-translation {% if crumb.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ crumb.get('name_translation') or '' }}</small></li>{% endif %}
+    {% endfor %}
     <li class="breadcrumb-item active">Post{% if meta.get('thread_post_number') %} #{{ meta['thread_post_number'] }}{% endif %}</li>
   </ol></nav>
 
@@ -60,8 +62,9 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
     <div>
       <h2 class="mb-1">{% if meta.get('subforum') %}{{ meta['subforum'].get('name') or meta['subforum']['id'] }}{% else %}Post{% endif %}</h2>
+      <div class="forum-subforum-name-translation text-muted" {% if not (meta.get('subforum') or {}).get('name_translation') %}style="display:none"{% endif %}>{{ (meta.get('subforum') or {}).get('name_translation') or '' }}</div>
       <div class="d-flex flex-wrap align-items-center mt-2">
-        {% if meta.get('thread') %}<h4 class="mb-0 mr-3"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ meta['thread'].get('name') or meta['thread']['id'] }}</a></h4>{% endif %}
+        {% if meta.get('thread') %}<div class="mr-3"><h4 class="mb-0"><a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=meta['thread']['subtype'], id=meta['thread']['id'], page=meta.get('thread_page', 1), _anchor=meta['id']) }}">{{ meta['thread'].get('name') or meta['thread']['id'] }}</a></h4><div class="forum-thread-name-translation text-muted" {% if not meta['thread'].get('name_translation') %}style="display:none"{% endif %}>{{ meta['thread'].get('name_translation') or '' }}</div></div>{% endif %}
         {% if meta.get('thread_post_number') %}<span class="badge badge-secondary px-2 py-1">Post #{{ meta['thread_post_number'] }}</span>{% endif %}
       </div>
     </div>
@@ -105,6 +108,7 @@
         <div class="mt-3">
           <button class="btn btn-sm btn-outline-dark" data-toggle="collapse" data-target="#translation"><i class="fas fa-language"></i> {{ meta.get('language') or 'Language' }}</button>
           {% if meta.get('language') %}<button class="btn btn-sm btn-outline-dark" type="button" title="Translate to preferred language" aria-label="Translate to preferred language" onclick='translatePostToPreferredLanguage({{ meta['id'] | tojson }}, {{ post_id_escape | tojson }}, this)'><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"/><path fill="currentColor" d="m11.9 22l4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4l5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45l-.75 2.05l-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg></button>{% endif %}
+          <button class="btn btn-sm btn-light border text-secondary" data-toggle="modal" data-target="#add_tags_modal" title="Add tag" aria-label="Add tag"><i class="fas fa-tag"></i></button>
           <div class="collapse mt-2" id="translation"><div class="card card-body"><form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
             <input type="hidden" name="id" value="{{ meta['id'] }}"><label>Source language</label><select name="language_target" class="form-control">{% for code, name in all_languages.items() %}<option value="{{ code }}" {% if code == meta.get('language') %}selected{% endif %}>{{ name }}</option>{% endfor %}</select>
             {% if translation_target %}<input type="hidden" name="target" value="{{ translation_target }}"><label class="mt-2">Translation ({{ translation_target }})</label><textarea class="form-control" name="translation">{{ meta.get('translation') or '' }}</textarea>{% endif %}
@@ -115,34 +119,79 @@
           {% include 'modals/edit_tag.html' %}
           {% for tag in meta.get('tags', []) %}<button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }} btn-sm mr-1" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="post" data-objsubtype="" data-objid="{{ meta['id'] }}">{{ tag }}</button>{% endfor %}
           {% include 'modals/add_tags.html' %}
-          <button class="btn btn-light btn-sm" data-toggle="modal" data-target="#add_tags_modal" title="Add tag" aria-label="Add tag"><i class="fas fa-tag"></i></button>
         </div>
       </div>
     </main>
   </div>
 </div></div></div>
 <script>
-$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
-function toggle_sidebar(){ $('#nav_menu').toggle(); }
+$(document).ready(function() {
+  $('#page-Decoded').addClass('active');
+  $('#nav_explorer_forum').addClass('active');
+});
+
+function toggle_sidebar() {
+  $('#nav_menu').toggle();
+}
+
 function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
-  if (!postId) { return; }
+  if (!postId) {
+    return;
+  }
+
   const formData = new URLSearchParams();
   formData.append('id', postId);
   buttonElement.disabled = true;
+
   fetch("{{ url_for('forums_explorer.objects_post_translate_json') }}", {
     method: 'POST',
     headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
     credentials: 'same-origin',
     body: formData.toString()
   })
-  .then(response => response.json().then(data => ({ok: response.ok, data: data})))
-  .then(({ok, data}) => {
-    if (!ok || !data || !data.translation) { return; }
-    const block = document.getElementById('postTranslationBlock' + postIdEscape);
-    const text = document.getElementById('postTranslationText' + postIdEscape);
-    if (block && text) { text.textContent = data.translation; block.style.display = ''; }
-  })
-  .finally(() => { buttonElement.disabled = false; });
+    .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(({ ok, data }) => {
+      if (!ok || !data || !data.translation) {
+        return;
+      }
+
+      const block = document.getElementById('postTranslationBlock' + postIdEscape);
+      const text = document.getElementById('postTranslationText' + postIdEscape);
+      if (block && text) {
+        text.textContent = data.translation;
+        block.style.display = '';
+      }
+
+      if (data.thread_name_translation) {
+        document.querySelectorAll('.forum-thread-name-translation').forEach(element => {
+          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.thread_name_translation : data.thread_name_translation;
+          element.classList.remove('d-none');
+          element.style.display = '';
+        });
+      }
+
+      if (data.subforum_name_translation) {
+        document.querySelectorAll('.forum-subforum-name-translation').forEach(element => {
+          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.subforum_name_translation : data.subforum_name_translation;
+          element.classList.remove('d-none');
+          element.style.display = '';
+        });
+      }
+
+      if (data.breadcrumb_name_translations) {
+        document.querySelectorAll('.forum-breadcrumb-translation').forEach((element, index) => {
+          const translation = data.breadcrumb_name_translations[index];
+          if (translation) {
+            element.textContent = '/ ' + translation;
+            element.classList.remove('d-none');
+            element.classList.add('d-block');
+          }
+        });
+      }
+    })
+    .finally(() => {
+      buttonElement.disabled = false;
+    });
 }
 </script>
 </body>

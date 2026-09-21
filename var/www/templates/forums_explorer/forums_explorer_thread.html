@@ -37,10 +37,10 @@
             {% if crumb['type'] == 'forum' %}
               <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
             {% elif crumb['type'] == 'subforum' %}
-              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum') }}?subtype={{ crumb['subtype'] }}&id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum') }}?subtype={{ crumb['subtype'] }}&id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation {% if loop.revindex == 2 %}forum-subforum-name-translation {% endif %}{% if crumb.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ crumb.get('name_translation') or '' }}</small></li>
             {% endif %}
           {% endfor %}
-          <li class="breadcrumb-item active">{{ thread.get('name') or thread['id'] }}</li>
+          <li class="breadcrumb-item active">{{ thread.get('name') or thread['id'] }}<small class="forum-breadcrumb-translation forum-thread-name-translation {% if thread.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ thread.get('name_translation') or '' }}</small></li>
         </ol>
       </nav>
 
@@ -53,6 +53,7 @@
                    <path d="M0 0h24v24H0z" fill="none" />
                    <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
                  </svg> {{ thread.get('name') or thread['id'] }}</h1>
+        <div class="forum-thread-name-translation mb-2" {% if not thread.get('name_translation') %}style="display:none"{% endif %}>{{ thread.get('name_translation') or '' }}</div>
         {% if is_admin %}
           <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_crawl') }}" class="ml-3">
             <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
@@ -238,10 +239,15 @@
   </div>
 </div>
 <script>
-$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
+$(document).ready(function() {
+  $('#page-Decoded').addClass('active');
+  $('#nav_explorer_forum').addClass('active');
+});
 
 function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
-  if (!postId) { return; }
+  if (!postId) {
+    return;
+  }
 
   const formData = new URLSearchParams();
   formData.append('id', postId);
@@ -253,21 +259,62 @@ function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
     credentials: 'same-origin',
     body: formData.toString()
   })
-  .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
-  .then(({ ok, data }) => {
-    if (!ok || !data || !data.translation) { return; }
-    const translationBlock = document.getElementById('postTranslationBlock' + postIdEscape);
-    const translationText = document.getElementById('postTranslationText' + postIdEscape);
-    if (translationBlock && translationText) {
-      translationText.textContent = data.translation;
-      translationBlock.style.display = '';
-    }
-  })
-  .finally(() => {
-    buttonElement.disabled = false;
-  });
+    .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(({ ok, data }) => {
+      if (!ok || !data || !data.translation) {
+        return;
+      }
+
+      const translationBlock = document.getElementById('postTranslationBlock' + postIdEscape);
+      const translationText = document.getElementById('postTranslationText' + postIdEscape);
+      if (translationBlock && translationText) {
+        translationText.textContent = data.translation;
+        translationBlock.style.display = '';
+      }
+
+      if (data.thread_name_translation) {
+        document.querySelectorAll('.forum-thread-name-translation').forEach(element => {
+          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.thread_name_translation : data.thread_name_translation;
+          element.classList.remove('d-none');
+          element.style.display = '';
+        });
+      }
+
+      if (data.subforum_name_translation) {
+        document.querySelectorAll('.forum-subforum-name-translation').forEach(element => {
+          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.subforum_name_translation : data.subforum_name_translation;
+          element.classList.remove('d-none');
+          element.style.display = '';
+        });
+      }
+
+      if (data.breadcrumb_name_translations) {
+        document.querySelectorAll('.forum-breadcrumb-translation').forEach((element, index) => {
+          const translation = data.breadcrumb_name_translations[index];
+          if (translation) {
+            element.textContent = '/ ' + translation;
+            element.classList.remove('d-none');
+            element.classList.add('d-block');
+          }
+        });
+      }
+    })
+    .finally(() => {
+      buttonElement.disabled = false;
+    });
 }
-function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+
+function toggle_sidebar() {
+  if ($('#nav_menu').is(':visible')) {
+    $('#nav_menu').hide();
+    $('#side_menu').removeClass('border-right col-lg-2');
+    $('#core_content').removeClass('col-lg-10');
+  } else {
+    $('#nav_menu').show();
+    $('#side_menu').addClass('border-right col-lg-2');
+    $('#core_content').addClass('col-lg-10');
+  }
+}
 </script>
 </body>
 </html>

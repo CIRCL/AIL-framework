@@ -515,7 +515,10 @@ def objects_post_translate_json():
         return create_json_response(post, r_code)
     return jsonify({
         'id': post_id,
-        'translation': post.get('translation')
+        'translation': post.get('translation'),
+        'thread_name_translation': (post.get('thread') or {}).get('name_translation'),
+        'subforum_name_translation': (post.get('subforum') or {}).get('name_translation'),
+        'breadcrumb_name_translations': [entry.get('name_translation') for entry in post.get('breadcrumb', []) if entry.get('type') != 'forum'],
     })
 
 @forums_explorer.route("/objects/post/detect/language", methods=['GET'])

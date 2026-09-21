@@ -399,13 +399,26 @@ def api_set_forum_account_local_storage(user_org, user_id, data):
     forum.refresh_account_availability(account_id)
     return {'forum_id': forum_id, 'account_id': account_id, 'cookiejar_uuid': cookiejar_uuid}, 200
 
-def _subforum_meta(subforum, flask_context=True):
+def _translate_meta_name(obj, meta, translation_target, translation_source=None):
+    if translation_target and meta.get('name'):
+        options = {'content': meta['name'], 'field': 'name', 'target': translation_target}
+        if translation_source:
+            options['source'] = translation_source
+        translation = obj.translate(**options)
+        if translation:
+            meta['name_translation'] = translation
+    return meta
+
+
+def _subforum_meta(subforum, flask_context=True, translation_target=None, translation_source=None):
     meta = subforum.get_meta(_SUBFORUM_OPTIONS, flask_context=flask_context)
+    meta = _translate_meta_name(subforum, meta, translation_target, translation_source=translation_source)
     meta['name'] = meta.get('name') or meta.get('id')
     return meta
 
-def _thread_meta(thread, flask_context=True):
+def _thread_meta(thread, flask_context=True, translation_target=None, translation_source=None):
     meta = thread.get_meta(_THREAD_OPTIONS, flask_context=flask_context)
+    meta = _translate_meta_name(thread, meta, translation_target, translation_source=translation_source)
     meta['name'] = meta.get('name') or meta.get('id')
     return meta
 
@@ -752,7 +765,7 @@ def prioritize_forum_pending_crawl_item(forum_id, crawl_key):
         return {'status': 'error', 'reason': reason}, status_code
     return {'forum_id': forum_id, 'crawl_key': crawl_key, 'priority': 100}, 200
 
-def get_breadcrumb_for_object(obj):
+def get_breadcrumb_for_object(obj, translation_target=None, translation_source=None):
     """Return parent breadcrumb entries from Forum to the given object."""
     breadcrumb = []
     current = obj
@@ -767,9 +780,9 @@ def get_breadcrumb_for_object(obj):
             breadcrumb.append(meta)
             break
         elif current.type == 'subforum':
-            meta = _subforum_meta(current)
+            meta = _subforum_meta(current, translation_target=translation_target, translation_source=translation_source)
         elif current.type == 'forum-thread':
-            meta = _thread_meta(current)
+            meta = _thread_meta(current, translation_target=translation_target, translation_source=translation_source)
         else:
             meta = current.get_default_meta()
         breadcrumb.append(meta)
@@ -835,9 +848,14 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=N
     if page < 1:
         nb = 50
     posts, pagination, tags = thread.get_posts(page=page, nb=nb, options=_POST_OPTIONS, translation_target=translation_target)
+    translation_source = thread.get_main_language() if translation_target else None
+    breadcrumb = get_breadcrumb_for_object(thread, translation_target=translation_target, translation_source=translation_source)
+    thread_meta = next((entry for entry in reversed(breadcrumb) if entry.get('type') == 'forum-thread'), None)
+    if not thread_meta:
+        thread_meta = _thread_meta(thread)
     return {
-        'thread': _thread_meta(thread),
-        'breadcrumb': get_breadcrumb_for_object(thread),
+        'thread': thread_meta,
+        'breadcrumb': breadcrumb,
         'posts': posts,
         'pagination': pagination,
         'tags': tags,
@@ -921,14 +939,17 @@ def api_get_post(post_id, translation_target=None):
     if not post.exists():
         return {"status": "error", "reason": "Unknown post"}, 404
     meta = post.get_meta(_POST_OPTIONS, translation_target=translation_target, flask_context=True)
+    translation_source = meta.get('language')
     thread_gid = post.get_thread()
     if thread_gid:
         _, subtype, thread_id = unpack_obj_global_id(thread_gid)
         thread = ForumThreads.ForumThread(thread_id, subtype)
         if thread.exists():
             page = thread.get_post_page(post.get_global_id(), 50)
-            breadcrumb = get_breadcrumb_for_object(thread)
-            meta['thread'] = _thread_meta(thread)
+            breadcrumb = get_breadcrumb_for_object(thread, translation_target=translation_target, translation_source=translation_source)
+            meta['thread'] = next((entry for entry in reversed(breadcrumb) if entry.get('type') == 'forum-thread'), None)
+            if not meta['thread']:
+                meta['thread'] = _thread_meta(thread)
             meta['thread_page'] = page if page > 0 else 1
             meta['thread_post_number'] = thread.get_post_number(post.get_global_id())
             meta['breadcrumb'] = breadcrumb
@@ -947,7 +968,7 @@ def api_get_post(post_id, translation_target=None):
             _, subtype, subforum_id = unpack_obj_global_id(subforum_gid)
             subforum = Subforums.Subforum(subforum_id, subtype)
             if subforum.exists():
-                meta['subforum'] = _subforum_meta(subforum)
+                meta['subforum'] = _subforum_meta(subforum, translation_target=translation_target, translation_source=translation_source)
     return meta, 200
 
 def api_post_detect_language(post_id):
