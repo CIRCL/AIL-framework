@@ -41,6 +41,7 @@ from lib.crawlers import Cookiejar
 # config_loader = None
 
 _FORUM_OPTIONS = {'banner', 'forum_type', 'info', 'name', 'url', 'nb_subforums', 'nb_orphan_subforums', 'svg_icon'}
+_FORUM_BREADCRUMB_OPTIONS = {'banner', 'name'}
 _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'images', 'language', 'link', 'reactions', 'state', 'timestamp', 'translation', 'user-account'}
@@ -422,7 +423,7 @@ def _thread_meta(thread, flask_context=True, translation_target=None, translatio
     meta['name'] = meta.get('name') or meta.get('id')
     return meta
 
-def _children_meta(parent, child_type):
+def _children_meta(parent, child_type, translation_target=None, translation_source=None):
     children = []
     for child_global_id in parent.get_childrens():
         obj_type, subtype, obj_id = unpack_obj_global_id(child_global_id)
@@ -432,13 +433,13 @@ def _children_meta(parent, child_type):
         if not obj.exists():
             continue
         if obj_type == 'subforum':
-            children.append(_subforum_meta(obj))
+            children.append(_subforum_meta(obj, translation_target=translation_target, translation_source=translation_source))
         elif obj_type == 'forum-thread':
-            children.append(_thread_meta(obj))
+            children.append(_thread_meta(obj, translation_target=translation_target, translation_source=translation_source))
     return sorted(children, key=lambda m: ((m.get('category') or '').lower(), (m.get('name') or m.get('title') or m.get('id')).lower(), m.get('id')))
 
 
-def _subforum_threads_meta(subforum):
+def _subforum_threads_meta(subforum, translation_target=None, translation_source=None):
     threads = []
     thread_ids = set()
 
@@ -446,7 +447,7 @@ def _subforum_threads_meta(subforum):
         thread = ForumThreads.ForumThread(thread_id, subforum.subtype)
         if not thread.exists():
             continue
-        meta = _thread_meta(thread)
+        meta = _thread_meta(thread, translation_target=translation_target, translation_source=translation_source)
         meta['last_post_timestamp'] = int(last_post_timestamp)
         meta['last_post_date'] = Date.get_utc_datetime_from_timestamp(last_post_timestamp)
         threads.append(meta)
@@ -461,7 +462,7 @@ def _subforum_threads_meta(subforum):
         thread = ForumThreads.ForumThread(thread_id, subforum.subtype)
         if not thread.exists():
             continue
-        meta = _thread_meta(thread)
+        meta = _thread_meta(thread, translation_target=translation_target, translation_source=translation_source)
         meta['last_post_timestamp'] = 0
         meta['last_post_date'] = None
         inactive_threads.append(meta)
@@ -776,7 +777,7 @@ def get_breadcrumb_for_object(obj, translation_target=None, translation_source=N
             break
         seen.add(global_id)
         if current.type == 'forum':
-            meta = current.get_meta(_FORUM_OPTIONS, flask_context=True)
+            meta = current.get_meta(_FORUM_BREADCRUMB_OPTIONS, flask_context=True)
             breadcrumb.append(meta)
             break
         elif current.type == 'subforum':
@@ -794,12 +795,13 @@ def get_breadcrumb_for_object(obj, translation_target=None, translation_source=N
 
 #### API ####
 
-def api_get_forum(forum_id):
+def api_get_forum(forum_id, translation_target=None):
     """Return forum metadata with root and orphan subforums."""
     forum = Forums.Forum(forum_id)
     if not forum.exists():
         return {"status": "error", "reason": "Unknown forum"}, 404
 
+    translation_source = forum.get_main_language() if translation_target else None
     orphan_subforums = []
     orphan_gids = set(forum.get_orphan_subforums())
     for orphan_gid in orphan_gids:
@@ -808,26 +810,31 @@ def api_get_forum(forum_id):
             continue
         subforum = Subforums.Subforum(obj_id, obj_subtype)
         if subforum.exists():
-            meta = _subforum_meta(subforum)
+            meta = _subforum_meta(subforum, translation_target=translation_target, translation_source=translation_source)
             meta['orphan'] = True
             orphan_subforums.append(meta)
 
     return {
         'forum': forum.get_meta(_FORUM_OPTIONS, flask_context=True),
-        'subforums': _children_meta(forum, 'subforum'),
+        'subforums': _children_meta(forum, 'subforum', translation_target=translation_target, translation_source=translation_source),
         'orphan_subforums': sorted(orphan_subforums, key=lambda m: ((m.get('name') or m.get('id')).lower(), m.get('id'))),
     }, 200
 
-def api_get_subforum(subtype, subforum_id):
+def api_get_subforum(subtype, subforum_id, translation_target=None):
     """Return subforum metadata with child subforums and forum threads."""
     subforum = Subforums.Subforum(subforum_id, subtype)
     if not subforum.exists():
         return {"status": "error", "reason": "Unknown forum subforum"}, 404
+    translation_source = subforum.get_main_language() if translation_target else None
+    breadcrumb = get_breadcrumb_for_object(subforum, translation_target=translation_target, translation_source=translation_source)
+    forum_meta = next((entry for entry in breadcrumb if entry.get('type') == 'forum'), None)
+    subforum_meta = next((entry for entry in reversed(breadcrumb) if entry.get('type') == 'subforum' and entry.get('id') == subforum_id), None)
     return {
-        'subforum': _subforum_meta(subforum),
-        'breadcrumb': get_breadcrumb_for_object(subforum),
-        'subforums': _children_meta(subforum, 'subforum'),
-        'threads': _subforum_threads_meta(subforum),
+        'forum': forum_meta,
+        'subforum': subforum_meta or _subforum_meta(subforum, translation_target=translation_target, translation_source=translation_source),
+        'breadcrumb': breadcrumb,
+        'subforums': _children_meta(subforum, 'subforum', translation_target=translation_target, translation_source=translation_source),
+        'threads': _subforum_threads_meta(subforum, translation_target=translation_target, translation_source=translation_source),
     }, 200
 
 def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=None):
@@ -850,10 +857,12 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=N
     posts, pagination, tags = thread.get_posts(page=page, nb=nb, options=_POST_OPTIONS, translation_target=translation_target)
     translation_source = thread.get_main_language() if translation_target else None
     breadcrumb = get_breadcrumb_for_object(thread, translation_target=translation_target, translation_source=translation_source)
+    forum_meta = next((entry for entry in breadcrumb if entry.get('type') == 'forum'), None)
     thread_meta = next((entry for entry in reversed(breadcrumb) if entry.get('type') == 'forum-thread'), None)
     if not thread_meta:
         thread_meta = _thread_meta(thread)
     return {
+        'forum': forum_meta,
         'thread': thread_meta,
         'breadcrumb': breadcrumb,
         'posts': posts,

@@ -48,6 +48,7 @@
         </div>
         {% if forum.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ forum['info'] }}</div>{% endif %}
         <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}?id={{ forum['id'] }}"><i class="fas fa-spider"></i> Crawler status</a>
+        <button class="btn btn-sm btn-outline-light mt-3" type="button" onclick='translateForumNames({{ forum['id'] | tojson }}, this)' title="Translate subforum names to preferred language" aria-label="Translate subforum names to preferred language"><i class="fas fa-language" aria-hidden="true"></i></button>
         </div>
       </div>
 
@@ -63,8 +64,53 @@
   </div>
 </div>
 <script>
-$(document).ready(function(){ $('#page-Decoded').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
-function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+$(document).ready(function() {
+  $('#page-Decoded').addClass('active');
+  $('#nav_explorer_forum').addClass('active');
+});
+
+function applyForumNameTranslations(names) {
+  document.querySelectorAll('.forum-name-translation').forEach(element => {
+    const name = names.find(entry => entry.type === element.dataset.objectType && entry.subtype === element.dataset.objectSubtype && String(entry.id) === element.dataset.objectId);
+    if (name && name.name_translation) {
+      element.textContent = name.name_translation;
+      element.style.display = '';
+    }
+  });
+}
+
+function translateForumNames(forumId, buttonElement) {
+  const formData = new URLSearchParams();
+  formData.append('id', forumId);
+  buttonElement.disabled = true;
+  fetch("{{ url_for('forums_explorer.forum_explorer_translate_json') }}", {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+    credentials: 'same-origin',
+    body: formData.toString()
+  })
+    .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(({ ok, data }) => {
+      if (ok && data && data.names) {
+        applyForumNameTranslations(data.names);
+      }
+    })
+    .finally(() => {
+      buttonElement.disabled = false;
+    });
+}
+
+function toggle_sidebar() {
+  if ($('#nav_menu').is(':visible')) {
+    $('#nav_menu').hide();
+    $('#side_menu').removeClass('border-right col-lg-2');
+    $('#core_content').removeClass('col-lg-10');
+  } else {
+    $('#nav_menu').show();
+    $('#side_menu').addClass('border-right col-lg-2');
+    $('#core_content').addClass('col-lg-10');
+  }
+}
 </script>
 </body>
 </html>

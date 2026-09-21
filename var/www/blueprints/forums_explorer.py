@@ -104,6 +104,18 @@ def forum_explorer_forums():
     return render_template('forums_explorer_index.html', forums=forums, parser_types=forums_viewer.FORUM_PARSER_TYPES, bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
 
 
+@forums_explorer.route("/forums/explorer/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def forum_explorer_translate_json():
+    forum_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    meta, status_code = forums_viewer.api_get_forum(forum_id, translation_target=target)
+    if status_code != 200:
+        return create_json_response(meta, status_code)
+    return jsonify({'names': meta['subforums'] + meta['orphan_subforums']})
+
+
 @forums_explorer.route("/forums/explorer/create", methods=['POST'])
 @login_required
 @login_admin
@@ -543,6 +555,20 @@ def forum_explorer_subforum():
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
     return render_template('forums_explorer_subforum.html', meta=meta[0], bootstrap_label=bootstrap_label)
+
+
+@forums_explorer.route("/forums/explorer/subforum/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def forum_explorer_subforum_translate_json():
+    subtype = request.form.get('subtype')
+    subforum_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    meta, status_code = forums_viewer.api_get_subforum(subtype, subforum_id, translation_target=target)
+    if status_code != 200:
+        return create_json_response(meta, status_code)
+    names = meta['breadcrumb'] + meta['subforums'] + meta['threads']
+    return jsonify({'names': names})
 
 
 @forums_explorer.route("/forums/explorer/thread", methods=['GET'])
