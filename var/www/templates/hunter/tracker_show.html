@@ -898,14 +898,14 @@ window.addEventListener('resize', function() {
     heatyearChart.resize();
 });
 
-function applyDateFilterFromHeatmap(date) {
-    if (!date) {
+function applyDateRangeFromHeatmap(dateFrom, dateTo) {
+    if (!dateFrom || !dateTo) {
         return;
     }
     const params = new URLSearchParams();
     params.set('uuid', '{{ meta['uuid'] }}');
-    params.set('date_from', date);
-    params.set('date_to', date);
+    params.set('date_from', dateFrom);
+    params.set('date_to', dateTo);
 
     const selectedTypes = [];
     $('input[name$="_obj"]:checked').each(function () {
@@ -917,6 +917,59 @@ function applyDateFilterFromHeatmap(date) {
 
     window.location.assign("{{ url_for('hunters.show_tracker') }}?" + params.toString() + '#tracker-matches');
 }
+
+function applyDateFilterFromHeatmap(date) {
+    applyDateRangeFromHeatmap(date, date);
+}
+
+const heatmapMonths = {
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11
+};
+let heatmapYear = new Date().getFullYear();
+let heatmapMonthsWithMatches = new Set();
+
+function getHeatmapMonthLabel(event) {
+    const target = event.target;
+    if (!target || !target.style || typeof target.style.text !== 'string') {
+        return null;
+    }
+    const label = target.style.text.trim();
+    return Object.prototype.hasOwnProperty.call(heatmapMonths, label) ? label : null;
+}
+
+function heatmapMonthHasMatches(monthLabel) {
+    if (!monthLabel) {
+        return false;
+    }
+    const monthNumber = String(heatmapMonths[monthLabel] + 1).padStart(2, '0');
+    return heatmapMonthsWithMatches.has(String(heatmapYear) + monthNumber);
+}
+
+heatyearChart.getZr().on('click', function (event) {
+    const monthLabel = getHeatmapMonthLabel(event);
+    if (!heatmapMonthHasMatches(monthLabel)) {
+        return;
+    }
+    const month = heatmapMonths[monthLabel];
+    const monthNumber = String(month + 1).padStart(2, '0');
+    const lastDay = String(new Date(heatmapYear, month + 1, 0).getDate()).padStart(2, '0');
+    applyDateRangeFromHeatmap(heatmapYear + '-' + monthNumber + '-01', heatmapYear + '-' + monthNumber + '-' + lastDay);
+});
+
+heatyearChart.getZr().on('mousemove', function (event) {
+    heatyearChart.getZr().setCursorStyle(heatmapMonthHasMatches(getHeatmapMonthLabel(event)) ? 'pointer' : 'default');
+});
 
 var optionheatmap;
 
@@ -969,6 +1022,14 @@ function update_heatmap_year(year) {
             optionheatmap['visualMap']['max'] = data['max']
             optionheatmap['calendar'][0]['range'] = data['year']
             optionheatmap['series'][0]['data'] = data['nb']
+            heatmapYear = Number(data['year'])
+            heatmapMonthsWithMatches = new Set(data['nb']
+                .filter(function (entry) {
+                    return Number(entry[1]) > 0;
+                })
+                .map(function (entry) {
+                    return String(entry[0]).replaceAll('-', '').slice(0, 6);
+                }));
             heatyearChart.setOption(optionheatmap)
 
         }
