@@ -29,6 +29,7 @@ from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
 from lib import chats_viewer
+from lib import forums_viewer
 from lib import module_extractor
 from lib import item_basic
 from lib import Tracker
@@ -72,6 +73,10 @@ def _extract_rulezet_rule_id(rulezet_url):
     if not path_segments:
         return None
     return path_segments[-1]
+
+
+def _get_forum_filter_choices():
+    return [{'id': forum['id'], 'name': forum.get('name') or forum['id']} for forum in forums_viewer.get_forums()]
 
 
 # ============= ROUTES ==============
@@ -465,6 +470,12 @@ def parse_add_edit_request(request_form):
             if excludes:
                 excludes = json.loads(excludes)
                 filters[obj_type]['excludes'] = excludes
+            if obj_type == 'post':
+                forums = request_form.get('forums_post', [])
+                if forums:
+                    forums = json.loads(forums)
+                    if forums:
+                        filters[obj_type]['forums'] = forums
             # Subtypes
             for obj_subtype in ail_core.get_object_all_subtypes(obj_type):
                 subtype = request_form.get(f'filter_{obj_type}_{obj_subtype}')
@@ -503,6 +514,7 @@ def add_tracked_menu():
         return render_template("tracker_add.html",
                                dict_tracker={},
                                all_sources=item_basic.get_all_items_sources(r_list=True),
+                               forums=_get_forum_filter_choices(),
                                tags_selector_data=Tag.get_tags_selector_data())
 
 @hunters.route("/tracker/edit", methods=['GET', 'POST'])
@@ -543,6 +555,7 @@ def tracker_edit():
         return render_template("tracker_add.html",
                                dict_tracker=dict_tracker,
                                all_sources=item_basic.get_all_items_sources(r_list=True),
+                               forums=_get_forum_filter_choices(),
                                tags_selector_data=tags_selector_data)
 
 @hunters.route('/tracker/delete', methods=['GET'])
@@ -944,6 +957,12 @@ def retro_hunt_add_task():
                     sources = json.loads(sources)
                     if sources:
                         filters[obj_type]['sources'] = sources
+                if obj_type == 'post':
+                    forums = request.form.get('forums_post', [])
+                    if forums:
+                        forums = json.loads(forums)
+                        if forums:
+                            filters[obj_type]['forums'] = forums
                 # Subtypes
                 for obj_subtype in ail_core.get_object_all_subtypes(obj_type):
                     subtype = request.form.get(f'filter_{obj_type}_{obj_subtype}')
@@ -991,11 +1010,12 @@ def retro_hunt_add_task():
             new_description = None
             new_level = None
             new_rule = None
-            new_filters = {'message', 'ocr', 'item'}
+            new_filters = {'message': {}, 'ocr': {}, 'item': {}, 'post': {}}
 
         return render_template("add_retro_hunt_task.html",
                                tags_selector_data=Tag.get_tags_selector_data(),
                                items_sources=item_basic.get_all_items_sources(r_list=True),
+                               forums=_get_forum_filter_choices(),
                                new_description=new_description, new_level=new_level, new_rule=new_rule,
                                new_filters=new_filters)
 

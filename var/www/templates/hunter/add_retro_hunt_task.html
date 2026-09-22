@@ -190,6 +190,13 @@
 													<small class="form-text text-muted">Processed text items and extracted content.</small>
 												</div>
 											</div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="post_obj" id="post_obj" {% if 'post' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="post_obj"><svg class="text-info mr-1" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none" /><path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" /></svg>Forum post</label>
+													<small class="form-text text-muted">Posts imported from forums.</small>
+												</div>
+											</div>
 										</div>
 										<div class="card filter-card mt-4 mb-0" id="sources_item_div">
 											<div class="card-body">
@@ -218,6 +225,13 @@
 														</div>
 													</div>
 												</div>
+											</div>
+										</div>
+										<div class="card filter-card mt-3 mb-0" id="forums_post_div">
+											<div class="card-body">
+												<h6 class="font-weight-bold mb-1"><svg class="text-info mr-1" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none" /><path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" /></svg>Refine post scanning by forum</h6>
+												<p class="text-muted small mb-3">Choose forums by name. Leave this empty to scan posts from every forum.</p>
+												<input id="forums_post" class="form-control" type="text" name="forums_post" placeholder="Forums to scan (all if empty)" autocomplete="off">
 											</div>
 										</div>
 									</div>
@@ -367,11 +381,23 @@ $(document).ready(function(){
 		name: 'sources_item',
 		emptyText: 'Item Sources to track (ALL IF EMPTY)',
 		});
+	forums_post = $('#forums_post').tagSuggest({
+		data: {{forums|tojson}},
+		{% if 'post' in new_filters and new_filters['post'].get('forums') %}value: {{new_filters['post']['forums']|tojson}},{% endif %}
+		sortOrder: 'name',
+		maxDropHeight: 200,
+		name: 'forums_post',
+		emptyText: 'Forums to scan (ALL IF EMPTY)',
+		});
 
 	item_source_input_controller();
+	post_forum_input_controller();
 
     $('#item_obj').on("change", function () {
 		item_source_input_controller();
+	});
+    $('#post_obj').on("change", function () {
+		post_forum_input_controller();
 	});
     /*$('#pgp_obj').on("change", function () {
 		pgp_source_input_controller();
@@ -399,6 +425,14 @@ function item_source_input_controller() {
 		$("#sources_item_div").show();
 	}else{
 		$("#sources_item_div").hide();
+	}
+}
+
+function post_forum_input_controller() {
+	if($('#post_obj').is(':checked')){
+		$("#forums_post_div").show();
+	}else{
+		$("#forums_post_div").hide();
 	}
 }
 

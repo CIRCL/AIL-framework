@@ -1380,7 +1380,7 @@ def api_add_tracker(dict_input, org, user_id):
     filters = dict_input.get('filters', {})
     if filters:
         remove_empty_sources_filters(filters)
-        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'} and all(not obj_filter or obj_type == 'pgp' for obj_type, obj_filter in filters.items()):
             filters = {}
         for obj_type in filters:
             if obj_type not in get_objects_tracked():
@@ -1391,7 +1391,7 @@ def api_add_tracker(dict_input, org, user_id):
                     filters['pgp'].pop('subtypes')
 
             for filter_name in filters[obj_type]:
-                if filter_name not in {'mimetypes', 'sources', 'subtypes'}:
+                if filter_name not in {'forums', 'mimetypes', 'sources', 'subtypes'}:
                     return {"status": "error", "reason": "Invalid Filter"}, 400
                 elif filter_name == 'mimetypes': # TODO
                     pass
@@ -1410,6 +1410,9 @@ def api_add_tracker(dict_input, org, user_id):
                     for subtype in filters[obj_type]['subtypes']:
                         if subtype not in obj_subtypes:
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
+                elif filter_name == 'forums':
+                    if obj_type != 'post' or not set(filters[obj_type]['forums']).issubset(get_object_all_subtypes('forum')):
+                        return {"status": "error", "reason": "Invalid Forum"}, 400
 
     level = dict_input.get('level', 1)
     try:
@@ -1472,7 +1475,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
     filters = dict_input.get('filters', {})
     if filters:
         remove_empty_sources_filters(filters)
-        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'}:
+        if filters.keys() == get_objects_tracked() and set(filters['pgp'].get('subtypes', [])) == {'mail', 'name'} and all(not obj_filter or obj_type == 'pgp' for obj_type, obj_filter in filters.items()):
             if not filters['decoded'] and not filters['item']:
                 filters = {}
         for obj_type in filters:
@@ -1484,7 +1487,7 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                     filters['pgp'].pop('subtypes')
 
             for filter_name in filters[obj_type]:
-                if filter_name not in {'mimetypes', 'sources', 'subtypes'}:
+                if filter_name not in {'forums', 'mimetypes', 'sources', 'subtypes'}:
                     return {"status": "error", "reason": "Invalid Filter"}, 400
                 elif filter_name == 'mimetypes':  # TODO
                     pass
@@ -1500,6 +1503,9 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                     for subtype in filters[obj_type]['subtypes']:
                         if subtype not in obj_subtypes:
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
+                elif filter_name == 'forums':
+                    if obj_type != 'post' or not set(filters[obj_type]['forums']).issubset(get_object_all_subtypes('forum')):
+                        return {"status": "error", "reason": "Invalid Forum"}, 400
 
     tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
                  tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate,
@@ -2568,14 +2574,14 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
     filters = dict_input.get('filters', {})
     if filters:
         remove_empty_sources_filters(filters)
-        if filters.keys() == get_objects_retro_hunted():
+        if filters.keys() == get_objects_retro_hunted() and not any(filters.values()):
             filters = {}
         for obj_type in filters:
             if obj_type not in get_objects_retro_hunted():
                 return {"status": "error", "reason": "Invalid Tracker Object type"}, 400
 
             for filter_name in filters[obj_type]:
-                if filter_name not in {'date_from', 'date_to', 'mimetypes', 'sources', 'subtypes'}:
+                if filter_name not in {'date_from', 'date_to', 'forums', 'mimetypes', 'sources', 'subtypes'}:
                     return {"status": "error", "reason": "Invalid Filter"}, 400
                 elif filter_name == 'date_from':
                     if not Date.validate_str_date(filters[obj_type]['date_from']):
@@ -2597,6 +2603,9 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
                     for subtype in filters[obj_type]['subtypes']:
                         if subtype not in obj_subtypes:
                             return {"status": "error", "reason": "Invalid Tracker Object subtype"}, 400
+                elif filter_name == 'forums':
+                    if obj_type != 'post' or not set(filters[obj_type]['forums']).issubset(get_object_all_subtypes('forum')):
+                        return {"status": "error", "reason": "Invalid Forum"}, 400
 
             if 'date_from' and 'date_to' in filters:
                 res = Date.api_validate_str_date_range(filters[obj_type]['date_from'], filters[obj_type]['date_to'])

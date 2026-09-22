@@ -21,6 +21,7 @@ from lib import Language
 from lib import Tag
 
 from lib import chats_viewer
+from lib import forums_viewer
 
 from lib.objects import Authors
 from lib.objects import BarCodes
@@ -394,6 +395,10 @@ def api_manually_translate(obj_type, subtype, obj_id, source, translation_target
 #### OBJ FILTERS ####
 
 def is_filtered(obj, filters):
+    # Trackers store filters by object type, while iterators pass the
+    # object-specific filter directly.
+    if obj.get_type() in filters:
+        filters = filters[obj.get_type()]
     if 'mimetypes' in filters:
         mimetype = obj.get_mimetype()
         if mimetype not in filters['mimetypes']:
@@ -406,7 +411,11 @@ def is_filtered(obj, filters):
         subtype = obj.get_subtype(r_str=True)
         if subtype not in filters['subtypes']:
             return True
+    if 'forums' in filters:
+        if obj.get_type() != 'post' or obj.get_forum_id() not in filters['forums']:
+            return True
     return False
+
 
 def obj_iterator(obj_type, filters):
     if obj_type == 'decoded':
@@ -423,6 +432,8 @@ def obj_iterator(obj_type, filters):
         return Mails.Mails().get_iterator()
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
+    elif obj_type == 'post':
+        return forums_viewer.get_posts_iterator(filters=filters)
     elif obj_type == 'ocr':
         return chats_viewer.get_ocrs_iterator(filters=filters)
     elif obj_type == 'title':
@@ -446,6 +457,8 @@ def card_obj_iterator(obj_type, filters):
         return Pgps.nb_all_pgps_objects(filters=filters)
     elif obj_type == 'message':
         return chats_viewer.get_nb_messages_iterator(filters=filters)
+    elif obj_type == 'post':
+        return forums_viewer.get_nb_posts_iterator(filters=filters)
     elif obj_type == 'ocr':
         return chats_viewer.get_nb_ors_iterator(filters=filters)
 

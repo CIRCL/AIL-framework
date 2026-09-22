@@ -31,7 +31,6 @@ from lib.objects import ForumThreads
 from lib.objects import Posts
 from lib.objects import UsersAccount
 from lib.objects import Images
-from lib.objects import ail_objects
 from lib import crawlers
 from lib import Language
 from packages import Date
@@ -46,7 +45,6 @@ _SUBFORUM_OPTIONS = {'info', 'url', 'nb_subforums', 'nb_threads'}
 _THREAD_OPTIONS = {'name', 'info', 'url', 'flags', 'nb_posts'}
 _POST_OPTIONS = {'content', 'images', 'language', 'link', 'reactions', 'state', 'timestamp', 'translation', 'user-account'}
 _FORUM_CRAWL_WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-
 
 def _normalize_forum_domain(value):
     value = (value or '').strip().lower()
@@ -429,12 +427,15 @@ def _children_meta(parent, child_type, translation_target=None, translation_sour
         obj_type, subtype, obj_id = unpack_obj_global_id(child_global_id)
         if obj_type != child_type:
             continue
-        obj = ail_objects.get_object(obj_type, subtype, obj_id)
-        if not obj.exists():
-            continue
         if obj_type == 'subforum':
+            obj = Subforums.Subforum(obj_id, subtype)
+            if not obj.exists():
+                continue
             children.append(_subforum_meta(obj, translation_target=translation_target, translation_source=translation_source))
         elif obj_type == 'forum-thread':
+            obj = ForumThreads.ForumThread(obj_id, subtype)
+            if not obj.exists():
+                continue
             children.append(_thread_meta(obj, translation_target=translation_target, translation_source=translation_source))
     return sorted(children, key=lambda m: ((m.get('category') or '').lower(), (m.get('name') or m.get('title') or m.get('id')).lower(), m.get('id')))
 
@@ -636,6 +637,33 @@ def get_forums():
     return sorted(forums, key=lambda m: ((m.get('name') or m.get('id')).lower(), m.get('id')))
 
 
+def get_posts_iterator(filters={}):
+    """Iterate posts, optionally restricted by forum and date range."""
+    forum_ids = filters.get('forums') or Forums.get_forums()
+    date_from = Date.convert_str_date_to_epoch(filters['date_from']) if filters.get('date_from') else None
+    date_to = Date.convert_str_date_to_epoch_end(filters['date_to']) if filters.get('date_to') else None
+    for forum_id in sorted(forum_ids):
+        forum = Forums.Forum(forum_id)
+        for correlation in forum.get_correlation('post').get('post', set()):
+            _, post_id = correlation.split(':', 1)
+            post = Posts.Post(post_id)
+            post_timestamp = post.get_timestamp()
+            if not post_timestamp:
+                continue
+            post_timestamp = float(post_timestamp)
+            if date_from is not None and post_timestamp < date_from:
+                continue
+            if date_to is not None and post_timestamp > date_to:
+                continue
+            yield post
+
+
+def get_nb_posts_iterator(filters={}):
+    forum_ids = filters.get('forums') or Forums.get_forums()
+    if not filters.get('date_from') and not filters.get('date_to'):
+        return sum(Forums.Forum(forum_id).get_nb_correlation('post') for forum_id in forum_ids)
+    return sum(1 for _ in get_posts_iterator(filters=filters))
+
 
 def get_forums_crawl_status():
     """Return crawler status summaries for all imported Forum objects."""
@@ -790,7 +818,15 @@ def get_breadcrumb_for_object(obj, translation_target=None, translation_source=N
         parent_gid = current.get_parent()
         if not parent_gid:
             break
-        current = ail_objects.get_object(*unpack_obj_global_id(parent_gid))
+        obj_type, subtype, obj_id = unpack_obj_global_id(parent_gid)
+        if obj_type == 'forum':
+            current = Forums.Forum(obj_id)
+        elif obj_type == 'subforum':
+            current = Subforums.Subforum(obj_id, subtype)
+        elif obj_type == 'forum-thread':
+            current = ForumThreads.ForumThread(obj_id, subtype)
+        else:
+            break
     return list(reversed(breadcrumb))
 
 #### API ####
