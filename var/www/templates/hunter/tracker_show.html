@@ -572,7 +572,7 @@
 
             {% if meta['objs'] %}
                 <hr>
-                <div class="mt-4">
+                <div id="tracker-matches" class="mt-4">
                     <table id="myTable_" class="table table-striped border-primary">
                         <thead class="bg-dark text-white">
                         <tr>
@@ -902,12 +902,20 @@ function applyDateFilterFromHeatmap(date) {
     if (!date) {
         return;
     }
-    $('#date-range-from-input').val(date);
-    $('#date-range-to-input').val(date);
-    const filterForm = document.getElementById('tracker-filter-form');
-    if (filterForm) {
-        filterForm.submit();
+    const params = new URLSearchParams();
+    params.set('uuid', '{{ meta['uuid'] }}');
+    params.set('date_from', date);
+    params.set('date_to', date);
+
+    const selectedTypes = [];
+    $('input[name$="_obj"]:checked').each(function () {
+        selectedTypes.push($(this).attr('name').replace(/_obj$/, ''));
+    });
+    if (selectedTypes.length > 0) {
+        params.set('filter', selectedTypes.join(','));
     }
+
+    window.location.assign("{{ url_for('hunters.show_tracker') }}?" + params.toString() + '#tracker-matches');
 }
 
 var optionheatmap;
