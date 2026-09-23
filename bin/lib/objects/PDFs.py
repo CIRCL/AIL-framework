@@ -128,7 +128,7 @@ class PDF(AbstractDaterangeObject):
 
     def extract_markdown(self, date=None):
         """Extract this PDF as markdown and link the resulting item."""
-        markdown = pymupdf4llm.to_markdown(self.get_filepath())
+        markdown = pymupdf4llm.to_markdown(self.get_filepath(), use_ocr=False)
         date = date or self.get_first_seen() or Date.get_today_date_str()
         item_id = f'pdf/{date[0:4]}/{date[4:6]}/{date[6:8]}/{self.id}.gz'
         item = Items.Item(item_id)
