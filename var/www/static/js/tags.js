@@ -653,7 +653,7 @@
             if(!$.isArray(data)){
                 if(typeof(data) === 'string'){
                     if(data.indexOf('[') > -1){
-                        values = eval(data);
+                        values = JSON.parse(data);
                     } else if(data.indexOf(',') > -1){
                         values = data.split(',');
                     }
@@ -981,13 +981,18 @@
             _renderComboItems: function(items, isGrouped) {
                 var ref = this, html = '';
                 $.each(items, function(index, value) {
-                    var displayed = cfg.renderer !== null ? cfg.renderer.call(ref, value) : value[cfg.displayField];
+                    var hasRenderer = cfg.renderer !== null;
+                    var displayed = hasRenderer ? cfg.renderer.call(ref, value) : value[cfg.displayField];
                     var resultItemEl = $('<div/>', {
                         'class': 'tag-res-item ' + (isGrouped ? 'tag-res-item-grouped ':'') +
                             (index % 2 === 1 && cfg.useZebraStyle === true ? 'tag-res-odd' : ''),
-                        html: cfg.highlight === true ? self._highlightSuggestion(displayed) : displayed,
                         'data-json': JSON.stringify(value)
                     });
+                    if (hasRenderer) {
+                        resultItemEl.html(cfg.highlight === true ? self._highlightSuggestion(displayed) : displayed);
+                    } else {
+                        resultItemEl.text(displayed);
+                    }
                     resultItemEl.on("click", $.proxy(handlers._onComboItemSelected, ref));
                     resultItemEl.on("mouseover", $.proxy(handlers._onComboItemMouseOver, ref));
                     html += $('<div/>').append(resultItemEl).html();
@@ -1012,18 +1017,17 @@
                 $.each(_selection, function(index, value){
 
                     var selectedItemEl, delItemEl,
-                        selectedItemHtml = cfg.selectionRenderer !== null ? cfg.selectionRenderer.call(ref, value) : value[cfg.displayField];
+                        hasSelectionRenderer = cfg.selectionRenderer !== null,
+                        selectedItemHtml = hasSelectionRenderer ? cfg.selectionRenderer.call(ref, value) : value[cfg.displayField];
                     // tag representing selected value
                     if(asText === true) {
                         selectedItemEl = $('<div/>', {
-                            'class': 'tag-sel-item tag-sel-text ' + cfg.selectionCls,
-                            html: selectedItemHtml + (index === (_selection.length - 1) ? '' : ',')
+                            'class': 'tag-sel-item tag-sel-text ' + cfg.selectionCls
                         }).data('json', value);
                     }
                     else {
                         selectedItemEl = $('<div/>', {
-                            'class': 'tag-sel-item ' + cfg.selectionCls,
-                            html: selectedItemHtml
+                            'class': 'tag-sel-item ' + cfg.selectionCls
                         }).data('json', value);
 
                         if(cfg.disabled === false){
@@ -1034,6 +1038,15 @@
 
                             delItemEl.on("click", $.proxy(handlers._onTagTriggerClick, ref));
                         }
+                    }
+
+                    if (hasSelectionRenderer) {
+                        selectedItemEl.prepend(selectedItemHtml);
+                    } else {
+                        selectedItemEl.prepend(document.createTextNode(selectedItemHtml));
+                    }
+                    if (asText === true && index !== (_selection.length - 1)) {
+                        selectedItemEl.append(document.createTextNode(','));
                     }
 
                     items.push(selectedItemEl);
