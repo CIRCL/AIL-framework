@@ -509,7 +509,7 @@ def objects_post():
     translation_languages = Language.get_translation_languages()
     extracted = module_extractor.extract(current_user.get_user_id(), 'post', '', post['id'], content=post.get('content') or '')
     post['extracted_matches'] = module_extractor.get_extracted_by_match(extracted)
-    return render_template('forums_explorer_post.html', meta=post, bootstrap_label=bootstrap_label,
+    return render_template('forums_explorer_post.html', meta=post, extracted=extracted, bootstrap_label=bootstrap_label,
                            ollama_enabled=images_engine.is_ollama_enabled(), ollama_models=images_engine.get_ollama_models(),
                            all_languages=languages, translation_languages=translation_languages,
                            translation_target=target,
