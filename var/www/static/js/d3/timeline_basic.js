@@ -57,7 +57,7 @@ const create_timeline_basic = (container_id, data) => {
             tooltip.transition()
                 .duration(200)
                 .style("opacity", .9);
-            tooltip.html(`${d.obj}<br>⏳ ${dateTimeFormat(new Date(d.start))}<br>⌛ ${dateTimeFormat(new Date(d.end))}`)
+            tooltip.html(`${sanitize_text(d.obj)}<br>⏳ ${dateTimeFormat(new Date(d.start))}<br>⌛ ${dateTimeFormat(new Date(d.end))}`)
                 .style("left", (event.pageX + 5) + "px")
                 .style("top", (event.pageY - 28) + "px");
         })
