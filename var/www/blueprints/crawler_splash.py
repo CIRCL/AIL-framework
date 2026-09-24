@@ -255,6 +255,7 @@ def interactive_capture_admin_close(uuid):
 def send_to_spider():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
 
     # POST val
     url = request.form.get('url_to_crawl')
@@ -351,7 +352,7 @@ def send_to_spider():
     if tags:
         data['tags'] = tags
     # print(data)
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
 
     if res[1] != 200:
         return create_json_response(res[0], res[1])
@@ -364,12 +365,13 @@ def send_to_spider():
 def domain_discovery():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
     domain = request.args.get('domain')
     if not crawlers.is_valid_onion_domain(domain):
         return create_json_response({'status': 'error', 'reason': 'Invalid onion domain'}, 400)
 
     data = {'depth': 1, 'har': True, 'screenshot': True, 'url': f'http://{domain}', 'proxy': 'force_tor'}
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
 
     if res[1] != 200:
         return create_json_response(res[0], res[1])

@@ -370,9 +370,12 @@ def get_url_domain(url):
 def is_global_url(url):
     """Return True when the URL resolves only to global IP addresses."""
     parsed_url = urlsplit(url)
+    if not parsed_url.netloc:
+        url = f'http://{url}'
+        parsed_url = urlsplit(url)
 
-    if parsed_url.scheme in {'data', 'file'}:
-        return True
+    if parsed_url.scheme.lower() not in {'http', 'https'}:
+        return False
 
     hostname = parsed_url.hostname
     if not parsed_url.netloc or not hostname:
@@ -432,13 +435,21 @@ def change_crawler_filter_local_ips_state(new_state):
     return False
 
 def api_validate_global_urls(url=None, urls=None):
-    if not is_crawler_filter_local_ips_enabled():
-        return None
     to_check = []
     if url:
         to_check.append(url)
     if urls:
         to_check.extend(urls)
+    for url_to_check in to_check:
+        url_to_validate = url_to_check
+        parsed_url = urlsplit(url_to_validate)
+        if not parsed_url.netloc:
+            url_to_validate = f'http://{url_to_validate}'
+            parsed_url = urlsplit(url_to_validate)
+        if parsed_url.scheme.lower() not in {'http', 'https'}:
+            return {'error': 'Only HTTP and HTTPS URLs are supported', 'url': url_to_check}, 400
+    if not is_crawler_filter_local_ips_enabled():
+        return None
     for url_to_check in to_check:
         if not is_global_url(url_to_check):
             return {'error': 'URL resolves to a non-public IP address or cannot be resolved', 'url': url_to_check}, 400
@@ -971,6 +982,9 @@ class Cookiejar:
 
     def get_user(self):
         return r_crawler.hget(f'cookiejar:meta:{self.uuid}', 'user')
+
+    def get_creator(self):
+        return self.get_user()
 
     def _set_user(self, user_id):
         return r_crawler.hset(f'cookiejar:meta:{self.uuid}', 'user', user_id)
@@ -3333,6 +3347,12 @@ class CrawlerTask:
         if self.exists():
             raise Exception('Error: Task already exists')
 
+        parsed_url = urlsplit(url)
+        if not parsed_url.netloc:
+            url = f'http://{url}'
+            parsed_url = urlsplit(url)
+        if parsed_url.scheme.lower() not in {'http', 'https'}:
+            raise ValueError('Only HTTP and HTTPS URLs are supported')
         domain = get_url_domain(url)
         if not domain:
             raise ValueError(f'Invalid URL or domain: {url}')
@@ -3563,7 +3583,7 @@ def api_parse_task_dict_basic(data, user_id):
         data['urls'] = urls
     return data, 200
 
-def api_add_crawler_task(data, user_org, user_id=None):
+def api_add_crawler_task(data, user_org, user_id=None, user_role=None):
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
@@ -3579,14 +3599,9 @@ def api_add_crawler_task(data, user_org, user_id=None):
 
     cookiejar_uuid = data.get('cookiejar', None)
     if cookiejar_uuid:
-        cookiejar = Cookiejar(cookiejar_uuid)
-        if not cookiejar.exists():
-            return {'error': 'unknown cookiejar uuid', 'cookiejar_uuid': cookiejar_uuid}, 404
-        level = cookiejar.get_level()
-        if level == 0:  # # TODO: check if user is admin
-            if cookiejar.get_user() != user_id:
-                return {'error': 'The access to this cookiejar is restricted'}, 403
-        cookiejar_uuid = cookiejar.uuid
+        acl_error = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, action='view')
+        if acl_error:
+            return acl_error
 
     cookies = data.get('cookies', None)
     if not cookiejar_uuid and cookies:
@@ -3651,6 +3666,10 @@ def api_add_crawler_capture(data, user_id):
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
+
+    filter_local_ips_error = api_validate_global_urls(url=task.get('url'))
+    if filter_local_ips_error:
+        return filter_local_ips_error
 
     task_uuid = data.get('task_uuid')
     if not task_uuid:
