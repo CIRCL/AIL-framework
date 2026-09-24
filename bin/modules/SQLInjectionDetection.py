@@ -13,7 +13,6 @@ Test different possibility to makes some sqlInjection.
 
 import os
 import sys
-import re
 import urllib.request
 
 from urllib.parse import unquote
@@ -29,9 +28,11 @@ from modules.abstract_module import AbstractModule
 class SQLInjectionDetection(AbstractModule):
     """docstring for SQLInjectionDetection module."""
 
+    MAX_URL_LENGTH = 16384
+
     # # TODO: IMPROVE ME
     # Reference: https://github.com/stamparm/maltrail/blob/master/core/settings.py
-    SQLI_REGEX = r"information_schema|sysdatabases|sysusers|floor\(rand\(|ORDER BY \d+|\bUNION\s+(ALL\s+)?SELECT\b|\b(UPDATEXML|EXTRACTVALUE)\(|\bCASE[^\w]+WHEN.*THEN\b|\bWAITFOR[^\w]+DELAY\b|\bCONVERT\(|VARCHAR\(|\bCOUNT\(\*\)|\b(pg_)?sleep\(|\bSELECT\b.*\bFROM\b.*\b(WHERE|GROUP|ORDER)\b|\bSELECT \w+ FROM \w+|\b(AND|OR|SELECT)\b.*/\*.*\*/|/\*.*\*/.*\b(AND|OR|SELECT)\b|\b(AND|OR)[^\w]+\d+['\") ]?[=><]['\"( ]?\d+|ODBC;DRIVER|\bINTO\s+(OUT|DUMP)FILE"
+    SQLI_REGEX = r"(?i:information_schema|sysdatabases|sysusers|floor\(rand\(|ORDER BY \d+|\bUNION\s+(ALL\s+)?SELECT\b|\b(UPDATEXML|EXTRACTVALUE)\(|\bCASE[^\w]+WHEN.{0,2048}THEN\b|\bWAITFOR[^\w]+DELAY\b|\bCONVERT\(|VARCHAR\(|\bCOUNT\(\*\)|\b(pg_)?sleep\(|\bSELECT\b.{0,2048}\bFROM\b.{0,2048}\b(WHERE|GROUP|ORDER)\b|\bSELECT \w+ FROM \w+|\b(AND|OR|SELECT)\b.{0,2048}/\*.{0,2048}\*/|/\*.{0,2048}\*/.{0,2048}\b(AND|OR|SELECT)\b|\b(AND|OR)[^\w]+\d+['\") ]?[=><]['\"( ]?\d+|ODBC;DRIVER|\bINTO\s+(OUT|DUMP)FILE)"
 
     def __init__(self):
         super(SQLInjectionDetection, self).__init__()
@@ -63,8 +64,14 @@ class SQLInjectionDetection(AbstractModule):
     # Try to detect if the url passed might be a sql injection by applying the regex
     # defined above on it.
     def is_sql_injection(self, url_parsed):
+        if len(url_parsed) > self.MAX_URL_LENGTH:
+            self.logger.warning('Skipping SQL injection detection for oversized URL')
+            return False
         line = unquote(url_parsed)
-        return re.search(SQLInjectionDetection.SQLI_REGEX, line, re.I) is not None
+        if len(line) > self.MAX_URL_LENGTH:
+            self.logger.warning('Skipping SQL injection detection for oversized decoded URL')
+            return False
+        return self.regex_search(self.SQLI_REGEX, self.obj.get_id(), line)
 
 
 if __name__ == "__main__":
