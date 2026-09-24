@@ -87,17 +87,10 @@ class Onion(AbstractModule):
 
             # TODO Crawl subdomain
             if len(url) >= 62:
-                # perf
-                if len(url) == 69 and url.endswith(".onion"):
-                    domain = url[7:]
+                domain = crawlers.get_url_domain(url)
+                if domain and crawlers.is_valid_onion_domain(domain):
                     domains.add(domain)
                     onion_urls.append(url)
-                else:
-                    domain = crawlers.get_url_domain(url)
-                    if domain:
-                        if crawlers.is_valid_onion_domain(domain):
-                            domains.add(domain)
-                            onion_urls.append(url)
 
         res = self.regex_findall(self.i2p_regex, obj.get_id(), content, r_set=True)
         for x in res:
