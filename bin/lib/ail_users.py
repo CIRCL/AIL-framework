@@ -49,6 +49,7 @@ config_loader = None
 
 regex_password = r'^(?=(.*\d){2})(?=.*[a-z])(?=.*[A-Z]).{10,100}$'
 regex_password = re.compile(regex_password)
+DUMMY_PASSWORD_HASH = b'$2b$12$unjIl0z4PZWGc7BMbUJEeucLAj7xee6AFBvTn5VIU71AV7uWYqbf.'
 
 #### SESSIONS ####
 
@@ -559,11 +560,11 @@ class AILUser(UserMixin):
 
     def check_password(self, password):
         password = password.encode()
-        hashed_password = r_serv_db.hget('ail:users:all', self.user_id).encode()
-        if bcrypt.checkpw(password, hashed_password):
-            return True
-        else:
+        hashed_password = r_serv_db.hget('ail:users:all', self.user_id)
+        if not hashed_password:
+            bcrypt.checkpw(password, DUMMY_PASSWORD_HASH)
             return False
+        return bcrypt.checkpw(password, hashed_password.encode())
 
     def edit_password(self, password_hash, chg_passwd=False):  # TODO REPLACE BY PASSWORD
         if chg_passwd:

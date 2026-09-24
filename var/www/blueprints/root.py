@@ -123,7 +123,9 @@ def login():
                     logging_error = f'Max Connection Attempts reached, Please wait {wait_time}s'
                     return render_template("login.html", error=logging_error)
 
-            if user.exists() and user.check_password(password):
+            user_exists = user.exists()
+            password_valid = user.check_password(password)
+            if user_exists and password_valid:
                 if user.is_disabled():
                     logging_error = 'User is disabled'
                     access_logger.info(f'Login fail: User Disabled', extra={'user_id': user.get_user_id(), 'ip_address': current_ip, 'user_agent': request.user_agent})
