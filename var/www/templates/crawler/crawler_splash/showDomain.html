@@ -426,7 +426,7 @@
                         {% for item in dict_domain["crawler_history_items"] %}
                             <tr>
                                 <td>
-                                    <a target="_blank" href="{{ url_for('objects_item.showItem') }}?id={{item["id"]}}" class="text-secondary">
+                                    <a target="_blank" href="{{ url_for('objects_item.showItem', id=item['id']) }}" class="text-secondary">
                                         <div style="line-height:0.9;">{{ item['crawler']["url"] }}</div>
                                     </a>
                                     <div>
@@ -440,7 +440,9 @@
                                     </div>
                                 </td>
                                 {%if item['crawler']["screenshot"]%}
-                                    <td class="text-center icon_img" title="Show Screenshot" onclick="reload_image('{{ item['crawler']["screenshot"] }}', '{{ item['crawler']["url"] | tojson }}', '{{ item["id"] }}');" id="{{ item['crawler']["screenshot"].replace('/', '') }}">
+                                    <td class="text-center icon_img reload-image" title="Show Screenshot"
+                                        data-screenshot="{{ item['crawler']['screenshot'] }}" data-url="{{ item['crawler']['url'] }}" data-item-id="{{ item['id'] }}"
+                                        id="{{ item['crawler']['screenshot'].replace('/', '') }}">
                                         <span class="">
                                             <i class="far fa-image"></i>
                                         </span>
@@ -503,7 +505,12 @@
 						<div class="mt-2">
                             {% include 'objects/image/block_blur_img_slider.html' %}
                         </div>
-                        <span><img class="object_image mb-1" style="width: 100%;" alt="" id="domain_screenshot"></span>
+							<span><img class="object_image mb-1" style="width: 100%;" alt="" id="domain_screenshot"
+                                {% if dict_domain.get('random_item') and dict_domain['random_item']['crawler']['screenshot'] %}
+                                    data-screenshot="{{ dict_domain['random_item']['crawler']['screenshot'] }}"
+                                    data-url="{{ dict_domain['random_item']['crawler']['url'] }}"
+                                    data-item-id="{{ dict_domain['random_item']['id'] }}"
+                                {% endif %}></span>
 						<div class="text-center">
 							<small class="text-info" style="line-height:0.9;">
 								<a target="_blank" href="" id="screenshot_link"></a>
@@ -572,46 +579,42 @@ function toggle_sidebar(){
 const base_url = "{{ url_for('objects_item.screenshot', filename="") }}";
 const screenshot_href = "{{ url_for('objects_item.showItem') }}?id=";
 const domain_screenshot = document.getElementById('domain_screenshot');
-var screenshot;
-var screenshot_link = $("#screenshot_link");
+let screenshot = domain_screenshot.dataset.screenshot || "";
+const screenshot_link = $("#screenshot_link");
 
 domain_screenshot.addEventListener('error', function() {
     domain_screenshot.src = "{{ url_for('static', filename='image/AIL.png') }}";
 });
 
-{% if "crawler_history_items" in dict_domain %}
-    {% if "random_item" in dict_domain %}
-        {% if dict_domain['random_item']['crawler']['screenshot'] %}
-            screenshot = "{{dict_domain['random_item']['crawler']['screenshot']}}";
-            var selected_icon = $("#"+screenshot.replace(/\//g, ""));
-            selected_icon.addClass("icon_selected");
-            selected_icon.removeClass("icon_img");
-
-            screenshot_link.attr("href", screenshot_href + "{{dict_domain['random_item']['id']}}");
-            screenshot_link.text("{{dict_domain['random_item']['crawler']['url']}}");
-        {% else %}
-            screenshot = "";
-        {% endif %}
-    {% endif %}
-{% else %}
-    screenshot = "";
-{% endif %}
+if (screenshot) {
+    const selected_icon = $("#" + screenshot.replace(/\//g, ""));
+    selected_icon.addClass("icon_selected");
+    selected_icon.removeClass("icon_img");
+    screenshot_link.attr("href", screenshot_href + encodeURIComponent(domain_screenshot.dataset.itemId));
+    screenshot_link.text(domain_screenshot.dataset.url);
+}
 domain_screenshot.src = base_url + screenshot;
 
-function reload_image(new_screenshot, link, item_id) {
+function reload_image(element) {
     if (screenshot) {
-        $("#"+screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
+        $("#" + screenshot.replace(/\//g, "")).removeClass("icon_selected").addClass("icon_img");
     }
-    screenshot = new_screenshot;
+    screenshot = element.dataset.screenshot;
 
-    domain_screenshot.src=base_url + screenshot;
-    selected_icon = $("#"+screenshot.replace(/\//g, ""));
+    domain_screenshot.src = base_url + screenshot;
+    const selected_icon = $("#" + screenshot.replace(/\//g, ""));
     selected_icon.addClass("icon_selected");
-    selected_icon.removeClass("icon_img")
+    selected_icon.removeClass("icon_img");
 
-    screenshot_link.attr("href", screenshot_href + item_id);
-    screenshot_link.text(link);
+    screenshot_link.attr("href", screenshot_href + encodeURIComponent(element.dataset.itemId));
+    screenshot_link.text(element.dataset.url);
 }
+
+document.querySelectorAll('.reload-image').forEach(function(element) {
+    element.addEventListener('click', function() {
+        reload_image(element);
+    });
+});
 
 </script>
 
