@@ -2,10 +2,12 @@
 # -*-coding:UTF-8 -*
 
 import os
+import copy
 import json
 import sys
 import logging
 import logging.handlers
+import unicodedata
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -19,6 +21,28 @@ config_loader = None
 
 LOGGING_CONF_DIR = os.path.join(os.environ['AIL_HOME'], 'configs')
 LOGS_DIR = os.path.join(os.environ['AIL_HOME'], 'logs')
+
+
+def _escape_access_log_value(value):
+    escaped = []
+    for character in str(value):
+        category = unicodedata.category(character)
+        if category == 'Cc' or category in {'Zl', 'Zp'}:
+            escaped.append(f'\\x{ord(character):02x}')
+        else:
+            escaped.append(character)
+    return ''.join(escaped)
+
+
+class AccessLogSingleLineFormatter(logging.Formatter):
+
+    def format(self, record):
+        sanitized = copy.copy(record)
+        sanitized.msg = _escape_access_log_value(record.getMessage())
+        sanitized.args = ()
+        for field in ('user_id', 'ip_address', 'user_agent'):
+            setattr(sanitized, field, _escape_access_log_value(getattr(record, field, '-')))
+        return _escape_access_log_value(super().format(sanitized))
 
 def get_config(name=None):
     if not name:
@@ -34,7 +58,7 @@ def get_access_config(create=False):
     logger = logging.getLogger('access.log')
 
     if create:
-        formatter = logging.Formatter('%(asctime)s - %(ip_address)s - %(user_agent)s - %(levelname)s - %(user_id)s - %(message)s')
+        formatter = AccessLogSingleLineFormatter('%(asctime)s - %(ip_address)s - %(user_agent)s - %(levelname)s - %(user_id)s - %(message)s')
 
         # STDOUT
         handler = logging.StreamHandler()
