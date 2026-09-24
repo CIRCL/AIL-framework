@@ -308,17 +308,26 @@ function refresh_crawler_status(){
 							icon_t = 'fab fa-html5';
 						}
 
-				    var newCell  = newRow.insertCell(0);
-						newCell.innerHTML = "<td><i class=\"fas fa-"+icon+"-circle\" style=\"color:"+text_color+";\"></i> "+crawler['start_time']+"</td>";
+						var newCell = newRow.insertCell(0);
+						var statusIcon = document.createElement('i');
+						statusIcon.className = 'fas fa-' + icon + '-circle';
+						statusIcon.style.color = text_color;
+						newCell.appendChild(statusIcon);
+						newCell.appendChild(document.createTextNode(' ' + crawler['start_time']));
 
-						var newCell  = newRow.insertCell(1);
-						newCell.innerHTML = "<td><i class=\""+icon_t+"\"></i></td>";
+						newCell = newRow.insertCell(1);
+						var typeIcon = document.createElement('i');
+						typeIcon.className = icon_t;
+						newCell.appendChild(typeIcon);
 
-						newCell  = newRow.insertCell(2);
-						newCell.innerHTML = "<td>"+crawler['domain']+"</td>";
+						newCell = newRow.insertCell(2);
+						newCell.textContent = crawler['domain'];
 
-						newCell  = newRow.insertCell(3);
-						newCell.innerHTML = "<td><div style=\"color:"+text_color+";\">"+crawler['status']+"</div></td>";
+						newCell = newRow.insertCell(3);
+						var statusText = document.createElement('div');
+						statusText.style.color = text_color;
+						statusText.textContent = crawler['status'];
+						newCell.appendChild(statusText);
 
 						//$("#panel_crawler").show();
 				}
