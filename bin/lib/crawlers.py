@@ -1343,7 +1343,7 @@ def api_create_cookiejar_from_json(user_org, user_id, data):
     return {'cookiejar_uuid': cookiejar_uuid}, 200
 
 
-def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
+def api_import_lacus_cookiejar(user_org, user_id, user_role, data, cookiejar_uuid=None):
     url = data.get('url')
     storage = data.get('storage')
     if not url:
@@ -1362,9 +1362,10 @@ def api_import_lacus_cookiejar(user_org, user_id, data, cookiejar_uuid=None):
         cookiejar_uuid = create_cookiejar(user_org, user_id, description, level, None)
         cookiejar = Cookiejar(cookiejar_uuid)
     else:
+        resp = api_check_cookiejar_access_acl(cookiejar_uuid, user_org, user_id, user_role, 'edit')
+        if resp:
+            return resp
         cookiejar = Cookiejar(cookiejar_uuid)
-        if not cookiejar.exists():
-            return {'error': 'unknown cookiejar uuid'}, 404
     res = _import_storage_in_cookiejar(cookiejar, storage)
     if res:
         return res

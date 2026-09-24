@@ -179,9 +179,9 @@ def get_onions_up_month(date_year_month):
 def lacus_cookiejar_import():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
+    user_org, user_id, user_role = ail_api.get_basic_user_meta(user_token)
 
-    res = crawlers.api_import_lacus_cookiejar(user_org, user_id, data)
+    res = crawlers.api_import_lacus_cookiejar(user_org, user_id, user_role, data)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 
