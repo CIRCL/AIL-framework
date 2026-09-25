@@ -394,6 +394,11 @@ def api_manually_translate(obj_type, subtype, obj_id, source, translation_target
 #### OBJ FILTERS ####
 
 def is_filtered(obj, filters):
+    """
+    filters: tracker filters, keyed by object type
+             {'item': {'sources': [...]}, 'pgp': {'subtypes': [...]}, ...}
+    """
+    filters = filters.get(obj.get_type(), {})
     if 'mimetypes' in filters:
         mimetype = obj.get_mimetype()
         if mimetype not in filters['mimetypes']:
