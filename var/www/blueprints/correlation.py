@@ -182,7 +182,10 @@ def show_correlation():
                 dict_object["metadata"]['type_id'] = subtype
             else:
                 dict_object["subtype"] = ''
-            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
+            card_options = {'similarity'} if obj_type == 'image' else None
+            dict_object["metadata_card"] = ail_objects.get_object_card_meta(
+                obj_type, subtype, obj_id, related_btc=related_btc, options=card_options
+            )
             dict_object["metadata_card"]['tags_safe'] = True
 
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Similarity - AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <style>
+        .similar-image {
+            filter: blur(var(--object-image-blur, 5px));
+            max-height: 220px;
+            max-width: 220px;
+        }
+    </style>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+
+<div class="container-fluid">
+    <div class="row">
+        {% include 'sidebars/sidebar_objects.html' %}
+
+        <div class="col-12 col-lg-10" id="core_content">
+            <div class="card my-3">
+                <div class="card-header">
+                    <i class="fas fa-fingerprint"></i> Search similar images by pHash
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Upload a static image to search AIL using the configured pHash Hamming distance.
+                        The uploaded image is processed in memory and is not stored.
+                    </p>
+
+                    {% if error %}
+                        <div class="alert alert-danger" role="alert">{{ error }}</div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="custom-file mb-3">
+                            <input class="custom-file-input" type="file" id="image" name="image" accept="image/*" required>
+                            <label class="custom-file-label" for="image">Choose an image (maximum 5 MB)</label>
+                        </div>
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {% if result %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        Results
+                        <span class="badge badge-secondary ml-2">{{ result['images']|length }}</span>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-3">Calculated pHash</dt>
+                            <dd class="col-sm-9"><code>{{ result['phash'] }}</code></dd>
+                            <dt class="col-sm-3">Maximum Hamming distance</dt>
+                            <dd class="col-sm-9">{{ result['hamming_distance'] }}</dd>
+                        </dl>
+
+                        {% if result['images'] %}
+                            <div class="d-flex flex-wrap">
+                                {% for image_id in result['images'] %}
+                                    <a class="m-2 text-center" href="{{ url_for('correlation.show_correlation', type='image', id=image_id) }}">
+                                        <img class="similar-image border rounded d-block mb-1"
+                                             src="{{ url_for('objects_image.image', filename=image_id) }}"
+                                             alt="Image {{ image_id }}"
+                                             loading="lazy">
+                                        <small>{{ image_id }}</small>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">No similar AIL image was found.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#nav_image_similarity').addClass('active');
+    $('.custom-file-input').on('change', function () {
+        $(this).next('.custom-file-label').text(this.files[0] ? this.files[0].name : 'Choose an image');
+    });
+</script>
+</body>
+</html>

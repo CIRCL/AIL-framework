@@ -53,7 +53,7 @@
                             <td>
                                 <a href="{{ url_for('chats_explorer.objects_user_account')}}?subtype={{ user_meta['subtype'] }}&id={{ user_meta['id'] }}">
                                     <img src="{% if user_meta['icon'] %}{{ url_for('objects_image.image', filename=user_meta['icon'])}}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}"
-                 class="rounded-circle mr-1" alt="{{ user_meta['id'] }}" width="40" height="40">
+                 class="rounded-circle mr-1" alt="{{ user_meta['id'] }}" width="40" height="40" loading="lazy">
                                 <a>
                             </td>
                             <td>

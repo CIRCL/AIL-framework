@@ -94,6 +94,11 @@ ollama_enabled = True
 # qwen2.5vl is always available and remains the default.
 ollama_models =
 
+[ImageSimilarity]
+phash_enabled = False
+phash_hamming_distance = 8
+photodna_enabled = False
+
 ##### Users #####
 [Users]
 force_2fa = False
@@ -221,6 +226,11 @@ password = ail_langs
 host = localhost
 port = 6383
 password = ail_objs
+
+[Kvrocks_ImageSimilarity]
+host = localhost
+port = 6383
+password = ail_image_similarity
 
 [Kvrocks_Relationships]
 host = localhost

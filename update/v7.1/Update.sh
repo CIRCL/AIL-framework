@@ -29,6 +29,12 @@ pip install -U 'pyfaup-rs>=0.4.18'
 echo -e $GREEN"Installing tempolocus."$DEFAULT
 pip install -U 'tempolocus>=1.0.0'
 
+echo -e $GREEN"Installing imagehash."$DEFAULT
+pip install -U 'imagehash>=4.3.0' || exit 1
+
+echo -e $GREEN"Installing photo-dna-rs."$DEFAULT
+pip install -U 'photo-dna-rs>=0.1.0' || exit 1
+
 echo ""
 echo -e $GREEN"Updating AIL VERSION ..."$DEFAULT
 echo ""

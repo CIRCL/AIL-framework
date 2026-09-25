@@ -94,6 +94,10 @@ easyocr
 qreader
 pyzbar
 
+# Perceptual hashing
+imagehash>=4.3.0
+photo-dna-rs>=0.1.0
+
 # Tests
 nose2>=0.12.0
 coverage>=5.5
