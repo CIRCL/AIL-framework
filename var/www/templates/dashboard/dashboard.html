@@ -244,7 +244,11 @@
                                         <svg height="26" width="26" style="pointer-events:none;">
                                         <g class="nodes">
                                             <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
-                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                            {% if tracker['obj']['icon']['style'] == 'svg' %}
+                                                <g transform="translate(5 5)" style="color:#000000" font-size="16px">{{ tracker['obj']['icon']['icon'] | safe }}</g>
+                                            {% else %}
+                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                            {% endif %}
                                         </g>
                                     </svg>
                                     </a>
@@ -274,7 +278,11 @@
                                         <svg height="26" width="26">
                                             <g class="nodes">
                                                 <circle cx="13" cy="13" r="13" fill="{{ t_obj['icon']['color'] }}"></circle>
-                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ t_obj['icon']['style'] }}" font-size="16px">{{ t_obj['icon']['icon'] }}</text>
+                                                {% if t_obj['icon']['style'] == 'svg' %}
+                                                    <g transform="translate(5 5)" style="color:#000000" font-size="16px">{{ t_obj['icon']['icon'] | safe }}</g>
+                                                {% else %}
+                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ t_obj['icon']['style'] }}" font-size="16px">{{ t_obj['icon']['icon'] }}</text>
+                                                {% endif %}
                                             </g>
                                         </svg>
                                     </a>
