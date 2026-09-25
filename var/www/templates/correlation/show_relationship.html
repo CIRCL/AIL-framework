@@ -499,10 +499,9 @@ var correl_link = "{{ url_for('correlation.show_relationship') }}?type={{ dict_o
     correl_link = correl_link + "&hidden={{ dict_object["hidden_str"] }}"
 {% endif %}
 
-const PivotickLib = window.Pivotick || {};
-const PivotickGraph = PivotickLib.Pivotick || PivotickLib.default || PivotickLib;
-const PivotickNode = PivotickLib.Node;
-const PivotickEdge = PivotickLib.Edge;
+const PivotickGraph = window.Pivotick;
+const PivotickNode = PivotickGraph.Node;
+const PivotickEdge = PivotickGraph.Edge;
 var currentObject = null;
 
 function build_tooltip_html(title, data) {
@@ -631,7 +630,7 @@ function is_svg_icon(nodeStyle) {
     return nodeStyle && nodeStyle.style === 'svg' && nodeStyle.icon;
 }
 
-function build_icon_class(nodeStyle, index) {
+function build_icon_class(nodeStyle) {
     if (is_svg_icon(nodeStyle)) {
         return '';
     }
@@ -641,7 +640,7 @@ function build_icon_class(nodeStyle, index) {
     if (!codepoint) {
         return baseClass;
     }
-    return (baseClass + ' pvt-ail-icon-' + index).trim();
+    return (baseClass + ' pvt-ail-icon-' + codepoint).trim();
 }
 
 function build_svg_icon(nodeStyle) {
@@ -660,11 +659,14 @@ function inject_icon_css_rules(nodes) {
         document.head.appendChild(styleTag);
     }
     const rules = [];
-    nodes.forEach(function(node, index) {
+    nodes.forEach(function(node) {
+        if (is_svg_icon(node.style)) {
+            return;
+        }
         const iconValue = get_icon_unicode_value(node.style);
         const codepoint = get_icon_codepoint(iconValue);
         if (codepoint) {
-            rules.push('.pvt-ail-icon-' + index + ' { --fa: "\\' + codepoint + '"; }');
+            rules.push('.pvt-ail-icon-' + codepoint + '::before { content: ' + JSON.stringify(String.fromCodePoint(parseInt(codepoint, 16))) + '; }');
         }
     });
     styleTag.textContent = rules.join('\n');
@@ -706,7 +708,7 @@ function create_graph(url){
             inject_icon_css_rules(data.nodes);
 
             const nodeById = {};
-            const nodes = data.nodes.map(function(n, idx){
+            const nodes = data.nodes.map(function(n){
                 nodeById[n.id] = new PivotickNode(n.id, {
                     ...n,
                     label: n.text,
@@ -714,7 +716,7 @@ function create_graph(url){
                 }, {
                     color: n.style.node_color || n.style.color,
                     size: n.style.node_radius || n.style.radius || 5,
-                    iconClass: build_icon_class(n.style, idx),
+                    iconClass: build_icon_class(n.style),
                     svgIcon: build_svg_icon(n.style),
                     textColor: '#000000',
                 });
@@ -735,7 +737,7 @@ function create_graph(url){
             }).filter(function(e){ return !!e.from && !!e.to; });
 
             all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
-                simulation: {
+                /*simulation: {
                     cooldownTime: 2000,        // default 2000
                     d3AlphaDecay: 0.015,       // default 0.0228
                     d3VelocityDecay: 0.5,      // default 0.4
@@ -744,7 +746,7 @@ function create_graph(url){
                     d3CollideRadius: 20,       // default 12
                     d3CollideIterations: 2,    // default 1
                     d3CenterStrength: 0.7,     // default 1
-                },
+                },*/
                 render: {
                     type: 'svg',
                     defaultEdgeStyle: {
@@ -754,6 +756,10 @@ function create_graph(url){
                 UI: {
                     mode: 'full',
                     theme: 'dark',
+                    editors: {
+                        nodeCreator: { enabled: false },
+                        edgeCreator: { enabled: false },
+                    },
                     tooltip: {
                         enabled: true,
                         render: function(element){ return render_pivotick_tooltip(element); },
