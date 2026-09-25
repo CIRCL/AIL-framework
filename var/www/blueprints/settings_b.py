@@ -744,21 +744,21 @@ def passive_ssh():
     meta = SSHKeys.get_passive_ssh_meta()
     return render_template("passive_ssh.html", meta=meta, acl_admin=acl_admin)
 
-@settings_b.route("/settings/passivedns/enable", methods=['GET'])
+@settings_b.route("/settings/passivessh/enable", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_enable():
     SSHKeys.enable_passive_ssh()
     return redirect(url_for('settings_b.passive_ssh'))
 
-@settings_b.route("/settings/passivedns/disable", methods=['GET'])
+@settings_b.route("/settings/passivessh/disable", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_disable():
     SSHKeys.disable_passive_ssh()
     return redirect(url_for('settings_b.passive_ssh'))
 
-@settings_b.route("/settings/passivedns/edit", methods=['GET', 'POST'])
+@settings_b.route("/settings/passivessh/edit", methods=['GET', 'POST'])
 @login_required
 @login_admin
 def passive_ssh_edit():
@@ -776,7 +776,7 @@ def passive_ssh_edit():
         acl_admin = current_user.is_in_role('admin')
         return render_template("passive_ssh_edit.html", meta=meta, acl_admin=acl_admin)
 
-@settings_b.route("/settings/passivedns/test", methods=['GET'])
+@settings_b.route("/settings/passivessh/test", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_test():

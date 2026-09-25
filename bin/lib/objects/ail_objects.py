@@ -398,8 +398,12 @@ def api_manually_translate(obj_type, subtype, obj_id, source, translation_target
 #### OBJ FILTERS ####
 
 def is_filtered(obj, filters):
-    # Trackers store filters by object type, while iterators pass the
-    # object-specific filter directly.
+    """
+    filters: tracker filters, keyed by object type
+             {'item': {'sources': [...]}, 'pgp': {'subtypes': [...]}, ...}
+    Trackers store filters by object type, while iterators pass the
+    object-specific filter directly.
+    """
     if obj.get_type() in filters:
         filters = filters[obj.get_type()]
     if 'mimetypes' in filters:
@@ -418,7 +422,6 @@ def is_filtered(obj, filters):
         if obj.get_type() != 'post' or obj.get_forum_id() not in filters['forums']:
             return True
     return False
-
 
 def obj_iterator(obj_type, filters):
     if obj_type == 'decoded':
