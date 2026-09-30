@@ -280,7 +280,9 @@
 												</div>
 												<div class="form-group mt-3">
 													<label for="blocklist_rule" class="font-weight-bold">Exclusion YARA rule (optional)</label>
-													<textarea class="form-control" id="blocklist_rule" name="blocklist_rule" placeholder="Enter a YARA rule to exclude false positives" rows="6">{{ new_blocklist_rule or '' }}</textarea>
+													<div class="border rounded bg-white p-3">
+														<textarea class="form-control" id="blocklist_rule" name="blocklist_rule" placeholder="Enter a YARA rule to exclude false positives" rows="6">{{ new_blocklist_rule or '' }}</textarea>
+													</div>
 													<small class="form-text text-muted">After a primary match, this rule scans the full object content. Any exclusion match discards the result. Its content is fixed when the task is created.</small>
 												</div>
 												<div class="form-group mt-3 mb-0">
@@ -552,5 +554,6 @@ initYaraRuleBuilder({
 		document.getElementById('text_input'),
 		yaraEditorOptions
 	)
+	window.yaraBlocklistEditor = createYaraEditor(document.getElementById('blocklist_rule'), { codemirror_extensions: [] });
 </script>
 </body>
