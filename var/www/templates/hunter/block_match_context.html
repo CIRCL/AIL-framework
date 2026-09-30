@@ -1,0 +1,9 @@
+{% if object.get('match_context') %}
+    <div class="small text-break mt-1">
+        {% for label, value in object['match_context'].items() %}
+            {% if value %}
+                <div><strong>{{ label }}:</strong> {{ value }}</div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
