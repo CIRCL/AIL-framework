@@ -25,7 +25,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from packages import Date
-from lib.ail_core import get_objects_tracked, get_object_all_subtypes, get_objects_retro_hunted
+from lib.ail_core import get_objects_tracked, get_object_all_subtypes, get_objects_retro_hunted, validate_pagination
 from lib import ail_logger
 from lib import ail_orgs
 from lib import ConfigLoader
@@ -2260,6 +2260,16 @@ class RetroHunt:
                 subtype, obj_id = obj.split(':', 1)
                 objs.append((obj_type, subtype, obj_id))
         return objs
+
+    def get_paginated_matches(self, page=1):
+        """Read existing match sets and paginate IDs before loading object metadata."""
+        page, nb = validate_pagination(page=page, nb=500)
+        objs = sorted(self.get_objs())
+        total = len(objs)
+        nb_pages = max(1, (total + nb - 1) // nb)
+        page = min(page, nb_pages)
+        start = (page - 1) * nb
+        return {'list_elem': objs[start:start + nb], 'page': page, 'nb_pages': nb_pages, 'nb_all_elem': total, 'nb_first_elem': start + 1 if total else 0, 'nb_last_elem': min(start + nb, total)}
 
     def is_retro_hunted_obj(self, obj_gid):
         return r_tracker.sismember(f'obj:retro_hunts:{obj_gid}', self.uuid)

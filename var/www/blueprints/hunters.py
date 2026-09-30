@@ -831,9 +831,11 @@ def retro_hunt_show_task():
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 
     dict_task['objs'] = []
+    dict_page = None
     if objs:
+        dict_page = retro_hunt.get_paginated_matches(page=request.args.get('page', 1))
         options = {'last_full_date', 'pdf', 'match_context'}
-        for ob in retro_hunt.get_objs():
+        for ob in dict_page['list_elem']:
             obj_type, obj_subtype, obj_id = ob
             obj_meta = ail_objects.get_object_meta(obj_type, obj_subtype, obj_id, options=options, flask_context=True)
             obj_meta['gid'] = f'{obj_type}:{obj_subtype}:{obj_id}'
@@ -841,6 +843,7 @@ def retro_hunt_show_task():
             dict_task['objs'].append(obj_meta)
 
     return render_template("show_retro_hunt.html", dict_task=dict_task,
+                           dict_page=dict_page,
                            blocklist_content=retro_hunt.get_blocklist_content(),
                            rule_content=rule_content,
                            bootstrap_label=bootstrap_label)

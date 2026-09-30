@@ -402,6 +402,9 @@
                 </div>
             </div>
 
+            {% if dict_page %}
+                <p class="mt-4 text-muted">Matches are ordered by object type, subtype, and ID. Table search and sorting apply to this page only.</p>
+            {% endif %}
             {% if dict_task['objs'] %}
                 <div class="mt-4">
                     <table class="table table-bordered table-hover" id="objs_table">
@@ -516,6 +519,15 @@
                 </div>
 
                 <hr>
+            {% endif %}
+            {% if dict_page %}
+                {% if dict_page['nb_all_elem'] %}
+                    {% with page=dict_page['page'], nb_page_max=dict_page['nb_pages'], nb_first_elem=dict_page['nb_first_elem'], nb_last_elem=dict_page['nb_last_elem'], nb_all_elem=dict_page['nb_all_elem'], object_name='Matches', target_url=url_for('hunters.retro_hunt_show_task', uuid=dict_task['uuid'], objs=True) %}
+                        {% include 'pagination.html' %}
+                    {% endwith %}
+                {% else %}
+                    <p class="text-center mt-4">No matches found.</p>
+                {% endif %}
             {% endif %}
 
         </div>
