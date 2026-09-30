@@ -143,7 +143,7 @@ class MailExporterTracker(MailExporter):
                 body += f'\nMatch {nb}: {match[0]}\nExtract:\n{match[1]}\n\n'
                 nb += 1
 
-        ail_link = f'AIL url:{obj.get_link()}\n\n'
+        ail_link = f'AIL url: {obj.get_link()}\n\n'
         for mail in tracker.get_mails():
             if ail_users.exists_user(mail):
                 body = ail_link + body

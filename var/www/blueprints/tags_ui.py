@@ -104,6 +104,8 @@ def tags_galaxy():
     galaxy = Tag.get_cluster_meta(galaxy_name, enabled=True, tags=True)
     if not galaxy:
         abort(404)
+    galaxy['nb_active_tags'] = Tag.get_galaxy_nb_tags_enabled(galaxy['type'])
+    galaxy['nb_tags'] = len(Tag.get_galaxy_tags(galaxy['type']))
     return render_template("tags/galaxy.html", galaxy=galaxy)
 
 @tags_ui.route('/tag/galaxy/tag')
@@ -194,7 +196,7 @@ def add_tags():
                                object_id=object_id, object_type=object_type, object_subtype=object_subtype)
     # error
     if res[1] != 200:
-        return str(res[0])
+        return jsonify(res[0])
 
     if request.referrer:
         return redirect(request.referrer)

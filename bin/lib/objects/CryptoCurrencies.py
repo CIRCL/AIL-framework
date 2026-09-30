@@ -176,8 +176,8 @@ class CryptoCurrency(AbstractSubtypeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['subtype'] = self.subtype
         meta['tags'] = self.get_tags(r_list=True)
@@ -195,7 +195,7 @@ class CryptoCurrencies(AbstractSubtypeObjects):
         return 'Cryptocurrencies'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'coins'}
+        return {'fa': 'fas', 'icon': 'coins'}
 
     def get_link(self, flask_context=False):
         if flask_context:

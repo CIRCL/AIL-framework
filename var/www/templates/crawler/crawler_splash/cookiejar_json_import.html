@@ -1,0 +1,39 @@
+<form class="d-inline-block {{ import_class|default('') }}" action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post" enctype="multipart/form-data">
+    {% if cookiejar_uuid %}
+        <input type="hidden" name="uuid" value="{{ cookiejar_uuid }}">
+    {% endif %}
+    <label class="btn btn-warning mb-0">
+        {{ import_label }} <i class="fas fa-file-import"></i>
+        <input type="file" name="file" accept="application/json,.json" onchange="this.form.submit();" hidden>
+    </label>
+</form>
+
+<button class="btn btn-warning {{ import_class|default('') }}" type="button" data-toggle="modal" data-target="#cookiejar-json-import-modal">
+    Paste JSON <i class="fas fa-paste"></i>
+</button>
+
+<div class="modal fade" id="cookiejar-json-import-modal" tabindex="-1" role="dialog" aria-labelledby="cookiejar-json-import-title" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post">
+                {% if cookiejar_uuid %}
+                    <input type="hidden" name="uuid" value="{{ cookiejar_uuid }}">
+                {% endif %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cookiejar-json-import-title">Import Cookiejar JSON</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="cookiejar-json-data">Cookiejar JSON</label>
+                    <textarea class="form-control text-monospace" id="cookiejar-json-data" name="json_data" rows="14" placeholder="Paste the cookiejar JSON here" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning"><i class="fas fa-file-import"></i> Import JSON</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

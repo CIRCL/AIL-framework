@@ -5,6 +5,7 @@ import base64
 import magic
 import os
 import sys
+import time
 
 from hashlib import sha256
 from io import BytesIO
@@ -17,6 +18,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib import image_similarity
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ail_core import get_default_image_description_model
 
@@ -24,6 +26,7 @@ config_loader = ConfigLoader()
 # r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 IMAGE_FOLDER = config_loader.get_files_directory('images')
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -43,8 +46,8 @@ class Image(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
-        # # TODO:
-        pass
+        image_similarity.delete(self.id)
+        # TODO: delete the image and its remaining metadata and correlations.
 
     def exists(self):
         return os.path.isfile(self.get_filepath())
@@ -64,7 +67,10 @@ class Image(AbstractDaterangeObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(IMAGE_FOLDER, self.get_rel_path())
+        filename = os.path.realpath(os.path.join(IMAGE_FOLDER, self.get_rel_path()))
+        image_dir = IMAGE_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, image_dir]) != image_dir:
+            return None
         return os.path.realpath(filename)
 
     def is_gif(self, filepath=None):
@@ -87,6 +93,12 @@ class Image(AbstractDaterangeObject):
     def get_content(self, r_type='str'):
         if r_type == 'str':
             return None
+        elif r_type == 'bytes':
+            filepath = self.get_filepath()
+            with open(filepath, 'rb') as f:
+                file_content = f.read()
+            return file_content
+        # io
         else:
             return self.get_file_content()
 
@@ -96,9 +108,13 @@ class Image(AbstractDaterangeObject):
             if key.startswith('desc:'):
                 model = key[5:]
                 models.append(model)
+        return models
 
     def add_description_model(self, model, description):
         self._set_field(f'desc:{model}', description)
+
+    def get_descriptions(self):
+        return {model: self.get_description(model) for model in self.get_description_models()}
 
     def get_description(self, model=None):
         if model is None:
@@ -107,6 +123,14 @@ class Image(AbstractDaterangeObject):
         if description:
             description = description.replace("`", ' ')
         return description
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
+        else:
+            return None
 
     def get_misp_object(self):
         obj_attrs = []
@@ -119,8 +143,8 @@ class Image(AbstractDaterangeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['img'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
@@ -128,6 +152,9 @@ class Image(AbstractDaterangeObject):
             meta['content'] = self.get_content()
         if 'description' in options:
             meta['description'] = self.get_description()
+            meta['descriptions'] = self.get_descriptions()
+        if 'similarity' in options:
+            meta['similarity'] = image_similarity.get_image_similarity_meta(self.id)
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta
@@ -139,6 +166,7 @@ class Image(AbstractDaterangeObject):
             os.makedirs(dirname)
         with open(filepath, 'wb') as f:
             f.write(content)
+        # self._create()  TODO ??? NEEDED FOR NB IMAGES
 
 def get_screenshot_dir():
     return IMAGE_FOLDER
@@ -168,6 +196,8 @@ def create(content, size_limit=5000000, b64=False, force=False):
         if not image.exists():
             image.create(content)
         return image
+    else:
+        print('LIMIT SIZE CREATE IMAGE')
 
 
 class Images(AbstractDaterangeObjects):
@@ -181,7 +211,7 @@ class Images(AbstractDaterangeObjects):
         return 'Images'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'image'}
+        return {'fa': 'fas', 'icon': 'image'}
 
     def get_link(self, flask_context=False):
         if flask_context:

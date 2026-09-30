@@ -213,6 +213,9 @@
                             {% endif %}
                             <b>{{ meta['protocol']['id'] }}</b>
                         </h4>
+                        {% if meta['network'] or meta['address'] %}<h6 class="card-title">
+                            {% if meta['network'] %}{{ meta['network'] }} {% endif %}{% if meta['address'] %}{{ meta['address'] }} {% endif %}
+                        </h6>{% endif %}
                     </div>
                 </div>
 
@@ -249,7 +252,7 @@
 <script>
     var chart = {};
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
+        $("#page-Chats-Explorer").addClass("active");
         $("#nav_chat").addClass("active");
         $('[data-toggle="popover"]').popover({
             boundary:'window',

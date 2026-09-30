@@ -114,7 +114,13 @@ function launching_kvrocks {
     echo -e $GREEN"\t* Launching KVROCKS servers"$DEFAULT
 
     sleep 0.1
-    screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    if [ -f "./kvrocks/build/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; ./kvrocks/build/kvrocks -c '$conf_dir'/6383.conf ; read x'
+    elif [ -f "/usr/bin/kvrocks" ]; then
+        screen -S "KVROCKS_AIL" -X screen -t "6383" bash -c 'cd '${AIL_HOME}'; kvrocks -c '$conf_dir'/6383.conf ; read x'
+    else
+        echo -e $RED"\t* KVROCKS is not installed."$DEFAULT
+    fi
 }
 
 function launching_logs {
@@ -191,7 +197,11 @@ function launching_scripts {
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "FeederImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./FeederImporter.py; read x"
     sleep 0.1
+    screen -S "Script_AIL" -X screen -t "CrawlerImporter" bash -c "cd ${AIL_BIN}/importer; ${ENV_PY} ./CrawlerImporter.py; read x"
+    sleep 0.1
     screen -S "Script_AIL" -X screen -t "D4_client" bash -c "cd ${AIL_BIN}/core; ${ENV_PY} ./D4_client.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "Translation" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Translation.py; read x"
     sleep 0.1
 
     screen -S "Script_AIL" -X screen -t "UpdateBackground" bash -c "cd ${AIL_BIN}; ${ENV_PY} ./update-background.py; read x"
@@ -279,6 +289,8 @@ function launching_scripts {
 
     # IMAGES
     screen -S "Script_AIL" -X screen -t "Exif" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./Exif.py; read x"
+    sleep 0.1
+    screen -S "Script_AIL" -X screen -t "ImageSimilarity" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./ImageSimilarity.py; read x"
     sleep 0.1
     screen -S "Script_AIL" -X screen -t "OcrExtractor" bash -c "cd ${AIL_BIN}/modules; ${ENV_PY} ./OcrExtractor.py; read x"
     sleep 0.1
@@ -546,6 +558,7 @@ function set_kvrocks_namespaces() {
   if checking_kvrocks; then
     _set_kvrocks_namespace "cor"  "ail_correls"
     _set_kvrocks_namespace "obj"  "ail_objs"
+    _set_kvrocks_namespace "isim" "ail_image_similarity"
     _set_kvrocks_namespace "tag"  "ail_tags"
   else
     echo -e $RED"\t* Error: Please launch Kvrocks server"$DEFAULT
@@ -598,7 +611,8 @@ function launch_tests() {
   echo -e $GREEN"\t* Flask:   $isflasked"$DEFAULT
   echo -e ""
   echo -e ""
-  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules
+  python3 -m nose2 --start-dir $tests_dir --coverage $bin_dir --with-coverage test_api test_modules test_api_crawler
+  exit $?
 }
 
 function reset_password() {
@@ -614,7 +628,9 @@ function reset_password() {
 
 function launch_all {
     checking_configuration;
-    update;
+    if [[ "${AIL_SKIP_UPDATE:-0}" != "1" ]]; then
+        update;
+    fi
     launch_redis;
     launch_kvrocks;
     launch_scripts;

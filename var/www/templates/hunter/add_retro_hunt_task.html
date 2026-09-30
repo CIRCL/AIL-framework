@@ -17,10 +17,74 @@
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+	<style>
+		.retro-page {
+			background: #f8f9fc;
+			min-height: 100vh;
+		}
+
+		.retro-shell {
+			max-width: 1400px;
+		}
+
+		.retro-hero {
+			border: 0;
+			background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+			box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.18);
+		}
+
+		.retro-hero .display-title {
+			font-size: 1.85rem;
+			font-weight: 600;
+		}
+
+		.retro-card {
+			border: 0;
+			box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
+		}
+
+		.retro-card .card-header {
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		}
+
+		.object-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+			grid-gap: 0.75rem;
+		}
+
+		.object-option {
+			background: #f8f9fc;
+			border: 1px solid #e9ecef;
+			border-radius: 0.5rem;
+			padding: 0.85rem 1rem;
+			height: 100%;
+		}
+
+		.object-option .custom-control-label {
+			font-weight: 600;
+		}
+
+		.filter-card {
+			border: 1px dashed #adb5bd;
+			background: #fcfcfd;
+		}
+
+		.sticky-panel {
+			position: sticky;
+			top: 1rem;
+		}
+
+		@media (max-width: 1199.98px) {
+			.sticky-panel {
+				position: static;
+			}
+		}
+	</style>
 
 </head>
 
-<body>
+<body class="retro-page">
 
 	{% include 'nav_bar.html' %}
 
@@ -30,42 +94,62 @@
 			{% include 'hunter/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+				<div class="container-fluid retro-shell py-3 py-xl-4">
+					<div class="card retro-hero text-white mb-4">
+						<div class="card-body p-4 p-xl-5">
+							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+								<div class="pr-lg-4">
+									<h1 class="display-title mb-2">Create a new Retro Hunt task</h1>
+									<p class="mb-0 text-white-50">Define the retro hunt scope, and select the YARA rule to scan historical data.</p>
+								</div>
+								<div class="text-white">
+									<ul class="mb-0">
+                                        <li>Step 1: Add task details</li>
+                                        <li>Step 2: Select tracked objects</li>
+                                        <li>Step 3: Configure YARA rules</li>
+                                    </ul>
+								</div>
+							</div>
+						</div>
+					</div>
 
-                <div class="card my-3">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="card-title">Create a new Retro Hunt task</h5>
-                    </div>
-                    <div class="card-body">
+					<form action="{{ url_for('hunters.retro_hunt_add_task') }}" method='post'>
+						<div class="row">
+							<div class="col-12 col-xl-8">
+								<div class="card retro-card mb-4">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-sliders-h text-primary mr-2"></i>Task details</h5>
+										<p class="mb-0 text-muted">Name your hunt and add context so others can quickly understand its purpose.</p>
+									</div>
+									<div class="card-body">
+										<div class="form-group">
+											<label for="name" class="font-weight-bold">Retro Hunt name</label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<div class="input-group-text bg-secondary text-white"><i class="fas fa-quote-right"></i></div>
+												</div>
+												<input id="name" name="name" class="form-control" placeholder="Example: Encoded PowerShell" type="text" required>
+											</div>
+										</div>
+										<div class="form-group mb-0">
+											<label for="description" class="font-weight-bold">Description</label>
+											<div class="input-group">
+												<div class="input-group-prepend">
+													<div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+												</div>
+												<textarea id="description" name="description" class="form-control" placeholder="Describe what this retro hunt should find (optional)." rows="3">{% if new_description %}{{ new_description }}{% endif %}</textarea>
+											</div>
+										</div>
+									</div>
+								</div>
 
-                        <form action="{{ url_for('hunters.retro_hunt_add_task') }}" method='post'>
-
-                            <div class="row">
-                                <div class="col-12 col-xl-9">
-                                    <div class="input-group mb-2 mr-sm-2">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text bg-secondary text-white"><i class="fas fa-quote-right"></i></div>
-                                        </div>
-                                        <input id="name" name="name" class="form-control" placeholder="Retro Hunt Name" type="text" required>
-                                    </div>
-
-											<!-- <div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-secondary text-white"><i class="fas fa-at"></i></div>
-										    </div>
-												<input id="mails" name="mails" class="form-control" placeholder="E-Mails Notification (optional, space separated)" type="text"}>
-										  </div> -->
-                                    <div class="input-group mb-2 mr-sm-2">
-                                        <div class="input-group-prepend">
-                                            <div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
-                                        </div>
-                                        <textarea id="description" name="description" class="form-control" placeholder="Retro Hunt Description (optional)" rows="3"></textarea>
-                                    </div>
-
-                                    <div class="card my-4">
-                                        <div class="card-header bg-info text-white">
-                                            <b>Objects to Track:</b>
-                                        </div>
-                                        <div class="card-body">
+								<div class="card retro-card mb-4">
+									<div class="card-header bg-white py-3">
+										<h5 class="mb-1"><i class="fas fa-crosshairs text-info mr-2"></i>Objects to track</h5>
+										<p class="mb-0 text-muted">Choose which object categories should be scanned by this hunt.</p>
+									</div>
+									<div class="card-body">
+										<div class="object-grid">
 {#                                                    <div class="custom-control custom-switch mt-1">#}
 {#                                                        <input class="custom-control-input" type="checkbox" name="cve_obj" id="cve_obj" checked="">#}
 {#                                                        <label class="custom-control-label" for="cve_obj"><i class="fas fa-bug"></i>&nbsp;CVE</label>#}
@@ -74,172 +158,201 @@
 {#                                                        <input class="custom-control-input" type="checkbox" name="crypto_obj" id="crypto_obj" checked="">#}
 {#                                                        <label class="custom-control-label" for="crypto_obj"><i class="fas fa-coins"></i>&nbsp;Cryptocurrency</label>#}
 {#                                                    </div>#}
-                                            <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj">
-                                                <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded</label>
-                                            </div>
-                                            <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" checked="">
-                                                <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Messages</label>
-                                            </div>
-                                            <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" checked="">
-                                                <label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand"></i>&nbsp;Ocrs</label>
-                                            </div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if 'decoded' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open text-info mr-1"></i>Decoded</label>
+													<small class="form-text text-muted">Content decoded from formats such as base64.</small>
+												</div>
+											</div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if 'message' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots text-info mr-1"></i>Message</label>
+													<small class="form-text text-muted">Messages from chats and conversations.</small>
+												</div>
+											</div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="ocr_obj" id="ocr_obj" {% if 'ocr' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="ocr_obj"><i class="fas fa-expand text-info mr-1"></i>OCR</label>
+													<small class="form-text text-muted">Text extracted from images.</small>
+												</div>
+											</div>
 {#                                                    <div class="custom-control custom-switch mt-1">#}
 {#                                                        <input class="custom-control-input" type="checkbox" name="domain_obj" id="domain_obj" checked="">#}
 {#                                                        <label class="custom-control-label" for="domain_obj"><i class="fas fa-spider"></i>&nbsp;Domain</label>#}
 {#                                                    </div>#}
-                                            <div class="custom-control custom-switch mt-1">
-                                                <input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" checked="">
-                                                <label class="custom-control-label" for="item_obj"><i class="fas fa-file"></i>&nbsp;Item</label>
-                                            </div>
-                                            <div class="card border-dark mb-4" id="sources_item_div">
-                                                <div class="card-body">
-                                                    <h5>Filter Item by sources</h5>
-                                                    <div class="input-group mb-2 mr-sm-2">
-                                                        <div class="input-group-prepend">
-                                                            <div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
-                                                        </div>
-                                                        <input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item Sources to track (ALL IF EMPTY)" autocomplete="off">
-                                                    </div>
-                                                    <h5>Date range:</h5>
-                                                    <div class="row mb-2">
-                                                        <div class="col-lg-6">
-                                                            <div class="input-group" id="date-range-from">
-                                                                <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-                                                                <input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from_item" autocomplete="off">
-                                                            </div>
-                                                        </div>
-                                                        <div class="col-lg-6">
-                                                            <div class="input-group" id="date-range-to">
-                                                                <div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-                                                                <input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to_item" autocomplete="off">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="item_obj" id="item_obj" {% if 'item' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="item_obj"><i class="fas fa-file text-info mr-1"></i>Item</label>
+													<small class="form-text text-muted">Processed text items and extracted content.</small>
+												</div>
+											</div>
+											<div class="object-option">
+												<div class="custom-control custom-switch mt-1">
+													<input class="custom-control-input" type="checkbox" name="post_obj" id="post_obj" {% if 'post' in new_filters %}checked=""{% endif %}>
+													<label class="custom-control-label" for="post_obj"><svg class="text-info mr-1" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none" /><path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" /></svg>Forum post</label>
+													<small class="form-text text-muted">Posts imported from forums.</small>
+												</div>
+											</div>
+										</div>
+										<div class="card filter-card mt-4 mb-0" id="sources_item_div">
+											<div class="card-body">
+												<h6 class="font-weight-bold mb-1">Refine item scanning by source</h6>
+												<p class="text-muted small mb-3">Leave this empty to scan items from every source.</p>
+												<div class="form-group mb-3">
+													<div class="input-group">
+														<div class="input-group-prepend">
+															<div class="input-group-text bg-dark text-white"><i class="fas fa-folder"></i></div>
+														</div>
+														<input id="sources_item" class="form-control" type="text" name="sources_item" placeholder="Item sources to track (all if empty)" autocomplete="off">
+													</div>
+												</div>
+												<label class="font-weight-bold mb-2">Date range</label>
+												<div class="row mb-0">
+													<div class="col-lg-6">
+														<div class="input-group mb-3 mb-lg-0" id="date-range-from">
+															<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+															<input class="form-control" id="date-range-from-input" placeholder="yyyy-mm-dd" name="date_from_item" autocomplete="off">
+														</div>
+													</div>
+													<div class="col-lg-6">
+														<div class="input-group" id="date-range-to">
+															<div class="input-group-prepend"><span class="input-group-text"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+															<input class="form-control" id="date-range-to-input" placeholder="yyyy-mm-dd" name="date_to_item" autocomplete="off">
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="card filter-card mt-3 mb-0" id="forums_post_div">
+											<div class="card-body">
+												<h6 class="font-weight-bold mb-1"><svg class="text-info mr-1" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none" /><path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" /></svg>Refine post scanning by forum</h6>
+												<p class="text-muted small mb-3">Choose forums by name. Leave this empty to scan posts from every forum.</p>
+												<input id="forums_post" class="form-control" type="text" name="forums_post" placeholder="Forums to scan (all if empty)" autocomplete="off">
+											</div>
+										</div>
+									</div>
+								</div>
 
+									<div class="card retro-card mb-4">
+										<div class="card-header bg-white py-3">
+                                            <h5 class="mb-1"><i class="fas fa-search text-success mr-2"></i>How should this retro hunt match?</h5>
+											<p class="mb-0 text-muted">Create a YARA rule manually or import one from Rulezet.</p>
+									</div>
+									<div class="card-body" id="yara_rule">
+										<div class="d-flex justify-content-end mb-1">
+											<button type="button" class="btn btn-outline-primary" id="yara_builder_open_btn">
+												<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" fill-rule="evenodd" clip-rule="evenodd"><path fill="#020202" d="M23.856 19.082c-1.914-1.635-3.818-3.33-5.733-4.985a99 99 0 0 0-1.904-1.665c-.638-.548-1.286-1.086-1.914-1.655a59 59 0 0 1-2.313-2.153a.28.28 0 0 0-.409 0a.29.29 0 0 0 0 .409c1.206 1.405 2.473 2.791 3.819 4.087a39 39 0 0 0 1.774 1.615c.608.519 1.217.997 1.845 1.526c1.455 1.166 2.99 2.273 4.436 3.38a.333.333 0 1 0 .42-.519z"/><path fill="#0c6fff" d="m7.485 3.48l.638.189c.06.458.15.907.22 1.366a.34.34 0 0 0 .349.319a.35.35 0 0 0 .329-.35c0-.408.07-.817.1-1.226h.259c.339 0 .658-.12.997-.17a.33.33 0 0 0 .339-.318a.33.33 0 0 0-.32-.35c-.338-.079-.657-.159-.996-.209h-.23v-.588C9.11 1.615 9 1.146 8.921.588a.29.29 0 1 0-.578 0c-.09.528-.19.997-.24 1.575v.658l-.508.1a.29.29 0 0 0-.309.27a.31.31 0 0 0 .2.288m7.796 4.816l.778.12l.18.817a.339.339 0 0 0 .667 0c0-.27.07-.529.1-.798h.08c.329-.06.638-.16.997-.229a.33.33 0 0 0 .319-.339a.34.34 0 0 0-.41-.379c-.338 0-.657-.12-.996-.15c-.34-.03 0-.11 0-.169c-.07-.379-.19-.708-.29-1.077a.3.3 0 0 0-.587 0c-.06.37-.15.718-.19 1.097a2 2 0 0 0 0 .24c-.24.07-.478.159-.728.249a.3.3 0 0 0-.2.319a.29.29 0 0 0 .28.299M5.86 16.969c-.997-.499-1.794-.997-2.752-1.536c-.339-.23-.558.19-.378.648a26 26 0 0 0 2.522 1.775q.677.407 1.396.738q.722.332 1.485.558c.993.299 2.024.453 3.061.459c.409 0 .548-.579.19-.708a12.7 12.7 0 0 1-3.36-.937c-.738-.34-1.456-.678-2.164-.997"/><path fill="#020202" d="M14.913 16.6a.34.34 0 0 0-.449-.15c-.4.153-.835.19-1.256.11a12 12 0 0 1-2.074-.588a26.2 26.2 0 0 1-4.825-2.204a16 16 0 0 1-4.088-3.23a8 8 0 0 1-.468-.548a5 5 0 0 1-.36-.579a2.7 2.7 0 0 1-.219-.488a3 3 0 0 1-.13-.529c-.089-.737.13-1.166.55-1.385a6.1 6.1 0 0 1 2.99-.17c.29 0 .578.08.858.13c.438.09.857.2 1.296.319a.3.3 0 1 0 .17-.569a24 24 0 0 0-1.317-.378a9 9 0 0 0-.917-.19a6.83 6.83 0 0 0-3.45.06A1.994 1.994 0 0 0 .048 8.484q.03.364.12.718q.098.35.259.678c.1.21.219.399.339.598c.12.2.398.529.608.778q.729.795 1.565 1.475c-.16.529-.329.997-.538 1.546q-.377.9-.868 1.744q-.551.676-.997 1.426a1.67 1.67 0 0 0-.08.997a5.04 5.04 0 0 0 2.224 2.991a16.2 16.2 0 0 0 4.965 1.914c.773.198 1.565.315 2.363.35c.44.023.874-.1 1.236-.35c.284-.27.485-.616.578-.997a8.3 8.3 0 0 0 .19-1.395q.085-.886.279-1.755q.2-.867.548-1.685a.4.4 0 0 0 0-.26q.135.015.27 0a2.9 2.9 0 0 0 1.635-.219a.34.34 0 0 0 .17-.438m-2.672.618a30 30 0 0 0-.997 3.61q-.07.64-.23 1.265c-.066.21-.186.4-.348.549c-.17.14-.519.09-.897 0a11 11 0 0 1-1.805-.39a16.3 16.3 0 0 1-4.596-1.814a4.18 4.18 0 0 1-1.904-2.303a.8.8 0 0 1 .08-.588c.199-.419.548-.798.747-1.196c.09-.18.708-1.626.798-1.885c.16-.448.279-.907.398-1.366a20 20 0 0 0 2.294 1.576a25.2 25.2 0 0 0 5.114 2.063c.409.12.907.28 1.426.39a.3.3 0 0 0-.08.089"/><path fill="#020202" d="M7.545 9.381a.29.29 0 1 0 0-.578a4.2 4.2 0 0 0-1.764 0c-.459.19-.748.588-.45 1.446q.066.196.16.379q.106.188.24.359q.164.218.359.408q.196.18.418.33c.744.49 1.544.888 2.383 1.186c1.243.41 2.527.68 3.829.807a.33.33 0 0 0 .379-.279a.33.33 0 0 0-.27-.379a19.6 19.6 0 0 1-2.99-.897c-.48-.19-.998-.399-1.396-.628a10.5 10.5 0 0 1-1.326-.718l-.609-.488l-.319-.44c-.08-.149-.17-.238-.11-.308a.42.42 0 0 1 .23-.13a5.3 5.3 0 0 1 1.236-.07"/></g></svg> YARA rule builder
+											</button>
+										</div>
+										{% include 'hunter/block_yara_rule_builder.html' %}
 
-{#                                            <div class="custom-control custom-switch mt-1">#}
-{#                                                <input class="custom-control-input" type="checkbox" name="pgp_obj" id="pgp_obj" checked="">#}
-{#                                                <label class="custom-control-label" for="pgp_obj"><i class="fas fa-key"></i>&nbsp;PGP</label>#}
-{#                                            </div>#}
-{#                                            <div class="card border-dark mb-4" id="sources_pgp_div">#}
-{#                                                <div class="card-body">#}
-{#                                                    <h6>Filter PGP by subtype:</h6>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_name" id="filter_pgp_name" checked="">#}
-{#                                                        <label class="custom-control-label" for="filter_pgp_name">#}
-{#                                                            <svg height="26" width="26">#}
-{#                                                                <g class="nodes">#}
-{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
-{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon fas" font-size="16px">&#xf507;</text>#}
-{#                                                                </g>#}
-{#                                                            </svg>#}
-{#                                                            name#}
-{#                                                        </label>#}
-{#                                                    </div>#}
-{#                                                    <div class="custom-control custom-switch mt-1">#}
-{#                                                        <input class="custom-control-input" type="checkbox" name="filter_pgp_mail" id="filter_pgp_mail" checked="">#}
-{#                                                        <label class="custom-control-label" for="filter_pgp_mail">#}
-{#                                                            <svg height="26" width="26">#}
-{#                                                                <g class="nodes">#}
-{#                                                                    <circle cx="13" cy="13" r="13" fill="#44AA99"></circle>#}
-{#                                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="fas" font-size="16px">&#xf1fa;</text>#}
-{#                                                                </g>#}
-{#                                                            </svg>#}
-{#                                                            mail#}
-{#                                                        </label>#}
-{#                                                    </div>#}
-{#                                                </div>#}
-{#                                            </div>#}
+										<div class="card border-0 bg-light mb-3">
+											<div class="card-body">
+												<div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+													<h6 class="font-weight-bold mb-0">Import from Rulezet</h6>
+													<a class="btn btn-outline-primary btn-sm mt-2 mt-md-0 d-inline-flex align-items-center" href="https://rulezet.org/rule/rules_list?format=yara" target="_blank" rel="noopener noreferrer">
+														<img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet logo" style="height: 50px; width: auto;" class="mr-1">
+														Search on Rulezet
+													</a>
+												</div>
+                                                <p class="small text-muted mb-2">Rulezet is an open-source platform for sharing and improving detection rules.</p>
+												<div class="input-group mb-2">
+													<input type="url" class="form-control" id="rulezet_rule_url" placeholder="https://rulezet.org/rule/public/215468">
+													<div class="input-group-append">
+														<button class="btn btn-outline-success" id="import_rulezet_btn" type="button">Import</button>
+													</div>
+												</div>
+                                                <small class="form-text text-muted mb-2">After import, the rule content is inserted below.</small>
+												<div class="alert alert-danger py-2 px-3 mb-0 d-none" id="rulezet_error"></div>
+											</div>
+										</div>
+											<div class="form-group mb-0">
+												<label for="text_input" class="font-weight-bold">Custom YARA rule</label>
+												<p class="small text-muted">Create, Paste or edit your own YARA rule.</p>
+												<div class="card border border-light">
+													<div class="card-body p-3">
+														<textarea class="form-control border-0 px-0" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="8">{% if new_rule %}{{ new_rule }}{% endif %}</textarea>
+													</div>
+												</div>
+												<div class="form-group mt-3">
+													<label for="blocklist_rule" class="font-weight-bold">Exclusion YARA rule (optional)</label>
+													<div class="border rounded bg-white p-3">
+														<textarea class="form-control" id="blocklist_rule" name="blocklist_rule" placeholder="Enter a YARA rule to exclude false positives" rows="6">{{ new_blocklist_rule or '' }}</textarea>
+													</div>
+													<small class="form-text text-muted">After a primary match, this rule scans the full object content. Any exclusion match discards the result. Its content is fixed when the task is created.</small>
+												</div>
+												<div class="form-group mt-3 mb-0">
+													<label for="source" class="font-weight-bold">Rule source</label>
+													<input id="source" name="source" class="form-control" type="text" value="manual">
+													<small class="form-text text-muted">Use <code>manual</code> for manually created YARA rules, or keep an external reference (for example, a Rulezet URL).</small>
+												</div>
+											</div>
+										</div>
+									</div>
 
-
-                                        </div>
-                                    </div>
-
-                                    <div class="card my-4">
-                                        <div class="card-header bg-secondary text-white">
-                                            <b>Tags</b>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="input-group mb-2 mr-sm-2">
-                                                <div class="input-group-prepend">
-                                                    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-                                                </div>
-                                                <input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text">
-                                            </div>
+									<div class="card retro-card mb-4">
+										<div class="card-header bg-white py-3">
+											<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Tags</h5>
+											<p class="mb-0 text-muted">Apply tags to matched objects.</p>
+										</div>
+										<div class="card-body">
+                                            <label class="font-weight-bold">MISP tags</label>
                                             {% include 'tags/block_tags_selector.html' %}
-                                        </div>
-                                    </div>
+                                            <div class="form-group my-3">
+                                                <label for="tags" class="font-weight-bold">Custom tags</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend">
+                                                        <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
+                                                    </div>
+                                                    <input id="tags" name="tags" class="form-control" placeholder="my-tag1 tag2" type="text">
+                                                </div>
+                                                <small class="form-text text-muted">Separate custom tags with spaces.</small>
+                                            </div>
+										</div>
+									</div>
+								</div>
 
-
-                                </div>
-                                <div class="col-12 col-xl-3">
-
-                                    <label  class="mt-3" for="level_selector">View Level</label>
-                                    <select class="custom-select" id="level_selector" name="level">
-                                        <option value="1" selected><i class="fas fa-users"></i> Global</option>
-                                        <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
-                                    </select>
-
-                                </div>
-                            </div>
-
-
-
-
-                            <div class="mb-2" id="yara_rule">
-                                <div class="" id="yara_default_rules">
-
-                                    <h6>Default YARA rules:</h6>
-                                    <select class="custom-select w-100 mb-3" id="yara_default_rule" name="yara_default_rule" onchange="get_default_rule_content(this);">
-                                        <option selected>Select a default rule</option>
-                                        {% for yara_types in all_yara_files %}
-                                            {% for yara_file_name in all_yara_files[yara_types] %}
-                                                <option value="{{yara_types}}/{{yara_file_name}}">{{yara_types}} - {{yara_file_name}}</option>
-                                            {% endfor %}
-                                        {% endfor %}
-                                    </select>
-
-                                    <pre class="border bg-light" id="default_yara_rule_content"></pre>
-
-                                </div>
-
-                                <hr>
-
-                                <h6>Custom YARA rules:</h6>
-                                <div class="row" id="textarea">
-                                    <textarea class="form-control mx-3" id="text_input" name="yara_custom_rule" placeholder="Enter your own YARA rule" rows="5"></textarea>
-                                </div>
-                            </div>
-
-                            <br>
-                            <button class="btn btn-primary mt-2">
-                                <i class="fas fa-plus"></i> Create Retro Hunt Task
-                            </button>
-
-                        </form>
-
-
-
-                    </div>
-                </div>
+								<div class="col-12 col-xl-4">
+									<div class="sticky-panel">
+										<div class="card retro-card mb-4">
+											<div class="card-header bg-white py-3">
+												<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility & actions</h5>
+												<p class="mb-0 text-muted">Decide who can view this retro hunt.</p>
+											</div>
+										<div class="card-body">
+											<label for="level_selector" class="font-weight-bold">View level</label>
+												<select class="custom-select" id="level_selector" name="level">
+													<option value="1" {% if new_level %}{% if new_level == 1 %}selected{% endif %}{% else %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+													<option value="2" {% if new_level == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
+												</select>
+                                                <small class="form-text text-muted">Global retro hunts are visible to all users, while organisation retro hunts are visible only within your organisation.</small>
+												<button class="btn btn-primary btn-lg btn-block mt-4" id="retro_hunt_submit_btn">
+													<i class="fas fa-plus mr-1"></i> Create Retro Hunt Task
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							</form>
+						</div>
 
 
 			</div>
 		</div>
 	</div>
 
-</body>
 
 <script>
 var ltags;
 var chart = {};
 $(document).ready(function(){
 	$('#nav_title_retro_hunt').removeClass("text-muted");
+    $("#nav_retro_hunts_add").addClass("active");
 
 	$('#date-range-from').dateRangePicker({
 		separator : ' to ',
@@ -269,15 +382,29 @@ $(document).ready(function(){
 	});
 
 	sources_item = $('#sources_item').tagSuggest({
-		data: {{items_sources|safe}},
+		data: {{items_sources|tojson}},
 		sortOrder: 'name',
 		maxDropHeight: 200,
 		name: 'sources_item',
 		emptyText: 'Item Sources to track (ALL IF EMPTY)',
 		});
+	forums_post = $('#forums_post').tagSuggest({
+		data: {{forums|tojson}},
+		{% if 'post' in new_filters and new_filters['post'].get('forums') %}value: {{new_filters['post']['forums']|tojson}},{% endif %}
+		sortOrder: 'name',
+		maxDropHeight: 200,
+		name: 'forums_post',
+		emptyText: 'Forums to scan (ALL IF EMPTY)',
+		});
+
+	item_source_input_controller();
+	post_forum_input_controller();
 
     $('#item_obj').on("change", function () {
 		item_source_input_controller();
+	});
+    $('#post_obj').on("change", function () {
+		post_forum_input_controller();
 	});
     /*$('#pgp_obj').on("change", function () {
 		pgp_source_input_controller();
@@ -308,6 +435,14 @@ function item_source_input_controller() {
 	}
 }
 
+function post_forum_input_controller() {
+	if($('#post_obj').is(':checked')){
+		$("#forums_post_div").show();
+	}else{
+		$("#forums_post_div").hide();
+	}
+}
+
 function pgp_source_input_controller() {
 	if($('#pgp_obj').is(':checked')){
 		$("#sources_pgp_div").show();
@@ -316,16 +451,109 @@ function pgp_source_input_controller() {
 	}
 }
 
-function get_default_rule_content(selector){
-	var yara_name = selector.value
-	if (yara_name === "Select a default rule") {
-		jQuery("#default_yara_rule_content").text("")
+function setRulezetError(message) {
+	const errorContainer = $('#rulezet_error');
+	if (message) {
+		errorContainer.text(message);
+		errorContainer.removeClass('d-none');
 	} else {
-		$.getJSON("{{ url_for('hunters.get_default_yara_rule_content') }}?rule=" + yara_name,
-			function(data) {
-				jQuery("#default_yara_rule_content").text(data['content'])
-		});
+		errorContainer.text('');
+		errorContainer.addClass('d-none');
 	}
 }
 
+function setYaraRuleContent(content) {
+	const textarea = document.getElementById('text_input');
+	if (window.yaraEditor) {
+		window.yaraEditor.dispatch({
+			changes: {
+				from: 0,
+				to: window.yaraEditor.state.doc.length,
+				insert: content
+			}
+		});
+	} else {
+		textarea.value = content;
+		textarea.dispatchEvent(new Event('input', { bubbles: true }));
+		textarea.dispatchEvent(new Event('change', { bubbles: true }));
+	}
+}
+
+$('#import_rulezet_btn').on('click', function () {
+	setRulezetError('');
+	const rulezetUrl = $('#rulezet_rule_url').val().trim();
+	if (!rulezetUrl) {
+		setRulezetError('Please provide a Rulezet URL.');
+		return;
+	}
+	try {
+		const parsed = new URL(rulezetUrl);
+		const pathSegments = parsed.pathname.split('/').filter(Boolean);
+		const ruleId = pathSegments[pathSegments.length - 1];
+		if (!ruleId) {
+			setRulezetError('Unable to extract Rule ID from URL.');
+			return;
+		}
+	} catch (_) {
+		setRulezetError('Invalid Rulezet URL.');
+		return;
+	}
+
+	$.getJSON("{{ url_for('hunters.import_rulezet_yara_rule') }}?url=" + encodeURIComponent(rulezetUrl))
+		.done(function (data) {
+			if ((data.format || '').toLowerCase() !== 'yara') {
+				setRulezetError('Only YARA rules are supported.');
+				return;
+			}
+			setYaraRuleContent(data.to_string || '');
+			if (!$('#name').val().trim()) {
+				$('#name').val(data.title || '');
+			}
+			if (!$('#description').val().trim()) {
+				$('#description').val(data.description || '');
+			}
+			$('#source').val(rulezetUrl);
+		})
+		.fail(function (xhr) {
+			const response = xhr.responseJSON || {};
+			setRulezetError(response.reason || 'Unable to fetch Rulezet rule details.');
+		});
+});
+
 </script>
+
+<script src="{{ url_for('static', filename='js/yara-rule-builder.js') }}"></script>
+<script>
+initYaraRuleBuilder({
+	disabledButtonSelectors: ['#retro_hunt_submit_btn'],
+	onRuleGenerated: function (content) {
+		setYaraRuleContent(content);
+	}
+});
+</script>
+
+<script type="module">
+	import { createYaraEditor } from "{{ url_for('static', filename='js/codemirror-yara.es.js') }}";
+
+	const yaraEditorOptions = {
+		'placeholder': `rule YourYaraRule {
+    meta:
+        author = "Yourself"
+        description = "A description of your rule"
+        reference = "An (optional) reference of your rule"
+    strings:
+        $str1 = "str1" nocase
+        $str2 = "str2" nocase
+        $str3 = "str3" nocase
+    condition:
+        all of them
+}`,
+		codemirror_extensions: []
+	}
+	window.yaraEditor = createYaraEditor(
+		document.getElementById('text_input'),
+		yaraEditorOptions
+	)
+	window.yaraBlocklistEditor = createYaraEditor(document.getElementById('blocklist_rule'), { codemirror_extensions: [] });
+</script>
+</body>

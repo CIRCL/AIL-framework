@@ -9,6 +9,7 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    {% include 'objects/block_obj_css.html' %}
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -18,92 +19,593 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 
+    <style>
+    .scope-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .scope-icon img {
+      max-width: 16px;
+      max-height: 16px;
+      display: block;
+    }
+
+    .scope-icon i {
+      font-size: 16px;
+      line-height: 1;
+    }
+    .scope-icon img,
+    .scope-icon i {
+      opacity: 0.75;
+    }
+
+    label:hover .scope-icon img,
+    label:hover .scope-icon i {
+      opacity: 1;
+    }
+    </style>
+
 </head>
 <body>
 
 	{% include 'nav_bar.html' %}
 
-	<div class="container-fluid">
-		<div class="row">
 
-			{% include 'sidebars/sidebar_search.html' %}
+<form method="GET" action="{{ url_for('search_b.search_dashboard') }}" id="searchForm", onsubmit="combineScopes()">
 
-			<div class="col-12 col-lg-10" id="core_content">
+  <div class="container-fluid">
+    <div class="row">
 
-                <div id="search_crawled">
-                    {% include 'search/block_crawled_search.html' %}
-                </div>
+      <!-- =======================
+           SIDEBAR (filters only)
+           ======================= -->
+      <aside class="col-md-3 col-xl-2 border-right bg-light py-3"
+             style="min-height: 100vh; position: sticky; top: 0;">
 
-                <div id="search_domains_name">
-                    {% include 'domains/block_domains_name_search.html' %}
-                </div>
+        <h6 class="text-uppercase text-muted mb-3">Search scope</h6>
 
-                <div id="search_titles">
-                    {% include 'title/block_titles_search.html' %}
-                </div>
+        <div class="mb-2">
+          <a href="#" class="small" onclick="setAllScopes(true); return false;">All</a>
+          <span class="text-muted mx-1">·</span>
+          <a href="#" class="small" onclick="setAllScopes(false); return false;">None</a>
+        </div>
 
-                <hr class="my-6">
-
-                <div id ="search_chats">
-                    {% include 'search/block_chats_search.html' %}
-                </div>
-
-                <div class="my-4" id="search_usernames">
-                    {% with subtypes=username_subtypes %}
-                        {% include 'username/block_usernames_search.html' %}
-                    {% endwith %}
-                </div>
-
-
-{#            TODO SEARCH CHATS / MESSAGES #}
-
-{#            TODO BUTTON with anchor ??? #}
-
-
-                <div id="search_mails">
-                    {% include 'mail/block_mails_search.html' %}
-                </div>
-
-{#                {% include 'cve/block_cve_search.html' %}#}
-
-                <div id="search_gtrackers">
-                    {% include 'block_passive_ssh_search.html' %}
-                </div>
-
-                <div id="search_gtrackers">
-                    {% include 'gtracker/block_gtrackers_search.html' %}
-                </div>
-
-                <div id="search_filenames">
-                    {% include 'file-name/block_file_name_search.html' %}
-                </div>
-
-
-
+        <!-- CHATS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted"><i class="far fa-comments"></i> Chats</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('chats', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('chats', false); return false;">None</a>
             </div>
+          </div>
+
+          {% for protocol in chat_protocols %}
+            {% set scope_value = "c" + protocol["id"] %}
+            <div class="custom-control custom-checkbox">
+              <input class="custom-control-input scope-item chats" type="checkbox" id="scope_{{ protocol['id'] }}"
+                     name="scope" value="{{ scope_value }}"
+                     {% if scope_value in selected_scopes %}checked{% endif %}>
+              <label class="custom-control-label d-flex align-items-center" for="scope_{{ protocol['id'] }}">
+                  <span class="scope-icon mr-2">
+                    {% if protocol.get('icon') and protocol['icon'].get('style') == 'svg' and protocol['icon'].get('icon') %}
+                      {{ protocol['icon']['icon'] | safe }}
+                    {% elif protocol.get('icon') and protocol['icon'].get('style') and protocol['icon'].get('icon') %}
+                      <i class="{{ protocol['icon']['style'] }} {{ protocol['icon']['icon'] }}"></i>
+                    {% else %}
+                      <i class="far fa-comments"></i>
+                    {% endif %}
+                  </span>
+                  {{ protocol["id"]|capitalize }}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+
+        <hr>
+
+        <!-- CRAWLED DOMAINS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted"><i class="fas fa-spider"></i> Crawled domains</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('domains', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('domains', false); return false;">None</a>
+            </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_web"
+                   name="scope" value="web"
+                   {% if "web" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_web">
+                <span class="scope-icon mr-2">
+                  <i class="fab fa-html5"></i>
+                </span>
+
+                Web (clearnet)
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_onion"
+                   name="scope" value="onion"
+                   {% if "onion" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_onion">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-user-secret"></i>
+                </span>
+
+                Tor (.onion)
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item domains" type="checkbox" id="scope_i2p"
+                   name="scope" value="i2p"
+                   {% if "i2p" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_i2p">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-user-secret"></i>
+                </span>
+
+                I2P
+            </label>
+          </div>
+        </div>
+
+
+        <hr>
+
+        <!-- FORUMS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted">
+                <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
+                    </svg> Forums</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleForumFilters(true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleForumFilters(false); return false;">None</a>
+            </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_forum"
+                   name="scope" value="forum"
+                   {% if "forum" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_forum">
+                <span class="scope-icon mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none" />
+                        <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
+                    </svg>
+                </span>
+                Forums
+            </label>
+          </div>
+
+          <div class="mt-2 pl-3 border-left">
+            <div class="small text-muted mb-1">Global forum result type</div>
+            <div class="custom-control custom-checkbox">
+              <input class="custom-control-input forum-type-item forum_types" type="checkbox" id="forum_type_post"
+                     name="forum_type" value="post"
+                     {% if not selected_forum_types or 'post' in selected_forum_types %}checked{% endif %}>
+              <label class="custom-control-label d-flex align-items-center" for="forum_type_post"><span class="scope-icon mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
+                  </svg>
+              </span> Posts</label>
+            </div>
+            <div class="custom-control custom-checkbox">
+              <input class="custom-control-input forum-type-item forum_types" type="checkbox" id="forum_type_thread"
+                     name="forum_type" value="forum-thread"
+                     {% if not selected_forum_types or 'forum-thread' in selected_forum_types %}checked{% endif %}>
+              <label class="custom-control-label d-flex align-items-center" for="forum_type_thread"><span class="scope-icon mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
+                    <path d="M0 0h24v24H0z" fill="none" />
+                    <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
+                  </svg>
+              </span> Threads</label>
+            </div>
+          </div>
+
+          <div class="mt-2 pl-3 border-left">
+            <div class="small text-muted mb-1">Forum name filter</div>
+            {% for forum in forums %}
+              <div class="custom-control custom-checkbox">
+                <input class="custom-control-input forum-item forums" type="checkbox" id="forum_{{ loop.index }}"
+                       name="forum" value="{{ forum['id'] }}"
+                       {% if not selected_forums or forum['id'] in selected_forums %}checked{% endif %}>
+                <label class="custom-control-label" for="forum_{{ loop.index }}">{{ forum.get('name') or forum['id'] }}</label>
+              </div>
+            {% else %}
+              <div class="text-muted small">No forums available.</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- HTML TITLES -->
+        <div class="mb-3">
+          <strong class="small text-uppercase text-muted">Web pages</strong>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_html_titles"
+                   name="scope" value="title"
+                   {% if "title" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_html_titles">
+                <span class="scope-icon mr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M10.5 20V7H5V4h14v3h-5.5v13z"/></svg>
+                </span>
+
+                Titles
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- FILENAMES -->
+        <div class="mb-3">
+          <strong class="small text-uppercase text-muted">Files</strong>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_filenames"
+                   name="scope" value="filename"
+                   {% if "filename" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_filenames">
+                <span class="scope-icon mr-2">
+                    <i class="far fa-file"></i>
+                </span>
+
+                Filenames
+            </label>
+          </div>
+        </div>
+
+        <hr>
+
+        <!-- AI DESCRIPTIONS -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="small text-uppercase text-muted">AI descriptions</strong>
+            <div>
+              <a href="#" class="small" onclick="toggleGroup('ai_description', true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleGroup('ai_description', false); return false;">None</a>
+            </div>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_images"
+                   name="scope" value="desc-img"
+                   {% if "desc-img" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_ai_description_images">
+                <span class="scope-icon mr-2">
+                    <i class="far fa-image"></i>
+                </span>
+
+                Images
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_screenshots"
+                   name="scope" value="desc-screen"
+                   {% if "desc-screen" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_ai_description_screenshots">
+                <span class="scope-icon mr-2">
+                    <i class="fas fa-image"></i>
+                </span>
+
+                Screenshots
+            </label>
+          </div>
+
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item ai_description" type="checkbox" id="scope_ai_description_domains"
+                   name="scope" value="desc-dom"
+                   {% if "desc-dom" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label" for="scope_ai_description_domains">Domains</label>
+          </div>
+        </div>
+
+        <div class="text-muted small mt-3">
+          Tip: If no scope is selected, treat it as “All”.
+        </div>
+
+      </aside>
+
+      <!-- =======================
+           SEARCH BAR
+           ======================= -->
+      <main class="col-md-9 col-xl-10 py-3">
+
+        <div class="row align-items-center mt-2">
+          <div class="col">
+            <div class="input-group input-group-lg">
+              <input type="text"
+                     class="form-control"
+                     name="q"
+                     value="{{ request.args.get('q','') }}"
+                     placeholder="Search chats, domains, titles, filenames…">
+
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-search"></i> Search
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <span class="col-auto text-center mt-1">
+            <i class="fa-solid fa-circle-info fa-2x"
+               style="color: #c0bfbc; cursor: help;"
+               onmouseenter="show_search_helper_tooltip(this)"
+               onmouseleave="hide_obj_tooltip(this)">
+            </i>
+          </span>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between my-2 flex-wrap">
+
+          <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" role="group" aria-label="Sort order">
+            <label class="btn btn-outline-secondary {% if sort == 'recent' %}active{% endif %}">
+              <input type="radio" name="sort" value="recent" autocomplete="off"
+                     {% if sort == 'recent' or not sort %}checked{% endif %}>
+              Most recent
+            </label>
+
+            <label class="btn btn-outline-secondary {% if sort == 'best' %}active{% endif %}">
+              <input type="radio" name="sort" value="best" autocomplete="off"
+                     {% if sort == 'best' %}checked{% endif %}>
+              Best match
+            </label>
+          </div>
+
+          <!-- MORE FILTERS -->
+          <div class="mt-2 mt-sm-0 d-flex align-items-center">
+            <a class="btn btn-sm btn-link p-0 mr-3"
+               data-toggle="collapse"
+               href="#moreFilters"
+               role="button"
+               aria-controls="moreFilters">
+              More filters <i class="fa-solid fa-chevron-down ml-1"></i>
+            </a>
+
+            <a class="btn btn-sm btn-outline-primary"
+               href="{{ url_for('search_b.search_advanced') }}">
+              <i class="fa-solid fa-sliders mr-1"></i>
+              Advanced search
+              <span class="text-dark">
+                <i class="fas fa-envelope"></i>
+                <i class="fa-solid fa-at"></i>
+                <i class="fas fa-user"></i>
+              </span>
+              <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:25px;">
+            </a>
+          </div>
 
         </div>
+
+        <div class="collapse mt-2 {% if request.args.get('from') or request.args.get('to') %}show{% endif %}" id="moreFilters">
+          <div class="card card-body">
+
+            <div class="form-row align-items-end">
+              <div class="col-md-4">
+                <label class="small text-muted mb-1" for="last_seen_from">First seen (from)</label>
+                <input type="date" class="form-control"
+                       id="last_seen_from"
+                       name="from"
+                       value="{{ request.args.get('from','') }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="small text-muted mb-1" for="last_seen_to">Last seen (to)</label>
+                <input type="date" class="form-control"
+                       id="last_seen_to"
+                       name="to"
+                       value="{{ request.args.get('to','') }}">
+              </div>
+
+              <div class="col-md-4">
+                <div class="custom-control custom-checkbox mb-1">
+                  <input type="checkbox" class="custom-control-input"
+                         id="use_last_seen"
+                         name="use_last_seen" value="1"
+                         {% if request.args.get('use_last_seen') %}checked{% endif %}>
+                </div>
+                <small class="text-muted">Off by default</small>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <input type="hidden" name="scopes" id="scopes">
+        <input type="hidden" name="forums" id="forums">
+        <input type="hidden" name="forum_types" id="forum_types">
+
+</form>
+
+    {% if search_error %}
+        <div class="alert alert-warning border-left border-warning shadow-sm mt-3" role="alert">
+          <div class="d-flex align-items-start">
+            <div class="mr-3 mt-1">
+              <i class="fas fa-exclamation-triangle fa-lg text-warning"></i>
+            </div>
+            <div>
+              <h6 class="alert-heading mb-1">{{ search_error.title }}</h6>
+              <p class="mb-0">{{ search_error.message }}</p>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+
+{#        <small class="text-muted d-block mt-2">#}
+{#          Examples: <code>@username</code>, <code>example.onion</code>, <code>invoice.pdf</code>, <code>ransomware</code>#}
+{#        </small>#}
+
+        <!-- Optional: show selected scopes as chips -->
+        {% if selected_scopes %}
+          <div class="mt-3">
+            <span class="text-muted mr-2">Searching in:</span>
+            {% for s in selected_scopes %}
+              <span class="badge badge-secondary mr-1 mb-1">{{ s }}</span>
+            {% endfor %}
+            <a class="small ml-2" href="{{ url_for('search_b.search_dashboard', q=request.args.get('q','')) }}">Reset</a>
+          </div>
+        {% endif %}
+
+
+    {% if result %}
+            {% set endpoint_url = url_for('search_b.search_dashboard') + "?q=" + to_search + "&sort=" + sort %}
+            {% if last_seen_from %}
+                {% set endpoint_url = endpoint_url + "&from=" + last_seen_from %}
+            {% endif %}
+            {% if last_seen_to %}
+                {% set endpoint_url = endpoint_url + "&to=" + last_seen_to %}
+            {% endif %}
+            {% if indexes_str %}
+                {% set endpoint_url = endpoint_url + "&scopes=" + indexes_str %}
+            {% endif %}
+            {% if forum_ids_str %}
+                {% set endpoint_url = endpoint_url + "&forums=" + forum_ids_str %}
+            {% endif %}
+            {% if forum_types_str %}
+                {% set endpoint_url = endpoint_url + "&forum_types=" + forum_types_str %}
+            {% endif %}
+            {% include 'search/pagination.html' %}
+            <div class="sticky-top mb-2" style="top: 1px; z-index: 1020;">
+                {% include 'objects/image/block_blur_img_slider.html' %}
+            </div>
+
+        <!-- RESULTS -->
+        {% for obj in result %}
+            {% if obj.type == 'message' %}
+                {% with message=obj %}
+                    {% include 'chats_explorer/block_message_search.html' %}
+                {% endwith %}
+            {% elif obj.type == 'image' or obj.type == 'screenshot' %}
+                {% include 'objects/image/block_img_description.html' %}
+            {% elif obj.type == 'domain' %}
+                {% include 'crawler/block_domain_description.html' %}
+{#                TODO MODIFY ME TO SHOW ALL DOMAINS  that matches "domains_items" #}
+            {% elif obj.type == 'item' %}
+                {% include 'objects/item/block_crawled_result.html' %}
+            {% elif obj.type == 'post' %}
+                {% include 'forums_explorer/block_forum_post_search_result.html' %}
+            {% elif obj.type == 'forum-thread' %}
+                {% include 'forums_explorer/block_forum_thread_search_result.html' %}
+            {% elif obj.type == 'title' %}
+                {% include 'objects/title/block_title.html' %}
+            {% elif obj.type == 'file-name' %}
+                {% include 'objects/file-name/block_file_name.html' %}
+            {% elif obj.type == 'user-account' %}
+                {% include 'chats_explorer/block_user_account.html' %}
+            {% elif obj.type == 'chat' %}
+                {% include 'chats_explorer/block_chat.html' %}
+            {% else %}
+                {{ obj }}
+            {% endif %}
+
+        {% endfor %}
+
+            {% include 'search/pagination.html' %}
+
+    {% elif request.args.get('q','') and request.args.get('scopes','') %}
+        <div class="text-muted d-block my-4">
+          No Results
+        </div>
+    {% endif %}
+
+
+      </main>
+
     </div>
+  </div>
+
 
 <script>
-    $(document).ready(function(){
-        $("#page-search").addClass("active");
-        $("#nav_explorer_chat").addClass("active");
+$(document).ready(function(){
+    $("#page-search").addClass("active");
+});
+
+
+  function setAllScopes(on) {
+    document.querySelectorAll('.scope-item').forEach(cb => cb.checked = on);
+  }
+
+  function toggleGroup(groupClass, on) {
+    document.querySelectorAll('input.' + groupClass).forEach(cb => cb.checked = on);
+  }
+
+  function toggleForumFilters(on) {
+    const forumScope = document.getElementById('scope_forum');
+    if (forumScope) {
+      forumScope.checked = on;
+    }
+    document.querySelectorAll('input.forums, input.forum_types').forEach(cb => cb.checked = on);
+  }
+
+  {% if not selected_scopes %}
+    setAllScopes(true);
+  {% endif %}
+
+  function combineScopes() {
+    const scopes = Array.from(
+      document.querySelectorAll('input[name="scope"]:checked')
+    ).map(i => i.value);
+    const forums = Array.from(
+      document.querySelectorAll('input[name="forum"]:checked')
+    ).map(i => i.value);
+    const forumTypes = Array.from(
+      document.querySelectorAll('input[name="forum_type"]:checked')
+    ).map(i => i.value);
+
+    document.getElementById('scopes').value = scopes.join(',');
+    document.getElementById('forums').value = forums.join(',');
+    document.getElementById('forum_types').value = forumTypes.join(',');
+    document.querySelectorAll('input[name="scope"]').forEach(i => i.disabled = true);
+    document.querySelectorAll('input[name="forum"]').forEach(i => i.disabled = true);
+    document.querySelectorAll('input[name="forum_type"]').forEach(i => i.disabled = true);
+
+    // avoid empty last_seen_from / last_seen_to
+    const last_seen_from = document.getElementById('last_seen_from');
+    if (!last_seen_from.value) {
+        last_seen_from.disabled = true;
+    }
+    const last_seen_to = document.getElementById('last_seen_to');
+    if (!last_seen_to.value) {
+        last_seen_to.disabled = true;
+    }
+
+  }
+
+
+  $('#moreFilters').on('show.bs.collapse', function () {
+  $(this).prev().find('.fa-chevron-down')
+    .removeClass('fa-chevron-down')
+    .addClass('fa-chevron-up');
+  });
+  $('#moreFilters').on('hide.bs.collapse', function () {
+    $(this).prev().find('.fa-chevron-up')
+      .removeClass('fa-chevron-up')
+      .addClass('fa-chevron-down');
   });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 </body>

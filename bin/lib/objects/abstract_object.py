@@ -6,6 +6,7 @@ Base Class for AIL Objects
 ##################################
 # Import External packages
 ##################################
+import json
 import os
 import logging.config
 import sys
@@ -26,8 +27,8 @@ from lib import Duplicate
 from lib.correlations_engine import get_nb_correlations, get_correlations, add_obj_correlation, delete_obj_correlation, delete_obj_correlations, exists_obj_correlation, is_obj_correlated, get_nb_correlation_by_correl_type, get_obj_inter_correlation
 from lib.Investigations import is_object_investigated, get_obj_investigations, delete_obj_investigations
 from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
-from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs
-from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers
+from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs, get_container_languages
+from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers, is_obj_retro_hunted, get_obj_retro_hunts, delete_obj_retro_hunts
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 
@@ -76,53 +77,69 @@ class AbstractObject(ABC):
     def get_last_full_date(self):
         return None
 
-    def get_default_meta(self, tags=False, link=False, options=set()):
+    def get_default_meta(self, tags=False, link=False, options=set(), flask_context=False):
         dict_meta = {'id': self.get_id(),
                      'type': self.get_type(),
                      'subtype': self.get_subtype(r_str=True)}
         if tags:
             dict_meta['tags'] = self.get_tags(r_list=True)
         if link:
-            dict_meta['link'] = self.get_link()
+            dict_meta['link'] = self.get_link(flask_context=flask_context)
         if 'uuid' in options:
             dict_meta['uuid'] = str(uuid.uuid5(uuid.NAMESPACE_URL, self.get_id()))
+        if 'custom' in options:
+            dict_meta['custom'] = self.get_custom_meta()
+        if 'file-meta' in options:
+            dict_meta['file-meta'] = self.get_file_meta()
+        if 'investigations' in options:
+            dict_meta['investigations'] = self.get_investigations()
+        if 'language' in options:
+            dict_meta['language'] = self.get_language()
+        if 'svg_icon' in options:
+            dict_meta['svg_icon'] = self.get_svg_icon()
         return dict_meta
 
     def _get_obj_field(self, obj_type, subtype, obj_id, field):
-        if subtype is None:
+        if not subtype:
             return r_object.hget(f'meta:{obj_type}:{obj_id}', field)
         else:
             return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', field)
 
     def _exists_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hexists(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     def _get_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hget(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
 
     def _set_field(self, field, value):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
 
     def _get_fields_keys(self):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hkeys(f'meta:{self.type}:{self.id}')
         else:
             return r_object.hkeys(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
 
     def _delete_field(self, field):
-        if self.subtype is None:
+        if not self.subtype:
             return r_object.hdel(f'meta:{self.type}:{self.id}', field)
         else:
             return r_object.hdel(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field)
+
+    def _delete_metas(self):
+        if not self.subtype:
+            return r_object.delete(f'meta:{self.type}:{self.id}')
+        else:
+            return r_object.delete(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}')
 
     ## Queues ##
 
@@ -148,6 +165,10 @@ class AbstractObject(ABC):
 
     def add_tag(self, tag):
         Tag.add_object_tag(tag, self.type, self.id, subtype=self.get_subtype(r_str=True))
+        if self.type == 'screenshot' and not Tag.is_tag_safe(tag):
+            domains = self.get_correlation('domain').get('domain', [])
+            for domain_id in domains:
+                Tag.add_object_tag(tag, 'domain', domain_id)
 
     def is_tags_safe(self, tags=None):
         if not tags:
@@ -162,6 +183,52 @@ class AbstractObject(ABC):
         Get Object Content
         """
         pass
+
+    ## Custom Metas ##
+
+    def get_custom_meta(self):
+        custom_metas = self._get_field('custom')
+        return custom_metas
+
+    # full_custom_meta: dictionary of custom meta to save
+    # To merge multiple dictionaries: obj.set_custom_meta(None, {'a': 1}, {'b': 2}, {'c': 3}) - only if full_custom_meta is None
+    def set_custom_meta(self, full_custom_meta=None, *custom_metas):
+        if not full_custom_meta:
+            # merge dictionaries
+            full_custom_meta = {}
+            for d in custom_metas:
+                if d:
+                    if isinstance(d, dict):
+                        full_custom_meta.update(d)
+        if full_custom_meta:
+            try:
+                full_custom_meta = json.dumps(full_custom_meta)
+            except Exception as e:
+                raise Exception(f'Invalid JSON/Dictionary {e}')
+            self._set_field('custom', full_custom_meta)
+
+    def delete_custom_meta(self):
+        self._delete_field('custom')
+
+    ## File-Meta ##
+
+    def get_file_meta(self):
+        file_meta = self._get_field('file-meta')
+        if file_meta:
+            return json.loads(file_meta)
+        return None
+
+    def set_file_meta(self, file_meta):
+        try:
+            file_meta = json.dumps(file_meta)
+        except Exception as e:
+            raise Exception(f'Invalid JSON/Dictionary {e}')
+        self._set_field('file-meta', file_meta)
+
+    def delete_file_meta(self):
+        self._delete_field('file-meta')
+
+    ## -File-Meta- ##
 
     ## Duplicates ##
     def get_duplicates(self):
@@ -207,18 +274,41 @@ class AbstractObject(ABC):
     def delete_trackers(self):
         return delete_obj_trackers(self.type, self.subtype, self.id)
 
+    ## Retro Hunts ##
+
+    def is_retro_hunted(self):
+        return is_obj_retro_hunted(self.type, self.subtype, self.id)
+
+    def get_retro_hunts(self):
+        return get_obj_retro_hunts(self.get_global_id())
+
+    def delete_retro_hunts(self):
+        return delete_obj_retro_hunts(self.get_global_id())
+
     ## -Trackers- ##
 
-    def _delete(self):
+    def _delete_object(self, meta=True):
         # DELETE TAGS
         Tag.delete_object_tags(self.type, self.get_subtype(r_str=True), self.id)
         # remove from tracker
         self.delete_trackers()
-        # remove from retro hunt currently item only TODO
+        # remove from retro hunt
+        self.delete_retro_hunts()
         # remove from investigations
         self.delete_investigations()
         # Delete Correlations
         delete_obj_correlations(self.type, self.get_subtype(r_str=True), self.id)
+        # custom meta
+        self.delete_custom_meta()
+        # langs
+        self.delete_translations()
+        self.delete_languages()
+        # Delete obj metas
+        if meta:
+            self._delete_metas()
+
+    def _delete(self, meta=True):
+        self._delete_object(meta=meta)
 
     @abstractmethod
     def delete(self):
@@ -357,11 +447,18 @@ class AbstractObject(ABC):
     def add_relationship(self, obj2_global_id, relationship, source=True):
         # is source
         if source:
-            print(self.get_global_id(), obj2_global_id, relationship)
             add_obj_relationship(self.get_global_id(), obj2_global_id, relationship)
         # is target
         else:
             add_obj_relationship(obj2_global_id, self.get_global_id(), relationship)
+
+    def add_obj_relationship(self, obj1_global_id, obj2_global_id, relationship, source=True):
+        # is source
+        if source:
+            add_obj_relationship(obj1_global_id, obj2_global_id, relationship)
+        # is target
+        else:
+            add_obj_relationship(obj2_global_id, obj1_global_id, relationship)
 
     ## -Relationship- ##
 
@@ -373,8 +470,18 @@ class AbstractObject(ABC):
     def get_languages(self):
         return get_obj_languages(self.type, self.get_subtype(r_str=True), self.id)
 
+    def get_language(self):
+        languages = self.get_languages()
+        if languages:
+            return languages.pop()
+        else:
+            return None
+
     def get_language_objs(self, language):
         return get_container_language_objs(language, self.get_global_id())
+
+    def get_container_languages(self):
+        return get_container_languages(self.get_global_id())
 
     def add_language(self, language):
         return add_obj_language(language, self.type, self.get_subtype(r_str=True), self.id, objs_containers=self.get_objs_container())
@@ -391,7 +498,11 @@ class AbstractObject(ABC):
         self.add_language(new_language)
 
     def detect_language(self, field=''):
-        return detect_obj_language(self.type, self.get_subtype(r_str=True), self.id, self.get_content(), objs_containers=self.get_objs_container())
+        if self.type == 'pdf':
+            content = self.get_content_sample()
+        else:
+            content = self.get_content()
+        return detect_obj_language(self.type, self.get_subtype(r_str=True), self.id, content, objs_containers=self.get_objs_container())
 
     def get_obj_language_stats(self):
         return get_obj_language_stats(self.type, self.get_subtype(r_str=True), self.id)
@@ -407,6 +518,10 @@ class AbstractObject(ABC):
 
     def delete_translation(self, language, field=''):
         return delete_obj_translation(self.get_global_id(), language, field=field)
+
+    def delete_translations(self):  # TODO handle field deletion
+        for language in self.get_languages():
+            self.delete_translation(language)
 
     def translate(self, content=None, field='', source=None, target='en'):
         global_id = self.get_global_id()
@@ -424,6 +539,9 @@ class AbstractObject(ABC):
 
     def is_children(self):
         return r_object.hexists(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')
+
+    def get_obj_parent(self, obj_type, subtype, obj_id):
+        return r_object.hget(f'meta:{obj_type}:{subtype}:{obj_id}', 'parent')
 
     def get_parent(self):
         return r_object.hget(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', 'parent')

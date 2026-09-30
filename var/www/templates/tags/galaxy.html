@@ -35,12 +35,16 @@
                     </a>
                 </div>
 
-                <div class="card">
+                <div class="card mb-2">
                     <div class="card-header bg-secondary text-white">
                         <div class="d-flex">
                             <span class="h3">{{ galaxy['name'] }}</span>
 
                             <span class="h5 ml-auto">
+                                <span class="badge badge-dark">
+                                    <b>{{ galaxy['nb_active_tags'] }}</b>/{{ galaxy['nb_tags'] }}
+                                    <i class="fas fa-tag"></i>
+                                </span>
                                 {% if galaxy['enabled'] %}
                                     <span class="badge badge-success">Enabled</span>
                                 {% else %}
@@ -105,7 +109,7 @@
                 <form action="{{ url_for('tags_ui.galaxy_enable_tags') }}" id="checkboxForm">
 				    <input type="hidden" value="{{ galaxy['type'] }}" name="galaxy">
 
-                    <table class="table table-bordered table-hover my-4">
+                    <table class="table table-bordered table-hover my-4" id="myTable_">
                         <thead class="bg-dark text-white">
                             <tr>
                                 <th></th>
@@ -122,6 +126,7 @@
                                             <input class="custom-control-input" type="checkbox" name="tags" id="{{ tag['tag'] }}" value="{{ tag['tag'] }}" {% if tag['enabled'] %}checked{% endif %}>
                                             <label class="custom-control-label" for="{{ tag['tag'] }}"></label>
                                         </div>
+                                        <span hidden="">{% if tag['enabled'] %}enabled{% else %}disabled{% endif %}</span>
                                     </td>
                                     <td>
                                         <a href="{{ url_for('tags_ui.tags_galaxy_tag') }}?galaxy={{ galaxy['type'] }}&tag={{ tag['tag'] }}" class="badge badge-info">{{ tag['tag'] }}</a>
@@ -152,6 +157,7 @@
                                                 </div>
                                             {% endif %}
                                         </div>
+                                        <span hidden="">{% if tag['enabled'] %}enabled{% else %}disabled{% endif %}</span>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -175,17 +181,12 @@
 </body>
 
 <script>
+var table;
 $(document).ready(function(){
     $("#navbar-tags").addClass("active");
     $("#nav_tags_config").removeClass("text-muted");
 
-    table = $('#myTable_').DataTable(
-        {
-            "aLengthMenu": [[5, 10, 15, 20, -1], [5, 10, 15, 20, "All"]],
-            "iDisplayLength": 10,
-            "order": [[ 3, "desc" ]]
-        }
-    );
+    table = $('#myTable_').DataTable({ "lengthMenu": [ 5, 10, 25, 50, 100 ], "pageLength": 10, "order": [[ 3, "desc" ]] });
 
 });
 </script>
@@ -193,11 +194,12 @@ $(document).ready(function(){
 <script>
 function submitEnabledTags() {
     table.destroy();
-	table = $('#myTable_').DataTable(
-		{
-			"iDisplayLength": -1,
-		}
-	);
+    table = $('#myTable_').DataTable(
+        {
+            "iDisplayLength": -1,
+        }
+    );
+}
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

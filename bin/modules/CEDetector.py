@@ -37,8 +37,9 @@ class CEDetector(AbstractModule):
         self.r_cache = config_loader.get_redis_conn("Redis_Cache")
 
         self.csam_words = self.load_world_file('csam_words')
-        self.child_worlds = self.load_world_file('child_words')
-        self.porn_worlds = self.load_world_file('porn_words')
+        self.child_words = self.load_world_file('child_words')
+        self.porn_words = self.load_world_file('porn_words')
+        self.vanity_words = self.load_world_file('vanity_words_forbidden')
 
         self.ce_tag = 'dark-web:topic="pornography-child-exploitation"'
         self.tokenizer = RegexpTokenizer('[\&\~\:\;\,\.\(\)\{\}\|\[\]\\\\//\=\'\"\%\$\?\@\+\#\_\^\<\>\!\*\n\r\t\s]+',
@@ -65,27 +66,32 @@ class CEDetector(AbstractModule):
         content = self.obj.get_content().lower()
         domain_id = message
 
-        is_csam = False
-        is_child_word = False
-        is_porn_world = False
-        words = TextBlob(content, tokenizer=self.tokenizer).tokens
-        words = set(words)
+        for word in self.vanity_words:
+            if domain_id.startswith(word):
+                to_tag = True
+                break
 
-        for word in words:
-            if word in self.csam_words:
-                is_csam = True
-            if word in self.child_worlds:
-                is_child_word = True
-            if word in self.porn_worlds:
-                is_porn_world = True
-            # PERF ???
-            # if is_child_word and is_porn_world:
-            #     break
+        if not to_tag:
+            is_csam = False
+            is_child_word = False
+            is_porn_world = False
+            words = TextBlob(content, tokenizer=self.tokenizer).tokens
+            words = set(words)
 
-        if is_csam:
-            to_tag = True
-        if is_child_word and is_porn_world:
-            to_tag = True
+            for word in words:
+                if word in self.csam_words:
+                    is_csam = True
+                if word in self.child_words:
+                    is_child_word = True
+                if word in self.porn_words:
+                    is_porn_world = True
+                # PERF ???
+                # if is_child_word and is_porn_world:
+                #     break
+            if is_csam:
+                to_tag = True
+            if is_child_word and is_porn_world:
+                to_tag = True
 
         if to_tag:
             print(f'CSAM DETECTED    {content}')
@@ -100,7 +106,6 @@ class CEDetector(AbstractModule):
                 for dom in self.obj.get_correlation('domain').get('domain', []):
                     domain = Domain(dom[1:])
                     self.add_message_to_queue(obj=domain, message=self.ce_tag, queue='Tags')
-
         return to_tag
 
 def test_detection():

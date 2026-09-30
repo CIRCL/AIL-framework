@@ -11,8 +11,9 @@ import random
 import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort, current_app
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -25,6 +26,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
+from lib.ail_core import generate_uuid
 from lib import crawlers
 from lib import Language
 from lib.objects import Domains
@@ -53,12 +55,41 @@ def api_validator(message, code):
         return Response(json.dumps(message, indent=2, sort_keys=True), mimetype='application/json'), code
 
 
+def _import_lookyloo_archive_from_upload(uploaded_file, logger):
+    if not uploaded_file or not uploaded_file.filename:
+        return False, 'No archive file was provided.'
+
+    filename = uploaded_file.filename.strip()
+    if not filename.lower().endswith('.zip'):
+        return False, 'Invalid file type: only .zip archives are supported.'
+
+    archive_name = f"{generate_uuid()}.zip"
+    imports_root = Path(os.environ['AIL_HOME']) / 'temp' / 'import'
+    archive_path = imports_root / archive_name
+
+    try:
+        imports_root.mkdir(parents=True, exist_ok=True)
+        uploaded_file.save(str(archive_path))
+
+        crawler_processor = crawlers.CrawlerCapturesProcessor(logger)
+        imported = crawler_processor.process_lookyloo_archive(archive_name)
+        if not imported:
+            return False, 'Invalid or unsupported Lacus capture archive format.'
+        return True, f'Lacus capture archive imported successfully ({len(imported)} object(s)).'
+    except Exception as e:
+        logger.exception(f'Error while importing lookyloo archive: {e}')
+        return False, f'Archive processing failed: {e}'
+    finally:
+        archive_path.unlink(missing_ok=True)
+
+
 def create_json_response(data, status_code):
     if status_code == 403:
         abort(403)
     elif status_code == 404:
         abort(404)
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
+
 
 
 # ============= ROUTES ==============
@@ -105,15 +136,118 @@ def manual():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
-    crawlers_types = crawlers.get_crawler_all_types()
+    crawlers_types = ['onion', 'web']
     proxies = []  # TODO HANDLE PROXIES
     return render_template("crawler_manual.html",
                            is_manager_connected=crawlers.get_lacus_connection_metadata(),
                            crawlers_types=crawlers_types,
                            proxies=proxies,
                            l_cookiejar=l_cookiejar,
+                           import_status=request.args.get('import_status'),
+                           import_message=request.args.get('import_message'),
+                           interactive_session=crawlers.get_user_active_interactive_session(user_id),
+                           interactive_usage=crawlers.get_interactive_usage(),
                            tags_selector_data=Tag.get_tags_selector_data())
 
+
+@crawler_splash.route("/crawlers/import_lookyloo_archive", methods=['POST'])
+@login_required
+@login_user_no_api
+def import_lookyloo_archive():
+    success, message = _import_lookyloo_archive_from_upload(request.files.get('lookyloo_archive'), logger=current_app.logger)
+    return redirect(url_for('crawler_splash.manual', import_status='success' if success else 'error', import_message=message))
+
+
+@crawler_splash.route("/crawlers/interactive/", methods=['GET'])
+@login_required
+@login_user_no_api
+def interactive_capture_current():
+    user_id = current_user.get_user_id()
+    session = crawlers.get_user_active_interactive_session(user_id)
+    if session:
+        return redirect(url_for('crawler_splash.interactive_capture_show', uuid=session.uuid))
+    return render_template('interactive_capture_home.html', usage=crawlers.get_interactive_usage())
+
+@crawler_splash.route("/crawlers/interactive/start", methods=['POST'])
+@login_required
+@login_user_no_api
+def interactive_capture_start():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    data = {
+        'url': request.form.get('url_to_crawl') or request.form.get('url'),
+        'depth': 0,
+        'har': request.form.get('har'),
+        'screenshot': request.form.get('screenshot'),
+        'javascript': request.form.get('javascript', False),
+    }
+    crawler_type = request.form.get('crawler_queue_type')
+    proxy = request.form.get('proxy_name')
+    if not proxy and crawler_type == 'onion':
+        proxy = 'force_tor'
+    if proxy:
+        data['proxy'] = proxy
+    if request.form.get('interactive_cookiejar'):
+        data['save_cookiejar'] = True
+        data['description'] = request.form.get('cookiejar_description')
+    res = crawlers.api_start_interactive_capture(data, user_org, user_id, current_user.get_role())
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=res[0]['uuid']))
+
+@crawler_splash.route("/crawlers/interactive/<uuid>", methods=['GET'])
+@login_required
+@login_user_no_api
+def interactive_capture_show(uuid):
+    user_id = current_user.get_user_id()
+    res = crawlers.api_get_interactive_session(uuid, user_id, is_admin=current_user.get_role() == 'admin')
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return render_template("interactive_capture.html", session=res[0], usage=crawlers.get_interactive_usage())
+
+@crawler_splash.route("/crawlers/interactive/<uuid>/status", methods=['GET'])
+@login_required
+@login_user_no_api
+def interactive_capture_status(uuid):
+    user_id = current_user.get_user_id()
+    res = crawlers.api_get_interactive_session(uuid, user_id, is_admin=current_user.get_role() == 'admin')
+    return create_json_response(res[0], res[1])
+
+@crawler_splash.route("/crawlers/interactive/<uuid>/finish", methods=['POST'])
+@login_required
+@login_user_no_api
+def interactive_capture_finish(uuid):
+    user_id = current_user.get_user_id()
+    res = crawlers.api_finish_interactive_session(uuid, user_id)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=uuid))
+
+@crawler_splash.route("/crawlers/interactive/<uuid>/cancel", methods=['POST'])
+@login_required
+@login_user_no_api
+def interactive_capture_cancel(uuid):
+    user_id = current_user.get_user_id()
+    res = crawlers.api_cancel_interactive_session(uuid, user_id=user_id, is_admin=current_user.get_role() == 'admin')
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=uuid))
+
+@crawler_splash.route("/crawlers/interactive/admin", methods=['GET'])
+@login_required
+@login_admin
+def interactive_capture_admin():
+    return render_template("interactive_sessions_admin.html", sessions=crawlers.get_active_interactive_sessions(), usage=crawlers.get_interactive_usage())
+
+
+@crawler_splash.route("/crawlers/interactive/admin/<uuid>/close", methods=['POST'])
+@login_required
+@login_admin
+def interactive_capture_admin_close(uuid):
+    res = crawlers.api_cancel_interactive_session(uuid, is_admin=True)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.interactive_capture_admin'))
 
 @crawler_splash.route("/crawlers/send_to_spider", methods=['POST'])
 @login_required
@@ -121,12 +255,16 @@ def manual():
 def send_to_spider():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
 
     # POST val
     url = request.form.get('url_to_crawl')
     urls = request.form.get('urls_to_crawl')
     if urls:
         urls = crawlers.extract_url_from_text(urls)
+        res = crawlers.api_validate_global_urls(urls=urls)
+        if res:
+            return create_json_response(res[0], res[1])
         l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
         crawlers_types = crawlers.get_crawler_all_types()
         proxies = []  # TODO HANDLE PROXIES
@@ -141,6 +279,7 @@ def send_to_spider():
     crawler_type = request.form.get('crawler_queue_type')
     screenshot = request.form.get('screenshot')
     har = request.form.get('har')
+    javascript = request.form.get('javascript', False)
     depth_limit = request.form.get('depth_limit')
     cookiejar_uuid = request.form.get('cookiejar')
 
@@ -201,7 +340,7 @@ def send_to_spider():
             cookiejar_uuid = cookiejar_uuid.rsplit(':')
             cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
 
-    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'frequency': frequency}
+    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'javascript': javascript, 'frequency': frequency}
     if url:
         data['url']= url
     if urls:
@@ -213,24 +352,26 @@ def send_to_spider():
     if tags:
         data['tags'] = tags
     # print(data)
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
 
     if res[1] != 200:
         return create_json_response(res[0], res[1])
     return redirect(url_for('crawler_splash.manual'))
 
+# Send Unknown onion to crawler
 @crawler_splash.route("/crawlers/domain_discovery", methods=['GET'])
 @login_required
 @login_user_no_api
 def domain_discovery():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
     domain = request.args.get('domain')
     if not crawlers.is_valid_onion_domain(domain):
         return create_json_response({'status': 'error', 'reason': 'Invalid onion domain'}, 400)
 
     data = {'depth': 1, 'har': True, 'screenshot': True, 'url': f'http://{domain}', 'proxy': 'force_tor'}
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
 
     if res[1] != 200:
         return create_json_response(res[0], res[1])
@@ -482,6 +623,7 @@ def crawlers_domain_download():
 @login_read_only
 def domains_explorer_post_filter():
     domain_onion = request.form.get('domain_onion_switch')
+    domain_i2p = request.form.get('domain_i2p_switch')
     domain_regular = request.form.get('domain_regular_switch')
     date_from = request.form.get('date_from')
     date_to = request.form.get('date_to')
@@ -493,7 +635,7 @@ def domains_explorer_post_filter():
         date_from = None
         date_to = None
 
-    if domain_onion and domain_regular:
+    if domain_onion and domain_regular and domain_i2p:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_all', date_from=date_from, date_to=date_to))
         else:
@@ -503,6 +645,11 @@ def domains_explorer_post_filter():
             return redirect(url_for('crawler_splash.domains_explorer_web', date_from=date_from, date_to=date_to))
         else:
             return redirect(url_for('crawler_splash.domains_explorer_web'))
+    elif domain_i2p:
+        if date_from and date_to:
+            return redirect(url_for('crawler_splash.domains_explorer_i2p', date_from=date_from, date_to=date_to))
+        else:
+            return redirect(url_for('crawler_splash.domains_explorer_i2p'))
     else:
         if date_from and date_to:
             return redirect(url_for('crawler_splash.domains_explorer_onion', date_from=date_from, date_to=date_to))
@@ -522,7 +669,7 @@ def domains_explorer_all():
     except:
         page = 1
 
-    dict_data = Domains.get_domains_up_by_filers(['onion', 'web'], page=page, date_from=date_from, date_to=date_to)
+    dict_data = Domains.get_domains_up_by_filers(Domains.get_all_domains_types(), page=page, date_from=date_from, date_to=date_to)
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
 
 
@@ -542,6 +689,21 @@ def domains_explorer_onion():
     return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
                            domain_type='onion')
 
+@crawler_splash.route('/domains/explorer/i2p', methods=['GET'])
+@login_required
+@login_read_only
+def domains_explorer_i2p():
+    page = request.args.get('page')
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    try:
+        page = int(page)
+    except:
+        page = 1
+
+    dict_data = Domains.get_domains_up_by_filers(['i2p'], page=page, date_from=date_from, date_to=date_to)
+    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
+                           domain_type='i2p')
 
 @crawler_splash.route('/domains/explorer/web', methods=['GET'])
 @login_required
@@ -565,9 +727,8 @@ def domains_explorer_web():
 @login_read_only
 def domains_all_languages_json():
     # # TODO: get domain type
-    iso = request.args.get('iso')
     domain_types = request.args.getlist('domain_types')
-    return jsonify(Language.get_languages_from_iso(Domains.get_all_domains_languages(), sort=True))
+    return jsonify(Language.get_bcp_languages_name(Domains.get_all_domains_languages()))
 
 
 @crawler_splash.route('/domains/languages/search_get', methods=['GET'])
@@ -640,7 +801,7 @@ def domains_search_name():
 def domains_search_today():
     dom_types = request.args.get('type')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()
@@ -674,7 +835,7 @@ def domains_search_date():
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
     down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up'))
+    up = bool(request.args.get('up', True))
     # page = request.args.get('page')
 
     all_types = Domains.get_all_domains_types()
@@ -865,6 +1026,70 @@ def crawler_cookiejar_cookie_delete():
         cookiejar_uuid = res[0]['cookiejar_uuid']
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
 
+@crawler_splash.route('/crawler/cookiejar/local_storage/delete', methods=['GET'])
+@login_required
+@login_user_no_api
+def crawler_cookiejar_local_storage_delete():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    cookiejar_uuid = request.args.get('uuid')
+
+    res = crawlers.api_delete_cookiejar_local_storage(user_org, user_id, user_role, cookiejar_uuid)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
+
+
+@crawler_splash.route('/crawler/cookiejar/json/export', methods=['GET'])
+@login_required
+@login_admin
+def crawler_cookiejar_json_export():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    cookiejar_uuid = request.args.get('uuid')
+
+    res = crawlers.api_export_cookiejar_json(user_org, user_id, user_role, cookiejar_uuid)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    response = Response(json.dumps(res[0], indent=2, sort_keys=True), mimetype='application/json')
+    response.headers['Content-Disposition'] = f'attachment; filename=cookiejar-{cookiejar_uuid}.json'
+    return response
+
+
+@crawler_splash.route('/crawler/cookiejar/json/import', methods=['POST'])
+@login_required
+@login_admin
+def crawler_cookiejar_json_import():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    cookiejar_uuid = request.form.get('uuid')
+
+    json_data = request.form.get('json_data', '').strip()
+    if not json_data:
+        file = request.files.get('file')
+        if not file or not file.filename:
+            return create_json_response({'error': 'cookiejar JSON not set'}, 400)
+        try:
+            json_data = file.read().decode()
+        except UnicodeDecodeError:
+            return create_json_response({'error': 'invalid cookiejar JSON encoding'}, 400)
+
+    try:
+        data = json.loads(json_data)
+    except json.decoder.JSONDecodeError:
+        return create_json_response({'error': 'invalid cookiejar JSON'}, 400)
+
+    if cookiejar_uuid:
+        res = crawlers.api_import_cookiejar_json(user_org, user_id, user_role, cookiejar_uuid, data)
+    else:
+        res = crawlers.api_create_cookiejar_from_json(user_org, user_id, data)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=res[0]['cookiejar_uuid']))
+
 
 @crawler_splash.route('/crawler/cookiejar/delete', methods=['GET'])
 @login_required
@@ -961,7 +1186,7 @@ def crawler_cookiejar_cookie_add():
 def crawler_cookiejar_cookie_manual_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
     name = request.form.get('name')
     value = request.form.get('value')
@@ -980,7 +1205,7 @@ def crawler_cookiejar_cookie_manual_add_post():
     if secure:
         cookie_dict['secure'] = True
 
-    res = crawlers.api_create_cookie(user_org, user_id, is_admin, cookiejar_uuid, cookie_dict)
+    res = crawlers.api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
     if res[1] != 200:
         return create_json_response(res[0], res[1])
 
@@ -993,20 +1218,20 @@ def crawler_cookiejar_cookie_manual_add_post():
 def crawler_cookiejar_cookie_json_add_post():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    is_admin = current_user.is_admin()
+    user_role = current_user.get_role()
     cookiejar_uuid = request.form.get('cookiejar_uuid')
 
     if 'file' in request.files:
         file = request.files['file']
         json_cookies = file.read().decode()
         if json_cookies:
-            res = crawlers.api_import_cookies_from_json(user_org, user_id, is_admin, cookiejar_uuid, json_cookies)
+            res = crawlers.api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, json_cookies)
             if res[1] != 200:
                 return create_json_response(res[0], res[1])
 
             return redirect(url_for('crawler_splash.crawler_cookiejar_show', cookiejar_uuid=cookiejar_uuid))
 
-    return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', cookiejar_uuid=cookiejar_uuid))
+    return redirect(url_for('crawler_splash.crawler_cookiejar_cookie_add', uuid=cookiejar_uuid))
 
 
 # --- Cookiejar ---#
@@ -1020,13 +1245,17 @@ def crawler_settings():
     lacus_url = crawlers.get_lacus_url()
     api_key = crawlers.get_hidden_lacus_api_key()
     nb_captures = crawlers.get_crawler_max_captures()
+    nb_forum_accounts = crawlers.get_forum_crawler_max_accounts()
+    nb_interactive_crawlers = crawlers.get_max_interactive_crawler()
 
     is_manager_connected = crawlers.get_lacus_connection_metadata(force_ping=True)
     is_crawler_working = crawlers.is_test_ail_crawlers_successful()
-    crawler_error_mess = crawlers.get_test_ail_crawlers_message()
+    crawler_test_metadata = crawlers.get_test_ail_crawlers_metadata()
 
     is_onion_filter_enabled = crawlers.is_onion_filter_enabled(cache=False)
     is_onion_filter_unknown = crawlers.is_onion_filter_unknown(cache=False)
+    crawler_logs = crawlers.get_last_crawler_logs(lines=100)
+    is_crawler_filter_local_ips_enabled = crawlers.is_crawler_filter_local_ips_enabled(cache=False)
 
     # TODO REGISTER PROXY
     # all_proxies = crawlers.get_all_proxies_metadata()
@@ -1037,11 +1266,16 @@ def crawler_settings():
                            is_manager_connected=is_manager_connected,
                            lacus_url=lacus_url, api_key=api_key,
                            nb_captures=nb_captures,
+                           nb_forum_accounts=nb_forum_accounts,
+                           nb_interactive_crawlers=nb_interactive_crawlers,
+                           interactive_usage=crawlers.get_interactive_usage(),
                            # all_proxies=all_proxies,
                            is_crawler_working=is_crawler_working,
-                           crawler_error_mess=crawler_error_mess,
+                           crawler_test_metadata=crawler_test_metadata,
                            is_onion_filter_enabled=is_onion_filter_enabled,
-                           is_onion_filter_unknown=is_onion_filter_unknown
+                           is_onion_filter_unknown=is_onion_filter_unknown,
+                           crawler_logs=crawler_logs,
+                           is_crawler_filter_local_ips_enabled=is_crawler_filter_local_ips_enabled
                            )
 
 
@@ -1070,15 +1304,27 @@ def crawler_lacus_settings_crawler_manager():
 def crawler_settings_crawlers_to_launch():
     if request.method == 'POST':
         nb_captures = request.form.get('nb_captures')
+        nb_forum_accounts = request.form.get('nb_forum_accounts')
+        nb_interactive_crawlers = request.form.get('nb_interactive_crawlers')
         res = crawlers.api_set_crawler_max_captures({'nb': nb_captures})
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+        res = crawlers.api_set_forum_crawler_max_accounts({'nb': nb_forum_accounts})
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
+        res = crawlers.api_set_max_interactive_crawler({'nb': nb_interactive_crawlers})
         if res[1] != 200:
             return create_json_response(res[0], res[1])
         else:
             return redirect(url_for('crawler_splash.crawler_settings'))
     else:
         nb_captures = crawlers.get_crawler_max_captures()
+        nb_forum_accounts = crawlers.get_forum_crawler_max_accounts()
+        nb_interactive_crawlers = crawlers.get_max_interactive_crawler()
         return render_template("settings_edit_crawlers_to_launch.html",
-                               nb_captures=nb_captures)
+                               nb_captures=nb_captures,
+                               nb_forum_accounts=nb_forum_accounts,
+                               nb_interactive_crawlers=nb_interactive_crawlers)
 
 
 @crawler_splash.route('/crawler/settings/crawler/test', methods=['GET'])
@@ -1110,6 +1356,18 @@ def crawler_filter_unknown_onion():
     else:
         filter_unknown_onion = False
     crawlers.change_onion_filter_unknown_state(filter_unknown_onion)
+    return redirect(url_for('crawler_splash.crawler_settings'))
+
+@crawler_splash.route('/crawler/settings/crawler/filter_local_ips', methods=['GET'])
+@login_required
+@login_admin
+def crawler_filter_local_ips():
+    filter_local_ips = request.args.get('state')
+    if filter_local_ips == 'enable':
+        filter_local_ips = True
+    else:
+        filter_local_ips = False
+    crawlers.change_crawler_filter_local_ips_state(filter_local_ips)
     return redirect(url_for('crawler_splash.crawler_settings'))
 
 

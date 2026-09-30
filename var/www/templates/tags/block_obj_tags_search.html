@@ -1,6 +1,6 @@
-<div class="card mb-3 mt-1">
+<div class="card mb-0 shadow-sm h-100">
 	<div class="card-header text-white bg-dark">
-		<h5 class="card-title">Search {{object_name}} by Tags :</h5>
+		<h5 class="card-title">Search {{object_name}} by Tags</h5>
 	</div>
 		<div class="card-body">
 
@@ -46,7 +46,7 @@
     function(data) {
       ltags = $('#ltags').tagSuggest({
         data: data,
-				value: [{%if "current_tags"%}{% for tag in current_tags %}'{{tag|safe}}',{%endfor%}{%endif%}],
+				value: [{%if "current_tags"%}{% for tag in current_tags %}{{tag|tojson}},{%endfor%}{%endif%}],
         sortOrder: 'name',
         maxDropHeight: 200,
         name: 'ltags'

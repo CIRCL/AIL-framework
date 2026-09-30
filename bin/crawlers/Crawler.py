@@ -29,7 +29,6 @@ from lib.objects.Items import Item
 from lib.objects import SSHKeys
 from lib.objects import Screenshots
 from lib.objects import Titles
-from trackers.Tracker_Yara import Tracker_Yara
 
 logging.config.dictConfig(ail_logger.get_config(name='crawlers'))
 
@@ -51,8 +50,6 @@ class Crawler(AbstractModule):
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
-
-        self.tracker_yara = Tracker_Yara(queue=False)
 
         self.vanity_tags = get_domain_vanity_tags()
         print('vanity tags:', self.vanity_tags)
@@ -98,6 +95,9 @@ class Crawler(AbstractModule):
             passivedns.set_default_passive_dns()
         self.passive_ssh = SSHKeys.is_passive_ssh_enabled()
 
+        # Interactive capture session cache
+        self.interactive_session = None
+
         # Capture
         self.har = None
         self.screenshot = None
@@ -142,6 +142,15 @@ class Crawler(AbstractModule):
         print(f'domain:      {self.domain}')
         print(f'domain_url:  {domain_url}')
         print()
+
+    def _update_capture_status(self, capture):
+        try:
+            status = self.lacus.get_capture_status(capture.uuid)
+            capture.update(status)
+        except ConnectionError:
+            self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
+            capture.update(-1)
+            self.refresh_lacus_status()
 
     def get_message(self):
         # Crawler Scheduler
@@ -201,24 +210,37 @@ class Crawler(AbstractModule):
                     capture_start = capture.get_start_time(r_str=False)
                     if capture_start == 0:
                         task = capture.get_task()
+                        error_message = f'Lacus returned an unknown capture state for task {task.uuid}'
+                        if task.get_parent() == 'interactive':
+                            crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message)
                         task.delete()
                         capture.delete()
                         self.logger.warning(f'capture UNKNOWN ERROR STATE, {task.uuid} Removed from queue')
                         return None
                     if int(time.time()) - capture_start > 600:  # TODO ADD in new crawler config
                         task = capture.get_task()
-                        task.reset()
-                        capture.delete()
-                        self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
+                        error_message = f'Lacus capture UNKNOWN timeout for task {task.uuid}'
+                        if task.get_parent() == 'interactive':
+                            crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message)
+                            self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Interactive session failed')
+                        else:
+                            task.reset()
+                            capture.delete()
+                            self.logger.warning(f'capture UNKNOWN Timeout, {task.uuid} Send back in queue')
                     else:
                         capture.update(status)
                 elif status == crawlers.CaptureStatus.QUEUED:
                     capture_start = capture.get_start_time(r_str=False)
                     if int(time.time()) - capture_start > 36000:  # TODO ADD in new crawler config
                         task = capture.get_task()
-                        task.reset()
-                        capture.delete()
-                        self.logger.warning(f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Send back in queue, start_time={capture_start}')
+                        error_message = f'Lacus capture QUEUED timeout for task {task.uuid}'
+                        if task.get_parent() == 'interactive':
+                            crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message)
+                            self.logger.warning(f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Interactive session failed, start_time={capture_start}')
+                        else:
+                            task.reset()
+                            capture.delete()
+                            self.logger.warning(f'capture QUEUED Timeout, {task.uuid}, {task.get_url()} Send back in queue, start_time={capture_start}')
                     else:
                         capture.update(status)
                     print(capture.uuid, crawlers.CaptureStatus(status).name, int(time.time()))
@@ -228,9 +250,14 @@ class Crawler(AbstractModule):
                 # Invalid State
                 else:
                     task = capture.get_task()
-                    task.reset()
-                    capture.delete()
-                    self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Send back in queue')
+                    error_message = f'Lacus returned invalid capture status {status} for task {task.uuid}'
+                    if task.get_parent() == 'interactive':
+                        crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message)
+                        self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Interactive session failed')
+                    else:
+                        task.reset()
+                        capture.delete()
+                        self.logger.warning(f'ERROR INVALID CAPTURE STATUS {status}, {task.uuid} Send back in queue')
 
             except ConnectionError:
                 self.logger.warning(f'Lacus ConnectionError, capture {capture.uuid}')
@@ -274,11 +301,16 @@ class Crawler(AbstractModule):
                                           user_agent=task.get_user_agent(),
                                           proxy=task.get_proxy(),
                                           cookies=task.get_cookies(),
+                                          storage=task.get_local_storage(),
+                                          java_script_enabled=task.get_javascript(),
                                           with_favicon=True,
                                           force=force,
                                           general_timeout_in_sec=90)  # TODO increase timeout if onion ????
+        if capture_uuid:
+            task.update_cookiejar_last_used()
 
-        crawlers.create_capture(capture_uuid, task_uuid)
+        capture = crawlers.create_capture(capture_uuid, task_uuid)
+        self._update_capture_status(capture)
         print(task.uuid, capture_uuid, 'launched')
 
         if self.ail_to_push_discovery:
@@ -301,10 +333,12 @@ class Crawler(AbstractModule):
         return capture_uuid
 
     # CRAWL DOMAIN
-    def compute(self, capture):
+    def compute(self, capture):  # TODO ADD FUNCTION TO MANUALLY IMPORT ???
         print('saving capture', capture.uuid)
 
         task = capture.get_task()
+        self.interactive_session = None
+
         domain = task.get_domain()
         print(domain)
         if not domain:
@@ -319,12 +353,43 @@ class Crawler(AbstractModule):
         self.parent = self.domain.get_parent()
         self.original_domain = Domain(domain)
 
+        if task.get_parent() == 'interactive':
+            self.interactive_session = crawlers.get_interactive_session_by_capture(capture.uuid)
+
         epoch = int(time.time())
         parent_id = task.get_parent()
 
         entries = self.lacus.get_capture(capture.uuid)
 
         print(entries.get('status'))
+        if task.is_cookiejar_only():
+            if self.interactive_session and self.interactive_session.is_cancelled():
+                task.remove()
+                self.interactive_session = None
+                self.root_item = None
+                return None
+            if entries.get('error'):
+                error_message = str(entries['error'])
+                self.logger.warning(error_message)
+                if self.interactive_session:
+                    crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message, session=self.interactive_session)
+            else:
+                cookiejar_saved = None
+                if self.interactive_session:
+                    cookiejar_saved = crawlers.finalize_interactive_cookiejar_session(capture.uuid, entries.get('storage', {}), session=self.interactive_session)
+                if self.interactive_session:
+                    if self.interactive_session.is_cancelled():
+                        pass
+                    elif cookiejar_saved is False:
+                        crawlers.release_interactive_session_by_capture(capture.uuid, status='error', session=self.interactive_session)
+                    elif crawlers.enqueue_interactive_forum_capture(capture.uuid, self.interactive_session):
+                        self.interactive_session.set('status', 'processing')
+                    else:
+                        crawlers.release_interactive_session_by_capture(capture.uuid, status='completed', session=self.interactive_session)
+            task.remove()
+            self.interactive_session = None
+            self.root_item = None
+            return None
         self.har = task.get_har()
         self.screenshot = task.get_screenshot()
         # DEBUG
@@ -335,7 +400,7 @@ class Crawler(AbstractModule):
         self.root_item = None
 
         # Save Capture
-        saved = self.save_capture_response(parent_id, entries)
+        saved = self.save_capture_response(capture, task, parent_id, entries)
         if saved:
             if self.parent != 'lookup':
                 # Update domain first/last seen
@@ -375,71 +440,86 @@ class Crawler(AbstractModule):
             print('task:   ', task.uuid, 'completed')
             print()
         else:
-            print('capture:', capture.uuid, 'Unsafe Content Filtered')
-            print('task:   ', task.uuid, 'Unsafe Content Filtered')
+            print('capture:', capture.uuid, 'Unsafe Content Filtered or error')
+            print('task:   ', task.uuid, 'Unsafe Content Filtered or error')
             print()
 
-        # onion messages correlation
+        # onion/i2p messages correlation
         if crawlers.is_domain_correlation_cache(self.original_domain.id):
             crawlers.save_domain_correlation_cache(self.original_domain.was_up(), domain)
 
+        if self.interactive_session:
+            crawlers.finalize_interactive_cookiejar_session(capture.uuid, entries.get('storage', {}), session=self.interactive_session)
+            crawlers.release_interactive_session_by_capture(capture.uuid, status='completed', session=self.interactive_session)
         task.remove()
+        self.interactive_session = None
         self.root_item = None
 
-    def save_capture_response(self, parent_id, entries):
+    def save_capture_response(self, capture, task, parent_id, entries):
+        filter_page = False
+        crawled_domain = None
+        crawled_url = None
         print(entries.keys())
         if 'error' in entries:
             # TODO IMPROVE ERROR MESSAGE
+            error_message = str(entries['error'])
             self.logger.warning(str(entries['error']))
-            print(entries.get('error'))
+            if self.interactive_session:
+                if crawlers.set_interactive_session_error_by_capture(capture.uuid, error_message, session=self.interactive_session):
+                    return False
+            if error_message.startswith('Something went poorly'):
+                # Timeout, require restart of lacus
+                if 'Too many open files' in error_message:
+                    task.reset()
+                    capture.delete()
+                    self.logger.warning(f'Lacus Too many open files Error, {task.uuid} Send back in queue')
+                    time.sleep(60)
             if entries.get('html'):
                 print('retrieved content')
-                # print(entries.get('html'))
 
-        if 'last_redirected_url' in entries and entries.get('last_redirected_url'): # TODO ADD RELATIONSHIP REDIRECT
+        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
             last_url = entries['last_redirected_url']
-            unpacked_last_url = crawlers.unpack_url(last_url)
-            current_domain = unpacked_last_url['domain']
+            if last_url == 'about:blank':
+                self.logger.warning(f'Error something fails, redirect: about:blank')
+                return False
+
+            current_domain = crawlers.get_url_domain(last_url)
             # REDIRECTION TODO CHECK IF TYPE CHANGE
             if current_domain != self.domain.id and not self.root_item:
-                self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
-                if not self.root_item:
-                    self.domain = Domain(current_domain)
-                    # Filter Domain
-                    if self.filter_unsafe_onion:
-                        if current_domain.endswith('.onion'):
-                            if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
-                                return False
+                if current_domain == 'localhost':
+                    self.logger.warning('Filter localhost redirection')
+                    filter_page = True
+                else:
+                    self.logger.warning(f'External redirection {self.domain.id} -> {current_domain}')
+                    if not self.root_item:
+                        self.domain = Domain(current_domain)
+                        # Filter Domain
+                        if self.filter_unsafe_onion:
+                            if current_domain.endswith('.onion'):
+                                try:
+                                    if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
+                                        return False
+                                except OnionFilteringError as e:
+                                    self.logger.warning(f'OnionFilteringError: {e}')
+                                    time.sleep(10)
+                                    try:
+                                        if not crawlers.check_if_onion_is_safe(current_domain, unknown=self.filter_unknown_onion):
+                                            return False
+                                    except OnionFilteringError as e:
+                                        self.logger.warning(f'Aborted: OnionFilteringError: {e}')
+                                        return False
 
         # TODO LAST URL
         # FIXME
         else:
             last_url = f'http://{self.domain.id}'
 
-        if 'html' in entries and entries.get('html'):
+        if 'html' in entries and entries.get('html') and not filter_page:
             item_id = crawlers.create_item_id(self.items_dir, self.domain.id)
             item = Item(item_id)
             print(item.id)
 
-            gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
-            # send item to Global
-            relay_message = f'crawler {gzip64encoded}'
-            self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
-
-            # Tag # TODO replace me with metadata to tags
-            msg = f'infoleak:submission="crawler"'  # TODO FIXME
-            self.add_message_to_queue(obj=item, message=msg, queue='Tags')
-
-            # TODO replace me with metadata to add
-            crawlers.create_item_metadata(item_id, last_url, parent_id)
-            if self.root_item is None:
-                self.root_item = item_id
-            parent_id = item_id
-
-            # DOM-HASH
-            dom_hash = DomHashs.create(entries['html'])
-            dom_hash.add(self.date.replace('/', ''), item)
-            dom_hash.add_correlation('domain', '', self.domain.id)
+            is_valid_html = True
 
             # TITLE
             signal.alarm(60)
@@ -448,61 +528,109 @@ class Crawler(AbstractModule):
             except TimeoutException:
                 self.logger.warning(f'BeautifulSoup HTML parser timeout: {item_id}')
                 title_content = None
+                is_valid_html = False
             else:
                 signal.alarm(0)
 
-            if title_content:
-                title = Titles.create_title(title_content)
-                title.add(item.get_date(), item)
-                # Tracker
-                self.tracker_yara.compute_manual(title)
-                # if not title.is_tags_safe():
-                #     unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
-                #     self.domain.add_tag(unsafe_tag)
-                #     item.add_tag(unsafe_tag)
-                self.add_message_to_queue(obj=title, message=self.domain.id, queue='Titles')
+            # DOM-HASH ID
+            if is_valid_html:
+                signal.alarm(60)
+                try:
+                    dom_hash_id = DomHashs.extract_dom_hash(entries['html'])
+                except TimeoutException:
+                    self.logger.warning(f'BeautifulSoup HTML parser for domhash timeout: {item_id}')
+                    dom_hash_id = None
+                except ValueError as e:
+                    signal.alarm(0)
+                    self.logger.warning(f'BeautifulSoup HTML invalid: {str(e)} {item_id}')
+                    dom_hash_id = None
+                else:
+                    signal.alarm(0)
+            else:
+                dom_hash_id = None
 
-            # SCREENSHOT
-            if self.screenshot:
-                if 'png' in entries and entries.get('png'):
-                    screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
-                    if screenshot:
-                        if not screenshot.is_tags_safe():
-                            unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
-                            self.domain.add_tag(unsafe_tag)
-                            item.add_tag(unsafe_tag)
-                        # Remove Placeholder pages # TODO Replace with warning list ???
-                        if screenshot.id not in self.placeholder_screenshots:
-                            # Create Correlations
-                            screenshot.add_correlation('item', '', item_id)
-                            screenshot.add_correlation('domain', '', self.domain.id)
-                        self.add_message_to_queue(obj=screenshot, queue='Images')
-            # HAR
-            if self.har:
-                if 'har' in entries and entries.get('har'):
-                    har_id = crawlers.create_har_id(self.date, item_id)
-                    crawlers.save_har(har_id, entries['har'])
-                    for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
-                        print(cookie_name)
-                        cookie = CookiesNames.create(cookie_name)
-                        cookie.add(self.date.replace('/', ''), self.domain)
-                    for etag_content in crawlers.extract_etag_from_har(entries['har']):
-                        print(etag_content)
-                        etag = Etags.create(etag_content)
-                        etag.add(self.date.replace('/', ''), self.domain)
-                    crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
+            # FILTER I2P 'Website Unknown' and 'Website Unreachable'
+            if self.domain.id.endswith('.i2p') and dom_hash_id:
+                if crawlers.is_filtered_i2p_page(dom_hash_id):
+                    filter_page = True
 
-            # FAVICON
-            if entries.get('potential_favicons'):
-                for favicon in entries['potential_favicons']:
-                    fav = Favicons.create(favicon)
-                    fav.add(item.get_date(), item)
+            if not filter_page:
+
+                # DOM-HASH
+                if dom_hash_id:
+                    dom_hash = DomHashs.create(entries['html'], obj_id=dom_hash_id)
+                    dom_hash.add(self.date.replace('/', ''), item)
+                    dom_hash.add_correlation('domain', '', self.domain.id)
+
+                gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
+                # send item to Global
+                relay_message = f'crawler {gzip64encoded}'
+                self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
+
+                # Tag # TODO replace me with metadata to tags
+                msg = f'infoleak:submission="crawler"'  # TODO FIXME
+                self.add_message_to_queue(obj=item, message=msg, queue='Tags')
+
+                # TODO replace me with metadata to add
+                crawlers.create_item_metadata(item_id, last_url, parent_id)
+                if self.root_item is None:
+                    self.root_item = item_id
+                parent_id = item_id
+
+                # TITLE
+                if title_content:
+                    title = Titles.create_title(title_content)
+                    title.add(item.get_date(), item)
+                    self.add_message_to_queue(obj=title, message=self.domain.id, queue='Titles')
+                    # Trackers
+                    self.add_message_to_queue(obj=title, queue='Trackers')
+
+                # SCREENSHOT
+                if self.screenshot:
+                    if 'png' in entries and entries.get('png'):
+                        screenshot = Screenshots.create_screenshot(entries['png'], b64=False)
+                        if screenshot:
+                            if not screenshot.is_tags_safe():
+                                unsafe_tag = 'dark-web:topic="pornography-child-exploitation"'
+                                self.domain.add_tag(unsafe_tag)
+                                item.add_tag(unsafe_tag)
+                            # Remove Placeholder pages # TODO Replace with warning list ???
+                            if screenshot.id not in self.placeholder_screenshots:
+                                # Create Correlations
+                                screenshot.add_correlation('item', '', item_id)
+                                screenshot.add_correlation('domain', '', self.domain.id)
+                            # self.add_message_to_queue(obj=screenshot, queue='Images') # TODO screenshot OCR
+                # HAR
+                if self.har:
+                    if 'har' in entries and entries.get('har'):
+                        har_id = crawlers.create_har_id(self.date, item_id)
+                        crawlers.save_har(har_id, entries['har'])
+                        for cookie_name in crawlers.extract_cookies_names_from_har(entries['har']):
+                            print(cookie_name)
+                            cookie = CookiesNames.create(cookie_name)
+                            cookie.add(self.date.replace('/', ''), self.domain)
+                        for etag_content in crawlers.extract_etag_from_har(entries['har']):
+                            print(etag_content)
+                            etag = Etags.create(etag_content)
+                            etag.add(self.date.replace('/', ''), self.domain)
+                        crawlers.extract_hhhash(entries['har'], self.domain.id, self.date.replace('/', ''))
+
+                # FAVICON
+                if entries.get('potential_favicons'):
+                    for favicon in entries['potential_favicons']:
+                        fav = Favicons.create(favicon)
+                        fav.add(item.get_date(), item)
+
+                crawled_domain = self.domain.id
+                crawled_url = last_url
 
         # Next Children
         entries_children = entries.get('children')
         if entries_children:
             for children in entries_children:
-                self.save_capture_response(parent_id, children)
+                self.save_capture_response(capture, task, parent_id, children)
+        if crawled_domain and self.interactive_session:
+            crawlers.set_interactive_session_crawled_domain_by_capture(capture.uuid, crawled_domain, url=crawled_url, session=self.interactive_session)
         return True
 
 

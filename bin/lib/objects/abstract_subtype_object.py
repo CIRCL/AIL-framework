@@ -21,7 +21,7 @@ from lib.objects.abstract_object import AbstractObject
 from lib.ail_core import get_object_all_subtypes, zscan_iter, get_object_all_subtypes
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
-from lib.data_retention_engine import update_obj_date
+from lib.data_retention_engine import update_obj_date, set_obj_date_first, set_obj_date_last, delete_obj_date
 from lib.telegram import USERNAME_CHARS
 
 from packages import Date
@@ -73,6 +73,16 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         else:
             return last_seen
 
+    def get_first_seen_timestamp(self):
+        first_seen = self.get_first_seen()
+        if first_seen:
+            return Date.convert_str_date_to_epoch(first_seen)
+
+    def get_last_seen_timestamp(self):
+        last_seen = self.get_last_seen()
+        if last_seen:
+            return Date.convert_str_date_to_epoch(last_seen)
+
     def get_nb_seen(self):
         nb = r_object.zscore(f'{self.type}_all:{self.subtype}', self.id)
         if not nb:
@@ -92,7 +102,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         if last_seen:
             return f'{last_seen[0:4]}-{last_seen[4:6]}-{last_seen[6:8]}'
 
-    def _get_meta(self, options=None):
+    def _get_meta(self, options=None, flask_context=False):
         if options is None:
             options = set()
         meta = {'id': self.id,
@@ -104,7 +114,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         if 'icon' in options:
             meta['icon'] = self.get_svg_icon()
         if 'link' in options:
-            meta['link'] = self.get_link()
+            meta['link'] = self.get_link(flask_context=flask_context)
         if 'sparkline' in options:
             meta['sparkline'] = self.get_sparkline()
         return meta
@@ -196,8 +206,36 @@ class AbstractSubtypeObject(AbstractObject, ABC):
     #     self.set_first_seen(first_seen)
     #     self.set_last_seen(last_seen)
 
-    def _delete(self):
-        pass
+    def _delete_daterange(self):
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        if first_seen and last_seen:
+            for date in Date.get_daterange(first_seen, last_seen):
+                r_object.zrem(f'{self.type}:{self.subtype}:{date}', self.id)
+        # Remove from global zset / iterator
+        r_object.zrem(f'{self.type}_all:{self.subtype}', self.id)
+        # check if subtype still exists
+        if not r_object.exists(f'{self.type}_all:{self.subtype}'):
+            r_object.srem(f'all_{self.type}:subtypes', self.subtype)
+            delete_obj_date(self.type, self.subtype)
+        # update object type/subtype first/last seen
+        else:
+            if first_seen and last_seen:
+                # update first seen
+                if not r_object.exists(f'{self.type}:{self.subtype}:{first_seen}'):
+                    for date in Date.get_daterange(first_seen, last_seen):
+                        if r_object.exists(f'{self.type}:{self.subtype}:{date}'):
+                            set_obj_date_first(date, self.type, subtype=self.subtype)
+                # update last seen
+                if not r_object.exists(f'{self.type}:{self.subtype}:{last_seen}'):
+                    for date in reversed(Date.get_daterange(first_seen, last_seen)):
+                        if r_object.exists(f'{self.type}:{self.subtype}:{date}'):
+                            set_obj_date_last(date, self.type, subtype=self.subtype)
+
+    def _delete(self, meta=True):
+        # Delete daterange
+        self._delete_daterange()
+        self._delete_object(meta=meta)
 
 
 class AbstractSubtypeObjects(ABC):
@@ -258,6 +296,11 @@ class AbstractSubtypeObjects(ABC):
 
     def get_id_iterators_by_subtype(self, subtype):
         return zscan_iter(r_object, f'{self.type}_all:{subtype}')
+
+    def get_iterator(self):
+        for subtype in get_object_all_subtypes(self.type):
+            for obj_id in self.get_id_iterators_by_subtype(subtype):
+                yield self.obj_class(obj_id[0], subtype)
 
     def get_metas(self, subtype, obj_ids, options=set()):
         dict_obj = {}

@@ -8,8 +8,21 @@ from dateutil.rrule import rrule, MONTHLY
 from dateutil.relativedelta import relativedelta
 
 def convert_date_str_to_datetime(date_str):
-    res =  datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
+    res = datetime.date(int(date_str[0:4]), int(date_str[4:6]), int(date_str[6:8]))
     return res
+
+def convert_str_datetime_to_epoch(date_str):
+    dt = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
+
+def convert_str_date_to_epoch(date_str):
+    dt = datetime.datetime.strptime(date_str.replace('-', ''), "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
+    return int(dt.timestamp())
+
+def convert_str_date_to_epoch_end(date_str):
+    dt = datetime.datetime.strptime(date_str.replace('-', ''), "%Y%m%d").replace(tzinfo=datetime.timezone.utc)
+    dt = dt + datetime.timedelta(days=1, seconds=-1)
+    return int(dt.timestamp())
 
 def get_full_month_str(date_from, date_to):
     # add one day (if last day of the month)
@@ -98,8 +111,27 @@ def get_current_week_day():
     return start.strftime("%Y%m%d")
 
 def get_current_utc_full_time():
-    timestamp = datetime.datetime.fromtimestamp(time.time())
+    timestamp = datetime.datetime.now(datetime.timezone.utc)
     return timestamp.strftime('%Y-%m-%d %H:%M:%S')
+
+def get_utc_datetime_from_timestamp(timestamp):
+    timestamp = datetime.datetime.fromtimestamp(float(timestamp), datetime.timezone.utc)
+    return timestamp.strftime('%Y-%m-%d %H:%M:%S')
+
+def get_utc_date_from_timestamp(timestamp, separator=''):
+    timestamp = datetime.datetime.fromtimestamp(float(timestamp), datetime.timezone.utc)
+    if separator:
+        return timestamp.strftime(f'%Y{separator}%m{separator}%d')
+    return timestamp.strftime('%Y%m%d')
+
+
+def get_utc_weekday_hour_from_timestamp(timestamp):
+    timestamp = datetime.datetime.fromtimestamp(float(timestamp), datetime.timezone.utc)
+    return timestamp.strftime('%a'), timestamp.hour
+
+
+def get_date_from_timestamp(timestamp):
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y%m%d')
 
 def get_month_dates(date=None):
     if date:
@@ -280,6 +312,14 @@ def get_previous_month_date():
     first = now.replace(day=1)
     last_month = first - datetime.timedelta(days=1)
     return last_month.strftime("%Y%m%d")
+
+def get_month_last_day(date_month):
+    month = int(date_month[4:6]) % 12 + 1
+    return (datetime.date(int(date_month[0:4]), month, 1) - datetime.timedelta(days=1)).strftime("%Y%m%d")
+
+def get_current_month():
+    dt = datetime.date.today()
+    return dt.strftime("%Y%m")
 
 def get_current_year():
     dt = datetime.date.today()

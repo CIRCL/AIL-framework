@@ -5,7 +5,13 @@ pastes = PASTES
 hash = HASHS
 crawled = crawled
 har = CRAWLED_SCREENSHOT
+files = FILES
+# size in bytes
+max_pdf_size = 100000000
+translated_pdf = temp/pdf
+pdf_translation_ttl = 30
 screenshot = CRAWLED_SCREENSHOT/screenshot
+cookiejar_local_storage = CRAWLED_SCREENSHOT/cookiejar_local_storage
 images = IMAGES
 favicons = FAVICONS
 
@@ -83,6 +89,15 @@ DiffMaxLineLength = 10000
 [Images]
 ollama_url = http://127.0.0.1:11434
 ollama_enabled = True
+# For multiple optional Ollama vision models, add them with "," without space.
+# e.g.: ollama_models = ornith:35b,qwen2.5vl:32b
+# qwen2.5vl is always available and remains the default.
+ollama_models =
+
+[ImageSimilarity]
+phash_enabled = False
+phash_hamming_distance = 8
+photodna_enabled = False
 
 ##### Users #####
 [Users]
@@ -211,6 +226,11 @@ password = ail_langs
 host = localhost
 port = 6383
 password = ail_objs
+
+[Kvrocks_ImageSimilarity]
+host = localhost
+port = 6383
+password = ail_image_similarity
 
 [Kvrocks_Relationships]
 host = localhost

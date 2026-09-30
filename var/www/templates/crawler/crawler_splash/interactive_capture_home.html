@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AIL-Framework</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid"><div class="row">
+{% include 'crawler/menu_sidebar.html' %}
+<div class="col-12 col-lg-10" id="core_content">
+    <div class="jumbotron bg-dark text-white mt-3 shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <p class="text-uppercase text-info font-weight-bold mb-2"><i class="fas fa-desktop"></i> Interactive capture</p>
+                <h1 class="display-4">No active browser session</h1>
+                <p class="lead mb-0">Start an interactive browser capture when you need to log in, solve prompts, or manually navigate before AIL saves the page state.</p>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card text-dark border-0 shadow">
+                    <div class="card-body text-center">
+                        <div class="h2 mb-0">{{ usage.active }} / {{ usage.max }}</div>
+                        <div class="text-muted">interactive slots in use</div>
+                        {% if usage.active < usage.max %}
+                            <span class="badge badge-success mt-3">Slot available</span>
+                        {% else %}
+                            <span class="badge badge-danger mt-3">All slots busy</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-play-circle text-primary"></i> Start a new interactive capture</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Interactive captures are launched from the crawler form. Paste a URL, enable <b>Interactive browser capture</b>, then AIL will open a remote browser that you can control.</p>
+                    <a class="btn btn-primary btn-lg" href="{{ url_for('crawler_splash.manual') }}">
+                        <i class="fas fa-plus"></i> Open crawler form
+                    </a>
+                    {% if current_user.get_role() == 'admin' %}
+                        <a class="btn btn-outline-secondary btn-lg ml-2" href="{{ url_for('crawler_splash.interactive_capture_admin') }}">
+                            <i class="fas fa-tools"></i> Manage sessions
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card border-info shadow-sm mb-3">
+                <div class="card-header bg-info text-white"><i class="fas fa-info-circle"></i> Workflow</div>
+                <div class="card-body">
+                    <ol class="pl-3 mb-0">
+                        <li>Launch the interactive capture from the crawler form.</li>
+                        <li>Open the remote browser link and navigate as needed.</li>
+                        <li>Click <b>Finish capture</b> to let AIL import and process the result.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div></div>
+</body>
+<script>$(document).ready(function(){ $('#page-Crawler').addClass('active'); });</script>
+</html>

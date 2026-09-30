@@ -17,107 +17,307 @@
 	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
 
+  <style>
+    body {
+      background: #f4f6f9;
+    }
+    .page-shell {
+      padding-bottom: 1.5rem;
+    }
+    .profile-page-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .profile-subtitle {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+    .profile-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.35rem;
+      box-shadow: 0 0.2rem 0.45rem rgba(15, 23, 42, 0.05);
+    }
+    .profile-label {
+      font-weight: 600;
+      color: #495057;
+      width: 35%;
+    }
+    .profile-value {
+      word-break: break-word;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+    .status-card {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 0.35rem;
+    }
+    .status-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03rem;
+      color: #6c757d;
+      margin-bottom: 0.35rem;
+    }
+    .status-value {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0;
+    }
+    .misp-logo {
+      width: 120px;
+    }
+    .rulezet-logo {
+      width: 132px;
+      max-width: 100%;
+    }
+    .misp-action-btn {
+      min-width: 42px;
+    }
+    .card-header h6, .card-header h3 {
+      margin-bottom: 0;
+    }
+    .profile-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #0d6efd, #5fa9ff);
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.85rem;
+      box-shadow: 0 0.35rem 0.6rem rgba(13, 110, 253, 0.25);
+    }
+    .misp-table th {
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+    .misp-table td {
+      vertical-align: middle;
+    }
+    .misp-empty-state {
+      border: 1px dashed #ced4da;
+      border-radius: 0.5rem;
+      background: #f8f9fa;
+      color: #6c757d;
+      padding: 1rem;
+      text-align: center;
+    }
+    .api-actions {
+      gap: 0.3rem;
+    }
+    .api-actions .btn {
+      margin-top: 0;
+    }
+    .rulezet-card {
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    }
+    .rulezet-note {
+      border-left: 4px solid #0d6efd;
+      background: #eef5ff;
+      color: #495057;
+      border-radius: 0.35rem;
+    }
+    .rulezet-pill {
+      border: 1px solid #d9e2f6;
+      background: #f3f7ff;
+      color: #2f5fb3;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      padding: 0.2rem 0.6rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    @media (max-width: 768px) {
+      .profile-label {
+        width: 42%;
+      }
+    }
+  </style>
 </head>
 <body>
 
 {% include 'nav_bar.html' %}
-	<div class="container-fluid">
+	<div class="container-fluid page-shell">
 		<div class="row">
 			{% include 'settings/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
-				<div class="card mb-3 mt-1">
-					<div class="card-header text-white bg-dark pb-1">
-						<h5 class="card-title">My Profile :</h5>
+				<div class="card mb-3 mt-1 shadow-sm">
+					<div class="card-header bg-white border-bottom">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                            <div class="d-flex align-items-center">
+                                <div class="profile-avatar">{{ meta['id'][0] | upper }}</div>
+                                <div>
+                                <h5 class="profile-page-title">Profile Settings</h5>
+                                <p class="profile-subtitle">Manage your account information, security options, and connectors.</p>
+                                </div>
+                            </div>
+                        </div>
 					</div>
 					<div class="card-body">
+                        {% if rulezet_error %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-circle mr-1"></i>{{ rulezet_error }}
+                            </div>
+                        {% endif %}
+                        {% if rulezet_success %}
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle mr-1"></i>{{ rulezet_success }}
+                            </div>
+                        {% endif %}
 
                         <div class="row">
-                            <div class="col-xl-6">
-                                <div class="card text-center border-secondary">
-                                    <div class="card-body px-1 py-0">
-                                        <table class="table table-sm">
+                            <div class="col-12 col-xl-6 mb-3">
+                                <div class="card profile-card h-100">
+                                    <div class="card-header bg-light">
+                                        <h6 class="section-title">Profile Information</h6>
+                                    </div>
+                                    <div class="card-body px-2 py-2">
+                                        <table class="table table-sm table-borderless mb-0">
                                             <tbody>
                                             <tr>
-                                                <td>Email</td>
-                                                <td>{{meta['id']}}</td>
+                                                <td class="profile-label">Email</td>
+                                                <td class="profile-value">{{meta['id']}}</td>
                                             </tr>
                                             <tr>
-                                                <td>Organisation</td>
-                                                <td>
+                                                <td class="profile-label">Organisation</td>
+                                                <td class="profile-value">
                                                     {{meta['org_name']}}<br>
-                                                    {{meta['org']}}
+                                                    <span class="text-muted">{{meta['org']}}</span>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>Role</td>
-                                                <td>{{meta['role']}}</td>
+                                                <td class="profile-label">Role</td>
+                                                <td class="profile-value">{{meta['role']}}</td>
                                             </tr>
                                             <tr>
-                                                <td>API Key</td>
-                                                <td>
+                                                <td class="profile-label">Translation language</td>
+                                                <td class="profile-value">
+                                                    <form action="{{ url_for('settings_b.edit_preferred_language') }}" method="post" class="form-inline">
+                                                        <select class="form-control form-control-sm mr-2" name="preferred_language" required>
+                                                            {% for code, label in all_languages|dictsort(by='value') %}
+                                                            <option value="{{ code }}" {% if meta.get('preferred_language', 'en') == code %}selected{% endif %}>{{ label }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                            <i class="fas fa-save"></i> Save
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="profile-label">API Key</td>
+                                                <td class="profile-value">
                                                     <span id="censored_key">
                                                         {{meta['api_key'][:4]}}*********************************{{meta['api_key'][-4:]}}
                                                     </span>
                                                     <span id="uncensored_key" style="display: none;">
                                                         {{meta['api_key']}}
                                                     </span>
-                                                    <a class="ml-3" href="{{url_for('settings_b.new_token_user_self')}}"><i class="fa fa-random"></i></a>
-                                                    <span class="btn btn-outline-secondary ml-1 px-1 py-0" id="btn_key" onclick="show_api_key();">
-                                                        <i class="fas fa-eye"></i>
-                                                    </span>
+                                                    <div class="api-actions d-inline-flex flex-wrap align-items-center">
+                                                        <button class="btn btn-outline-secondary btn-sm px-2 py-0" id="btn_key" onclick="show_api_key();" title="Show full API key" type="button">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-info btn-sm ml-1 py-0" id="btn_copy_key" onclick="copy_api_key();" title="Copy API key" type="button">
+                                                            <i class="fas fa-copy"></i> Copy
+                                                        </button>
+                                                        <a class="btn btn-outline-primary btn-sm ml-1 py-0" href="{{url_for('settings_b.new_token_user_self')}}" title="Generate a new API key">
+                                                            <i class="fa fa-random"></i> Regenerate
+                                                        </a>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                            <tr>
-                                                <td>2FA OTP</td>
-                                                <td>
-                                                    {% if meta['2fa'] %}
-                                                        <span class="badge badge-success" style="font-size: 1.0rem;"><b>YES</b></span>
-                                                        {% if acl_admin %}
-                                                            <div>
-                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_reset_self')}}"><i class="fas fa-sync"></i> RESET OTP</a>
-                                                            </div>
-                                                        {% endif %}
-                                                        {% if not global_2fa %}
-                                                            <div>
-                                                                <a class="btn btn-sm btn-danger mt-1" href="{{url_for('settings_b.user_otp_disable_self')}}"><i class="fas fa-warning"></i> DISABLE 2FA OTP</a>
-                                                            </div>
-                                                        {% endif %}
-                                                    {% else %}
-                                                        <span class="badge badge-danger" style="font-size: 1.0rem;"><b>NO</b></span>
-                                                        <div>
-                                                            <a class="btn btn-success" href="{{url_for('settings_b.user_otp_enable_self')}}"><i class="fas fa-plus"></i> ACTIVATE 2FA OTP</a>
-                                                        </div>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            {% if meta['2fa'] %}
-                                                <tr>
-                                                    <td>TOTP</td>
-                                                    <td><a class="btn btn-info" href="{{url_for('settings_b.user_hotp')}}"><i class="fas fa-eye"></i> View Paper Tokens</a></td>
-                                                </tr>
-                                            {% endif %}
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-12 col-xl-6 mb-3">
+                                <div class="card h-100 border-secondary">
+                                    <div class="card-header bg-light">
+                                        <h6 class="section-title">Security & Access</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="status-card p-3 mb-3">
+                                            <p class="status-title">Two-factor authentication</p>
+                                            {% if not meta['2fa'] %}
+                                                <p class="status-value text-danger"><i class="fas fa-shield-alt mr-1"></i>Disabled</p>
+                                                <p class="text-muted small mb-2">Your account is currently protected by password only.</p>
+                                                <p class="small text-muted mb-2">
+                                                    <i class="fas fa-info-circle mr-1"></i>For better security, enable 2FA to protect your account from unauthorized access.
+                                                </p>
+                                                <a class="btn btn-success btn-sm" href="{{url_for('settings_b.user_otp_enable_self')}}">
+                                                    <i class="fas fa-plus"></i> Enable 2FA OTP
+                                                </a>
+                                            {% else %}
+                                                <p class="status-value text-success"><i class="fas fa-shield-alt mr-1"></i>Enabled</p>
+                                                <p class="text-muted small mb-2">Your account requires a one-time code during sign in.</p>
+                                                {% if acl_admin %}
+                                                    <a class="btn btn-outline-danger btn-sm mr-2 mb-2" href="{{url_for('settings_b.user_otp_reset_self')}}">
+                                                        <i class="fas fa-sync"></i> Reset OTP
+                                                    </a>
+                                                {% endif %}
+                                                {% if not global_2fa %}
+                                                    <a class="btn btn-outline-danger btn-sm mb-2" href="{{url_for('settings_b.user_otp_disable_self')}}">
+                                                        <i class="fas fa-warning"></i> Disable 2FA OTP
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="d-flex flex-wrap">
+                                            {% if meta['2fa'] %}
+                                                <div class="w-100 text-muted small mb-2">
+                                                    <strong>HOTP - Paper-Based Single Use Tokens</strong><br>
+                                                    If you don’t have access to your phone or authentication app, use the tokens below.<br>
+                                                    Print and store them securely for future access.
+                                                </div>
+                                                <a class="btn btn-outline-info mb-2 mr-2" href="{{url_for('settings_b.user_hotp')}}">
+                                                    <i class="fas fa-eye"></i> View HOTP Paper Tokens
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-
-
-                        <div class="card my-2">
-                            <div class="card-header bg-dark text-white">
-                                <h3 class="txt-secondary my-2">User Settings:</h3>
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">MISP Integrations</h3>
+                                <a href="{{ url_for('settings_b.edit_misp') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus"></i> Add MISP Account
+                                </a>
                             </div>
                             <div class="card-body">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" style="width:150px;"></h3>
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/misp-logo.png')}}" alt="MISP" class="misp-logo"></h3>
 
-
-                                        <table id="table_misp_config" class="table table-striped border-primary">
+                                        {% if misps|length == 0 %}
+                                            <div class="misp-empty-state">
+                                                <i class="fas fa-plug fa-lg mb-2"></i>
+                                                <p class="mb-2">No MISP integrations configured yet.</p>
+                                                <a href="{{ url_for('settings_b.edit_misp') }}" class="btn btn-primary btn-sm">
+                                                    Add your first MISP account
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                        <div class="table-responsive">
+                                        <table id="table_misp_config" class="table table-striped table-hover border-primary misp-table">
                                             <thead class="bg-dark text-white">
                                             <tr>
                                                 <th>Description</th>
@@ -152,12 +352,12 @@
                                                     <td></td>
                                                     <td>
                                                         <a href="{{ url_for('settings_b.edit_misp') }}?uuid={{ misp['uuid'] }}">
-															<button type="button" class="btn btn-outline-info">
+															<button type="button" class="btn btn-outline-info misp-action-btn" title="Edit MISP connection">
 																<i class="fas fa-pencil-alt"></i>
 															</button>
 														</a>
-                                                        <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}">
-															<button type="button" class="btn btn-outline-danger">
+                                                        <a href="{{ url_for('settings_b.delete_misp') }}?uuid={{ misp['uuid'] }}" onclick="return confirm('Delete this MISP integration?');">
+															<button type="button" class="btn btn-outline-danger misp-action-btn" title="Delete MISP connection">
 																<i class="fa-solid fa-trash-can"></i>
 															</button>
 														</a>
@@ -166,12 +366,156 @@
                                             {% endfor %}
                                             </tbody>
                                         </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                        <a href="{{ url_for('settings_b.edit_misp') }}">
-                                            <button class="btn btn-primary my-2">
-                                                <i class="fa-solid fa-plus"></i> Add <b>MISP</b> Account
-                                            </button>
-                                        </a>
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">Rulezet Connector</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="card rulezet-card">
+                                    <div class="card-body">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                                            <div class="mb-2 mb-md-0">
+                                                <h5 class="card-title mb-1">
+                                                    <a href="https://rulezet.org/" target="_blank" title="Open Rulezet website">
+                                                        <img src="{{ url_for('static', filename='image/rulezet-logo.png')}}" alt="Rulezet" class="rulezet-logo mr-2">
+                                                    </a>
+                                                </h5>
+                                            </div>
+                                            <span class="rulezet-pill">
+                                                <i class="fas fa-key"></i>
+                                                API Key Required
+                                            </span>
+                                        </div>
+
+                                        <div class="rulezet-note p-2 mb-3 small">
+                                            Connect your Rulezet account to synchronize personalized rules.
+                                        </div>
+                                        <form action="{{ url_for('settings_b.edit_rulezet') }}" method="post">
+                                            {% set rulezet_api_key = meta.get('rulezet_api_key') %}
+                                            <div class="form-group">
+                                                <label for="rulezet_api_key" class="font-weight-bold">API Key</label>
+                                                {% if rulezet_api_key %}
+                                                    <input type="text" class="form-control mb-2" id="rulezet_api_key_masked"
+                                                           value="{{ rulezet_api_key[0:4] }}{{ '*' * (rulezet_api_key|length - 8) }}{{ rulezet_api_key[-4:] }}"
+                                                           readonly>
+                                                    <div id="rulezet_api_key_edit_container" class="d-none">
+                                                        <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
+                                                               value="" maxlength="60"
+                                                               placeholder="Enter your new Rulezet API key (60 alphanumeric characters)">
+                                                    </div>
+                                                {% else %}
+                                                    <input type="text" class="form-control" id="rulezet_api_key" name="rulezet_api_key"
+                                                           value="" maxlength="60"
+                                                           placeholder="Enter your Rulezet API key (60 alphanumeric characters)"
+                                                           required>
+                                                {% endif %}
+                                                <small class="form-text text-muted">
+                                                    You can find your Rulezet API key in your Rulezet account settings:
+                                                  <a href="https://rulezet.org/account/" target="_blank" rel="noopener noreferrer">https://rulezet.org/account/</a>
+                                                </small>
+                                            </div>
+                                            <div class="d-flex flex-wrap">
+                                                {% if rulezet_api_key %}
+                                                    <button type="button" id="rulezet_edit_btn" class="btn btn-outline-primary btn-sm mr-2 mb-2">
+                                                        <i class="fas fa-pen"></i> Replace Rulezet Key
+                                                    </button>
+                                                    <button type="submit" id="rulezet_save_btn" class="btn btn-primary btn-sm mr-2 mb-2 d-none">
+                                                        <i class="fas fa-save"></i> Update Rulezet Key
+                                                    </button>
+                                                    <a href="{{ url_for('settings_b.delete_rulezet') }}" class="btn btn-outline-danger btn-sm mb-2"
+                                                       onclick="return confirm('Remove your Rulezet API key?');">
+                                                        <i class="fa-solid fa-trash-can"></i> Remove Rulezet Key
+                                                    </a>
+                                                {% else %}
+                                                    <button type="submit" class="btn btn-primary btn-sm mr-2 mb-2">
+                                                        <i class="fas fa-save"></i> Save Rulezet Key
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card my-2 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h3 class="section-title">FlowIntel Integrations</h3>
+                                <a href="{{ url_for('settings_b.edit_flowintel') }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-plus"></i> Add FlowIntel Account
+                                </a>
+                            </div>
+                            <div class="card-body">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/flowintel-logo.png')}}" alt="FlowIntel" class="misp-logo"></h3>
+
+                                        {% if flowintels|length == 0 %}
+                                            <div class="misp-empty-state">
+                                                <i class="fas fa-plug fa-lg mb-2"></i>
+                                                <p class="mb-2">No FlowIntel integrations configured yet.</p>
+                                                <a href="{{ url_for('settings_b.edit_flowintel') }}" class="btn btn-primary btn-sm">
+                                                    Add your first FlowIntel account
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                        <div class="table-responsive">
+                                        <table id="table_flowintel_config" class="table table-striped table-hover border-primary misp-table">
+                                            <thead class="bg-dark text-white">
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>url</th>
+                                                <th>api key</th>
+                                                <th>verify cert</th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody style="font-size: 15px;">
+                                            {% for flowintel in flowintels %}
+                                                <tr class="border-color: blue;">
+                                                    <td>
+                                                        {% if flowintel['description'] %}
+                                                            {{ flowintel['description'] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ flowintel['url'] }}</td>
+                                                    <td>
+                                                        {% if flowintel['api_key'] %}
+                                                            {{ flowintel['api_key'][0:4] }}*********************************{{ flowintel['api_key'][-4:] }}
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if flowintel['ssl'] %}
+                                                            <i class="fa-solid fa-check"></i>
+                                                        {% else %}
+                                                            <i class="fa-solid fa-xmark"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('settings_b.edit_flowintel') }}?uuid={{ flowintel['uuid'] }}">
+                                                            <button type="button" class="btn btn-outline-info misp-action-btn" title="Edit FlowIntel connection">
+                                                                <i class="fas fa-pencil-alt"></i>
+                                                            </button>
+                                                        </a>
+                                                        <a href="{{ url_for('settings_b.delete_flowintel') }}?uuid={{ flowintel['uuid'] }}" onclick="return confirm('Delete this FlowIntel integration?');">
+                                                            <button type="button" class="btn btn-outline-danger misp-action-btn" title="Delete FlowIntel connection">
+                                                                <i class="fa-solid fa-trash-can"></i>
+                                                            </button>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -188,13 +532,32 @@
 
 <script>
 $(document).ready(function(){
-    $("#nav_edit_profile").addClass("active");
+    $("#page-options").addClass("active");
+	$("#nav_edit_profile").addClass("active");
 	$("#nav_my_profile").removeClass("text-muted");
-    $('#table_misp_config').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 2, "desc" ]]
+
+    $('#rulezet_edit_btn').on('click', function() {
+        $('#rulezet_api_key_masked').addClass('d-none');
+        $('#rulezet_api_key_edit_container').removeClass('d-none');
+        $('#rulezet_api_key').prop('required', true).trigger('focus');
+        $('#rulezet_edit_btn').addClass('d-none');
+        $('#rulezet_save_btn').removeClass('d-none');
     });
+
+    if ($('#table_misp_config').length) {
+        $('#table_misp_config').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 2, "desc" ]]
+        });
+    }
+    if ($('#table_flowintel_config').length) {
+        $('#table_flowintel_config').DataTable({
+            "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
+            "iDisplayLength": 10,
+            "order": [[ 2, "desc" ]]
+        });
+    }
 
 } );
 
@@ -216,6 +579,17 @@ function show_api_key() {
     $('#censored_key').hide();
     $('#btn_key').hide();
     $('#uncensored_key').show();
+}
+
+function copy_api_key() {
+    var apiKey = "{{meta['api_key']}}";
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(apiKey);
+        $('#btn_copy_key').html('<i class="fas fa-check"></i> Copied');
+        setTimeout(function(){
+            $('#btn_copy_key').html('<i class="fas fa-copy"></i> Copy');
+        }, 1600);
+    }
 }
 
 </script>

@@ -3,7 +3,7 @@
 """
     Decoder module
 
-    Dectect Binary and decode it
+    Detect Binary and decode it
 """
 
 ##################################
@@ -22,9 +22,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.Decodeds import Decoded
-from trackers.Tracker_Term import Tracker_Term
-from trackers.Tracker_Regex import Tracker_Regex
-from trackers.Tracker_Yara import Tracker_Yara
 
 config_loader = ConfigLoader()
 hex_max_execution_time = config_loader.get_config_int("Decoder", "max_execution_time_hexadecimal")
@@ -38,9 +35,9 @@ class Decoder(AbstractModule):
     Decoder module for AIL framework
     """
 
-    def hex_decoder(self, hexStr):
-        # hexStr = ''.join( hex_string.split(" ") )
-        return bytes(bytearray([int(hexStr[i:i+2], 16) for i in range(0, len(hexStr), 2)]))
+    def hex_decoder(self, str_hex):
+        # str_hex = ''.join( hex_string.split(" ") )
+        return bytes(bytearray([int(str_hex[i:i+2], 16) for i in range(0, len(str_hex), 2)]))
 
     def binary_decoder(self, binary_string):
         return bytes(bytearray([int(binary_string[i:i+8], 2) for i in range(0, len(binary_string), 8)]))
@@ -77,10 +74,6 @@ class Decoder(AbstractModule):
 
         # Waiting time in seconds between to message processed
         self.pending_seconds = 1
-
-        self.tracker_term = Tracker_Term(queue=False)
-        self.tracker_regex = Tracker_Regex(queue=False)
-        self.tracker_yara = Tracker_Yara(queue=False)
 
         # Send module state to logs
         self.logger.info(f'Module {self.module_name} initialized')
@@ -133,12 +126,7 @@ class Decoder(AbstractModule):
                 # TRACKERS DECODED
                 for decoded_id in new_decodeds:
                     decoded = Decoded(decoded_id)
-                    try:
-                        self.tracker_term.compute_manual(decoded)
-                        self.tracker_regex.compute_manual(decoded)
-                    except UnicodeDecodeError:
-                        pass
-                    self.tracker_yara.compute_manual(decoded)
+                    self.add_message_to_queue(obj=decoded, queue='Trackers')
 
 
 if __name__ == '__main__':

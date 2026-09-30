@@ -1,11 +1,71 @@
-{% if ollama_enabled or ollama_description %}
+{% set descriptions = ollama_descriptions|default({}) %}
+{% if ollama_enabled or descriptions or ollama_description %}
     <span>
-        {% if ollama_description %}
-            <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_text_tooltip(this, `{{ ollama_description }}`)" onmouseleave="hide_obj_tooltip(this)"></i>
-        {% elif ollama_enabled %}
-            <span>
-                <a class="btn btn-info" href="{{ url_for('objects_item.image_describe') }}?gid={{ image_gid }}"><i class="fa-solid fa-magnifying-glass-plus"></i> 📝</a>
-            </span>
+        {% if descriptions %}
+            {% for model, description in descriptions.items() %}
+                <button type="button" class="btn btn-link p-0 mr-1" title="Read description ({{ model }})"
+                        data-tooltip="{{ description }}" data-tooltip-model="{{ model }}"
+                        onmouseenter="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                        onclick="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
+                </button>
+            {% endfor %}
+        {% elif ollama_description %}
+            <button type="button" class="btn btn-link p-0" title="Read description" data-tooltip="{{ ollama_description }}"
+                    data-tooltip-model="qwen2.5vl"
+                    onmouseenter="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)"
+                    onclick="show_image_description_tooltip(this, this.dataset.tooltip, this.dataset.tooltipModel)">
+                <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;"></i>
+            </button>
+        {% endif %}
+        {% if ollama_enabled %}
+            {% set available_models = ollama_models|default(['qwen2.5vl']) %}
+            {% set missing_models = available_models|reject('in', descriptions)|list %}
+            {% if missing_models %}
+                <span class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Add image description"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                    <span class="dropdown-menu">
+                        {% for model in missing_models %}
+                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model) }}">Generate with {{ model }}</a>
+                        {% endfor %}
+                    </span>
+                </span>
+            {% endif %}
         {% endif %}
     </span>
+    <script type="module">
+        import { createMarkdownRenderer } from "{{ url_for('static', filename='js/markdown-renderer.es.js') }}";
+
+        window.show_image_description_tooltip = function(container, description, model) {
+            const trigger = $(container);
+            if (trigger.data('bs.popover')) {
+                trigger.popover('show');
+                return;
+            }
+
+            // Both values originate from object metadata. Use text nodes here;
+            // the Markdown renderer sanitizes its generated HTML before display.
+            const content = $('<div>');
+            if (model) {
+                content.append($('<div>').addClass('small text-muted mb-2').text(model));
+            }
+            content.append($('<div>').addClass('ail-image-description-markdown').text(description));
+
+            trigger.popover({
+                content: content[0],
+                html: true,
+                container: 'body',
+                trigger: 'hover focus',
+                template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
+            });
+            trigger.popover('show');
+
+            const popoverId = trigger.attr('aria-describedby');
+            const popover = popoverId && document.getElementById(popoverId);
+            const markdownElement = popover && popover.querySelector('.ail-image-description-markdown');
+            if (markdownElement) {
+                createMarkdownRenderer(markdownElement);
+            }
+        };
+    </script>
 {% endif %}

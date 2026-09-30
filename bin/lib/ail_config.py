@@ -48,7 +48,7 @@ def delete_user_set_config(user_id, name):
 
 # OBJECT
 def get_user_obj_names():
-    return {'misp'}
+    return {'misp', 'flowintel'}
 
 def _get_user_obj_config(user_id, obj_name, field_name):
     field = f'{obj_name}:{field_name}'
@@ -268,7 +268,107 @@ def api_delete_user_misp(user_id, data):
 
 ## --MISP-- ##
 
+#### FLOWINTEL ####
+
+class UserConfigFlowIntel(AbstractUserConfigObject):
+    def __init__(self, uuidv5, user_id):
+        super().__init__(name='flowintel', fields_names={'url', 'api_key', 'ssl', 'description'}, uuidv5=uuidv5, user_id=user_id)
+
+    def get_url(self):
+        return self.get_config_field('url')
+
+    def get_description(self):
+        return self.get_config_field('description')
+
+    def get_meta(self):
+        return {'uuid': self.uuid,
+                'url': self.get_url(),
+                'api_key': self.get_config_field('api_key'),
+                'ssl': self.get_config_field('ssl') == 'True',
+                'description': self.get_description()}
 
 
+def get_user_config_flowintels(user_id):
+    meta = []
+    for uuidv5 in get_user_config_objs('flowintel', user_id):
+        flowintel_conf = UserConfigFlowIntel(uuidv5, user_id)
+        meta.append(flowintel_conf.get_meta())
+    return meta
 
+def create_user_config_flowintel(user_id, url, api_key, ssl, description):
+    uuidv5 = generate_uuid5(f'{url}|{api_key}')
+    flowintel_conf = UserConfigFlowIntel(uuidv5, user_id)
+    if flowintel_conf.exists():
+        return uuidv5
+    else:
+        ssl = bool(ssl)
+        flowintel_conf.set_config({'url': url, 'api_key': api_key, 'ssl': str(ssl), 'description': description})
+        return uuidv5
 
+def edit_user_config_flowintel(uuidv5, user_id, url, api_key, ssl, description):
+    new_uuidv5 = generate_uuid5(f'{url}|{api_key}')
+    if new_uuidv5 != uuidv5:
+        UserConfigFlowIntel(uuidv5, user_id).delete()
+        return create_user_config_flowintel(user_id, url, api_key, ssl, description)
+    else:
+        flowintel_conf = UserConfigFlowIntel(new_uuidv5, user_id)
+        flowintel_conf.set_config_field('ssl', str(ssl))
+        flowintel_conf.set_config_field('description', description)
+        return new_uuidv5
+
+## ## API ## ##
+
+def api_get_user_flowintels(user_id, uuidv5):
+    flowintel_conf = UserConfigFlowIntel(uuidv5, user_id)
+    if not flowintel_conf.exists():
+        return {'status': 'error', 'reason': 'Unknown uuid'}, 404
+    else:
+        return flowintel_conf.get_meta(), 200
+
+def api_edit_user_flowintel(user_id, data):
+    conf_uuid = data.get('uuid')
+    url = data.get('url')
+    api_key = data.get('api_key')
+    flowintel_ssl = data.get('ssl')
+    if flowintel_ssl:
+        flowintel_ssl = True
+    else:
+        flowintel_ssl = False
+    description = data.get('description')
+    if description:
+        if len(description) > 2000:
+            description = description[:2000]
+
+    if not url:
+        return {'status': 'error', 'reason': 'missing flowintel url'}, 400
+    if not api_key:
+        return {'status': 'error', 'reason': 'missing flowintel api key'}, 400
+    if len(api_key) != 60 or not api_key.isalnum():
+        return {'status': 'error', 'reason': 'invalid flowintel api key'}, 400
+
+    if len(url) > 2000:
+        url = url[:2000]
+
+    if not ail_users.exists_user(user_id):
+        return {'status': 'error', 'reason': 'Unknown user'}, 400
+
+    if conf_uuid:
+        if not is_valid_uuid_v5(conf_uuid):
+            return {'status': 'error', 'reason': 'Unknown user'}, 400
+        else:
+            return edit_user_config_flowintel(conf_uuid, user_id, url, api_key, flowintel_ssl, description), 200
+    else:
+        return create_user_config_flowintel(user_id, url, api_key, flowintel_ssl, description), 200
+
+def api_delete_user_flowintel(user_id, data):
+    conf_uuid = data.get('uuid')
+    if not is_valid_uuid_v5(conf_uuid):
+        return {'status': 'error', 'reason': 'Unknown user'}, 400
+    else:
+        flowintel = UserConfigFlowIntel(conf_uuid, user_id)
+        flowintel.delete()
+        return conf_uuid, 200
+
+## -- API -- ##
+
+## --FLOWINTEL-- ##

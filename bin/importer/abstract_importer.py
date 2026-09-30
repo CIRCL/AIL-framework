@@ -108,3 +108,26 @@ class AbstractImporter(ABC):  # TODO ail queues
         else:
             return f'{source}'
 
+    def build_queue_messages(self, objs, feeder):
+        feeder_name = feeder.get_name()
+        objs_messages = []
+        for obj in objs:
+            # Text created
+            if obj.type == 'item':
+                if obj.exists():
+                    objs_messages.append({'obj': obj, 'message': feeder_name})
+                # object to save on disk as file (Items)
+                else:
+                    gzip64_content = feeder.get_gzip64_content()
+                    relay_message = f'{feeder_name} {gzip64_content}'
+                    objs_messages.append({'obj': obj, 'message': relay_message})
+            elif obj.type == 'image':
+                date = feeder.get_date()  # TODO REPLACE By get image date
+                objs_messages.append({'obj': obj, 'message': f'{feeder_name} {date}'})
+            elif obj.type == 'title':
+                print(feeder.get_domain_id())
+                objs_messages.append({'obj': obj, 'message': feeder.get_domain_id()})
+            else:  # Messages save on DB
+                if obj.exists() and obj.type != 'chat':
+                    objs_messages.append({'obj': obj, 'message': feeder_name})
+        return objs_messages

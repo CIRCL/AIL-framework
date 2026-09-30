@@ -130,7 +130,7 @@ function show_search_helper_tooltip(container) {
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of 10 words can be used in a search query.</li></ul></div>";
+        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of <b>10 words</b> can be used in a search query.</li></ul></div>";
 
         container.popover({
             content: c_helper,
@@ -146,20 +146,104 @@ function show_search_helper_tooltip(container) {
 
 }
 
-function show_text_tooltip(container, text) {
+function show_text_tooltip(container, text, label) {
     container = $(container);
 
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = "<p style=\"white-space: pre-wrap\">" + text + "</p>";
+        let content = $("<div>");
+        if (label) {
+            content.append($("<div>").addClass("small text-muted mb-2").text(label));
+        }
+        content.append($("<p>").css("white-space", "pre-wrap").text(text));
+        let c_helper = content.prop("outerHTML");
 
         container.popover({
             content: c_helper,
             html: true,
             container: 'body',
+            trigger: 'hover focus',
+            template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
         })
         container.popover('show');
     }
 
+}
+
+function sticky_btn_up_scroll(sticky_btn_up) {
+  if (document.body.scrollTop > 500 || document.documentElement.scrollTop > 500) {
+    sticky_btn_up.style.display = "block";
+  } else {
+    sticky_btn_up.style.display = "none";
+  }
+}
+
+function goToTop() {
+  document.body.scrollTop = 0; // For Safari
+  document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+}
+
+function init_match_content_previews(tables) {
+    const selector = 'a.obj-link[data-preview-url]';
+
+    function updatePreview(link, content) {
+        const popoverId = link.attr('aria-describedby');
+        const popover = popoverId && document.getElementById(popoverId);
+        if (popover) {
+            $(popover).find('.popover-body').text(content);
+            link.popover('update');
+        }
+    }
+
+    tables.popover({
+        selector: selector,
+        trigger: 'hover focus',
+        container: 'body',
+        placement: 'auto',
+        html: false,
+        title: 'Content preview',
+        delay: {show: 250, hide: 100},
+        template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem); pointer-events: none;"><div class="arrow"></div><div class="popover-header text-muted bg-transparent border-0 pb-0" style="font-size: 0.75rem; font-weight: normal;"></div><div class="popover-body" style="white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; max-height: calc(22.5em + 1rem); overflow: hidden;"></div></div>',
+        content: function () {
+            return $(this).data('contentPreview') || 'Loading content…';
+        }
+    });
+
+    tables.on('show.bs.popover', selector, function () {
+        const link = $(this);
+        if (link.data('contentPreview') || link.data('previewLoading')) {
+            return;
+        }
+        link.data('previewLoading', true);
+        $.getJSON(link.attr('data-preview-url')).done(function (data) {
+            let content = data.content || 'No text content available.';
+            if (data.truncated) {
+                content = content.replace(/[\r\n]+$/, '') + '…';
+            }
+            link.data('contentPreview', content);
+            updatePreview(link, content);
+        }).fail(function () {
+            updatePreview(link, 'Unable to load content preview. Hover again to retry.');
+        }).always(function () {
+            link.removeData('previewLoading');
+        });
+    });
+
+    tables.on('preDraw.dt', function () {
+        $(this).find(selector).popover('hide');
+    });
+
+    tables.on('auxclick', selector, function (event) {
+        if (event.button === 1) {
+            this.blur();
+            $(this).popover('hide');
+        }
+    });
+
+    tables.on('keydown', selector, function (event) {
+        if (event.key === 'Escape') {
+            $(this).popover('hide');
+        }
+    });
 }

@@ -82,8 +82,8 @@ class DomHash(AbstractDaterangeObject):
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
         return meta
@@ -93,17 +93,26 @@ class DomHash(AbstractDaterangeObject):
 
 
 def _compute_dom_hash(html_content):
-    soup = BeautifulSoup(html_content, "lxml")
+    try:
+        soup = BeautifulSoup(html_content, "lxml")
+    except Exception as e:
+        print(e)  # TODO LOG
+        return None
     to_hash = "|".join(t.name for t in soup.findAll()).encode()
     return sha256(to_hash).hexdigest()[:32]
 
+def extract_dom_hash(html_content):
+    return _compute_dom_hash(html_content)
 
-def create(content):
-    obj_id = _compute_dom_hash(content)
-    obj = DomHash(obj_id)
-    if not obj.exists():
-        obj.create()
-    return obj
+def create(content, obj_id=None):
+    if obj_id is None:
+        obj_id = extract_dom_hash(content)
+    if obj_id:
+        obj = DomHash(obj_id)
+        if not obj.exists():
+            obj.create()
+        return obj
+    return None
 
 
 class DomHashs(AbstractDaterangeObjects):

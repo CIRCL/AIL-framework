@@ -8,8 +8,9 @@
 import os
 import sys
 import json
+import pycountry
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -24,8 +25,11 @@ from lib import ail_orgs
 from lib import ail_config
 from lib import ail_queues
 from lib import ail_users
+from lib import Language
 from lib import d4
 from lib import passivedns
+from lib.ConfigLoader import ConfigLoader
+# from exporter.MailExporter import MailExporterUsers
 from lib.objects import SSHKeys
 from packages import git_status
 
@@ -34,6 +38,9 @@ settings_b = Blueprint('settings_b', __name__, template_folder=os.path.join(os.e
 
 # ============ VARIABLES ============
 # bootstrap_label = Flask_config.bootstrap_label
+config_loader = ConfigLoader()
+r_cache = config_loader.get_redis_conn("Redis_Cache")
+config_loader = None
 
 # ============ FUNCTIONS ============
 
@@ -78,8 +85,25 @@ def user_profile():
     meta = r[0]
     global_2fa = ail_users.is_2fa_enabled()
     return render_template("user_profile.html", meta=meta, global_2fa=global_2fa,
+                           all_languages=Language.get_all_languages(),
                            misps=ail_config.get_user_config_misps(user_id),
+                           flowintels=ail_config.get_user_config_flowintels(user_id),
+                           rulezet_error=request.args.get('rulezet_error'),
+                           rulezet_success=request.args.get('rulezet_success'),
                            acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/view", methods=['GET'])
+@login_required
+@login_admin
+def user_view():
+    user_id = request.args.get('user_id')
+    r = ail_users.api_get_user_view(user_id)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    meta = r[0]
+    return render_template("view_user.html", meta=meta,
+                           misps=ail_config.get_user_config_misps(user_id),
+                           acl_admin=True)
 
 #### USER OTP ####
 
@@ -251,6 +275,115 @@ def delete_misp():
 
 ## --USER MISP-- ##
 
+#### USER FLOWINTEL ####
+
+@settings_b.route("/settings/user/edit_flowintel", methods=['GET'])
+@login_required
+@login_user
+def edit_flowintel():
+    acl_admin = current_user.is_in_role('admin')
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        meta = ail_config.api_get_user_flowintels(user_id, conf_uuid)[0]
+    else:
+        meta = {}
+    return render_template("flowintel_add_instance.html", meta=meta,
+                           acl_admin=acl_admin)
+
+@settings_b.route("/settings/user/edit_flowintel_post", methods=['POST'])
+@login_required
+@login_user
+def edit_flowintel_post():
+    user_id = current_user.get_user_id()
+    uuidv5 = request.form.get('uuid')
+    url = request.form.get('flowintel_url')
+    api_key = request.form.get('api_key')
+    description = request.form.get('description')
+    flowintel_ssl = request.form.get('flowintel_verify_ssl')
+    if flowintel_ssl:
+        flowintel_ssl = True
+    else:
+        flowintel_ssl = False
+
+    data = {'url': url, 'api_key': api_key, 'ssl': flowintel_ssl, 'description': description}
+    if uuidv5:
+        data['uuid'] = uuidv5
+    r = ail_config.api_edit_user_flowintel(user_id, data)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.user_profile'))
+
+@settings_b.route("/settings/user/flowintel/delete", methods=['GET'])
+@login_required
+@login_user
+def delete_flowintel():
+    conf_uuid = request.args.get('uuid')
+    if conf_uuid:
+        user_id = current_user.get_user_id()
+        ail_config.api_delete_user_flowintel(user_id, {'uuid': conf_uuid})
+    return redirect(url_for('settings_b.user_profile'))
+
+## --USER FLOWINTEL-- ##
+
+#### USER RULEZET ####
+
+@settings_b.route("/settings/user/rulezet/edit", methods=['POST'])
+@login_required
+@login_user
+def edit_rulezet():
+    user_id = current_user.get_user_id()
+    api_key = request.form.get('rulezet_api_key')
+    r = ail_users.api_edit_user_rulezet_api_key(user_id, api_key)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Rulezet API key saved successfully'))
+
+@settings_b.route("/settings/user/rulezet/delete", methods=['GET'])
+@login_required
+@login_user
+def delete_rulezet():
+    user_id = current_user.get_user_id()
+    r = ail_users.api_delete_user_rulezet_api_key(user_id)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Rulezet API key removed successfully'))
+
+## --USER RULEZET-- ##
+
+@settings_b.route("/settings/user/preferred_language/edit", methods=['POST'])
+@login_required
+@login_user
+def edit_preferred_language():
+    user_id = current_user.get_user_id()
+    preferred_language = request.form.get('preferred_language')
+    r = ail_users.api_edit_user_preferred_language(user_id, preferred_language)
+    if r[1] != 200:
+        return redirect(url_for('settings_b.user_profile', rulezet_error=r[0].get('reason')))
+    return redirect(url_for('settings_b.user_profile', rulezet_success='Preferred language saved successfully'))
+
+@settings_b.route("/settings/users/purge_failed_login", methods=['GET'])
+@login_required
+@login_admin
+def purge_failed_login():
+    purged = 0
+    for pattern in ('failed_login_ip:*', 'failed_login_user_id:*'):
+        for key in r_cache.scan_iter(pattern):
+            r_cache.delete(key)
+            purged += 1
+    return redirect(url_for('settings_b.users_list', purged_failed_login=purged))
+
+
+@settings_b.route("/settings/user/purge_otp_timeout", methods=['GET'])
+@login_required
+@login_admin
+def purge_user_otp_timeout():
+    user_id = request.args.get('user_id')
+    if user_id:
+        r_cache.delete(f'failed_otp_user_id:{user_id}')
+    return redirect(url_for('settings_b.users_list', purged_otp_user=user_id))
+
 @settings_b.route("/settings/user/logout", methods=['GET'])
 @login_required
 @login_admin
@@ -269,6 +402,30 @@ def user_logout():
 def users_logout():
     admin_id = current_user.get_user_id() # TODO LOGS
     r = ail_users.api_logout_users(admin_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/disable", methods=['GET'])
+@login_required
+@login_admin
+def user_disable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_disable_user(admin_id, user_id, request.access_route[0], request.user_agent)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('settings_b.users_list'))
+
+@settings_b.route("/settings/user/enable", methods=['GET'])
+@login_required
+@login_admin
+def user_enable():
+    user_id = request.args.get('user_id')
+    admin_id = current_user.get_user_id()
+    r = ail_users.api_enable_user(admin_id, user_id, request.access_route[0], request.user_agent)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -395,7 +552,9 @@ def delete_user():
 @login_admin
 def users_list():
     meta = ail_users.api_get_users_meta()
-    return render_template("users_list.html", meta=meta, acl_admin=True)
+    return render_template("users_list.html", meta=meta, acl_admin=True,
+                           purged_failed_login=request.args.get('purged_failed_login'),
+                           purged_otp_user=request.args.get('purged_otp_user'))
 
 #############################################
 
@@ -404,7 +563,28 @@ def users_list():
 @login_admin
 def organisations_list():
     meta = ail_orgs.api_get_orgs_meta()
-    return render_template("orgs_list.html", meta=meta, acl_admin=True)
+    nb_regions = ail_orgs.get_nb_regions()
+    special_regions = set(ail_orgs.SPECIAL_NATIONALITIES.keys())
+    regions_country_map = {}
+    special_region_stats = {}
+    for org in meta.get('orgs', []):
+        if not org['nb_users'] > 0:
+            continue
+        nationality = org.get('nationality')
+        if not nationality:
+            continue
+        if nationality in special_regions:
+            special_region_stats[nationality] = special_region_stats.get(nationality, 0) + 1
+            continue
+        country = pycountry.countries.get(name=nationality)
+        if country:
+            country_name = country.name
+            regions_country_map[country_name] = regions_country_map.get(country_name, 0) + 1
+
+    return render_template("orgs_list.html", meta=meta, nb_regions=nb_regions,
+                           country_region_stats=regions_country_map,
+                           special_region_stats=special_region_stats,
+                           acl_admin=True)
 
 @settings_b.route("/settings/organisation", methods=['GET'])
 @login_required
@@ -418,12 +598,54 @@ def organisation():
         meta['users'] = ail_users.get_users_meta(meta['users'])
     return render_template("view_organisation.html", meta=meta, acl_admin=True)
 
+@settings_b.route("/settings/organisation/edit", methods=['GET', 'POST'])
+@login_required
+@login_admin
+def organisation_edit():
+    org_uuid = request.args.get('uuid')
+    if not org_uuid:
+        return create_json_response({'status': 'error', 'reason': 'Missing UUID'}, 400)
+
+    if request.method == 'POST':
+        admin_id = current_user.get_user_id()
+        name = request.form.get('name')
+        description = request.form.get('description')
+        nationality = request.form.get('nationality')
+        sector = request.form.get('sector')
+        org_type = request.form.get('org_type')
+
+        data = {
+            'uuid': org_uuid,
+            'name': name,
+            'description': description,
+            'nationality': nationality,
+            'sector': sector,
+            'org_type': org_type
+        }
+        r = ail_orgs.api_edit_org(data, admin_id, request.access_route[0], request.user_agent)
+        if r[1] != 200:
+            return create_json_response(r[0], r[1])
+        return redirect(url_for('settings_b.organisation', uuid=org_uuid))
+    else:
+        meta, r = ail_orgs.api_get_org_meta(org_uuid)
+        if r != 200:
+            return create_json_response(meta, r)
+        nationality_selector = ail_orgs.get_nationality_selector()
+        nationality_values = {country['value'] for country in nationality_selector}
+        return render_template("edit_org.html", meta=meta,
+                               nationality_selector=nationality_selector,
+                               nationality_unknown=bool(meta.get('nationality')) and meta.get('nationality') not in nationality_values,
+                               acl_admin=True)
+
 @settings_b.route("/settings/create_organisation", methods=['GET'])
 @login_required
 @login_admin
 def create_organisation():
     meta = {}
-    return render_template("create_org.html", meta=meta, error_mail=False, acl_admin=True)
+    nationality_selector = ail_orgs.get_nationality_selector()
+    return render_template("create_org.html", meta=meta,
+                           nationality_selector=nationality_selector,
+                           acl_admin=True)
 
 @settings_b.route("/settings/create_org_post", methods=['POST'])
 @login_required
@@ -435,8 +657,12 @@ def create_org_post():
     org_uuid = request.form.get('uuid')
     name = request.form.get('name')
     description = request.form.get('description')
+    nationality = request.form.get('nationality')
+    sector = request.form.get('sector')
+    org_type = request.form.get('org_type')
 
-    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], request.user_agent, description=description)
+    r = ail_orgs.api_create_org(admin_id, org_uuid, name, request.access_route[0], request.user_agent,
+                                description=description, nationality=nationality, sector=sector, org_type=org_type)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:
@@ -502,7 +728,7 @@ def passive_dns_edit():
         password = request.form.get('password')
         res = passivedns.api_edit_passive_dns(user, password)
         if res[1] != 200:
-            return create_json_response(r[0], r[1])
+            return create_json_response(res[0], res[1])
         else:
             return redirect(url_for('settings_b.passive_dns'))
     else:
@@ -518,21 +744,21 @@ def passive_ssh():
     meta = SSHKeys.get_passive_ssh_meta()
     return render_template("passive_ssh.html", meta=meta, acl_admin=acl_admin)
 
-@settings_b.route("/settings/passivedns/enable", methods=['GET'])
+@settings_b.route("/settings/passivessh/enable", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_enable():
     SSHKeys.enable_passive_ssh()
     return redirect(url_for('settings_b.passive_ssh'))
 
-@settings_b.route("/settings/passivedns/disable", methods=['GET'])
+@settings_b.route("/settings/passivessh/disable", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_disable():
     SSHKeys.disable_passive_ssh()
     return redirect(url_for('settings_b.passive_ssh'))
 
-@settings_b.route("/settings/passivedns/edit", methods=['GET', 'POST'])
+@settings_b.route("/settings/passivessh/edit", methods=['GET', 'POST'])
 @login_required
 @login_admin
 def passive_ssh_edit():
@@ -542,7 +768,7 @@ def passive_ssh_edit():
         password = request.form.get('password')
         res = SSHKeys.api_edit_passive_ssh(url, user, password)
         if res[1] != 200:
-            return create_json_response(r[0], r[1])
+            return create_json_response(res[0], res[1])
         else:
             return redirect(url_for('settings_b.passive_ssh'))
     else:
@@ -550,7 +776,7 @@ def passive_ssh_edit():
         acl_admin = current_user.is_in_role('admin')
         return render_template("passive_ssh_edit.html", meta=meta, acl_admin=acl_admin)
 
-@settings_b.route("/settings/passivedns/test", methods=['GET'])
+@settings_b.route("/settings/passivessh/test", methods=['GET'])
 @login_required
 @login_admin
 def passive_ssh_test():
@@ -560,9 +786,18 @@ def passive_ssh_test():
     else:
         return redirect(url_for('settings_b.passive_ssh'))
 
-# @settings.route("/settings/ail", methods=['GET'])
+# @settings_b.route("/settings/email/users", methods=['GET'])
 # @login_required
 # @login_admin
-# def ail_configs():
-#     return render_template("ail_configs.html", passivedns_enabled=None)
-
+# def email_users():
+#     if request.method == 'POST':
+#         subject = request.form.get('subject')
+#         content = request.form.get('content')
+#         if not subject or not content:
+#             return create_json_response({'status': 'error', 'reason': 'Missing subject or content'}, 400)
+#         exporter = MailExporterUsers()
+#         exporter.export(ail_users.get_users(), subject, content)
+#         return redirect(url_for('settings_b.email_users', send=True))
+#     else:
+#         send = request.args.get('send')
+#         return render_template("email_users.html", send=send, acl_admin=acl_admin)

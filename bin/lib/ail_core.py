@@ -16,18 +16,24 @@ r_serv_db = config_loader.get_db_conn("Kvrocks_DB")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
 config_loader = None
 
-AIL_OBJECTS = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
-                      'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'gtracker', 'hhhash', 'ip',
-                      'item', 'image', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'ssh-key', 'screenshot', 'title',
-                      'user-account', 'username'})
+AIL_OBJECTS = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cookie-name', 'cve', 'cryptocurrency',
+               'decoded', 'domain', 'dom-hash', 'etag', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'hhhash', 'ip',
+               'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot', 'ssh-key', 'subforum', 'title',
+               'user-account', 'username'}
 
-AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'pgp', 'username', 'user-account'}
+AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'forum', 'forum-thread', 'pgp', 'subforum', 'username', 'user-account'}
 
-# TODO by object TYPE ????
-AIL_OBJECTS_CORRELATIONS_DEFAULT = sorted({'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
-                                           'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'gtracker', 'item',
-                                           'image', 'ip', 'mail', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot',
-                                           'ssh-key', 'title', 'user-account', 'username'})
+# TODO by object TYPE ???? correlation
+AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',
+                                    'decoded', 'domain', 'dom-hash', 'favicon', 'file-name', 'forum', 'forum-thread', 'gtracker', 'item',
+                                    'image', 'ip', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot',
+                                    'ssh-key', 'subforum', 'title', 'user-account', 'username'}
+
+AIL_OBJS_QUEUES = {'barcode', 'decoded', 'file-name', 'image', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'screenshot', 'title'}   # ADD TAGS ???
+
+AIL_OBJS_TRACKED = {'barcode', 'decoded', 'file-name', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title'}
+
+AIL_OBJS_RETRO_HUNTED = {'decoded', 'item', 'message', 'ocr'}  # TODO PGP, TITLE
 
 def get_ail_uuid():
     ail_uuid = r_serv_db.get('ail:uuid')
@@ -90,27 +96,58 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         return r_object.smembers(f'all_chat-subchannel:subtypes')
     if obj_type == 'chat-thread':
         return r_object.smembers(f'all_chat-thread:subtypes')
+    if obj_type == 'forum':
+        return r_object.smembers('forum:all')
+    if obj_type == 'subforum':
+        return r_object.smembers(f'all_subforum:subtypes')
+    if obj_type == 'forum-thread':
+        return r_object.smembers(f'all_forum-thread:subtypes')
     if obj_type == 'cryptocurrency':
         return ['bitcoin', 'bitcoin-cash', 'dash', 'ethereum', 'litecoin', 'monero', 'ripple', 'tron', 'zcash']
     if obj_type == 'pgp':
         return ['key', 'mail', 'name']
     if obj_type == 'username':
-        return ['telegram', 'discord', 'twitter', 'jabber']
+        chat_protocols = r_serv_db.smembers('chat:protocols')
+        if not chat_protocols:
+            chat_protocols = set()
+        chat_protocols.add('jabber')
+        chat_protocols.add('telegram')
+        return sorted(chat_protocols)
     if obj_type == 'user-account':
-        return r_object.smembers(f'all_chat:subtypes')
+        # return r_object.smembers(f'all_chat:subtypes')
+        return r_object.smembers(f'all_user-account:subtypes')
     return []
 
 def get_default_correlation_objects():
     return AIL_OBJECTS_CORRELATIONS_DEFAULT
 
 def get_obj_queued():
-    return ['barcode', 'item', 'image', 'message', 'ocr', 'qrcode'] # screenshot ???
+    return AIL_OBJS_QUEUES
 
 def get_objects_tracked():
-    return ['barcode', 'decoded', 'item', 'message', 'ocr', 'pgp', 'qrcode', 'title']
+    return AIL_OBJS_TRACKED  # TODO add new test to check if == sorted() return True
+
+def get_nb_objects_tracked():
+    return len(AIL_OBJS_TRACKED)
+
+def is_tracked_object(obj_type):
+    return obj_type in AIL_OBJS_TRACKED
+
+def is_tracked_objects(obj_types):
+    for obj_type in obj_types:
+        if not is_tracked_object(obj_type):
+            return False
+    return True
+
+def sanitize_tracked_objects(objs):
+    l_types = []
+    for obj in objs:
+        if is_tracked_object(obj):
+            l_types.append(obj)
+    return l_types
 
 def get_objects_retro_hunted():
-    return ['decoded', 'item', 'message', 'ocr']
+    return AIL_OBJS_RETRO_HUNTED
 
 def get_all_objects_with_subtypes_tuple():
     str_objs = []
@@ -151,13 +188,23 @@ def unpack_correl_objs_id(obj_type, correl_objs_id, r_type='tuple'):
 
 ##-- AIL OBJECTS --##
 
-def get_chat_instance_name(chat_instance):
-    if chat_instance == '00098785-7e70-5d12-a120-c5cdc1252b2b':
-        return 'telegram'
-    elif chat_instance == 'd2426e3f-22f3-5a57-9a98-d2ae9794e683':
-        return 'discord'
-    else:
-        return chat_instance
+##-- CHATS PROTOCOLS --##
+
+def get_chats_protocols():
+    names = set()
+    for chat_instance_uuid in r_serv_db.smembers(f'chatSerIns:all'):
+        names.add(r_serv_db.hget(f'chatSerIns:{chat_instance_uuid}', 'protocol'))
+    return sorted(names)
+
+def get_chat_protocol(chat_instance_uuid):
+    return r_serv_db.hget(f'chatSerIns:{chat_instance_uuid}', 'protocol')
+
+# TODO GET NAME + ICON
+def get_chat_instance_uuid(chat_name):
+    if chat_name == 'telegram':
+        return '00098785-7e70-5d12-a120-c5cdc1252b2b'
+    elif chat_name == 'discord':
+        return 'd2426e3f-22f3-5a57-9a98-d2ae9794e683'
 
 ####    Redis     ####
 
@@ -186,6 +233,26 @@ def sscan_iterator(r_redis, key):
 def rreplace(s, old, new, occurrence):
     li = s.rsplit(old, occurrence)
     return new.join(li)
+
+
+def validate_pagination(page=None, nb=None, default_nb=50, max_nb=None):
+    """Return normalized one-based pagination values."""
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    if page < 1:
+        page = 1
+    try:
+        nb = int(nb)
+    except (TypeError, ValueError):
+        nb = default_nb
+    if nb < 1:
+        nb = 1
+    if max_nb is not None and nb > max_nb:
+        nb = max_nb
+    return page, nb
+
 
 def get_template_pagination(elems, total, page=1, nb=50):
     if len(elems) > nb:

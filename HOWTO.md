@@ -72,3 +72,50 @@ To enable LibreTranslate for chat translation, edit the LibreTranslate URL in th
 libretranslate = http://127.0.0.1:5000
 ```
 
+## Indexer
+
+The **Indexer** module integrates with **Meilisearch**, a search engine used to index and search the content of chat messages, image and domain descriptions, and crawled content.
+
+### Installation:  
+
+Install Meilisearch using the [official](https://www.meilisearch.com/docs/learn/self_hosted/install_meilisearch_locally) installation script:
+
+```bash
+curl -L https://install.meilisearch.com | sh
+```
+
+### Launch
+./meilisearch --no-analytics
+
+> 💡 Use the `--no-analytics` flag to **Disable Meilisearch telemetry**.
+
+### Configuration:
+To enable the indexer in AIL, activate Meilisearch and configure its connection details in [`./configs/core.cfg`](./configs/core.cfg) under the `[Indexer]` section:
+```
+# Indexer configuration
+[Indexer]
+meilisearch = True
+meilisearch_url = http://<meilisearch_url>        # URL where Meilisearch is running (e.g., `http://127.0.0.1:7700`)  
+meilisearch_key = <meilisearch_db_password>       # Meilisearch master key or API key
+```
+
+### Reindex after upgrading to v6.7
+
+> ⚠️ Meilisearch indexes created with AIL versions **before v6.7** are **automatically removed during the update**.  
+> Search indexing was refactored, so the indexes must be rebuilt using the new schema.
+
+Use `tools/reindex_meilisearch.py` to rebuild the indexes:
+
+```bash
+# Reindex everything
+python3 tools/reindex_meilisearch.py --type all
+
+# Reindex only one dataset
+python3 tools/reindex_meilisearch.py --type messages
+```
+
+If you want to **reset and recreate the indexes** before reindexing:
+
+```bash
+python3 tools/reindex_meilisearch.py --reset --type all
+```

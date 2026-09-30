@@ -21,16 +21,70 @@
       max-width: none;
       width: 500px;
     }
-        .icon-button {
+    .dashboard-main {
+      padding-top: 0.25rem;
+      color: #1f2937;
+    }
+    .dashboard-heading {
+      color: #111827;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin-bottom: 1rem;
+    }
+    .search-panel {
+      background: #f8fafc;
+      border: 1px solid #dbe4ef;
+      border-radius: 0.75rem;
+      padding: 0.85rem;
+      margin: 0.35rem 0 0.8rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .dashboard-main .form-control {
+      min-height: 2.4rem;
+    }
+    .chart-panel {
+      border: 1px solid #dbe4ef;
+      border-radius: 0.75rem;
+      background: #ffffff;
+      padding: 0.25rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+    .crawler-panel-label {
+      font-size: 0.82rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #4b5563;
+      margin: 0 0 0.45rem 0.1rem;
+      font-weight: 600;
+    }
+    .icon-button {
       position: relative;
       display: inline-block;
-      border: none;
-      background: none;
+      border: 1px solid transparent;
+      background: transparent;
       {#padding: 0;#}
       margin: 0;
       cursor: pointer;
       outline: inherit;
 	    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+      border-radius: 0.6rem;
+      padding: 0.3rem 0.25rem 0.2rem;
+      color: #1f2937;
+      text-decoration: none;
+      box-shadow: none;
+    }
+    .icon-button:hover {
+      background: #f8fafc;
+      border-color: #dbe4ef;
+      box-shadow: none;
+      text-decoration: none;
+      color: #1f2937;
+    }
+    .icon-button:focus,
+    .icon-button:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 2px;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
     }
 
     .icon-wrapper {
@@ -45,6 +99,13 @@
       font-size: 14px;
       background: forestgreen;
     }
+    .icon-button .h4 {
+      font-size: 0.98rem;
+      margin-top: 0.35rem;
+      margin-bottom: 0;
+      font-weight: 600;
+      line-height: 1.25;
+    }
   </style>
 
 </head>
@@ -52,15 +113,39 @@
 
 	{% include 'nav_bar.html' %}
 
-	<div class="container-fluid">
+	<div class="container-fluid dashboard-main">
 
 
 		<div class="row">
 
             <div class="col-12 col-xl-6">
-                <div id="feeders_dashboard" style="width: 100%; height:600px;"></div>
+                <div class="search-panel">
+                    <form method="GET" action="{{ url_for('search_b.search_dashboard') }}">
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   name="q"
+                                   placeholder="Search chats, domains, titles, filenames…">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="fas fa-search"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-1">
+                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('search_b.search_dashboard') }}">
+                                <i class="fa-solid fa-sliders mr-1"></i> Search options
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="chart-panel">
+                    <div id="feeders_dashboard" style="width: 100%; height:600px;"></div>
+                </div>
 
-                <div class="card mt-1 mb-4">
+                <div class="mt-3">
+                    <p class="crawler-panel-label">Crawler status overview</p>
+                    <div class="card mt-1 mb-4">
                     <div class="card-header text-white bg-dark">
                         <div class="row">
                             <div class="col-1">
@@ -112,17 +197,17 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <div class="col-12 col-xl-6">
-
-                <h3 class="text-center mt-1 mb-4" id="current_date"></h3>
+                <h3 class="text-center mt-1 mb-3 dashboard-heading" id="current_date"></h3>
 
                 <div class="row">
 
                     {% for obj_type in nb_objects %}
                         <div class="col-sm-6 col-md-4 col-lg-3 text-center mb-4">
-                            {% with type=obj_type, name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon']['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
+                            {% with type=obj_type, name=nb_objects[obj_type]['name'], icon=nb_objects[obj_type]['icon'], nb=nb_objects[obj_type]['nb'], url=nb_objects[obj_type]['link'] %}
                                 {% include 'objects/block_obj_button.html' %}
                             {% endwith %}
                         </div>
@@ -159,7 +244,11 @@
                                         <svg height="26" width="26" style="pointer-events:none;">
                                         <g class="nodes">
                                             <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
-                                            <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                            {% if tracker['obj']['icon']['style'] == 'svg' %}
+                                                <g transform="translate(5 5)" style="color:#000000" font-size="16px">{{ tracker['obj']['icon']['icon'] | safe }}</g>
+                                            {% else %}
+                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ tracker['obj']['icon']['style'] }}" font-size="16px">{{ tracker['obj']['icon']['icon'] }}</text>
+                                            {% endif %}
                                         </g>
                                     </svg>
                                     </a>
@@ -189,7 +278,11 @@
                                         <svg height="26" width="26">
                                             <g class="nodes">
                                                 <circle cx="13" cy="13" r="13" fill="{{ t_obj['icon']['color'] }}"></circle>
-                                                <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ t_obj['icon']['style'] }}" font-size="16px">{{ t_obj['icon']['icon'] }}</text>
+                                                {% if t_obj['icon']['style'] == 'svg' %}
+                                                    <g transform="translate(5 5)" style="color:#000000" font-size="16px">{{ t_obj['icon']['icon'] | safe }}</g>
+                                                {% else %}
+                                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ t_obj['icon']['style'] }}" font-size="16px">{{ t_obj['icon']['icon'] }}</text>
+                                                {% endif %}
                                             </g>
                                         </svg>
                                     </a>
@@ -361,7 +454,13 @@ function updateCrawlerStats(data) {
 ///////
 
 function create_obj_svg(container, obj_gid, url, color, fa_style, icon) {
-    var svg_obj = '<svg height="26" width="26"> <g class="nodes"> <circle cx="13" cy="13" r="13" fill="' + color + '"></circle> <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="' + fa_style + '" font-size="16px">' + icon + '</text> </g> </svg>';
+    var icon_markup;
+    if (fa_style === 'svg') {
+        icon_markup = '<g transform="translate(5 5) scale(0.6667)" style="color:#000000">' + icon.replace(/<svg[^>]*>/, '').replace('</svg>', '') + '</g>';
+    } else {
+        icon_markup = '<text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="' + fa_style + '" font-size="16px">' + icon + '</text>';
+    }
+    var svg_obj = '<svg height="26" width="26"> <g class="nodes"> <circle cx="13" cy="13" r="13" fill="' + color + '"></circle>' + icon_markup + '</g> </svg>';
     var obj_link = $('<a>');
     obj_link.on('mouseenter',  function () {
         show_obj_tooltip(this, obj_gid);

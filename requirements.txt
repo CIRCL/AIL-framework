@@ -3,14 +3,16 @@ pylacus
 pymisp>=2.4.144
 d4-pyclient>=0.1.6
 
-thehive4py
+thehive4py<2.0
 git+https://github.com/MISP/PyTaxonomies
 git+https://github.com/MISP/PyMISPGalaxies
 
 # Core
-redis>4.4.4
+redis>4.4.4,<=7.4.1
 python-magic>0.4.15
 yara-python>4.0.2
+pyfaup-rs>=0.4.18
+orjson
 
 # AIL Sync
 websockets>9.0
@@ -18,7 +20,6 @@ websockets>9.0
 # Hashlib
 crcmod
 mmh3>2.5
-ssdeep>3.3
 xxhash>3.1.0
 
 # ZMQ
@@ -34,6 +35,10 @@ textblob>=0.15.3
 html2text>=2020.1.16
 beautifulsoup4>4.8.2
 
+# PDF
+pymupdf
+pymupdf4llm
+
 # Crawler
 scrapy>2.0.0
 scrapy-splash>=0.7.2
@@ -41,7 +46,7 @@ scrapy-splash>=0.7.2
 # Languages
 gcld3
 libretranslatepy
-git+https://github.com/ail-project/LexiLang
+picolang
 
 # Demoji
 git+https://github.com/ail-project/demoji
@@ -89,6 +94,10 @@ easyocr
 qreader
 pyzbar
 
+# Perceptual hashing
+imagehash>=4.3.0
+photo-dna-rs>=0.1.0
+
 # Tests
 nose2>=0.12.0
 coverage>=5.5
@@ -96,10 +105,8 @@ coverage>=5.5
 # # # #
 PySocks>=1.7.1
 pycountry>=20.7.3
-https://github.com/saffsd/langid.py/archive/master.zip
+tempolocus>=1.0.0
 
-idna
-publicsuffixlist
 requests
 
 chardet

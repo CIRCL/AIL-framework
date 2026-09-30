@@ -1,0 +1,114 @@
+<div class="card my-3">
+  <div class="card-header bg-dark text-white">
+    <i class="fas fa-clock"></i> TempoLocus activity inference
+  </div>
+  <div class="card-body">
+    <form method="get" class="form-inline mb-3">
+      {% for key, value in request.args.items() %}
+        {% if key not in ['tempolocus', 'tempolocus_holiday_profile', 'tempolocus_activity_signal'] %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endfor %}
+      <input type="hidden" name="tempolocus" value="1">
+      <label class="mr-2" for="tempolocus_holiday_profile">Holiday profile</label>
+      <select class="form-control form-control-sm mr-3" id="tempolocus_holiday_profile" name="tempolocus_holiday_profile">
+        <option value="standard" {% if tempolocus_holiday_profile == 'standard' %}selected{% endif %}>standard</option>
+        <option value="public-worker" {% if tempolocus_holiday_profile == 'public-worker' %}selected{% endif %}>public-worker</option>
+      </select>
+      <label class="mr-2" for="tempolocus_activity_signal">Yearly activity signal</label>
+      <select class="form-control form-control-sm mr-3" id="tempolocus_activity_signal" name="tempolocus_activity_signal">
+        <option value="lack" {% if tempolocus_activity_signal == 'lack' %}selected{% endif %}>lack</option>
+        <option value="peak" {% if tempolocus_activity_signal == 'peak' %}selected{% endif %}>peak</option>
+      </select>
+      <button class="btn btn-sm btn-primary" type="submit">
+        {% if tempolocus_requested %}Update TempoLocus inference{% else %}Run TempoLocus inference{% endif %}
+      </button>
+    </form>
+
+    {% if not tempolocus_requested %}
+      <p class="text-muted mb-0">TempoLocus analyzes AIL message activity to estimate likely timezones, countries derived from timezone offsets, and holiday-region patterns for this chat or user account.</p>
+    {% else %}
+      {% if tempolocus_predictions.get('signals') %}
+        <p class="text-muted mb-3">
+          Based on {{ tempolocus_predictions['signals'].get('total_activity', 0) }} messages in AIL weekly hour statistics. Weekly mode infers timezone patterns; holidays are only checked in the holiday-region section below.
+          Confidence: {{ "%.2f"|format((tempolocus_predictions.get('confidence') or 0) * 100) }}%.
+        </p>
+      {% endif %}
+      <div class="row">
+        <div class="col-12 col-lg-6">
+          <h5>Most probable timezones</h5>
+          <table class="table table-sm table-hover">
+            <thead>
+            <tr><th>Timezone</th><th>Probability</th><th>Candidate zones</th></tr>
+            </thead>
+            <tbody>
+            {% for timezone in tempolocus_predictions.get('results', [])[:5] %}
+              <tr>
+                <td><strong>{{ timezone.get('id') }}</strong><br><small>{{ timezone.get('label') }}</small></td>
+                <td>{{ "%.2f"|format((timezone.get('probability') or 0) * 100) }}%</td>
+                <td><small>{{ timezone.get('timezone_candidates', [])[:3] | join(', ') }}</small></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col-12 col-lg-6">
+          <h5>Most probable countries from timezone offsets</h5>
+          <table class="table table-sm table-hover">
+            <thead>
+            <tr><th>Country</th><th>Probability</th><th>Matched offsets</th></tr>
+            </thead>
+            <tbody>
+            {% for country in tempolocus_predictions.get('probable_countries', [])[:5] %}
+              <tr>
+                <td><strong>{{ country.get('label') }}</strong> <small>({{ country.get('id') }})</small></td>
+                <td>{{ "%.2f"|format((country.get('probability') or 0) * 100) }}%</td>
+                <td><small>{{ country.get('matched_timezone_offsets', []) | join(', ') }}</small></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {% if tempolocus_holiday_predictions %}
+        <hr>
+        <h5>Most probable holiday regions</h5>
+        <p class="text-muted">
+          Holiday profile: {{ tempolocus_holiday_predictions.get('holiday_profile') }};
+          activity signal: {{ tempolocus_holiday_predictions.get('activity_signal') }}.
+          Holiday matching is evaluated independently per calendar year.
+        </p>
+        {% for yearly_prediction in tempolocus_holiday_predictions.get('years', []) %}
+          <h6 class="mt-3">{{ yearly_prediction.get('year') }}</h6>
+          {% if yearly_prediction.get('signals') %}
+            <p class="text-muted mb-2">
+              Date range: {{ yearly_prediction['signals'].get('date_range', {}).get('start') }} - {{ yearly_prediction['signals'].get('date_range', {}).get('end') }};
+              confidence: {{ "%.2f"|format((yearly_prediction.get('confidence') or 0) * 100) }}%.
+            </p>
+          {% endif %}
+          <table class="table table-sm table-hover">
+            <thead>
+            <tr><th>Region</th><th>Probability</th><th>Matched holidays</th></tr>
+            </thead>
+            <tbody>
+            {% for region in yearly_prediction.get('results', [])[:5] %}
+              <tr>
+                <td><strong>{{ region.get('label') }}</strong> <small>({{ region.get('id') }})</small></td>
+                <td>{{ "%.2f"|format((region.get('probability') or 0) * 100) }}%</td>
+                <td>
+                  {% for holiday in region.get('evidence', {}).get('matched_holidays', [])[:3] %}
+                    <small>{{ holiday.get('date') }} {{ holiday.get('name') }}</small>{% if not loop.last %}<br>{% endif %}
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted mb-0">No TempoLocus holiday-region prediction is available for this activity.</p>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

@@ -40,36 +40,63 @@ config_loader = None
 # CORRELATION MIGRATION
 ##################################
 
+COMMON_TEXT_OBJECT_CORRELATIONS = [
+    "cve",
+    "cryptocurrency",
+    "decoded",
+    "domain",
+    "file-name",
+    "mail",
+    "pdf",
+    "pgp",
+    "username",
+]
+
 CORRELATION_TYPES_BY_OBJ = {
+    "author": ["pdf"],
     "barcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],
-    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "image", "message", "ocr", "pgp", "user-account"],
+    "chat": ["barcode", "chat-subchannel", "chat-thread", "cryptocurrency", "cve", "decoded", "domain", "file-name", "image", "message", "ocr", "pdf", "pgp", "qrcode", "user-account"],
     "chat-subchannel": ["chat", "chat-thread", "image", "message", "ocr", "user-account"],
     "chat-thread": ["chat", "chat-subchannel", "image", "message", "ocr", "user-account"],
     "cookie-name": ["domain"],
     "cryptocurrency": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "cve": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
     "decoded": ["barcode", "chat", "domain", "item", "message", "ocr", "qrcode"],
-    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "screenshot", "ssh-key", "title", "username"],
+    "domain": ["barcode", "chat", "cve", "cookie-name", "cryptocurrency", "dom-hash", "decoded", "etag", "favicon", "gtracker", "hhhash", "item", "mail", "message", "pgp", "qrcode", "screenshot", "ssh-key", "title", "username"],
     "dom-hash": ["domain", "item"],
     "etag": ["domain"],
     "favicon": ["domain", "item"],  # TODO Decoded
-    "file-name": ["chat", "item", "message"],
+    "forum": ["post", "subforum", "user-account"],
+    "subforum": ["forum", "subforum", "forum-thread"],
+    "forum-thread": ["subforum", "post", "user-account"],
+    # TODO Extend to detection of text -> same as message
+    "post": ["forum", "forum-thread", "image", "user-account", *COMMON_TEXT_OBJECT_CORRELATIONS],
+    "file-name": ["chat", "item", "message", "pdf"],
     "gtracker": ["domain", "item"],
     "hhhash": ["domain"],
-    "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "qrcode", "user-account"],  # TODO subchannel + threads ????
+    "image": ["barcode", "chat", "chat-subchannel", "chat-thread", "message", "ocr", "post", "qrcode", "user-account"],  # TODO subchannel + threads ????
     "ip": ["ssh-key"],
-    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "gtracker", "mail", "message", "pgp", "screenshot", "title", "username"],  # chat ???
+    "item": ["cve", "cryptocurrency", "decoded", "domain", "dom-hash", "favicon", "file-name", "gtracker", "mail", "message", "pdf", "pgp", "screenshot", "title", "username"],  # chat ???
     "mail": ["domain", "item", "message"],  # chat ??
-    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pgp", "user-account"],
+    "message": ["barcode", "chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "domain", "file-name", "image", "item", "mail", "ocr", "pdf", "pgp", "qrcode", "user-account", "username"],
     "ocr": ["chat", "chat-subchannel", "chat-thread", "cve", "cryptocurrency", "decoded", "image", "message", "pgp", "user-account"],
+    "pdf": ["author", "chat", "file-name", "item", "message"],
     "pgp": ["chat", "domain", "item", "message", "ocr"],
     "qrcode": ["chat", "cve", "cryptocurrency", "decoded", "domain", "image", "message", "screenshot"],     # "chat-subchannel", "chat-thread" ?????
     "screenshot": ["barcode", "domain", "item", "qrcode"],
     "ssh-key": ["domain", "ip"],
     "title": ["domain", "item"],
-    "user-account": ["chat", "chat-subchannel", "chat-thread", "image", "message", "ocr", "username"],
+    "user-account": ["chat", "chat-subchannel", "chat-thread", "forum", "forum-thread", "image", "message", "ocr", "post", "username"],
     "username": ["domain", "item", "message", "user-account"],
 }
+
+def debug_correlation_asymmetries():
+    missing = []
+    for k, values in CORRELATION_TYPES_BY_OBJ.items():
+        for v in values:
+            if k not in CORRELATION_TYPES_BY_OBJ.get(v, []):
+                missing.append((k, v))
+    return missing
 
 def get_obj_correl_types(obj_type):
     return CORRELATION_TYPES_BY_OBJ.get(obj_type)
@@ -160,6 +187,25 @@ def delete_obj_correlations(obj_type, subtype, obj_id):
             subtype2, obj2_id = str_obj.split(':', 1)
             delete_obj_correlation(obj_type, subtype, obj_id, correl_type, subtype2, obj2_id)
 
+def get_obj_one_depth_correlations(obj_type, subtype, obj_id, target_types, intermediate_types=set(), start=None, end=None):
+    matches = []
+    src_obj_correlations = get_correlations(obj_type, subtype, obj_id, unpack=True)
+    for c_type in src_obj_correlations:
+        if not intermediate_types or c_type in intermediate_types:
+            if src_obj_correlations[c_type]:
+                for intermediate_obj_subtype, intermediate_obj_id in src_obj_correlations[c_type]:
+                    intermediate_obj_correlation = get_correlations(c_type, intermediate_obj_subtype, intermediate_obj_id, unpack=True)
+                    for t_type in intermediate_obj_correlation:
+                        if t_type in target_types:
+                            for t_obj_subtype, t_obj_id in intermediate_obj_correlation[t_type]:
+                                if start:
+                                    if t_obj_id.startswith(start):
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
+                                elif end:
+                                    if t_obj_id.endswith(end):
+                                        matches.append({'intermediate': f'{c_type}:{intermediate_obj_subtype}:{intermediate_obj_id}', 'target': f'{t_type}:{t_obj_subtype}:{t_obj_id}'})
+    return matches
+
 # # bypass max result/objects ???
 # def get_correlation_depht(obj_type, subtype, obj_id, filter_types=[], level=1, nb_max=300):
 #     objs = set()
@@ -211,6 +257,8 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
     obj_correlations = get_correlations(obj_type, subtype, obj_id, filter_types=filter_types)
     # print(obj_correlations)
+
+    # add direct correlation
     for correl_type in obj_correlations:
         for str_obj in obj_correlations[correl_type]:
             subtype2, obj2_id = str_obj.split(':', 1)
@@ -226,11 +274,19 @@ def _get_correlations_graph_node(links, nodes, meta, obj_type, subtype, obj_id, 
 
             if len(nodes) > max_nodes != 0:
                 meta['complete'] = False
-                break
+                return None
             nodes.add(obj2_str_id)
             links.add((obj_str_id, obj2_str_id))
 
+    # level + 1
+    for correl_type in obj_correlations:
+        for str_obj in obj_correlations[correl_type]:
+            subtype2, obj2_id = str_obj.split(':', 1)
             if level > 0:
                 next_level = level - 1
                 _get_correlations_graph_node(links, nodes, meta, correl_type, subtype2, obj2_id, next_level, max_nodes, filter_types=filter_types, objs_hidden=objs_hidden, previous_str_obj=obj_str_id)
 
+
+if __name__ == '__main__':
+    r = debug_correlation_asymmetries()
+    print(r)

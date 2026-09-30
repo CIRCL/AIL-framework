@@ -1,0 +1,218 @@
+<style>
+/* allow flex children to shrink */
+.flex-grow-1 {
+    min-width: 0;
+}
+
+block-obj {
+    background: #fff;
+    border: 1px solid #c9ced4;
+    border-radius: 8px;
+    transition: all .12s ease-in-out;
+    position: relative;
+}
+
+.block-obj::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
+    pointer-events: none;
+}
+
+.block-obj::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 4px;
+    border-radius: 4px;
+    background: #6c757d;
+    opacity: .45;
+    transition: all .12s ease-in-out;
+}
+
+.block-obj:hover {
+    border-color: #9aa2aa;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    transform: translateY(-1px);
+}
+
+.block-obj:hover::before {
+    opacity: 1;
+    background: #007bff;
+}
+
+.block-obj a:hover {
+    text-decoration: none;
+}
+
+
+.block-obj mark,
+.block-obj .highlight {
+    background: #ffe08a;
+    padding: 0 3px;
+    border-radius: 3px;
+}
+
+.block-obj-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+    letter-spacing: .2px;
+    color: #6c757d;
+}
+
+.object_image {
+    filter: blur(var(--object-image-blur, 5px));
+}
+
+.image-preview-wrap {
+  width: 100%;
+  max-height: 420px;
+  background: #f8f9fa;
+  border-top: 1px solid #e5e7ea;
+  border-bottom: 1px solid #e5e7ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* keep aspect ratio, no distortion */
+.image-preview {
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* fallback */
+.image-preview-fallback {
+  width: 100%;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.obj-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #c9ced4;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+  background: #fff;
+}
+
+.obj-avatar-fallback {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid #c9ced4;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.obj-type-col {
+    flex-shrink: 0; /* prevent right column from forcing overflow */
+    min-width: 95px;
+    /* border-left: 1px solid #e5e7ea; */
+    padding-left: 12px;
+}
+
+.obj-type-label {
+    font-size: 0.75rem;
+    color: #7a8188;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: .85;
+}
+
+.block-obj-result {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.25rem;
+    /* ~5-6 lines */
+    /*max-height: 7rem;
+    overflow: hidden;*/
+}
+
+.block-obj-info {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    line-height: 1.2rem;
+    max-height: 4.8rem;        /* 4 lines max */
+    overflow: hidden;
+}
+
+.domain-title {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.domain-type {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #f1f3f5;
+  color: #495057;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+.domain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.domain-chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #c9ced4;
+  border-radius: 999px;
+  background: #fff;
+  color: #495057;
+  font-size: 0.78rem;
+  text-decoration: none;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.domain-chip:hover {
+  text-decoration: none;
+  border-color: #9aa2aa;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+
+.crawled-item-url {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.chat-message-left {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.message-pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  margin: 0;
+  /*max-height: 16rem;*/
+  overflow: hidden;
+}
+</style>

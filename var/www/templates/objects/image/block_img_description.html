@@ -1,0 +1,75 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+  <a href="{{ obj['link'] }}" class="text-decoration-none text-body">
+
+    <!-- HEADER -->
+    <div class="card-body pb-2 pt-2 px-3 d-flex align-items-start">
+
+      <div class="flex-grow-1">
+
+        <div class="h5 mb-1 font-weight-normal block-obj-result">
+          {{ obj['result'] }}
+        </div>
+
+        {% if obj['type'] != 'screenshot' %}
+          <div class="text-muted block-obj-meta">
+            Seen <strong>{{ obj['nb_seen'] }}</strong> ·
+            {{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }} → {{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}
+          </div>
+        {% endif %}
+
+      </div>
+
+      <!-- type column -->
+      <div class="obj-type-col text-right ml-3">
+        <div class="obj-type-label">
+          {{ obj['type'] }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- IMAGE CONTENT -->
+    <div class="image-preview-wrap">
+      {% if obj["tags_safe"] %}
+        <img
+          src="{% if obj['type'] == 'image' %}{{ url_for('objects_image.image', filename=obj['img']) }}{% else %}{{ url_for('objects_item.screenshot', filename=obj['img']) }}{% endif %}"
+          alt="Image content"
+          class="image-preview object_image"
+          loading="lazy"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        >
+        <div class="image-preview-fallback text-muted" style="display:none;">
+          <i class="far fa-image"></i> Unable to load image
+        </div>
+      {% else %}
+        <span class="fa-stack fa-3x">
+          <i class="fas fa-stack-1x fa-image"></i>
+          <i class="fas fa-stack-2x fa-ban" style="color:#dc3545"></i>
+        </span>
+        <div class="small mt-2 text-center">
+          <div class="text-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            Image not displayed
+          </div>
+          <div class="text-muted mt-1">
+            This image was flagged for potentially unsafe or violent content.
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- FOOTER META -->
+    <div class="card-body pt-2 pb-2 px-3">
+
+      {% if obj['tags'] %}
+      <div class="mt-1">
+        {% for tag in obj['tags'] %}
+          <span class="badge badge-light border mr-1">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+  </a>
+</div>

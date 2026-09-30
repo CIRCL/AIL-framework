@@ -1,0 +1,23 @@
+<div class="card mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <div>
+      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
+      </svg> Forum thread
+      {% if obj.get('name') %}
+        <span class="font-weight-bold ml-2">{{ obj.get('name') }}</span>
+      {% endif %}
+    </div>
+    {% if obj.get('link') %}<a class="btn btn-sm btn-outline-secondary" href="{{ obj['link'] }}"><i class="fas fa-project-diagram"></i> Correlation</a>{% endif %}
+  </div>
+  <div class="card-body">
+    {% if obj.get('nb_posts') is not none %}
+      <div class="text-muted small mb-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                     <path d="M0 0h24v24H0z" fill="none" />
+                                     <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
+                                   </svg> {{ obj.get('nb_posts') }} posts</div>
+    {% endif %}
+    <div>{{ obj.get('result') }}</div>
+  </div>
+</div>

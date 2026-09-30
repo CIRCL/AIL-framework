@@ -16,6 +16,7 @@ from lib.objects.abstract_daterange_object import AbstractDaterangeObject, Abstr
 
 config_loader = ConfigLoader()
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -59,10 +60,17 @@ class FileName(AbstractDaterangeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_pdf(self):
+        pdfs = self.get_correlation('pdf').get('pdf', set())
+        if len(pdfs) == 1:
+            return pdfs.pop()[1:]
+
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
+        if 'pdf' in options:
+            meta['pdf'] = self.get_pdf()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         return meta

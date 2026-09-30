@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ConfigLoader
 from lib import chats_viewer
 from lib import item_basic
+from lib import Language
 from lib.objects.Items import Item
 from lib.objects.Screenshots import Screenshot
 from lib import Tag
@@ -51,6 +52,8 @@ def create_json_response(data, status_code):
 
 # ============= ROUTES ==============
 
+#### SCREENSHOTS ####
+
 @objects_item.route('/screenshot/<path:filename>')
 @login_required
 @login_read_only
@@ -58,11 +61,13 @@ def create_json_response(data, status_code):
 def screenshot(filename):
     if not filename:
         abort(404)
-    if not 64 <= len(filename) <= 70:
-        abort(404)
     filename = filename.replace('/', '')
+    if not 64 <= len(filename) <= 70 or not filename.isascii() or not filename.isalnum():
+        abort(404)
     s = Screenshot(filename)
     return send_from_directory(SCREENSHOT_FOLDER, s.get_rel_path(add_extension=True), as_attachment=False, mimetype='image')
+
+## --SCREENSHOTS-- ##
 
 @objects_item.route("/object/item")
 @login_required
@@ -70,11 +75,15 @@ def screenshot(filename):
 def showItem():  # # TODO: support post
     user_org = current_user.get_org()
     item_id = request.args.get('id')
+    match_uuid = request.args.get('match_uuid')
+
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options={'content', 'crawler', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    meta = item.get_meta(options={'content', 'crawler', 'custom', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    if meta.get('custom'):
+        meta['custom'] = json.dumps(json.loads(meta['custom']), indent=2, sort_keys=True)
     if meta['file_name']:
         message = chats_viewer.api_get_message(item.get_message())
         if message[1] == 200:
@@ -96,6 +105,7 @@ def showItem():  # # TODO: support post
         if meta['crawler']['screenshot']:
             img = Screenshot(meta['crawler']['screenshot_id'])
             meta['description'] = img.get_description()
+            meta['descriptions'] = img.get_descriptions()
             meta['image_gid'] = img.get_global_id()
 
     if meta.get('investigations'):
@@ -105,19 +115,21 @@ def showItem():  # # TODO: support post
             if not inv.check_level(user_org):
                 continue
 
-            invests.append(inv.get_metadata(r_str=True))
+            invests.append(inv.get_meta(r_str=True))
         meta['investigations'] = invests
     else:
         meta['investigations'] = []
 
-    extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'])
+    extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'], match_uuid=match_uuid)
     extracted_matches = module_extractor.get_extracted_by_match(extracted)
 
     return render_template("show_item.html", bootstrap_label=bootstrap_label,
                            modal_add_tags=Tag.get_modal_add_tags(meta['id'], object_type='item'),
                            is_hive_connected=False,
                            ollama_enabled=images_engine.is_ollama_enabled(),
+                           ollama_models=images_engine.get_ollama_models(),
                            meta=meta, message=message,
+                           all_languages=Language.get_all_languages(),
                            extracted=extracted, extracted_matches=extracted_matches)
 
     # kvrocks data
@@ -136,7 +148,7 @@ def html2text(): # # TODO: support post
     if not item_id or not item_basic.exist_item(item_id):
         abort(404)
     item = Item(item_id)
-    return item.get_html2text_content()
+    return Response(item.get_html2text_content(), mimetype='text/plain')
 
 @objects_item.route("/objects/item/raw_content")
 @login_required
@@ -158,16 +170,6 @@ def item_download():  # # TODO: support post
     item = Item(item_id)
     return send_file(item.get_raw_content(), download_name=item_id, as_attachment=True)
 
-@objects_item.route("/objects/item/content/more")
-@login_required
-@login_read_only
-def item_content_more():
-    item_id = request.args.get('id', '')
-    item = Item(item_id)
-    item_content = item.get_content()
-    to_return = item_content[max_preview_modal-1:]
-    return to_return
-
 @objects_item.route("/objects/item/diff")
 @login_required
 @login_user
@@ -176,6 +178,10 @@ def object_item_diff():
     id2 = request.args.get('s2', '')
     item1 = Item(id1)
     item2 = Item(id2)
+    if not item1.exists():
+        return jsonify({'status': 'error', 'error': "Unknow Item"}), 404
+    if not item2.exists():
+        return jsonify({'status': 'error', 'error': "Unknow Item"}), 404
     item1_content = item1.get_content()
     item2_content = item2.get_content()
     i1_max_len = item1.get_meta_lines(content=item1_content)['max_length']
@@ -186,7 +192,7 @@ def object_item_diff():
     lines2 = item2_content.splitlines()
     htmldiff = difflib.HtmlDiff()
     diff = htmldiff.make_file(lines1, lines2)
-    return diff
+    return Response(diff, mimetype='text/plain')
 
 @objects_item.route("/objects/item/preview")
 @login_required
@@ -219,7 +225,8 @@ def item_preview():
 @login_read_only
 def image_describe():
     gid = request.args.get('gid')
-    r = images_engine.api_get_image_description(gid)
+    model = request.args.get('model')
+    r = images_engine.api_get_image_description(gid, model=model)
     if r[1] != 200:
         return create_json_response(r[0], r[1])
     else:

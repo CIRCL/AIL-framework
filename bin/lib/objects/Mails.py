@@ -116,13 +116,13 @@ class Mail(AbstractDaterangeObject):
     #     return obj
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):
+    def get_meta(self, options=None, flask_context=False):
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self._get_meta(options=options)
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
 
@@ -271,7 +271,8 @@ def search_domain_username(domain, s_username=None, r_pos=False, page=1, nb=500)
                 break
             cursor += 1
     else:
-        re_search = re.compile(s_username)
+        # escape username search
+        re_search = re.compile(re.escape(s_username))
         total, results = get_cache_search_mail(domain=domain, s_username=s_username, page=page, nb=nb)
         if results is None:
             results = []

@@ -39,7 +39,9 @@ class DefaultFeeder:
         return name
 
     def get_source(self):
-        return self.json_data.get('source')
+        source = self.json_data.get('source')
+        if source:
+            return os.path.basename(source)
 
     def get_date(self):
         return datetime.date.today().strftime("%Y%m%d")
@@ -58,6 +60,15 @@ class DefaultFeeder:
     def get_json_meta(self):
         return self.json_data.get('meta')
 
+    def get_meta(self):
+        return self.json_data.get('meta')
+
+    def get_meta_field(self, field, default=None):
+        return self.json_data.get('meta', {}).get(field, default)
+
+    def get_payload(self):
+        return self.json_data.get('data')
+
     def get_uuid(self):
         return self.json_data.get('source_uuid')
 
@@ -71,8 +82,14 @@ class DefaultFeeder:
         return self.json_data.get('data')
 
     def get_obj_type(self):
-        meta = self.get_json_meta()
+        meta = self.get_meta()
         return meta.get('type', 'item')
+
+    def get_obj_id(self):
+        meta = self.get_meta()
+        obj_id = meta.get('id', None)
+        if obj_id:
+            return os.path.basename(obj_id)
 
     ## OVERWRITE ME ##
     def get_obj(self):
@@ -81,8 +98,17 @@ class DefaultFeeder:
         Default == item object
         """
         date = datetime.date.today().strftime("%Y/%m/%d")
-        obj_id = os.path.join(self.get_name(), date, str(uuid.uuid4()))
-        obj_id = f'{obj_id}.gz'
+        obj_id = self.get_obj_id()
+        if obj_id:
+            obj_id = os.path.join(self.get_name(), date, obj_id)
+            if ail_objects.exists_obj('item', '', obj_id):
+                obj_id = None
+
+        if not obj_id:
+            obj_id = os.path.join(self.get_name(), date, str(uuid.uuid4()))
+
+        if not obj_id.endswith('.gz'):
+            obj_id = f'{obj_id}.gz'
         obj_id = f'item::{obj_id}'
         self.obj = ail_objects.get_obj_from_global_id(obj_id)
         return self.obj

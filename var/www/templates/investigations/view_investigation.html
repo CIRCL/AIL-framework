@@ -27,7 +27,7 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_investigations.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
 
@@ -80,16 +80,12 @@
                                           <td>{{metadata['date']}}</td>
                                         </tr>
                                         <tr>
-                                          <th>Threat Level</th>
-                                          <td>{{metadata['threat_level']}}</td>
-                                        </tr>
-                                        <tr>
                                           <th>Analysis</th>
                                           <td>{{metadata['analysis']}}</td>
                                         </tr>
                                         <tr>
-                                          <th>Info</th>
-                                          <td>{{metadata['info']}}</td>
+                                          <th>Description</th>
+                                          <td>{% if metadata['description'] %}{{ metadata['description'] }}{% endif %}</td>
                                         </tr>
                                                     <tr>
                                           <th># Objects</th>
@@ -156,6 +152,11 @@
 
                                             </div>
                                         </div>
+                                        <a href="{{ url_for('investigations_b.investigation_download') }}?uuid={{metadata['uuid']}}">
+											<button type="button" class="btn btn-info">
+												<i class="fas fa-download"></i> Download
+											</button>
+										</a>
 									</div>
 
 									{% if misp_url %}
@@ -245,7 +246,7 @@ $(document).ready(function(){
       maxSelection: 1,
       emptyText: 'Select MISP Account',
       name: 'user_misp',
-      {% if selector_val %}value: ['{{ selector_val | safe}}']{% endif %}
+      {% if selector_val %}value: [{{ selector_val | tojson}}]{% endif %}
   });
   $("#collapseMISP").addClass("collapse");
 

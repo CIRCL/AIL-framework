@@ -11,6 +11,16 @@ The authorization is performed by using the following header:
 ~~~~
 Authorization: YOUR_API_KEY
 ~~~~
+
+When a reverse proxy uses the `Authorization` header for HTTP authentication,
+the AIL API key can instead be sent in `X-AIL-AUTH`:
+
+~~~~
+X-AIL-AUTH: YOUR_API_KEY
+~~~~
+
+If both headers are present, `X-AIL-AUTH` is used for the AIL API key.
+
 ### Accept and Content-Type headers
 
 When submitting data in a POST, PUT or DELETE operation you need to specify in what content-type you encoded the payload. This is done by setting the below Content-Type headers:
@@ -1239,6 +1249,49 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 
 
 
+## Image similarity
+
+### Search images by pHash: `api/v1/image/similarity/phash/search`
+
+Returns all image SHA-256 IDs whose indexed pHash is within the requested exact Hamming radius. Only newly processed images are present in the first-version MIH index.
+
+**Method**: `POST`
+
+#### Parameters
+
+- `phash`
+  - nonzero 64-bit pHash;
+  - exactly 16 hexadecimal characters;
+  - mandatory.
+
+The maximum Hamming distance is configured by the server as `phash_hamming_distance` under `[ImageSimilarity]`. It cannot be overridden by the request.
+
+#### Example
+
+```text
+curl https://127.0.0.1:7000/api/v1/image/similarity/phash/search \
+  --header "Authorization: YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{"phash":"a91c45ef00981234"}' \
+  --request POST
+```
+
+#### Success response
+
+**HTTP status code**: `200`
+
+```json
+{
+  "phash": "a91c45ef00981234",
+  "hamming_distance": 10,
+  "images": [
+    "<image SHA-256>"
+  ]
+}
+```
+
+Invalid input returns `400`. An unavailable image-similarity Kvrocks backend returns `503`.
+
 # FUTURE endpoints
 
 <details>
@@ -1254,6 +1307,7 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 ##### ``api/get/tracker`` POST
 
 -----
+
 
 
 
@@ -1292,4 +1346,3 @@ curl -k https://127.0.0.1:7000/api/v1/get/import/item --header "Authorization: i
 </details>
 
 -----
-

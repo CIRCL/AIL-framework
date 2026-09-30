@@ -9,6 +9,7 @@
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -40,7 +41,7 @@
         }
         .message_image {
             max-width: 50%;
-            filter: blur(5px);
+            filter: blur(var(--object-image-blur, 5px));
         }
 	</style>
 
@@ -48,6 +49,8 @@
 <body>
 
 	{% include 'nav_bar.html' %}
+
+    <button onclick="goToTop()" id="sticky_btn_up" title="Go to top"><i class="fas fa-circle-chevron-up"></i></button>
 
 	<div class="container-fluid">
 		<div class="row">
@@ -131,6 +134,7 @@
                 <h5>Languages:</h5>
                 <div id="langpie" style="width: 100%;height: 300px;"></div>
                 {% include 'chats_explorer/block_language_stats.html' %}
+                    {% include 'chats_explorer/block_tempolocus.html' %}
 
                 {% with translate_url=url_for('chats_explorer.chats_explorer_chat', subtype=chat['subtype']), obj_id=chat['id'], pagination=chat['pagination'] %}
                     {% include 'chats_explorer/block_translation.html' %}
@@ -196,7 +200,7 @@
 
 <script>
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
+        $("#page-Chats-Explorer").addClass("active");
         $("#nav_chat").addClass("active");
 
         {% if chat['subchannels'] %}
@@ -209,7 +213,10 @@
         {% if message_id %}
             document.location.hash = '#{{ message_id }}';
         {% endif %}
-  });
+    });
+
+    let sticky_up_btn = document.getElementById("sticky_btn_up");
+    window.onscroll = function() {sticky_btn_up_scroll(sticky_up_btn)};
 
 function toggle_sidebar(){
 	if($('#nav_menu').is(':visible')){

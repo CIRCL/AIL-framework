@@ -18,6 +18,7 @@ from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
 from lib import Language
 from lib.objects import UsersAccount
+from lib.objects import Images
 from lib.data_retention_engine import update_obj_date, get_obj_date_first
 # TODO Set all messages ???
 
@@ -79,6 +80,14 @@ class Message(AbstractObject):
     def get_protocol(self):
         chat_instance = self.get_chat_instance()
         return r_obj.hget(f'chatSerIns:{chat_instance}', 'protocol')
+
+    def get_network(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'network')
+
+    def get_address(self):
+        chat_instance = self.get_chat_instance()
+        return r_obj.hget(f'chatSerIns:{chat_instance}', 'address')
 
     def get_content(self, r_type='str'): # TODO ADD cache # TODO Compress content ???????
         """
@@ -157,10 +166,9 @@ class Message(AbstractObject):
         for child in self.get_childrens():
             obj_type, _, obj_id = child.split(':', 2)
             if obj_type == 'image':
-                image_description = self._get_obj_field('image', None, obj_id, 'desc:qwen2.5vl')
-                if image_description:
-                    image_description = image_description.replace("`", ' ')
-                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id), 'description': image_description})
+                image = Images.Image(obj_id)
+                images.append({'id': obj_id, 'ocr': self._get_image_ocr(obj_id),
+                               'description': image.get_description(), 'descriptions': image.get_descriptions()})
         return images
 
     def get_barcodes(self):
@@ -202,18 +210,30 @@ class Message(AbstractObject):
         files = {}
         nb_files = 0
         s_files = set()
+        # TODO PERF
         for file_name in file_names:
+            # item
             for it in self.get_correlation_iter('file-name', '', file_name, 'item'):
                 if file_name not in files:
                     files[file_name] = []
-                files[file_name].append({'obj': it[1:], 'tags': self.get_obj_tags('item', '', it[1:])})
+                files[file_name].append({'type': 'item', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('item', '', it[1:], r_list=True)})
+                s_files.add(it[1:])
+                nb_files += 1
+            # pdf
+            for it in self.get_correlation_iter('file-name', '', file_name, 'pdf'):
+                if file_name not in files:
+                    files[file_name] = []
+                files[file_name].append({'type': 'pdf', 'subtype': '', 'id': it[1:], 'tags': self.get_obj_tags('pdf', '', it[1:], r_list=True)})
                 s_files.add(it[1:])
                 nb_files += 1
         if nb_files < self.get_nb_files():
             files['undefined'] = []
             for f in self.get_correlation('item').get('item'):
                 if f[1:] not in s_files:
-                    files['undefined'].append({'obj': f[1:], 'tags': self.get_obj_tags('item', '', f[1:])})
+                    files['undefined'].append({'type': 'item', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('item', '', f[1:], r_list=True)})
+            for f in self.get_correlation('pdf').get('pdf'):
+                if f[1:] not in s_files:
+                    files['undefined'].append({'type': 'pdf', 'subtype': '', 'id': f[1:], 'tags': self.get_obj_tags('pdf', '', f[1:], r_list=True)})
         return files
 
     def get_reactions(self):
@@ -250,18 +270,13 @@ class Message(AbstractObject):
     # message media
     # flag is deleted -> event or missing from feeder pass ???
 
-    def get_language(self):
-        languages = self.get_languages()
-        if languages:
-            return languages.pop()
-        else:
-            return None
-
-    def get_search_document(self):
+    def get_search_document(self, timestamp=None):
+        if not timestamp:
+            timestamp = self.get_timestamp()
         global_id = self.get_global_id()
         content = self.get_content()
         if content:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content}
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
         else:
             return None
 
@@ -301,14 +316,14 @@ class Message(AbstractObject):
     #     return r_object.hget(f'meta:item::{self.id}', 'url')
 
     # options: set of optional meta fields
-    def get_meta(self, options=set(), timestamp=None, translation_target=''):
+    def get_meta(self, options=set(), timestamp=None, translation_target='', flask_context=False):
         """
         :type options: set
         :type timestamp: float
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self.get_default_meta(tags=True, options=options)
         # original_id
         meta['_id'] = self.id.rsplit('/', 1)[-1]
 
@@ -330,6 +345,10 @@ class Message(AbstractObject):
             meta['content'] = self.get_content()
         if 'protocol':
             meta['protocol'] = self.get_protocol()
+        if 'network':
+            meta['network'] =  self.get_network()
+        if 'address':
+            meta['address'] =  self.get_address()
         if 'parent' in options:
             meta['parent'] = self.get_parent()
             if meta['parent'] and 'parent_meta' in options:
@@ -354,6 +373,8 @@ class Message(AbstractObject):
             meta['user-account'] = self.get_user_account(meta=True)
             if not meta['user-account']:
                 meta['user-account'] = {'id': 'UNKNOWN'}
+        elif 'user-account-id' in options:
+            meta['user-account'] = self.get_user_account()
         if 'container' in options:
             meta['container'] = self.get_container()
         if 'chat' in options:
@@ -375,16 +396,12 @@ class Message(AbstractObject):
                 meta['files'] = self.get_files(file_names=meta['files-names'])
         if 'reactions' in options:
             meta['reactions'] = self.get_reactions()
-        if 'language' in options:
-            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
             if meta.get('language'):
                 source = meta['language']
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-            if 'language' in options:
-                meta['language'] = self.get_language()
 
         # meta['encoding'] = None
         return meta
@@ -440,15 +457,13 @@ class Message(AbstractObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        # TODO remove from chat - subchannel - thread
+        #   zset timestamp
         pass
 
-def create_obj_id(chat_instance, chat_id, message_id, timestamp, channel_id=None, thread_id=None): # TODO CHECK COLLISIONS
+def create_obj_id(chat_instance, chat_id, message_id, timestamp, thread_id=None):
     timestamp = int(timestamp)
-    if channel_id and thread_id:
-        return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
-    elif channel_id:
-        return f'{chat_instance}/{timestamp}/{channel_id}/{chat_id}/{message_id}'
-    elif thread_id:
+    if thread_id:
         return f'{chat_instance}/{timestamp}/{chat_id}/{thread_id}/{message_id}'
     else:
         return f'{chat_instance}/{timestamp}/{chat_id}/{message_id}'

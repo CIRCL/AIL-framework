@@ -79,8 +79,8 @@ class HHHash(AbstractDaterangeObject):
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['tags'] = self.get_tags(r_list=True)
         meta['content'] = self.get_content()
@@ -130,7 +130,7 @@ class HHHashs(AbstractDaterangeObjects):
         return 'HHHashs'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'align-left'}
+        return {'fa': 'fas', 'icon': 'align-left'}
 
     def get_link(self, flask_context=False):
         if flask_context:

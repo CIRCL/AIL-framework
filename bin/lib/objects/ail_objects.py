@@ -2,6 +2,9 @@
 # -*-coding:UTF-8 -*
 import os
 import sys
+import zipfile
+
+from io import BytesIO
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -18,7 +21,9 @@ from lib import Language
 from lib import Tag
 
 from lib import chats_viewer
+from lib import forums_viewer
 
+from lib.objects import Authors
 from lib.objects import BarCodes
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -30,6 +35,10 @@ from lib.objects import Decodeds
 from lib.objects import Domains
 from lib.objects import Etags
 from lib.objects import Favicons
+from lib.objects import Forums
+from lib.objects import Subforums
+from lib.objects import ForumThreads
+from lib.objects import Posts
 from lib.objects import FilesNames
 from lib.objects import DomHashs
 from lib.objects import GTrackers
@@ -40,6 +49,7 @@ from lib.objects import IPAddresses
 from lib.objects import Mails
 from lib.objects import Messages
 from lib.objects import Ocrs
+from lib.objects import PDFs
 from lib.objects import Pgps
 from lib.objects import QrCodes
 from lib.objects import Screenshots
@@ -53,6 +63,7 @@ from lib.objects import Usernames
 # config_loader = None
 # TODO INIT objs classes ????
 OBJECTS_CLASS = {
+    'author': {'obj': Authors.Author, 'objs': Authors.Authors},
     'barcode': {'obj': BarCodes.Barcode, 'objs': BarCodes.Barcodes},
     'chat': {'obj': Chats.Chat, 'objs': Chats.Chats},
     'chat-subchannel': {'obj': ChatSubChannels.ChatSubChannel, 'objs': None}, ######   ######
@@ -65,6 +76,10 @@ OBJECTS_CLASS = {
     'dom-hash': {'obj': DomHashs.DomHash, 'objs': DomHashs.DomHashs},
     'etag': {'obj': Etags.Etag, 'objs': Etags.Etags},
     'favicon': {'obj': Favicons.Favicon, 'objs': Favicons.Favicons},
+    'forum': {'obj': Forums.Forum, 'objs': Forums.Forums},
+    'subforum': {'obj': Subforums.Subforum, 'objs': Subforums.Subforums},
+    'forum-thread': {'obj': ForumThreads.ForumThread, 'objs': ForumThreads.ForumThreads},
+    'post': {'obj': Posts.Post, 'objs': None},
     'file-name': {'obj': FilesNames.FileName, 'objs': FilesNames.FilesNames},
     'hhhash': {'obj': HHHashs.HHHash, 'objs': HHHashs.HHHashs},
     'gtracker': {'obj': GTrackers.GTracker, 'objs': GTrackers.GTrackers},
@@ -74,6 +89,7 @@ OBJECTS_CLASS = {
     'mail': {'obj': Mails.Mail, 'objs': Mails.Mails},
     'message': {'obj': Messages.Message, 'objs': None}, #############################################################
     'ocr': {'obj': Ocrs.Ocr, 'objs': Ocrs.Ocrs},
+    'pdf': {'obj': PDFs.PDF, 'objs': PDFs.PDFs},
     'pgp': {'obj': Pgps.Pgp, 'objs': Pgps.Pgps},
     'qrcode': {'obj': QrCodes.Qrcode, 'objs': QrCodes.Qrcodes},
     'screenshot': {'obj': Screenshots.Screenshot, 'objs': None}, ####################################################################################################
@@ -100,9 +116,9 @@ def sanitize_objs_types(objs, default=False):
             l_types.append(obj)
     if not l_types:
         if default:
-            l_types = get_default_correlation_objects()
+            l_types = list(get_default_correlation_objects())
         else:
-            l_types = get_all_objects()
+            l_types = list(get_all_objects())
     return l_types
 
 
@@ -138,6 +154,19 @@ def exists_obj(obj_type, subtype, obj_id):
 
 #### API ####
 
+def api_get_object_content_preview(obj_type, obj_id):
+    if obj_type not in {'ocr', 'item', 'message', 'post'}:
+        return {'status': 'error', 'reason': 'Unsupported object type'}, 400
+    if not obj_id:
+        return {'status': 'error', 'reason': 'Invalid object id'}, 400
+    obj = get_object(obj_type, '', obj_id)
+    if not obj.exists():
+        return {'status': 'error', 'reason': 'Object Not Found'}, 404
+    content = obj.get_content() or ''
+    preview = ''.join(content[:1000].splitlines(keepends=True)[:15])
+    return {'content': preview, 'truncated': len(preview) < len(content)}, 200
+
+
 def api_get_object(obj_type, obj_subtype, obj_id):
     if not obj_id:
         return {'status': 'error', 'reason': 'Invalid object id'}, 400
@@ -149,7 +178,7 @@ def api_get_object(obj_type, obj_subtype, obj_id):
     obj = get_object(obj_type, obj_subtype, obj_id)
     if not obj.exists():
         return {'status': 'error', 'reason': 'Object Not Found'}, 404
-    options = {'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
+    options = {'address', 'chat', 'content', 'created_at', 'files-names', 'icon', 'images', 'info', 'nb_participants', 'network', 'parent', 'parent_meta', 'protocol', 'reactions', 'thread', 'user-account', 'username', 'subchannels', 'threads'}
     return obj.get_meta(options=options), 200
 
 
@@ -194,13 +223,17 @@ def get_nb_objects_dashboard(date, flask_context=True):
             objs[obj_type]['link'] = objs_class.get_link(flask_context=flask_context)
     return objs
 
+def get_nb_objects(obj_type):
+    if OBJECTS_CLASS[obj_type].get('objs'):
+        return OBJECTS_CLASS[obj_type]['objs']().get_nb()
+    elif obj_type == 'chat':
+        return chats_viewer.get_nb_chats_stats()
+    # 'item'
+    # 'screenshot'
+    # 'message'
+    return None
 
-#########################################################################################
-#########################################################################################
-#########################################################################################
-
-
-def get_objects(objects): # TODO RENAME ME
+def get_objects(objects):
     objs = set()
     for obj in objects:
         if isinstance(obj, dict):
@@ -219,6 +252,23 @@ def get_objects(objects): # TODO RENAME ME
     return ail_objects
 
 
+def download_objects(objects):
+    # zip buffer
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "a") as zf:
+        for obj in get_objects(objects):
+            if obj.exists():
+                filename = obj.get_global_id()
+                if obj.type == 'item':
+                    if filename.endswith('.gz'):
+                        filename = filename[:-3]
+                content = obj.get_content(r_type='bytes')
+                if content:
+                    zf.writestr(filename, BytesIO(content).getvalue())
+    zip_buffer.seek(0)
+    return zip_buffer
+
+
 def get_obj_global_id(obj_type, subtype, obj_id):
     obj = get_object(obj_type, subtype, obj_id)
     return obj.get_global_id()
@@ -234,6 +284,8 @@ def get_obj_from_global_id(global_id):
 
 def get_object_link(obj_type, subtype, id, flask_context=False):
     obj = get_object(obj_type, subtype, id)
+    # link = obj.get_link(flask_context=flask_context)
+    # obj.delete()
     return obj.get_link(flask_context=flask_context)
 
 
@@ -278,7 +330,44 @@ def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
     meta = obj.get_meta(options=options)
     meta['icon'] = obj.get_svg_icon()
     meta['link'] = obj.get_link(flask_context=flask_context)
+    if 'match_context' in options:
+        meta['match_context'] = get_obj_match_context(obj)
     return meta
+
+
+def get_obj_match_context(obj):
+    """Return short identifying metadata for tracker and retro-hunt matches."""
+    context = {}
+    if obj.type == 'pdf':
+        names = sorted(obj.get_file_names())
+        if names:
+            context['File names'] = ', '.join(names)
+    elif obj.type == 'item':
+        context['Source'] = obj.get_source()
+    elif obj.type == 'message':
+        chat = get_obj_from_global_id(obj.get_chat())
+        context['Channel'] = chat.get_name() or chat.id
+        channel_username = chat.get_username()
+        if channel_username:
+            context['Channel'] += f" (@{channel_username.split(':', 2)[2]})"
+        subchannel_gid = obj.get_subchannel()
+        if subchannel_gid:
+            subchannel = get_obj_from_global_id(subchannel_gid)
+            context['Subchannel'] = subchannel.get_name() or subchannel.id
+        user_account = obj.get_user_account()
+        if user_account:
+            context['User ID'] = user_account.split(':', 2)[2]
+            username = get_obj_from_global_id(user_account).get_username()
+            if username:
+                context['User ID'] += f" (@{username.split(':', 2)[2]})"
+    elif obj.type == 'post':
+        forum = Forums.Forum(obj.get_forum_id())
+        context['Forum'] = forum.get_name() or forum.id
+        thread_gid = obj.get_thread()
+        if thread_gid:
+            thread = get_obj_from_global_id(thread_gid)
+            context['Thread'] = thread.get_name() or thread.id
+    return context
 
 
 def get_objects_meta(objs, options=set(), flask_context=False):
@@ -298,15 +387,18 @@ def get_objects_meta(objs, options=set(), flask_context=False):
     return metas
 
 
-def get_object_card_meta(obj_type, subtype, id, related_btc=False):
+def get_object_card_meta(obj_type, subtype, id, related_btc=False, options=None):
     obj = get_object(obj_type, subtype, id)
-    meta = obj.get_meta(options={'chat', 'chats', 'created_at', 'icon', 'info', 'map', 'nb_messages', 'nb_participants', 'threads', 'username'})
+    meta_options = {'address', 'chat', 'chats', 'created_at', 'icon', 'info', 'map', 'nb_messages', 'nb_participants', 'network', 'protocol', 'threads', 'username'}
+    if options:
+        meta_options.update(options)
+    meta = obj.get_meta(options=meta_options)
     # meta['icon'] = obj.get_svg_icon()
     meta['svg_icon'] = obj.get_svg_icon()
     if subtype or obj_type == 'cookie-name' or obj_type == 'cve' or obj_type == 'etag' or obj_type == 'title' or obj_type == 'favicon' or obj_type == 'hhhash':
         meta['sparkline'] = obj.get_sparkline()
         if obj_type == 'cve':
-            meta['cve_search'] = obj.get_cve_search()
+            meta['vulnerability_lookup'] = obj.get_vulnerability_lookup()
         # if obj_type == 'title':
         #     meta['cve_search'] = obj.get_cve_search()
     if subtype == 'bitcoin' and related_btc:
@@ -316,6 +408,10 @@ def get_object_card_meta(obj_type, subtype, id, related_btc=False):
         meta['size'] = obj.get_size()
         meta["vt"] = obj.get_meta_vt()
         meta["vt"]["status"] = obj.is_vt_enabled()
+    if obj.get_type() == 'pdf':
+        meta['author'] = obj.get_author()
+        meta["file-names"] = obj.get_file_names()
+        meta["markdown_id"] = obj.get_markdown_id()
     # TAGS MODAL
     meta["add_tags_modal"] = Tag.get_modal_add_tags(obj.id, obj.get_type(), obj.get_subtype(r_str=True))
     return meta
@@ -352,6 +448,14 @@ def api_manually_translate(obj_type, subtype, obj_id, source, translation_target
 #### OBJ FILTERS ####
 
 def is_filtered(obj, filters):
+    """
+    filters: tracker filters, keyed by object type
+             {'item': {'sources': [...]}, 'pgp': {'subtypes': [...]}, ...}
+    Trackers store filters by object type, while iterators pass the
+    object-specific filter directly.
+    """
+    if obj.get_type() in filters:
+        filters = filters[obj.get_type()]
     if 'mimetypes' in filters:
         mimetype = obj.get_mimetype()
         if mimetype not in filters['mimetypes']:
@@ -363,6 +467,9 @@ def is_filtered(obj, filters):
     if 'subtypes' in filters:
         subtype = obj.get_subtype(r_str=True)
         if subtype not in filters['subtypes']:
+            return True
+    if 'forums' in filters:
+        if obj.get_type() != 'post' or obj.get_forum_id() not in filters['forums']:
             return True
     return False
 
@@ -381,12 +488,14 @@ def obj_iterator(obj_type, filters):
         return Mails.Mails().get_iterator()
     elif obj_type == 'message':
         return chats_viewer.get_messages_iterator(filters=filters)
+    elif obj_type == 'post':
+        return forums_viewer.get_posts_iterator(filters=filters)
     elif obj_type == 'ocr':
         return chats_viewer.get_ocrs_iterator(filters=filters)
     elif obj_type == 'title':
         return Titles.Titles().get_iterator()
     else:
-        return []
+        return iter(())
 
 
 def card_objs_iterators(filters):
@@ -404,6 +513,8 @@ def card_obj_iterator(obj_type, filters):
         return Pgps.nb_all_pgps_objects(filters=filters)
     elif obj_type == 'message':
         return chats_viewer.get_nb_messages_iterator(filters=filters)
+    elif obj_type == 'post':
+        return forums_viewer.get_nb_posts_iterator(filters=filters)
     elif obj_type == 'ocr':
         return chats_viewer.get_nb_ors_iterator(filters=filters)
 

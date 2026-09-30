@@ -152,7 +152,7 @@ def objects_misp_export_post():
     threat_level = request.form.get('misp_threat_level_id')
     analysis = request.form.get('misp_event_analysis')
     info = request.form.get('misp_event_info')
-    publish = request.form.get('misp_event_info', False)
+    publish = request.form.get('misp_publish', False)
 
     objs = ail_objects.get_objects(objects)
     if not objs:

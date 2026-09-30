@@ -139,7 +139,7 @@ class CodeReader(AbstractModule):
 
         if obj.type == 'image':
             if self.obj.is_gif():
-                self.logger.warning(f'Ignoring GIF: {self.obj.id}')
+                self.logger.info(f'Ignoring GIF: {self.obj.id}')
                 return None
 
         # image - screenshot

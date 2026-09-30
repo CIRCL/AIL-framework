@@ -23,7 +23,7 @@
                         <th>ID</th>
                         <th>First Seen</th>
                         <th>Last Seen</th>
-                        <th>NB Chats</th>
+                        <th>{% if account_context == 'forum' %}NB Posts{% else %}NB Chats{% endif %}</th>
                     </tr>
                     </thead>
                     <tbody style="font-size: 15px;">
@@ -50,7 +50,7 @@
                                 {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
                             {% endif %}
                         </td>
-                        <td>{{ meta['chats'] | length }}</td>
+                        <td>{% if account_context == 'forum' %}{{ meta.get('nb_posts', 0) }}{% else %}{{ meta.get('chats', []) | length }}{% endif %}</td>
                     </tr>
                     </tbody>
                 </table>

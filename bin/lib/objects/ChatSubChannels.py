@@ -73,8 +73,8 @@ class ChatSubChannel(AbstractChatObject):
 
     # TODO TIME LAST MESSAGES
 
-    def get_meta(self, options=set(), translation_target=None):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), translation_target=None, flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags(r_list=True)
         meta['name'] = self.get_name()
         if 'chat' in options:

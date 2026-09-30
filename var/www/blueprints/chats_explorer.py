@@ -21,9 +21,11 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib import chats_viewer
+from lib import forums_viewer
 from lib import Language
 from lib import Tag
 from lib import module_extractor
+from lib import ail_users
 from lib.objects import ail_objects
 from lib import images_engine
 
@@ -35,6 +37,16 @@ bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
 
 def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
+
+def get_tempolocus_request_options():
+    requested = request.args.get('tempolocus') == '1'
+    holiday_profile = request.args.get('tempolocus_holiday_profile')
+    if holiday_profile not in {'standard', 'public-worker'}:
+        holiday_profile = 'standard'
+    activity_signal = request.args.get('tempolocus_activity_signal')
+    if activity_signal not in {'lack', 'peak'}:
+        activity_signal = 'lack'
+    return requested, holiday_profile, activity_signal
 
 # ============ FUNCTIONS ============
 
@@ -51,7 +63,9 @@ def create_json_response(data, status_code):
 @login_read_only
 def chats_explorer_protocols():
     protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'))
+    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'),
+                           nb_new_chats_monitoring_requests=chats_viewer.get_nb_new_chats_monitoring_requests(),
+                           is_admin=current_user.is_admin())
 
 @chats_explorer.route("chats/explorer/networks", methods=['GET'])
 @login_required
@@ -76,8 +90,30 @@ def chats_explorer_instance():
         return create_json_response(chat_instance[0], chat_instance[1])
     else:
         chat_instance = chat_instance[0]
+        language_distribution = []
+        for code, count in sorted(chat_instance.get('languages', {}).items(), key=lambda item: item[1], reverse=True):
+            language_distribution.append({
+                'code': code,
+                'label': Language.get_language_from_iso(code) or f'Unknown ({code})',
+                'value': int(count)
+            })
+
+        available_codes = {entry['code'] for entry in language_distribution}
+        for chat in chat_instance.get('chats', []):
+            for code in chat.get('languages', []):
+                available_codes.add(code)
+
+        available_languages = []
+        for code in sorted(available_codes):
+            available_languages.append({
+                'code': code,
+                'label': Language.get_language_from_iso(code) or f'Unknown ({code})'
+            })
+
         return render_template('chat_instance.html', chat_instance=chat_instance,
-                               bootstrap_label=bootstrap_label)
+                               bootstrap_label=bootstrap_label,
+                               language_distribution=language_distribution,
+                               available_languages=available_languages)
 
 @chats_explorer.route("chats/explorer/instances/languages/messages", methods=['GET'])
 @login_required
@@ -123,12 +159,21 @@ def chats_explorer_chat():
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('chat', instance_uuid, chat_id)
+        tempolocus_requested, tempolocus_holiday_profile, tempolocus_activity_signal = get_tempolocus_request_options()
+        tempolocus_predictions = {}
+        tempolocus_holiday_predictions = {}
+        if tempolocus_requested:
+            tempolocus_predictions = chats_viewer.get_chat_tempolocus_predictions('chat', instance_uuid, chat_id)
+            tempolocus_holiday_predictions = chats_viewer.get_chat_tempolocus_holiday_predictions('chat', instance_uuid, chat_id, holiday_profile=tempolocus_holiday_profile, activity_signal=tempolocus_activity_signal)
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat&subtype={instance_uuid}&id={chat_id}&lang='
         return render_template('chat_viewer.html', chat=chat, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(chat['id'], chat['type'], chat['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
-                               all_languages=languages, translation_languages=translation_languages, translation_target=target)
+                               tempolocus_predictions=tempolocus_predictions, tempolocus_holiday_predictions=tempolocus_holiday_predictions,
+                               tempolocus_requested=tempolocus_requested, tempolocus_holiday_profile=tempolocus_holiday_profile,
+                               tempolocus_activity_signal=tempolocus_activity_signal, all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("chats/explorer/chat/lang", methods=['GET'])
 @login_required
@@ -141,9 +186,8 @@ def chats_explorer_chat_lang():
     if target == "Don't Translate":
         target = None
     language = request.args.get('lang')
+    language = Language.normalize_bcp47_tag(language)
     lang = language
-    if language:
-        language = Language.get_iso_from_language(language)
     if not language:
         return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
     meta = chats_viewer.api_get_chat_messages_by_lang(chat_type, instance_uuid, chat_id, language, translation_target=target)
@@ -227,6 +271,7 @@ def objects_subchannel_messages():
         lang_endpoint = url_for('chats_explorer.chats_explorer_chat_lang') + f'?type=chat-subchannel&subtype={instance_uuid}&id={subchannel_id}&lang='
         return render_template('SubChannelMessages.html', subchannel=subchannel,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(subchannel['id'], subchannel['type'], subchannel['subtype']),
                                message_id=message_id, languages_stats=languages_stats, lang_endpoint=lang_endpoint,
                                bootstrap_label=bootstrap_label, all_languages=languages,
@@ -260,6 +305,7 @@ def objects_thread_messages():
         translation_languages = Language.get_translation_languages()
         return render_template('ThreadMessages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                message_id=message_id, all_languages=languages,
                                translation_languages=translation_languages, translation_target=target)
 
@@ -282,14 +328,14 @@ def chats_explorer_chat_participants():
 @login_required
 @login_read_only
 def chats_explorer_chat_download():
-    chat_id = request.args.get('id')
-    chat_subtype = request.args.get('subtype')
-    chat = chats_viewer.api_chat_messages(chat_subtype, chat_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    chat = chats_viewer.api_get_chat_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if chat[1] != 200:
-        if chat[1] == 404:
-            abort(404)
-        else:
-            return create_json_response(chat[0], chat[1])
+        return create_json_response(chat[0], chat[1])
     else:
         return jsonify(chat[0])
 
@@ -297,9 +343,12 @@ def chats_explorer_chat_download():
 @login_required
 @login_read_only
 def objects_subchannel_messages_download():
-    subchannel_id = request.args.get('id')
-    instance_uuid = request.args.get('subtype')
-    subchannel = chats_viewer.api_subchannel_messages(instance_uuid, subchannel_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    subchannel = chats_viewer.api_get_chat_subchannel_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if subchannel[1] != 200:
         return create_json_response(subchannel[0], subchannel[1])
     else:
@@ -310,9 +359,12 @@ def objects_subchannel_messages_download():
 @login_required
 @login_read_only
 def objects_thread_messages_download():
-    thread_id = request.args.get('id')
-    instance_uuid = request.args.get('subtype')
-    thread = chats_viewer.api_thread_messages(instance_uuid, thread_id)
+    obj_id = request.args.get('id')
+    instance_uuid = request.args.get('instance_uuid')
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    thread = chats_viewer.api_get_chat_thread_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     if thread[1] != 200:
         return create_json_response(thread[0], thread[1])
     else:
@@ -348,6 +400,39 @@ def chat_monitoring_requests():
     metas = chats_viewer.get_chats_monitoring_requests_metas()
     return render_template('chat_monitoring_requests.html', metas=metas)
 
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/done", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_done():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_done_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/reject", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_reject():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_reject_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
+
+@chats_explorer.route("/chats/explorer/chat/monitoring/request/delete", methods=['GET']) # TODO LOG
+@login_required
+@login_admin
+def chat_monitoring_request_delete():
+    m_uuid = request.args.get('uuid')
+    r = chats_viewer.api_delete_chat_monitoring_request(m_uuid)
+    if r[1] != 200:
+        return create_json_response(r[0], r[1])
+    else:
+        return redirect(url_for('chats_explorer.chat_monitoring_requests'))
+
 #### ####
 
 
@@ -367,6 +452,7 @@ def objects_message():
 
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
+        target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
         container_url = ail_objects.get_obj_from_global_id(message['container']).get_link(flask_context=True)
         extracted = module_extractor.extract(current_user.get_user_id(), 'message', '', message['id'], content=message['content'])
         extracted_matches = module_extractor.get_extracted_by_match(extracted)
@@ -374,6 +460,7 @@ def objects_message():
         message['extracted_matches'] = extracted_matches
         return render_template('ChatMessage.html', meta=message, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(), all_languages=languages,
+                               ollama_models=images_engine.get_ollama_models(),
                                translation_languages=translation_languages, translation_target=target, container_url=container_url,
                                modal_add_tags=Tag.get_modal_add_tags(message['id'], object_type='message'))
 
@@ -395,6 +482,21 @@ def objects_message_translate():
             return redirect(request.referrer)
         else:
             return redirect(url_for('chats_explorer.objects_message', id=message_id, target=target))
+
+@chats_explorer.route("/objects/message/translate/json", methods=['POST'])
+@login_required
+@login_user_no_api
+def objects_message_translate_json():
+    message_id = request.form.get('id')
+    target = ail_users.AILUser(current_user.get_user_id()).get_preferred_language()
+    message, r_code = chats_viewer.api_get_message(message_id, translation_target=target)
+    if r_code != 200:
+        return create_json_response(message, r_code)
+
+    return jsonify({
+        'id': message_id,
+        'translation': message.get('translation')
+    })
 
 @chats_explorer.route("/objects/message/detect/language", methods=['GET'])
 @login_required
@@ -420,7 +522,12 @@ def objects_user_account():
     target = request.args.get('target')
     if target == "Don't Translate":
         target = None
-    user_account = chats_viewer.api_get_user_account(user_id, instance_uuid, translation_target=target)
+    obj = ail_objects.get_object('user-account', instance_uuid, user_id)
+    is_forum_account = obj.get_forum()
+    if is_forum_account:
+        user_account = forums_viewer.api_get_user_account(user_id, instance_uuid, translation_target=target)
+    else:
+        user_account = chats_viewer.api_get_user_account(user_id, instance_uuid, translation_target=target)
     # print()
     # print(user_account[0]['usernames'])
     # print()
@@ -431,11 +538,42 @@ def objects_user_account():
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('user-account', instance_uuid, user_id)
-        lang_endpoint = url_for('chats_explorer.objects_user_account_lang') + f'?subtype={instance_uuid}&id={user_id}&lang='
+        tempolocus_requested, tempolocus_holiday_profile, tempolocus_activity_signal = get_tempolocus_request_options()
+        tempolocus_predictions = {}
+        tempolocus_holiday_predictions = {}
+        if tempolocus_requested and not is_forum_account:
+            tempolocus_predictions = chats_viewer.get_user_account_tempolocus_predictions(user_id, instance_uuid)
+            tempolocus_holiday_predictions = chats_viewer.get_user_account_tempolocus_holiday_predictions(user_id, instance_uuid, holiday_profile=tempolocus_holiday_profile, activity_signal=tempolocus_activity_signal)
+        lang_endpoint = url_for('chats_explorer.objects_user_account_lang', subtype=instance_uuid, id=user_id)
+        account_context = 'forum' if is_forum_account else 'chat'
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,
                                ail_tags=Tag.get_modal_add_tags(user_account['id'], user_account['type'], user_account['subtype']),
                                languages_stats=languages_stats, lang_endpoint=lang_endpoint, all_languages=languages,
-                               translation_languages=translation_languages, translation_target=target)
+                               tempolocus_predictions=tempolocus_predictions, tempolocus_holiday_predictions=tempolocus_holiday_predictions,
+                               tempolocus_requested=tempolocus_requested, tempolocus_holiday_profile=tempolocus_holiday_profile,
+                               tempolocus_activity_signal=tempolocus_activity_signal, translation_languages=translation_languages, translation_target=target,
+                               account_context=account_context)
+
+
+@chats_explorer.route("/objects/user-account/posts", methods=['GET'])
+@login_required
+@login_read_only
+def objects_user_account_posts():
+    instance_uuid = request.args.get('subtype')
+    user_id = request.args.get('id')
+    page = request.args.get('page')
+    nb = request.args.get('nb')
+    target = request.args.get('target')
+    if target == "Don't Translate":
+        target = None
+    meta = forums_viewer.api_get_user_account_posts(user_id, instance_uuid, page=page, nb=nb, translation_target=target)
+    if meta[1] != 200:
+        return create_json_response(meta[0], meta[1])
+    languages = Language.get_all_languages()
+    translation_languages = Language.get_translation_languages()
+    return render_template('user_account_forum_posts.html', meta=meta[0], bootstrap_label=bootstrap_label,
+                           ail_tags=Tag.get_modal_add_tags(meta[0]['user-account']['id'], meta[0]['user-account']['type'], meta[0]['user-account']['subtype']),
+                           all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
 @chats_explorer.route("/objects/user-account_usernames_timeline_json", methods=['GET']) # TODO API
 @login_required
@@ -483,6 +621,7 @@ def objects_user_account_chat():
         translation_languages = Language.get_translation_languages()
         return render_template('chats_explorer/user_chat_messages.html', meta=meta, bootstrap_label=bootstrap_label,
                                ollama_enabled=images_engine.is_ollama_enabled(),
+                               ollama_models=images_engine.get_ollama_models(),
                                ail_tags=Tag.get_modal_add_tags(meta['user-account']['id'], meta['user-account']['type'], meta['user-account']['subtype']),
                                all_languages=languages, translation_languages=translation_languages, translation_target=target)
 
@@ -493,9 +632,8 @@ def objects_user_account_lang():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
     language = request.args.get('lang')
+    language = Language.normalize_bcp47_tag(language)
     lang = language
-    if language:
-        language = Language.get_iso_from_language(language)
     if not language:
         return create_json_response({"status": "error", "reason": "Unknown language"}, 400)
     target = request.args.get('target')
@@ -519,7 +657,11 @@ def objects_user_account_lang():
 def user_account_messages_stats_week_all():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
-    week = chats_viewer.api_get_user_account_nb_all_week_messages(user_id, instance_uuid)
+    obj = ail_objects.get_object('user-account', instance_uuid, user_id)
+    if obj.get_forum():
+        week = forums_viewer.api_get_user_account_nb_all_week_posts(user_id, instance_uuid)
+    else:
+        week = chats_viewer.api_get_user_account_nb_all_week_messages(user_id, instance_uuid)
     if week[1] != 200:
         return create_json_response(week[0], week[1])
     else:
@@ -532,7 +674,11 @@ def user_account_messages_stats_year():
     instance_uuid = request.args.get('subtype')
     user_id = request.args.get('id')
     year = request.args.get('year')
-    stats = chats_viewer.api_get_user_account_nb_year_messages(user_id, instance_uuid, year)
+    obj = ail_objects.get_object('user-account', instance_uuid, user_id)
+    if obj.get_forum():
+        stats = forums_viewer.api_get_user_account_nb_year_posts(user_id, instance_uuid, year)
+    else:
+        stats = chats_viewer.api_get_user_account_nb_year_messages(user_id, instance_uuid, year)
     if stats[1] != 200:
         return create_json_response(stats[0], stats[1])
     else:

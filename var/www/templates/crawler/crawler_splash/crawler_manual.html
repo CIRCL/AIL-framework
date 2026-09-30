@@ -34,13 +34,18 @@
 
 				{% include 'crawler/crawler_disabled.html' %}
 
+
+						{% if interactive_session %}
+                <div class="alert alert-warning mt-3">You already have an active interactive session. Finish it before starting another one.</div>
+                {% endif %}
+
 						<div class="card text-white bg-dark mb-3 mt-1">
 						  <div class="card-header">
 								<h5 class="card-title">Crawl a Domain</h5>
 							</div>
 						  <div class="card-body">
 						    <p class="card-text">Enter an url or a domain and choose what kind of option you want.</p>
-								<form action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
+								<form id="crawl_form" action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
 									<div class="row">
 										<div class="col-12 col-lg-6">
                                             {% if urls %}
@@ -54,7 +59,7 @@
                                             {% else %}
                                                 <div class="input-group" id="single_urls">
                                                     <input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
-                                                    <div class="input-group-append">
+                                                    <div class="input-group-append" id="multiple_urls_button">
                                                         <button class="btn btn-secondary" type="button" onclick="btn_multiple_urls()"><i class="fa fa-plus"></i> Multiple Urls</button>
                                                     </div>
                                                 </div>
@@ -84,7 +89,48 @@
                                             <div class="input-group" id="div_proxy_name">
 												<input type="text" class="form-control" id="proxy_name" name="proxy_name" placeholder="Expected Format: [scheme]://[username]:[password]@[hostname]:[port]">
 											</div>
-											<div class="d-flex mt-3">
+											<div class="card bg-light text-dark border-info mt-3 shadow-sm">
+                                                <div class="card-body py-3">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div class="custom-control custom-switch">
+                                                            <input class="custom-control-input" type="checkbox" name="interactive_capture" value="True" id="interactive_capture" {% if interactive_usage and interactive_usage.active >= interactive_usage.max %}disabled{% endif %}>
+                                                            <label class="custom-control-label font-weight-bold" for="interactive_capture"><i class="fas fa-desktop"></i> Interactive browser capture</label>
+                                                        </div>
+                                                        {% if interactive_usage %}
+                                                            <span class="badge {% if interactive_usage.active < interactive_usage.max %}badge-success{% else %}badge-danger{% endif %} ml-2">
+                                                                {{ interactive_usage.max - interactive_usage.active }} / {{ interactive_usage.max }} slots available
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="form-text text-muted mt-2">
+                                                        Opens a live remote browser session for this URL. Use it when you need to log in, accept prompts, solve navigation steps, or manually reach the page before AIL saves the capture.
+                                                    </small>
+                                                    <div id="interactive_help" class="mt-2" style="display:none;">
+                                                        <ul class="mb-0 pl-3 small">
+                                                            <li>AIL will reserve one interactive slot and return a browser link.</li>
+                                                            <li>Only one URL is captured; scheduling, depth crawling, and multiple URLs are hidden.</li>
+                                                            <li>Click <b>Finish capture</b> when the browser shows the page you want AIL to process.</li>
+                                                            <li>Enable <b>Create cookiejar</b> to save the browser cookies and local storage as a user-level cookiejar.</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="interactive_cookiejar_options" class="card bg-light text-dark border-warning mt-2" style="display:none;">
+                                                <div class="card-body py-3">
+                                                    <div class="custom-control custom-switch">
+                                                        <input class="custom-control-input" type="checkbox" name="interactive_cookiejar" value="True" id="interactive_cookiejar">
+                                                        <label class="custom-control-label font-weight-bold" for="interactive_cookiejar"><i class="fas fa-cookie-bite"></i> Create cookiejar from this interactive session</label>
+                                                    </div>
+                                                    <input class="form-control mt-2" type="text" id="cookiejar_description" name="cookiejar_description" placeholder="Cookiejar description (optional)">
+                                                    <small class="form-text text-muted">The cookiejar will be visible only to your user account.</small>
+                                                </div>
+                                            </div>
+                                            {% if interactive_usage and interactive_usage.active >= interactive_usage.max %}
+                                                <div class="alert alert-danger mt-2 mb-0">No interactive browser slot is currently available. Please wait for another session to finish or ask an administrator to increase the limit.</div>
+                                            {% endif %}
+                                            <div id="interactive_warning" class="alert alert-info mt-2" style="display:none;">Interactive mode is enabled: enter one URL, open the returned browser link, then finish from the session page.</div>
+
+											<div class="d-flex mt-3" id="interactive_incompatible_scheduler">
 												<i class="fas fa-user-ninja mt-1"></i> &nbsp;Manual&nbsp;&nbsp;
 												<div class="custom-control custom-switch">
 													<input class="custom-control-input" type="checkbox" name="crawler_scheduler" value="True" id="crawler_scheduler">
@@ -180,9 +226,15 @@
 															<i class="fas fa-file"></i> &nbsp;HAR
 														</label>
 													</div>
+													<div class="custom-control custom-switch mt-1">
+													  <input class="custom-control-input" type="checkbox" name="javascript" value="True" id="javascript_id" checked>
+														<label class="custom-control-label" for="javascript_id">
+															<i class="fab fa-js-square"></i> &nbsp;JavaScript
+														</label>
+													</div>
 												</div>
 												<div class="col-12 col-xl-6">
-													<div class="input-group form-group mb-0">
+													<div class="input-group form-group mb-0" id="interactive_incompatible_depth">
 														<div class="input-group-prepend">
 													    <span class="input-group-text bg-light"><i class="fas fa-water"></i></span>
 													  </div>
@@ -219,9 +271,47 @@
 									<button class="btn btn-primary mt-2">
 										<i class="fas fa-spider"></i> Send to Spider
 									</button>
-								<form>
+								</form>
 						  </div>
 						</div>
+
+                {% if import_message %}
+					<div class="alert {% if import_status == 'success' %}alert-success{% else %}alert-danger{% endif %} mt-3" role="alert">
+						{{ import_message }}
+					</div>
+				{% endif %}
+
+                <div class="card text-white bg-dark mb-3 mt-1">
+                    <div class="card-header">
+                        <h5 class="card-title">Import Lookyloo Capture Archive</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1 pr-3">
+                                <p class="card-text">Upload a zipped capture archive exported from Lookyloo.</p>
+
+                                <form action="{{ url_for('crawler_splash.import_lookyloo_archive') }}" method="post" enctype="multipart/form-data">
+                                    <div class="input-group mb-2">
+                                        <div class="custom-file">
+                                            <input class="custom-file-input" type="file" id="lookyloo_archive" name="lookyloo_archive" accept=".zip,application/zip" required>
+                                            <label class="custom-file-label" for="lookyloo_archive">Choose Lookyloo archive (.zip)</label>
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-primary mt-1" type="submit">
+                                        <i class="fas fa-file-archive"></i> Import Archive
+                                    </button>
+                                </form>
+                            </div>
+
+                            <img src="{{ url_for('static', filename='image/lookyloo.png') }}"
+                                 alt="Lookyloo"
+                                 class="ml-3"
+                                 style="max-width: 140px; height: auto;">
+                        </div>
+                    </div>
+                </div>
 
 
 			</div>
@@ -239,6 +329,7 @@ $(document).ready(function(){
 	$("#nav_manual_crawler").addClass("active");
 	queue_type_selector_input_controler()
 	manual_crawler_input_controler();
+    interactive_input_controller();
     $("#custom_frequency").hide();
     $("#multiple_urls").hide();
 
@@ -248,6 +339,14 @@ $(document).ready(function(){
 
 	$('#queue_type_selector').on("change", function () {
 		queue_type_selector_input_controler();
+	});
+
+	$('#interactive_capture').on('change', function(){ interactive_input_controller(); });
+	$('#interactive_cookiejar').on('change', function(){ interactive_input_controller(); });
+
+	$('#lookyloo_archive').on('change', function(){
+		const fileName = $(this).val().split('\\').pop();
+		$(this).next('.custom-file-label').html(fileName || 'Choose Lookyloo archive (.zip)');
 	});
 });
 
@@ -289,6 +388,37 @@ function frequency_selector_update(obj) {
     }else{
 		$("#custom_frequency").hide();
 	}
+}
+
+function interactive_input_controller() {
+    if($('#interactive_capture').is(':checked')){
+        $('#crawl_form').attr('action', '{{ url_for('crawler_splash.interactive_capture_start') }}');
+        $('#interactive_warning').show();
+        $('#interactive_help').show();
+        $('#interactive_cookiejar_options').show();
+        $('#crawler_scheduler').prop('checked', false).prop('disabled', true);
+        $('#depth_limit').val(0).prop('disabled', true);
+        $('#urls_to_crawl').prop('disabled', true);
+        $('#single_urls').show();
+        $('#multiple_urls').hide();
+        $('#multiple_urls_button').hide();
+        $('#interactive_incompatible_scheduler').hide();
+        $('#frequency_inputs').hide();
+        $('#interactive_incompatible_depth').hide();
+    } else {
+        $('#crawl_form').attr('action', '{{ url_for('crawler_splash.send_to_spider') }}');
+        $('#interactive_warning').hide();
+        $('#interactive_help').hide();
+        $('#interactive_cookiejar_options').hide();
+        $('#interactive_cookiejar').prop('checked', false);
+        $('#crawler_scheduler').prop('disabled', false);
+        $('#depth_limit').prop('disabled', false);
+        $('#urls_to_crawl').prop('disabled', false);
+        $('#multiple_urls_button').show();
+        $('#interactive_incompatible_scheduler').show();
+        $('#interactive_incompatible_depth').show();
+    }
+    manual_crawler_input_controler();
 }
 
 function queue_type_selector_input_controler() {

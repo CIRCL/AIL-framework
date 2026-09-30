@@ -22,7 +22,11 @@
     <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
     <script src="{{ url_for('static', filename='js/d3/timeline_basic.js')}}"></script>
     <script src="{{ url_for('static', filename='js/echarts.min.js')}}"></script>
-
+  <style>
+    .forum-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
+    .forum-banner { width: 100%; max-height: 220px; object-fit: cover; border-radius: .35rem .35rem 0 0; }
+    .forum-banner-card { overflow: hidden; }
+  </style>
 
 </head>
 <body>
@@ -45,7 +49,7 @@
                     {% include 'chats_explorer/block_translation.html' %}
                 {% endwith %}
 
-                {% if meta['chats'] %}
+                {% if account_context == 'chat' and meta['chats'] %}
                     <h4 class="mx-5 mt-2 text-secondary">User All Messages:</h4>
                     <div id="heatmapweekhourall"></div>
 
@@ -66,6 +70,7 @@
                     <h5>Languages:</h5>
                     <div id="langpie" style="width: 100%;height: 300px;"></div>
                     {% include 'chats_explorer/block_language_stats.html' %}
+                    {% include 'chats_explorer/block_tempolocus.html' %}
 
                     <h4>Usernames:</h4>
                     <div id="timeline_user_usernames" style="max-width: 900px"></div>
@@ -86,6 +91,72 @@
                     {% endfor %}
                 {% endif %}
 
+                {% if account_context == 'forum' %}
+                    {% set forum = meta.get('forum') %}
+                    {% if forum %}
+                        <div class="forum-title-card forum-banner-card mb-4">
+                            {% if forum.get('banner') %}<img class="forum-banner" src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="{{ forum.get('name') or forum['id'] }} banner">{% endif %}
+                            <div class="p-4">
+                                <h3 class="mb-2">{% if forum.get('svg_icon') and forum['svg_icon'].get('style') == 'svg' %}{{ forum['svg_icon']['icon'] | safe }}{% endif %} {{ forum.get('name') or forum['id'] }}</h3>
+                                <div>
+                                    <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
+                                    <span class="mr-3"><i class="fas fa-layer-group"></i> {{ forum.get('forum_type') or '' }}</span>
+                                    {% if forum.get('url') %}<span><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
+                                </div>
+                                {% if forum.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ forum['info'] }}</div>{% endif %}
+                                <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ forum['id'] }}"><i class="fas fa-external-link-alt"></i> Show Forum</a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <h4 class="mx-5 mt-2 text-secondary">User Forum Post Activity:</h4>
+                    <div id="heatmapweekhourall"></div>
+
+                    <h5>Posts by year:</h5>
+                    <div>
+                        <div class="row">
+                            <div class="col-12 col-lg-11">
+                                <div id="heatmapyear" style="width: 100%;height: 300px;"></div>
+                            </div>
+                            <div class="col-12 col-lg-1">
+                                {% for year in meta['years'] %}
+                                    <div><button class="btn btn-info mt-1" onclick="update_heatmap_year({{ year }})">{{ year }}</button></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>Usernames:</h4>
+                    <div id="timeline_user_usernames" style="max-width: 900px"></div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                        <h4 class="mb-0">Threads where this user posted</h4>
+                        <a class="btn btn-primary" href="{{ url_for('chats_explorer.objects_user_account_posts') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
+                            <i class="fas fa-list"></i> Show paginated posts
+                        </a>
+                    </div>
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Thread</th>
+                            <th>First user post</th>
+                            <th>Last user post</th>
+                            <th>Posts in thread</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for thread in meta['threads'] %}
+                            <tr>
+                                <td><a href="{{ url_for('forums_explorer.forum_explorer_thread') }}?subtype={{ thread['subtype'] }}&id={{ thread['id'] }}">{{ thread.get('name') or thread['id'] }}</a></td>
+                                <td>{{ thread['first_post_date'] }}</td>
+                                <td>{{ thread['last_post_date'] }}</td>
+                                <td>{{ thread['nb_posts'] }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
 
             </div>
 
@@ -96,7 +167,7 @@
 {% include 'objects/tooltip_ail_objects.html' %}
 <script>
     $(document).ready(function(){
-        $("#page-Decoded").addClass("active");
+        $("#page-Chats-Explorer").addClass("active");
         $("#nav_chat").addClass("active");
 
 {#        {% if meta['subchannels'] %}#}
@@ -115,20 +186,23 @@ d3.json(url_t)
         create_timeline_basic('#timeline_user_usernames', data);
 });
 
+{% if account_context == 'chat' and meta['chats'] or account_context == 'forum' and meta['nb_posts'] %}
 d3.json("{{ url_for('chats_explorer.user_account_messages_stats_week_all') }}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}")
     .then(function(data) {
         create_heatmap_week_hour('#heatmapweekhourall', data);
     })
 
-let url = "{{ url_for('chats_explorer.objects_user_account_chats_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
-d3.json(url).then(function(data) {
-    create_directed_chord_diagram('#chord_user_chats', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
-});
+    {% if account_context == 'chat' %}
+        let url = "{{ url_for('chats_explorer.objects_user_account_chats_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
+        d3.json(url).then(function(data) {
+            create_directed_chord_diagram('#chord_user_chats', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+        });
 
-let url2 = "{{ url_for('chats_explorer.objects_user_account_mentions_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
-d3.json(url2).then(function(data) {
-    create_directed_chord_diagram('#chord_mentions', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
-});
+        let url2 = "{{ url_for('chats_explorer.objects_user_account_mentions_chord_json') }}?subtype={{ meta["subtype"] }}&id={{ meta["id"] }}"
+        d3.json(url2).then(function(data) {
+            create_directed_chord_diagram('#chord_mentions', data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+        });
+    {% endif %}
 
 
 var heatyearChart = echarts.init(document.getElementById('heatmapyear'));
@@ -182,6 +256,7 @@ function update_heatmap_year(year) {
     );
 }
 
+{% endif %}
 </script>
 
 

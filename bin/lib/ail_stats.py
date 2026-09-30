@@ -15,22 +15,10 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import ail_objects
-from lib.objects import BarCodes
-from lib.objects import CookiesNames
-from lib.objects import CryptoCurrencies
-from lib.objects import Domains
-from lib.objects import Favicons
-from lib.objects import FilesNames
-from lib.objects import GTrackers
-from lib.objects import Mails
-from lib.objects import Pgps
-from lib.objects import QrCodes
-from lib.objects import Titles
-from lib.objects import Usernames
 from lib.crawlers import get_crawlers_stats
+from lib import ail_core
 from lib import ail_orgs
 from lib import ail_users
-from lib import chats_viewer
 from lib import Tag
 from lib import Tracker
 
@@ -44,6 +32,9 @@ config_loader = None
 
 def get_feeders():
     return r_stats.smembers(f'feeders:name')
+
+def reset_feeders_names():
+    r_stats.delete(f'feeders:name')
 
 def get_current_feeder_timestamp(timestamp):
     return int(timestamp - (timestamp % 30))
@@ -62,7 +53,7 @@ def get_feeders_dashboard_full():
     # print(timestamp)
     f_dashboard = {}
 
-    feeders = get_feeders()
+    feeders = sorted(get_feeders())
     d_time = []
     for i in range(timestamp - 30*20, timestamp + 30, 30):
         t_feeders = get_feeders_by_time(i)
@@ -78,7 +69,7 @@ def get_feeders_dashboard_full():
 
 def get_feeders_dashboard():
     timestamp = get_current_feeder_timestamp(int(time.time()))
-    print(timestamp)
+    # print(timestamp)
 
     f_dashboard = {}
     t_feeders = get_feeders_by_time(timestamp)
@@ -130,25 +121,17 @@ def get_tracked_objs_dashboard(user_org, user_id):
     return trackers
 
 
-def get_global_stats():  # decoded ??  domhash, hhhash  etag ???
+def get_global_stats():
     stats = {'orgs': ail_orgs.get_nb_orgs(),
              'users': ail_users.get_nb_users(),
-             'objs':
-                 {'barcode': BarCodes.Barcodes().get_nb(),
-                  'chat': chats_viewer.get_nb_chats_stats(),
-                  'cookie-name': CookiesNames.CookiesNames().get_nb(),
-                  'cryptocurrency': CryptoCurrencies.CryptoCurrencies().get_nb(),
-                  'domain': {'onion': Domains.get_nb_domains_up_by_type('onion'),
-                             'web': Domains.get_nb_domains_up_by_type('web')
-                             },
-                  'favicon': Favicons.Favicons().get_nb(),
-                  'file-name': FilesNames.FilesNames().get_nb(),
-                  'gtracker': GTrackers.GTrackers().get_nb(),
-                  'mail': Mails.Mails().get_nb(),
-                  'pgp': Pgps.Pgps().get_nb(),
-                  'qrcode': QrCodes.Qrcodes().get_nb(),
-                  'title': Titles.Titles().get_nb(),
-                  'username': Usernames.Usernames().get_nb(),
-                  },
+             'objs': {},
              }
+    for obj_type in sorted(ail_core.get_all_objects()):
+        nb = ail_objects.get_nb_objects(obj_type)
+        if nb:
+            stats['objs'][obj_type] = nb
     return stats
+
+if __name__ == '__main__':
+    print(get_global_stats())
+

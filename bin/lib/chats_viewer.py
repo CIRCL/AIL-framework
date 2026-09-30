@@ -11,13 +11,16 @@ import sys
 import time
 import uuid
 
+import tempolocus
+from tempolocus.core import DetectionError
+
 from datetime import datetime, timezone
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.ail_core import generate_uuid
+from lib.ail_core import generate_uuid, get_chat_instance_uuid, is_valid_uuid_v5, paginate_iterator, validate_pagination
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Chats
 from lib.objects import ChatSubChannels
@@ -135,6 +138,11 @@ class ChatProtocol: # TODO first seen last seen ???? + nb by day ????
     def get_icon(self):
         if self.id == 'discord':
             icon = {'style': 'fab', 'icon': 'fa-discord'}
+        elif self.id == 'matrix':
+            icon = {'style': 'svg',
+                    'icon': '<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 256 256"><path fill="currentColor" d="M72 216a8 8 0 0 1-8 8H40a8 8 0 0 1-8-8V40a8 8 0 0 1 8-8h24a8 8 0 0 1 0 16H48v160h16a8 8 0 0 1 8 8M216 32h-24a8 8 0 0 0 0 16h16v160h-16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-32 88a32 32 0 0 0-56-21.13a31.93 31.93 0 0 0-40.71-6.15A8 8 0 0 0 72 96v64a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0v-40a16 16 0 0 1 32 0v40a8 8 0 0 0 16 0Z"/></svg>'}
+        elif self.id == 'rocket-chat':
+            icon = {'style': 'fab', 'icon': 'fa-rocketchat'}
         elif self.id == 'telegram':
             icon = {'style': 'fab', 'icon': 'fa-telegram'}
         else:
@@ -168,8 +176,8 @@ class ChatServiceInstance:
     def exists(self):
         return r_obj.exists(f'chatSerIns:{self.uuid}')
 
-    def get_protocol(self): # return objects ????
-        return r_obj.hget(f'chatSerIns:{self.uuid}', 'protocol')
+    def get_protocol(self):
+        return r_db.hget(f'chatSerIns:{self.uuid}', 'protocol')
 
     def get_network(self): # return objects ????
         network = r_obj.hget(f'chatSerIns:{self.uuid}', 'network')
@@ -194,11 +202,13 @@ class ChatServiceInstance:
             meta['chats'] = []
             for chat_id in self.get_chats():
                 meta['chats'].append(Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages'}))
-        if 'chats_with_messages':
+        if 'chats_with_messages' in options:
             meta['chats'] = []
             for chat_id in self.get_chats_with_messages():
-                meta['chats'].append(
-                    Chats.Chat(chat_id, self.uuid).get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'}))
+                chat = Chats.Chat(chat_id, self.uuid)
+                chat_meta = chat.get_meta({'created_at', 'icon', 'nb_subchannels', 'nb_messages', 'username', 'str_username'})
+                chat_meta['languages'] = [lang_stat[0] for lang_stat in chat.get_obj_language_stats()]
+                meta['chats'].append(chat_meta)
         if 'languages' in options:
             meta['languages'] = Language.get_container_subtype_languages('chat', self.uuid)
         return meta
@@ -260,8 +270,101 @@ class ChatServiceInstance:
 
         return languages
 
+
+def api_check_chat_instance_uuid(instance_uuid):
+    if not is_valid_uuid_v5(instance_uuid):
+        return {'status': 'error', 'reason': 'Invalid instance_uuid'}, 400
+    if not ChatServiceInstance(instance_uuid).exists():
+        return {'status': 'error', 'reason': 'Unknown chat instance'}, 404
+
+
+def api_check_chat_container(container_type, instance_uuid, container_id):
+    res = api_check_chat_instance_uuid(instance_uuid)
+    if res:
+        return res
+    container_classes = {
+        'chat': Chats.Chat,
+        'chat-subchannel': ChatSubChannels.ChatSubChannel,
+        'chat-thread': ChatThreads.ChatThread,
+    }
+    container_class = container_classes.get(container_type)
+    if not container_class:
+        return {'status': 'error', 'reason': 'Invalid chat container type'}, 400
+    if not isinstance(container_id, str) or not container_id:
+        return {'status': 'error', 'reason': f'{container_type} id is required'}, 400
+
+    if not container_class(container_id, instance_uuid).exists():
+        return {'status': 'error', 'reason': f'Unknown {container_type}'}, 404
+
 def get_chat_service_instances():
     return r_obj.smembers(f'chatSerIns:all')
+
+
+def api_get_chat_service_instances(page=1, nb=50):
+    page, nb = validate_pagination(page, nb, default_nb=50, max_nb=500)
+    instances = paginate_iterator(sorted(get_chat_service_instances()), nb_obj=nb, page=page)
+    metas = []
+    for instance_uuid in instances['list_elem']:
+        instance = ChatServiceInstance(instance_uuid)
+        meta = instance.get_meta()
+        meta['chat_count'] = instance.get_nb_chats()
+        metas.append(meta)
+    pagination = {
+        'page': instances['page'] or 1,
+        'page_size': nb,
+        'page_count': instances['nb_pages'],
+        'total': instances['nb_all_elem']
+    }
+    return {'instances': metas, 'pagination': pagination}, 200
+
+
+def api_get_chat_service_instance_chats(instance_uuid, page=1, nb=50, languages=None):
+    res = api_check_chat_instance_uuid(instance_uuid)
+    if res:
+        return res
+    try:
+        languages = Language.normalize_bcp47_tags(languages)
+    except (TypeError, ValueError) as error:
+        return {'status': 'error', 'reason': str(error)}, 400
+    page, nb = validate_pagination(page, nb, default_nb=50, max_nb=500)
+
+    instance = ChatServiceInstance(instance_uuid)
+    chats = []
+    chats_languages = {}
+    for chat_id in sorted(instance.get_chats()):
+        chat = Chats.Chat(chat_id, instance_uuid)
+        if languages:
+            chat_languages = set(chat.get_languages())
+            if not chat_languages.intersection(languages):
+                continue
+            chats_languages[chat_id] = sorted(chat_languages)
+        chats.append(chat)
+
+    paginated = paginate_iterator(chats, nb_obj=nb, page=page)
+    pagination = {
+        'page': paginated['page'] or 1,
+        'page_size': nb,
+        'page_count': paginated['nb_pages'],
+        'total': paginated['nb_all_elem']
+    }
+    chats_meta = []
+    for chat in paginated['list_elem']:
+        options = {'nb_messages', 'str_username', 'username'}
+        if not languages:
+            options.add('languages')
+        meta = chat.get_meta(options)
+        if languages:
+            meta['languages'] = chats_languages[chat.id]
+        chats_meta.append(meta)
+    return {
+        'instance': {
+            **instance.get_meta(),
+            'chat_count': instance.get_nb_chats()
+        },
+        'chats': chats_meta,
+        'pagination': pagination
+    }, 200
+
 
 def get_chat_service_instances_by_protocol(protocol):
     instance_uuids = {}
@@ -362,6 +465,11 @@ def get_nb_chats_stats():
             nb[protocol] += 1
     return nb
 
+def get_chats_iterator():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            yield Chats.Chat(chat_id, instance_uuid)
+
 #######################################################################################
 
 def get_obj_chat(chat_type, chat_subtype, chat_id):
@@ -379,7 +487,7 @@ def get_obj_chat_from_global_id(chat_gid):
 def get_obj_chat_meta(obj_chat, new_options=set()):
     options = {}
     if obj_chat.type == 'chat':
-        options = {'created_at', 'icon', 'info', 'subchannels', 'threads', 'username'}
+        options = {'address', 'created_at', 'icon', 'info', 'network', 'protocol', 'subchannels', 'threads', 'username'}
     elif obj_chat.type == 'chat-subchannel':
         options = {'chat', 'created_at', 'icon', 'nb_messages', 'threads'}
     elif obj_chat.type == 'chat-thread':
@@ -466,7 +574,22 @@ def get_messages_iterator(filters={}):
             for message_id in Tag.get_objs_by_date('message', tags, date):
                 yield Messages.Message(message_id)
     else:
-        for instance_uuid in get_chat_service_instances():
+        if 'sources' in filters:
+            if filters['sources']:
+                instance_uuids = []
+                sources = filters['sources']
+                for source in sources:
+                    instance_uuid = get_chat_instance_uuid(source)
+                    if instance_uuid:
+                        instance_uuids.append(instance_uuid)
+                    else:
+                        instance_uuids.append(source)
+            else:
+                instance_uuids = get_chat_service_instances()
+        else:
+            instance_uuids = get_chat_service_instances()
+        instance_uuids = sorted(instance_uuids)
+        for instance_uuid in instance_uuids:
 
             for chat_id in ChatServiceInstance(instance_uuid).get_chats():
                 chat = Chats.Chat(chat_id, instance_uuid)
@@ -540,8 +663,13 @@ def get_chat_object_messages_meta(c_messages):
                 if meta['forwarded_from'] not in temp_chats:
                     chat = get_obj_chat_from_global_id(meta['forwarded_from'])
                     temp_chats[meta['forwarded_from']] = chat.get_meta({'icon'})
-                else:
-                    meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+                meta['forwarded_from'] = temp_chats[meta['forwarded_from']]
+            if 'reply_to' in meta:
+                if meta.get('reply_to').get('forwarded_from'):
+                    if meta['reply_to']['forwarded_from'] not in temp_chats:
+                        chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+                        temp_chats[meta['reply_to']['forwarded_from']] = chat.get_meta({'icon'})
+                    meta['reply_to']['forwarded_from'] = temp_chats[meta['reply_to']['forwarded_from']]
             if meta['barcodes']:
                 barcodes = []
                 for q in meta['barcodes']:
@@ -710,7 +838,7 @@ def get_user_account_mentions_chord(subtype, user_id):
 
 
 def _get_chat_card_meta_options():
-    return {'created_at', 'icon', 'info', 'nb_participants', 'origin_link', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
+    return {'address', 'created_at', 'icon', 'info', 'nb_participants', 'network', 'origin_link', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}
 
 def _get_message_bloc_meta_options():
     return {'chat', 'content', 'files', 'files-names', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'reactions','thread', 'translation', 'user-account'}
@@ -718,6 +846,37 @@ def _get_message_bloc_meta_options():
 def _delete_messages_languages():
     for message in get_messages_iterator():
         message.delete_languages()
+
+def print_messages_language_by_language(language):
+    for instance_uuid in sorted(get_chat_service_instances()):
+        chat_instance = ChatServiceInstance(instance_uuid)
+        for chat_id in chat_instance.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            chat_messages = chat.get_messages_by_lang(language)
+            if not chat_messages:
+                continue
+            for message_id in chat_messages:
+                message = Messages.Message(message_id[1:])
+                print(message.get_content())
+
+def redetect_messages_language_by_language(language):
+    nb_chats = 0
+    nb_messages = 0
+    for instance_uuid in sorted(get_chat_service_instances()):
+        chat_instance = ChatServiceInstance(instance_uuid)
+        for chat_id in chat_instance.get_chats_with_messages():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            chat_messages = chat.get_messages_by_lang(language)
+            if not chat_messages:
+                continue
+            nb_chats += 1
+            for message_id in chat_messages:
+                message = Messages.Message(message_id[1:])
+                if message.get_language() == language:
+                    message.detect_language()
+                    nb_messages += 1
+    return {'language': language, 'chats': nb_chats, 'messages': nb_messages}
+
 
 # TODO
 #   - Messages duplicates
@@ -779,6 +938,33 @@ def get_chats_monitoring_requests_metas():
         requests.append(cr.get_meta())
     return requests
 
+def get_new_chats_monitoring_requests():
+    return r_obj.smembers(f'chats:requests:new')
+
+def get_nb_new_chats_monitoring_requests():
+    return r_obj.scard(f'chats:requests:new')
+
+def api_done_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.done(), 200
+
+def api_reject_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.reject(), 200
+
+def api_delete_chat_monitoring_request(c_uuid): # TODO LOG
+    cm = ChatsMonitoringRequest(c_uuid)
+    if not cm.exists():
+        return {"status": "error", "reason": "Unknown chat monitoring"}, 404
+    else:
+        return cm.delete(), 200
+
 class ChatsMonitoringRequest:
     def __init__(self, r_uuid):
         self.uuid = r_uuid
@@ -790,7 +976,7 @@ class ChatsMonitoringRequest:
         r_obj.hset(f'chats:request:{self.uuid}', name, value)
 
     def exists(self):
-        r_obj.exists(f'chats:request:{self.uuid}')
+        return r_obj.exists(f'chats:request:{self.uuid}')
 
     def get_meta(self):
         return {'uuid': self.uuid,
@@ -800,9 +986,11 @@ class ChatsMonitoringRequest:
                 'invite': self._get_field('invite'),
                 'username': self._get_field('username'),
                 'description': self._get_field('description'),
-        }
+                'status': self._get_field('status'),
+                }
 
     def create(self, creator, chat_type, invite, username, description):
+        r_obj.sadd(f'chats:requests:new', self.uuid)
         self._set_field('chat_type', chat_type)
         self._set_field('creator', creator)
         self._set_field('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
@@ -813,6 +1001,20 @@ class ChatsMonitoringRequest:
         if description:
             self._set_field('description', description)
         r_obj.sadd(f'chats:requests', self.uuid)
+
+    def done(self):
+        self._set_field('status', 'done')
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
+    def reject(self):
+        self._set_field('status', 'rejected')
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
+    def delete(self):
+        r_obj.delete(f'chats:request:{self.uuid}')
+        r_obj.srem(f'chats:requests', self.uuid)
+        r_obj.srem(f'chats:requests:new', self.uuid)
+
 
 def create_chat_monitoring_requests(creator, chat_type, invite, username, description):
     r_uuid = generate_uuid()
@@ -852,6 +1054,59 @@ def fix_chats_with_messages():
                 if subchannel.get_nb_messages() > 0:
                     chat.add_chat_with_messages()
                     break
+
+
+def fix_message_forum_pdf_and_image_message_id(chat, message_id):
+    ms = message_id.split('/')
+    if len(ms) == 5:
+        # check if is not thread
+        if ms[3] == chat.id:
+            channel_id = ms[2]
+
+            ## Message ##
+            new_message_id = f'{ms[0]}/{ms[1]}/{ms[3]}/{ms[4]}'
+            old_message = Messages.Message(message_id)
+            new_message = Messages.Message(new_message_id)
+            if not new_message.exists():
+                pass
+                # new_message.create('') # TODO create empty message
+                # # TODO get chat ID
+                # # TODO get subchannel ID
+                # # TODO add message to channel ID
+                # # TODO copy reactions
+                #
+                # # TODO correlation: -> copy correlation ????
+                # #       - subchannel
+                # #       - user account
+                # #       - filename
+                # #       - ocr
+
+            # re-create correlation message -> pdf + image
+            else: # TODO create if don't exists
+                for c in old_message.get_correlation('image').get('image', []):
+                    new_message.add_correlation('image', '', c[1:])
+                for c in old_message.get_correlation('pdf').get('pdf', []):
+                    new_message.add_correlation('pdf', '', c[1:])
+                ## -Message- ##
+
+            invalid_chat = Chats.Chat(channel_id, chat.subtype)
+            invalid_chat.delete()
+
+# delete invalid chat correlation
+# rename message ID ???
+def fix_forum_pdf_and_image_message():
+    for instance_uuid in get_chat_service_instances():
+        for chat_id in ChatServiceInstance(instance_uuid).get_chats():
+            chat = Chats.Chat(chat_id, instance_uuid)
+            # subchannels
+            for subchannel_gid in chat.get_subchannels():
+                _, _, subchannel_id = subchannel_gid.split(':', 2)
+                subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, instance_uuid)
+                messages, _ = subchannel._get_messages(nb=-1)
+                for mess in messages:
+                    _, _, message_id = mess[0].split(':', )
+                    fix_message_forum_pdf_and_image_message_id(chat, message_id)
+
 
 #### API ####
 
@@ -903,12 +1158,70 @@ def enrich_chat_relationships_labels(relationships):
                 meta[row['target']] = row['target']
     return meta
 
+def _get_tempolocus_predictions_from_weekly(weekly_activity, top=5):
+    if not weekly_activity:
+        return {}
+    try:
+        return tempolocus.detect(weekly_activity, kind='weekly', top=top)
+    except DetectionError:
+        return {}
+
+def _get_tempolocus_holiday_predictions_from_yearly_activity(yearly_activity, top=5, holiday_profile='standard', activity_signal='lack'):
+    yearly_results = []
+    for year, daily_activity in sorted(yearly_activity.items()):
+        if not daily_activity:
+            continue
+        try:
+            result = tempolocus.detect(
+                {'nb': [[day, count] for day, count in sorted(daily_activity.items())]},
+                kind='yearly',
+                top=top,
+                holiday_profile=holiday_profile,
+                activity_signal=activity_signal,
+            )
+            result['year'] = year
+            yearly_results.append(result)
+        except DetectionError:
+            continue
+    if not yearly_results:
+        return {}
+    return {
+        'input_type': 'yearly_daily_activity_by_year',
+        'holiday_profile': holiday_profile,
+        'activity_signal': activity_signal,
+        'years': yearly_results,
+    }
+
+def get_chat_tempolocus_predictions(chat_type, chat_instance_uuid, chat_id, top=5):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
+    return _get_tempolocus_predictions_from_weekly(chat.get_nb_week_messages(), top=top)
+
+def get_chat_tempolocus_holiday_predictions(chat_type, chat_instance_uuid, chat_id, top=5, holiday_profile='standard', activity_signal='lack'):
+    chat = get_obj_chat(chat_type, chat_instance_uuid, chat_id)
+    yearly_activity = {}
+    for year in chat.get_message_years():
+        _, daily_activity = chat.get_nb_year_messages(year)
+        yearly_activity[str(year)] = daily_activity
+    return _get_tempolocus_holiday_predictions_from_yearly_activity(yearly_activity, top=top, holiday_profile=holiday_profile, activity_signal=activity_signal)
+
+def get_user_account_tempolocus_predictions(user_id, instance_uuid, top=5):
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    weekly_activity = get_user_account_nb_all_week_messages(user_account.id, user_account.get_chats(), user_account.get_chat_subchannels())
+    return _get_tempolocus_predictions_from_weekly(weekly_activity, top=top)
+
+def get_user_account_tempolocus_holiday_predictions(user_id, instance_uuid, top=5, holiday_profile='standard', activity_signal='lack'):
+    user_account = UsersAccount.UserAccount(user_id, instance_uuid)
+    yearly_activity = {}
+    for year in user_account.get_years():
+        _, daily_activity = get_user_account_nb_year_messages(user_account.id, user_account.get_chats(), year)
+        yearly_activity[str(year)] = daily_activity
+    return _get_tempolocus_holiday_predictions_from_yearly_activity(yearly_activity, top=top, holiday_profile=holiday_profile, activity_signal=activity_signal)
+
 def api_get_chat_service_instance(chat_instance_uuid):
     chat_instance = ChatServiceInstance(chat_instance_uuid)
     if not chat_instance.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    # return chat_instance.get_meta({'chats'}), 200
-    return chat_instance.get_meta({'chats_with_messages'}), 200
+    return chat_instance.get_meta({'chats_with_messages', 'languages'}), 200
 
 def api_get_messages_languages(instance_uuid):
     chat_instance = ChatServiceInstance(instance_uuid)
@@ -921,14 +1234,14 @@ def api_get_chats_selector():
     for instance_uuid in get_chat_service_instances():
         for chat_id in ChatServiceInstance(instance_uuid).get_chats():
             chat = Chats.Chat(chat_id, instance_uuid)
-            selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_chat_instance()}: {chat.get_label()}'})
+            selector.append({'id': chat.get_global_id(), 'name': f'{chat.get_protocol()}: {chat.get_label()}'})
     return selector
 
 def api_get_chat(chat_id, chat_instance_uuid, translation_target=None, nb=-1, page=-1, messages=True, message=None, heatmap=False):
     chat = Chats.Chat(chat_id, chat_instance_uuid)
     if not chat.exists():
         return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'icon', 'info', 'nb_participants', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
+    meta = chat.get_meta({'address', 'created_at', 'icon', 'info', 'network', 'nb_participants', 'protocol', 'subchannels', 'tags_safe', 'threads', 'translation', 'username'}, translation_target=translation_target)
     if meta['username']:
         meta['username'] = get_username_meta_from_global_id(meta['username'])
     if meta['subchannels']:
@@ -991,7 +1304,7 @@ def api_get_languages_stats(obj_type, chat_instance_uuid, chat_id):
     stats = obj.get_obj_language_stats()
     langs = []
     for stat in stats:
-        langs.append({'name': Language.get_language_from_iso(stat[0]), 'value': int(stat[1])})
+        langs.append({'name': stat[0], 'value': int(stat[1])})
     return langs
 
 
@@ -1044,10 +1357,14 @@ def api_get_message(message_id, translation_target=None):
     message = Messages.Message(message_id)
     if not message.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
-    meta = message.get_meta({'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
+    meta = message.get_meta({'address', 'barcodes', 'chat', 'container', 'content', 'files', 'files-names', 'forwarded_from', 'icon', 'images', 'language', 'link', 'network', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'thread', 'translation', 'user-account'}, translation_target=translation_target)
     if 'forwarded_from' in meta:
         chat = get_obj_chat_from_global_id(meta['forwarded_from'])
         meta['forwarded_from'] = chat.get_meta({'icon'})
+    if 'reply_to' in meta:
+        if meta['reply_to'].get('forwarded_from'):
+            chat = get_obj_chat_from_global_id(meta['reply_to']['forwarded_from'])
+            meta['reply_to']['forwarded_from'] = chat.get_meta({'icon'})
     barcodes = []
     for q in meta['barcodes']:
         obj = Barcode(q)
@@ -1148,44 +1465,62 @@ def api_get_user_account_nb_year_messages(user_id, instance_uuid, year):
     nb = [[date, value] for date, value in nb.items()]
     return {'max': nb_max, 'nb': nb, 'year': year}, 200
 
-def api_chat_messages(subtype, chat_id):
-    chat = Chats.Chat(chat_id, subtype)
-    if not chat.exists():
-        return {"status": "error", "reason": "Unknown chat"}, 404
-    meta = chat.get_meta({'created_at', 'info', 'nb_participants', 'subchannels', 'threads', 'username'})  # 'icon' 'translation'
-    if meta['username']:
-        meta['username'] = get_username_meta_from_global_id(meta['username'])
-    if meta['subchannels']:
-        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
-    else:
-        options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-        meta['messages'], _, _ = chat.get_messages(nb=-1, options=options)
-    return meta, 200
 
-def api_subchannel_messages(subtype, subchannel_id):
-    subchannel = ChatSubChannels.ChatSubChannel(subchannel_id, subtype)
-    if not subchannel.exists():
-        return {"status": "error", "reason": "Unknown subchannel"}, 404
-    meta = subchannel.get_meta(
-        {'chat', 'created_at', 'nb_messages', 'nb_participants', 'threads'})
-    if meta['chat']:
-        meta['chat'] = get_chat_meta_from_global_id(meta['chat'])
-    if meta.get('threads'):
-        meta['threads'] = get_threads_metas(meta['threads'])
+def api_get_chat_object_messages(chat_type, instance_uuid, object_id, page=1, nb=500, languages=None):
+    res = api_check_chat_container(chat_type, instance_uuid, object_id)
+    if res:
+        return res
+    try:
+        languages = Language.normalize_bcp47_tags(languages)
+    except (TypeError, ValueError) as error:
+        return {'status': 'error', 'reason': str(error)}, 400
+    page, nb = validate_pagination(page, nb, default_nb=500, max_nb=500)
+
+    obj = get_obj_chat(chat_type, instance_uuid, object_id)
+    options = {'languages', 'nb_messages'}
+    if chat_type == 'chat':
+        options.update({'created_at', 'subchannels', 'threads', 'username'})
+    elif chat_type == 'chat-subchannel':
+        options.update({'chat', 'created_at', 'threads'})
+    meta = obj.get_meta(options)
     if meta.get('username'):
         meta['username'] = get_username_meta_from_global_id(meta['username'])
-    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-    meta['messages'], _, _ = subchannel.get_messages(nb=-1, options=options)
-    return meta, 200
+    if meta.get('subchannels'):
+        meta['subchannels'] = get_subchannels_meta_from_global_id(meta['subchannels'])
+    if meta.get('threads'):
+        meta['threads'] = get_threads_metas(meta['threads'])
+    if meta.get('chat'):
+        meta['chat'] = meta['chat'].split(':', 2)[2]
 
-def api_thread_messages(subtype, thread_id):
-    thread = ChatThreads.ChatThread(thread_id, subtype)
-    if not thread.exists():
-        return {"status": "error", "reason": "Unknown thread"}, 404
-    meta = thread.get_meta({'chat', 'nb_messages', 'nb_participants'})
-    options = {'content', 'files', 'files-names', 'images', 'link', 'parent', 'parent_meta', 'reactions', 'thread', 'user-account'}
-    meta['messages'], _, _ = thread.get_messages(nb=-1, options=options)
-    return meta, 200
+    message_options = {'content', 'files', 'files-names', 'forwarded_from', 'images',
+                       'language', 'parent', 'thread', 'user-account-id'}
+    messages, pagination, _ = obj.get_messages(
+        page=page, nb=nb, languages=languages, options=message_options)
+    pagination = {
+        'page': pagination['page'] or 1,
+        'page_size': pagination['nb'],
+        'page_count': pagination['nb_pages'],
+        'total': pagination['total']
+    }
+    response_key = {
+        'chat': 'chat',
+        'chat-subchannel': 'subchannel',
+        'chat-thread': 'thread'
+    }[chat_type]
+    return {response_key: meta, 'messages': messages, 'pagination': pagination}, 200
+
+
+def api_get_chat_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
+
+def api_get_chat_subchannel_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat-subchannel', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
+
+def api_get_chat_thread_messages(instance_uuid, obj_id, page=1, nb=500, languages=None):
+    return api_get_chat_object_messages('chat-thread', instance_uuid, obj_id, page=page, nb=nb, languages=languages)
+
 
 # # # # # # # # # # LATER
 #                 #

@@ -23,6 +23,12 @@
             </label>
           </div>
           <div class="custom-control custom-switch">
+            <input class="custom-control-input" type="checkbox" name="domain_i2p_switch" value="True" id="domain_i2p_switch" {%if domain_type=='all' or domain_type=='i2p'%}checked{%endif%}>
+            <label class="custom-control-label" for="domain_i2p_switch">
+              <span class="badge badge-danger"><i class="fas fa-user-secret"></i> I2P Domains</span>
+            </label>
+          </div>
+          <div class="custom-control custom-switch">
             <input class="custom-control-input" type="checkbox" name="domain_regular_switch" value="True" id="domain_regular_switch"{%if domain_type=='all' or domain_type=='regular'%}checked{%endif%}>
             <label class="custom-control-label" for="domain_regular_switch">
               <span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>

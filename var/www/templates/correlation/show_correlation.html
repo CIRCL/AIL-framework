@@ -10,12 +10,17 @@
 	  <!-- Core CSS -->
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/helper.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+        <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
 
 		<style>
@@ -65,17 +70,20 @@
 			color: #000000;
 		}
 
-        .pixelated {
-            image-rendering: pixelated;
-        }
-
-        .blured {
-            filter: blur(5px);
+        .object_image {
+            filter: blur(var(--object-image-blur, 5px));
         }
 
 		.graph_panel {
 			padding: unset;
 		}
+
+		#graph {
+			width: 100%;
+			height: 90vh;
+			min-height: 620px;
+		}
+
 
 		.line_graph {
 		  fill: none;
@@ -86,6 +94,93 @@
 			stroke-width: 1.5;
 			/*attr('stroke', '#bcbd22').*/
 		}
+
+        .pivotik-tooltip-card {
+            width: auto;
+            max-width: min(92vw, 44rem);
+            background-color: #1f1f1f;
+            color: #f8f9fa;
+            border: 1px solid #3a3a3a;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35);
+            box-sizing: border-box;
+        }
+
+        .pivotik-tooltip-card .card-header {
+            border-bottom: 1px solid #3a3a3a;
+            background-color: #1f1f1f;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .pivotik-tooltip-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .pivotik-tooltip-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 0.45rem;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 0.35rem;
+            padding: 0.25rem 0.45rem;
+        }
+
+        .pivotik-tooltip-label {
+            color: #b9c0c7;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            flex: 0 0 auto;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+
+        .pivotik-tooltip-value {
+            color: #f8f9fa;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            line-height: 1.25;
+            font-size: 0.82rem;
+            flex: 1 1 auto;
+        }
+
+        .pivotik-tooltip-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            margin-top: 0.45rem;
+        }
+
+        .pivotik-tooltip-image {
+            margin-top: 0.6rem;
+            text-align: center;
+        }
+
+        .pivotik-tooltip-image .img-thumbnail {
+            max-width: 100%;
+            width: auto;
+            height: auto;
+        }
+
+        .pvt-tooltip {
+            white-space: normal !important;
+            max-width: min(92vw, 44rem) !important;
+        }
+
+        .pvt-tooltip .pvt-tooltip-container {
+            max-height: min(75vh, 38rem) !important;
+            overflow: auto !important;
+            max-width: min(92vw, 44rem) !important;
+            width: max-content !important;
+            min-width: 14rem !important;
+            min-height: 0 !important;
+            resize: none !important;
+        }
 		</style>
 	</head>
 	<body>
@@ -95,9 +190,7 @@
 		<div class="container-fluid">
 			<div class="row">
 
-				{% include 'sidebars/sidebar_objects.html' %}
-
-				<div class="col-12 col-lg-10" id="core_content">
+				<div class="col-12 col-lg-12" id="core_content">
 
                     {% set is_correlation = True %}
 					{% if dict_object["object_type"] == "pgp" %}
@@ -131,11 +224,15 @@
                     {% elif dict_object["object_type"] == "hhhash" %}
 						{% include 'correlation/metadata_card_hhhash.html' %}
                     {% elif dict_object["object_type"] == "image" %}
-						{% include 'chats_explorer/card_image.html' %}
+						{% include 'objects/image/card_image.html' %}
                     {% elif dict_object["object_type"] == "ocr" %}
 						{% include 'objects/ocr/card_ocr.html' %}
                     {% elif dict_object["object_type"] == "barcode" %}
 						{% include 'objects/barcode/card_barcode.html' %}
+                    {% elif dict_object["object_type"] == "pdf" %}
+						{% include 'objects/pdf/card_pdf.html' %}
+                    {% elif dict_object["object_type"] == "author" %}
+						{% include 'objects/author/card_author.html' %}
                     {% elif dict_object["object_type"] == "qrcode" %}
 						{% include 'objects/qrcode/card_qrcode.html' %}
 					{% elif dict_object["object_type"] == "item" %}
@@ -161,27 +258,7 @@
 								<div class="card-header">
 									<i class="fas fa-project-diagram"></i> Graph
 									<span class="float-right">
-                                        <div class="card border-secondary">
-                                            <div class="card-body py-2">
-                                                <div class="row">
-                                                    <div class="col-md-3 text-center px-0">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(0);blur_tooltip();">
-                                                            <i class="fas fa-eye-slash"></i>
-      										                <span class="label-icon">Hide</span>
-                                                        </button>
-                                                    </div>
-                                                    <div class="col-md-6 text-center pl-0 pt-1">
-                                                        <input type="range" min="0" max="15" step="0.1" value="10" id="blur-slider-correlation">
-                                                    </div>
-                                                    <div class="col-md-3 text-center">
-                                                        <button class="btn btn-sm btn-secondary" onclick="blur_slider_correlation.val(15);blur_tooltip();">
-                                                            <i class="fas fa-image"></i>
-                                                            <span class="label-icon">Full</span>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {% include 'objects/image/block_blur_img_slider.html' %}
                                     </span>
                                     <span class="float-right mx-1">
 										{% if dict_object["object_type"] != "" %}
@@ -248,127 +325,34 @@
                                     </ul>
 
 									<ul class="list-group">
-  									<li class="list-group-item list-group-item-info">Select Correlation</li>
+  									<li class="list-group-item list-group-item-info">
+                                        Select Correlation:
+                                        <div>
+                                            <span class="">
+                                                <button class="btn btn-sm btn-info px-1 py-0" onclick="select_object_type_selector();" title="Select All Object Types">
+                                                    <i class="fa-solid fa-square-check"></i>
+                                                </button>
+                                            </span>
+                                            <span class="">
+                                                <button class="btn btn-sm btn-info px-1 py-0" onclick="unselect_object_type_selector();" title="Clear All Object Types">
+                                                    <i class="fa-solid fa-eraser"></i>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </li>
                                     <form action="{{ url_for('correlation.show_correlation') }}" method="post">
-									<li class="list-group-item text-left">
+									<li class="list-group-item text-left" id="correlation_type_selector">
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">
                                             <input type="hidden" id="subtype" name="subtype" value="{{ dict_object["metadata"]["type_id"] }}">
                                             <input type="hidden" id="obj_id" name="obj_id" value="{{ dict_object["correlation_id"] }}">
 
-
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="cookie-name_Check" name="cookie-name_Check" {%if "cookie-name" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="cookie-name_Check">Cookie Name</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="cve_Check" name="cve_Check" {%if "cve" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="cve_Check">Cve</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="cryptocurrency_Check" name="cryptocurrency_Check" {%if "cryptocurrency" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="cryptocurrency_Check">Cryptocurrency</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="decoded_Check" name="decoded_Check" {%if "decoded" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="decoded_Check">Decoded</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="etag_Check" name="EtagCheck" {%if "etag" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="etag_Check">Etag</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="favicon_Check" name="favicon_Check" {%if "favicon" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="favicon_Check">Favicon</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="gtracker_Check" name="gtracker_Check" {%if "gtracker" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="gtracker_Check">G tracking</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="domhash_Check" name="domhash_Check" {%if "dom-hash" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="domhash_Check">DomHash</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="hhhash_Check" name="hhhash_Check" {%if "hhhash" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="hhhash_Check">HHHash</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="screenshot_Check" name="screenshot_Check" {%if "screenshot" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="screenshot_Check">Screenshot</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="title_Check" name="title_Check" {%if "title" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="title_Check">Title</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="pgp_Check" name="pgp_Check" {%if "pgp" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="pgp_Check">PGP</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="domain_Check" name="domain_Check" {%if "domain" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="domain_Check">Domain</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="item_Check" name="item_Check" {%if "item" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="item_Check">Item</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="mail_Check" name="mail_Check" {%if "mail" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="mail_Check">Mail</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="ssh-key_Check" name="ssh-key_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="ssh-key_Check">SSH Key</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="ip_Check" name="ip_Check" {%if "ssh-key" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="ip_Check">IP</label>
-                                            </div>
-
-                                            <hr>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="chat_Check" name="chat_Check" {%if "chat" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="chat_Check">Chat</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="chat-subchannel_Check" name="chat-subchannel_Check" {%if "chat-subchannel" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="chat-subchannel_Check">Chat-Subchannel</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="chat-thread_Check" name="chat-thread_Check" {%if "chat-thread" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="chat-thread_Check">Chat-Thread</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="message_Check" name="message_Check" {%if "message" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="message_Check">Message</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="file-name_Check" name="file-name_Check" {%if "file-name" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="file-name_Check">File Name</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="image_Check" name="image_Check" {%if "image" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="image_Check">Image</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="ocr_Check" name="ocr_Check" {%if "ocr" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="ocr_Check">OCR</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="qrcode_Check" name="qrcode_Check" {%if "qrcode" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="qrcode_Check">Qrcode</label>
-                                            </div>
-
-                                            <hr>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="user-account_Check" name="user-account_Check" {%if "user-account" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="user-account_Check">User-Account</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" value="True" id="username_Check" name="username_Check" {%if "username" in dict_object["filter"]%}checked{%endif%}>
-                                                <label class="form-check-label" for="username_Check">Username</label>
-                                            </div>
+                                            {% for correlation_filter_object in dict_object["correlation_filter_objects"] %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="{{ correlation_filter_object['type'] }}_Check" name="{{ correlation_filter_object['type'] }}_Check" {% if correlation_filter_object['type'] in dict_object["filter"] %}checked{% endif %}>
+                                                    <label class="form-check-label" for="{{ correlation_filter_object['type'] }}_Check">{{ correlation_filter_object['label'] }}</label>
+                                                </div>
+                                            {% endfor %}
 
                                     </li>
 {#                                    <li class="list-group-item text-left">#}
@@ -384,9 +368,20 @@
 
                                         <div class="form-group">
                                             <label for="max_nb_nodes_in">Correlation Depth:</label>
-                                            <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
+                                            <div class="row">
+                                                <div class="col-xl-3">
+                                                    <div class="btn btn-sm btn-info px-1 py-1" onclick="set_level_zero();" title="Show Direct Correlations (Level 0)">
+                                                        <div class="d-flex align-items-center">
+                                                            <svg width="32" height="32" viewBox="0 0 32 32"><g fill="none"><path fill="#bebebe" d="M23.958 2H8.042A3.046 3.046 0 0 0 5 5.05v21.9A3.046 3.046 0 0 0 8.042 30h15.916A3.046 3.046 0 0 0 27 26.95V5.05A3.046 3.046 0 0 0 23.958 2"/><path fill="#636363" d="M7 7.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 7 7.25m.75 8a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zm14 0a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zm0-8.75a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5zM7 25.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75m14.75-.75a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5z"/><path fill="#d3d3d3" d="M12.5 9a3.5 3.5 0 1 1 7 0v14a3.5 3.5 0 1 1-7 0z"/><path fill="#635994" d="M13.5 9a2.5 2.5 0 0 1 5 0v14a2.5 2.5 0 0 1-5 0z"/><path fill="#00a6ed" d="M11 12a2 2 0 0 1 2-2h6a2 2 0 1 1 0 4h-6a2 2 0 0 1-2-2"/></g></svg>
+                                                            <i class="fa-solid fa-0"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-xl-9">
+                                                    <input class="form-control" type="number" value="{{dict_object["level"]}}" min="0" id="level" name="level">
+                                                </div>
+                                            </div>
                                         </div>
-
 
                                     </li>
                                     <li class="list-group-item text-left">
@@ -457,7 +452,7 @@
                                 <input type="hidden" id="tag_nb_max" name="tag_nb_max" value="{{dict_object["max_nodes"]}}">
                                 <input type="hidden" id="filter" name="tag_filter" value="{{dict_object["filter_str"]}}">
                                 <input type="hidden" id="tag_hidden" name="tag_hidden" value="{{dict_object["hidden_str"]}}">
-                                {% include 'tags/block_tags_selector.html' %}
+{#                                {% include 'tags/block_tags_selector.html' %}#}
                                 <button class="btn btn-primary mt-2">
 									<i class="fas fa-tag"></i> Add Tags
                                 </button>
@@ -476,7 +471,7 @@ $(document).ready(function(){
         $("#incomplete_graph").hide();
 		$("#page-Decoded").addClass("active");
 
-		all_graph.node_graph = create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] | urlencode }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
+		create_graph("{{ url_for('correlation.graph_node_json') }}?id={{ dict_object["correlation_id"] | urlencode }}&type={{ dict_object["object_type"] }}&mode={{ dict_object["mode"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}&max_nodes={{dict_object["max_nodes"]}}{% if 'type_id' in dict_object["metadata"] %}&subtype={{ dict_object["metadata"]["type_id"] }}{% endif %}&hidden={{ dict_object["hidden_str"] }}");
 		{% if dict_object["object_type"] in ["cryptocurrency", "pgp", "username"] %}
 			all_graph.line_chart = create_line_chart('graph_line', "{{ url_for('objects_subtypes.objects_cve_graphline_json') }}?type={{ dict_object["object_type"] }}&subtype={{dict_object["metadata"]["type_id"]}}&id={{ dict_object["correlation_id"] | urlencode }}");
 		{% elif dict_object["object_type"] == "decoded" %}
@@ -486,16 +481,6 @@ $(document).ready(function(){
         {% endif %}
 		all_graph.onResize();
 });
-
-const blur_slider_correlation = $('#blur-slider-correlation');
-function blur_tooltip(){
-    var image = $('#tooltip_screenshot_correlation')[0];
-    if (image) {
-        var blurValue = $('#blur-slider-correlation').val();
-        blurValue = 15 - blurValue;
-        image.style.filter = "blur(" + blurValue + "px)";
-    }
-}
 
 $(window).on("resize", function() {
 		all_graph.onResize();
@@ -522,12 +507,26 @@ function SubmitAddTags() {
 	$('#ltagsgalaxies').val(tagsgalaxy);
 	return true;
 }
+
+function set_level_zero() {
+    document.getElementById('level').value = 0;
+}
+
+function select_object_type_selector() {
+    document.querySelectorAll('#correlation_type_selector input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
+function unselect_object_type_selector() {
+    document.querySelectorAll('#correlation_type_selector input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
 </script>
 
 <script>
 	function resize_graph() {
-		zoom.translateTo(svg_node, 200, 200);
-		zoom.scaleTo(svg_node, 2);
+		if (all_graph.node_graph?.renderer?.fitAndCenter) {
+            all_graph.node_graph.renderer.fitAndCenter(1);
+        }
 	}
 
     function reset_graph() {
@@ -538,310 +537,367 @@ function SubmitAddTags() {
 
 <script>
 var correl_link = "{{ url_for('correlation.show_correlation') }}?type={{ dict_object["type"] }}&subtype={{ dict_object["subtype"] }}&id={{ dict_object["id"] }}&max_nodes={{ dict_object["max_nodes"] }}&level={{ dict_object["level"] }}&filter={{ dict_object["filter_str"] }}"
+
 {% if 'hidden_str' in dict_object %}
     correl_link = correl_link + "&hidden={{ dict_object["hidden_str"] }}"
 {% endif %}
 
-var width = 400,
-		height = 400;
-
-var link;
-
-var zoom = d3.zoom()
-	.scaleExtent([.2, 10])
-	.on("zoom", zoomed);
-
-// Loading:
-//$("#graph_loading").show()
-
-//var transform = d3.zoomIdentity;
-
-var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-var div = d3.select("body").append("div")
-		.attr("class", "tooltip_graph")
-		.style("opacity", 0);
-
-var simulation = d3.forceSimulation()
-		.force("link", d3.forceLink().id(function(d) { return d.id; }))
-		.force("charge", d3.forceManyBody())
-		.force("center", d3.forceCenter(width / 2, height / 2));
-		//.on("tick", ticked);
+const PivotickGraph = window.Pivotick;
+const PivotickNode = PivotickGraph.Node;
+const PivotickEdge = PivotickGraph.Edge;
 
 var currentObject = null;
 
-var svg_node = d3.select("#graph").append("svg")
-		.attr("id", "graph_div")
-		.attr("width", width)
-		.attr("height", height)
-		.call(d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed))
-		.on("dblclick.zoom", null)
+function build_tooltip_html(title, data) {
+    const excludedKeys = ['tags', 'id', 'img', 'svg_icon', 'icon', 'link', 'type', 'tags_safe', 'is_tags_safe'];
+    const prettifyKey = function(key) {
+        return sanitize_text((key || '').replace(/_/g, ' '));
+    };
+    const formatDate = function(value) {
+        if (typeof value === 'string' && value.length === 8 && /^\d+$/.test(value)) {
+            return value.slice(0, 4) + '-' + value.slice(4, 6) + '-' + value.slice(6, 8);
+        }
+        return sanitize_text(value);
+    };
+    const buildDetailRow = function(label, value) {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        return '<div class="pivotik-tooltip-row"><span class="pivotik-tooltip-label">' + prettifyKey(label) +
+            '</span><span class="pivotik-tooltip-value">' + sanitize_text(value) + '</span></div>';
+    };
 
-var container_graph = svg_node.append("g");
-		//.attr("transform", "translate(40,0)")
-		//.attr("transform", "scale(2)");
+    let desc = '<div class="card pivotik-tooltip-card">';
+    desc = desc + '<div class="card-body p-2">';
+    desc = desc + '<div class="pivotik-tooltip-details">';
+
+    if (Object.prototype.hasOwnProperty.call(data, 'status')) {
+        const statusLabel = data.status ? 'UP' : 'DOWN';
+        const statusClass = data.status ? 'success' : 'danger';
+        const statusIcon = data.status ? 'fa-check-circle' : 'fa-times-circle';
+        desc = desc + '<div class="pivotik-tooltip-row"><span class="pivotik-tooltip-label">Status</span><span class="pivotik-tooltip-value"><span class="badge badge-' + statusClass + '"><i class="fas ' + statusIcon + ' mr-1"></i>' + statusLabel + '</span></span></div>';
+    }
+
+    Object.keys(data).forEach(function(key) {
+        if (excludedKeys.includes(key) || key === 'status' || !data[key]) {
+            return;
+        }
+        if (key === 'first_seen' || key === 'last_seen') {
+            desc = desc + buildDetailRow(key, formatDate(data[key]));
+        } else {
+            desc = desc + buildDetailRow(key, data[key]);
+        }
+    });
+
+    desc = desc + '</div>';
+
+    if (data.tags) {
+        desc = desc + '<div class="pivotik-tooltip-tags">';
+        data.tags.forEach(function(tag) {
+            desc = desc + '<span class="badge badge-warning">' + sanitize_text(tag) + '</span> ';
+        });
+        desc = desc + '</div>';
+    }
+
+    if (data.img) {
+        desc = desc + '<div class="pivotik-tooltip-image">';
+        if (data.tags_safe) {
+            if (data.type === 'screenshot') {
+                desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}";
+            } else if (data.type === 'favicon') {
+                desc = desc + "<img src={{ url_for('objects_favicon.favicon', filename="") }}";
+            } else {
+                desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}";
+            }
+            desc = desc + data.img + ' class="img-thumbnail correlation-tooltip-image object_image" style="max-height: 14rem;"/>';
+        } else {
+            desc = desc + '<span class="my-2 fa-stack fa-4x"><i class="fas fa-stack-1x fa-image"></i><i class="fas fa-stack-2x fa-ban" style="color:Red"></i></span>';
+        }
+        desc = desc + '</div>';
+    }
+
+    desc = desc + '</div></div>';
+    return desc;
+}
+
+function render_pivotick_tooltip(element) {
+    const wrapper = document.createElement('div');
+    const elementData = typeof element.getData === 'function' ? (element.getData() || {}) : {};
+    const isNode = (typeof element.degree === 'function') || !!elementData._ail;
+    if (!isNode) {
+        const label = sanitize_text((elementData && elementData.label) ? elementData.label : 'Relationship');
+        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + label + '</b></div>';
+        return wrapper;
+    }
+
+    const nodeId = get_node_id(element);
+    const title = get_node_text(element);
+    if (!nodeId) {
+        wrapper.innerHTML = '<div class="px-2 py-1"><b>' + sanitize_text(title || 'Object') + '</b></div>';
+        return wrapper;
+    }
+    const ail = elementData._ail || elementData;
+
+    if (ail.tooltip_html) {
+        wrapper.innerHTML = ail.tooltip_html;
+        return wrapper;
+    }
+
+    wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="d-flex align-items-center"><div class="spinner-border spinner-border-sm text-warning mr-2" role="status"></div><span>Loading details...</span></div></div></div>';
+
+    $.getJSON("{{ url_for('correlation.get_description') }}?object_id=" + encodeURIComponent(nodeId),
+        function(data){
+            const html = build_tooltip_html(title, data);
+            ail.tooltip_html = html;
+            wrapper.innerHTML = html;
+        }
+    ).fail(function(error){
+        wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
+    });
+
+    return wrapper;
+}
+
+
+function get_icon_unicode_value(nodeStyle) {
+    return (nodeStyle && (nodeStyle.icon_text || nodeStyle.icon)) || '';
+}
+
+function get_icon_codepoint(iconValue) {
+    if (!iconValue) return null;
+    const cp = iconValue.codePointAt(0);
+    if (!cp) return null;
+    return cp.toString(16).toUpperCase();
+}
+
+function is_svg_icon(nodeStyle) {
+    return nodeStyle && nodeStyle.style === 'svg' && nodeStyle.icon;
+}
+
+function build_icon_class(nodeStyle) {
+    if (is_svg_icon(nodeStyle)) {
+        return '';
+    }
+    const baseClass = (nodeStyle && (nodeStyle.icon_class || nodeStyle.style)) || '';
+    const iconValue = get_icon_unicode_value(nodeStyle);
+    const codepoint = get_icon_codepoint(iconValue);
+    if (!codepoint) {
+        return baseClass;
+    }
+    return (baseClass + ' pvt-ail-icon-' + codepoint).trim();
+}
+
+function build_svg_icon(nodeStyle) {
+    if (is_svg_icon(nodeStyle)) {
+        return nodeStyle.icon;
+    }
+    return undefined;
+}
+
+function inject_icon_css_rules(nodes) {
+    const styleId = 'pivotick-ail-icon-map';
+    let styleTag = document.getElementById(styleId);
+    if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = styleId;
+        document.head.appendChild(styleTag);
+    }
+    const rules = [];
+    nodes.forEach(function(node) {
+        if (is_svg_icon(node.style)) {
+            return;
+        }
+        const iconValue = get_icon_unicode_value(node.style);
+        const codepoint = get_icon_codepoint(iconValue);
+        if (codepoint) {
+            rules.push('.pvt-ail-icon-' + codepoint + '::before { content: ' + JSON.stringify(String.fromCodePoint(parseInt(codepoint, 16))) + '; }');
+        }
+    });
+    styleTag.textContent = rules.join('\n');
+}
+
+const SIDEBAR_HIDDEN_KEYS = new Set([
+    'icon',
+    'shape',
+    'style',
+    'text',
+    'url',
+    'x',
+    'y',
+    'vx',
+    'vy',
+    'fx',
+    'fy',
+    '_ail',
+]);
+
+function build_sidebar_properties(element) {
+    const data = (element && typeof element.getData === 'function') ? (element.getData() || {}) : (element || {});
+    return Object.entries(data)
+        .filter(function(entry) {
+            const key = entry[0];
+            const value = entry[1];
+            return key && value !== null && value !== undefined && value !== '' && !SIDEBAR_HIDDEN_KEYS.has(key);
+        })
+        .map(function(entry) {
+            return { name: entry[0], value: entry[1] };
+        });
+}
 
 
 function create_graph(url){
+    return $.getJSON(url)
+        .done(function(data){
+            const graphContainer = document.getElementById('graph');
 
-d3.json(url)
-.then(function(data){
+            inject_icon_css_rules(data.nodes);
 
-	link = container_graph.append("g")
-	.selectAll("line")
-	.data(data.links)
-	.enter().append("line")
-		.attr("class", "link");
-		//.attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+            const nodeById = {};
+            const nodes = data.nodes.map(function(n){
+                nodeById[n.id] = new PivotickNode(n.id, {
+                    ...n,
+                    label: n.text,
+                    _ail: n,
+                }, {
+                    color: n.style.node_color || n.style.color,
+                    size: n.style.node_radius || n.style.radius || 5,
+                    iconClass: build_icon_class(n.style),
+                    svgIcon: build_svg_icon(n.style),
+                    textColor: '#000000',
+                });
+                return nodeById[n.id];
+            });
 
-	var node = container_graph.selectAll(".node")
-				.data(data.nodes)
-			.enter().append("g")
-			.attr("class", "nodes")
-			.on("dblclick", doubleclick)
-			.on("click", click)
-			.on("mouseover", mouseovered)
-			.on("mouseout", mouseouted)
-			.call(d3.drag()
-					.on("start", drag_start)
-					.on("drag", dragged)
-					.on("end", drag_end));
+            const edges = data.links.map(function(l, i){
+                const sourceId = typeof l.source === 'object' ? l.source.id : l.source;
+                const targetId = typeof l.target === 'object' ? l.target.id : l.target;
+                return new PivotickEdge(
+                    'e' + i,
+                    nodeById[sourceId],
+                    nodeById[targetId],
+                    { label: l.relationship || '' },
+                    {},
+                    false
+                );
+            }).filter(function(e){ return !!e.from && !!e.to; });
 
-    /*
-    node.append("image")
-    .attr("xlink:href", "https://circl.lu/assets/images/circl-logo.png")
-    .attr("height", 20)
-    .attr("width", 20)
-    .attr("x", -10)
-    .attr("y", -10);
+            all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
+                /*simulation: {
+                    cooldownTime: 2000,        // default 2000
+                    d3AlphaDecay: 0.015,       // default 0.0228
+                    d3VelocityDecay: 0.5,      // default 0.4
+                    d3LinkDistance: 60,        // default 30
+                    d3ManyBodyStrength: -250,  // default -150
+                    d3CollideRadius: 20,       // default 12
+                    d3CollideIterations: 2,    // default 1
+                    d3CenterStrength: 0.7,     // default 1
+                },*/
+                render: {
+                    type: 'svg',
+                    defaultEdgeStyle: {
+                        markerEnd: "",
+                        markerStart: "",
+                        curveStyle: 'straight',
+                    },
+                },
+                UI: {
+                    mode: 'full',
+                    theme: 'dark',
+                    editors: {
+                        nodeCreator: { enabled: false },
+                        edgeCreator: { enabled: false },
+                    },
+                    tooltip: {
+                        enabled: true,
+                        render: function(element){ return render_pivotick_tooltip(element); },
+                    },
+                    sidebar: {
+                        collapsed: false,
+                    },
+                    propertiesPanel: {
+                        nodePropertiesMap: function(node) { return build_sidebar_properties(node); },
+                        edgePropertiesMap: function(edge) { return build_sidebar_properties(edge); },
+                    },
 
-     */
+                },
+                callbacks: {
+                    onNodeDbclick: function(event, node){ doubleclick(event, node); },
+                    onNodeHoverIn: function(event, node){ currentObject = { id: get_node_id(node), node: node }; },
+                    onNodeHoverOut: function(){ currentObject = null; },
+                    onCanvasClick: function(){ currentObject = null; },
+                    onNodeClick: function(event, node){ click(node); },
+                },
+            });
 
-	node.append("circle")
-			.attr("r", function(d) {
-				return (d.style.node_radius);})
-			.attr("fill", function(d) {
-					return d.style.node_color;});
+            if (all_graph.node_graph?.renderer?.fitAndCenter) {
+                all_graph.node_graph.renderer.fitAndCenter(1);
+            }
 
-	node.append('text')
-		  .attr('text-anchor', 'middle')
-		  .attr('dominant-baseline', 'central')
-		  .attr("class", function(d) {
-				return "graph_node_icon " + d.style.icon_class
-			})
-    	.attr('font-size', '8px' )
-			.attr('pointer-events', 'none')
-    	.text(function(d) {
-				//if(d.hash){
-					return d.style.icon_text
-				//}
-			});
+            $("#graph_loading").remove();
 
-	zoom.translateTo(svg_node, 200, 200);
-	zoom.scaleTo(svg_node, 2);
+            if (!data.meta.complete){
+                $("#incomplete_graph").show();
+            }
 
-/*	node.append("text")
-		      .attr("dy", 3)
-					.attr("dx", 7)
-					.attr("class", "graph_text_node")
-		      //.style("text-anchor", function(d) { return d.children ? "end" : "start"; })
-		      .text(function(d) { return d.id; });*/
+            d3.select("body").on("keypress", keypressed);
+        })
+        .fail(function(error) {
+            $("#graph_loading").remove();
+            $("#graph").append($("<div></div>").text(error.statusText || error));
+        });
+}
 
-	simulation
-			.nodes(data.nodes)
-			.on("tick", ticked);
-
-	simulation.force("link")
-			.links(data.links);
-
-	function ticked() {
-		link
-				.attr("x1", function(d) { return d.source.x; })
-				.attr("y1", function(d) { return d.source.y; })
-				.attr("x2", function(d) { return d.target.x; })
-				.attr("y2", function(d) { return d.target.y; });
-
-		/*node
-				.attr("cx", function(d) { return d.x; })
-				.attr("cy", function(d) { return d.y; });*/
-		node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-	}
-
-	// Loading ...
-	$("#graph_loading").remove();
-
-    if (!data.meta.complete){
-        $("#incomplete_graph").show();
+function get_node_data(nodeLike) {
+    if (!nodeLike) {
+        return {};
     }
-
-    d3.select("body").on("keypress", keypressed)
-
-
-
-})
-.catch(function(error) {
-				$("#graph_loading").remove()
-				svg_node.remove();
-				d3.select("#graph").append("div")
-													 .text(error);
-		});
-}
-
-function zoomed() {
-	container_graph.attr("transform", d3.event.transform);
-}
-
-function doubleclick (d) {
-	window.open(d.url, '_blank');
-}
-
-function keypressed () {
-    //console.log(d3.event.keyCode)
-    //console.log(currentObject.id)
-    // hide node, H or h key
-    if ((d3.event.keyCode === 72 || d3.event.keyCode === 104) && currentObject) {
-        window.location.href = correl_link + "&hide=" + currentObject.id
+    if (typeof nodeLike.getData === 'function') {
+        return nodeLike.getData() || {};
     }
-
+    return nodeLike;
 }
 
-function click (d) {
-console.log('clicked')
+function get_node_id(nodeLike) {
+    if (!nodeLike) {
+        return null;
+    }
+    if (nodeLike.id) {
+        return nodeLike.id;
+    }
+    const data = get_node_data(nodeLike);
+    return data.id || (data._ail && data._ail.id) || null;
 }
 
-function drag_start(d) {
-if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-d.fx = d.x;
-d.fy = d.y;
+function get_node_text(nodeLike) {
+    const data = get_node_data(nodeLike);
+    const ail = data._ail || {};
+    return ail.text || data.label || get_node_id(nodeLike) || '';
 }
 
-function dragged(d) {
-d.fx = d3.event.x;
-d.fy = d3.event.y;
+function doubleclick(event, node) {
+    const data = get_node_data(node);
+    const ail = data._ail || data;
+    if (ail.url) {
+        window.open(ail.url, '_blank');
+    }
 }
 
-function drag_end(d) {
-if (!d3.event.active) simulation.alphaTarget(0);
-d.fx = d.x;
-d.fy = d.y;
+function keypressed(event) {
+    const keyCode = event ? event.keyCode : d3.event.keyCode;
+    if ((keyCode === 72 || keyCode === 104) && currentObject) {
+        window.location.href = correl_link + "&hide=" + encodeURIComponent(currentObject.id);
+    }
 }
 
-function mouseovered(d) {
-
-currentObject = d;
-
-var d3_pageX = d3.event.pageX;
-var d3_pageY = d3.event.pageY;
-
-if (d.popover) {
-	div.html(d.popover)
-		.style("left", (d3_pageX) + "px")
-		.style("top", (d3_pageY - 28) + "px");
-
-	div.transition()
-		.duration(200)
-		.style("opacity", 1);
-    blur_tooltip();
-} else {
-
-		var pop_header = "<div class=\"card text-white\" style=\"max-width: 25rem;\"><div class=\"card-header bg-dark pb-0 border-white\"><h6>"+ sanitize_text(d.text) +"</h6></div>"
-		var spinner = "<div class=\"card-body bg-dark pt-0\"><div class=\"spinner-border text-warning\" role=\"status\"></div> Loading...</div>"
-
-		div.html(pop_header + spinner)
-			.style("left", (d3_pageX) + "px")
-			.style("top", (d3_pageY - 28) + "px");
-
-		div.transition()
-			.duration(200)
-			.style("opacity", 1);
-
-		$.getJSON("{{ url_for('correlation.get_description') }}?object_id="+ d.id,
-				function(data){
-					var desc = pop_header + "<div class=\"card-body bg-dark pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
-					Object.keys(data).forEach(function(key) {
-						if (key=="status") {
-							desc = desc + "<dt class=\"col-sm-3 px-0\">status</dt><dd class=\"col-sm-9 px-0\"><div class=\"badge badge-pill badge-light flex-row-reverse\" style=\"color:"
-							if (data["status"]) {
-								desc = desc + "Green"
-							} else {
-								desc = desc + "Red"
-							}
-							desc = desc + ";\"><i class=\"fas "
-							if (data["status"]) {
-								desc = desc + "fa-check-circle\"></i>UP"
-							} else {
-								desc = desc + "fa-times-circle\"></i>DOWN"
-							}
-							desc = desc + "</div></dd>"
-						} else if (key!=="tags" && key!=="id" && key!=="img" && key!=="svg_icon" && key!=="icon" && key!=="link" && key!=="type") {
-                            if (data[key]) {
-                                if ((key==="first_seen" || key==="last_seen") && data[key].length===8) {
-                                    let date = sanitize_text(data[key])
-                                    desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8) + "</dd>"
-                                } else {
-							        desc = desc + "<dt class=\"col-sm-3 px-0\">" + sanitize_text(key) + "</dt><dd class=\"col-sm-9 px-0\">" + sanitize_text(data[key]) + "</dd>"
-                                }
-                            }
-						}
-					});
-					desc = desc + "</dl>"
-
-                    if (data["tags"]) {
-						data["tags"].forEach(function(tag) {
-							desc = desc + "<span class=\"badge badge-warning\">"+ sanitize_text(tag) +"</span>";
-						});
-					}
-
-					if (data["img"]) {
-                        if (data["tags_safe"]) {
-                            if (data["type"] === "screenshot") {
-						        desc = desc + "<img src={{ url_for('objects_item.screenshot', filename="") }}"
-                            } else if (data["type"] === "favicon") {
-                                desc = desc + "<img src={{ url_for('objects_favicon.favicon', filename="") }}"
-                            } else {
-                                desc = desc + "<img src={{ url_for('objects_image.image', filename="") }}"
-                            }
-                            desc = desc + data["img"] +" class=\"img-thumbnail blured\" id=\"tooltip_screenshot_correlation\" style=\"\"/>";
-                        } else {
-                            desc = desc + "<span class=\"my-2 fa-stack fa-4x\"><i class=\"fas fa-stack-1x fa-image\"></i><i class=\"fas fa-stack-2x fa-ban\" style=\"color:Red\"></i></span>";
-                        }
-					}
-
-					desc = desc + "</div></div>"
-					div.html(desc)
-					 	.style("left", (d3_pageX) + "px")
-					 	.style("top", (d3_pageY - 28) + "px");
-					d.popover = desc
-
-                    if (data["img"]) {
-                        blur_tooltip();
-                    }
-
-				})
-				.fail(function(error) {
-					desc = pop_header + "<div class=\"card-body bg-dark pt-0\"><i class=\"fas fa-3x fa-times text-danger\"></i>"+ error.statusText +"</div>"
-					div.html(desc)
-					 	.style("left", (d3_pageX) + "px")
-					 	.style("top", (d3_pageY - 28) + "px");
-				});
-		}
+function click(node) {
+    console.log('clicked', get_node_id(node));
 }
 
-function mouseouted() {
-    currentObject = null;
-
-	div.transition()
-		.duration(500)
-		.style("opacity", 0);
-
-	link.style("stroke", "#666");
-}
 
 all_graph.onResize = function () {
-	var aspect = 1000 / 500, all_graph = $("#graph_div");
-	var targetWidth = all_graph.parent().width();
-	all_graph.attr("width", targetWidth);
-	all_graph.attr("height", targetWidth / aspect);
+    if (all_graph.node_graph?.renderer?.fitAndCenter) {
+        all_graph.node_graph.renderer.fitAndCenter();
+    }
 }
 
 window.all_graph = all_graph;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
-
+import json
 import os
 import sys
 
@@ -93,13 +93,13 @@ class SSHKey(AbstractDaterangeObject):
         self._set_field('type', key_type)
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):  # TODO get HOSTS
+    def get_meta(self, options=None, flask_context=False):  # TODO get HOSTS
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self._get_meta(options=options)
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
         meta['key_type'] = self.get_key_type()
@@ -147,7 +147,7 @@ class SSHKeys(AbstractDaterangeObjects):
         return 'SSHKeys'
 
     def get_icon(self):
-        return {'fa': 'fab', 'icon': 'console'}
+        return {'fa': 'fas', 'icon': 'terminal'}
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -248,13 +248,16 @@ def get_passive_ssh_session():
 
 def _get_passive_ssh_result(path):
     s = get_passive_ssh_session()
-    res = s.get(f'{get_passive_ssh_url()}{path}')
+    try:
+        res = s.get(f'{get_passive_ssh_url()}{path}')
+    except requests.exceptions.ConnectionError:
+        return None, 503
     if res.status_code != 200:
         # TODO LOG
         if res.status_code != 404:
-            print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
+            print(f" PassiveSSH requests error: {res.text}, {res.status_code}")
         # set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
-        return res.text, res.status_code
+        return json.loads(res.text), res.status_code
     else:
         r = res.json()
         if r:
@@ -338,9 +341,8 @@ def api_test_passive_ssh():
     if not url:
         return {"status": "error", "reason": "Invalid passive SSH URL"}, 400
     s = get_passive_ssh_session()
-    res = s.get(f'{url}/host/ssh/ail-project.org')
+    res = s.get(f'{url}/host/ssh/github.com')
     if res.status_code != 200:
-        # TODO LOG
         print(f" PassiveSSH requests error: {res.status_code}, {res.text}")
         set_passive_ssh_test(f"{res.status_code}: {res.text}", is_error=True)
     else:

@@ -21,8 +21,130 @@
   <script src="{{ url_for('static', filename='js/helper.js') }}"></script>
 
   <style>
+    .object_image {
+        filter: blur(var(--object-image-blur, 5px));
+    }
     .popover{
         max-width: 100%;
+    }
+    .popover-header{
+        background: #343a40;
+        color: #fff;
+        font-weight: 600;
+    }
+    .popover-body{
+        background: #f8f9fa;
+        border-radius: 0 0 .3rem .3rem;
+    }
+    .page-shell{
+        padding: 0 0.5rem 1rem;
+    }
+    .item-hero{
+        border: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.08);
+    }
+    .item-hero .card-header{
+        background: linear-gradient(120deg, #343a40, #495057);
+    }
+    .meta-table th{
+        width: 28%;
+        color: #495057;
+        font-weight: 600;
+        border-top: 0;
+    }
+    .meta-table td{
+        border-top: 0;
+    }
+    .pill-tags{
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+    }
+    .actions-grid{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+    .actions-grid .btn{
+        border-radius: 999px;
+    }
+    .section-block{
+        margin: 0.85rem 0.65rem;
+    }
+    .card-clean{
+        border: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 0.4rem 1.1rem rgba(0, 0, 0, 0.07);
+    }
+    .card-clean .card-header{
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .section-title{
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #343a40;
+    }
+    .section-badge{
+        border-radius: 999px;
+        font-size: 0.78rem;
+        padding: 0.3rem 0.55rem;
+    }
+    .summary-chip{
+        border: 1px solid #e9ecef;
+        border-radius: 0.65rem;
+        padding: 0.45rem 0.6rem;
+        background: #fff;
+        min-width: 170px;
+    }
+    .summary-chip .label{
+        display: block;
+        font-size: 0.72rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        margin-bottom: 0.1rem;
+    }
+    .summary-chip .value{
+        font-weight: 600;
+        color: #212529;
+        word-break: break-word;
+    }
+    .extracted-table tbody tr:hover{
+        background-color: #f8fbff;
+    }
+    .extracted-match-list{
+        margin: 0;
+        padding-left: 1rem;
+    }
+    .extracted-match-list li{
+        margin: 0.15rem 0;
+    }
+    .extracted-card-header{
+        cursor: pointer;
+        user-select: none;
+    }
+    .extracted-card-header:hover{
+        background: #eef3f8 !important;
+    }
+    .show-more-btn{
+        border-radius: 999px;
+        font-size: 0.78rem;
+        padding: 0.12rem 0.6rem;
+    }
+    .id-inline{
+        font-family: monospace;
+        font-size: 0.9rem;
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.35rem;
+        background: #f1f3f5;
+        display: inline-block;
     }
 	.rotate{
 		-moz-transition: all 0.1s linear;
@@ -44,78 +166,121 @@
 <body>
   {% include 'nav_bar.html' %}
 
-  <div class="card my-2 mx-2">
-    <div class="card-header bg-dark">
+   <button onclick="goToTop()" id="sticky_btn_up" title="Go to top"><i class="fas fa-circle-chevron-up"></i></button>
+
+  <div class="page-shell">
+  <div class="card item-hero my-2 mx-2">
+    <div class="card-header py-3">
       <h3 class="text-white text-center" >{{ meta['name'] }}</h3>
     </div>
-    <div class="card-body pb-1">
-      <table class="table table-condensed">
-        <thead class="">
-          <tr>
-            <th>Date</th>
-            <th>Source</th>
-            <!-- <th>Encoding</th> -->
-            <th>Size (Kb)</th>
-            <th>Number of lines</th>
-            <th>Max line length</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-          <td>{{ meta['date'] }}</td>
-          <td>{{ meta['source'] }}</td>
-          <!-- <td>{{ meta['encoding'] }}</td> -->
-          <td>{{ meta['size'] }}</td>
-          <td>{{ meta['lines']['nb'] }}</td>
-          <td>{{ meta['lines']['max_length'] }}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div>
-        <h5>
-          <span>
-            {% include 'modals/edit_tag.html' %}
-            {% for tag in meta['tags'] %}
-              <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
-              data-tagid="{{ tag }}" data-objtype="item" data-objsubtype="" data-objid="{{ meta['id'] }}">
-                {{ tag }}
-              </button>
-
-            {%  endfor %}
-            <br>
-            {% include 'modals/add_tags.html' %}
-            <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-              <i class="far fa-plus-square"></i>
-            </button>
-          </span>
-        </h5>
+    <div class="card-body pb-2">
+      <div class="row">
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm mb-2">
+            <div class="card-header text-light py-2">
+              <strong><i class="fas fa-info-circle"></i> Item Overview</strong>
+            </div>
+            <div class="card-body py-2">
+              <table class="table table-sm meta-table mb-0">
+                <tbody>
+                  <tr><th>Date</th><td>{{ meta['date'] }}</td></tr>
+                  <tr><th>Source</th><td>{{ meta['source'] }}</td></tr>
+                  <tr><th>Size (Kb)</th><td>{{ meta['size'] }}</td></tr>
+                  <tr><th>Number of lines</th><td>{{ meta['lines']['nb'] }}</td></tr>
+                  <tr><th>Max line length</th><td>{{ meta['lines']['max_length'] }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm mb-2">
+            <div class="card-header text-light py-2">
+              <strong><i class="fas fa-tags"></i> Tags</strong>
+            </div>
+            <div class="card-body py-2">
+              <div class="pill-tags">
+                {% include 'modals/edit_tag.html' %}
+                {% for tag in meta['tags'] %}
+                  <button class="btn btn-sm btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal"
+                  data-tagid="{{ tag }}" data-objtype="item" data-objsubtype="" data-objid="{{ meta['id'] }}">
+                    {{ tag }}
+                  </button>
+                {%  endfor %}
+                {% include 'modals/add_tags.html' %}
+                <button type="button" class="btn btn-sm btn-light border" data-toggle="modal" data-target="#add_tags_modal" title="Add tag">
+                  <i class="far fa-plus-square"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
+      {% if meta['custom'] %}
+          <div id="accordionCustomMeta" class="mb-2">
+            <div class="card">
+              <div class="card-header py-1" id="headingCustomMeta">
+                <div class="row">
+                  <div class="col-11">
+                    <div class="mt-2">
+                      <h5><i class="fas fa-circle-info"></i> Custom Meta</h5>
+                    </div>
+                  </div>
+                  <div class="col-1">
+                    <button class="btn btn-link py-2 float-right rotate" data-toggle="collapse" data-target="#collapseCustomMeta" aria-expanded="true" aria-controls="collapseCustomMeta">
+                      <i class="fas fa-2x fa-chevron-circle-down"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+{#                TODO  CREATE  OBJ CUSTOM META BLOC  #}
+              <div id="collapseCustomMeta" class="collapse" aria-labelledby="headingCustomMeta" data-parent="#accordionCustomMeta">
+                <div class="card-body">
+                  <pre class="" id="custom_meta">{{ meta['custom'] }}</pre>
+                </div>
+              </div>
+
+
+            </div>
+          </div>
+      {% endif %}
+
       {% if meta['father'] %}
-        <div class="mt-3">
-          Father: <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>
+        <div class="alert alert-light border mt-2 mb-2">
+            <strong><i class="fas fa-level-up-alt"></i> Father:</strong>
+            {% if meta['source'] == 'pdf' %}
+                <a href="{{ url_for('objects_pdf.pdf_view')}}?id={{meta['father'][5:]}}" target="_blank"><i class="far fa-file-pdf fa-3x" style="color: Red;"></i> {{meta['father'][5:]}}</a>
+            {% elif meta['father'] == 'manual' %}
+                Manual
+            {% else %}
+                <a href="{{ url_for('objects_item.showItem')}}?id={{meta['father']}}" target="_blank">{{meta['father']}}</a>
+            {% endif %}
         </div>
       {% endif %}
 
-      <div class="d-flex flex-row-reverse bd-highlight">
-        <div>
+      <div class="actions-grid justify-content-end mt-1">
+        <div class="mr-auto text-muted small align-self-center">
+          ID: <code>{{ meta['id'] }}</code>
+        </div>
+        <div class="mt-1">
           <a href="{{ url_for('correlation.show_correlation')}}?type=item&id={{ meta['id'] }}" target="_blank">
-						<button class="btn btn-lg btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
-						</button>
-					</a>
+			<button class="btn btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph
+			</button>
+		  </a>
         </div>
         <div>
           {% with obj_type='item', obj_id=meta['id'], obj_subtype=''%}
             {% include 'modals/investigations_register_obj.html' %}
           {% endwith %}
-          <div class="mr-2">
-            <button type="button" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+          <div class="mt-1">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
               <i class="fas fa-microscope"></i> Investigations
             </button>
           </div>
         </div>
-        <div class="mx-2">
+        <div>
           {% with obj_type='item', obj_id=meta['id'], obj_lvl=0%}
             {% include 'import_export/block_add_user_object_to_export.html' %}
           {% endwith %}
@@ -123,7 +288,7 @@
         {% if is_hive_connected %}
           <div>
             {% include 'modals/create_hive_case.html' %}
-            <button type="button" class="btn btn-lg btn-outline-dark mx-1" data-toggle="modal" data-target="#create_hive_case_modal">
+            <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#create_hive_case_modal">
               Create
               <img id="thehive-icon" src="{{url_for('static', filename='image/thehive_icon.png') }}">
               Case
@@ -136,14 +301,14 @@
   </div>
 
   {% if misp_eventid %}
-    <div class="list-group" id="misp_event">
+    <div class="list-group section-block" id="misp_event">
       <li class="list-group-item active">MISP Events already Created</li>
       <a target="_blank" href="{{ misp_url }}" class="list-group-item">{{ misp_url }}</a>
     </div>
   {% endif %}
 
   {% if meta['hive_case'] %}
-    <div class="list-group" id="misp_event">
+    <div class="list-group section-block" id="misp_event">
       <li class="list-group-item active">The Hive Case already Created</li>
       <a target="_blank" href="{{ hive_url }}" class="list-group-item">{{ hive_url }}</a>
     </div>
@@ -259,127 +424,6 @@
 
   {% endif %}
 
-{#  {% if  meta['duplicates'] %}#}
-{#    <div id="accordionDuplicate" class="mb-2 mx-3">#}
-{#      <div class="card">#}
-{#        <div class="card-header py-1" id="headingDuplicate">#}
-{#          <div class="row">#}
-{#            <div class="col-11">#}
-{#              <div class="mt-2">#}
-{#                <i class="far fa-clone"></i> duplicates&nbsp;&nbsp;#}
-{#                <div class="badge badge-warning">{{meta['duplicates']|length}}</div>#}
-{#              </div>#}
-{#            </div>#}
-{#            <div class="col-1">#}
-{#              <button class="btn btn-link btn-lg py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDuplicate" aria-expanded="true" aria-controls="collapseDuplicate">#}
-{#                <i class="fas fa-chevron-circle-down"></i>#}
-{#              </button>#}
-{#            </div>#}
-{#          </div>#}
-{#        </div>#}
-{##}
-{#        <div id="collapseDuplicate" class="collapse" aria-labelledby="headingDuplicate" data-parent="#accordionDuplicate">#}
-{#          <div class="card-body">#}
-{##}
-{#            <table class="table" id="tableDup">#}
-{#              <thead class="thead-dark">#}
-{#                <tr>#}
-{#                  <th>Date</th>#}
-{#                  <th>Similarity</th>#}
-{#                  <th>Item</th>#}
-{#                  <th>Diff</th>#}
-{#                </tr>#}
-{#              </thead>#}
-{#              <tbody>#}
-{#                {% for duplicate_id in meta['duplicates'] %}#}
-{#                  <tr>#}
-{#                    <td>{{meta['duplicates'][duplicate_id]['date']}}</td>#}
-{#                    <td class="py-0">#}
-{#                      <table class="table table-borderless table-sm my-0">#}
-{#                        <tbody>#}
-{#                          {%for dict_algo in meta['duplicates'][duplicate_id]|sort(attribute='algo')%}#}
-{#                            <tr>#}
-{#                              <td class="py-0">{{dict_algo['algo']}}</td>#}
-{#                              <td class="w-100 py-0">#}
-{#                                <div class="progress mt-1">#}
-{#                                  <div class="progress-bar progress-bar-striped {%if dict_algo['algo']=='tlsh'%}bg-secondary{%endif%}" role="progressbar" style="width: {{dict_algo['similarity']}}%;" aria-valuenow="{{dict_algo['similarity']}}" aria-valuemin="0" aria-valuemax="100">#}
-{#                                    {{dict_algo['similarity']}}%#}
-{#                                  </div>#}
-{#                                </div>#}
-{#                              </td>#}
-{#                            </tr>#}
-{#                          {%endfor%}#}
-{#                        </tbody>#}
-{#                      </table>#}
-{#                    </td>#}
-{#                    <td>#}
-{#                      <a href="{{ url_for('objects_item.showItem')}}?id={{duplicate_id}}" target="_blank">#}
-{#                        {{duplicate_id}}#}
-{#                      </a>#}
-{#                    </td>#}
-{#                    <td>#}
-{#                      <a target="_blank" href="{{ url_for('objects_item.object_item_diff') }}?id1={{meta['id']}}&id2={{duplicate_id}}" class="fa fa-columns" title="Show diff"></a>#}
-{#                    </td>#}
-{#                  </tr>#}
-{#                {% endfor %}#}
-{#              </tbody>#}
-{#            </table>#}
-{##}
-{#          </div>#}
-{#        </div>#}
-{##}
-{#      </div>#}
-{#    </div>#}
-{#  {% endif %}#}
-
-
-{#  {% if  l_64|length != 0 %}#}
-{#  <div id="accordionDecoded" class="mb-3">#}
-{#    <div class="card">#}
-{#      <div class="card-header py-1" id="headingDecoded">#}
-{#        <div class="row">#}
-{#          <div class="col-11">#}
-{#            <div class="mt-2">#}
-{#              <i class="fas fa-lock-open"></i> Decoded Files&nbsp;&nbsp;#}
-{#              <div class="badge badge-warning">{{l_64|length}}</div>#}
-{#            </div>#}
-{#          </div>#}
-{#          <div class="col-1">#}
-{#            <button class="btn btn-link  py-2 float-right rotate" data-toggle="collapse" data-target="#collapseDecoded" aria-expanded="true" aria-controls="collapseDecoded">#}
-{#              <i class="fas fa-chevron-circle-down"></i>#}
-{#            </button>#}
-{#          </div>#}
-{#        </div>#}
-{#      </div>#}
-{##}
-{#      <div id="collapseDecoded" class="collapse show" aria-labelledby="headingDecoded" data-parent="#accordionDecoded">#}
-{#        <div class="card-body">#}
-{##}
-{#          <table id="tableb64" class="red_table table table-striped">#}
-{#            <thead>#}
-{#              <tr>#}
-{#                <th>estimated type</th>#}
-{#                <th>hash</th>#}
-{#              </tr>#}
-{#            </thead>#}
-{#            <tbody>#}
-{#              {% for b64 in l_64 %}#}
-{#                <tr>#}
-{#                  <td><i class="fas {{ b64[0] }}"></i>&nbsp;&nbsp;{{ b64[1] }}</td>#}
-{#                  <td><a target="_blank" href="{{ url_for('correlation.show_correlation') }}?type=decoded&id={{ b64[2] }}"> {{b64[2]}} ({{ b64[4] }})</a></td>#}
-{#                </tr>#}
-{#              {% endfor %}#}
-{#            </tbody>#}
-{#          </table>#}
-{##}
-{#        </div>#}
-{#      </div>#}
-{##}
-{##}
-{#    </div>#}
-{#  </div>#}
-{#  {% endif %}#}
-
 
   {% if meta['crawler'] %}
   <div id="accordionCrawler" class="mb-3 mx-3">
@@ -435,7 +479,7 @@
               </table>
             </div>
 
-              {% with ollama_description=meta['description'], image_gid=meta['image_gid'] %}
+              {% with ollama_description=meta['description'], ollama_descriptions=meta.get('descriptions', {}), image_gid=meta['image_gid'] %}
                 {% include 'block_img_ollama.html' %}
               {% endwith %}
 
@@ -458,69 +502,110 @@
 
   {% if extracted_matches %}
   <div id="accordion_extracted" class="mb-3 mx-3">
-      <div class="card">
-          <div class="card-header py-1" id="heading_extracted">
-              <div class="row">
-                  <div class="col-11">
-                      <div class="mt-2">
-                          <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="32"> Extracted&nbsp;&nbsp;
-                          <div class="badge badge-warning">{{extracted_matches|length}}</div>
-                      </div>
+      <div class="card card-clean">
+          <div class="card-header py-2 extracted-card-header" id="heading_extracted" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapse_extracted">
+              <div class="d-flex flex-wrap align-items-center justify-content-between">
+                  <div class="section-title">
+                      <img id="misp-logo" src="{{ url_for('static', filename='image/ail-icon.png')}}" height="28" alt="AIL logo">
+                      <span>Extracted Indicators</span>
+                      <span class="badge badge-warning section-badge">{{ extracted_matches|length }} types</span>
                   </div>
-                  <div class="col-1">
-                      <button class="btn btn-link btn-lg py-2 float-right rotate down" data-toggle="collapse" data-target="#collapse_extracted" aria-expanded="true" aria-controls="collapseDecoded">
-                          <i class="fas fa-chevron-circle-down"></i>
-                      </button>
-                  </div>
+                  <button class="btn btn-link py-0 px-1 rotate down" type="button" aria-label="Toggle extracted indicators">
+                      <i class="fas fa-lg fa-chevron-circle-down"></i>
+                  </button>
               </div>
           </div>
 
           <div id="collapse_extracted" class="collapse show" aria-labelledby="heading_extracted" data-parent="#accordion_extracted">
               <div class="card-body">
-                  <table id="table_extracted" class="table table-striped">
-                      <thead class="thead-dark">
-                      <tr>
-                          <th>Type</th>
-                          <th>ID</th>
-                          <th>Extracted</th>
-                      </tr>
-                      </thead>
-                      <tbody>
-                      {% for match in extracted_matches %}
+                  <div class="d-flex flex-wrap mb-3" style="gap:0.55rem;">
+                      <div class="summary-chip">
+                          <span class="label">Types</span>
+                          <span class="value">{{ extracted_matches|length }}</span>
+                      </div>
+                      <div class="summary-chip">
+                          <span class="label">Total extracted hits</span>
+                          <span class="value">{{ extracted|length }}</span>
+                      </div>
+                      <div class="summary-chip">
+                          <span class="label">Quick hint</span>
+                          <span class="value">Click an extracted value to jump to highlighted content below.</span>
+                      </div>
+                  </div>
+
+                  <div class="table-responsive">
+                      <table id="table_extracted" class="table table-striped table-hover extracted-table mb-0">
+                          <thead class="thead-light">
                           <tr>
-                              <td>
-                                  <svg height="26" width="26">
-                                      <g class="nodes">
-                                          <circle cx="13" cy="13" r="13" fill="{{ extracted_matches[match]['icon']['color'] }}"></circle>
-                                          <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ extracted_matches[match]['icon']['style'] }}" font-size="16px">{{ extracted_matches[match]['icon']['icon'] }}</text>
-                                      </g>
-                                  </svg>
-                                  {{ extracted_matches[match]['subtype'] }}
-                              </td>
-                              <td>
-                                  {% if extracted_matches[match]['subtype'] == 'tracker' %}
-                                      <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ extracted_matches[match]['id'] }}">{{ extracted_matches[match]['id'] }}</a>
-                                  {% else %}
-                                      {{ extracted_matches[match]['id'] }}
-                                  {% endif %}
-                              </td>
-                              <td>
-                                  <button class="btn btn-info btn-sm" type="button" data-toggle="collapse" data-target="#collapseextracted{{ loop.index }}">
-                                      <i class="fa-solid fa-caret-up"></i>
-                                  </button>
-                                  <div class="collapse show" id="collapseextracted{{ loop.index }}">
-                                      {% for row in extracted_matches[match]['matches'] %}
-                                          <a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a><br>
-                                      {% endfor %}
-                                  </div>
-                              </td>
+                              <th style="min-width:170px;">Type</th>
+                              <th style="min-width:260px;">ID / Context</th>
+                              <th>Extracted Values</th>
                           </tr>
-                      {% endfor %}
-                      </tbody>
-                  </table>
+                          </thead>
+                          <tbody>
+                          {% for match in extracted_matches %}
+                              <tr>
+                                  <td>
+                                      <div class="d-flex align-items-center">
+                                          <svg height="26" width="26" class="mr-2 flex-shrink-0">
+                                              <g class="nodes">
+                                                  <circle cx="13" cy="13" r="13" fill="{{ extracted_matches[match]['icon']['color'] }}"></circle>
+                                                  <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="graph_node_icon {{ extracted_matches[match]['icon']['style'] }}" font-size="16px">{{ extracted_matches[match]['icon']['icon'] }}</text>
+                                              </g>
+                                          </svg>
+                                          <div>
+                                              <div class="font-weight-bold text-capitalize">{{ extracted_matches[match]['subtype'] }}</div>
+                                              <small class="text-muted">{{ extracted_matches[match]['matches']|length }} match{% if extracted_matches[match]['matches']|length > 1 %}es{% endif %}</small>
+                                          </div>
+                                      </div>
+                                  </td>
+                                  <td>
+                                      {% if extracted_matches[match]['subtype'] == 'tracker' %}
+                                          <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ extracted_matches[match]['id'] }}" class="id-inline">{{ extracted_matches[match]['id'] }}</a>
+                                          {% if 'name' in extracted_matches[match] %}
+                                              <div class="small font-weight-bold mt-1">{{ extracted_matches[match]['name'] }}</div>
+                                          {% endif %}
+                                          {% if 'description' in extracted_matches[match] %}
+                                              <div class="small text-muted mt-1">{{ extracted_matches[match]['description'] }}</div>
+                                          {% endif %}
+                                      {% elif extracted_matches[match]['subtype'] == 'retro_hunt' %}
+                                          <span class="id-inline">{{ extracted_matches[match]['id'] }}</span>
+                                          {% if 'name' in extracted_matches[match] %}
+                                              <div class="small font-weight-bold mt-1">{{ extracted_matches[match]['name'] }}</div>
+                                          {% endif %}
+                                          {% if 'description' in extracted_matches[match] %}
+                                              <div class="small text-muted mt-1">{{ extracted_matches[match]['description'] }}</div>
+                                          {% endif %}
+                                      {% else %}
+                                          <span class="id-inline">{{ extracted_matches[match]['id'] }}</span>
+                                      {% endif %}
+                                  </td>
+                                  <td>
+                                      <ul class="extracted-match-list">
+                                      {% for row in extracted_matches[match]['matches'][:3] %}
+                                          <li><a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a></li>
+                                      {% endfor %}
+                                      </ul>
+                                      {% if extracted_matches[match]['matches']|length > 3 %}
+                                          <div class="collapse" id="collapseExtractedValues{{ loop.index }}">
+                                              <ul class="extracted-match-list mt-1">
+                                                  {% for row in extracted_matches[match]['matches'][3:] %}
+                                                      <li><a href="#{{ row[0] }}:{{row[1] }}">{{ row[2] }}</a></li>
+                                                  {% endfor %}
+                                              </ul>
+                                          </div>
+                                          <button class="btn btn-outline-info btn-sm show-more-btn mt-1" type="button" data-toggle="collapse" data-target="#collapseExtractedValues{{ loop.index }}" aria-expanded="false" aria-controls="collapseExtractedValues{{ loop.index }}">
+                                              Show {{ extracted_matches[match]['matches']|length - 3 }} more
+                                          </button>
+                                      {% endif %}
+                                  </td>
+                              </tr>
+                          {% endfor %}
+                          </tbody>
+                      </table>
+                  </div>
               </div>
           </div>
-
       </div>
   </div>
   {% endif %}
@@ -549,11 +634,17 @@
 
       <ul class="nav nav-pills" id="pills-tab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" id="pills-content-tab" data-toggle="pill" href="#pills-content" role="tab" aria-controls="pills-content" aria-selected="true">Content</a>
+          <a class="nav-link active" id="pills-content-tab" data-toggle="pill" href="#pills-content" role="tab" aria-controls="pills-content" aria-selected="true">{% if meta['source'] == 'pdf' %}Markdown{% else %}Content{% endif %}</a>
         </li>
+        {% if meta['source'] == 'pdf' %}
+        <li class="nav-item">
+          <a class="nav-link" id="pills-text-tab" data-toggle="pill" href="#pills-text" role="tab" aria-controls="pills-text" aria-selected="false">Text</a>
+        </li>
+        {% else %}
         <li class="nav-item">
           <a class="nav-link" id="pills-html2text-tab" data-toggle="pill" href="#pills-html2text" role="tab" aria-controls="pills-html2text" aria-selected="false">html2text</a>
         </li>
+        {% endif %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#">Others</a>
           <div class="dropdown-menu">
@@ -568,23 +659,29 @@
 
       <div class="tab-content" id="pills-tabContent">
         <div class="tab-pane fade show active" id="pills-content" role="tabpanel" aria-labelledby="pills-content-tab">
-            {% if not extracted %}
+            {% if meta['source'] == 'pdf' %}
+                <div class="border p-3 ail-markdown">{{ meta['content']|e }}</div>
+            {% elif not extracted %}
                 <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
             {% else %}
-                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Extracted:" data-content="<ul class=&quot;list-group&quot;>{% for r in row[3] %}<li class=&quot;list-group-item&quot;><div><svg height=&quot;26&quot; width=&quot;26&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color'] }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style'] }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon'] }}</text></g></svg> {{ extracted_matches[r[0]]['subtype'] }}</div>{{ extracted_matches[r[0]]['id'] }} <div><b>{{ r[1] }}</b></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
+                <p class="my-0"> <pre class="border" id="obj_content">{{ meta['content'][:extracted[0][0]] }}{% for row in extracted %}<span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Matched indicators" data-content="<ul class=&quot;list-group list-group-flush&quot;>{% for r in row[3] %}<li class=&quot;list-group-item px-2 py-2&quot;><div class=&quot;d-flex align-items-start&quot;><svg height=&quot;26&quot; width=&quot;26&quot; class=&quot;mr-2 mt-1 flex-shrink-0&quot;><g class=&quot;nodes&quot;><circle cx=&quot;13&quot; cy=&quot;13&quot; r=&quot;13&quot; fill=&quot;{{ extracted_matches[r[0]]['icon']['color']|forceescape|forceescape }}&quot;></circle><text x=&quot;13&quot; y=&quot;13&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;central&quot; class=&quot;{{ extracted_matches[r[0]]['icon']['style']|forceescape|forceescape }}&quot; font-size=&quot;16px&quot;>{{ extracted_matches[r[0]]['icon']['icon']|forceescape|forceescape }}</text></g></svg><div><div class=&quot;font-weight-bold text-capitalize&quot;>{{ extracted_matches[r[0]]['subtype']|replace('_', ' ')|forceescape|forceescape }}</div><div><span class=&quot;badge badge-light border&quot;>{{ extracted_matches[r[0]]['id']|forceescape|forceescape }}</span></div>{% if extracted_matches[r[0]]['subtype'] == 'tracker' or extracted_matches[r[0]]['subtype'] == 'retro_hunt' %}{% if 'name' in extracted_matches[r[0]] %}<div class=&quot;small font-weight-bold mt-1&quot;>{{ extracted_matches[r[0]]['name']|forceescape|forceescape }}</div>{% endif %}{% if 'description' in extracted_matches[r[0]] %}<div class=&quot;small text-muted mt-1&quot;>{{ extracted_matches[r[0]]['description']|forceescape|forceescape }}</div>{% endif %}{% endif %}<div class=&quot;small mt-1&quot;><span class=&quot;text-muted&quot;>Matched value:</span> <b>{{ r[1]|forceescape|forceescape }}</b></div></div></div></li>{% endfor %}</ul>" id="{{ row[0] }}:{{ row[1] }}">{{ meta['content'][row[0]:row[1]] }}</span>{% if loop.index + 1 > extracted|length %}{{ meta['content'][extracted[-1][1]:] }}{% else %}{{ meta['content'][row[1]:extracted[loop.index][0]] }}{% endif %}{% endfor %}</pre></p>
             {% endif %}
         </div>
+        {% if meta['source'] == 'pdf' %}
+        <div class="tab-pane fade" id="pills-text" role="tabpanel" aria-labelledby="pills-text-tab">
+          <p class="my-0"><pre class="border" id="obj_content">{{ meta['content'] }}</pre></p>
+        </div>
+        {% else %}
         <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
           <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
         </div>
-        <div class="tab-pane fade" id="pills-html2text" role="tabpanel" aria-labelledby="pills-html2text-tab">
-          <p class="my-0"> <pre id="html2text-container" class="border"></pre></p>
-        </div>
+        {% endif %}
       </div>
 
 
 
     </div>
+  </div>
   </div>
 
 <script>
@@ -605,7 +702,26 @@
         $('[data-toggle="popover"]').popover({
             boundary:'window',
         });
+
+        $('#collapse_extracted').on('show.bs.collapse', function(){
+            $('#heading_extracted .rotate').addClass('down');
+        });
+        $('#collapse_extracted').on('hide.bs.collapse', function(){
+            $('#heading_extracted .rotate').removeClass('down');
+        });
+        $('[id^=collapseExtractedValues]').on('show.bs.collapse', function(){
+            const button = $('[data-target="#' + this.id + '"]');
+            button.text('Show less');
+        });
+        $('[id^=collapseExtractedValues]').on('hide.bs.collapse', function(){
+            const button = $('[data-target="#' + this.id + '"]');
+            const hiddenCount = $(this).find('li').length;
+            button.text('Show ' + hiddenCount + ' more');
+        });
     });
+
+    let sticky_up_btn = document.getElementById("sticky_btn_up");
+    window.onscroll = function() {sticky_btn_up_scroll(sticky_up_btn)};
 
     let text_wrapped = false;
     function wrap_content() {
@@ -631,6 +747,13 @@
     });
     // $('[data-toggle="popover"]').popover();
 </script>
+
+{% if meta['source'] == 'pdf' %}
+<script type="module">
+    import { renderMarkdownElements } from "{{ url_for('static', filename='js/markdown-renderer.es.js') }}";
+    renderMarkdownElements();
+</script>
+{% endif %}
 
 </body>
 

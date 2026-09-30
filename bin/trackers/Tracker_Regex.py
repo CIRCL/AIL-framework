@@ -64,12 +64,17 @@ class Tracker_Regex(AbstractModule):
         if obj_type not in self.tracked_regexs:
             return None
 
-        content = obj.get_content()
+        # Ensure only string content is processed
+        if self.obj.type == 'decoded':
+            if not self.obj.get_mimetype().startswith('text/'):
+                return None
 
-        for dict_regex in self.tracked_regexs[obj_type]:
-            matches = self.regex_finditer(dict_regex['regex'], obj_id, content)
-            if matches:
-                self.new_tracker_found(dict_regex['tracked'], 'regex', obj, matches)
+        content = obj.get_content()
+        if content:
+            for dict_regex in self.tracked_regexs[obj_type]:
+                matches = self.regex_finditer(dict_regex['regex'], obj_id, content)
+                if matches:
+                    self.new_tracker_found(dict_regex['tracked'], 'regex', obj, matches)
 
     def extract_matches(self, re_matches, limit=500, lines=5):
         matches = []

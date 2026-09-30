@@ -67,6 +67,12 @@
           Create Cookiejar
         </a>
 
+        {% if current_user.is_admin() %}
+          {% with cookiejar_uuid=None, import_label='Import Cookiejar JSON', import_class='my-4' %}
+            {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+          {% endwith %}
+        {% endif %}
+
       </div>
 		</div>
 	</div>

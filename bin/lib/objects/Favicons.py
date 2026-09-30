@@ -59,7 +59,10 @@ class Favicon(AbstractDaterangeObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(FAVICON_FOLDER, self.get_rel_path())
+        filename = os.path.realpath(os.path.join(FAVICON_FOLDER, self.get_rel_path()))
+        favicon_dir = FAVICON_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, favicon_dir]) != favicon_dir:
+            return None
         return os.path.realpath(filename)
 
     def get_file_content(self, r_type='str'):
@@ -70,13 +73,17 @@ class Favicon(AbstractDaterangeObject):
             b64 = base64.b64encode(file_content)
             # b64 = base64.encodebytes(file_content)
             return b64.decode()
+        elif r_type == 'bytes':
+            with open(filepath, 'rb') as f:
+                file_content = f.read()
+                return file_content
         elif r_type == 'io':
             with open(filepath, 'rb') as f:
                 file_content = BytesIO(f.read())
                 return file_content
 
     def get_content(self, r_type='str'):
-        return self.get_file_content()
+        return self.get_file_content(r_type=r_type)
 
     def get_misp_object(self):
         obj_attrs = []
@@ -98,8 +105,8 @@ class Favicon(AbstractDaterangeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         meta['img'] = self.id
         meta['tags'] = self.get_tags(r_list=True)

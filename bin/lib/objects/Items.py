@@ -5,7 +5,6 @@ import base64
 import gzip
 import magic
 import os
-import re
 import sys
 import html2text
 
@@ -90,7 +89,11 @@ class Item(AbstractObject):
         filename = os.path.realpath(filename)
 
         # incorrect filename
-        if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
+        if ITEMS_FOLDER[-1] == '/':
+            items_dir = ITEMS_FOLDER[:-1]
+        else:
+            items_dir = ITEMS_FOLDER
+        if not os.path.commonpath([filename, ITEMS_FOLDER]) == items_dir:
             return None
         else:
             return filename
@@ -270,13 +273,13 @@ class Item(AbstractObject):
         self.set_parent(parent_id)
 
     # options: set of optional meta fields
-    def get_meta(self, options=None):
+    def get_meta(self, options=None, flask_context=False):
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self.get_default_meta(tags=True)
+        meta = self.get_default_meta(tags=True, options=options, flask_context=flask_context)
         meta['date'] = self.get_date(separator=True)
         meta['source'] = self.get_source()
         # optional meta fields
@@ -789,7 +792,7 @@ def get_item_filename(item_id):
     filename = os.path.realpath(filename)
 
     # incorrect filename
-    if not os.path.commonprefix([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
+    if not os.path.commonpath([filename, ITEMS_FOLDER]) == ITEMS_FOLDER:
         return None
     else:
         return filename
@@ -899,12 +902,15 @@ def create_item(obj_id, obj_metadata, io_content):
 
 
 # if __name__ == '__main__':
-#     content = 'test file content'
-#     duplicates = {'tests/2020/01/02/test.gz': [{'algo':'ssdeep', 'similarity':75}, {'algo':'tlsh', 'similarity':45}]}
-#
+    # content = 'test file content'
+
     # item = Item('tests/2020/01/02/test_save.gz')
-#     item.create(content, _save=False)
-#     filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
-#     gen = get_all_items_objects(filters=filters)
-#     for obj_id in gen:
-#         print(obj_id.id)
+    # item.create(content, _save=False)
+    # filters = {'date_from': '20230101', 'date_to': '20230501', 'sources': ['crawled', 'submitted'], 'start': ':submitted/2023/04/28/submitted_2b3dd861-a75d-48e4-8cec-6108d41450da.gz'}
+    # gen = get_all_items_objects(filters=filters)
+    # for obj_id in gen:
+    #     print(obj_id.id)
+    # obj = Item('')
+    # obj.set_custom_meta({"a": 1, "c": {"tests": "3"}})
+    # obj.set_custom_meta(None, {'a': 1}, {'b': 2}, {'c': 3})
+    # print(obj.get_custom_meta())

@@ -30,8 +30,15 @@
                     <div class="card-header bg-dark text-white">
 
                         <form action="{{ url_for('crawler_splash.crawler_settings_crawlers_to_launch') }}" method="post" enctype="multipart/form-data">
-                            <h3 class="card-title">Number of Concurrent Crawlers to Launch:</h3>
+                            <h3 class="card-title">Concurrent Lacus Tasks:</h3>
+                            <label for="nb_captures" class="mt-2">Number of concurrent crawler tasks to launch</label>
                             <input class="form-control" type="number" id="nb_captures" value="{{ nb_captures }}" min="1" name="nb_captures" required>
+
+                            <label for="nb_forum_accounts" class="mt-3">Number of concurrent forum account Lacus tasks to launch</label>
+                            <input class="form-control" type="number" id="nb_forum_accounts" value="{{ nb_forum_accounts }}" min="0" name="nb_forum_accounts" required>
+
+                            <label for="nb_interactive_crawlers" class="mt-3">MAX_INTERACTIVE_CRAWLER: concurrent interactive xpra sessions</label>
+                            <input class="form-control" type="number" id="nb_interactive_crawlers" value="{{ nb_interactive_crawlers }}" min="0" name="nb_interactive_crawlers" required>
 
                             <button type="submit" class="btn btn-primary my-2">Edit <i class="fas fa-pencil-alt"></i></button>
                         </form>

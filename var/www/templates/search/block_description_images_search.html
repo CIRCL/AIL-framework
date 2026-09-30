@@ -1,0 +1,42 @@
+<div class="card border-secondary my-2">
+    <div class="card-header text-white bg-dark">
+        <div class="card-title h1"><i class="fas fa-image"></i><i class="far fa-image"></i> Visual & Domain Description Search:</div>
+    </div>
+    <div class="card-body text-dark">
+        Type:
+        <div class="d-flex my-1">
+            <button class="btn btn-secondary" onclick="change_sector_description_images_type('desc-dom')">
+                <b><i class="fas fa-user-secret"></i><i class="fab fa-html5"></i> Domain</b>
+            </button>
+            <button class="btn btn-secondary mx-2" onclick="change_sector_description_images_type('desc-screen')">
+                <b><i class="fas fa-image"></i>  Screenshot</b>
+            </button>
+            <button class="btn btn-secondary" onclick="change_sector_description_images_type('desc-img')">
+                <b><i class="far fa-image"></i> Image</b>
+            </button>
+        </div>
+
+        <form action="{{ url_for('search_b.search_description_images_post') }}" id="search_subtype_obj" method='post'>
+            <div class="input-group mb-1">
+                <input type="text" name="page" value="{% if page %}{{ page }}{% else %}1{% endif %}" hidden="">
+                <select class="custom-select col-2" id="search_type_description_images" name="search_type_description_images" value="{% if search_index %}{{ search_index }}{% else %}tor{% endif %}" required>
+                    <option value="desc-dom" {% if search_index == 'desc-dom' %}selected{% endif %}>domain</option>
+                    <option value="desc-screen" {% if search_index == 'desc-screen' %}selected{% endif %}>screenshot</option>
+                    <option value="desc-img" {% if search_index == 'desc-img' %}selected{% endif %}>image</option>
+                </select>
+                <input type="text" class="form-control col-8" name="to_search" value="{% if to_search %}{{ to_search }}{% endif %}" placeholder="content to Search" required>
+                <button class="btn btn-primary input-group-addon search-obj col-1"><i class="fas fa-search"></i></button>
+                <span class="col-1 text-center mt-1">
+                    <i class="fa-solid fa-circle-info fa-2x" style="color: #c0bfbc;" onmouseenter="show_search_helper_tooltip(this)" onmouseleave="hide_obj_tooltip(this)"></i>
+                </span>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        var selector_search_description_images = $("#search_type_description_images")
+        function change_sector_description_images_type(s_type) {
+            selector_search_description_images.val(s_type);
+        }
+    </script>
+</div>

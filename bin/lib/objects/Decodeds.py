@@ -131,9 +131,12 @@ class Decoded(AbstractDaterangeObject):
             else:
                 return b''
         if r_type == 'str':
-            with open(filepath, 'r') as f:
-                content = f.read()
-            return content
+            try:
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                return content
+            except UnicodeDecodeError:
+                return ''
         elif r_type == 'bytes':
             with open(filepath, 'rb') as f:
                 content = f.read()
@@ -181,8 +184,8 @@ class Decoded(AbstractDaterangeObject):
     def get_decoders(self):
         return ['base64', 'binary', 'hexadecimal']
 
-    def get_meta(self, options=set()):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['id'] = self.id
         if 'mimetype' in options:
             meta['mimetype'] = self.get_mimetype()

@@ -254,7 +254,7 @@ for elem in sys.stdin:
 	pip install -U -r requirements.txt
 	``` 
 4. Edit the configuration file ```ail-framework/configs/core.cfg```:
-	- Modify the "pystemonpath" path accordingly.
+	- In the ``Pystemon`` section, update the ``dir`` parameter so it points to the directory where Pystemon stores its pastes. 
 
 5. Launch ail-framework, pystemon and PystemonImporter.py (all within the virtual environment):
 	 - Option 1 (recommended): 
@@ -383,6 +383,8 @@ rule disney_plus : credential_leak
 ### How to create a tracker
 
 A new tracker can be created from the Leak Hunter section in the UI.
+
+YARA trackers and retro hunts support an optional **Exclusion YARA rule**. After a primary match, the exclusion scans the full object content. If any exclusion rule matches, the candidate is discarded before results, tags, or notifications are created.
 
 # <a name="users_roles"></a> Users ROLES
 

@@ -9,7 +9,7 @@ import os
 import sys
 import json
 
-from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -23,6 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_config
+from lib import ail_core
 from lib import Investigations
 from lib.objects import ail_objects
 from lib import Tag
@@ -58,7 +59,7 @@ def investigations_dashboard():
 def investigations_admin():
     inv_org = Investigations.get_orgs_investigations_meta(r_str=True)
     return render_template("investigations.html", bootstrap_label=bootstrap_label,
-                           inv_global=[], inv_org=inv_org)
+                           inv_global=[], inv_org=inv_org, is_admin=True)
 
 
 @investigations_b.route("/investigation", methods=['GET'])  # # FIXME: add /view ????
@@ -77,7 +78,7 @@ def show_investigation():
     if res:
         return create_json_response(res[0], res[1])
 
-    metadata = investigation.get_metadata(r_str=True, options={'org_name'})
+    metadata = investigation.get_meta(r_str=True, options={'org_name'})
     objs = []
     for obj in investigation.get_objects():
         obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)
@@ -99,11 +100,10 @@ def add_investigation():
         user_id = current_user.get_user_id()
         user_org = current_user.get_org()
         level = request.form.get("investigation_level")
-        name = request.form.get("investigation_name")
+        name = request.form.get("investigation_info")
+        description = request.form.get("investigation_description", '')
         date = request.form.get("investigation_date")
-        threat_level = request.form.get("threat_level")
         analysis = request.form.get("analysis")
-        info = request.form.get("investigation_info")
         # tags
         taxonomies_tags = request.form.get('taxonomies_tags')
         if taxonomies_tags:
@@ -122,8 +122,8 @@ def add_investigation():
         tags = taxonomies_tags + galaxies_tags
 
         input_dict = {"user_org": user_org, "user_id": user_id, "level": level, "name": name,
-                      "threat_level": threat_level, "date": date,
-                      "analysis": analysis, "info": info, "tags": tags}
+                      "description": description, "date": date,
+                      "analysis": analysis, "tags": tags}
         res = Investigations.api_add_investigation(input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
@@ -143,11 +143,9 @@ def edit_investigation():  # TODO CHECK ACL
         user_role = current_user.get_role()
         investigation_uuid = request.form.get("investigation_uuid")
         level = request.form.get("investigation_level")
-        name = request.form.get("investigation_name")
-        date = request.form.get("investigation_date")
-        threat_level = request.form.get("threat_level")
         analysis = request.form.get("analysis")
-        info = request.form.get("investigation_info")
+        name = request.form.get("investigation_info")
+        description = request.form.get("investigation_description")
 
         # tags
         taxonomies_tags = request.form.get('taxonomies_tags')
@@ -167,8 +165,8 @@ def edit_investigation():  # TODO CHECK ACL
         tags = taxonomies_tags + galaxies_tags
 
         input_dict = {"user_id": user_id, "uuid": investigation_uuid, "level": level,
-                      "name": name, "threat_level": threat_level,
-                      "analysis": analysis, "info": info, "tags": tags}
+                      "description": description,
+                      "analysis": analysis, "name": name, "tags": tags}
         res = Investigations.api_edit_investigation(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
@@ -177,7 +175,7 @@ def edit_investigation():  # TODO CHECK ACL
     else:
         investigation_uuid = request.args.get('uuid')
         investigation = Investigations.Investigation(investigation_uuid)
-        metadata = investigation.get_metadata(r_str=False)
+        metadata = investigation.get_meta(r_str=False)
         taxonomies_tags, galaxies_tags = Tag.sort_tags_taxonomies_galaxies(metadata['tags'])
         tags_selector_data = Tag.get_tags_selector_data()
         tags_selector_data['taxonomies_tags'] = taxonomies_tags
@@ -199,6 +197,26 @@ def delete_investigation():
         return create_json_response(res[0], res[1])
     return redirect(url_for('investigations_b.investigations_dashboard'))
 
+
+@investigations_b.route("/investigation/download", methods=['GET'])
+@login_required
+@login_user_no_api
+def investigation_download():
+    user_org = current_user.get_org()
+    user_id = current_user.get_user_id()
+    user_role = current_user.get_role()
+    investigation_uuid = request.args.get('uuid')
+    input_dict = {"uuid": investigation_uuid}
+    res = Investigations.api_download_investigation(user_org, user_id, user_role, input_dict)
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+
+    zip_file = ail_objects.download_objects(res[0]['objs'])
+    if not zip_file:
+        abort(404)
+    return send_file(zip_file, download_name=res[0]['filename'], as_attachment=True)
+
+
 @investigations_b.route("/investigation/object/register", methods=['GET'])
 @login_required
 @login_user_no_api
@@ -209,10 +227,19 @@ def register_investigation():
     investigations_uuid = request.args.get('uuids')
     investigations_uuid = investigations_uuid.split(',')
 
-    object_type = request.args.get('type')
+    object_type = request.args.get('type', '')
     object_subtype = request.args.get('subtype')
-    object_id = request.args.get('id')
+    object_id = request.args.get('id', '')
     comment = request.args.get('comment')
+
+    object_type = object_type.replace(' ', '')
+    if object_type not in ail_core.get_all_objects():
+        return {"status": "error", "reason": f"Invalid Object Type: {object_type}"}, 400
+    if object_subtype == 'None':
+        object_type = ''
+    object_id = object_id.rstrip()
+    if not ail_objects.exists_obj(object_type, object_subtype, object_id):
+        return {"status": "error", "reason": f"Unknown Object: {object_type}:{object_subtype}:{object_id}"}, 404
 
     for investigation_uuid in investigations_uuid:
         input_dict = {"uuid": investigation_uuid, "id": object_id,
@@ -222,6 +249,8 @@ def register_investigation():
         res = Investigations.api_register_object(user_org, user_id, user_role, input_dict)
         if res[1] != 200:
             return create_json_response(res[0], res[1])
+    if request.referrer:
+        return redirect(request.referrer)
     return redirect(url_for('investigations_b.investigations_dashboard'))
 
 @investigations_b.route("/investigation/object/unregister", methods=['GET'])

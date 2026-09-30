@@ -32,10 +32,9 @@ r_crawler = config_loader.get_db_conn("Kvrocks_Crawler")
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
+def _get_item_domain(item_id):
+    return item_id[19:-36]
 
-################################################################################
-################################################################################
-################################################################################
 
 class Domain(AbstractObject):
     """
@@ -55,6 +54,8 @@ class Domain(AbstractObject):
     def get_domain_type(self):
         if str(self.id).endswith('.onion'):
             return 'onion'
+        elif str(self.id).endswith('.i2p'):
+            return 'i2p'
         else:
             return 'web'
 
@@ -205,6 +206,35 @@ class Domain(AbstractObject):
             history.append(dict_history)
         return history
 
+    def get_timestamps_up(self):
+        history_tuple = r_crawler.zrange(f'domain:history:{self.id}', 0, -1, withscores=True)
+        timestamps = []
+        if history_tuple:
+            for root_id, epoch in history_tuple:
+                try:
+                    int(root_id)
+                except ValueError:
+                    timestamps.append(epoch)
+        return timestamps
+
+    # retrieve timestamp from item id
+    def get_item_timestamp(self, item_id):
+        # check if item is crawling root
+        timestamp = r_crawler.zscore(f'domain:history:{self.id}', item_id)
+        if timestamp:
+            return timestamp
+        else:
+            parent_id = self.get_obj_parent('item', '', item_id)
+            parent_domain = _get_item_domain(parent_id)
+            if parent_id and parent_domain == self.id:
+                return self.get_item_timestamp(parent_id)
+        return None
+
+        # check if item is core
+
+        # else get father
+
+
     # TODO ADD RANDOM OPTION
     def get_screenshot(self):
         last_item = self.get_last_item_root()
@@ -220,7 +250,7 @@ class Domain(AbstractObject):
         return ['type', 'first_seen', 'last_check', 'last_origin', 'ports', 'status', 'tags', 'languages']
 
     # options: set of optional meta fields
-    def get_meta(self, options=set()):
+    def get_meta(self, options=set(), flask_context=False):
         meta = {'type': self.domain_type,  # TODO RENAME ME -> Fix template
                 'id': self.id,
                 'domain': self.id, # TODO Remove me -> Fix templates
@@ -237,8 +267,12 @@ class Domain(AbstractObject):
             meta['languages'] = self.get_languages()
         if 'screenshot' in options:
             meta['screenshot'] = self.get_screenshot()
+        if 'img' in options:
+            meta['img'] = self.get_screenshot()
         if 'tags_safe' in options:
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
@@ -258,6 +292,9 @@ class Domain(AbstractObject):
         if self.get_domain_type() == 'onion':
             style = 'fas'
             icon = '\uf06e'
+        elif self.get_domain_type() == 'i2p':
+            style = 'fas'
+            icon = '\uf21b'  # TODO change me
         else:
             style = 'fab'
             icon = '\uf13b'
@@ -334,6 +371,7 @@ class Domain(AbstractObject):
             if key.startswith('desc:'):
                 model = key[5:]
                 models.append(model)
+        return models
 
     def add_description_model(self, model, description):
         print(f'desc:{model}', description)
@@ -347,7 +385,24 @@ class Domain(AbstractObject):
             description = description.replace("`", ' ')
         return description
 
+    def delete_description(self, model=None):
+        if model is None:
+            model = get_default_image_description_model()
+        self._delete_field(f'desc:{model}')
+
     ## -Descriptions- ##
+
+    ## Search ##
+
+    def get_search_description_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
+        else:
+            return None
+
+    ## -Search- ##
 
     # TODO FIXME
     def get_all_urls(self, date=False, epoch=None):
@@ -454,21 +509,30 @@ class Domain(AbstractObject):
     ############################################################################
     ############################################################################
 
-
-    def create(self, first_seen, last_check, status, tags, languages):
-
-
-        r_crawler.hset(f'domain:meta:{self.id}', 'first_seen', first_seen)
-        r_crawler.hset(f'domain:meta:{self.id}', 'last_check', last_check)
-
-        for language in languages:
-            self.add_language(language)
+    # def create(self, epoch, root_item_id, origin='manual', tags=[]):
+    #
+    #     # UP
+    #     if root_item_id:
+    #         self.add_history(epoch, root_item=root_item_id)
+    #         if origin:
+    #             self.set_last_origin(origin)
+    #     # DOWN
+    #     else:
+    #         self.add_history(epoch)
+    #
+    #     # manually set languages
+    #     # for language in languages:
+    #     #     self.add_language(language)
 
     # add root_item to history
     # if domain down -> root_item = epoch
     def _add_history_root_item(self, root_item, epoch):
         # Create/Update crawler history
         r_crawler.zadd(f'domain:history:{self.id}', {root_item: epoch})
+
+    def exists_epoch_history(self, epoch):
+        nb = r_crawler.zcount(f'domain:history:{self.id}', epoch, epoch)
+        return nb > 0
 
     # if domain down -> root_item = epoch
     def add_history(self, epoch, root_item=None, date=None):
@@ -509,7 +573,7 @@ def _write_in_zip_buffer(zf, path, filename):
 ############################################################################
 
 def get_all_domains_types():
-    return ['onion', 'web']  # i2p
+    return ['i2p', 'onion', 'web']
 
 def sanitize_domains_types(types):
     domains_types = get_all_domains_types()
@@ -609,6 +673,16 @@ def get_domains_dates_by_daterange(date_from, date_to, domain_types, up=True, do
                 date_domains[date] = list(domains)
     return date_domains
 
+def get_domains_by_month(date_month, domains_types, up=True, down=True):
+    start = f'{date_month}01'
+    end = Date.get_month_last_day(date_month)
+    domains = []
+    for domain_type in domains_types:
+        doms = get_domains_by_daterange(start, end, domain_type, up=up, down=down)
+        if doms:
+            domains.extend(doms)
+    return domains
+
 def get_domain_up_iterator():
     for domain_type in get_all_domains_types():
         for dom_id in get_domains_up_by_type(domain_type):
@@ -624,7 +698,7 @@ def get_domains_meta(domains):
 # TODO ADD TAGS FILTER
 def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
     if not domain_types:
-        domain_types = ['onion', 'web']
+        domain_types = get_all_domains_types()
     if not tags:
         domains = []
         if not date_from and not date_to:
@@ -654,6 +728,8 @@ def sanitize_domain_name_to_search(name_to_search, domain_type):
         return ""
     if domain_type == 'onion':
         r_name = r'[a-z0-9\.]+'
+    elif domain_type == 'ip':
+        r_name = r'[a-z0-9-\.]+'
     else:
         r_name = r'[a-zA-Z0-9-_\.]+'
     # invalid domain name
@@ -783,7 +859,7 @@ class Domains:
         return 'Domains'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'spider'}
+        return {'fa': 'fas', 'icon': 'spider'}
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -799,6 +875,12 @@ class Domains:
         nb = 0
         for domain_type in get_all_domains_types():
             nb += r_crawler.scard(f'{domain_type}_up:{date}')
+        return nb
+
+    def get_nb(self):
+        nb = {}
+        for domain_type in get_all_domains_types():
+            nb[domain_type] = get_nb_domains_up_by_type(domain_type)
         return nb
 
 #### API ####

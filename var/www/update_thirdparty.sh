@@ -77,22 +77,6 @@ unzip -qq temp/popper.zip -d temp/
 mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js ./static/js/
 mv temp/floating-ui-${POPPER_VERSION}/dist/umd/popper.min.js.map ./static/js/
 
-
-
-
-# INSTALL YARA
-YARA_VERSION="4.3.0"
-wget https://github.com/VirusTotal/yara/archive/v${YARA_VERSION}.zip -O temp/yara.zip
-unzip temp/yara.zip -d temp/
-pushd temp/yara-${YARA_VERSION}
-./bootstrap.sh
-./configure
-make
-sudo make install
-make check
-popd
-
-
 rm -rf temp
 
 mkdir -p ./static/image

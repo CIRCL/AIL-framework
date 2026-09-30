@@ -60,12 +60,15 @@ from blueprints.objects_etag import objects_etag
 from blueprints.objects_hhhash import objects_hhhash
 from blueprints.objects_dom_hash import objects_dom_hash
 from blueprints.chats_explorer import chats_explorer
+from blueprints.forums_explorer import forums_explorer
 from blueprints.objects_image import objects_image
 from blueprints.objects_ocr import objects_ocr
 from blueprints.objects_barcode import objects_barcode
 from blueprints.objects_qrcode import objects_qrcode
 from blueprints.objects_favicon import objects_favicon
 from blueprints.objects_file_name import objects_file_name
+from blueprints.objects_pdf import objects_pdf
+from blueprints.objects_author import objects_author
 from blueprints.objects_ssh import objects_ssh
 from blueprints.objects_ip import objects_ip
 from blueprints.api_rest import api_rest
@@ -117,15 +120,20 @@ for handler in flask_logger.handlers:
 
 # =========  TLS  =========#
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.load_cert_chain(certfile=os.path.join(Flask_dir, 'server.crt'), keyfile=os.path.join(Flask_dir, 'server.key'))
-ssl_context.suppress_ragged_eofs = True
-# print(ssl_context.get_ciphers())
+ssl_context = None
+self_signed_certfile = os.path.join(Flask_dir, 'server.crt')
+self_signed_keyfile = os.path.join(Flask_dir, 'server.key')
+
+if os.path.exists(self_signed_certfile) and os.path.exists(self_signed_keyfile):
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    ssl_context.load_cert_chain(certfile=self_signed_certfile, keyfile=self_signed_keyfile)
+    ssl_context.suppress_ragged_eofs = True
+    # print(ssl_context.get_ciphers())
 # =========       =========#
 
 Flask_config.app = Flask(__name__, static_url_path=baseUrl+'/static/')
 app = Flask_config.app
-app.config['MAX_CONTENT_LENGTH'] = 900 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 2000 * 1024 * 1024
 
 # =========  BLUEPRINT  =========#
 app.register_blueprint(root, url_prefix=baseUrl)
@@ -153,12 +161,15 @@ app.register_blueprint(objects_etag, url_prefix=baseUrl)
 app.register_blueprint(objects_hhhash, url_prefix=baseUrl)
 app.register_blueprint(objects_dom_hash, url_prefix=baseUrl)
 app.register_blueprint(chats_explorer, url_prefix=baseUrl)
+app.register_blueprint(forums_explorer, url_prefix=baseUrl)
 app.register_blueprint(objects_image, url_prefix=baseUrl)
 app.register_blueprint(objects_ocr, url_prefix=baseUrl)
 app.register_blueprint(objects_barcode, url_prefix=baseUrl)
 app.register_blueprint(objects_qrcode, url_prefix=baseUrl)
 app.register_blueprint(objects_favicon, url_prefix=baseUrl)
 app.register_blueprint(objects_file_name, url_prefix=baseUrl)
+app.register_blueprint(objects_pdf, url_prefix=baseUrl)
+app.register_blueprint(objects_author, url_prefix=baseUrl)
 app.register_blueprint(objects_ssh, url_prefix=baseUrl)
 app.register_blueprint(objects_ip, url_prefix=baseUrl)
 app.register_blueprint(search_b, url_prefix=baseUrl)
@@ -267,7 +278,10 @@ def _handle_client_error(e):
         return Response(json.dumps({"status": "error", "reason": "Server Error"}) + '\n', mimetype='application/json'), 500
     else:
         if current_user:
-            flask_logger.warning(f'User: {current_user.get_user_id()}')
+            try:
+                flask_logger.warning(f'User: {current_user.get_user_id()}')
+            except AttributeError as e:
+                flask_logger.warning(f'Anonymous User error (AnonymousUserMixin, user not logged)')
         return e
 
 @login_required
@@ -288,6 +302,10 @@ sock = Sock(app)
 @login_required
 @sock.route('/ws/dashboard')
 def ws_dashboard(ws):
+    if not current_user.is_authenticated:
+        ws.close()
+        return
+
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     next_feeders = ail_stats.get_next_feeder_timestamp(int(time.time())) + 1
@@ -311,10 +329,11 @@ def ws_dashboard(ws):
 
 
 # ========== INITIAL taxonomies ============
-default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
-# enable default taxonomies
-for taxonomy in default_taxonomies:
-    Tag.enable_taxonomy_tags(taxonomy)
+if not Tag.is_taxonomy_enabled("infoleak"):
+    default_taxonomies = ["infoleak", "gdpr", "fpf", "dark-web"]
+    # enable default taxonomies
+    for taxonomy in default_taxonomies:
+        Tag.enable_taxonomy_tags(taxonomy)
 
 # ========== GIT Cache ============
 clear_git_meta_cache()

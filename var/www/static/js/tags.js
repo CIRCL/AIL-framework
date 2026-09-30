@@ -279,7 +279,8 @@
 
             /**
              * @cfg (function) renderer
-             * <p>A function used to define how the items will be presented in the combo</p>
+             * <p>A function used to define how the items will be presented in the combo. Return a DOM or jQuery
+             * object for structured content; string results are rendered as text.</p>
              * Defaults to <code>null</code>.
              */
             renderer: null,
@@ -321,7 +322,8 @@
 
             /**
              * @cfg (function) selectionRenderer
-             * <p>A function used to define how the items will be presented in the tag list</p>
+             * <p>A function used to define how the items will be presented in the tag list. Return a DOM or jQuery
+             * object for structured content; string results are rendered as text.</p>
              * Defaults to <code>null</code>.
              */
             selectionRenderer: null,
@@ -653,7 +655,7 @@
             if(!$.isArray(data)){
                 if(typeof(data) === 'string'){
                     if(data.indexOf('[') > -1){
-                        values = eval(data);
+                        values = JSON.parse(data);
                     } else if(data.indexOf(',') > -1){
                         values = data.split(',');
                     }
@@ -711,7 +713,7 @@
                         nbGroups += 1;
                         $('<div/>', {
                             'class': 'tag-res-group',
-                            html: grpName
+                            text: grpName
                         }).appendTo(ms.combobox);
                         self._renderComboItems(_groups[grpName].items, true);
                     }
@@ -750,23 +752,29 @@
             },
 
             /**
-             * Replaces html with highlighted html according to case
-             * @param html
+             * Appends text with literal query matches highlighted.
+             * @param element
+             * @param value
              * @private
              */
-            _highlightSuggestion: function(html) {
+            _appendHighlightedText: function(element, value) {
                 var q = ms.input.val() !== cfg.emptyText ? ms.input.val() : '';
+                var text = String(value);
                 if(q.length === 0) {
-                    return html; // nothing entered as input
+                    element.text(text);
+                    return;
                 }
 
-                if(cfg.matchCase === true) {
-                    html = html.replace(new RegExp('(' + q + ')(?!([^<]+)?>)','g'), '<em>$1</em>');
+                var searchText = cfg.matchCase === true ? text : text.toLowerCase();
+                var searchQuery = cfg.matchCase === true ? q : q.toLowerCase();
+                var offset = 0;
+                var matchIndex;
+                while ((matchIndex = searchText.indexOf(searchQuery, offset)) !== -1) {
+                    element.append(document.createTextNode(text.slice(offset, matchIndex)));
+                    $('<em/>').text(text.slice(matchIndex, matchIndex + q.length)).appendTo(element);
+                    offset = matchIndex + q.length;
                 }
-                else {
-                    html = html.replace(new RegExp('(' + q + ')(?!([^<]+)?>)','gi'), '<em>$1</em>');
-                }
-                return html;
+                element.append(document.createTextNode(text.slice(offset)));
             },
 
             /**
@@ -979,20 +987,26 @@
             },
 
             _renderComboItems: function(items, isGrouped) {
-                var ref = this, html = '';
+                var ref = this;
                 $.each(items, function(index, value) {
-                    var displayed = cfg.renderer !== null ? cfg.renderer.call(ref, value) : value[cfg.displayField];
+                    var hasRenderer = cfg.renderer !== null;
+                    var displayed = hasRenderer ? cfg.renderer.call(ref, value) : value[cfg.displayField];
                     var resultItemEl = $('<div/>', {
                         'class': 'tag-res-item ' + (isGrouped ? 'tag-res-item-grouped ':'') +
                             (index % 2 === 1 && cfg.useZebraStyle === true ? 'tag-res-odd' : ''),
-                        html: cfg.highlight === true ? self._highlightSuggestion(displayed) : displayed,
                         'data-json': JSON.stringify(value)
                     });
+                    if (hasRenderer && (displayed instanceof $ || displayed && displayed.nodeType)) {
+                        resultItemEl.append(displayed);
+                    } else if (cfg.highlight === true) {
+                        self._appendHighlightedText(resultItemEl, displayed);
+                    } else {
+                        resultItemEl.text(displayed);
+                    }
                     resultItemEl.on("click", $.proxy(handlers._onComboItemSelected, ref));
                     resultItemEl.on("mouseover", $.proxy(handlers._onComboItemMouseOver, ref));
-                    html += $('<div/>').append(resultItemEl).html();
+                    ms.combobox.append(resultItemEl);
                 });
-                ms.combobox.append(html);
                 _comboItemHeight = ms.combobox.find('.tag-res-item:first').outerHeight();
             },
 
@@ -1012,18 +1026,17 @@
                 $.each(_selection, function(index, value){
 
                     var selectedItemEl, delItemEl,
-                        selectedItemHtml = cfg.selectionRenderer !== null ? cfg.selectionRenderer.call(ref, value) : value[cfg.displayField];
+                        hasSelectionRenderer = cfg.selectionRenderer !== null,
+                        selectedItemHtml = hasSelectionRenderer ? cfg.selectionRenderer.call(ref, value) : value[cfg.displayField];
                     // tag representing selected value
                     if(asText === true) {
                         selectedItemEl = $('<div/>', {
-                            'class': 'tag-sel-item tag-sel-text ' + cfg.selectionCls,
-                            html: selectedItemHtml + (index === (_selection.length - 1) ? '' : ',')
+                            'class': 'tag-sel-item tag-sel-text ' + cfg.selectionCls
                         }).data('json', value);
                     }
                     else {
                         selectedItemEl = $('<div/>', {
-                            'class': 'tag-sel-item ' + cfg.selectionCls,
-                            html: selectedItemHtml
+                            'class': 'tag-sel-item ' + cfg.selectionCls
                         }).data('json', value);
 
                         if(cfg.disabled === false){
@@ -1034,6 +1047,15 @@
 
                             delItemEl.on("click", $.proxy(handlers._onTagTriggerClick, ref));
                         }
+                    }
+
+                    if (hasSelectionRenderer && (selectedItemHtml instanceof $ || selectedItemHtml && selectedItemHtml.nodeType)) {
+                        selectedItemEl.prepend(selectedItemHtml);
+                    } else {
+                        selectedItemEl.prepend(document.createTextNode(String(selectedItemHtml)));
+                    }
+                    if (asText === true && index !== (_selection.length - 1)) {
+                        selectedItemEl.append(document.createTextNode(','));
                     }
 
                     items.push(selectedItemEl);
@@ -1134,7 +1156,7 @@
                 }
                 // build groups
                 if(cfg.groupBy !== null) {
-                    _groups = {};
+                    _groups = Object.create(null);
                     $.each(newSuggestions, function(index, value) {
                         if(_groups[value[cfg.groupBy]] === undefined) {
                             _groups[value[cfg.groupBy]] = {title: value[cfg.groupBy], items: [value]};
@@ -1151,8 +1173,8 @@
              * Update the helper text
              * @private
              */
-            _updateHelper: function(html) {
-                ms.helper.html(html);
+            _updateHelper: function(text) {
+                ms.helper.text(text);
                 if(!ms.helper.is(":visible")) {
                     ms.helper.fadeIn();
                 }

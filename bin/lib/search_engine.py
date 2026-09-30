@@ -2,23 +2,36 @@
 # -*-coding:UTF-8 -*
 
 import os
-import logging
 import logging.config
 import sys
 import time
+import uuid
 
+import requests
 import meilisearch
+from meilisearch.errors import MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError
+from hashlib import sha256
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib import ail_logger
+from lib.exceptions import MeilisearchError
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Domains
+from lib.objects import FilesNames
+from lib.objects import Images
 from lib.objects import Items
 from lib.objects import Messages
+from lib.objects import Forums
+from lib.objects import ForumThreads
+from lib.objects import Posts
+from lib.objects import Screenshots
+from lib.objects import Titles
+from lib.objects import UsersAccount
 from lib import chats_viewer
+from packages import Date
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 logger = logging.getLogger()
@@ -27,117 +40,533 @@ config_loader = ConfigLoader()
 IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearch')
 M_URL = config_loader.get_config_str('Indexer', 'meilisearch_url')
 M_KEY = config_loader.get_config_str('Indexer', 'meilisearch_key')
+r_search = config_loader.get_db_conn("Kvrocks_Searchs")
 config_loader = None
+
+
+def get_obj_uuid5(obj_gid):
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, obj_gid))
+
 
 def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
 
 
+# TODO One index for all forums ???
+# def load_forum_indexes():
+#     indexes = set()
+#     for protocol in chats_viewer.get_chat_protocols():
+#         indexes.add(f'c{protocol}')
+#     return indexes
+
+
+def load_messages_indexes():
+    indexes = set()
+    for protocol in chats_viewer.get_chat_protocols():
+        indexes.add(f'c{protocol}')
+    return indexes
+
+
+# FORUMS_INDEXES = load_forums_indexes()
+MESSAGES_INDEXES = load_messages_indexes()
+DATERANGE_INDEXES = {'filename', 'title'}
+
+
+def load_indexes_names():
+    names = {'desc-dom', 'desc-img', 'desc-screen', 'filename', 'forum', 'title'}
+    for domain_types in Domains.get_all_domains_types():
+        names.add(domain_types)
+    for chat_name in MESSAGES_INDEXES:
+        names.add(chat_name)
+    return sorted(names)
+
+
+INDEX_NAMES = load_indexes_names()
+def get_indexes_names():
+    return INDEX_NAMES
+
+
+def index_all():
+    # Engine._delete_all()
+    # Engine._delete('onion')
+    # delete_crawled_content_domains_items()
+    Engine.create_indexes()
+    # Engine._create_index('onion')
+    # Engine.setup_indexes_searchable_filterable_sortable()
+    index_crawled()
+    index_chats()
+    index_user_accounts()
+    index_messages()
+    index_forum_posts()
+    index_images_descriptions()
+    index_screenshots_descriptions()
+    index_domains_descriptions()
+    index_titles()
+    index_file_names()
+
+
 class MeiliSearch:
     def __init__(self):
-        self.client = meilisearch.Client(M_URL, M_KEY)
+        self.client = meilisearch.Client(M_URL, M_KEY, timeout=5)
+        self.search_client = meilisearch.Client(M_URL, M_KEY, timeout=30)
+        try:
+            self._known_indexes = set(self.get_indexes())
+        except meilisearch.errors.MeilisearchCommunicationError:
+            self._known_indexes = set()
 
-    def search(self, indexes, query, nb=20, page=1):  # TODO filters, multisearch
-        if len(indexes) == 1:
-            return self.client.index(indexes[0]).search(query, {'attributesToSearchOn': ['content'], 'limit': nb, 'page': page,
-                                                           'attributesToCrop': ['content'],
-                                                           'attributesToHighlight': ['content'],
-                                                           'highlightPreTag': '🔎⏩',
-                                                           'highlightPostTag': '⏪🔍',
-                                                           'cropLength': 100,
-                                                           'showMatchesPosition': False
-                                                           })
-        else:
-            end_query = []
-            for index in indexes:
-                end_query.append({'indexUid': index,
-                              'q': query,
-                              'attributesToSearchOn': ['content'],
-                              'attributesToCrop': ['content'],
-                              'attributesToHighlight': ['content'],
-                              'highlightPreTag': '🔎⏩',
-                              'highlightPostTag': '⏪🔍',
-                              'cropLength': 100,
-                              'showMatchesPosition': False
-                              })
-            return self.client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
+    def init(self):
+        self.create_missing_indexes()
+
+    def is_up(self):
+        try:
+            self.client.health()
+            return True
+        except (MeilisearchApiError, MeilisearchCommunicationError, Exception) as e:
+            # TODO LOG
+            return False
+
+    def get_nb_tasks(self):
+        return self.client.get_tasks().total
+
+    def tasks_enqueued(self):
+        tasks = self.client.get_tasks({"statuses": ["enqueued"],"limit": 100})
+        print("currently enqueued tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_processing(self):
+        tasks = self.client.get_tasks({"statuses": ["processing"],"limit": 100})
+        print("currently processing tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def tasks_failed(self):
+        tasks = self.client.get_tasks({"statuses": ["failed"], "limit": 100})
+        print("currently failed tasks:", len(tasks.results))
+        for task in tasks.results:
+            print("=" * 100)
+            print("uid:        ", task.uid)
+            print("index_uid:  ", task.index_uid)
+            print("type:       ", task.type)
+            print("status:     ", task.status)
+            print("enqueued_at:", task.enqueued_at)
+            print("started_at: ", task.started_at)
+            print("finished_at:", task.finished_at)
+            print("details:    ", task.details)
+            print("error:      ", task.error)
+
+    def task_status(self, task_uid):
+        status = self.client.get_task(task_uid)
+        print(status)
+        return status
+
+    def task_payload(self, task_uid):
+        url = f"{M_URL}/tasks/{task_uid}/documents"
+        r = requests.get(url, headers={"Authorization": f"Bearer {M_KEY}"})
+        if r.status_code != 200:
+            print(f"Could not dump documents for task {task_uid}: HTTP {r.status_code}")
+            print(r.text[:1000])
+            return None
+        return r.content
+
+    def tasks_cancel_processing(self, task_uids):
+        cancel_task = self.client.cancel_tasks({"uids": task_uids, "statuses": ["processing"]})
+        print("Cancellation task:", cancel_task.task_uid)
+
+    def _wait_task(self, task, timeout_in_ms=120000):
+        task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
+        return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
+
+    def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent', forum_ids=None, forum_types=None):
+        # TODO investigate attributesToRetrieve speed
+        end_query = []
+        for index in indexes:
+            q = {'indexUid': index,
+                 'q': query,
+                 'attributesToSearchOn': ['content'],
+                 'attributesToCrop': ['content'],
+                 'attributesToHighlight': ['content'],
+                 'highlightPreTag': '🔎⏩',
+                 'highlightPostTag': '⏪🔍',
+                 'cropLength': 100,
+                 'showMatchesPosition': False,
+                 }
+            if sort == 'recent':
+                q['sort'] = ['last:desc']
+            filters = []
+            if index == 'forum' and forum_ids:
+                escaped_forum_ids = [forum_id.replace('\\', '\\\\').replace("'", "\\'") for forum_id in forum_ids]
+                filters.append('fid IN [' + ', '.join([f"'{forum_id}'" for forum_id in escaped_forum_ids]) + ']')
+            if index == 'forum' and forum_types:
+                escaped_forum_types = [forum_type.replace('\\', '\\\\').replace("'", "\\'") for forum_type in forum_types]
+                filters.append('type IN [' + ', '.join([f"'{forum_type}'" for forum_type in escaped_forum_types]) + ']')
+            if timestamp_from and timestamp_to:
+                if index in DATERANGE_INDEXES:
+                    filters.append(f'first >= {timestamp_from} AND last <= {timestamp_to}')
+                else:
+                    filters.append(f'last >= {timestamp_from} AND last <= {timestamp_to}')
+            elif timestamp_from:
+                if index in DATERANGE_INDEXES:
+                    filters.append(f'first >= {timestamp_from}')
+                else:
+                    filters.append(f'last >= {timestamp_from}')
+            elif timestamp_to:
+                filters.append(f'last <= {timestamp_to}')
+            if filters:
+                q['filter'] = ' AND '.join(filters)
+            end_query.append(q)
+        return self.search_client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
 
     def get_indexes(self):
-        return self.client.get_indexes()
+        names = []
+        for index in self.client.get_indexes().get('results', []):
+            names.append(index.uid)
+        return names
 
-    def _create_indexes(self):
-        for index in ['cdiscord', 'ctelegram', 'cmatrix', 'tor', 'web']:  # TODO dynamic load of chat uuid ?
-            self.client.create_index(index, {'primaryKey': 'uuid'})
+    def _create_index(self, index_name):
+        self.client.create_index(index_name, {'primaryKey': 'uuid'})
+        self.setup_index_searchable_filterable_sortable(index_name)
 
-    def add(self, index, document):
-        self.client.index(index).add_documents([document], primary_key='uuid')
+    def create_indexes(self):
+        for index_name in get_indexes_names():
+            self.ensure_index(index_name)
+
+    def create_missing_indexes(self):
+        for index_name in get_indexes_names():
+            self.ensure_index(index_name)
+
+    def ensure_index(self, index_name):
+        if index_name not in self._known_indexes:
+            self._create_index(index_name)
+            self._known_indexes.add(index_name)
+
+    def setup_index_searchable_filterable_sortable(self, index_name):
+        # restrict searchable attributes
+        self.client.index(index_name).update_searchable_attributes(['content'])
+        filterable_attributes = ['last']
+        if index_name == 'forum':
+            filterable_attributes.extend(['fid', 'type'])
+        if index_name not in MESSAGES_INDEXES:
+            filterable_attributes.append('first')
+        # filter by daterange
+        self.client.index(index_name).update_filterable_attributes(filterable_attributes)
+        # sort by date
+        self.client.index(index_name).update_sortable_attributes(filterable_attributes)
+        # result rank
+        # Default:
+        #     "words",      -> nb match terms
+        #     "typo",       -> nb match typo
+        #     "proximity",  -> short distance between terms
+        #     "attribute",  -> most important attributes
+        #     "sort",
+        #     "exactness"
+        self.client.index(index_name).update_ranking_rules(
+            ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'])
+        # fix issue attributesToSearchOn fails on never-populated index
+        # https://github.com/meilisearch/meilisearch/issues/5921
+        dummy_document = {'uuid': 'dummy', 'content': 'dummy', 'last': 0, 'id': 'dummy'}
+        if index_name not in MESSAGES_INDEXES:
+            dummy_document['first'] = 0
+        self.add(index_name, dummy_document)
+        self.remove(index_name, 'dummy')
+
+    def setup_indexes_searchable_filterable_sortable(self):
+        for index_name in get_indexes_names():
+            self.setup_index_searchable_filterable_sortable(index_name)
+
+    # replacing existing documents
+    def add(self, index, document, retry=3):
+        try:
+            self.client.index(index).add_documents([document], primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as e:
+            logger.warning(f'Meilisearch connection failed, retry: {retry}')
+            if retry > 0:
+                self.add(index, document, retry - 1)
+                time.sleep(10)
+            else:
+                logger.warning(f'Meilisearch connection failed: {e.message}')
+                raise MeilisearchError(e.message)
+
+    def update(self, index, document, retry=3):
+        self.ensure_index(index)
+        try:
+            self.client.index(index).update_documents([document], primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as e:
+            logger.warning(f'Meilisearch connection failed, retry: {retry}')
+            if retry > 0:
+                self.update(index, document, retry - 1)
+                time.sleep(10)
+            else:
+                logger.warning(f'Meilisearch connection failed: {e.message}')
+                raise MeilisearchError(e.message)
 
     def remove(self, index, doc_id):
         self.client.index(index).delete_document(doc_id)
 
     def _delete(self, index):
-        self.client.index(index).delete_all_documents()
+        # self.client.index(index).delete_all_documents()
+        self.client.delete_index(index)
+        self._known_indexes.remove(index)
 
     def _delete_all(self):
         indexes = self.client.get_indexes()
-        print(indexes)
         for index in indexes["results"]:
             index.delete()
+        delete_crawled_content_domains_items()
+        self._known_indexes = set()
+
+    def get_stats(self):
+        return self.client.get_all_stats()
+
+    def index_obj(self, index, obj, timestamp):
+        document = obj.get_search_document(timestamp)
+        if document:
+            self.update(index, document)
+
+    ## INDEX ##
+    def index_crawled_item(self, domain, item, timestamp):
+        content = item.get_html2text_content()
+        cid = sha256(content.encode()).hexdigest()
+        index = domain.get_domain_type()
+        # update
+        if r_search.exists(f'crawled:{index}:{cid}'):
+            document = {'uuid': cid, 'last': timestamp}
+            self.update(index, document)
+        # new content
+        else:
+            r_search.sadd(f'crawled:{index}:contents', cid)
+            document = {'uuid': cid, 'content': content, 'last': timestamp}
+            self.add(index, document)
+        r_search.hset(f'crawled:{index}:{cid}', domain.id, item.id)
+
+    def index_chat_message(self, message):
+        index = f'c{message.get_protocol()}'
+        if index not in MESSAGES_INDEXES:
+            self._create_index(index)
+            MESSAGES_INDEXES.add(index)
+        timestamp = message.get_timestamp()
+        chat_instance = message.get_chat_instance()
+        chat = chats_viewer.get_obj_chat('chat', chat_instance, message.get_chat_id())
+        self.index_obj(index, chat, timestamp)
+        self.index_obj(index, message, timestamp)
+        user_account = message.get_user_account()
+        if user_account:
+            _, user_account_subtype, user_account_id = user_account.split(':', 2)
+            user_account = UsersAccount.UserAccount(user_account_id, user_account_subtype)
+            self.index_obj(index, user_account, timestamp)
 
 
 if IS_MEILISEARCH_ENABLED:
     Engine = MeiliSearch()
 else:
     Engine = None
-##
 
-def index_all():
-    # Engine._delete_all()
-    # Engine._delete('tor')
-    # Engine._delete('web')
-    Engine._create_indexes()
-    index_crawled()
-    index_chats_messages()
+#### INDEXER ####
 
-# TODO index titles
+## DOMAIN ##
+
+def index_crawled_item(item):
+    domain = Domains.Domain(item.get_domain())
+    timestamp = domain.get_item_timestamp(item.id)
+    if timestamp:
+        Engine.index_crawled_item(domain, item, timestamp)
+    # else: # TODO LOG
+
+
 def _index_crawled_domain(dom_id):
     domain = Domains.Domain(dom_id)
-    for item_id in domain.get_crawled_items_by_epoch():
-        item = Items.Item(item_id)
-        if not item.exists():
-            continue
-        if item.is_onion():
-            index = 'tor'
-        else:
-            index = 'web'
-        document = item.get_search_document()
-        Engine.add(index, document)
+    for timestamp in domain.get_timestamps_up():
+        for item_id in domain.get_crawled_items_by_epoch(epoch=timestamp):
+            item = Items.Item(item_id)
+            if not item.exists():
+                continue
+            Engine.index_crawled_item(domain, item, timestamp)
+
 
 def index_crawled():
-    for dom_id in Domains.get_domains_up_by_type('onion'):
-        _index_crawled_domain(dom_id)
-    for dom_id in Domains.get_domains_up_by_type('web'):
-        _index_crawled_domain(dom_id)
+    # multi process
+    if not r_search.exists('to_index:crawled'):
+        for domain_type in Domains.get_all_domains_types():
+            for dom_id in Domains.get_domains_up_by_type(domain_type):
+                r_search.sadd('to_index:crawled', dom_id)
+    while True:
+        dom_id = r_search.spop('to_index:crawled')
+        if not dom_id:
+            break
+        try:
+            _index_crawled_domain(dom_id)
+        except MeilisearchError:
+            # send back for resume
+            r_search.sadd('to_index:crawled', dom_id)
+            print('send back to indexing queue')
+            time.sleep(10)
 
-# TODO index chats + user-account
-def index_message(message):
-    index = f'c{message.get_protocol()}'
-    document = message.get_search_document()
+
+## MESSAGE ##
+
+def index_chats():
+    for obj in chats_viewer.get_chats_iterator():
+        index = f'c{obj.get_protocol()}'
+        document = obj.get_search_document()
+        if document:
+            Engine.update(index, document)
+
+def index_messages():
+    for message in chats_viewer.get_messages_iterator():
+        index = f'c{message.get_protocol()}'
+        document = message.get_search_document()
+        if document:
+            Engine.update(index, document)
+
+def index_user_accounts():
+    for obj in UsersAccount.UserAccounts().get_iterator():
+        index = f'c{obj.get_protocol()}'
+        document = obj.get_search_document()
+        if document:
+            Engine.update(index, document)
+
+## DESCRIPTION ##
+
+def index_image_description(image):
+    index = f'desc-img'
+    document = image.get_search_document()
     if document:
         Engine.add(index, document)
 
+def index_images_descriptions():
+    for image in Images.get_all_images_objects():
+        index_image_description(image)
 
-# TODO index chat with description
-# TODO index user-account description
-def index_chats_messages():
-    for message in chats_viewer.get_messages_iterator():
-        index_message(message)
+
+def index_screenshot_description(screenshot):
+    index = f'desc-screen'
+    document = screenshot.get_search_document()
+    if document:
+        Engine.add(index, document)
+
+def index_screenshots_descriptions():
+    for screenshot in Screenshots.get_screenshots_obj_iterator():
+        index_screenshot_description(screenshot)
+
+
+def index_domain_description(domain_id):
+    index = f'desc-dom'
+    domain = Domains.Domain(domain_id)
+    document = domain.get_search_description_document()
+    if document:
+        Engine.add(index, document)
+
+def index_domains_descriptions():
+    for dom_id in Domains.get_domains_up_by_type('onion'):
+        index_domain_description(dom_id)
+    for dom_id in Domains.get_domains_up_by_type('web'):
+        index_domain_description(dom_id)
+
+
+## TITLE ##  # TODO update only
+
+def index_title(obj):
+    index = 'title'
+    document = obj.get_search_document()
+    if document:
+        Engine.update(index, document)
+
+
+def index_titles():
+    index = 'title'
+    for obj in Titles.Titles().get_iterator():
+        document = obj.get_search_document()
+        if document:
+            Engine.update(index, document)
+
+
+## FILENAME ##  # TODO update only
+
+def index_forum_thread(obj):
+    index = 'forum'
+    document = obj.get_search_document()
+    if document:
+        Engine.update(index, document)
+
+def index_forum_post(obj):
+    index = 'forum'
+    document = obj.get_search_document()
+    if document:
+        Engine.update(index, document)
+
+def index_forum_posts():
+    for forum_id in Forums.get_forums():
+        for obj_id, _score in ForumThreads.ForumThreads().get_id_iterators_by_subtype(forum_id):
+            thread = ForumThreads.ForumThread(obj_id, forum_id)
+            index_forum_thread(thread)
+            posts, _ = thread._get_posts()
+            for post_gid, _timestamp in posts:
+                _, _, post_id = post_gid.split(':', 2)
+                index_forum_post(Posts.Post(post_id))
+
+def index_file_name(obj):
+    index = 'filename'
+    document = obj.get_search_document()
+    if document:
+        Engine.update(index, document)
+
+
+def index_file_names():
+    index = 'filename'
+    for obj in FilesNames.FilesNames().get_iterator():
+        document = obj.get_search_document()
+        if document:
+            Engine.update(index, document)
+
+
+INDEXING_FUNCTIONS = {
+    'all': index_all,
+    'crawled': index_crawled,
+    'chats': index_chats,
+    'messages': index_messages,
+    'forum': index_forum_posts,
+    'user_accounts': index_user_accounts,
+    'images_descriptions': index_images_descriptions,
+    'screenshots_descriptions': index_screenshots_descriptions,
+    'domains_descriptions': index_domains_descriptions,
+    'titles': index_titles,
+    'file_names': index_file_names,
+}
+
+## --INDEXER-- ##
+
+
+def remove_document(index_name, obj_gid):
+    Engine.remove(index_name, get_obj_uuid5(obj_gid))
+
+
+def delete_index(index_name):
+    Engine._delete(index_name)
+    Engine.client._create_index(index_name)
 
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')
 
-# def search(index, query, page=1, nb=20):
-#     return Engine.search(index, query, page=page, nb=nb)
+
+#### PAGINATION ####
 
 def sanityze_page(page):
     try:
@@ -150,7 +579,7 @@ def sanityze_page(page):
 
 def _get_pagination_nb_first_last(pagination, nb_per_page):
     first = (pagination['page'] - 1) * nb_per_page
-    last = first+ nb_per_page
+    last = first + nb_per_page
     if last > pagination['total']:
         last = pagination['total']
     if first == 0:
@@ -167,7 +596,7 @@ def extract_pagination_from_result(result, nb_per_page, page):
 
 def create_pagination_multiple_indexes(total, nb_per_page, page):
     pagination = {'page': page, 'total': total}
-    pages = total/nb_per_page
+    pages = total / nb_per_page
     if pages.is_integer():
         pagination['nb_pages'] = int(pages)
     else:
@@ -175,109 +604,172 @@ def create_pagination_multiple_indexes(total, nb_per_page, page):
     pagination['nb_first'], pagination['nb_last'] = _get_pagination_nb_first_last(pagination, nb_per_page)
     return pagination
 
-def api_search_crawled(data):
-    index = data.get("index")
+
+## --PAGINATION-- ##
+
+#### CRAWLED CONTENT ####
+
+def get_crawled_content_domains_items(index, h):
+    return r_search.hgetall(f'crawled:{index}:{h}')
+
+
+def delete_crawled_content_domains_items():
+    for index in Domains.get_all_domains_types():
+        while True:
+            c_id = r_search.spop(f'crawled:{index}:contents')
+            if not c_id:
+                break
+            r_search.delete(f'crawled:{index}:{c_id}')
+    r_search.delete('to_index:crawled')
+
+
+#### API ####
+
+def api_check_indexes(indexes):
+    for index in indexes:
+        if index not in INDEX_NAMES:
+            return {"status": "error", "reason": f"Unknow index: {index}"}, 404
+    return None, 200
+
+
+def api_search(data):
+    indexes = data.get("indexes")
     to_search = data.get("search")
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
     user_id = data.get("user_id")
-    log(user_id, index, to_search)
+    log(user_id, str(indexes), to_search)
 
-    if not index or index not in ['tor', 'web', 'all']:
-        return {"status": "error", "reason": "Invalid search index"}, 400
-    if not to_search:
-        return {"status": "error", "reason": "Invalid search query"}, 400
+    r = api_check_indexes(indexes)
+    if r[1] != 200:
+        return r
 
-    # TODO SEARCH TITLE
+    if not indexes:
+        indexes = get_indexes_names()
 
-    if index == 'all':
-        indexes = ['tor', 'web']
-    else:
-        indexes = [index]
+    sort = data.get("sort", "recent")
+    if sort != "best" and sort != "recent":
+        return {"status": "error", "reason": "Invalid sort"}, 400
 
-    result = Engine.search(indexes, to_search, page=page, nb=nb_per_page)
+    forum_ids = data.get("forum_ids", [])
+    if isinstance(forum_ids, str):
+        forum_ids = [forum_id for forum_id in forum_ids.split(',') if forum_id]
+
+    forum_types = data.get("forum_types", [])
+    if isinstance(forum_types, str):
+        forum_types = [forum_type for forum_type in forum_types.split(',') if forum_type]
+    invalid_forum_types = set(forum_types) - {'post', 'forum-thread'}
+    if invalid_forum_types:
+        return {"status": "error", "reason": "Invalid forum result type"}, 400
+
+    timestamp_from = data.get("from")
+    timestamp_to = data.get("to")
+
+    if timestamp_from:
+        try:
+            timestamp_from = Date.convert_str_date_to_epoch(timestamp_from)
+        except:
+            return {"status": "error", "reason": "Invalid date from"}, 400
+    if timestamp_to:
+        try:
+            timestamp_to = Date.convert_str_date_to_epoch_end(timestamp_to)
+        except:
+            return {"status": "error", "reason": "Invalid date to"}, 400
+
+    try:
+        result = Engine.search(indexes, to_search, page=page, nb=nb_per_page, timestamp_from=timestamp_from, sort=sort,
+                               timestamp_to=timestamp_to, forum_ids=forum_ids, forum_types=forum_types)
+    except MeilisearchTimeoutError:
+        return {
+            "status": "error",
+            "error_type": "meilisearch_timeout",
+            "reason": "The connection to Meilisearch timed out. Please try again in a few minutes."
+        }, 503
+    except MeilisearchCommunicationError:
+        return {
+            "status": "error",
+            "error_type": "meilisearch_unreachable",
+            "reason": "Meilisearch is unreachable. Install/start Meilisearch or check the connection settings."
+        }, 503
+
     objs = []
     pagination = {}
-    # if isinstance(result['results'], dict):
     if result.get("hits"):
         pagination = extract_pagination_from_result(result, nb_per_page, page)
         for res in result['hits']:
-            item = Items.Item(res['id'].split(':', 2)[2])
-            meta = item.get_meta(options={'url'})
+            # crawled items
+            if not res.get('id'):
+                index = res['_federation']['indexUid']
+                #
+                domains_items = get_crawled_content_domains_items(index, res['uuid'])
+                obj = Items.Item(domains_items[next(iter(domains_items))])
+                meta = obj.get_meta(options={'link', 'crawler'})
+                # TODO change default separator
+                meta['date'] = meta['date'].replace('/', '-')
+                meta['domains_items'] = domains_items
+            else:
+                obj_type, subtype, obj_id = res['id'].split(':', 2)
+                if obj_type == 'item':
+                    obj = Items.Item(obj_id)
+                    meta = obj.get_meta(options={'url'})
+                elif obj_type == 'message':
+                    message = Messages.Message(obj_id)
+                    meta = message.get_meta(
+                        options={'barcodes', 'files', 'files-names', 'forwarded_from', 'full_date', 'icon', 'images',
+                                 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions',
+                                 'user-account'})
+                    meta['protocol'] = chats_viewer.get_chat_protocol_meta(meta['protocol'])
+                    # if meta.get('reply_to'):
+                    #     print(meta['reply_to'])
+                elif obj_type == 'chat':
+                    obj = chats_viewer.get_obj_chat('chat', subtype, obj_id)
+                    meta = obj.get_meta(options={'link', 'icon', 'info', 'nb_participants', 'protocol', 'tags_safe', 'username', 'usernames'})
+                elif obj_type == 'user-account':
+                    obj = UsersAccount.UserAccount(obj_id, subtype)
+                    meta = obj.get_meta(options={'link', 'icon', 'info', 'nb_chats', 'protocol', 'tags_safe', 'username', 'usernames'})
+                elif obj_type == 'image':
+                    obj = Images.Image(obj_id)
+                    meta = obj.get_meta(options={'link', 'tags_safe'})
+                elif obj_type == 'screenshot':
+                    obj = Screenshots.Screenshot(obj_id)
+                    meta = obj.get_meta(options={'link', 'tags_safe'})
+                elif obj_type == 'domain':
+                    obj = Domains.Domain(obj_id)
+                    meta = obj.get_meta(options={'img', 'link', 'tags_safe'})
+                    # TEMP FIX  TODO
+                    meta['domain_type'] = meta['type']
+                    meta['type'] = 'domain'
+                    meta['first_seen'] = meta['first_seen'].replace('/', '-')
+                    meta['last_check'] = meta['last_check'].replace('/', '-')
+                elif obj_type == 'file-name':
+                    obj = FilesNames.FileName(obj_id)
+                    meta = obj.get_meta(options={'link'})
+                elif obj_type == 'post':
+                    obj = Posts.Post(obj_id)
+                    meta = obj.get_meta(options={'content', 'link', 'user-account', 'full_date', 'state', 'svg_icon'})
+                elif obj_type == 'forum-thread':
+                    obj = ForumThreads.ForumThread(obj_id, subtype)
+                    meta = obj.get_meta(options={'link', 'name', 'info', 'nb_posts', 'icon'})
+                elif obj_type == 'title':
+                    obj = Titles.Title(obj_id)
+                    meta = obj.get_meta(options={'link'})
+                else:
+                    print('ERROR UNKNOWN OBJ RESULT', res)
+                    continue  # TODO ERROR
+
             meta['result'] = res['_formatted']['content']
             objs.append(meta)
-    # else:
-    #     total = 0
-    #     for index in result['results']:
-    #         total += index['totalHits']
-    #         for res in index['hits']:
-    #             item = Items.Item(res['id'].split(':', 2)[2])
-    #             meta = item.get_meta(options={'url'})
-    #             meta['result'] = res['_formatted']['content']
-    #             objs.append(meta)
-    #     pagination = create_pagination_multiple_indexes(total, nb_per_page, page)
     return (objs, pagination), 200
 
-def api_search_chats(data):
-    index = data.get("index")
-    to_search = data.get("search")
-    page = sanityze_page(data.get("page"))
-    nb_per_page = 20
-    user_id = data.get("user_id")
-    log(user_id, index, to_search)
-
-    protocols = chats_viewer.get_chat_protocols()
-
-    if index != 'all':
-        if not index or index not in protocols:
-            return {"status": "error", "reason": "Invalid search index"}, 400
-        if not to_search:
-            return {"status": "error", "reason": "Invalid search query"}, 400
-
-    # TODO SEARCH CHATS + USERS DESCRIPTION + MESSAGES FORWARD
-
-    indexes = []
-    if index == 'all':
-        for protocol in protocols:
-            indexes.append(f'c{protocol}')
-    else:
-        indexes.append(f'c{index}')
-
-
-    result = Engine.search(indexes, to_search, page=page, nb=nb_per_page)
-    objs = []
-    pagination = {}
-    # if isinstance(result['results'], dict):
-    if result.get("hits"):
-        pagination = extract_pagination_from_result(result, nb_per_page, page)
-        for res in result['hits']:
-            message = Messages.Message(res['id'].split(':', 2)[2])
-            meta = message.get_meta(options={'barcodes', 'files', 'files-names', 'forwarded_from', 'full_date', 'icon', 'images', 'language', 'link', 'parent', 'parent_meta', 'protocol', 'qrcodes', 'reactions', 'user-account'})
-            meta['protocol'] = chats_viewer.get_chat_protocol_meta(meta['protocol'])
-            if meta.get('reply_to'):
-                print(meta['reply_to'])
-            meta['result'] = res['_formatted']['content']
-            objs.append(meta)
-    return (objs, pagination), 200
-
-### Filter
-# use filters ???
-# onion
-# chat -> mention, forward, chat type ???
+## --API-- ##
 
 ### SEARCH
 # Limitation: The maximum number of terms taken into account for each search query is 10.
 # If a search query includes more than 10 words, all words after the 10th will be ignored.
-#
-# multisearch -> search on multiple indexes ???
-# single search for one index
-#
-# client.index('index').search('test)
 
 ### INDEX
 # .index(index_name).update_documents([doc])  # partial update -> keep old filed
 # .index(index_name).add_documents() -> delete old fields
-# .index("misp-galaxy").update_filterable_attributes( ... )
 # .swap_indexes -> update index without interruption
 
 ### delete
@@ -287,4 +779,10 @@ def api_search_chats(data):
 
 if __name__ == '__main__':
     index_all()
-    # print(search('ctelegram', 'test'))
+    # delete_crawled_content_domains_items()
+    # Engine.setup_indexes_searchable_filterable_sortable()
+    # import json
+    # print(json.dumps(Engine.get_stats(), indent=2))
+    # data = {'indexes': ['filename', 'title'], 'user_id': 'admin@admin.test', 'search': 'stick'}
+    # r = api_search(data)
+    # print(r)

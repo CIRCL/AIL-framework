@@ -3,6 +3,8 @@
     <tr>
         <th class="bg-info text-white">Description</th>
         <th class="bg-info text-white">Date</th>
+        <th class="bg-info text-white">Last edit</th>
+        <th class="bg-info text-white">Last use</th>
         <th class="bg-info text-white">UUID</th>
         <th class="bg-info text-white">Level</th>
         <th class="bg-info text-white">Org</th>
@@ -18,6 +20,8 @@
             {{dict_cookiejar['date'][0:4]}}/{{dict_cookiejar['date'][4:6]}}/{{dict_cookiejar['date'][6:8]}}
           {%endif%}
         </td>
+        <td>{{ dict_cookiejar.get('last_edit_date') or '-' }}</td>
+        <td>{{ dict_cookiejar.get('last_used_date') or '-' }}</td>
         <td>
           <a target="_blank" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid={{ dict_cookiejar['uuid'] }}">
             {{ dict_cookiejar['uuid']}}

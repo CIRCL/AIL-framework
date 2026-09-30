@@ -33,8 +33,18 @@ class Languages(AbstractModule):
                 for lang in obj.get_languages(min_probability=0.8, force_gcld3=True):
                     print(lang)
                     domain.add_language(lang)
+        # PDF
+        elif obj.type == 'pdf':
+            lang = obj.detect_language(content=obj.get_content_sample())
+            print(self.obj.id, lang)
+
         # Detect Chat Message Language
         elif obj.type == 'message':
+            lang = obj.detect_language()
+            print(self.obj.id, lang)
+
+        # Detect Forum Post Language
+        elif obj.type == 'post':
             lang = obj.detect_language()
             print(self.obj.id, lang)
 

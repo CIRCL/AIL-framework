@@ -13,6 +13,8 @@ import sys
 import string
 import unicodedata
 import uuid
+import html
+from urllib.parse import quote
 
 from functools import wraps
 
@@ -205,6 +207,7 @@ def submit():
 
     return PasteSubmit_page()
 
+# TODO REFACTOR ME
 @PasteSubmit.route("/PasteSubmit/submit_status", methods=['GET'])
 @login_required
 @login_user_no_api
@@ -225,8 +228,10 @@ def submit_status():
             link = ''
             if paste_submit_link:
                 for paste in paste_submit_link:
-                    url = url_for('objects_item.showItem') + '?id=' + paste
-                    link += '<a target="_blank" href="' + url + '" class="list-group-item">' + paste +'</a>'
+                    # TODO REFACTOR ME
+                    escaped_paste = html.escape(paste)
+                    url = url_for('objects_item.showItem') + '?id=' + quote(paste, safe='')
+                    link += f'<a target="_blank" href="{html.escape(url)}" class="list-group-item">{escaped_paste}</a>'
 
             if nb_total == '-1':
                 in_progress = nb_sucess + ' / '

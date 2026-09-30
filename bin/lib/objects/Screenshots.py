@@ -5,6 +5,7 @@ import base64
 import os
 import re
 import sys
+import time
 
 from hashlib import sha256
 from io import BytesIO
@@ -24,6 +25,7 @@ config_loader = ConfigLoader()
 # r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_serv_metadata = config_loader.get_db_conn("Kvrocks_Objects")
 SCREENSHOT_FOLDER = config_loader.get_files_directory('screenshot')
+baseurl = config_loader.get_config_str("Notifications", "ail_domain")
 config_loader = None
 
 
@@ -82,7 +84,10 @@ class Screenshot(AbstractObject):
         return rel_path
 
     def get_filepath(self):
-        filename = os.path.join(SCREENSHOT_FOLDER, self.get_rel_path(add_extension=True))
+        filename = os.path.realpath(os.path.join(SCREENSHOT_FOLDER, self.get_rel_path(add_extension=True)))
+        image_dir = SCREENSHOT_FOLDER.rstrip('/')
+        if os.path.commonpath([filename, image_dir]) != image_dir:
+            return None
         return os.path.realpath(filename)
 
     def get_file_content(self):
@@ -103,14 +108,26 @@ class Screenshot(AbstractObject):
             if key.startswith('desc:'):
                 model = key[5:]
                 models.append(model)
+        return models
 
     def add_description_model(self, model, description):
         self._set_field(f'desc:{model}', description)
+
+    def get_descriptions(self):
+        return {model: self.get_description(model) for model in self.get_description_models()}
 
     def get_description(self, model=None):
         if not model:
             model = get_default_image_description_model()
         return self._get_field(f'desc:{model}')
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_description()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(time.time())}
+        else:
+            return None
 
     def get_misp_object(self):
         obj_attrs = []
@@ -123,14 +140,17 @@ class Screenshot(AbstractObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def get_meta(self, options=set()):
-        meta = self.get_default_meta()
+    def get_meta(self, options=set(), flask_context=False):
+        meta = self.get_default_meta(flask_context=flask_context)
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
         if 'description' in options:
             meta['description'] = self.get_description()
+            meta['descriptions'] = self.get_descriptions()
         if 'tags_safe' in options:
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
+        if 'link' in options:
+            meta['link'] = self.get_link(flask_context=flask_context)
         return meta
 
 def get_screenshot_dir():

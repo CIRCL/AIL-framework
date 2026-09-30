@@ -2,7 +2,6 @@
 # -*-coding:UTF-8 -*
 
 import os
-import ssdeep
 import sys
 import time
 import tlsh
@@ -35,13 +34,6 @@ config_loader = None
 #
 # Duplicates domains != Duplicates items
 
-
-def get_ssdeep_hash(content):
-    return ssdeep.hash(content)
-
-def get_ssdeep_similarity(obj_hash, other_hash):
-    return ssdeep.compare(obj_hash, other_hash)
-
 def get_tlsh_hash(content):
     return tlsh.hash(content)
 
@@ -53,9 +45,7 @@ def get_tlsh_similarity(obj_hash, other_hash):
     return similarity
 
 def get_algo_similarity(algo, obj_hash, other_hash):
-    if algo == 'ssdeep':
-        return get_ssdeep_similarity(obj_hash, other_hash)
-    elif algo == 'tlsh':
+    if algo == 'tlsh':
         return get_tlsh_similarity(obj_hash, other_hash)
 
 def get_algo_hashs_by_month(algo, date_ymonth):

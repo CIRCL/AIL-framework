@@ -19,7 +19,8 @@ RELATIONSHIPS = {
     "forwarded_from",
     "forwarded_to",  # forwarded_to
     "in",
-    "mention"
+    "mention",
+    "quote"
 }
 
 RELATIONSHIPS_OBJS = { # TODO forward user-account
@@ -39,6 +40,9 @@ RELATIONSHIPS_OBJS = { # TODO forward user-account
         'chat': {'chat', 'user-account', 'message'},
         'message': {'chat', 'user-account'},
         'user-account': {'chat', 'message'},
+    },
+    "quote": {
+        'post': {'post'},
     },
 }
 
@@ -144,7 +148,7 @@ def _get_relationship_graph(obj_global_id, links, nodes, meta, level, max_nodes,
     for rel in get_obj_relationships(obj_global_id, relationships=relationships, filter_types=filter_types):
         meta['objs'].add(rel['id'])
 
-        if rel['id'] in done:
+        if rel['id'] in done or rel['id'] in objs_hidden:
             continue
 
         if len(nodes) > max_nodes != 0:

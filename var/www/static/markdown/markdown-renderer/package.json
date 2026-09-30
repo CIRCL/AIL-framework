@@ -1,0 +1,26 @@
+{
+  "name": "ail-markdown-renderer",
+  "private": true,
+  "version": "0.0.0",
+  "files": [
+    "dist"
+  ],
+  "module": "./dist/markdown-renderer.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/markdown-renderer.es.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.0"
+  },
+  "dependencies": {
+    "dompurify": "3.4.14",
+    "marked": "18.0.11"
+  }
+}

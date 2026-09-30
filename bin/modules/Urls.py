@@ -15,13 +15,14 @@ This module extract URLs from an item and send them to others modules.
 import os
 import sys
 
+from pyfaup import Url
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
-from lib import psl_faup
 
 class Urls(AbstractModule):
     """
@@ -66,13 +67,9 @@ class Urls(AbstractModule):
         if urls:
             urls = set(urls)
             for url in urls:
-                url = psl_faup.get_url(url)
+                parsed_url = Url(url)
+                url = str(parsed_url)
                 if url:
-                    # decode URL
-                    try:
-                        url = url.decode()
-                    except AttributeError:
-                        pass
 
                     print(url, self.obj.get_global_id())
                     self.add_message_to_queue(message=str(url), queue='Url')

@@ -148,13 +148,13 @@ class Ocr(AbstractDaterangeObject):
         return obj
 
     # options: set of optional meta fields
-    def get_meta(self, options=None, translation_target=''):
+    def get_meta(self, options=None, translation_target='', flask_context=False):
         """
         :type options: set
         """
         if options is None:
             options = set()
-        meta = self._get_meta(options=options)
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['tags'] = self.get_tags()
         meta['content'] = self.get_content()
 
@@ -169,16 +169,12 @@ class Ocr(AbstractDaterangeObject):
             meta['img'] = self.draw_bounding_boxs()
         if 'map' in options:
             meta['map'] = self.get_img_map_coords()
-        if 'language' in options:
-            meta['language'] = self.get_language()
         if 'translation' in options and translation_target:
             if meta.get('language'):
                 source = meta['language']
             else:
                 source = None
             meta['translation'] = self.translate(content=meta.get('content'), source=source, target=translation_target)
-            if 'language' in options:
-                meta['language'] = self.get_language()
         return meta
 
     def get_objs_container(self):
@@ -334,7 +330,7 @@ class Ocrs(AbstractDaterangeObjects):
         return 'Ocrs'
 
     def get_icon(self):
-        return {'fas': 'far', 'icon': 'expand'}
+        return {'fa': 'fas', 'icon': 'expand'}
 
     def get_link(self, flask_context=False):
         if flask_context:

@@ -7,9 +7,6 @@
 
 import os
 import sys
-import time
-
-import json # TODO REMOVE ME
 
 from flask import render_template, Response, request, Blueprint
 from flask_login import login_required, current_user
@@ -22,9 +19,6 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_stats
-
-# TODO STATS
-# from lib import ail_updates
 
 # ============ BLUEPRINT ============
 dashboard = Blueprint('dashboard', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/dashboard'))
@@ -43,6 +37,7 @@ def index():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     nb_objects = ail_stats.get_nb_objs_dashboard()
+    nb_objects = dict(sorted(nb_objects.items()))
     feeders_dashboard = ail_stats.get_feeders_dashboard_full()
     crawlers_stats = ail_stats.get_crawlers_stats()
     trackers = ail_stats.get_tracked_objs_dashboard(user_org, user_id)
@@ -50,3 +45,11 @@ def index():
     return render_template("dashboard.html", feeders_dashboard=feeders_dashboard,
                            nb_objects=nb_objects, trackers=trackers, tagged_objs=tagged_objs,
                            bootstrap_label=bootstrap_label, crawlers_stats=crawlers_stats)
+
+@dashboard.route("/objects", methods=['GET'])
+@login_required
+@login_read_only
+def objects_dashboard():
+    nb_objects = ail_stats.get_nb_objs_dashboard()
+    nb_objects = dict(sorted(nb_objects.items()))
+    return render_template("objects_dashboard.html", nb_objects=nb_objects)

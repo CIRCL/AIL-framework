@@ -18,6 +18,7 @@ PASTES
 CRAWLED_SCREENSHOT
 IMAGES
 FAVICONS
+FILES
 BASE64
 HASHS
 DATA_ARDB
@@ -42,7 +43,8 @@ var/www/submitted
 var/www/server.crt
 var/www/server.key
 
-# Local config
+# Local config / secrets
+.ail-api-key
 configs/keys
 configs/core.cfg
 configs/core.cfg.backup
@@ -54,10 +56,13 @@ configs/d4client_passiveDNS_conf/uuid
 # Trackers
 bin/trackers/yara/custom-rules/*
 
+# Tools
+tools
+bin/crawlers/forum_crawler.py
+
 # Helper
 tools/gen_cert/rootCA.*
 tools/gen_cert/server.*
-
 
 # Pystemon archives
 pystemon/archives
@@ -71,3 +76,5 @@ doc/data-flow.png
 doc/ail_queues.dot
 doc/ail_queues.svg
 doc/statistics
+docs/PR319_REMAINING_FILES_COMPARISON.md
+pr319change.md

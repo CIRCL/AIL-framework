@@ -21,80 +21,159 @@
 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+	<style>
+		.investigation-page {
+			background: #f8f9fc;
+			min-height: 100vh;
+		}
+		.investigation-shell {
+			max-width: 1400px;
+		}
+		.investigation-hero {
+			border: 0;
+			background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+			box-shadow: 0 0.75rem 1.5rem rgba(17, 24, 39, 0.2);
+		}
+		.investigation-hero .display-title {
+			font-size: 1.85rem;
+			font-weight: 600;
+		}
+		.investigation-form-card {
+			border: 0;
+			box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.08);
+		}
+		.investigation-form-header {
+			background: #fff;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+		}
+		.form-hint {
+			font-size: .85rem;
+		}
+		.quick-tip-card {
+			border: 1px dashed #adb5bd;
+			background: #fcfcfd;
+		}
+		.status-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+			grid-gap: 0.75rem;
+		}
+		.status-chip {
+			background: #f8f9fc;
+			border: 1px solid #e9ecef;
+			border-radius: 0.5rem;
+			padding: 0.75rem;
+		}
+		.section-divider {
+			border-top: 1px solid rgba(0, 0, 0, 0.06);
+			margin-top: 1rem;
+			padding-top: 1rem;
+		}
+		.sticky-panel {
+			position: sticky;
+			top: 1rem;
+		}
+		@media (max-width: 1199.98px) {
+			.sticky-panel {
+				position: static;
+			}
+		}
+	</style>
 
 </head>
 
-<body>
+<body class="investigation-page">
 
 	{% include 'nav_bar.html' %}
 
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+			{% include 'sidebars/sidebar_investigations.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
-
-						<div class="card my-3">
-						  <div class="card-header bg-dark text-white">
-								<h5 class="card-title">
-									{% if edit %}
-										Edit Investigation
-									{% else %}
-										Create Investigation
-									{% endif %}
-								</h5>
+				<div class="container-fluid investigation-shell py-3 py-xl-4">
+					<div class="card investigation-hero text-white mb-4">
+						<div class="card-body p-4 p-xl-5">
+							<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+								<div class="pr-lg-4">
+									<h1 class="display-title mb-2">
+										{% if edit %}
+											Update investigation
+										{% else %}
+											Create a new investigation
+										{% endif %}
+									</h1>
+									<p class="mb-0 text-white-50">Launch a new investigation with the right details, status, and visibility settings for collaboration.</p>
+								</div>
+								<div class="text-white">
+									<ul class="mb-0 mt-3 mt-lg-0 text-white">
+										<li>Step 1: Add title and context</li>
+										<li>Step 2: Set status and timeline</li>
+										<li>Step 3: Apply tags and sharing level</li>
+									</ul>
+								</div>
 							</div>
-						  <div class="card-body">
+						</div>
+					</div>
 
-								<form action="{% if edit %}{{ url_for('investigations_b.edit_investigation') }}{% else %}{{ url_for('investigations_b.add_investigation') }}{% endif %}" method='post' onsubmit="SubmitCreateInvestigation();">
+					<form action="{% if edit %}{{ url_for('investigations_b.edit_investigation') }}{% else %}{{ url_for('investigations_b.add_investigation') }}{% endif %}" method='post' onsubmit="SubmitCreateInvestigation();">
 
 									{% if edit %}
 										<input id="investigation_uuid" name="investigation_uuid" type="text" value="{{ metadata['uuid'] }}" hidden>
 									{% endif %}
 
 									<div class="row">
-										<div class="col-12 col-xl-9">
-											<div class="input-group mb-2 mr-sm-2">
-										    <div class="input-group-prepend">
-										      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
-										    </div>
-												<input id="investigation_info" name="investigation_info" class="form-control" placeholder="Quick Investigation Info" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
-										  </div>
-
-											<div class="row">
-												<div class="col-12 col-xl-6">
+										<div class="col-12 col-xl-8">
+											<div class="card mb-4 investigation-form-card">
+												<div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-file-signature text-primary mr-2"></i>Investigation details</h5>
+													<p class="mb-0 text-muted">Add a clear title and summary so your team immediately understands the objective.</p>
+												</div>
+												<div class="card-body">
 													<div class="form-group">
-													 <label for="threat_level">Threat Level:
-														 <span id="threat_level_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
-														 <script type="text/javascript">
-														 		$(function() {
-																 		$('#threat_level_idInfoPopover').popover({
-																				html: true,
-																				content: function() {
-																				 		var tempSelector = '#threat_level';
-																						return $('<div>').append(
-												                        $('<span>').attr('class', 'blue bold').text($(tempSelector +" option:selected").text())
-												                    ).append(
-												                        $('<span>').text(': ' + fieldDesc[$(tempSelector).val()])
-												                    );
-																				}
-																		});
-																		var fieldDesc = {"1":"*high* means sophisticated APT malware or 0-day attack","2":"*medium* means APT malware","3":"*low* means mass-malware","4":"*undefined* no risk"};
-																});
-														 </script>
-													 </label>
-													 <select class="form-control" id="threat_level" name="threat_level" required>
-														 <option value="1">High</option>
-														 <option value="2">Medium</option>
-														 <option value="3">Low</option>
-														 <option value="4">Undefined</option>
-													 </select>
+														<label for="investigation_info" class="font-weight-bold mb-1">Investigation name <span class="text-danger">*</span></label>
+														<div class="input-group">
+													    <div class="input-group-prepend">
+													      <div class="input-group-text bg-dark text-white"><i class="fas fa-quote-right"></i></div>
+													    </div>
+															<input id="investigation_info" name="investigation_info" class="form-control" placeholder="Example: Suspicious infrastructure campaign" type="text" {% if edit %}value="{{metadata['info']}}"{% endif %} required>
+													  </div>
+														<small class="text-muted form-hint">Use a short and specific title for easier search and collaboration.</small>
+													</div>
+
+													<div class="section-divider"></div>
+
+													<div class="form-group mb-0">
+														<label for="investigation_description" class="font-weight-bold mb-1">Description</label>
+														<div class="input-group">
+															<div class="input-group-prepend">
+																<div class="input-group-text bg-info text-white"><i class="fas fa-pencil-alt"></i></div>
+															</div>
+															<textarea id="investigation_description" name="investigation_description" class="form-control" rows="3" placeholder="Add context, key indicators, and objectives (optional).">{% if edit and metadata['description'] %}{{ metadata['description'] }}{% endif %}</textarea>
+														</div>
 													</div>
 												</div>
-												<div class="col-12 col-xl-6">
+											</div>
+
+											<div class="card mb-4 investigation-form-card">
+												<div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-tasks text-info mr-2"></i>Status and timeline</h5>
+													<p class="mb-0 text-muted">Track investigation progress and set the investigation date.</p>
+												</div>
+												<div class="card-body">
+													<div class="status-grid mb-3">
+														<div class="status-chip">
+															<div class="small text-uppercase text-muted">Status</div>
+															<div class="font-weight-bold"><i class="fas fa-stream text-info mr-1"></i>Case stage</div>
+														</div>
+														<div class="status-chip">
+															<div class="small text-uppercase text-muted">Date</div>
+															<div class="font-weight-bold"><i class="far fa-calendar-alt text-secondary mr-1"></i>Case timeline</div>
+														</div>
+													</div>
 													<div class="form-group">
-													 <label for="analysis">Analysis:
+													 <label for="analysis" class="font-weight-bold mb-1">Analysis status
 														 <span id="analysis_idInfoPopover" class="fas fa-info-circle" data-toggle="popover" data-trigger="hover"></span>
 														 <script type="text/javascript">
 														 		$(function() {
@@ -119,17 +198,24 @@
 														 <option value="2">Completed</option>
 													 </select>
 													</div>
+
+													<div class="section-divider"></div>
+
+													<div class="form-group mb-0">
+														<label for="ivestigation-date-input" class="font-weight-bold mb-1">Investigation date <span class="text-danger">*</span></label>
+														<div class="input-group" id="ivestigation-date">
+															<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
+															<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
+														</div>
+														<small class="text-muted form-hint">Set when this case started or was first reported.</small>
+													</div>
 												</div>
 											</div>
 
-											<div class="input-group" id="ivestigation-date">
-												<div class="input-group-prepend"><span class="input-group-text bg-secondary text-white"><i class="far fa-calendar-alt" aria-hidden="true"></i></span></div>
-												<input class="form-control" id="ivestigation-date-input" placeholder="yyyy-mm-dd" name="investigation_date" autocomplete="off" required>
-											</div>
-
-											<div class="card my-4">
-											  <div class="card-header bg-secondary text-white">
-													<b>Tags</b>
+											<div class="card mb-4 investigation-form-card">
+											  <div class="card-header investigation-form-header py-3">
+													<h5 class="mb-1"><i class="fas fa-tags text-danger mr-2"></i>Classification tags</h5>
+													<p class="mb-0 text-muted">Attach tags to improve filtering and reporting.</p>
 												</div>
 											  <div class="card-body">
 													{% include 'tags/block_tags_selector.html' %}
@@ -138,43 +224,52 @@
 
 										</div>
 
-										<div class="col-12 col-xl-3">
-											{% if edit %}
-												Edit Investigation
-											{% else %}
-												Create a new Investigation
-											{% endif %}
-
-                                            <br>
-                                            <label  class="mt-3" for="level_selector">View Level</label>
-                                            <select class="custom-select" id="level_selector" name="investigation_level">
-                                                {% if edit %}
-                                                    <option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2" {% if metadata['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
-                                                {% else %}
-                                                    <option value="1" selected><i class="fas fa-users"></i> Global</option>
-                                                    <option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
-                                                {% endif %}
-                                            </select>
+										<div class="col-12 col-xl-4">
+											<div class="card investigation-form-card sticky-panel mb-4">
+												<div class="card-body">
+													<h5 class="mb-1"><i class="fas fa-eye text-secondary mr-2"></i>Visibility &amp; actions</h5>
+													<p class="text-muted mb-3">
+														{% if edit %}
+															Update metadata and visibility for this investigation.
+														{% else %}
+															Decide who can view this investigation.
+														{% endif %}
+													</p>
+													<label class="font-weight-bold mb-1" for="level_selector">View Level</label>
+													<select class="custom-select" id="level_selector" name="investigation_level">
+														{% if edit %}
+															<option value="1" {% if metadata['level'] == 1 %}selected{% endif %}><i class="fas fa-users"></i> Global</option>
+															<option value="2" {% if metadata['level'] == 2 %}selected{% endif %}><i class="fas fa-landmark"></i> My Organisation</option>
+														{% else %}
+															<option value="1" selected><i class="fas fa-users"></i> Global</option>
+															<option value="2"><i class="fas fa-landmark"></i> My Organisation</option>
+														{% endif %}
+													</select>
+													<small class="text-muted d-block mt-2">Global investigations are visible to all users; My Organisation restricts visibility to your organisation.</small>
+													<hr>
+													<div class="d-flex flex-column">
+														<button class="btn btn-primary px-4 py-2 mb-2">
+															{% if edit %}
+																<i class="fas fa-pencil-alt"></i> Edit Investigation
+															{% else %}
+																<i class="fas fa-plus"></i> Create Investigation
+															{% endif %}
+														</button>
+													</div>
+												</div>
+											</div>
 
 										</div>
-									</div>
+                                    </div>
 
+                        <div class="d-flex justify-content-start mt-1 mb-4">
+                            <a href="{{ url_for('investigations_b.investigations_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to investigations
+                            </a>
+                        </div>
 
-									<br>
-									<button class="btn btn-primary mt-2">
-										{% if edit %}
-											<i class="fas fa-pencil-alt"></i> Edit Investigation
-										{% else %}
-											<i class="fas fa-plus"></i> Create Investigation
-										{% endif %}
-									</button>
-
-								</form>
-
-						  </div>
-						</div>
-
+					</form>
+				</div>
 
 			</div>
 
@@ -185,6 +280,7 @@
 
 <script>
 $(document).ready(function(){
+    $("#page-investigation").addClass("active");
 	$('#nav_investigation').removeClass("text-muted");
 	$("#nav_add_investigation").addClass("active");
 

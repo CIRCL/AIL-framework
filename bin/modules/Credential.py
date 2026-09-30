@@ -29,13 +29,14 @@ Redis organization:
 import os
 import sys
 
+from pyfaup import Url
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from modules.abstract_module import AbstractModule
 from lib import ConfigLoader
-from lib import psl_faup
 
 
 class Credential(AbstractModule):
@@ -115,7 +116,8 @@ class Credential(AbstractModule):
                         creds_sites[site_domain] = 1
 
                 for url in all_sites:
-                    domain = psl_faup.get_domain(url)
+                    host = Url(url).host
+                    domain = host.domain() or str(host)
                     if domain in creds_sites.keys():
                         creds_sites[domain] += 1
                     else:
@@ -135,8 +137,8 @@ class Credential(AbstractModule):
                 # nb_tlds = {}
                 # for cred in all_credentials:
                 #     maildomains = re.findall(r"@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,20}", cred.lower())[0]
-                #     self.faup.decode(maildomains)
-                #     tld = self.faup.get()['tld']
+                #     parsed_url = Url(f'https://{maildomains}')
+                #     tld = str(parsed_url.host.suffix()) if parsed_url.host.suffix() else None
                 #     # # TODO: # FIXME: remove me
                 #     try:
                 #         tld = tld.decode()

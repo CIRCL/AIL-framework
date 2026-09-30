@@ -72,6 +72,16 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return last_seen
 
+    def get_first_seen_timestamp(self):
+        first_seen = self._get_field('first_seen')
+        if first_seen:
+            return Date.convert_str_date_to_epoch(first_seen)
+
+    def get_last_seen_timestamp(self):
+        last_seen = self._get_field('last_seen')
+        if last_seen:
+            return Date.convert_str_date_to_epoch(last_seen)
+
     def get_nb_seen(self): # TODO REPLACE ME -> correlation image chats
         return self.get_nb_correlation('item') + self.get_nb_correlation('message')
 
@@ -82,7 +92,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         else:
             return int(nb)
 
-    def _get_meta(self, options=[]):
+    def _get_meta(self, options=[], flask_context=False):
         meta_dict = self.get_default_meta(options=options)
         meta_dict['first_seen'] = self.get_first_seen()
         meta_dict['last_seen'] = self.get_last_seen()
@@ -91,6 +101,8 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             meta_dict['sparkline'] = self.get_sparkline()
         if 'last_full_date' in options:
             meta_dict['last_full_date'] = meta_dict['last_seen']
+        if 'link' in options:
+            meta_dict['link'] = self.get_link(flask_context=flask_context)
         return meta_dict
 
     def set_first_seen(self, first_seen):
@@ -118,6 +130,14 @@ class AbstractDaterangeObject(AbstractObject, ABC):
         for date in Date.get_previous_date_list(6):
             sparkline.append(self.get_nb_seen_by_date(date))
         return sparkline
+
+    def get_search_document(self):
+        global_id = self.get_global_id()
+        content = self.get_content()
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'first': int(self.get_first_seen_timestamp()), 'last': int(self.get_last_seen_timestamp())}
+        else:
+            return None
 
     def get_content(self, r_type='str'):
         if r_type == 'str':
@@ -186,6 +206,11 @@ class AbstractDaterangeObject(AbstractObject, ABC):
             for date in Date.get_daterange(first_seen, last_seen):
                 r_object.zrem(f'{self.type}:date:{date}', self.id)
         r_object.delete(f'meta:{self.type}:{self.id}')
+
+    def _delete(self, meta=True):
+        self.delete_dates()
+        r_object.srem(f'{self.type}:all', self.id)
+        self._delete_object(meta=meta)
 
 
 class AbstractDaterangeObjects(ABC):

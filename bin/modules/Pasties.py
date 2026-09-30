@@ -12,6 +12,8 @@ This module spots domain-pasties services for further processing
 import os
 import sys
 import time
+from urllib.parse import urlsplit
+
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -20,7 +22,6 @@ sys.path.append(os.environ['AIL_BIN'])
 from modules.abstract_module import AbstractModule
 from lib.ConfigLoader import ConfigLoader
 from lib import crawlers
-from lib import psl_faup
 
 # TODO add url validator
 
@@ -55,11 +56,11 @@ class Pasties(AbstractModule):
                 for line in f:
                     url = line.strip()
                     if url:  # TODO validate line
-                        url_decoded = psl_faup.unparse_url(url)
-                        host = url_decoded['host']
+                        parsed_url = urlsplit(url if '://' in url[:10] else f'//{url}')
+                        host = parsed_url.hostname
                         # if url_decoded.get('port', ''):
                         #     host = f'{host}:{url_decoded["port"]}'
-                        path = url_decoded.get('resource_path', '')
+                        path = parsed_url.path
                         # print(url_decoded)
                         if path and path != '/':
                             if path[-1] != '/':
@@ -81,14 +82,14 @@ class Pasties(AbstractModule):
             with open(url_blocklist) as f:
                 for line in f:
                     url = line.strip()
-                    url_decoded = psl_faup.unparse_url(url)
-                    host = url_decoded['host']
+                    parsed_url = urlsplit(url if '://' in url[:10] else f'//{url}')
+                    host = parsed_url.hostname
                     # if url_decoded.get('port', ''):
                     #     host = f'{host}:{url_decoded["port"]}'
-                    path = url_decoded.get('resource_path', '')
+                    path = parsed_url.path or ''
                     url = f'{host}{path}'
-                    if url_decoded['query_string']:
-                        url = url + url_decoded['query_string']
+                    if parsed_url.query:
+                        url = url + parsed_url.query
                     self.urls_blocklist.add(url)
 
     def send_to_crawler(self, url, obj_id):
@@ -98,14 +99,14 @@ class Pasties(AbstractModule):
             crawlers.create_task(url, depth=0, har=False, screenshot=False, proxy='force_tor', priority=60, parent=obj_id)
 
     def compute(self, message):
-        url = message.split()
+        url = message
 
-        url_decoded = psl_faup.unparse_url(url)
+        url_decoded = urlsplit(url if '://' in url[:10] else f'//{url}')
         # print(url_decoded)
-        url_host = url_decoded['host']
+        url_host = url_decoded.hostname
         # if url_decoded.get('port', ''):
         #     url_host = f'{url_host}:{url_decoded["port"]}'
-        path = url_decoded.get('resource_path', '')
+        path = url_decoded.path or ''
         if url_host in self.pasties:
             if url.startswith('http://'):
                 if url[7:] in self.urls_blocklist:

@@ -1,0 +1,173 @@
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+
+{% with modal_add_tags=ail_tags %}
+	{% include 'modals/add_tags.html' %}
+{% endwith %}
+
+{% include 'modals/edit_tag.html' %}
+
+<div class="card my-1">
+	<div class="card-header">
+        <div class=""><b>PDF original SHA-256:</b> {{ meta["id"] }}</div>
+        <div class="my-3">
+            {% if meta['markdown_id'] %}
+            <a href="{{ url_for('objects_item.showItem')}}?id={{ meta['markdown_id'] }}">
+                <button class="btn btn-primary"><i class="fa-border fa-2x bg-white text-primary" style="--fa-border-padding: .1em .20em .10em;"><i class="far fa-m"></i><i class="far fa-d"></i></i> PDF Markdown</button>
+            </a>
+            {% else %}
+                <span class="alert alert-warning d-inline-block py-2 mb-0" role="alert">
+                    <i class="fas fa-exclamation-triangle"></i> No markdown was extracted for this PDF.
+                </span>
+                {% if current_user.is_admin() %}
+                    <form class="d-inline-block ml-1" method="post" action="{{ url_for('objects_pdf.pdf_extract_markdown') }}">
+                        <input type="hidden" name="id" value="{{ meta['id'] }}">
+                        <button class="btn btn-warning" type="submit">
+                            <i class="fas fa-redo"></i> Retry Markdown Extraction
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <a target="_blank" href="{{ url_for('objects_pdf.pdf_pdfa', pdf_id=meta['id']) }}">
+                <button class="btn btn-primary"><i class="far fa-file-pdf fa-2x fa-border bg-white" style="color: Red;--fa-border-color: inherit;"></i> Open PDF (A)</button>
+            </a>
+        </div>
+
+        {% if translation_languages %}
+            <div class="mb-2">
+                <span class="btn btn-outline-dark p-0 px-1" type="button" data-toggle="collapse" data-target="#collapsePdfLang{{ meta['id'] }}" aria-expanded="false" aria-controls="collapsePdfLang{{ meta['id'] }}">
+                    <i class="fas fa-language"></i> {% if meta['language'] %}{{ translation_languages[meta['language']] }}{% endif %}
+                </span>
+                <div class="collapse mt-1" id="collapsePdfLang{{ meta['id'] }}">
+                    <div class="card card-body">
+                        <form method="post" action="{{ url_for('languages_ui.translate_object') }}">
+                            <input type="text" id="type" name="type" value="{{meta['type']}}" hidden>
+                            <input type="text" id="id" name="id" value="{{meta['id']}}" hidden>
+                            <span class="badge badge-primary">Source:</span>
+                            <span class="">
+                                <select id="language_target" name="language_target" class="form-select" aria-label="PDF Language">
+                                    <option selected value="{{ meta['language'] }}">{{ meta['language'] }}</option>
+                                    {% for language in translation_languages %}
+                                        <option value="{{ language }}">{{ translation_languages[language] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </span>
+                            <button class="btn btn-dark" type="submit">
+                                <i class="fas fa-pen-alt"> Update Language</i>
+                            </button>
+                        </form>
+                        <div>
+                            <a class="btn btn-primary" href="{{ url_for('languages_ui.detect_object_language')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
+                                <i class="fas fa-redo"></i> Detect Language
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                {% if 'translated' in meta %}
+                    {% set translated=meta['translated'] %}
+                {% else %}
+                    {% set translated=none %}
+                {% endif %}
+                {% with translate_url=url_for('objects_pdf.pdf_translate'), obj_id=meta['id'], translation_name="Translate PDF", translated=translated %}
+                    {% include 'chats_explorer/block_translation_post.html' %}
+                {% endwith %}
+            </div>
+        {% endif %}
+
+		<ul class="list-group mb-2">
+            <li class="list-group-item py-0">
+                <table class="table">
+                    <tbody style="font-size: 15px;">
+                    <tr>
+                        <td>
+                            <svg height="26" width="26">
+                                <g class="nodes">
+                                    <circle cx="13" cy="13" r="13" fill="orange"></circle>
+                                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ meta["svg_icon"]["style"] }}" font-size="16px">{{ meta["svg_icon"]["icon"] }}</text>
+                                </g>
+                            </svg>
+                            {{ meta['type'] }}
+                        </td>
+                        <td><b>First Seen:</b> {% if meta['first_seen'] %}{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}{% endif %}</td>
+                        <td><b>Last Seen:</b> {% if meta['last_seen'] %}{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}{% endif %}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li class="list-group-item py-0">
+                <h5><i class="far fa-file"></i> File Names:</h5>
+                <ul>
+                {% for file_name in meta['file-names'] %}
+                    <li>{{ file_name }}</li>
+                {% endfor %}
+                </ul>
+            </li>
+            {% if 'author' in meta %}
+                {% if meta['author'] %}
+                    <li class="list-group-item py-0">
+                        <h5><i class="fas fa-user-pen"></i> Author:</h5>
+                        <ul>
+                            <li>{{ meta['author'] }}</li>
+                        </ul>
+                    </li>
+                {% endif %}
+            {% endif %}
+            {% if 'file-meta' in meta %}
+                {% if meta['file-meta'] %}
+                    <li class="list-group-item py-0">
+                        <h5>File Metadata:</h5>
+                        <table class="table table-borderless table-sm">
+                            <tbody style="font-size: 15px;">
+                            {% for f_meta in meta['file-meta'] %}
+                                <tr>
+                                    <td><b>{{ f_meta }}:</b></td>
+                                    <td>{{ meta['file-meta'][f_meta] }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </li>
+                {% endif %}
+            {% endif %}
+			<li class="list-group-item py-0">
+				<div class="my-2">
+					Tags:
+					{% for tag in meta['tags'] %}
+                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
+                                data-toggle="modal" data-target="#edit_tags_modal"
+						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="" data-objid="{{ meta["id"] }}">
+                                {{ tag }}
+						</button>
+					{%  endfor %}
+					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
+                        <i class="far fa-plus-square"></i>
+                    </button>
+				</div>
+			</li>
+		</ul>
+
+		{% with obj_type='pdf', obj_id=meta['id'], obj_subtype='' %}
+			{% include 'modals/investigations_register_obj.html' %}
+		{% endwith %}
+		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+			<i class="fas fa-microscope"></i> Investigations
+		</button>
+
+        <span class="mb-2 float-right">
+            {% if is_correlation %}
+                <a href="{{ url_for('objects_pdf.pdf_view')}}?id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="fas fa-expand"></i> Show Object</button>
+                </a>
+            {% else %}
+                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}">
+                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
+                    </button>
+                </a>
+            {% endif %}
+        </span>
+
+	</div>
+</div>

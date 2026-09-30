@@ -21,14 +21,10 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_core
-from lib import search_engine
 from lib import chats_viewer
-from lib import images_engine
+from lib import forums_viewer
+from lib import search_engine
 from lib.objects import SSHKeys
-# from lib import Language
-# from lib import Tag
-# from lib import module_extractor
-# from lib.objects import ail_objects
 
 logger = logging.getLogger()
 
@@ -44,97 +40,104 @@ def create_json_response(data, status_code):
 def log(user_id, index, to_search):
     logger.warning(f'{user_id} search: {index} - {to_search}')
 
+
 # ============ FUNCTIONS ============
 
 # ============= ROUTES ==============
-
-# @chats_explorer.route("/chats/explorer", methods=['GET'])
-# @login_required
-# @login_read_only
-# def chats_explorer_dashboard():
-#     return
 
 @search_b.route("search", methods=['GET'])
 @login_required
 @login_read_only
 def search_dashboard():
-    protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('search_dashboard.html', protocols=protocols,
+    user_id = current_user.get_user_id()
+    search = request.args.get('q')
+    indexes = request.args.get('scopes')
+    if indexes:
+        indexes_str = indexes
+        indexes = indexes.split(',')
+    else:
+        indexes = []
+        indexes_str = None
+
+    forum_ids = request.args.get('forums')
+    if forum_ids:
+        forum_ids_str = forum_ids
+        forum_ids = [forum_id for forum_id in forum_ids.split(',') if forum_id]
+    else:
+        forum_ids = []
+        forum_ids_str = None
+
+    forum_types = request.args.get('forum_types')
+    if forum_types:
+        forum_types_str = forum_types
+        forum_types = [forum_type for forum_type in forum_types.split(',') if forum_type]
+    else:
+        forum_types = []
+        forum_types_str = None
+
+    last_seen_from = request.args.get('from')
+    last_seen_to = request.args.get('to')
+
+    page = request.args.get('page', 1)
+
+    sort = request.args.get('sort', 'recent')
+
+    # selected_scopes -> scope_human
+
+    search_error = None
+    if search:
+        r = search_engine.api_search({'indexes': indexes, 'search': search, 'page': page, 'user_id': user_id,
+                                      'from': last_seen_from, 'to': last_seen_to, 'sort': sort,
+                                      'forum_ids': forum_ids, 'forum_types': forum_types})
+        if r[1] != 200:
+            error_type = r[0].get('error_type')
+            if error_type == 'meilisearch_timeout':
+                search_error = {
+                    'title': 'Search service timeout',
+                    'message': r[0].get('reason')
+                }
+                result = None
+                pagination = None
+            elif error_type == 'meilisearch_unreachable':
+                search_error = {
+                    'title': 'Search service unavailable',
+                    'message': r[0].get('reason')
+                }
+                result = None
+                pagination = None
+            else:
+                return create_json_response(r[0], r[1])
+        else:
+            result, pagination = r[0]
+    else:
+        result = None
+        pagination = None
+
+    return render_template('search_dashboard.html',
+                           bootstrap_label=bootstrap_label,
+                           chat_protocols=chats_viewer.get_chat_protocols_meta(),
+                           forums=forums_viewer.get_forums(),
+                           selected_forums=forum_ids,
+                           forum_ids_str=forum_ids_str,
+                           selected_forum_types=forum_types,
+                           forum_types_str=forum_types_str,
+                           indexes_str=indexes_str,
+                           selected_scopes=indexes,
+                           to_search=search,
+                           sort=sort,
+                           last_seen_from=last_seen_from,
+                           last_seen_to=last_seen_to,
+                           search_error=search_error,
+                           result=result, pagination=pagination)
+
+# username_subtypes=ail_core.get_object_all_subtypes('username')
+
+@search_b.route("/search/advanced", methods=['GET'])
+@login_required
+@login_read_only
+def search_advanced():
+    return render_template('advanced_search.html',
                            username_subtypes=ail_core.get_object_all_subtypes('username'))
-
-
-@search_b.route("/search/crawled/post", methods=['POST'])
-@login_required
-@login_read_only
-def search_crawled_post():
-    to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type_crawled')
-    page = request.form.get('page', 1)
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    return redirect(
-        url_for('search_b.search_crawled', search=to_search, page=page, index=search_type))
-
-
-@search_b.route("/search/crawled", methods=['GET'])
-@login_required
-@login_read_only
-def search_crawled():
-    user_id = current_user.get_user_id()
-    search = request.args.get('search')
-    index = request.args.get('index', 'tor')
-    page = request.args.get('page', 1)
-
-    r = search_engine.api_search_crawled({'index': index, 'search': search, 'page': page, 'user_id': user_id})
-    if r[1] != 200:
-        return create_json_response(r[0], r[1])
-
-    result, pagination = r[0]
-
-    # TODO icon eye + correlation
-
-    return render_template("search_crawled.html", to_search=search, search_index=index,
-                           bootstrap_label=bootstrap_label,
-                           result=result, pagination=pagination)
-
-@search_b.route("/search/chats/post", methods=['POST'])
-@login_required
-@login_read_only
-def search_chats_post():
-    to_search = request.form.get('to_search')
-    search_type = request.form.get('search_type_chats')
-    page = request.form.get('page', 1)
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    return redirect(url_for('search_b.search_chats', search=to_search, page=page, index=search_type))
-
-
-@search_b.route("/search/chats", methods=['GET'])
-@login_required
-@login_read_only
-def search_chats():
-    user_id = current_user.get_user_id()
-    search = request.args.get('search')
-    index = request.args.get('index', 'telegram')
-    page = request.args.get('page', 1)
-
-    r = search_engine.api_search_chats({'index': index, 'search': search, 'page': page, 'user_id': user_id})
-    if r[1] != 200:
-        return create_json_response(r[0], r[1])
-
-    result, pagination = r[0]
-
-    protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template("search_chats.html", protocols=protocols,
-                           to_search=search, search_index=index,
-                           ollama_enabled=images_engine.is_ollama_enabled(),
-                           bootstrap_label=bootstrap_label,
-                           result=result, pagination=pagination)
-
 
 @search_b.route("/search/passivessh/host/ssh", methods=['GET', 'POST'])
 @login_required

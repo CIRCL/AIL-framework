@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AIL-Framework</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+</head>
+<body>
+{% include 'nav_bar.html' %}
+<div class="container-fluid"><div class="row">
+{% include 'crawler/menu_sidebar.html' %}
+<div class="col-12 col-lg-10" id="core_content">
+    <div class="jumbotron bg-dark text-white mt-3 mb-3 shadow-sm">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+            <div>
+                <p class="text-uppercase text-info font-weight-bold mb-2"><i class="fas fa-desktop"></i> Interactive crawler session</p>
+                <h1 class="display-4 mb-2" id="interactive_title">{% if session.status == 'completed' %}Capture completed{% elif session.status == 'processing' %}Capture processing{% elif session.status == 'finishing' %}Capture finishing{% elif session.status in ['cancelled', 'expired', 'error', 'closed'] %}Session {{ session.status }}{% else %}Interactive capture{% endif %}</h1>
+                <p class="lead mb-0 text-break">{{ session.url }}</p>
+            </div>
+            <div class="mt-4 mt-lg-0 text-lg-right">
+                <span class="badge badge-info p-2" id="interactive_status">{{ session.status }}</span>
+                <div class="small text-light mt-2">Slots in use: {{ usage.active }} / {{ usage.max }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-route text-primary"></i> Session controls</h4>
+                    <span class="text-muted small">UUID: {{ session.uuid }}</span>
+                </div>
+                <div class="card-body">
+                    <div id="remote_starting" class="alert alert-info" {% if session.remote_url or session.status in ['finishing', 'completed', 'expired', 'error', 'closed'] %}style="display:none;"{% endif %}>
+                        <i class="fas fa-spinner fa-spin"></i> The interactive browser is starting. This page updates automatically; the browser link will appear as soon as it is ready.
+                    </div>
+                    <div id="capture_processing" class="alert alert-success" {% if session.status not in ['finishing', 'processing', 'completed'] %}style="display:none;"{% endif %}>
+                        <i class="fas fa-check-circle"></i> The interactive session is completed. AIL is saving and processing the browser state; results URL will appear in AIL when processing is finished.
+                    </div>
+                    <div id="capture_stopped_pending_import" class="alert alert-info" {% if session.remote_status|lower != 'stopped' or session.status in ['completed', 'expired', 'error', 'closed'] %}style="display:none;"{% endif %}>
+                        <i class="fas fa-hourglass-half"></i> The interactive browser capture is stopped. The crawler will import the capture, then the crawled domain will be available when processing is finished.
+                    </div>
+                    <div id="open_browser_help" class="alert alert-primary" {% if not session.remote_url or session.status not in ['starting', 'ready'] or session.remote_status|lower == 'stopped' %}style="display:none;"{% endif %}>
+                        <i class="fas fa-external-link-alt"></i> Click <strong>Open interactive browser</strong> to open the interactive session. When you are done browsing, come back to this page and click <strong>Finish capture</strong>.
+                    </div>
+                    <div id="interactive_error" class="alert alert-danger" {% if not session.error %}style="display:none;"{% endif %}>{{ session.error }}</div>
+                    {% set show_crawled_domain = session.crawled_domain and session.crawled_url and session.capture_status == 'DONE' %}
+                    <div id="crawled_domain_card" class="alert alert-primary flex-column flex-md-row justify-content-between align-items-md-center {% if show_crawled_domain %}d-flex{% else %}d-none{% endif %}" {% if not show_crawled_domain %}style="display:none !important;"{% endif %}>
+                        <div>
+                            <div class="font-weight-bold"><i class="fas fa-globe"></i> Crawled domain ready</div>
+                            <div>
+                                <span id="crawled_url" class="text-muted" {% if not session.crawled_url %}style="display:none;"{% endif %}>({{ session.crawled_url }})</span>
+                                <span id="crawled_domain_text">{{ session.crawled_domain }}</span>
+                            </div>
+                        </div>
+                        <a id="crawled_domain_btn" class="btn btn-primary mt-3 mt-md-0 {% if not show_crawled_domain %}d-none{% endif %}" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ session.crawled_domain|urlencode }}" {% if not show_crawled_domain %}style="display:none !important;"{% endif %}>
+                            <i class="fas fa-external-link-alt"></i> Open domain
+                        </a>
+                    </div>
+
+                    <a id="remote_url_btn" class="btn btn-primary btn-lg" target="_blank" rel="noopener" href="{{ session.remote_url }}" {% if not session.remote_url or session.status in ['finishing', 'completed', 'expired', 'error', 'closed'] or session.remote_status|lower == 'stopped' %}style="display:none;"{% endif %}>
+                        <i class="fas fa-external-link-alt"></i> Open interactive browser
+                    </a>
+                    {% if session.status in ['starting', 'ready'] and session.capture_status != 'DONE' and session.remote_status|lower != 'stopped' %}
+                        <form id="finish_capture_form" class="d-inline-block ml-lg-2 mt-3 mt-lg-0" method="post" action="{{ url_for('crawler_splash.interactive_capture_finish', uuid=session.uuid) }}">
+                            <button id="finish_capture_btn" class="btn btn-success btn-lg" type="submit"><i class="fas fa-check"></i> Finish capture</button>
+                        </form>
+                        <form id="cancel_capture_form" class="d-inline-block ml-lg-2 mt-3 mt-lg-0" method="post" action="{{ url_for('crawler_splash.interactive_capture_cancel', uuid=session.uuid) }}" onsubmit="return confirm('Cancel this session? Cookies, local storage, and page content from this session will be discarded.');">
+                            <button id="cancel_capture_btn" class="btn btn-danger btn-lg" type="submit"><i class="fas fa-times"></i> Cancel</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-info-circle text-info"></i> Capture details</h5></div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>Status</span>
+                        <span class="badge badge-info" id="interactive_status_detail">{{ session.status }}</span>
+                    </div>
+                    <div class="list-group-item" id="remote_status_row" {% if not session.remote_status or session.status in ['finishing', 'completed', 'expired', 'error', 'closed'] %}style="display:none;"{% endif %}>
+                        <div class="text-muted small">Remote browser status</div>
+                        <span id="remote_status">{{ session.remote_status }}</span>
+                    </div>
+                    <div class="list-group-item" id="capture_status_row" {% if not session.capture_status %}style="display:none;"{% endif %}>
+                        <div class="text-muted small">Capture status</div>
+                        <span id="capture_status">{{ session.capture_status }}</span>
+                    </div>
+                    {% if session.save_cookiejar == '1' %}
+                        <div class="list-group-item">
+                            <div class="text-muted small">Option</div>
+                            Save browser cookies and local storage as a user-level cookiejar
+                        </div>
+                        <div class="list-group-item" id="cookiejar_row" {% if not session.cookiejar_uuid %}style="display:none;"{% endif %}>
+                            <div class="text-muted small">Cookiejar</div>
+                            <a id="cookiejar_link" href="{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid={{ session.cookiejar_uuid }}">{{ session.cookiejar_uuid }}</a>
+                        </div>
+                    {% endif %}
+                    <div class="list-group-item {% if not show_crawled_domain %}d-none{% endif %}" id="crawled_domain_row" {% if not show_crawled_domain %}style="display:none !important;"{% endif %}>
+                        <div class="text-muted small">Crawled domain</div>
+                        <a id="crawled_domain_link" class="btn btn-sm btn-outline-primary mt-1" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ session.crawled_domain|urlencode }}">
+                            <i class="fas fa-external-link-alt"></i> {{ session.crawled_domain }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div></div>
+</body>
+<script>
+const interactiveFinalStates = ['completed', 'cancelled', 'expired', 'error', 'closed'];
+let interactiveStatusTimer = null;
+
+$(document).ready(function(){
+    $('#page-Crawler').addClass('active');
+    const initialStatus = $('#interactive_status').text();
+    update_interactive_controls(initialStatus, $('#capture_status').text(), $('#remote_status').text());
+    if(!interactiveFinalStates.includes(initialStatus)){
+        refresh_interactive_status();
+        interactiveStatusTimer = setInterval(refresh_interactive_status, 5000);
+    }
+});
+
+function stop_interactive_status_refresh(){
+    if(interactiveStatusTimer){
+        clearInterval(interactiveStatusTimer);
+        interactiveStatusTimer = null;
+    }
+}
+
+function update_interactive_title(status){
+    const titles = {
+        finishing: 'Capture finishing',
+        processing: 'Capture processing',
+        completed: 'Capture completed',
+        cancelled: 'Session cancelled',
+        expired: 'Session expired',
+        error: 'Session error',
+        closed: 'Session closed'
+    };
+    $('#interactive_title').text(titles[status] || 'Interactive capture');
+}
+
+function hide_finish_capture_button(){
+    $('#finish_capture_btn').prop('disabled', true).hide().addClass('d-none');
+    $('#finish_capture_form').hide().addClass('d-none');
+}
+
+function hide_cancel_capture_button(){
+    $('#cancel_capture_btn').prop('disabled', true).hide().addClass('d-none');
+    $('#cancel_capture_form').hide().addClass('d-none');
+}
+
+function is_capture_done(captureStatus){
+    const normalizedCaptureStatus = String(captureStatus || '').toUpperCase();
+    return normalizedCaptureStatus === 'DONE';
+}
+
+function is_remote_browser_stopped(remoteStatus){
+    return String(remoteStatus || '').toLowerCase() === 'stopped';
+}
+
+function update_stopped_pending_import_message(status, remoteStatus){
+    const normalizedStatus = String(status || '').toLowerCase();
+    if(is_remote_browser_stopped(remoteStatus) && !interactiveFinalStates.includes(normalizedStatus)){
+        $('#capture_stopped_pending_import').show();
+    } else {
+        $('#capture_stopped_pending_import').hide();
+    }
+}
+
+function update_open_browser_help(status, remoteStatus){
+    const normalizedStatus = String(status || '').toLowerCase();
+    if($('#remote_url_btn').is(':visible') && ['starting', 'ready'].includes(normalizedStatus) && !is_remote_browser_stopped(remoteStatus)){
+        $('#open_browser_help').show();
+    } else {
+        $('#open_browser_help').hide();
+    }
+}
+
+function hide_remote_browser_controls(){
+    $('#remote_url_btn').hide().addClass('d-none');
+}
+
+function show_crawled_domain_controls(){
+    $('#crawled_domain_card').removeClass('d-none').addClass('d-flex').removeAttr('style');
+    $('#crawled_domain_row').removeClass('d-none').removeAttr('style');
+    $('#crawled_domain_btn').removeClass('d-none').removeAttr('style');
+}
+
+function hide_crawled_domain_controls(){
+    $('#crawled_domain_card').removeClass('d-flex').addClass('d-none').attr('style', 'display:none !important;');
+    $('#crawled_domain_row').addClass('d-none').attr('style', 'display:none !important;');
+    $('#crawled_domain_btn').addClass('d-none').attr('style', 'display:none !important;');
+}
+
+function update_interactive_controls(status, captureStatus, remoteStatus){
+    update_interactive_title(status);
+    const normalizedStatus = String(status || '').toLowerCase();
+    const remoteStopped = is_remote_browser_stopped(remoteStatus);
+    const finishAllowed = ['starting', 'ready'].includes(normalizedStatus) && !is_capture_done(captureStatus) && !remoteStopped;
+    if(!finishAllowed){
+        hide_finish_capture_button();
+    }
+    if(remoteStopped){
+        hide_finish_capture_button();
+        hide_cancel_capture_button();
+        hide_remote_browser_controls();
+        $('#remote_starting').hide();
+    }
+    if(['finishing', 'completed', 'cancelled', 'expired', 'error', 'closed'].includes(normalizedStatus)){
+        hide_finish_capture_button();
+        hide_cancel_capture_button();
+        hide_remote_browser_controls();
+        $('#remote_starting').hide();
+        $('#remote_status_row').hide();
+    }
+    if(['finishing', 'processing', 'completed'].includes(normalizedStatus)){
+        $('#capture_processing').show();
+    }
+    update_stopped_pending_import_message(normalizedStatus, remoteStatus);
+    update_open_browser_help(normalizedStatus, remoteStatus);
+    if(interactiveFinalStates.includes(normalizedStatus)){
+        stop_interactive_status_refresh();
+    }
+}
+
+function refresh_interactive_status(){
+    $.getJSON("{{ url_for('crawler_splash.interactive_capture_status', uuid=session.uuid) }}", function(data){
+        if(data.status){
+            $('#interactive_status').text(data.status);
+            $('#interactive_status_detail').text(data.status);
+        }
+        if(data.remote_status){
+            $('#remote_status').text(data.remote_status);
+            $('#remote_status_row').show();
+            if(is_remote_browser_stopped(data.remote_status)){
+                hide_finish_capture_button();
+                hide_remote_browser_controls();
+                $('#remote_starting').hide();
+            }
+        }
+        if(data.capture_status){
+            $('#capture_status').text(data.capture_status);
+            $('#capture_status_row').show();
+            if(is_capture_done(data.capture_status)){
+                hide_finish_capture_button();
+            }
+        }
+        const currentRemoteStatus = data.remote_status || $('#remote_status').text();
+        if(data.remote_url && !is_remote_browser_stopped(currentRemoteStatus)){
+            $('#remote_url_btn').attr('href', data.remote_url).show().removeClass('d-none');
+            $('#remote_starting').hide();
+        }
+        update_interactive_controls(data.status || $('#interactive_status').text(), data.capture_status || $('#capture_status').text(), currentRemoteStatus);
+        if(data.cookiejar_uuid){
+            $('#cookiejar_link').attr('href', '{{ url_for('crawler_splash.crawler_cookiejar_show') }}?uuid=' + data.cookiejar_uuid).text(data.cookiejar_uuid);
+            $('#cookiejar_row').show();
+        }
+        if(data.crawled_domain && data.crawled_url && is_capture_done(data.capture_status || $('#capture_status').text())){
+            const domainUrl = '{{ url_for('crawler_splash.showDomain') }}?domain=' + encodeURIComponent(data.crawled_domain);
+            $('#crawled_domain_link').attr('href', domainUrl).html('<i class="fas fa-external-link-alt"></i> ' + data.crawled_domain);
+            $('#crawled_domain_btn').attr('href', domainUrl);
+            $('#crawled_domain_text').text(data.crawled_domain);
+            if(data.crawled_url){
+                $('#crawled_url').text('(' + data.crawled_url + ')').show();
+            }
+            show_crawled_domain_controls();
+        } else if(!is_capture_done(data.capture_status || $('#capture_status').text())){
+            hide_crawled_domain_controls();
+        }
+        if(data.error || data.last_status_error){
+            $('#interactive_error').text(data.error || data.last_status_error).show();
+        }
+    });
+}
+</script>
+</html>

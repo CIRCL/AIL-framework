@@ -39,6 +39,45 @@ correlation = Blueprint('correlation', __name__,
 
 # ============ FUNCTIONS ============
 
+
+def get_correlation_filter_objects():
+    labels = {
+        'barcode': 'Barcode',
+        'chat-subchannel': 'Chat-Subchannel',
+        'chat-thread': 'Chat-Thread',
+        'cookie-name': 'Cookie Name',
+        'cve': 'CVE',
+        'cryptocurrency': 'Cryptocurrency',
+        'decoded': 'Decoded',
+        'dom-hash': 'DomHash',
+        'etag': 'Etag',
+        'favicon': 'Favicon',
+        'file-name': 'File Name',
+        'forum': 'Forum',
+        'forum-thread': 'Forum Thread',
+        'gtracker': 'G tracking',
+        'hhhash': 'HHHash',
+        'image': 'Image',
+        'ip': 'IP',
+        'item': 'Item',
+        'mail': 'Mail',
+        'message': 'Message',
+        'ocr': 'OCR',
+        'pdf': 'PDF',
+        'pgp': 'PGP',
+        'post': 'Post',
+        'qrcode': 'Qrcode',
+        'screenshot': 'Screenshot',
+        'ssh-key': 'SSH Key',
+        'subforum': 'Subforum',
+        'title': 'Title',
+        'user-account': 'User-Account',
+    }
+    return [
+        {'type': obj_type, 'label': labels.get(obj_type, obj_type.replace('-', ' ').title())}
+        for obj_type in sorted(ail_objects.get_all_objects())
+    ]
+
 def sanitise_graph_mode(graph_mode):
     if graph_mode not in ('inter', 'union'):
         return 'union'
@@ -135,21 +174,34 @@ def show_correlation():
                            "correlation_id": obj_id,
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id,
                                                                    options={'tags', 'description'}, flask_context=True),
-                           "nb_correl": ail_objects.get_obj_nb_correlations(obj_type, subtype, obj_id)
+                           "nb_correl": ail_objects.get_obj_nb_correlations(obj_type, subtype, obj_id),
+                           "correlation_filter_objects": get_correlation_filter_objects()
                            }
             if subtype:
                 dict_object["subtype"] = subtype
                 dict_object["metadata"]['type_id'] = subtype
             else:
                 dict_object["subtype"] = ''
-            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=related_btc)
+            card_options = {'similarity'} if obj_type == 'image' else None
+            dict_object["metadata_card"] = ail_objects.get_object_card_meta(
+                obj_type, subtype, obj_id, related_btc=related_btc, options=card_options
+            )
             dict_object["metadata_card"]['tags_safe'] = True
 
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
                                    ollama_enabled=images_engine.is_ollama_enabled(),
+                                   ollama_models=images_engine.get_ollama_models(),
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
+
+@correlation.route('/correlation/content/preview')
+@login_required
+@login_read_only
+def object_content_preview():
+    preview, status = ail_objects.api_get_object_content_preview(request.args.get('type'), request.args.get('id'))
+    return jsonify(preview), status
+
 
 @correlation.route('/correlation/get/description')
 @login_required
@@ -280,10 +332,16 @@ def relationships_graph_node_json():
     max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
     level = sanitise_level(request.args.get('level'))
 
+    hidden = request.args.get('hidden')
+    if hidden:
+        hidden = set(hidden.split(','))
+    else:
+        hidden = set()
+
     filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
     relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
 
-    json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, relationships=relationships, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
+    json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, relationships=relationships, objs_hidden=hidden, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
     return jsonify(json_graph)
 
 @correlation.route('/relationships/chord_graph_json')
@@ -354,6 +412,10 @@ def show_relationship():
         obj_id = request.args.get('id')
         max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
         level = sanitise_level(request.args.get('level'))
+        objs_hidden = sanitise_objs_hidden(request.args.get('hidden'))
+        obj_to_hide = request.args.get('hide')
+        if obj_to_hide:
+            objs_hidden.add(obj_to_hide)
 
         filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','), default=True)
         relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
@@ -370,6 +432,8 @@ def show_relationship():
                            "correlation_id": obj_id,
                            "relationships": relationships, "relationships_str": ",".join(relationships),
                            "filter": filter_types, "filter_str": ",".join(filter_types),
+                           "hidden": objs_hidden, "hidden_str": ",".join(objs_hidden),
+
                            "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'info', 'icon', 'username'}, flask_context=True),
                            "nb_relation": ail_objects.get_obj_nb_relationships(obj_type, subtype, obj_id)
                            }
@@ -384,4 +448,3 @@ def show_relationship():
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
-

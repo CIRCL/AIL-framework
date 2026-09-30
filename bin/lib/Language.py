@@ -5,10 +5,12 @@ import os
 import re
 import logging.config
 import sys
+import time
 import html2text
+import pycountry
 
 import gcld3
-from lexilang.detector import detect as lexilang_detect
+from picolang.detector import detect as picolang_detect
 from libretranslatepy import LibreTranslateAPI
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -17,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_logger
 from lib.ConfigLoader import ConfigLoader
-from lib.ail_core import get_object_all_subtypes
+from lib.ail_core import get_object_all_subtypes, generate_uuid
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 logger = logging.getLogger()
@@ -31,122 +33,169 @@ config_loader = None
 _translate_char_table = str.maketrans(dict.fromkeys("!\"#$%&()*+,/:;<=>?@[\\]^_`{|}~.", " "))
 
 
-dict_iso_languages = {
-    'afr': 'Afrikaans',
-    'sqi': 'Albanian',
-    'amh': 'Amharic',
-    'ara': 'Arabic',
-    'hye': 'Armenian',
-    'aze': 'Azerbaijani',
-    'eus': 'Basque',
-    'bel': 'Belarusian',
-    'ben': 'Bengali',
-    'bos': 'Bosnian',
-    'bul': 'Bulgarian',
-    'mya': 'Burmese',
-    'cat': 'Catalan',
+dict_bcp47_languages = {
+    'af': 'Afrikaans',
+    'sq': 'Albanian',
+    'am': 'Amharic',
+    'ar': 'Arabic',
+    'hy': 'Armenian',
+    'az': 'Azerbaijani',
+    'eu': 'Basque',
+    'be': 'Belarusian',
+    'bn': 'Bengali',
+    'bs': 'Bosnian',
+    'bg': 'Bulgarian',
+    'my': 'Burmese',
+    'ca': 'Catalan',
     'ceb': 'Cebuano',
-    'zho': 'Chinese',
-    'cos': 'Corsican',
-    'hrv': 'Croatian',
-    'ces': 'Czech',
-    'dan': 'Danish',
-    'nld': 'Dutch',
-    'eng': 'English',
-    'epo': 'Esperanto',
-    'est': 'Estonian',
+    'zh': 'Chinese',
+    'co': 'Corsican',
+    'hr': 'Croatian',
+    'cs': 'Czech',
+    'da': 'Danish',
+    'nl': 'Dutch',
+    'en': 'English',
+    'eo': 'Esperanto',
+    'et': 'Estonian',
     'fil': 'Filipino',
-    'fin': 'Finnish',
-    'fra': 'French',
-    'fry': 'Frisian - Western Frisian',
-    'glg': 'Galician',
-    'kat': 'Georgian',
-    'deu': 'German',
-    'ell': 'Greek',
-    'guj': 'Gujarati',
-    'hat': 'Haitian',
-    'hau': 'Hausa',
+    'fi': 'Finnish',
+    'fr': 'French',
+    'fy': 'Frisian - Western Frisian',
+    'gl': 'Galician',
+    'ka': 'Georgian',
+    'de': 'German',
+    'el': 'Greek',
+    'gu': 'Gujarati',
+    'ht': 'Haitian',
+    'ha': 'Hausa',
     'haw': 'Hawaiian',
-    'heb': 'Hebrew',
-    'hin': 'Hindi',
+    'he': 'Hebrew',
+    'hi': 'Hindi',
     'hmn': 'Hmong',
-    'hun': 'Hungarian',
-    'isl': 'Icelandic',
-    'ibo': 'Igbo',
-    'gle': 'Irish',
-    'ind': 'Indonesian',
-    'ita': 'Italian',
-    'jpn': 'Japanese',
-    'jav': 'Javanese',
+    'hu': 'Hungarian',
+    'is': 'Icelandic',
+    'ig': 'Igbo',
+    'ga': 'Irish',
+    'id': 'Indonesian',
+    'it': 'Italian',
+    'ja': 'Japanese',
+    'jv': 'Javanese',
     'kab': 'Kabyle',
-    'kan': 'Kannada',
-    'kaz': 'Kazakh',
-    'khm': 'Khmer',
-    'kir': 'Kirghiz',
-    'kor': 'Korean',
-    'kur': 'Kurdish',
-    'lao': 'Lao',
-    'lat': 'Latin',
-    'lav': 'Latvian',
-    'lit': 'Lithuanian',
-    'ltz': 'Luxembourgish',
-    'mkd': 'Macedonian',
-    'mlg': 'Malagasy',
-    'msa': 'Malay',
-    'mal': 'Malayalam',
-    'mlt': 'Maltese',
-    'mri': 'Maori',
-    'mar': 'Marathi',
-    'mon': 'Mongolian',
-    'nep': 'Nepali',
-    'nor': 'Norwegian',
-    'nya': 'Nyanja',
-    'oci': 'Occitan',
-    'pan': 'Panjabi',
-    'fas': 'Persian',
-    'pol': 'Polish',
-    'por': 'Portuguese',
-    'pus': 'Pushto',
-    'ron': 'Romanian',
-    'rus': 'Russian',
-    'smo': 'Samoan',
-    'gla': 'Scottish Gaelic',
-    'hbs': 'Serbo-Croatian',
-    'sna': 'Shona',
-    'snd': 'Sindhi',
-    'sin': 'Sinhala',
-    'slk': 'Slovak',
-    'slv': 'Slovenian',
-    'som': 'Somali',
-    'sot': 'Southern Sotho',
-    'spa': 'Spanish',
-    'sun': 'Sundanese',
-    'swa': 'Swahili',
-    'swe': 'Swedish',
-    'tgl': 'Tagalog',
-    'tgk': 'Tajik',
-    'tam': 'Tamil',
-    'tel': 'Telugu',
-    'tha': 'Thai',
-    'tur': 'Turkish',
-    'ukr': 'Ukrainian',
-    'urd': 'Urdu',
-    'uzb': 'Uzbek',
-    'vie': 'Vietnamese',
-    'cym': 'Welsh',
-    'xho': 'Xhosa',
-    'yid': 'Yiddish',
-    'yor': 'Yoruba',
-    'zul': 'Zulu',
+    'kn': 'Kannada',
+    'kk': 'Kazakh',
+    'km': 'Khmer',
+    'ky': 'Kirghiz',
+    'ko': 'Korean',
+    'ku': 'Kurdish',
+    'lo': 'Lao',
+    'la': 'Latin',
+    'lv': 'Latvian',
+    'lt': 'Lithuanian',
+    'lb': 'Luxembourgish',
+    'mk': 'Macedonian',
+    'mg': 'Malagasy',
+    'ms': 'Malay',
+    'ml': 'Malayalam',
+    'mt': 'Maltese',
+    'mi': 'Maori',
+    'mr': 'Marathi',
+    'mn': 'Mongolian',
+    'ne': 'Nepali',
+    'no': 'Norwegian',
+    'nb': 'Norwegian Bokmål',
+    'ny': 'Nyanja',
+    'oc': 'Occitan',
+    'pa': 'Panjabi',
+    'fa': 'Persian',
+    'pl': 'Polish',
+    'pt': 'Portuguese',
+    'ps': 'Pushto',
+    'ro': 'Romanian',
+    'ru': 'Russian',
+    'sm': 'Samoan',
+    'gd': 'Scottish Gaelic',
+    'sr': 'Serbian',
+    'sh': 'Serbo-Croatian',
+    'sn': 'Shona',
+    'sd': 'Sindhi',
+    'si': 'Sinhala',
+    'sk': 'Slovak',
+    'sl': 'Slovenian',
+    'so': 'Somali',
+    'st': 'Southern Sotho',
+    'es': 'Spanish',
+    'su': 'Sundanese',
+    'sw': 'Swahili',
+    'sv': 'Swedish',
+    'tl': 'Tagalog',
+    'tg': 'Tajik',
+    'ta': 'Tamil',
+    'te': 'Telugu',
+    'th': 'Thai',
+    'tr': 'Turkish',
+    'uk': 'Ukrainian',
+    'ur': 'Urdu',
+    'uz': 'Uzbek',
+    'vi': 'Vietnamese',
+    'cy': 'Welsh',
+    'xh': 'Xhosa',
+    'yi': 'Yiddish',
+    'yo': 'Yoruba',
+    'zu': 'Zulu',
 }
 
+PRIMARY_LANGUAGE_ALIAS = {
+    'iw': 'he',
+    'in': 'id',
+    'ji': 'yi'
+}
+
+# Temporary gcld3 normalization overrides:
+# gcld3 may emit transliterated tags (e.g., "ja-Latn")
+DETECTED_LANGUAGE_PRIMARY_OVERRIDES = {
+    'bg-Latn': 'bg',
+    'el-Latn': 'el',
+    'hi-Latn': 'hi',
+    'ja-Latn': 'ja',
+    'ru-Latn': 'ru',
+    'zh-Latn': 'zh',
+}
+
+
+# Explicit ISO 639-3 -> canonical BCP 47 primary language subtags.
+# NOTE: used by migration/update code; script/region must never be guessed.
+ISO639_3_TO_BCP47_PRIMARY = {
+    lang.alpha_3: lang.alpha_2
+    for lang in pycountry.languages
+    if hasattr(lang, 'alpha_3') and hasattr(lang, 'alpha_2')
+}
+ISO639_3_TO_BCP47_PRIMARY['srp'] = 'sr'
+ISO639_3_TO_BCP47_PRIMARY['hbs'] = 'sh'
+
+def iso639_3_to_bcp47_primary(code_iso3):
+    if not code_iso3:
+        return None
+    return ISO639_3_TO_BCP47_PRIMARY.get(code_iso3.lower())
+
 def get_all_languages():
-    return dict_iso_languages
+    return dict_bcp47_languages.copy()
+
+def get_bcp_languages_name(languages_code):
+    languages = []
+    for language_code in languages_code:
+        languages.append(get_bcp_language_name(language_code))
+    return languages
+
+def get_bcp_language_name(language_code):
+    if language_code in PRIMARY_LANGUAGE_ALIAS:
+        language_code = PRIMARY_LANGUAGE_ALIAS[language_code]
+    return dict_bcp47_languages[language_code.split('-', 1)[0]]
 
 def create_dict_iso_languages():
     dict_lang = {}
-    for code in dict_iso_languages:
-        dict_lang[dict_iso_languages[code]] = code
+    all_languages = get_all_languages()
+    for code, name in all_languages.items():
+        dict_lang[name] = code
     return dict_lang
 
 
@@ -195,6 +244,7 @@ dict_iso_1_to_3 = {
     'ig': 'ibo',
     'is': 'isl',
     'it': 'ita',
+    'iw': 'heb',       # gcld3 use the old language code
     'ja': 'jpn',
     'ja-Latn': 'jpn',  # gcld3 output
     'jv': 'jav',
@@ -240,7 +290,7 @@ dict_iso_1_to_3 = {
     'sn': 'sna',
     'so': 'som',
     'sq': 'sqi',
-    'sr': 'hbs',  # Lexilang invalid use of sr. Should se deprecated sh
+    'sr': 'hbs',  # picolang invalid use of sr. Should se deprecated sh
     'st': 'sot',
     'su': 'sun',
     'sv': 'swe',
@@ -275,26 +325,124 @@ def create_dict_iso_3_to_1():
 
 dict_iso_3_to_1 = create_dict_iso_3_to_1()
 
+def _is_valid_primary_subtag(primary):
+    if len(primary) == 2:
+        return pycountry.languages.get(alpha_2=primary) is not None
+    if len(primary) == 3:
+        return pycountry.languages.get(alpha_3=primary) is not None
+    return False
+
+def _is_valid_script_subtag(script):
+    return pycountry.scripts.get(alpha_4=script) is not None
+
+def _is_valid_region_subtag(region):
+    if len(region) == 2:
+        return pycountry.countries.get(alpha_2=region) is not None
+    if len(region) == 3 and region.isdigit():
+        return pycountry.countries.get(numeric=region) is not None
+    return False
+
+def normalize_bcp47_tag(language_tag):
+    if language_tag is None:
+        return None
+    tag = language_tag.strip().replace('_', '-')
+    if not tag:
+        return None
+    subtags = [subtag for subtag in tag.split('-') if subtag]
+    if not subtags:
+        return None
+
+    primary = subtags[0].lower()
+    primary = PRIMARY_LANGUAGE_ALIAS.get(primary, primary)
+    if not re.fullmatch(r'[A-Za-z]{2,3}', primary):
+        return None
+    if not _is_valid_primary_subtag(primary):
+        return None
+
+    script = None
+    region = None
+    idx = 1
+    if idx < len(subtags) and re.fullmatch(r'[A-Za-z]{4}', subtags[idx]):
+        script = subtags[idx].title()
+        if not _is_valid_script_subtag(script):
+            return None
+        idx += 1
+    if idx < len(subtags) and (re.fullmatch(r'[A-Za-z]{2}', subtags[idx]) or re.fullmatch(r'\d{3}', subtags[idx])):
+        region = subtags[idx].upper()
+        if not _is_valid_region_subtag(region):
+            return None
+        idx += 1
+
+    # Keep validation scope strict for AIL needs:
+    # language[-Script][-Region]
+    if idx != len(subtags):
+        return None
+
+    canonical = [primary]
+    if script:
+        canonical.append(script)
+    if region:
+        canonical.append(region)
+    return '-'.join(canonical)
+
+
+def normalize_bcp47_tags(language_tags):
+    if language_tags is None or language_tags == '':
+        return []
+    if isinstance(language_tags, str):
+        language_tags = [language_tags]
+
+    normalized = set()
+    for value in language_tags:
+        if not isinstance(value, str):
+            raise ValueError('Invalid languages')
+        for language_tag in value.split(','):
+            language_tag = language_tag.strip()
+            if not language_tag:
+                continue
+            language = normalize_bcp47_tag(language_tag)
+            if not language:
+                raise ValueError(f'Invalid BCP 47 language tag: {language_tag}')
+            normalized.add(language)
+    return sorted(normalized)
+
+
+def is_valid_bcp47_tag(language_tag):
+    return normalize_bcp47_tag(language_tag) is not None
+
 def convert_iso1_code(code_iso1):
-    iso3 = dict_iso_1_to_3.get(code_iso1)
+    language = normalize_bcp47_tag(code_iso1)
+    if language:
+        return language
+    iso3 = iso639_3_to_bcp47_primary(code_iso1)
     if iso3:
         return iso3
-    elif len(code_iso1) == 3:
-        return code_iso1
-    else:
-        raise Exception(f'Invalid language code: {code_iso1}')
+    if code_iso1 == 'zt':
+        return 'zh-Hant'
+    raise Exception(f'Invalid language code: {code_iso1}')
 
 def convert_iso3_code(code_iso3):
-    iso1 = dict_iso_3_to_1.get(code_iso3)
+    # Return primary language for translation backends.
+    language = normalize_bcp47_tag(code_iso3)
+    if language:
+        return language.split('-', 1)[0]
+    iso1 = iso639_3_to_bcp47_primary(code_iso3)
     if iso1:
         return iso1
-    elif len(iso1) == 3:
-        return iso1
-    else:
-        raise Exception(f'Invalid language code3: {code_iso3}')
+    raise Exception(f'Invalid language code3: {code_iso3}')
 
 def get_language_from_iso(iso_language):
-    return dict_iso_languages.get(iso_language, None)
+    language = normalize_bcp47_tag(iso_language)
+    if not language:
+        migrated = iso639_3_to_bcp47_primary(iso_language)
+        language = migrated if migrated else None
+    if not language:
+        return None
+    primary = language.split('-', 1)[0]
+    lang = pycountry.languages.get(alpha_2=primary) or pycountry.languages.get(alpha_3=primary)
+    if not lang:
+        return language
+    return getattr(lang, 'name', language)
 
 def get_languages_from_iso(l_iso_languages, sort=False):
     l_languages = []
@@ -307,18 +455,25 @@ def get_languages_from_iso(l_iso_languages, sort=False):
     return l_languages
 
 def get_iso_from_language(language):
-    return dict_languages_iso.get(language, None)
+    code = dict_languages_iso.get(language, None)
+    if code:
+        return code
+    return normalize_bcp47_tag(language)
 
 def get_iso_from_languages(l_languages, sort=False):
     l_iso = []
     for language in l_languages:
         iso_lang = get_iso_from_language(language)
         if iso_lang:
-            l_iso.append(iso_lang)
+            l_iso.append(normalize_bcp47_tag(iso_lang) or iso_lang)
     if sort:
         l_iso = sorted(l_iso)
     return l_iso
 
+def exists_lang_iso_target_source(source, target):
+    if not normalize_bcp47_tag(source) or not normalize_bcp47_tag(target):
+        return False
+    return True
 
 def get_translator_instance():
     return TRANSLATOR_URL
@@ -440,6 +595,9 @@ def get_container_subtype_languages(obj_type, obj_subtype):
 def get_container_language_objs(language, global_id):
     return r_lang.smembers(f'obj:lang:{language}:{global_id}')
 
+def get_container_languages(global_id):
+    return r_lang.zrange(f'obj:langs:stat:{global_id}', 0, -1)
+
 def _add_container_language(language, global_id, obj_gid):
     r_lang.sadd(f'obj:lang:{language}:{global_id}', obj_gid)
     nb = r_lang.zincrby(f'obj:langs:stat:{global_id}', 1, language)
@@ -470,6 +628,10 @@ def _delete_obj_type_stats(language, obj_type, obj_subtype):
         r_lang.srem(f'objs:langs:{obj_type}', language)
 
 def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):  # (s)
+    raw_language = language
+    language = normalize_bcp47_tag(language)
+    if not language:
+        raise Exception(f'Invalid language tag: {raw_language}')
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
@@ -487,6 +649,9 @@ def add_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=se
                 _add_container_language(language, global_id, obj_global_id)
 
 def remove_obj_language(language, obj_type, obj_subtype, obj_id, objs_containers=set()):
+    language = normalize_bcp47_tag(language)
+    if not language:
+        return
     if not obj_subtype:
         obj_subtype = ''
     obj_global_id = f'{obj_type}:{obj_subtype}:{obj_id}'
@@ -537,12 +702,17 @@ def detect_obj_language(obj_type, obj_subtype, obj_id, content, objs_containers=
 
 ## Translation
 def r_get_obj_translation(obj_global_id, language, field=''):
+    if not language:
+        return None
     return r_lang.hget(f'tr:{obj_global_id}:{field}', language)
 
 def _get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
     """
         Returns translated content
     """
+    language = normalize_bcp47_tag(language)
+    if not language:
+        return None
     translation = r_cache.get(f'translation:{language}:{obj_global_id}:{field}')
     # r_cache.expire(f'translation:{language}:{obj_global_id}:{field}', 0)
     if translation:
@@ -565,14 +735,38 @@ def _get_obj_translation(obj_global_id, language, source=None, content=None, fie
 def get_obj_translation(obj_global_id, language, source=None, content=None, field='', objs_containers=set()):
     return _get_obj_translation(obj_global_id, language, source=source, content=content, field=field, objs_containers=objs_containers)
 
+def get_obj_translated_languages(obj_gid):
+    return r_lang.hkeys(f'tr:{obj_gid}:')
 
-# TODO Force to edit ????
+def get_obj_translated(obj_gid, language_name=False):
+    translation = r_lang.hgetall(f'tr:{obj_gid}:')
+    if not language_name:
+        return translation
+    else:
+        translated = {}
+        for lang_code in translation:
+            translated[get_language_from_iso(lang_code) or lang_code] = translation[lang_code]
+        return translated
+
+def exists_object_translation_language(obj_gid, target):
+    if not target:
+        return False
+    return r_lang.hexists(f'tr:{obj_gid}:', target)
+
+def get_object_translation_language(obj_gid, target):
+    if not target:
+        return None
+    return r_lang.hget(f'tr:{obj_gid}:', target)
 
 def set_obj_translation(obj_global_id, language, translation, field=''):
+    if not language:
+        return None
     r_cache.delete(f'translation:{language}:{obj_global_id}:')
     return r_lang.hset(f'tr:{obj_global_id}:{field}', language, translation)
 
 def delete_obj_translation(obj_global_id, language, field=''):
+    if not language:
+        return None
     r_cache.delete(f'translation:{language}:{obj_global_id}:')
     r_lang.hdel(f'tr:{obj_global_id}:{field}', language)
 
@@ -600,11 +794,14 @@ class LanguagesDetector:
         # print('------------------------------------------------')
         for lang in self.detector.FindTopNMostFreqLangs(content, num_langs=self.nb_langs):
             if lang.proportion >= self.min_proportion and lang.probability >= self.min_probability and lang.is_reliable:
-                languages.append(lang.language)
+                language = lang.language
+                if language in DETECTED_LANGUAGE_PRIMARY_OVERRIDES:
+                    language = DETECTED_LANGUAGE_PRIMARY_OVERRIDES[language]
+                languages.append(language)
         return languages
 
-    def detect_lexilang(self, content):
-        language, prob = lexilang_detect(content)
+    def detect_picolang(self, content):
+        language, prob = picolang_detect(content)
         # print(language, prob)
         if prob > 0 and self.min_probability == -1:
             return [language]
@@ -613,7 +810,7 @@ class LanguagesDetector:
         else:
             return []
 
-    def detect(self, content, force_gcld3=False, iso3=True):  # TODO detect length between 20-200 ????
+    def detect(self, content, force_gcld3=False, iso3=True):  # TODO backward arg kept, returns canonical BCP 47
         if not content:
             return []
         content = _clean_text_to_translate(content, html=True)
@@ -624,24 +821,21 @@ class LanguagesDetector:
         # print('-------------------------------------------------------')
         # print(content)
         # print(len(content))
-        # lexilang
+        # picolang
         if len(content) < 150:
-            # print('lexilang')
-            languages = self.detect_lexilang(content)
+            # print('picolang')
+            languages = self.detect_picolang(content)
         # gcld3
         else:
             languages = self.detect_gcld3(content)
         if not languages:
             return []
-        if iso3:
-            langs = []
-            for lang in languages:
-                iso_lang = convert_iso1_code(lang)
-                if iso_lang:
-                    langs.append(iso_lang)
-            return langs
-        else:
-            return languages
+        langs = []
+        for lang in languages:
+            lang_code = normalize_bcp47_tag(lang)
+            if lang_code:
+                langs.append(lang_code)
+        return langs
 
 class LanguageTranslator:
 
@@ -698,12 +892,14 @@ class LanguageTranslator:
             # print('##############################################################')
             return language[0]
 
-    def translate(self, content, source=None, target="eng"):
+    def translate(self, content, source=None, target="en", filter_same_content=True):
         # print(source, target)
         l_languages = get_translation_languages()
         if source:
+            source = normalize_bcp47_tag(source)
             if source not in l_languages:
                 return None, None
+        target = normalize_bcp47_tag(target)
         if target not in l_languages:
             return None, None
         translation = None
@@ -713,6 +909,7 @@ class LanguageTranslator:
             # print(source, content)
             if source:
                 if source != target:
+                    source = normalize_bcp47_tag(source)
                     if source not in l_languages:
                         return None, None
                     try:
@@ -727,10 +924,13 @@ class LanguageTranslator:
                         try:
                             # print(source_iso1, target_iso1)
                             translation = self.lt.translate(content, source_iso1, target_iso1)
+                            # Fix libretranslate dot panic
+                            if translation.endswith('........'):
+                                translation = translation.replace('........', '.')
                         except Exception as e:
                             logger.error(f'Libretranslate Translation: {e}')
                             translation = None
-                        if translation == content:
+                        if translation == content and filter_same_content:
                             # print('EQUAL')
                             translation = None
         return source, translation
@@ -759,6 +959,159 @@ def get_translation_languages():
 
 def ping_libretranslate():
     return LanguageTranslator().ping()
+
+def translate(content, source, target="en", filter_same_content=False):
+    return LanguageTranslator().translate(content, source=source, target=target, filter_same_content=filter_same_content)
+
+## Translation Task ##
+
+def get_translation_tasks():
+    return r_lang.smembers('tasks:translation')
+
+def is_translation_task_running(task_uuid):
+    start = r_lang.hget(f'task:tr:{task_uuid[0]}', 'start')
+    if start:
+        start = int(start)
+        if start + 3600 < int(time.time()):
+            return False
+        else:
+            return True
+    else:
+        return False
+
+def _get_translation_task_to_launch(i_task_uuid):
+    task_uuid = None
+    for task_uuid in r_lang.smembers('tasks:translation'):
+        if task_uuid != i_task_uuid:
+            if not is_translation_task_running(task_uuid):
+                return task_uuid
+    return task_uuid
+
+def get_translation_task_to_launch():
+    task_uuid = r_lang.srandmember('tasks:translation')
+    if task_uuid:
+        task_uuid = task_uuid[0]
+        if not is_translation_task_running(task_uuid):
+            return task_uuid
+        else:
+            return _get_translation_task_to_launch(task_uuid)
+    else:
+        return None
+
+class TranslationTask:
+    def __init__(self, task_uuid):
+        self.uuid = task_uuid
+
+    def exists(self):
+        return r_lang.exists(f'task:tr:{self.uuid}')
+
+    def _get_field(self, field):
+        return r_lang.hget(f'task:tr:{self.uuid}', field)
+
+    def _set_field(self, field, value):
+        r_lang.hset(f'task:tr:{self.uuid}', field, value)
+
+    def get_source(self):
+        return self._get_field('source')
+
+    def get_target(self):
+        return self._get_field('target')
+
+    def get_progress(self):
+        return self._get_field('progress')
+
+    def update_time(self):
+        return self._set_field('time', int(time.time()))
+
+    def update_progress(self, done, total):
+        if done < 0:
+            done = 1
+        progress = int(done * 100 / total)
+        if progress == 100:
+            progress = 99
+        self._set_field('progress', progress)
+        self.update_time()
+
+    def get_object(self):
+        return self._get_field('object')
+
+    def create(self, obj_gid, source, target):
+        r_lang.sadd('tasks:translation', self.uuid)
+        r_lang.sadd(f'tasks:translation:obj:{obj_gid}', self.uuid)
+        self._set_field('object', obj_gid)
+        self._set_field('source', source)
+        self._set_field('target', target)
+        self._set_field('progress', 0)
+
+    def start(self):
+        self._set_field('progress', 0)
+        self._set_field('start', int(time.time()))
+
+    # set as filename for pdf
+    def complete(self, translation):
+        set_obj_translation(self.get_object(), self.get_target(), translation)
+        self.delete()
+
+    def delete(self):
+        r_lang.srem('tasks:translation', self.uuid)
+        r_lang.srem(f'tasks:translation:obj:{self.get_object()}', self.uuid)
+        r_lang.delete(f'task:tr:{self.uuid}')
+
+def exists_task(obj_gid, source, target):
+    task_uuid = False
+    for task_uuid in get_object_tasks_uuid(obj_gid):
+        task = TranslationTask(task_uuid)
+        if task.get_source() == source and task.get_target() == target:
+            task_uuid = task.uuid
+            break
+    return task_uuid
+
+def create_translation_task(obj_gid, source, target, force=False):
+    task_uuid = exists_task(obj_gid, source, target)
+    if task_uuid:
+        if force:
+            task = TranslationTask(task_uuid)
+            task.delete()
+        else:
+            return task_uuid
+    task = TranslationTask(generate_uuid())
+    task.create(obj_gid, source, target)
+    return task.uuid
+
+def get_object_tasks_uuid(obj_gid):
+    return r_lang.smembers(f'tasks:translation:obj:{obj_gid}')
+
+def get_object_tasks(obj_gid, language_name=False):
+    tasks = {}
+    for task_uuid in get_object_tasks_uuid(obj_gid):
+        task = TranslationTask(task_uuid)
+        target = task.get_target()
+        if language_name:
+            target = get_language_from_iso(target)
+        tasks[task_uuid] = {'progress': task.get_progress(), 'target': target}
+    return tasks
+
+def api_get_translation_task_progress(task_uuid):
+    task = TranslationTask(task_uuid)
+    if not task.exists():
+        return {'error': 'Unknown translation task'}, 404
+    return task.get_progress(), 200
+
+def api_get_object_translation_tasks_progress(tasks_uuid):
+    tasks = {}
+    for task_uuid in tasks_uuid:
+        task = TranslationTask(task_uuid)
+        if not task.exists():
+            return {'error': 'Unknown translation task'}, 404
+        tasks[task_uuid] = task.get_progress()
+    return tasks, 200
+
+
+def api_delete_translation_task(task_uuid):
+    task = TranslationTask(task_uuid)
+    if not task.exists():
+        return {'error': 'Unknown translation task'}, 404
+    return task.delete(), 200
 
 
 if __name__ == '__main__':

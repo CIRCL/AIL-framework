@@ -34,16 +34,6 @@ config_loader = None
 
 
 #### UUID ####
-def is_valid_uuid_v4(UUID):
-    if not UUID:
-        return False
-    UUID = UUID.replace('-', '')
-    try:
-        uuid_test = uuid.UUID(hex=UUID, version=4)
-        return uuid_test.hex == UUID
-    except:
-        return False
-
 def sanityze_uuid(UUID):
     sanityzed_uuid = uuid.UUID(hex=UUID, version=4)
     return str(sanityzed_uuid).replace('-', '')
@@ -53,36 +43,20 @@ def generate_uuid():
 
 ## -- UUID -- ##
 
-# status
-# created
-# last change
-# tags
-# comment/info
-# level
-
-## threat_level:
-# 1 = high
-# 2 = medium
-# 3 = low
-# 4 = undefined
-
 ## analysis:
 # 0 = Initial
 # 1 = Ongoing
 # 2 = Complete
 
-# # TODO: Save correlation between investigations ?
-
-class ThreatLevel(Enum):
-    high = 1
-    medium = 2
-    low = 3
-    undefined = 4
-
 class Analysis(Enum):
-    initial = 0
-    ongoing = 1
-    completed = 2
+    initial = 0 # Created
+    ongoing = 1 # Ongoing
+    completed = 2 # Finished
+
+# def get_cases_status():
+#     return {'Created',
+#             'Ongoing',
+#             'Finished'}
 
 class Investigation(object):
     """Investigation."""
@@ -105,9 +79,14 @@ class Investigation(object):
         else:
             return self.uuid
 
-    # # TODO: Replace by title ??????
     def get_name(self):
-        return r_tracking.hget(f'investigations:data:{self.uuid}', 'name')
+        return self._get_field('info')
+
+    def get_info(self):
+        return r_tracking.hget(f'investigations:data:{self.uuid}', 'info')
+
+    def get_description(self):
+        return self._get_field('description')
 
     ## LEVEL ##
 
@@ -152,15 +131,6 @@ class Investigation(object):
 
     ## -ORG- ##
 
-    def get_threat_level(self):
-        try:
-            return int(r_tracking.hget(f'investigations:data:{self.uuid}', 'threat_level'))
-        except:
-            return 1
-
-    def get_threat_level_str(self):
-        return ThreatLevel(self.get_threat_level()).name
-
     def get_analysis(self):
         try:
             return int(r_tracking.hget(f'investigations:data:{self.uuid}', 'analysis'))
@@ -177,8 +147,8 @@ class Investigation(object):
     def get_creator_user(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'creator_user')
 
-    def get_info(self):
-        return r_tracking.hget(f'investigations:data:{self.uuid}', 'info')
+    def get_creator(self):
+        return r_tracking.hget(f'investigations:data:{self.uuid}', 'creator_user')
 
     def get_date(self):
         return r_tracking.hget(f'investigations:data:{self.uuid}', 'date')
@@ -199,17 +169,14 @@ class Investigation(object):
     #     return r_tracking.smembers(f'investigations:misp:{self.uuid}')
 
     # # TODO: DATE FORMAT
-    def get_metadata(self, options=set(), r_str=False):
+    def get_meta(self, options=set(), r_str=False):
         if r_str:
             analysis = self.get_analysis_str()
-            threat_level = self.get_threat_level_str()
         else:
             analysis = self.get_analysis()
-            threat_level = self.get_threat_level()
 
         # 'name': self.get_name(),
         meta = {'uuid': self.uuid,
-                'threat_level': threat_level,
                 'analysis': analysis,
                 'tags': list(self.get_tags()),
                 'user_creator': self.get_creator_user(),
@@ -218,7 +185,8 @@ class Investigation(object):
                 'date': self.get_date(),
                 'timestamp': self.get_timestamp(r_str=r_str),
                 'last_change': self.get_last_change(r_str=r_str),
-                'info': self.get_info(),
+                'info': self.get_info(), # name
+                'description': self.get_description(),
                 'nb_objects': self.get_nb_objects(),
                 # 'misp_events': list(self.get_misp_events())
                 }
@@ -229,26 +197,16 @@ class Investigation(object):
         return meta
 
     def set_name(self, name):
-        r_tracking.hset(f'investigations:data:{self.uuid}', 'name', name)
+        r_tracking.hset(f'investigations:data:{self.uuid}', 'info', name)
 
-    def set_info(self, info):
-        r_tracking.hset(f'investigations:data:{self.uuid}', 'info', info)
+    def set_description(self, info):
+        r_tracking.hset(f'investigations:data:{self.uuid}', 'description', info)
 
     def set_date(self, date):
         r_tracking.hset(f'investigations:data:{self.uuid}', 'date', date)
 
     def set_last_change(self, last_change):
         r_tracking.hset(f'investigations:data:{self.uuid}', 'last_change', last_change)
-
-    def set_threat_level(self, threat_level):
-        try:
-            threat_level = int(threat_level)
-        except TypeError:
-            raise UpdateInvestigationError('threat_level Not an integer')
-        if 1 <= threat_level <= 4:
-            r_tracking.hset(f'investigations:data:{self.uuid}', 'threat_level', threat_level)
-        else:
-            raise UpdateInvestigationError(f'Invalid threat_level: {threat_level}')
 
     def set_analysis(self, analysis):
         try:
@@ -374,8 +332,8 @@ def _set_timestamp(investigation_uuid, timestamp):
 
 # analysis - threat level - info - date - creator
 
-def _re_create_investigation(investigation_uuid, user_org, user_id, level, date, name, threat_level, analysis, info, tags, last_change, timestamp, misp_events):
-    create_investigation(user_org, user_id, level, date, name, threat_level, analysis, info, tags=tags, investigation_uuid=investigation_uuid)
+def _re_create_investigation(investigation_uuid, user_org, user_id, level, date, name, analysis, info, tags, last_change, timestamp, misp_events):
+    create_investigation(user_org, user_id, level, date, name, analysis, info, tags=tags, investigation_uuid=investigation_uuid)
     if timestamp:
         _set_timestamp(investigation_uuid, timestamp)
     investigation = Investigation(investigation_uuid)
@@ -384,13 +342,12 @@ def _re_create_investigation(investigation_uuid, user_org, user_id, level, date,
     for misp_event in misp_events:
         investigation.add_misp_events(misp_event)
 
-# # TODO: fix default threat_level analysis
 # # TODO: limit description + name
 # # TODO: sanitize tags
 # # TODO: sanitize date
-def create_investigation(user_org, user_id, level, date, name, threat_level, analysis, info, tags=[], investigation_uuid=None):
+def create_investigation(user_org, user_id, level, date, name, description, analysis, tags=[], investigation_uuid=None):
     if investigation_uuid:
-        if not is_valid_uuid_v4(investigation_uuid):
+        if not ail_core.is_valid_uuid_v4(investigation_uuid):
             investigation_uuid = generate_uuid()
     else:
         investigation_uuid = generate_uuid()
@@ -405,10 +362,9 @@ def create_investigation(user_org, user_id, level, date, name, threat_level, ana
     investigation = Investigation(investigation_uuid)
     investigation.set_level(level, user_org)
 
-    investigation.set_info(info)
-    #investigation.set_name(name) ##############################################
+    investigation.set_name(name)
+    investigation.set_description(description)
     investigation.set_date(date)
-    investigation.set_threat_level(threat_level)
     investigation.set_analysis(analysis)
 
     # # TODO: sanityze tags
@@ -425,14 +381,14 @@ def get_all_investigations_meta(r_str=False):
     investigations_meta = []
     for investigation_uuid in get_all_investigations():
         investigation = Investigation(investigation_uuid)
-        investigations_meta.append(investigation.get_metadata(r_str=r_str))
+        investigations_meta.append(investigation.get_meta(r_str=r_str))
     return investigations_meta
 
 def get_global_investigations_meta(r_str=False):
     investigations_meta = []
     for investigation_uuid in get_global_investigations():
         investigation = Investigation(investigation_uuid)
-        investigations_meta.append(investigation.get_metadata(r_str=r_str))
+        investigations_meta.append(investigation.get_meta(r_str=r_str))
     return investigations_meta
 
 
@@ -440,7 +396,7 @@ def get_org_investigations_meta(org_uuid, r_str=False):
     investigations_meta = []
     for investigation_uuid in get_org_investigations(org_uuid):
         investigation = Investigation(investigation_uuid)
-        investigations_meta.append(investigation.get_metadata(r_str=r_str, options={'org_name'}))
+        investigations_meta.append(investigation.get_meta(r_str=r_str, options={'org_name'}))
     return investigations_meta
 
 def get_orgs_investigations_meta(r_str=False):
@@ -448,7 +404,7 @@ def get_orgs_investigations_meta(r_str=False):
     for tracker_uuid in get_all_investigations():
         inv = Investigation(tracker_uuid)
         if inv.get_level() == 2:
-            investigations_meta.append(inv.get_metadata(r_str=r_str, options={'org_name'}))
+            investigations_meta.append(inv.get_meta(r_str=r_str, options={'org_name'}))
     return investigations_meta
 
 
@@ -456,11 +412,11 @@ def get_investigations_selector(org_uuid):
     l_investigations = []
     for investigation_uuid in get_global_investigations():
         investigation = Investigation(investigation_uuid)
-        name = investigation.get_info()
+        name = investigation.get_name()
         l_investigations.append({"id": investigation_uuid, "name": name})
     for investigation_uuid in get_org_investigations(org_uuid):
         investigation = Investigation(investigation_uuid)
-        name = investigation.get_info()
+        name = investigation.get_name()
         l_investigations.append({"id": investigation_uuid, "name": name})
     return l_investigations
 
@@ -469,10 +425,6 @@ def get_investigations_selector(org_uuid):
 def api_check_investigation_acl(inv, user_org, user_id, user_role, action):
     if not ail_orgs.check_obj_access_acl(inv, user_org, user_id, user_role, action):
         return {"status": "error", "reason": "Access Denied"}, 403
-
-def api_is_allowed_to_edit_investigation_level(inv, user_org, user_id, user_role, new_level):
-    if not ail_orgs.check_acl_edit_level(inv, user_org, user_id, user_role, new_level):
-        return {"status": "error", "reason": "Access Denied - Investigation level"}, 403
 
 ####  API  ####
 
@@ -484,7 +436,7 @@ def api_get_investigation(user_org, user_id, user_role, investigation_uuid):  # 
     if res:
         return res
 
-    meta = investigation.get_metadata(options={'objects'}, r_str=False)
+    meta = investigation.get_meta(options={'objects'}, r_str=False)
     # objs = []
     # for obj in investigation.get_objects():
     #     obj_meta = ail_objects.get_object_meta(obj["type"], obj["subtype"], obj["id"], flask_context=True)
@@ -500,9 +452,12 @@ def api_get_investigation(user_org, user_id, user_role, investigation_uuid):  # 
 def api_add_investigation(json_dict):
     user_org = json_dict.get('user_org')
     user_id = json_dict.get('user_id')
-    name = json_dict.get('name') ##### mandatory ?
+    name = json_dict.get('name') # TODO make mandatory
+    name = name[:10000]
     name = escape(name)
-    threat_level = json_dict.get('threat_level', 4)
+    description = json_dict.get('description', '')
+    description = description[:50000]
+    description = escape(description)
     analysis = json_dict.get('analysis', 0)
 
     # # TODO: sanityze date
@@ -516,15 +471,12 @@ def api_add_investigation(json_dict):
     if level not in range(1, 3):
         level = 1
 
-    info = json_dict.get('info', '')
-    info = escape(info)
-    info = info[:1000]
     tags = json_dict.get('tags', [])
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
 
     try:
-        res = create_investigation(user_org, user_id, level, date, name, threat_level, analysis, info, tags=tags)
+        res = create_investigation(user_org, user_id, level, date, name, description, analysis, tags=tags)
     except UpdateInvestigationError as e:
         return e.message, 400
     return res, 200
@@ -532,7 +484,7 @@ def api_add_investigation(json_dict):
 # # TODO: edit threat level / status
 def api_edit_investigation(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
-    if not is_valid_uuid_v4(investigation_uuid):
+    if not ail_core.is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
     investigation_uuid = sanityze_uuid(investigation_uuid)
     if not exists_investigation(investigation_uuid):
@@ -549,17 +501,10 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
         level = 1
     if level not in range(1, 3):
         level = 1
-    res = api_is_allowed_to_edit_investigation_level(investigation, user_org, user_id, user_role, level)
-    if res:
-        return res
 
-    name = json_dict.get('name') ##### mandatory ?
+    name = json_dict.get('name')
+    name = name[:1000]
     name = escape(name)
-    threat_level = json_dict.get('threat_level', 4)
-    try:
-        investigation.set_threat_level(threat_level)
-    except UpdateInvestigationError:
-        return {"status": "error", "reason": "Invalid Investigation threat_level"}, 400
 
     analysis = json_dict.get('analysis', 0)
     try:
@@ -567,9 +512,9 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
     except UpdateInvestigationError:
         return {"status": "error", "reason": "Invalid Investigation analysis"}, 400
 
-    info = json_dict.get('info', '')
-    info = escape(info)
-    info = info[:1000]
+    description = json_dict.get('description', '')
+    description = escape(description)
+    description = description[:50000]
     tags = json_dict.get('tags', [])
     if not Tag.are_enabled_tags(tags):
         return {"status": "error", "reason": "Invalid/Disabled tags"}, 400
@@ -578,8 +523,8 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
     if level != old_level:
         investigation.reset_level(old_level, level, user_org)
 
-    investigation.set_info(info)
     investigation.set_name(name)
+    investigation.set_description(description)
     investigation.set_tags(tags)
 
     timestamp = int(time.time())
@@ -589,7 +534,7 @@ def api_edit_investigation(user_org, user_id, user_role, json_dict):
 
 def api_delete_investigation(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
-    if not is_valid_uuid_v4(investigation_uuid):
+    if not ail_core.is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
     investigation_uuid = sanityze_uuid(investigation_uuid)
     if not exists_investigation(investigation_uuid):
@@ -601,9 +546,29 @@ def api_delete_investigation(user_org, user_id, user_role, json_dict):
     res = investigation.delete()
     return res, 200
 
+def api_download_investigation(user_org, user_id, user_role, json_dict):
+    investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
+    if not ail_core.is_valid_uuid_v4(investigation_uuid):
+        return {"status": "error", "reason": "Invalid Investigation uuid"}, 400
+    investigation_uuid = sanityze_uuid(investigation_uuid)
+    if not exists_investigation(investigation_uuid):
+        return {"status": "error", "reason": "Investigation not found"}, 404
+    investigation = Investigation(investigation_uuid)
+    res = api_check_investigation_acl(investigation, user_org, user_id, user_role, 'view')
+    if res:
+        return res
+    name = investigation.get_name()
+    if name:
+        filename = name.replace('_', '').replace('/', '')
+    else:
+        filename = ''
+    filename = f'{filename}_{investigation.get_uuid()}.zip'
+    res = {'filename': filename, 'objs': investigation.get_objects()}
+    return res, 200
+
 def api_register_object(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
-    if not is_valid_uuid_v4(investigation_uuid):
+    if not ail_core.is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": f"Invalid Investigation uuid: {investigation_uuid}"}, 400
     investigation_uuid = sanityze_uuid(investigation_uuid)
     if not exists_investigation(investigation_uuid):
@@ -630,7 +595,7 @@ def api_register_object(user_org, user_id, user_role, json_dict):
 
 def api_unregister_object(user_org, user_id, user_role, json_dict):
     investigation_uuid = json_dict.get('uuid', '').replace(' ', '')
-    if not is_valid_uuid_v4(investigation_uuid):
+    if not ail_core.is_valid_uuid_v4(investigation_uuid):
         return {"status": "error", "reason": f"Invalid Investigation uuid: {investigation_uuid}"}, 400
     investigation_uuid = sanityze_uuid(investigation_uuid)
     if not exists_investigation(investigation_uuid):

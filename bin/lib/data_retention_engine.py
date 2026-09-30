@@ -81,7 +81,7 @@ def _set_obj_date_last(date, obj_type, subtype=''):
 
 def set_obj_date_last(date, obj_type, subtype=''):
     _set_obj_date_last(date, obj_type, subtype=subtype)
-    r_obj.hset(f'date:last', f'{obj_type}:{subtype}', date)
+    r_obj.hget(f'date:first', f'{obj_type}:{subtype}')
 
 def update_obj_date(date, obj_type, subtype=''):
     date = int(date)
@@ -91,6 +91,10 @@ def update_obj_date(date, obj_type, subtype=''):
         set_obj_date_first(date, obj_type, subtype=subtype)
     if date > last:
         set_obj_date_last(date, obj_type, subtype=subtype)
+
+def delete_obj_date(obj_type, subtype=''):
+    r_obj.hdel(f'date:first', f'{obj_type}:{subtype}')
+    r_obj.hdel(f'date:last', f'{obj_type}:{subtype}')
 
 
 if __name__ == '__main__':

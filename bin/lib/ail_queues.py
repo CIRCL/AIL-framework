@@ -85,7 +85,7 @@ class AILQueue:
                 # raise Exception(f'Error: queue {self.name}, no AIL object provided')
             else:
                 obj_global_id, mess = row_mess
-                m_hash = xxhash.xxh3_64_hexdigest(message)
+                m_hash = xxhash.xxh3_64_hexdigest(message.encode())
                 add_processed_obj(obj_global_id, m_hash, module=self.name)
                 return obj_global_id, m_hash, mess
 
@@ -99,8 +99,32 @@ class AILQueue:
         # condition -> not in any queue
         # TODO EDIT meta
 
-    def end_message(self, obj_global_id, m_hash):
-        end_processed_obj(obj_global_id, m_hash, module=self.name)
+    def send_back_message_to_queue(self, obj_gid, sha256_mess, message=''):
+        self.end_message(obj_gid, sha256_mess, resend=True)
+
+        message = f'{obj_gid};{message}'
+        if obj_gid != '::':
+            m_hash = xxhash.xxh3_64_hexdigest(message.encode())
+        else:
+            m_hash = None
+        self._send_message_to_module(self.name, obj_gid, m_hash, message)
+
+        # Update queues stats
+        r_queues.hset('queues', self.name, self.get_nb_messages())
+        r_queues.hset(f'module:{self.name}', self.pid, int(time.time()))
+
+
+    def end_message(self, obj_global_id, m_hash, resend=False):
+        end_processed_obj(obj_global_id, m_hash, module=self.name, resend=resend)
+
+    def _send_message_to_module(self, module_name, obj_gid, m_hash, message):
+        if m_hash:
+            add_processed_obj(obj_gid, m_hash, queue=module_name)
+
+        r_queues.rpush(f'queue:{module_name}:in', message)
+        # stats
+        nb_mess = r_queues.llen(f'queue:{module_name}:in')
+        r_queues.hset('queues', module_name, nb_mess)
 
     def send_message(self, obj_global_id, message='', queue_name=None):
         if not self.subscribers_modules:
@@ -115,19 +139,13 @@ class AILQueue:
 
         message = f'{obj_global_id};{message}'
         if obj_global_id != '::':
-            m_hash = xxhash.xxh3_64_hexdigest(message)
+            m_hash = xxhash.xxh3_64_hexdigest(message.encode())
         else:
             m_hash = None
 
         # Add message to all modules
         for module_name in self.subscribers_modules[queue_name]:
-            if m_hash:
-                add_processed_obj(obj_global_id, m_hash, queue=module_name)
-
-            r_queues.rpush(f'queue:{module_name}:in', message)
-            # stats
-            nb_mess = r_queues.llen(f'queue:{module_name}:in')
-            r_queues.hset('queues', module_name, nb_mess)
+            self._send_message_to_module(module_name, obj_global_id, m_hash, message)
 
     def start(self):
         r_queues.hset(f'module:start:{self.name}', self.pid, int(time.time()))
@@ -151,6 +169,20 @@ class AILQueue:
     def end(self):
         self.clear()
         self._stop_module()
+
+
+def send_message_from_module(module_name, obj_global_id, message=''):
+    """Publish an object through the queues configured for a source module.
+
+    This is intended for one-shot producers, such as web actions, which do not
+    run an ``AbstractModule`` process of their own.
+    """
+    queue = AILQueue(module_name, -1)
+    try:
+        queue.send_message(obj_global_id, message=message)
+    finally:
+        # Do not call end(): it clears the module's inbound queue.
+        queue._stop_module()
 
 
 def get_queues_modules():
@@ -252,7 +284,7 @@ def add_processed_obj(obj_global_id, m_hash, module=None, queue=None):
         r_obj_process.zadd(f'obj:modules:{obj_global_id}', {f'{module}:{m_hash}': int(time.time())})
         r_obj_process.zrem(f'obj:queues:{obj_global_id}', f'{module}:{m_hash}')
 
-def end_processed_obj(obj_global_id, m_hash, module=None, queue=None):
+def end_processed_obj(obj_global_id, m_hash, module=None, queue=None, resend=False):
     if queue:
         r_obj_process.zrem(f'obj:queues:{obj_global_id}', f'{queue}:{m_hash}')
     if module:
@@ -260,7 +292,7 @@ def end_processed_obj(obj_global_id, m_hash, module=None, queue=None):
 
         # TODO HANDLE QUEUE DELETE
         # process completed
-        if not is_processed_obj(obj_global_id):
+        if not is_processed_obj(obj_global_id) and not resend:
             obj_type = obj_global_id.split(':', 1)[0]
             r_obj_process.zrem(f'objs:process:{obj_type}', obj_global_id)
             r_obj_process.srem(f'objs:process', obj_global_id)

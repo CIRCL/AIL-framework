@@ -5,7 +5,6 @@ import os
 import sys
 
 from datetime import datetime
-
 from flask import url_for
 # from pymisp import MISPObject
 
@@ -43,8 +42,7 @@ class Chat(AbstractChatObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
-        # # TODO:
-        pass
+        self._delete_chat()
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -60,13 +58,26 @@ class Chat(AbstractChatObject):
                 username = username.split(':', 2)[2]
                 return f'https://t.me/{username}'
 
-    def get_chat_instance(self):
-        if self.subtype == '00098785-7e70-5d12-a120-c5cdc1252b2b':
-            return 'telegram'
-        elif self.subtype == 'd2426e3f-22f3-5a57-9a98-d2ae9794e683':
-            return 'discord'
+    def get_search_document(self, timestamp=None):
+        if not timestamp:
+            timestamp = self.get_last_seen_timestamp()
+        global_id = self.get_global_id()
+        username = self.get_username()
+        if not username:
+            username = ''
         else:
-            return self.subtype
+            username = username.split(':', 2)[2]
+        name = self.get_name()
+        if not name:
+            name = ''
+        description = self.get_info()
+        if not description:
+            description = ''
+        content = f'{self.id} {username} {name} {description}'
+        if content:
+            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
+        else:
+            return None
 
     def get_svg_icon(self):  # TODO
         # if self.subtype == 'telegram':
@@ -82,8 +93,8 @@ class Chat(AbstractChatObject):
         icon = '\uf086'
         return {'style': style, 'icon': icon, 'color': '#4dffff', 'radius': 5}
 
-    def get_meta(self, options=set(), translation_target=None):
-        meta = self._get_meta(options=options)
+    def get_meta(self, options=set(), translation_target=None, flask_context=False):
+        meta = self._get_meta(options=options, flask_context=flask_context)
         meta['name'] = self.get_name()
         meta['tags'] = self.get_tags(r_list=True)
         if 'icon' in options:
@@ -116,6 +127,12 @@ class Chat(AbstractChatObject):
             meta['tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'origin_link' in options:
             meta['origin_link'] = self.get_origin_link()
+        if 'protocol' in options:
+            meta['protocol'] = self.get_protocol()
+        if 'network' in options:
+            meta['network'] = self.get_network()
+        if 'address' in options:
+            meta['address'] = self.get_address()
         return meta
 
     def get_misp_object(self):
@@ -232,7 +249,7 @@ class Chats(AbstractChatObjects):
         return 'Chats'
 
     def get_icon(self):
-        return {'fas': 'fas', 'icon': 'comment'}
+        return {'fa': 'fas', 'icon': 'comment'}
 
     def get_link(self, flask_context=False):
         if flask_context:
@@ -265,6 +282,6 @@ def get_all_by_subtype(subtype):
 
 
 if __name__ == '__main__':
-    chat = Chat('test', 'telegram')
-    r = chat.get_messages()
+    chat = Chat('2', '00098785-7e70-5d12-a120-c5cdc1252b2b')
+    r = chat.delete()
     print(r)

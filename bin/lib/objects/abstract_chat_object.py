@@ -19,7 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects
-from lib.ail_core import unpack_correl_objs_id, zscan_iter ################
+from lib.ail_core import unpack_correl_objs_id, zscan_iter, get_chat_protocol
 from lib.ConfigLoader import ConfigLoader
 from lib.objects import Messages
 from packages import Date
@@ -48,15 +48,31 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         """
         super().__init__(obj_type, id, subtype)
 
+    def _get_meta(self, options=None, flask_context=False):
+        meta = super()._get_meta(options=options, flask_context=flask_context)
+        if options and 'languages' in options:
+            meta['languages'] = sorted(self.get_languages())
+        return meta
+
+    def get_languages(self):
+        return self.get_container_languages()
+
     # get useraccount / username
     # get users ?
     # timeline name ????
     # last imported/updated
 
     # TODO get instance
-    # TODO get protocol
-    # TODO get network
-    # TODO get address
+    # TODO get instance
+
+    def get_protocol(self):
+        return get_chat_protocol(self.subtype)
+
+    def get_network(self):
+        return r_object.hget(f'chatSerIns:{self.subtype}', 'network')
+
+    def get_address(self):
+        return r_object.hget(f'chatSerIns:{self.subtype}', 'address')
 
     def get_chat(self):  # require ail object TODO ##
         if self.type != 'chat':
@@ -134,16 +150,28 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
             return -1
         return int(rank/ nb) + 1
 
-    def _get_messages(self, nb=-1, page=-1):
+    def _get_messages(self, nb=-1, page=-1, languages=None):
+        key = f'messages:{self.type}:{self.subtype}:{self.id}'
+        # languages filtering
+        if languages:
+            language_objs = set()
+            for language in languages:
+                language_objs.update(self.get_language_objs(language))
+            messages = r_object.zrange(key, 0, -1, withscores=True)
+            messages = [message for message in messages if message[0] in language_objs]
+            total = len(messages)
+        else:
+            messages = None
+            total = r_object.zcard(key)
+
         if nb < 1:
-            messages = r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', 0, -1, withscores=True)
+            if messages is None:
+                messages = r_object.zrange(key, 0, -1, withscores=True)
             nb_pages = 0
             page = 1
-            total = len(messages)
             nb_first = 1
             nb_last = total
         else:
-            total = r_object.zcard(f'messages:{self.type}:{self.subtype}:{self.id}')
             nb_pages = total / nb
             if not nb_pages.is_integer():
                 nb_pages = int(nb_pages) + 1
@@ -156,7 +184,10 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 start = (page - 1) * nb
             else:
                 start = 0
-            messages = r_object.zrange(f'messages:{self.type}:{self.subtype}:{self.id}', start, start+nb-1, withscores=True)
+            if messages is None:
+                messages = r_object.zrange(key, start, start+nb-1, withscores=True)
+            else:
+                messages = messages[start:start + nb]
             # if messages:
             #     messages = reversed(messages)
             nb_first = start+1
@@ -279,14 +310,14 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
         meta = message.get_meta(options=options, timestamp=timestamp, translation_target=translation_target)
         return meta
 
-    def get_messages(self, start=0, page=-1, nb=500, message=None, unread=False, options=None, translation_target='en'):  # threads ???? # TODO ADD last/first message timestamp + return page
+    def get_messages(self, start=0, page=-1, nb=500, message=None, unread=False, options=None, translation_target='en', languages=None):  # threads ???? # TODO ADD last/first message timestamp + return page
         # TODO return message meta
         tags = {}
         messages = {}
         curr_date = None
         try:
             nb = int(nb)
-        except TypeError:
+        except (TypeError, ValueError):
             nb = 500
         if message:
             page = self.get_message_page(message, nb)
@@ -297,7 +328,7 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
                 page = int(page)
             except TypeError:
                 page = 1
-        mess, pagination = self._get_messages(nb=nb, page=page)
+        mess, pagination = self._get_messages(nb=nb, page=page, languages=languages)
         for message in mess:
             timestamp = message[1]
             date_day = datetime.utcfromtimestamp(timestamp).strftime('%Y/%m/%d')
@@ -370,6 +401,12 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     def get_user_messages(self, user_id):
         return self.get_correlation_iter('user-account', self.subtype, user_id, 'message')
+
+    def _delete_chat(self):
+        self._delete_daterange()
+        self._delete_object()
+        # TODO REMOVE MESSAGE+icons objects?
+        r_object.delete(f'messages:{self.type}:{self.subtype}:{self.id}')
 
 # TODO move me to abstract subtype
 class AbstractChatObjects(AbstractSubtypeObjects, ABC):

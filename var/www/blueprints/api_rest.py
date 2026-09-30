@@ -19,9 +19,12 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_api
 from lib import ail_core
 from lib import ail_updates
+from lib import ail_users
 from lib import ail_logger
 from lib import crawlers
 from lib import chats_viewer
+from lib import forums_viewer
+from lib import image_similarity
 
 from lib import Investigations
 from lib import Tag
@@ -43,9 +46,14 @@ api_rest = Blueprint('api_rest', __name__, template_folder=os.path.join(os.envir
 
 # ============ AUTH FUNCTIONS ============
 
+API_AUTH_HEADERS = ('X-AIL-AUTH', 'Authorization')
+
+
 def get_auth_from_header():
-    token = request.headers.get('Authorization').replace(' ', '')  # remove space
-    return token
+    for header_name in API_AUTH_HEADERS:
+        token = request.headers.get(header_name)
+        if token:
+            return token.replace(' ', '')  # remove space
 
 
 def token_required(user_role):
@@ -53,14 +61,14 @@ def token_required(user_role):
         @wraps(funct)
         def api_token(*args, **kwargs):
             # Check AUTH Header
-            if not request.headers.get('Authorization'):
+            token = get_auth_from_header()
+            if not token:
                 return create_json_response({'status': 'error', 'reason': 'Authentication needed'}, 401)
 
             # Check Role
             if not user_role:
                 return create_json_response({'status': 'error', 'reason': 'Invalid Role'}, 401)
 
-            token = get_auth_from_header()
             ip_source = request.access_route[0]
             data, status_code = ail_api.authenticate_user(token, ip_address=ip_source)
             if status_code != 200:
@@ -115,6 +123,13 @@ def v1_pyail_version():
     return create_json_response({'version': ail_version}, 200)
 
 
+@api_rest.route("api/v1/image/similarity/phash/search", methods=['POST'])
+@token_required('user')
+def v1_image_similarity_phash_search():
+    response, status = image_similarity.api_search_phash(request.get_json(silent=True))
+    return create_json_response(response, status)
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      CRAWLERS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -124,14 +139,28 @@ def v1_pyail_version():
 def add_crawler_task():
     data = request.get_json()
     user_token = get_auth_from_header()
-    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id)
+    user_org, user_id, user_role = ail_api.get_basic_user_meta(user_token)
+    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
     if res:
         return create_json_response(res[0], res[1])
 
     dict_res = {'url': data['url']}
     return create_json_response(dict_res, 200)
 
+
+@api_rest.route("api/v1/crawler/stats", methods=['GET'])
+@token_required('user')
+def get_crawler_stats():
+    domain_type = request.args.get('domain_type')
+    res = crawlers.get_crawlers_stats(domain_type=domain_type)
+    return create_json_response(res, 200)
+
+
+@api_rest.route("api/v1/crawler/captures", methods=['GET'])
+@token_required('user')
+def get_crawler_captures():
+    res = crawlers.get_captures_status()
+    return create_json_response(res, 200)
 
 @api_rest.route("api/v1/add/crawler/capture", methods=['POST'])  # TODO V2 Migration
 @token_required('user')
@@ -152,6 +181,78 @@ def get_onions_up_month(date_year_month):
     res = Domains.api_get_onions_by_month(date_year_month)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
+
+@api_rest.route("api/v1/lacus/cookiejar/import", methods=['POST'])
+@token_required('user')
+def lacus_cookiejar_import():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_org, user_id, user_role = ail_api.get_basic_user_meta(user_token)
+
+    res = crawlers.api_import_lacus_cookiejar(user_org, user_id, user_role, data)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
+@api_rest.route("api/v1/forum/crawler/account/login", methods=['POST'])
+@token_required('admin')
+def forum_crawler_account_login():
+    data = request.get_json()
+    user_token = get_auth_from_header()
+    user_org, user_id, _ = ail_api.get_basic_user_meta(user_token)
+    res = forums_viewer.api_set_forum_account_local_storage(user_org, user_id, data)
+    return create_json_response(res[0], res[1])
+
+
+@api_rest.route("api/v1/crawler/user-agent/default", methods=['GET'])
+@token_required('admin')
+def crawler_user_agent_default():
+    # data = request.get_json()
+    # if data.get('os', '').lower() == 'linux':
+    #     linux = True
+    # else:
+    linux = False
+    res = {'user-agent': crawlers.get_default_user_agent(linux=linux)}
+    return create_json_response(res, 200)
+
+#### SCHEDULER ####
+
+@api_rest.route("api/v1/crawler/scheduler", methods=['GET'])
+@token_required('user')
+def get_crawler_scheduler():
+    res = crawlers.get_schedulers_metas()
+    return create_json_response(res, 200)
+
+@api_rest.route("api/v1/crawler/schedule/delete/<path:schedule_uuid>", methods=['DELETE'])
+@token_required('admin')
+def delete_crawler_schedule(schedule_uuid):
+    data = {'uuid': schedule_uuid}
+    res = crawlers.api_delete_schedule(data)
+    return create_json_response(res[0], res[1])
+
+
+#### BLACKLIST ####
+
+@api_rest.route("api/v1/crawler/blacklist", methods=['GET'])
+@token_required('admin')
+def get_crawler_blacklist():
+    res = crawlers.get_blacklist()
+    return create_json_response(list(res), 200)
+
+@api_rest.route("api/v1/crawler/blacklist/add", methods=['POST'])
+@token_required('admin')
+def add_crawler_blacklist():
+    data = request.get_json()
+    res = crawlers.api_blacklist_domain(data)
+    return create_json_response(res[0], res[1])
+
+@api_rest.route("api/v1/crawler/blacklist/delete/<path:domain>", methods=['DELETE'])
+@token_required('admin')
+def delete_crawler_blacklist(domain):
+    data = {'domain': domain}
+    res = crawlers.api_unblacklist_domain(data)
+    return create_json_response(res[0], res[1])
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # #       IMPORTERS       # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -161,6 +262,21 @@ def import_json_item():
     data_json = request.get_json()
     res = api_add_json_feeder_to_queue(data_json)
     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+
+@api_rest.route("api/v1/import/crawler/capture", methods=['POST'])
+@token_required('user')
+def import_crawler_capture():
+    data_json = request.get_json()
+    res = crawlers.api_add_lacus_capture_to_import(data_json)
+    return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
+
+# @api_rest.route("api/v1/import/crawler/lookyloo", methods=['POST'])
+# @token_required('user')
+# def import_crawler_capture():
+#     data_json = request.get_json() # TODO get gzip file
+#     res = crawlers.api_add_lacus_capture_to_import(data_json)
+#     return Response(json.dumps(res[0]), mimetype='application/json'), res[1]
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      OBJECTS      # # # # # # # # # # # # # # # # # # # TODO LIST OBJ TYPES + SUBTYPES
@@ -196,28 +312,58 @@ def v1_object_type_id(object_type, object_id):
 # # # # # # # # # # # # # # #      CHATS      # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+@api_rest.route("api/v1/chat/instances", methods=['GET'])
+@token_required('user')
+def chat_instances():
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    r = chats_viewer.api_get_chat_service_instances(page=page, nb=nb)
+    return create_json_response(r[0], r[1])
+
+
+@api_rest.route("api/v1/chat/instances/<instance_uuid>/chats", methods=['GET'])
+@token_required('user')
+def chat_instance_chats(instance_uuid):
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_service_instance_chats(instance_uuid, page=page, nb=nb, languages=languages)
+    return create_json_response(r[0], r[1])
+
+
 @api_rest.route("api/v1/chat/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_chat_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
-@api_rest.route("api/v1/chat-subchannel/messages", methods=['GET'])
+
+@api_rest.route("api/v1/chat/subchannel/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_subchannel_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_subchannel_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_subchannel_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
-@api_rest.route("api/v1/chat-thread/messages", methods=['GET'])
+
+@api_rest.route("api/v1/chat/thread/messages", methods=['GET'])
 @token_required('user')
 def objects_chat_thread_messages():
-    obj_subtype = request.args.get('subtype')
+    instance_uuid = request.args.get('instance_uuid')
     obj_id = request.args.get('id')
-    r = chats_viewer.api_thread_messages(obj_subtype, obj_id)
+    page = request.args.get('page')
+    nb = request.args.get('page_size')
+    languages = request.args.getlist('languages')
+    r = chats_viewer.api_get_chat_thread_messages(instance_uuid, obj_id, page=page, nb=nb, languages=languages)
     return create_json_response(r[0], r[1])
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -227,7 +373,8 @@ def objects_chat_thread_messages():
 @api_rest.route("api/v1/lookup/onion/<domain>", methods=['GET'])
 @token_required('user')
 def api_lookup_onion(domain):
-    return create_json_response(crawlers.api_get_onion_lookup(domain), 200)
+    response, status_code = crawlers.api_get_onion_lookup(domain)
+    return create_json_response(response, status_code)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      TITLES       # # # # # # # # # # # # # # # # # # # TODO TO REVIEW
@@ -272,3 +419,35 @@ def v1_investigation(investigation_uuid):
     return create_json_response(r[0], r[1])
 
 # TODO CATCH REDIRECT
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # #     ADMINS    # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+@api_rest.route("api/v1/user/create", methods=['POST'])
+@token_required('admin')
+def v1_user_create():
+    data_json = request.get_json()
+    user_token = get_auth_from_header()
+    admin_org, admin_id, admin_role = ail_api.get_basic_user_meta(user_token)
+    email = data_json.get('id')
+    email = email.lower()
+    if email and len(email) < 300 and ail_users.check_email(email):
+        org_uuid = data_json.get('org_uuid')
+        role = data_json.get('role')
+        password = data_json.get('password')
+        if password:
+            if not ail_users.check_password_strength(password):
+                return create_json_response({'status': 'error', 'reason': 'Incorrect Password'}, 400)
+        else:
+            password = ail_users.gen_password()
+        otp = data_json.get('otp', True)
+        send_email = data_json.get('send_email', True)
+
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+        user_agent = request.user_agent.string
+
+        r = ail_users.api_create_user(admin_id, ip_address, user_agent, email, password, org_uuid, role, otp, send_email=send_email)
+        return create_json_response(r[0], r[1])
+    else:
+        return create_json_response({'status': 'error', 'reason': 'Invalid user_id'}, 400)
