@@ -208,6 +208,7 @@
                         <thead class="thead-dark">
                         <tr>
                             <th>Organisation</th>
+                            <th>Country</th>
                             <th>UUID</th>
                             <th>Description</th>
                             <th>Created At</th>
@@ -220,6 +221,15 @@
                             <tr>
                                 <td>
                                     <span class="orgs-name">{{ org['name'] }}</span>
+                                </td>
+                                <td data-order="{{ org['nationality'] or '' }}">
+                                    {% if org['nationality_display'] %}
+                                        {{ org['nationality_display'] }}
+                                    {% elif org['nationality'] %}
+                                        {{ org['nationality'] }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <a class="" href="{{ url_for('settings_b.organisation', uuid=org['uuid']) }}" title="Open organisation details">
