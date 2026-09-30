@@ -37,8 +37,10 @@ class Tracker_Yara(AbstractModule):
         # Load Yara rules
         self.rules = Tracker.get_tracked_yara_rules()
         self.last_refresh = time.time()
+        self.blocklist = Tracker.YaraBlocklist(Tracker.Tracker(uuid) for uuid in Tracker.get_trackers_by_type('yara'))
 
         self.obj = None
+        self.content = None
 
         # Exporter
         self.exporters = {'mail': MailExporterTracker(),
@@ -50,6 +52,7 @@ class Tracker_Yara(AbstractModule):
         # refresh YARA list
         if self.last_refresh < Tracker.get_tracker_last_updated_by_type('yara'):
             self.rules = Tracker.get_tracked_yara_rules()
+            self.blocklist = Tracker.YaraBlocklist(Tracker.Tracker(uuid) for uuid in Tracker.get_trackers_by_type('yara'))
             self.last_refresh = time.time()
             print('Tracked set refreshed')
 
@@ -61,6 +64,8 @@ class Tracker_Yara(AbstractModule):
             return None
 
         content = self.obj.get_content(r_type='bytes')
+        self.content = content
+        self.blocklist.reset_object()
         if not content:
             return None
 
@@ -129,6 +134,9 @@ class Tracker_Yara(AbstractModule):
             # Filter Object
             filters = tracker.get_filters()
             if ail_objects.is_filtered(self.obj, filters):
+                continue
+
+            if self.blocklist.excludes(tracker, self.content, self.obj.get_global_id()):
                 continue
 
             tracker.add(self.obj.get_type(), self.obj.get_subtype(r_str=True), obj_id)

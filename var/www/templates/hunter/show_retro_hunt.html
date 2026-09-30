@@ -391,6 +391,10 @@
                                     {% else %}
                                         <div class="alert alert-secondary mb-0">No rule content is available for this retro hunt.</div>
                                     {% endif %}
+                                            {% if blocklist_content %}
+                                                <h6 class="mt-3">Exclusion YARA rule</h6>
+                                                <pre class="border bg-white p-3">{{ blocklist_content }}</pre>
+                                            {% endif %}
                                 </div>
                             </div>
                         </div>

@@ -36,10 +36,12 @@ class Retro_Hunt_Module(AbstractModule):
 
         # reset on each loop
         self.retro_hunt = None
+        self.blocklist = None
         self.nb_objs = 0
         self.nb_done = 0
         self.progress = 0
         self.obj = None
+        self.content = None
         self.tags = []
 
         self.logger.info(f"Module: {self.module_name} Launched")
@@ -54,6 +56,7 @@ class Retro_Hunt_Module(AbstractModule):
         self.retro_hunt = Tracker.RetroHunt(task_uuid)
 
         rule = self.retro_hunt.get_rule(r_compile=True)
+        self.blocklist = Tracker.YaraBlocklist([self.retro_hunt])
         timeout = self.retro_hunt.get_timeout()
         self.tags = self.retro_hunt.get_tags()
 
@@ -90,6 +93,8 @@ class Retro_Hunt_Module(AbstractModule):
                 print(obj.get_id())
                 self.obj = obj
                 content = obj.get_content(r_type='bytes')
+                self.content = content
+                self.blocklist.reset_object()
                 if not content:
                     continue
 
@@ -125,6 +130,9 @@ class Retro_Hunt_Module(AbstractModule):
             self.progress = new_progress
 
     def yara_rules_match(self, data):
+        if self.blocklist.excludes(self.retro_hunt, self.content, self.obj.get_global_id(), timeout=self.retro_hunt.get_timeout()):
+            return yara.CALLBACK_CONTINUE
+
         obj_id = self.obj.get_id()
         # print(data)
         task_uuid = data['namespace']

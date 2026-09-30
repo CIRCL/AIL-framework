@@ -296,6 +296,7 @@ def show_tracker():
         meta['filters'] = json.dumps(meta['filters'], indent=4)
 
     return render_template("tracker_show.html", meta=meta,
+                            blocklist_content=tracker.get_blocklist_content(),
                             rule_content=yara_rule_content,
                             typo_squatting=typo_squatting,
                             filter_obj_types=filter_obj_types,
@@ -485,6 +486,7 @@ def parse_add_edit_request(request_form):
                     filters[obj_type]['subtypes'].append(obj_subtype)
 
     input_dict = {"tracked": to_track, "type": tracker_type,
+                  "blocklist_rule": request_form.get("blocklist_rule", "") if tracker_type in {"yara_custom", "yara_default"} else "",
                   "tags": tags, "mails": mails, "filters": filters,
                   "notification_filter_duplicate" : notification_filter_duplicate,
                   "level": level, "description": description, "webhook": webhook, "source": source}
@@ -541,6 +543,7 @@ def tracker_edit():
         dict_tracker = tracker.get_meta(options={'description', 'filter_duplicate_notification', 'level', 'mails', 'filters', 'tags', 'webhooks', 'source'})
         if dict_tracker['type'] == 'yara':
             dict_tracker['content'] = Tracker.get_yara_rule_content(dict_tracker['tracked'])
+            dict_tracker['blocklist_rule'] = tracker.get_blocklist_content()
         elif dict_tracker['type'] == 'set':
             tracked, nb_words = dict_tracker['tracked'].rsplit(';', 1)
             tracked = tracked.replace(',', ' ')
@@ -838,6 +841,7 @@ def retro_hunt_show_task():
             dict_task['objs'].append(obj_meta)
 
     return render_template("show_retro_hunt.html", dict_task=dict_task,
+                           blocklist_content=retro_hunt.get_blocklist_content(),
                            rule_content=rule_content,
                            bootstrap_label=bootstrap_label)
 
@@ -981,6 +985,7 @@ def retro_hunt_add_task():
 
         input_dict = {"level": level, "name": name, "description": description, "creator": user_id,
                       "rule": rule, "type": rule_type,
+                      "blocklist_rule": request.form.get("blocklist_rule", ""),
                       "tags": tags, "filters": filters, "timeout": timeout,  # "mails": mails
                       "source": source,
                       }
@@ -1005,11 +1010,13 @@ def retro_hunt_add_task():
             new_description = tracker.get_description()
             new_level = tracker.get_level()
             new_rule = tracker.get_rule_content()
+            new_blocklist_rule = tracker.get_blocklist_content()
             new_filters = tracker.get_filters()
         else:
             new_description = None
             new_level = None
             new_rule = None
+            new_blocklist_rule = None
             new_filters = {'message': {}, 'ocr': {}, 'item': {}, 'post': {}}
 
         return render_template("add_retro_hunt_task.html",
@@ -1017,7 +1024,7 @@ def retro_hunt_add_task():
                                items_sources=item_basic.get_all_items_sources(r_list=True),
                                forums=_get_forum_filter_choices(),
                                new_description=new_description, new_level=new_level, new_rule=new_rule,
-                               new_filters=new_filters)
+                               new_filters=new_filters, new_blocklist_rule=new_blocklist_rule)
 
 @hunters.route('/retro_hunt/task/pause', methods=['GET'])
 @login_required

@@ -200,6 +200,13 @@ class Tracker:
     def _get_field(self, field):
         return r_tracker.hget(f'tracker:{self.uuid}', field)
 
+    def get_blocklist(self):
+        return self._get_field('blocklist')
+
+    def get_blocklist_content(self):
+        filename = self.get_blocklist()
+        return get_yara_rule_content(filename) if filename else ''
+
     def _set_field(self, field, value):
         r_tracker.hset(f'tracker:{self.uuid}', field, value)
 
@@ -515,6 +522,8 @@ class Tracker:
             meta['user'] = self.get_user()
         if 'level' in options:
             meta['level'] = self.get_level()
+        if 'blocklist' in options:
+            meta['blocklist'] = self.get_blocklist()
         if 'description' in options:
             meta['description'] = self.get_description()
         if 'source' in options:
@@ -735,7 +744,7 @@ class Tracker:
 
     # TODO escape custom tags
     # TODO escape mails ????
-    def create(self, tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual'):
+    def create(self, tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', blocklist_rule=''):
         if self.exists():
             raise Exception('Error: Tracker already exists')
 
@@ -755,6 +764,9 @@ class Tracker:
             typo_generation = runAll(domain=domain, limit=math.inf, formatoutput="text", pathOutput="-", verbose=False) # TODO REPLACE LIMIT BY -1
             for typo in typo_generation:
                 r_tracker.sadd(f'tracker:typosquatting:{to_track}', typo)
+
+        if blocklist_rule:
+            save_yara_blocklist(self, blocklist_rule)
 
         # create metadata
         self._set_field('tracked', to_track)
@@ -802,7 +814,7 @@ class Tracker:
         trigger_trackers_refresh(tracker_type)
         return self.uuid
 
-    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False, source='manual'):
+    def edit(self, tracker_type, to_track, level, org, description=None, filters={}, tags=[], mails=[], webhook=None, notification_filter_duplicate=False, source='manual', blocklist_rule=None):
 
         # edit tracker
         old_type = self.get_type()
@@ -824,6 +836,11 @@ class Tracker:
         # TODO TYPO EDIT
         elif tracker_type == 'typosquatting':
             pass
+
+        if tracker_type == 'yara' and blocklist_rule is not None:
+            save_yara_blocklist(self, blocklist_rule)
+        elif tracker_type != 'yara' and old_type == 'yara':
+            delete_yara_blocklist(self)
 
         if tracker_type != old_type:
             # LEVEL
@@ -931,6 +948,7 @@ class Tracker:
             r_tracker.srem(f'org:tracker:{org}', self.uuid)
             r_tracker.srem(f'org:tracker:{org}:{tracker_type}', self.uuid)
 
+        delete_yara_blocklist(self)
         self._remove_from_owner_dashboard()
 
         r_tracker.srem(f'all:tracker:{tracker_type}', tracked)
@@ -949,12 +967,12 @@ class Tracker:
         r_tracker.delete(f'tracker:objs:fp:{self.uuid}')
         trigger_trackers_refresh(tracker_type)
 
-def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', tracker_uuid=None):
+def create_tracker(tracker_type, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', tracker_uuid=None, blocklist_rule=''):
     if not tracker_uuid:
         tracker_uuid = str(uuid.uuid4())
     tracker = Tracker(tracker_uuid)
     return tracker.create(tracker_type, to_track, org, user_id, level, description=description, filters=filters, tags=tags,
-                          mails=mails, webhook=webhook, source=source)
+                          mails=mails, webhook=webhook, source=source, blocklist_rule=blocklist_rule)
 
 def _re_create_tracker(tracker_type, tracker_uuid, to_track, org, user_id, level, description=None, filters={}, tags=[], mails=[], webhook=None, source='manual', first_seen=None, last_seen=None):
     create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
@@ -1332,13 +1350,10 @@ def api_validate_tracker_to_add(to_track, tracker_type, nb_words=1):
         if "." not in to_track:
             return {"status": "error", "reason": "Invalid domain name"}, 400
 
-    elif tracker_type == 'yara_custom':
-        valid_yara_rule, error = is_valid_yara_rule(to_track)
-        if not valid_yara_rule:
-            return {"status": "error", "reason": f"Invalid Yara Rule: {error}"}, 400
-    elif tracker_type == 'yara_default':
-        if not is_valid_default_yara_rule(to_track):
-            return {"status": "error", "reason": "The Yara Rule doesn't exist"}, 400
+    elif tracker_type in {'yara_custom', 'yara_default'}:
+        res = api_validate_rule_to_add(to_track, tracker_type)
+        if res[1] != 200:
+            return res
     else:
         return {"status": "error", "reason": "Incorrect type"}, 400
     return {"status": "success", "tracked": to_track, "type": tracker_type}, 200
@@ -1422,8 +1437,13 @@ def api_add_tracker(dict_input, org, user_id):
     if level not in range(0, 3):
         level = 1
 
+    blocklist_rule = dict_input.get('blocklist_rule', '')
+    res = validate_yara_blocklist(blocklist_rule, tracker_type)
+    if res:
+        return res
+
     tracker_uuid = create_tracker(tracker_type, to_track, org, user_id, level, description=description, filters=filters,
-                                  tags=tags, mails=mails, webhook=webhook, source=source)
+                                  tags=tags, mails=mails, webhook=webhook, source=source, blocklist_rule=blocklist_rule)
 
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
@@ -1507,9 +1527,15 @@ def api_edit_tracker(dict_input, user_org, user_id, user_role):
                     if obj_type != 'post' or not set(filters[obj_type]['forums']).issubset(get_object_all_subtypes('forum')):
                         return {"status": "error", "reason": "Invalid Forum"}, 400
 
+    blocklist_rule = dict_input.get('blocklist_rule')
+    if blocklist_rule is not None:
+        res = validate_yara_blocklist(blocklist_rule, tracker_type)
+        if res:
+            return res
+
     tracker.edit(tracker_type, to_track, level, user_org, description=description, filters=filters,
                  tags=tags, mails=mails, webhook=webhook, notification_filter_duplicate=notification_filter_duplicate,
-                 source=source)
+                 source=source, blocklist_rule=blocklist_rule)
     return {'tracked': to_track, 'type': tracker_type, 'uuid': tracker_uuid}, 200
 
 
@@ -1819,6 +1845,69 @@ def is_valid_default_yara_rule(yara_rule, verbose=True):
         else:
             return False
 
+def validate_yara_blocklist(rule, tracker_type='yara'):
+    if not isinstance(rule, str):
+        return {'status': 'error', 'reason': 'Exclusion YARA rule must be a string'}, 400
+    if rule.strip():
+        if tracker_type not in {'yara', 'yara_custom', 'yara_default'}:
+            return {'status': 'error', 'reason': 'Exclusion rules are only supported for YARA trackers'}, 400
+        res = api_validate_rule_to_add(rule, 'yara_custom')
+        if res[1] != 200:
+            return res
+
+def save_yara_blocklist(owner, rule):
+    filename = owner.get_blocklist()
+    if rule.strip():
+        filename = save_yara_rule('yara_custom', rule, tracker_uuid=f'{owner.uuid}-blocklist')
+        owner._set_field('blocklist', filename)
+    elif filename:
+        delete_yara_blocklist(owner)
+
+def delete_yara_blocklist(owner):
+    filename = owner.get_blocklist()
+    if filename:
+        path = get_yara_rule_file_by_tracker_name(filename)
+        if path and os.path.isfile(path):
+            os.remove(path)
+        owner._set_field('blocklist', '')
+
+
+class YaraBlocklist:
+    def __init__(self, owners):
+        self.rules = {}
+        self.verdicts = {}
+        for owner in owners:
+            filename = owner.get_blocklist()
+            if not filename:
+                continue
+            self.rules[owner.uuid] = None
+            try:
+                self.rules[owner.uuid] = yara.compile(filepath=os.path.join(get_yara_rules_dir(), filename))
+            except (yara.Error, OSError) as error:
+                logger.error(f'Unable to load exclusion YARA rule for {owner.uuid}: {error}')
+
+    def reset_object(self):
+        self.verdicts.clear()
+
+    def excludes(self, owner, content, obj_gid, timeout=60):
+        if owner.uuid not in self.rules:
+            return False
+        if owner.uuid in self.verdicts:
+            return self.verdicts[owner.uuid]
+        # A configured rule that cannot be checked must skip the candidate.
+        excluded = True
+        try:
+            rule = self.rules[owner.uuid]
+            if rule is not None:
+                excluded = bool(rule.match(data=content, timeout=timeout))
+            else:
+                logger.error(f'Exclusion YARA rule unavailable for {owner.uuid}, object {obj_gid}; skipping candidate')
+        except (yara.Error, OSError) as error:
+            logger.error(f'Exclusion YARA check failed for {owner.uuid}, object {obj_gid}; skipping candidate: {error}')
+        self.verdicts[owner.uuid] = excluded
+        return excluded
+
+
 def save_yara_rule(yara_rule_type, yara_rule, tracker_uuid=None):
     if yara_rule_type == 'yara_custom':
         if not tracker_uuid:
@@ -1910,6 +1999,13 @@ class RetroHunt:
 
     def _get_field(self, field):
         return r_tracker.hget(f'retro_hunt:{self.uuid}', field)
+
+    def get_blocklist(self):
+        return self._get_field('blocklist')
+
+    def get_blocklist_content(self):
+        filename = self.get_blocklist()
+        return get_yara_rule_content(filename) if filename else ''
 
     def _set_field(self, field, value):
         return r_tracker.hset(f'retro_hunt:{self.uuid}', field, value)
@@ -2046,6 +2142,8 @@ class RetroHunt:
             meta['creator'] = self.get_creator()
         if 'date' in options:
             meta['date'] = self.get_date()
+        if 'blocklist' in options:
+            meta['blocklist'] = self.get_blocklist()
         if 'description' in options:
             meta['description'] = self.get_description()
         if 'source' in options:
@@ -2267,13 +2365,15 @@ class RetroHunt:
         user_id = self.get_creator()
         r_tracker.lrem(f'retro_hunt:owner:{user_id}',  -1, self.uuid)
 
-    def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual'):
+    def create(self, org_uuid, user_id, level, name, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual', blocklist_rule=''):
         if self.exists():
             raise Exception('Error: Retro Hunt Task already exists')
 
         self._set_field('name', escape(name))
 
         self._set_field('rule', rule)
+        if blocklist_rule:
+            save_yara_blocklist(self, blocklist_rule)
 
         self._set_field('date', datetime.date.today().strftime("%Y%m%d"))
         self._set_field('name', escape(name))
@@ -2333,6 +2433,7 @@ class RetroHunt:
                 except FileNotFoundError:
                     pass
 
+        delete_yara_blocklist(self)
         self._remove_from_owner_dashboard()
         self.delete_level()
 
@@ -2353,14 +2454,14 @@ class RetroHunt:
         self.clear_cache()
         return self.uuid
 
-def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual', task_uuid=None):
+def create_retro_hunt(user_org, user_id, level, name, rule_type, rule, description=None, filters=[], mails=[], tags=[], timeout=30, state='pending', source='manual', task_uuid=None, blocklist_rule=''):
     if not task_uuid:
         task_uuid = str(uuid.uuid4())
     retro_hunt = RetroHunt(task_uuid)
     # rule_type: yara_default - yara custom
     rule = save_yara_rule(rule_type, rule, tracker_uuid=retro_hunt.uuid)
     retro_hunt.create(user_org, user_id, level, name, rule, description=description, mails=mails, tags=tags,
-                      timeout=timeout, filters=filters, state=state, source=source)
+                      timeout=timeout, filters=filters, state=state, source=source, blocklist_rule=blocklist_rule)
     return retro_hunt.uuid
 
 # TODO
@@ -2612,8 +2713,13 @@ def api_create_retro_hunt_task(dict_input, user_org, user_id):
                 if res:
                     return res
 
+    blocklist_rule = dict_input.get('blocklist_rule', '')
+    res = validate_yara_blocklist(blocklist_rule)
+    if res:
+        return res
+
     task_uuid = create_retro_hunt(user_org, user_id, level, name, task_type, rule, description=description,
-                                  mails=mails, tags=tags, timeout=30, filters=filters, source=source)
+                                  mails=mails, tags=tags, timeout=30, filters=filters, source=source, blocklist_rule=blocklist_rule)
     return {'name': name, 'rule': rule, 'type': task_type, 'uuid': task_uuid}, 200
 
 def api_delete_retro_hunt_task(user_org, user_id, user_role, task_uuid):

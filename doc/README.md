@@ -384,6 +384,8 @@ rule disney_plus : credential_leak
 
 A new tracker can be created from the Leak Hunter section in the UI.
 
+YARA trackers and retro hunts support an optional **Exclusion YARA rule**. After a primary match, the exclusion scans the full object content. If any exclusion rule matches, the candidate is discarded before results, tags, or notifications are created.
+
 # <a name="users_roles"></a> Users ROLES
 
 | **Functionality**                               | **Read-Only** | **No-API User** | **User**           | **Administrator** |
