@@ -142,9 +142,9 @@
 
                 {% if chat['messages'] %}
 
-                    <span class="mt-3">
+                    <div class="mt-3 sticky-top">
                         {% include 'objects/image/block_blur_img_slider.html' %}
-                    </span>
+                    </div>
 
                     {% with obj_subtype=chat['subtype'], obj_id=chat['id'], url_endpoint=url_for("chats_explorer.chats_explorer_chat"), nb=chat['pagination']['nb']  %}
                         {% set date_from=chat['first_seen'] %}
