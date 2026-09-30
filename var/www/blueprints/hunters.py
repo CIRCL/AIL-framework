@@ -277,7 +277,7 @@ def show_tracker():
         date_from, date_to = Date.sanitise_daterange(date_from, date_to)
         objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types)
         meta['objs'] = []
-        options = {'last_full_date', 'pdf'}
+        options = {'last_full_date', 'pdf', 'match_context'}
         for obj_gid in objs:
             obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
             obj_meta = ail_objects.get_object_meta(obj_type, obj_subtype, obj_id, options=options, flask_context=True)
@@ -829,7 +829,7 @@ def retro_hunt_show_task():
 
     dict_task['objs'] = []
     if objs:
-        options = {'last_full_date', 'pdf'}
+        options = {'last_full_date', 'pdf', 'match_context'}
         for ob in retro_hunt.get_objs():
             obj_type, obj_subtype, obj_id = ob
             obj_meta = ail_objects.get_object_meta(obj_type, obj_subtype, obj_id, options=options, flask_context=True)

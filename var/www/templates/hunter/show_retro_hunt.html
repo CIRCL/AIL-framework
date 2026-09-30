@@ -18,6 +18,7 @@
     <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
     <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/helper.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script language="javascript" src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
@@ -404,7 +405,7 @@
                             <tr>
                                 <th>Type</th>
                                 <th></th>
-                                <th>Id</th>
+                                <th>Object</th>
                                 <th></th>
                                 <th>Last Date</th>
                                 <th></th>
@@ -428,9 +429,11 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}">
+                                        <a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}"
+                                           {% if object['type'] in ['ocr', 'item', 'message', 'post'] %}data-preview-url="{{ url_for('correlation.object_content_preview', type=object['type'], id=object['id']) }}"{% endif %}>
                                             {{ object['id']}}
                                         </a>
+                                        {% include 'hunter/block_match_context.html' %}
                                         <div>
                                             {% for tag in object['tags'] %}
                                                 <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
@@ -520,6 +523,7 @@ $(document).ready(function(){
         $('#nav_title_retro_hunt').removeClass("text-muted");
 
         {% if dict_task['objs'] %}
+        init_match_content_previews($('#objs_table'));
         $('#objs_table').DataTable({
             "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
             "iDisplayLength": 10,

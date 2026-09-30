@@ -154,6 +154,19 @@ def exists_obj(obj_type, subtype, obj_id):
 
 #### API ####
 
+def api_get_object_content_preview(obj_type, obj_id):
+    if obj_type not in {'ocr', 'item', 'message', 'post'}:
+        return {'status': 'error', 'reason': 'Unsupported object type'}, 400
+    if not obj_id:
+        return {'status': 'error', 'reason': 'Invalid object id'}, 400
+    obj = get_object(obj_type, '', obj_id)
+    if not obj.exists():
+        return {'status': 'error', 'reason': 'Object Not Found'}, 404
+    content = obj.get_content() or ''
+    preview = ''.join(content[:1000].splitlines(keepends=True)[:15])
+    return {'content': preview, 'truncated': len(preview) < len(content)}, 200
+
+
 def api_get_object(obj_type, obj_subtype, obj_id):
     if not obj_id:
         return {'status': 'error', 'reason': 'Invalid object id'}, 400
@@ -317,7 +330,44 @@ def get_object_meta(obj_type, subtype, id, options=set(), flask_context=False):
     meta = obj.get_meta(options=options)
     meta['icon'] = obj.get_svg_icon()
     meta['link'] = obj.get_link(flask_context=flask_context)
+    if 'match_context' in options:
+        meta['match_context'] = get_obj_match_context(obj)
     return meta
+
+
+def get_obj_match_context(obj):
+    """Return short identifying metadata for tracker and retro-hunt matches."""
+    context = {}
+    if obj.type == 'pdf':
+        names = sorted(obj.get_file_names())
+        if names:
+            context['File names'] = ', '.join(names)
+    elif obj.type == 'item':
+        context['Source'] = obj.get_source()
+    elif obj.type == 'message':
+        chat = get_obj_from_global_id(obj.get_chat())
+        context['Channel'] = chat.get_name() or chat.id
+        channel_username = chat.get_username()
+        if channel_username:
+            context['Channel'] += f" (@{channel_username.split(':', 2)[2]})"
+        subchannel_gid = obj.get_subchannel()
+        if subchannel_gid:
+            subchannel = get_obj_from_global_id(subchannel_gid)
+            context['Subchannel'] = subchannel.get_name() or subchannel.id
+        user_account = obj.get_user_account()
+        if user_account:
+            context['User ID'] = user_account.split(':', 2)[2]
+            username = get_obj_from_global_id(user_account).get_username()
+            if username:
+                context['User ID'] += f" (@{username.split(':', 2)[2]})"
+    elif obj.type == 'post':
+        forum = Forums.Forum(obj.get_forum_id())
+        context['Forum'] = forum.get_name() or forum.id
+        thread_gid = obj.get_thread()
+        if thread_gid:
+            thread = get_obj_from_global_id(thread_gid)
+            context['Thread'] = thread.get_name() or thread.id
+    return context
 
 
 def get_objects_meta(objs, options=set(), flask_context=False):

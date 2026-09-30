@@ -195,6 +195,14 @@ def show_correlation():
                                    ollama_models=images_engine.get_ollama_models(),
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])
 
+@correlation.route('/correlation/content/preview')
+@login_required
+@login_read_only
+def object_content_preview():
+    preview, status = ail_objects.api_get_object_content_preview(request.args.get('type'), request.args.get('id'))
+    return jsonify(preview), status
+
+
 @correlation.route('/correlation/get/description')
 @login_required
 @login_read_only
