@@ -26,7 +26,7 @@
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Add image description"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
                     <span class="dropdown-menu">
                         {% for model in missing_models %}
-                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model) }}">Generate with {{ model }}</a>
+                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model, message_anchor=image_message_anchor|default(none)) }}">Generate with {{ model }}</a>
                         {% endfor %}
                     </span>
                 </span>

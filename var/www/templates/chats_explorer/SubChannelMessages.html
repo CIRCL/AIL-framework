@@ -189,7 +189,9 @@
             });
         {% endif %}
         {% if message_id %}
-            document.location.hash = '#{{ message_id }}';
+            if (!window.location.hash) {
+                document.location.hash = '#{{ message_id }}';
+            }
         {% endif %}
     });
 

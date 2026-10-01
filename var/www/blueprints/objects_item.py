@@ -9,6 +9,7 @@ import difflib
 import json
 import os
 import sys
+from urllib.parse import quote
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, send_file, send_from_directory
 from flask_login import login_required, current_user
@@ -231,6 +232,9 @@ def image_describe():
         return create_json_response(r[0], r[1])
     else:
         if request.referrer:
+            message_anchor = request.args.get('message_anchor')
+            if message_anchor:
+                return redirect(f"{request.referrer.split('#', 1)[0]}#{quote(message_anchor, safe='')}")
             return redirect(request.referrer)
         else:
             # TODO
