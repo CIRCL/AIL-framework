@@ -147,6 +147,8 @@ def manual():
                            import_message=request.args.get('import_message'),
                            interactive_session=crawlers.get_user_active_interactive_session(user_id),
                            interactive_usage=crawlers.get_interactive_usage(),
+                           interactive_default_timeout=crawlers.INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT,
+                           interactive_max_timeout=crawlers.INTERACTIVE_CAPTURE_MAX_TIMEOUT,
                            tags_selector_data=Tag.get_tags_selector_data())
 
 
@@ -180,6 +182,7 @@ def interactive_capture_start():
         'har': request.form.get('har'),
         'screenshot': request.form.get('screenshot'),
         'javascript': request.form.get('javascript', False),
+        'general_timeout_in_sec': request.form.get('general_timeout_in_sec'),
     }
     crawler_type = request.form.get('crawler_queue_type')
     proxy = request.form.get('proxy_name')

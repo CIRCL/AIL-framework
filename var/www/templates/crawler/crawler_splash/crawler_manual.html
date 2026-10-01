@@ -106,6 +106,15 @@
                                                         Opens a live remote browser session for this URL. Use it when you need to log in, accept prompts, solve navigation steps, or manually reach the page before AIL saves the capture.
                                                     </small>
                                                     <div id="interactive_help" class="mt-2" style="display:none;">
+                                                        <div class="form-group">
+                                                            <label for="general_timeout_in_sec">Session time limit</label>
+                                                            <select class="form-control" id="general_timeout_in_sec" name="general_timeout_in_sec" disabled>
+                                                                {% for timeout in range(interactive_default_timeout, interactive_max_timeout + 1, 30) %}
+                                                                    <option value="{{ timeout }}"{% if timeout == interactive_default_timeout %} selected{% endif %}>{{ timeout // 60 }} min {{ timeout % 60 }} sec{% if timeout == interactive_default_timeout %} (default){% endif %}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <small class="form-text text-muted">Increase the time available to use the browser, up to 30 minutes. Finish the capture before the session expires.</small>
+                                                        </div>
                                                         <ul class="mb-0 pl-3 small">
                                                             <li>AIL will reserve one interactive slot and return a browser link.</li>
                                                             <li>Only one URL is captured; scheduling, depth crawling, and multiple URLs are hidden.</li>
@@ -395,6 +404,7 @@ function interactive_input_controller() {
         $('#crawl_form').attr('action', '{{ url_for('crawler_splash.interactive_capture_start') }}');
         $('#interactive_warning').show();
         $('#interactive_help').show();
+        $('#general_timeout_in_sec').prop('disabled', false);
         $('#interactive_cookiejar_options').show();
         $('#crawler_scheduler').prop('checked', false).prop('disabled', true);
         $('#depth_limit').val(0).prop('disabled', true);
@@ -409,6 +419,7 @@ function interactive_input_controller() {
         $('#crawl_form').attr('action', '{{ url_for('crawler_splash.send_to_spider') }}');
         $('#interactive_warning').hide();
         $('#interactive_help').hide();
+        $('#general_timeout_in_sec').prop('disabled', true);
         $('#interactive_cookiejar_options').hide();
         $('#interactive_cookiejar').prop('checked', false);
         $('#crawler_scheduler').prop('disabled', false);

@@ -2541,6 +2541,8 @@ def can_launch_forum_crawler_account():
 
 INTERACTIVE_SESSION_TTL = 3600
 INTERACTIVE_SESSION_META_TTL = 3600
+INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT = 90
+INTERACTIVE_CAPTURE_MAX_TIMEOUT = 30 * 60
 INTERACTIVE_ACTIVE_STATES = {'starting', 'ready', 'finishing', 'processing'}
 INTERACTIVE_FINAL_STATES = {'completed', 'cancelled', 'expired', 'error', 'closed'}
 
@@ -2878,6 +2880,17 @@ class InteractiveCrawlerSession:
 
 
 def api_start_interactive_capture(data, user_org, user_id, user_role=None):
+    timeout = data.get('general_timeout_in_sec', INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT)
+    if timeout is None:
+        timeout = INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT
+    try:
+        if isinstance(timeout, bool) or not isinstance(timeout, (int, str)):
+            raise ValueError
+        timeout = int(timeout)
+        if not 1 <= timeout <= INTERACTIVE_CAPTURE_MAX_TIMEOUT:
+            raise ValueError
+    except (TypeError, ValueError):
+        return {'error': f'Interactive capture timeout must be a whole number between 1 and {INTERACTIVE_CAPTURE_MAX_TIMEOUT} seconds (30 minutes maximum)'}, 400
     task, resp = api_parse_task_dict_basic(data, user_id)
     if resp != 200:
         return task, resp
@@ -2925,13 +2938,13 @@ def api_start_interactive_capture(data, user_org, user_id, user_role=None):
             session.set('cookiejar_only', '1')
         capture_uuid = session.uuid
         lacus = get_lacus()
-        print('url', task['url'], 'depth', 0, 'proxy', task['proxy'], 'with_favicon', with_favicon,'force',True, 'uuid',capture_uuid, 'remote_headfull',True, 'browser',browser,'user_agent',user_agent, 'java_script_enabled',task['javascript'], 'general_timeout_in_sec',int(data.get('general_timeout_in_sec') or 90))
+        print('url', task['url'], 'depth', 0, 'proxy', task['proxy'], 'with_favicon', with_favicon,'force',True, 'uuid',capture_uuid, 'remote_headfull',True, 'browser',browser,'user_agent',user_agent, 'java_script_enabled',task['javascript'], 'general_timeout_in_sec',timeout)
         returned_uuid = lacus.enqueue(url=task['url'], depth=0, proxy=task['proxy'], with_favicon=with_favicon,
                                       force=True, uuid=capture_uuid, remote_headfull=True, browser=browser,
                                       user_agent=user_agent, java_script_enabled=task['javascript'],
                                       cookies=crawler_task.get_cookies(), storage=crawler_task.get_local_storage(),
                                       referer=referer,
-                                      general_timeout_in_sec=int(data.get('general_timeout_in_sec') or 90))
+                                      general_timeout_in_sec=timeout)
         crawler_task.update_cookiejar_last_used()
         capture_uuid = returned_uuid or capture_uuid
         session.set('capture_uuid', capture_uuid)
