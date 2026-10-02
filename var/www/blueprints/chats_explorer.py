@@ -535,6 +535,12 @@ def objects_user_account():
         return create_json_response(user_account[0], user_account[1])
     else:
         user_account = user_account[0]
+        user_account['nb_images'] = len(obj.get_images())
+        shared_image_accounts = []
+        for match in obj.get_accounts_with_shared_images():
+            account_meta = match['account'].get_meta(options={'username'}, flask_context=True)
+            account_meta['shared_images'] = match['images']
+            shared_image_accounts.append(account_meta)
         languages = Language.get_all_languages()
         translation_languages = Language.get_translation_languages()
         languages_stats = chats_viewer.api_get_languages_stats('user-account', instance_uuid, user_id)
@@ -552,7 +558,7 @@ def objects_user_account():
                                tempolocus_predictions=tempolocus_predictions, tempolocus_holiday_predictions=tempolocus_holiday_predictions,
                                tempolocus_requested=tempolocus_requested, tempolocus_holiday_profile=tempolocus_holiday_profile,
                                tempolocus_activity_signal=tempolocus_activity_signal, translation_languages=translation_languages, translation_target=target,
-                               account_context=account_context)
+                               account_context=account_context, shared_image_accounts=shared_image_accounts)
 
 
 @chats_explorer.route("/objects/user-account/posts", methods=['GET'])

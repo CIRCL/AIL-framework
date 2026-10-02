@@ -12,7 +12,17 @@
 	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
         <h4 class="text-secondary">{% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['id'] }}{% endif %} </h4>
         {% if meta['icon'] %}
-            <div><img src="{{ url_for('objects_image.image', filename=meta['icon'])}}" class="mb-2" alt="{{ meta['id'] }}" width="250" height="250"></div>
+            <div class="d-flex align-items-center flex-wrap mb-2">
+                <img src="{{ url_for('objects_image.image', filename=meta['icon'])}}" alt="{{ meta['id'] }}" width="250" height="250">
+                <div class="ml-3">
+                    {% if meta.get('nb_images', 0) > 1 %}
+                        <div class="mb-2"><span class="badge badge-info">{{ meta['nb_images'] }} images</span></div>
+                    {% endif %}
+                    <a class="btn btn-sm btn-outline-info" href="{{ url_for('correlation.show_correlation', type=meta['type'], subtype=meta['subtype'], id=meta['id'], level=0, filter='image') }}">
+                        <i class="far fa-images"></i> View images
+                    </a>
+                </div>
+            </div>
         {% endif %}
         <ul class="list-group mb-2">
             <li class="list-group-item py-0">

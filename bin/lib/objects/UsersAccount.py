@@ -97,6 +97,31 @@ class UserAccount(AbstractSubtypeObject):
     def set_icon(self, icon):
         self._set_field('icon', icon)
 
+    def get_images(self):
+        """Return distinct correlated image IDs, including the current icon."""
+        images = {image_id.split(':', 1)[1] for image_id in self.get_correlation('image').get('image', set())}
+        icon = self.get_icon()
+        if icon:
+            images.add(icon)
+        return images
+
+    def get_accounts_with_shared_images(self):
+        """Return other accounts correlated with the same images."""
+        shared_images = {}
+        for image_id in sorted(self.get_images()):
+            correlations = self.get_obj_correlations('image', '', image_id, filter_types=['user-account'])
+            for account_id in correlations.get('user-account', set()):
+                shared_images.setdefault(account_id, []).append(image_id)
+        accounts = []
+        for account_id in sorted(shared_images):
+            subtype, obj_id = account_id.split(':', 1)
+            if subtype == self.subtype and obj_id == self.id:
+                continue
+            account = UserAccount(obj_id, subtype)
+            if account.exists():
+                accounts.append({'account': account, 'images': shared_images[account_id]})
+        return accounts
+
     def get_info(self):
         return self._get_field('info')
 
