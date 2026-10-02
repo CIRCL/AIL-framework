@@ -26,13 +26,46 @@
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Add image description"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
                     <span class="dropdown-menu">
                         {% for model in missing_models %}
-                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model, message_anchor=image_message_anchor|default(none)) }}">Generate with {{ model }}</a>
+                            <a class="dropdown-item small" href="{{ url_for('objects_item.image_describe', gid=image_gid, model=model, message_anchor=image_message_anchor|default(none)) }}" onclick="return start_image_description(this, event)">Generate with {{ model }}</a>
                         {% endfor %}
+                    </span>
+                    <span class="d-none small text-muted ml-2 ail-image-description-status" role="status" aria-live="polite">
+                        <span class="spinner-border spinner-border-sm mr-1" aria-hidden="true"></span>
+                        Describing image…
                     </span>
                 </span>
             {% endif %}
         {% endif %}
     </span>
+    <script>
+        window.start_image_description = function(link, event) {
+            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+                return true;
+            }
+
+            const dropdown = link.closest('.dropdown');
+            if (dropdown.dataset.describing === 'true') {
+                return false;
+            }
+
+            const button = dropdown.querySelector('.dropdown-toggle');
+            const status = dropdown.querySelector('.ail-image-description-status');
+            $(button).dropdown('hide');
+            dropdown.dataset.describing = 'true';
+            dropdown.setAttribute('aria-busy', 'true');
+            button.disabled = true;
+            status.classList.remove('d-none');
+
+            window.addEventListener('pageshow', function() {
+                delete dropdown.dataset.describing;
+                dropdown.removeAttribute('aria-busy');
+                button.disabled = false;
+                status.classList.add('d-none');
+            }, { once: true });
+
+            return true;
+        };
+    </script>
     <script type="module">
         import { createMarkdownRenderer } from "{{ url_for('static', filename='js/markdown-renderer.es.js') }}";
 
