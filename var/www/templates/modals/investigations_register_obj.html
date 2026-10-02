@@ -1,6 +1,10 @@
 <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
 <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+{% if show_object_investigations is not defined or show_object_investigations %}
+    {% include 'investigations/block_object_investigations.html' %}
+{% endif %}
+
 <div id="investigations_register_obj_modal" class="modal fade" role="dialog">
   <div class="modal-dialog modal-lg">
 

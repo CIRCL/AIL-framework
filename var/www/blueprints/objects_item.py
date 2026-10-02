@@ -82,7 +82,7 @@ def showItem():  # # TODO: support post
         abort(404)
 
     item = Item(item_id)
-    meta = item.get_meta(options={'content', 'crawler', 'custom', 'duplicates', 'file_name', 'investigations', 'lines', 'size'})
+    meta = item.get_meta(options={'content', 'crawler', 'custom', 'duplicates', 'file_name', 'lines', 'size'})
     if meta.get('custom'):
         meta['custom'] = json.dumps(json.loads(meta['custom']), indent=2, sort_keys=True)
     if meta['file_name']:
@@ -109,17 +109,7 @@ def showItem():  # # TODO: support post
             meta['descriptions'] = img.get_descriptions()
             meta['image_gid'] = img.get_global_id()
 
-    if meta.get('investigations'):
-        invests = []
-        for investigation_uuid in meta['investigations']:
-            inv = Investigations.Investigation(investigation_uuid)
-            if not inv.check_level(user_org):
-                continue
-
-            invests.append(inv.get_meta(r_str=True))
-        meta['investigations'] = invests
-    else:
-        meta['investigations'] = []
+    meta['investigations'] = Investigations.get_obj_investigations_meta(item.id, 'item', user_org)
 
     extracted = module_extractor.extract(current_user.get_user_id(), 'item', '', item.id, content=meta['content'], match_uuid=match_uuid)
     extracted_matches = module_extractor.get_extracted_by_match(extracted)

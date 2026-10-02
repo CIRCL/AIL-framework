@@ -115,7 +115,8 @@ class Investigation(object):
         if level == 1:
             return True
         elif level == 2:
-            return self.get_org() == user_org
+            return bool(user_org) and self.get_org() == user_org
+        return False
 
     ## ORG ##
 
@@ -317,6 +318,15 @@ def is_object_investigated(obj_id, obj_type, subtype=''):
 
 def get_obj_investigations(obj_id, obj_type, subtype=''):
     return r_tracking.smembers(f'obj:investigations:{obj_type}:{subtype}:{obj_id}')
+
+def get_obj_investigations_meta(obj_id, obj_type, user_org, subtype=''):
+    """Return object investigations visible through ordinary organization access."""
+    investigations = []
+    for investigation_uuid in get_obj_investigations(obj_id, obj_type, subtype=subtype):
+        investigation = Investigation(investigation_uuid)
+        if investigation.exists() and investigation.check_level(user_org):
+            investigations.append(investigation.get_meta(r_str=True))
+    return sorted(investigations, key=lambda investigation: (investigation['info'] or '', investigation['uuid']))
 
 def delete_obj_investigations(obj_id, obj_type, subtype=''):
     unregistered = False

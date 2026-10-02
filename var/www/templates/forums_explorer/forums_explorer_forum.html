@@ -52,6 +52,10 @@
         </div>
       </div>
 
+      {% with obj_type='forum', obj_id=forum['id'], obj_subtype='' %}
+        {% include 'investigations/block_object_investigations.html' %}
+      {% endwith %}
+
       {% with subforums=meta['subforums'], title='Root subforums', orphan=false %}
         {% include 'forums_explorer/subforums_table.html' %}
       {% endwith %}

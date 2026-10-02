@@ -44,13 +44,14 @@
 .chat-object-stat-action:focus .chat-object-stat-hint {
     text-decoration: underline;
 }
-    .chat-object-card {
-    overflow: hidden;
+.chat-object-card {
+    overflow: visible;
 }
 
 .chat-object-header {
     background: linear-gradient(135deg, #f8fbff 0%, #ffffff 70%);
     padding: 1rem 1.25rem;
+    border-radius: .3rem .3rem 0 0;
 }
 
 .chat-object-avatar {
@@ -417,17 +418,22 @@
             </div>
         </div>
 
-        {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'] %}
+        {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'], show_object_investigations=false %}
             {% include 'modals/investigations_register_obj.html' %}
         {% endwith %}
 
         <div class="chat-object-actions d-flex flex-wrap align-items-center pt-3 mt-3 border-top">
+            <div class="mb-2">
+                {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'], investigations_button_class='btn-sm rounded-pill' %}
+                    {% include 'investigations/block_object_investigations.html' %}
+                {% endwith %}
+            </div>
             <button type="button"
                     class="btn btn-primary btn-sm rounded-pill mr-2 mb-2"
                     data-toggle="modal"
                     data-target="#investigations_register_obj_modal">
-                <i class="fas fa-microscope mr-1" aria-hidden="true"></i>
-                Investigations
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>
+                Add to investigation
             </button>
 
             {% if is_correlation %}

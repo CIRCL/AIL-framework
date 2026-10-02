@@ -1,0 +1,23 @@
+{% if object_investigations is not defined %}
+    {% set object_investigations = get_object_investigations(obj_type, obj_subtype, obj_id) %}
+{% endif %}
+{% if object_investigations %}
+    <link href="{{ url_for('static', filename='css/investigations.css') }}" rel="stylesheet">
+    <div class="dropdown object-investigations d-inline-block mr-2">
+        <button type="button" class="btn investigations-toggle dropdown-toggle {{ investigations_button_class|default('') }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <i class="fas fa-microscope mr-1" aria-hidden="true"></i> Linked investigations
+            <span class="badge investigations-count ml-1">{{ object_investigations|length }}</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right shadow">
+            <h6 class="dropdown-header border-bottom mb-1">This object is in {{ object_investigations|length }} investigation{% if object_investigations|length != 1 %}s{% endif %}</h6>
+            {% for investigation in object_investigations %}
+                <a class="dropdown-item py-2" href="{{ url_for('investigations_b.show_investigation', uuid=investigation['uuid']) }}">
+                    <span class="d-block font-weight-bold">{{ investigation['info'] or investigation['uuid'] }}</span>
+                    {% if investigation.get('description') %}
+                        <span class="investigation-description d-block small mt-1">{{ investigation['description'] }}</span>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

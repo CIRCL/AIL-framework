@@ -117,6 +117,10 @@
 {#                            </li>#}
                         </ul>
 
+                        {% with obj_type='chat-thread', obj_id=meta['id'], obj_subtype=meta['subtype'] %}
+                            {% include 'investigations/block_object_investigations.html' %}
+                        {% endwith %}
+
 {#                        {% with obj_type='chat', obj_id=meta['id'], obj_subtype=meta['subtype'] %}#}
 {#                            {% include 'modals/investigations_register_obj.html' %}#}
 {#                        {% endwith %}#}

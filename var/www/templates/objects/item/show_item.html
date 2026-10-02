@@ -42,8 +42,11 @@
     .item-hero{
         border: 0;
         border-radius: 0.75rem;
-        overflow: hidden;
+        overflow: visible;
         box-shadow: 0 0.5rem 1.4rem rgba(0, 0, 0, 0.08);
+    }
+    .item-hero > .card-header{
+        border-radius: 0.75rem 0.75rem 0 0;
     }
     .item-hero .card-header{
         background: linear-gradient(120deg, #343a40, #495057);
@@ -270,13 +273,18 @@
 			</button>
 		  </a>
         </div>
+        <div class="mt-1">
+          {% with object_investigations=meta['investigations'] %}
+            {% include 'investigations/block_object_investigations.html' %}
+          {% endwith %}
+        </div>
         <div>
-          {% with obj_type='item', obj_id=meta['id'], obj_subtype=''%}
+          {% with obj_type='item', obj_id=meta['id'], obj_subtype='', show_object_investigations=false %}
             {% include 'modals/investigations_register_obj.html' %}
           {% endwith %}
           <div class="mt-1">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
-              <i class="fas fa-microscope"></i> Investigations
+              <i class="fas fa-plus mr-1"></i> Add to investigation
             </button>
           </div>
         </div>
@@ -313,68 +321,6 @@
       <a target="_blank" href="{{ hive_url }}" class="list-group-item">{{ hive_url }}</a>
     </div>
   {% endif %}
-
-  {% if meta['investigations'] %}
-    <div id="accordionInvestigation" class="mb-2 mx-3">
-      <div class="card">
-        <div class="card-header py-1" id="headingInvestigation">
-          <div class="row">
-            <div class="col-11">
-              <div class="mt-2">
-                <i class="fas fa-microscope"></i> Investigations&nbsp;&nbsp;
-                <div class="badge badge-warning">{{meta['investigations']|length}}</div>
-              </div>
-            </div>
-            <div class="col-1">
-              <button class="btn btn-link btn-lg py-2 float-right rotate" data-toggle="collapse" data-target="#collapseInvestigation" aria-expanded="true" aria-controls="collapseInvestigation">
-                <i class="fas fa-chevron-circle-down"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div id="collapseInvestigation" class="collapse" aria-labelledby="headingInvestigation" data-parent="#accordionInvestigation">
-          <div class="card-body">
-
-              <table id="table_investigation" class="table table-striped border-primary">
-                        <thead class="bg-dark text-white">
-                        <tr>
-                            <th>Name</th>
-                            <th>Date</th>
-                            <th>last modified</th>
-                            <td>Info</td>
-                            <th>Nb Objects</th>
-                        </tr>
-                        </thead>
-                        <tbody style="font-size: 15px;">
-                        {% for dict_investigation in meta['investigations'] %}
-                            <tr class="border-color: blue;">
-                                <td>
-                                    <a href="{{ url_for('investigations_b.show_investigation') }}?uuid={{ dict_investigation['uuid'] }}">
-                                        {{ dict_investigation['info']}}
-                                        <div>
-                                            {% for tag in dict_investigation['tags'] %}
-                                                <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }} pull-left">{{ tag }}</span>
-                                            {% endfor %}
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>{{ dict_investigation['date']}}</td>
-                                <td>{{ dict_investigation['last_change']}}</td>
-                                <td>{{ dict_investigation['info']}}</td>
-                                <td>{{ dict_investigation['nb_objects']}}</td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-
-          </div>
-        </div>
-
-      </div>
-    </div>
-  {% endif %}
-
 
   {% if  l_64|length != 0 %}
   <div id="accordionDecoded" class="mb-3">

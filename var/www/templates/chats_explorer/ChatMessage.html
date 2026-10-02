@@ -106,30 +106,27 @@
                                         </button>
                                     {%  endfor %}
                                     {% include 'modals/add_tags.html' %}
-                                    <button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-                                        <i class="far fa-plus-square"></i>
-                                    </button>
                                 </span>
                             </h5>
                         </div>
 
-                        <div class="d-flex flex-row-reverse bd-highlight">
-                            <div>
-                                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&id={{ meta['id'] }}" target="_blank">
-                                    <button class="btn btn-lg btn-info"><i class="fas fa-project-diagram"></i> Correlations Graph</button>
-                                </a>
-                            </div>
-                            <div>
-                                {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=''%}
-                                    {% include 'modals/investigations_register_obj.html' %}
-                                {% endwith %}
-                                <div class="mr-2">
-                                    <button type="button" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
-                                        <i class="fas fa-microscope"></i> Investigations
-                                    </button>
-                                </div>
-                            </div>
-                          </div>
+                        {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype='', show_object_investigations=false %}
+                            {% include 'modals/investigations_register_obj.html' %}
+                        {% endwith %}
+                        <div class="d-flex flex-wrap justify-content-end align-items-center" style="gap: .5rem;">
+                            <button type="button" class="btn btn-lg btn-outline-secondary" data-toggle="modal" data-target="#add_tags_modal">
+                                <i class="fas fa-tags mr-1" aria-hidden="true"></i> Add tags
+                            </button>
+                            {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype='', investigations_button_class='btn-lg' %}
+                                {% include 'investigations/block_object_investigations.html' %}
+                            {% endwith %}
+                            <button type="button" class="btn btn-lg btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
+                                <i class="fas fa-plus mr-1"></i> Add to investigation
+                            </button>
+                            <a class="btn btn-lg btn-info" href="{{ url_for('correlation.show_correlation', type=meta['type'], id=meta['id']) }}" target="_blank">
+                                <i class="fas fa-project-diagram"></i> Correlations Graph
+                            </a>
+                        </div>
 
                     </div>
                 </div>

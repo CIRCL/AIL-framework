@@ -105,6 +105,9 @@
       {% endif %}
 
       {% set pagination = meta['pagination'] %}
+      {% with obj_type='forum-thread', obj_id=thread['id'], obj_subtype=thread['subtype'] %}
+        {% include 'investigations/block_object_investigations.html' %}
+      {% endwith %}
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="mb-0">Posts</h3>
         <span class="text-muted">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>

@@ -35,6 +35,10 @@ investigations_b = Blueprint('investigations_b', __name__, template_folder=os.pa
 bootstrap_label = Flask_config.bootstrap_label
 
 # ============ FUNCTIONS ============
+@investigations_b.app_template_global()
+def get_object_investigations(obj_type, obj_subtype, obj_id):
+    return Investigations.get_obj_investigations_meta(obj_id, obj_type, current_user.get_org(), subtype=obj_subtype or '')
+
 def create_json_response(data, status_code):
     if status_code == 403:
         abort(403)
