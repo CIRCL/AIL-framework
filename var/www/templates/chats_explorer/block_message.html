@@ -115,12 +115,23 @@
         {% endif %}
         {% if message['images'] %}
             {% for message_image in message['images'] %}
-                <img class="{% if force_full_image%}object_full_image{% else %}object_image{% endif %} mb-1" src="{{ url_for('objects_image.image', filename=message_image['id'])}}"  loading="lazy">
-                {% if message_image['ocr'] %}
-                    <span>
-                        <a class="btn btn-info" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>
-                    </span>
-                {% endif %}
+                <div class="d-flex align-items-start mb-1">
+                    <div style="min-width: 0">
+                        <img class="{% if force_full_image%}object_full_image{% else %}object_image{% endif %}" src="{{ url_for('objects_image.image', filename=message_image['id'])}}" style="max-width: 100%" loading="lazy">
+                    </div>
+                    {% if message_image['ocr'] or ollama_enabled %}
+                        <div class="d-flex flex-column align-items-start flex-shrink-0 ml-2">
+                            {% if message_image['ocr'] %}
+                                <a class="btn btn-info mb-2" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=message_image['id'])}}"><i class="fas fa-expand"></i> OCR</a>
+                            {% endif %}
+                            {% if ollama_enabled %}
+                                {% with ollama_description=message_image['description'], ollama_descriptions=message_image.get('descriptions', {}), image_gid='image::'+message_image['id'], image_message_anchor=message['_id'] %}
+                                    {% include 'block_img_ollama_small.html' %}
+                                {% endwith %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
                 {% if message['barcodes'] %}
                     {% for barcode in message['barcodes'] %}
                         <span>
@@ -150,11 +161,6 @@
                         </span>
 
                     {% endfor %}
-                {% endif %}
-                {% if ollama_enabled %}
-                    {% with ollama_description=message_image['description'], ollama_descriptions=message_image.get('descriptions', {}), image_gid='image::'+message_image['id'], image_message_anchor=message['_id'] %}
-                        {% include 'block_img_ollama_small.html' %}
-                    {% endwith %}
                 {% endif %}
             {%  endfor %}
         {% endif %}
