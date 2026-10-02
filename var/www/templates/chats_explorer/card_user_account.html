@@ -1,122 +1,89 @@
-<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet" type="text/css">
 <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
 {% with modal_add_tags=ail_tags %}
-	{% include 'modals/add_tags.html' %}
+    {% include 'modals/add_tags.html' %}
+{% endwith %}
+{% include 'modals/edit_tag.html' %}
+{% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'], show_object_investigations=false %}
+    {% include 'modals/investigations_register_obj.html' %}
 {% endwith %}
 
-{% include 'modals/edit_tag.html' %}
-
-
-<div class="card my-1">
-	<div class="card-header" style="background-color:#d9edf7;font-size: 15px">
-        <h4 class="text-secondary">{% if meta['username'] %}{{ meta["username"]["id"] }} {% else %} {{ meta['id'] }}{% endif %} </h4>
-        {% if meta['icon'] %}
-            <div class="d-flex align-items-center flex-wrap mb-2">
-                <img src="{{ url_for('objects_image.image', filename=meta['icon'])}}" alt="{{ meta['id'] }}" width="250" height="250">
-                <div class="ml-3">
-                    {% if meta.get('nb_images', 0) > 1 %}
-                        <div class="mb-2"><span class="badge badge-info">{{ meta['nb_images'] }} images</span></div>
-                    {% endif %}
-                    <a class="btn btn-sm btn-outline-info" href="{{ url_for('correlation.show_correlation', type=meta['type'], subtype=meta['subtype'], id=meta['id'], level=0, filter='image') }}">
-                        <i class="far fa-images"></i> View images
+<section class="card account-summary my-3" aria-label="Account overview">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap align-items-start account-summary-heading">
+            <div class="account-avatar-column mr-4 mb-3">
+                {% if meta.get('icon') %}
+                    <img src="{{ url_for('objects_image.image', filename=meta['icon']) }}" class="account-avatar" alt="Account avatar" width="240" height="240">
+                {% else %}
+                    <div class="account-avatar account-avatar-placeholder"><i class="far fa-user-circle" aria-hidden="true"></i></div>
+                {% endif %}
+                {% if meta.get('nb_images', 0) > 1 %}
+                    <div class="mt-2 text-center"><span class="badge badge-light">{{ meta['nb_images'] }} images</span></div>
+                {% endif %}
+                {% if meta.get('icon') or meta.get('nb_images', 0) %}
+                    <a class="btn btn-sm btn-outline-info mt-2 w-100" href="{{ url_for('correlation.show_correlation', type=meta['type'], subtype=meta['subtype'], id=meta['id'], level=0, filter='image') }}">
+                        <i class="far fa-images mr-1" aria-hidden="true"></i> View images
                     </a>
+                {% endif %}
+            </div>
+            <div class="account-identity flex-grow-1">
+                <div class="account-eyebrow mb-2">User account{% if account_context == 'forum' %} <span class="badge badge-light ml-2">Forum</span>{% elif account_context == 'chat' %} <span class="badge badge-light ml-2">Chat</span>{% endif %}</div>
+                <h2 class="mb-2">{% if meta.get('username') %}{{ meta['username']['id'] }}{% else %}{{ meta['id'] }}{% endif %}</h2>
+                <div class="small text-muted mb-3">ID <span class="account-id ml-1">{{ meta['id'] }}</span></div>
+                <div class="account-actions d-flex flex-wrap">
+                    {% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'], investigations_button_class='btn-sm' %}
+                        {% include 'investigations/block_object_investigations.html' %}
+                    {% endwith %}
+                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#investigations_register_obj_modal"><i class="fas fa-plus mr-1" aria-hidden="true"></i> Add to investigation</button>
+                    {% if is_correlation %}
+                        <a class="btn btn-outline-info btn-sm" href="{{ url_for('chats_explorer.objects_user_account', subtype=meta['subtype'], id=meta['id']) }}"><i class="fas fa-user-circle mr-1" aria-hidden="true"></i> Show account</a>
+                    {% else %}
+                        <a class="btn btn-outline-info btn-sm" href="{{ url_for('correlation.show_correlation', type=meta['type'], subtype=meta['subtype'], id=meta['id']) }}"><i class="fas fa-project-diagram mr-1" aria-hidden="true"></i> Correlations</a>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('correlation.show_relationship', type=meta['type'], subtype=meta['subtype'], id=meta['id']) }}"><i class="fas fa-link mr-1" aria-hidden="true"></i> Relationships</a>
+                    {% endif %}
                 </div>
+                <dl class="account-facts mt-4 mb-0">
+                    <div><dt>First seen</dt><dd>{% if meta.get('first_seen') %}{{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}{% else %}—{% endif %}</dd></div>
+                    <div><dt>Last seen</dt><dd>{% if meta.get('last_seen') %}{{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}{% else %}—{% endif %}</dd></div>
+                    <div><dt>{% if account_context == 'forum' %}Posts{% else %}Chats{% endif %}</dt><dd>{% if account_context == 'forum' %}{{ meta.get('nb_posts', 0) }}{% else %}{{ meta.get('chats', []) | length }}{% endif %}</dd></div>
+                </dl>
+            </div>
+            {% if meta.get('info') %}
+                <div class="account-about">
+                    <div class="account-eyebrow mb-2">About</div>
+                    <pre class="account-description mb-0">{{ meta['info'] }}</pre>
+                    {% if meta.get('translation_info') %}
+                        <pre class="account-description text-muted border-top mt-3 pt-3 mb-0">{{ meta['translation_info'] }}</pre>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+        {% if show_username_timeline %}
+            <div class="account-detail account-username-history mt-2">
+                <div class="account-username-labels">
+                    <div class="account-eyebrow mb-2">Username history</div>
+                    {% for username in meta.get('usernames', []) %}
+                        <span class="badge badge-light account-username mr-1 mb-1">{{ username['id'] }}</span>
+                    {% endfor %}
+                </div>
+                <div id="timeline_user_usernames" aria-label="Username timeline"><span class="small text-muted">Loading username history…</span></div>
+            </div>
+        {% elif meta.get('usernames') %}
+            <div class="account-detail mt-3">
+                <div class="account-eyebrow mb-2">Usernames</div>
+                {% for username in meta['usernames'] %}<span class="badge badge-light account-username mr-1 mb-1">{{ username['id'] }}</span>{% endfor %}
             </div>
         {% endif %}
-        <ul class="list-group mb-2">
-            <li class="list-group-item py-0">
-                <table class="table">
-                    <thead class="">
-                    <tr>
-                        <th>usernames</th>
-                        <th>ID</th>
-                        <th>First Seen</th>
-                        <th>Last Seen</th>
-                        <th>{% if account_context == 'forum' %}NB Posts{% else %}NB Chats{% endif %}</th>
-                    </tr>
-                    </thead>
-                    <tbody style="font-size: 15px;">
-                    <tr>
-                        <td>
-                            {% if 'usernames' in meta %}
-                                <ul>
-                                    {% for username in meta['usernames'] %}
-                                        <li>{{ username['id'] }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% else %}
-                                {{ meta['username']['id'] }}
-                            {% endif %}
-                        </td>
-                        <td>{{ meta['id']  }}</td>
-                        <td>
-                            {% if meta['first_seen'] %}
-                                {{ meta['first_seen'][0:4] }}-{{ meta['first_seen'][4:6] }}-{{ meta['first_seen'][6:8] }}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if meta['last_seen'] %}
-                                {{ meta['last_seen'][0:4] }}-{{ meta['last_seen'][4:6] }}-{{ meta['last_seen'][6:8] }}
-                            {% endif %}
-                        </td>
-                        <td>{% if account_context == 'forum' %}{{ meta.get('nb_posts', 0) }}{% else %}{{ meta.get('chats', []) | length }}{% endif %}</td>
-                    </tr>
-                    </tbody>
-                </table>
-                {% if meta['info'] %}
-                    <li class="list-group-item py-1">
-                        <pre class="my-0">{{ meta['info'] }}</pre>
-                        {% if meta['translation_info'] %}
-                            <hr>
-                            <pre class="my-0 text-secondary">{{ meta['translation_info'] }}</pre>
-                        {% endif %}
-                    </li>
-                {% endif %}
-            </li>
-
-			<li class="list-group-item py-0">
-				<div class="my-2">
-					Tags:
-					{% for tag in meta['tags'] %}
-                        <button class="btn btn-{{ bootstrap_label[loop.index0 % 5] }}"
-                                data-toggle="modal" data-target="#edit_tags_modal"
-						        data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="{{ meta['subtype'] }}" data-objid="{{ meta["id"] }}">
-                                {{ tag }}
-						</button>
-					{%  endfor %}
-					<button type="button" class="btn btn-light" data-toggle="modal" data-target="#add_tags_modal">
-                        <i class="far fa-plus-square"></i>
-                    </button>
-				</div>
-			</li>
-		</ul>
-
-		{% with obj_type=meta['type'], obj_id=meta['id'], obj_subtype=meta['subtype'] %}
-			{% include 'modals/investigations_register_obj.html' %}
-		{% endwith %}
-		<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investigations_register_obj_modal">
-			<i class="fas fa-microscope"></i> Investigations
-		</button>
-
-        <span class="mb-2 float-right">
-            {% if is_correlation %}
-                <a href="{{ url_for('chats_explorer.objects_user_account')}}?subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-info"><i class="fas fa-user-circle"></i> Show Object</button>
-                </a>
-            {% else %}
-                <a href="{{ url_for('correlation.show_correlation')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-info"><i class="far fa-eye"></i> Correlations &nbsp;
-{#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
-                    </button>
-                </a>
-                <a href="{{ url_for('correlation.show_relationship')}}?type={{ meta['type'] }}&subtype={{ meta['subtype'] }}&id={{ meta['id'] }}">
-                    <button class="btn btn-secondary"><i class="far fa-eye"></i> Relationships &nbsp;
-{#                        <span class="badge badge-warning">{{ meta['nb_correlations'] }}</span>#}
-                    </button>
-                </a>
-            {% endif %}
-        </span>
-
-	</div>
-</div>
+        <div class="account-detail mt-3">
+            <div class="d-flex align-items-center flex-wrap account-tags">
+                <span class="account-eyebrow mr-3">Tags</span>
+                {% for tag in meta['tags'] %}
+                    <button class="btn btn-sm btn-{{ bootstrap_label[loop.index0 % 5] }}" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="{{ meta['type'] }}" data-objsubtype="{{ meta['subtype'] }}" data-objid="{{ meta['id'] }}">{{ tag }}</button>
+                {% endfor %}
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target="#add_tags_modal"><i class="fas fa-plus mr-1" aria-hidden="true"></i> Add tag</button>
+            </div>
+        </div>
+    </div>
+</section>

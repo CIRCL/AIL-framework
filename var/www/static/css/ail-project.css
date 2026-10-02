@@ -47,3 +47,125 @@
 #sticky_btn_up:hover {
   background-color: #555;
 }
+
+/* Shared user account overview */
+.account-summary {
+    border: 1px solid #e2e8ef;
+    border-radius: .75rem;
+    box-shadow: 0 3px 12px rgba(28, 47, 70, .04);
+    border-top: 4px solid #248595;
+    background: #fff;
+}
+:where(.account-summary) .account-avatar-column {
+    width: 240px;
+    flex-shrink: 0;
+}
+:where(.account-summary) .account-avatar {
+    width: 240px;
+    height: 240px;
+    object-fit: cover;
+    border: 1px solid #e2e8ef;
+    border-radius: .75rem;
+}
+:where(.account-summary) .account-avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #638391;
+    background: #edf4f6;
+    font-size: 6rem;
+}
+:where(.account-summary) .account-identity {
+    min-width: 0;
+    flex-basis: 260px;
+}
+:where(.account-summary) .account-identity h2,
+:where(.account-summary, .account-page) .account-id,
+:where(.account-summary) .account-username {
+    overflow-wrap: anywhere;
+}
+:where(.account-summary) .account-identity h2 {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: #25374b;
+}
+:where(.account-summary, .account-page) .account-eyebrow {
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #637487;
+}
+:where(.account-summary, .account-page) .account-id {
+    font-family: monospace;
+    color: #40546a;
+}
+:where(.account-summary) .account-actions .btn,
+:where(.account-summary) .account-tags .btn {
+    margin: 0 .5rem .5rem 0;
+}
+:where(.account-summary) .account-facts {
+    display: flex;
+    flex-wrap: wrap;
+}
+:where(.account-summary) .account-facts > div {
+    padding-right: 2rem;
+    margin: 0 2rem .5rem 0;
+    border-right: 1px solid #e2e8ef;
+}
+:where(.account-summary) .account-facts > div:last-child {
+    border-right: 0;
+}
+:where(.account-summary) .account-facts dt {
+    font-size: .8rem;
+    font-weight: 400;
+    color: #637487;
+}
+:where(.account-summary) .account-facts dd {
+    margin: .25rem 0 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #25374b;
+}
+:where(.account-summary) .account-detail {
+    padding-top: 1rem;
+    border-top: 1px solid #edf0f4;
+}
+:where(.account-summary) .account-username {
+    padding: .5rem .75rem;
+    font-weight: 400;
+    white-space: normal;
+}
+:where(.account-summary) .account-about {
+    flex: 1 1 360px;
+    min-width: 0;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8ef;
+    border-radius: .5rem;
+}
+:where(.account-summary) .account-description {
+    font-family: inherit;
+    font-size: .9rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: #40546a;
+}
+@media (max-width: 575.98px) {
+    :where(.account-summary) > .card-body {
+        padding: 1rem !important;
+    }
+    :where(.account-summary) .account-summary-heading {
+        flex-direction: column;
+    }
+    :where(.account-summary) .account-identity,
+    :where(.account-summary) .account-about {
+        flex-basis: auto;
+        width: 100%;
+    }
+    :where(.account-summary) .account-facts > div {
+        padding-right: 1rem;
+        margin-right: 1rem;
+    }
+}

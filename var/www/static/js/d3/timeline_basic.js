@@ -4,13 +4,12 @@
 // container_id = #container_id "data": [{"obj": username, "start": 1111111100000, "end": 2222222200000}, ...]
 // tooltip = d3 tooltip object
 
-const create_timeline_basic = (container_id, data) => {
+const create_timeline_basic = (container_id, data, width = 800) => {
 
     if(!Object.keys(data).length){
         return;
     }
 
-    const width = 800;
     const height = 100;
     const margin = { top: 10, right: 10, bottom: 40, left: 40 };
 
@@ -86,7 +85,7 @@ const create_timeline_basic = (container_id, data) => {
 
     // x-axis
     const xAxis = d3.axisBottom(xScale)
-        .ticks(d3.timeMonth.every(1))
+        .ticks(width < 800 ? Math.max(2, Math.floor(width / 100)) : d3.timeMonth.every(1))
         .tickFormat(dateFormat);
 
     svg.append("g")

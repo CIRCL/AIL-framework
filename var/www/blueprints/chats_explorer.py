@@ -537,8 +537,18 @@ def objects_user_account():
         user_account = user_account[0]
         user_account['nb_images'] = len(obj.get_images())
         shared_image_accounts = []
+        account_instances = {}
         for match in obj.get_accounts_with_shared_images():
-            account_meta = match['account'].get_meta(options={'username'}, flask_context=True)
+            account_meta = match['account'].get_meta(options={'username', 'icon'}, flask_context=True)
+            subtype = account_meta['subtype']
+            if subtype not in account_instances:
+                instance = chats_viewer.ChatServiceInstance(subtype).get_meta()
+                if not instance['protocol']:
+                    forum = ail_objects.get_object('forum', '', subtype)
+                    if forum.exists():
+                        instance = {'protocol': 'Forum', 'network': None, 'address': forum.get_url()}
+                account_instances[subtype] = instance
+            account_meta['instance'] = account_instances[subtype]
             account_meta['shared_images'] = match['images']
             shared_image_accounts.append(account_meta)
         languages = Language.get_all_languages()
@@ -547,9 +557,10 @@ def objects_user_account():
         tempolocus_requested, tempolocus_holiday_profile, tempolocus_activity_signal = get_tempolocus_request_options()
         tempolocus_predictions = {}
         tempolocus_holiday_predictions = {}
-        if tempolocus_requested and not is_forum_account:
-            tempolocus_predictions = chats_viewer.get_user_account_tempolocus_predictions(user_id, instance_uuid)
-            tempolocus_holiday_predictions = chats_viewer.get_user_account_tempolocus_holiday_predictions(user_id, instance_uuid, holiday_profile=tempolocus_holiday_profile, activity_signal=tempolocus_activity_signal)
+        if tempolocus_requested:
+            activity_viewer = forums_viewer if is_forum_account else chats_viewer
+            tempolocus_predictions = activity_viewer.get_user_account_tempolocus_predictions(user_id, instance_uuid)
+            tempolocus_holiday_predictions = activity_viewer.get_user_account_tempolocus_holiday_predictions(user_id, instance_uuid, holiday_profile=tempolocus_holiday_profile, activity_signal=tempolocus_activity_signal)
         lang_endpoint = url_for('chats_explorer.objects_user_account_lang', subtype=instance_uuid, id=user_id)
         account_context = 'forum' if is_forum_account else 'chat'
         return render_template('user_account.html', meta=user_account, bootstrap_label=bootstrap_label,

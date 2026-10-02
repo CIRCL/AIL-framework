@@ -1,3 +1,4 @@
+{% set activity_label = 'forum posts' if account_context == 'forum' else 'messages' %}
 <div class="card my-3">
   <div class="card-header bg-dark text-white">
     <i class="fas fa-clock"></i> TempoLocus activity inference
@@ -26,11 +27,11 @@
     </form>
 
     {% if not tempolocus_requested %}
-      <p class="text-muted mb-0">TempoLocus analyzes AIL message activity to estimate likely timezones, countries derived from timezone offsets, and holiday-region patterns for this chat or user account.</p>
+      <p class="text-muted mb-0">TempoLocus analyzes activity from AIL {{ activity_label }} to estimate likely timezones, countries derived from timezone offsets, and holiday-region patterns for this object.</p>
     {% else %}
       {% if tempolocus_predictions.get('signals') %}
         <p class="text-muted mb-3">
-          Based on {{ tempolocus_predictions['signals'].get('total_activity', 0) }} messages in AIL weekly hour statistics. Weekly mode infers timezone patterns; holidays are only checked in the holiday-region section below.
+          Based on {{ tempolocus_predictions['signals'].get('total_activity', 0) }} {{ activity_label }} in AIL weekly hour statistics. Weekly mode infers timezone patterns; holidays are only checked in the holiday-region section below.
           Confidence: {{ "%.2f"|format((tempolocus_predictions.get('confidence') or 0) * 100) }}%.
         </p>
       {% endif %}

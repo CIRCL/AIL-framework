@@ -33,6 +33,7 @@ from lib.objects import UsersAccount
 from lib.objects import Images
 from lib import crawlers
 from lib import Language
+from lib import tempolocus_engine
 from packages import Date
 from lib.crawlers import Cookiejar
 
@@ -526,6 +527,7 @@ def get_user_account_threads_meta(user_account):
         thread_subtype, thread_id = thread_str.split(':', 1)
         thread = ForumThreads.ForumThread(thread_id, thread_subtype)
         thread_meta = _thread_meta(thread) if thread.exists() else {'type': 'forum-thread', 'subtype': thread_subtype, 'id': thread_id}
+        thread_meta['svg_icon'] = thread.get_svg_icon()
         user_thread_posts = user_account.get_correlation_iter_obj(thread, 'post')
         thread_meta['nb_posts'] = len(user_thread_posts)
         first_post_timestamp = None
@@ -585,12 +587,28 @@ def get_user_account_nb_year_posts(user_account, year):
     return nb_max, nb_year
 
 
+def get_user_account_tempolocus_predictions(user_id, forum_id, top=5):
+    user_account = UsersAccount.UserAccount(user_id, forum_id)
+    weekly_activity = get_user_account_nb_all_week_posts(user_account)
+    return tempolocus_engine.get_predictions_from_weekly(weekly_activity, top=top)
+
+
+def get_user_account_tempolocus_holiday_predictions(user_id, forum_id, top=5, holiday_profile='standard', activity_signal='lack'):
+    user_account = UsersAccount.UserAccount(user_id, forum_id)
+    yearly_activity = {}
+    for year in user_account.get_years():
+        _, daily_activity = get_user_account_nb_year_posts(user_account, year)
+        yearly_activity[str(year)] = daily_activity
+    return tempolocus_engine.get_holiday_predictions_from_yearly_activity(yearly_activity, top=top, holiday_profile=holiday_profile, activity_signal=activity_signal)
+
+
 def api_get_user_account(user_id, forum_id, translation_target=None):
     user_account = UsersAccount.UserAccount(user_id, forum_id)
     if not user_account.exists():
         return {"status": "error", "reason": "Unknown user-account"}, 404
     meta = user_account.get_meta({'forums', 'icon', 'info', 'translation', 'username', 'usernames', 'username_meta', 'years', 'nb_posts'}, translation_target=translation_target)
     forum = Forums.Forum(forum_id)
+    meta['forum_svg_icon'] = forum.get_svg_icon()
     meta['forum'] = forum.get_meta(_FORUM_OPTIONS, flask_context=True) if forum.exists() else None
     meta['threads'] = get_user_account_threads_meta(user_account)
     return meta, 200
