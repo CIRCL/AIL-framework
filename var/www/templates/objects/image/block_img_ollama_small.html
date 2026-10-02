@@ -38,6 +38,11 @@
 
         window.show_image_description_tooltip = function(container, description, model) {
             const trigger = $(container);
+            const popoverId = trigger.attr('aria-describedby');
+            const popover = popoverId && document.getElementById(popoverId);
+            if (popover && popover.classList.contains('show')) {
+                return;
+            }
             if (trigger.data('bs.popover')) {
                 trigger.popover('show');
                 return;
@@ -49,7 +54,9 @@
             if (model) {
                 content.append($('<div>').addClass('small text-muted mb-2').text(model));
             }
-            content.append($('<div>').addClass('ail-image-description-markdown').text(description));
+            const markdownElement = $('<div>').addClass('ail-image-description-markdown').text(description);
+            createMarkdownRenderer(markdownElement[0]);
+            content.append(markdownElement);
 
             trigger.popover({
                 content: content[0],
@@ -59,13 +66,6 @@
                 template: '<div class="popover" role="tooltip" style="max-width: min(90vw, 48rem);"><div class="arrow"></div><div class="popover-body" style="max-height: 70vh; overflow-y: auto; overflow-wrap: anywhere;"></div></div>',
             });
             trigger.popover('show');
-
-            const popoverId = trigger.attr('aria-describedby');
-            const popover = popoverId && document.getElementById(popoverId);
-            const markdownElement = popover && popover.querySelector('.ail-image-description-markdown');
-            if (markdownElement) {
-                createMarkdownRenderer(markdownElement);
-            }
         };
     </script>
 {% endif %}
