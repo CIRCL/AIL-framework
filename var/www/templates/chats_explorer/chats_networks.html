@@ -1,78 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-  <title>Chats Protocols - AIL</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <title>Chat Networks - AIL</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
-  <!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 
-  <!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 
+    <link href="{{ url_for('static', filename='css/chats-networks.css') }}" rel="stylesheet">
 </head>
 <body>
 
-	{% include 'nav_bar.html' %}
+    {% include 'nav_bar.html' %}
 
-	<div class="container-fluid">
-		<div class="row">
+    <div class="container-fluid">
+        <div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
+            {% include 'sidebars/sidebar_objects.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+            <div class="col-12 col-lg-10 networks-page" id="core_content">
+                <div class="networks-content">
+                    <a class="networks-back" href="{{ url_for('chats_explorer.chats_explorer_protocols') }}">
+                        <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i> All protocols
+                    </a>
+                    <header class="networks-header">
+                        <div class="networks-header-icon" aria-hidden="true"><i class="fas fa-comments"></i></div>
+                        <div class="networks-heading">
+                            <div class="networks-eyebrow">Chat explorer</div>
+                            <h1>{{ protocol }}</h1>
+                            <p>Choose a network to explore its chats.</p>
+                        </div>
+                    </header>
 
-                <h1 class="m-4">{{ protocol }} Networks:</h1>
+                    {% if networks %}
+                        <div class="networks-toolbar">
+                            <h2 class="networks-section-title">Networks <span class="networks-count">{{ networks|length }}</span></h2>
+                            <div class="network-search">
+                                <label for="network-search" class="sr-only">Find a network</label>
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                                <input type="search" class="form-control" id="network-search" placeholder="Find a network…" aria-controls="network-list" autocomplete="off">
+                            </div>
+                        </div>
 
-                {% for network in networks %}
-                    <ul class="list-group flex-md-column flex-row justify-content-between w-100 mb-4">
-                        <li class="list-group-item active">
-                            <h3>{{ network }}:</h3>
-                        </li>
-
-                        {% for instance_uuid in networks[network] %}
-                            <li class="list-group-item">
-                                <a class="nav-link" href="{{url_for('chats_explorer.chats_explorer_instance')}}?subtype={{ instance_uuid }}">
-                                    <span>{{ instance_uuid }}</span>
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endfor %}
-
+                        <div class="row" id="network-list">
+                            {% for network, instances in networks|dictsort %}
+                                <div class="col-12 col-md-6 col-xl-4 mb-4 network-entry" data-network="{{ network }}">
+                                    <div class="card network-card h-100">
+                                        {% if instances|length == 1 %}
+                                            <a class="card-body network-link d-flex flex-column" href="{{ url_for('chats_explorer.chats_explorer_instance', subtype=instances[0]) }}">
+                                                <h3 class="network-name">{{ network }}</h3>
+                                                <span class="network-caption">Explore chats</span>
+                                                <span class="network-open mt-auto">Open network <span class="network-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span></span>
+                                            </a>
+                                        {% else %}
+                                            <div class="card-body">
+                                                <h3 class="network-name">{{ network }}</h3>
+                                                <p class="network-caption mb-0">{{ instances|length }} instances{% if instances %} &middot; Choose one to open{% endif %}</p>
+                                            </div>
+                                            <div class="list-group list-group-flush">
+                                                {% for instance_uuid in instances|sort %}
+                                                    <a class="list-group-item network-link" href="{{ url_for('chats_explorer.chats_explorer_instance', subtype=instance_uuid) }}" aria-label="Open {{ network }} instance {{ loop.index }}">
+                                                        <span class="network-open">Open instance {{ loop.index }} <span class="network-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span></span>
+                                                        <small class="network-instance-id text-muted mt-1">{{ instance_uuid }}</small>
+                                                    </a>
+                                                {% else %}
+                                                    <div class="list-group-item text-muted">No instances available.</div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <p id="network-no-results" class="networks-empty d-none" role="status">No networks match your search.</p>
+                    {% else %}
+                        <div class="networks-empty">
+                            <i class="fas fa-comments mb-3" aria-hidden="true"></i>
+                            <h2 class="h5">No networks available</h2>
+                            <p class="text-muted mb-0">No chat networks have been imported for this protocol yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-
         </div>
     </div>
 
 <script>
-    $(document).ready(function(){
+    $(document).ready(function() {
         $("#page-Chats-Explorer").addClass("active");
         $("#nav_explorer_chat").addClass("active");
-  });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
+        $("#network-search").on("input", function() {
+            var query = $(this).val().trim().toLowerCase();
+            var visibleNetworks = 0;
+
+            $(".network-entry").each(function() {
+                var matches = $(this).attr("data-network").toLowerCase().includes(query);
+                $(this).toggleClass("d-none", !matches);
+                if (matches) {
+                    visibleNetworks += 1;
+                }
+            });
+
+            $("#network-no-results").toggleClass("d-none", visibleNetworks > 0);
+        });
+    });
+
+    function toggle_sidebar() {
+        if ($('#nav_menu').is(':visible')) {
+            $('#nav_menu').hide();
+            $('#side_menu').removeClass('border-right');
+            $('#side_menu').removeClass('col-lg-2');
+            $('#core_content').removeClass('col-lg-10');
+        } else {
+            $('#nav_menu').show();
+            $('#side_menu').addClass('border-right');
+            $('#side_menu').addClass('col-lg-2');
+            $('#core_content').addClass('col-lg-10');
+        }
+    }
 </script>
 
 </body>
-
 </html>
