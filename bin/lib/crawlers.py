@@ -1062,11 +1062,6 @@ class Cookiejar:
             with gzip.open(self.get_local_storage_file()) as f:
                 try:
                     storage = json.loads(f.read())
-                    # TEMP: Remove origin fields before returning local storage to crawlers.
-                    # TODO: Remove this workaround once Playwright supports origin fields.
-                    if storage:
-                        for origin in storage.get('origins', []):
-                            origin.pop('origin', None)
                     if r_json:
                         return json.dumps(storage, indent=2)
                     else:
