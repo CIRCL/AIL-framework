@@ -15,7 +15,237 @@
     <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 
-    <link href="{{ url_for('static', filename='css/chats-networks.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+    <style>
+        .networks-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e2e8ef;
+        }
+
+        .networks-header-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+            border: 1px solid #d8eaed;
+            border-radius: 20px;
+            background: #e8f3f5;
+            color: #248595;
+            font-size: 1.8rem;
+        }
+
+        .networks-heading {
+            min-width: 0;
+        }
+
+        .networks-eyebrow {
+            margin-bottom: 4px;
+            color: #637487;
+            font-size: .7rem;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+
+        .networks-heading h1 {
+            margin: 0 0 6px;
+            font-size: 2rem;
+            font-weight: 650;
+            letter-spacing: -.025em;
+            overflow-wrap: anywhere;
+        }
+
+        .networks-heading p {
+            margin: 0;
+            color: #637487;
+            font-size: .95rem;
+        }
+
+        .networks-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 28px 0 24px;
+        }
+
+        .networks-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .network-search {
+            position: relative;
+            width: 320px;
+            max-width: 100%;
+        }
+
+        .network-search > i {
+            position: absolute;
+            top: 50%;
+            left: 14px;
+            transform: translateY(-50%);
+            color: #7b8b9d;
+            pointer-events: none;
+        }
+
+        .network-search input {
+            height: 42px;
+            padding-left: 40px;
+            border-color: #dde4ed;
+            border-radius: 8px;
+            font-size: .875rem;
+        }
+
+        .network-search input:focus {
+            border-color: #248595;
+            box-shadow: 0 0 0 3px rgba(36, 133, 149, .12);
+        }
+
+        .network-card {
+            border: 1px solid #e2e8ef;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(28, 47, 70, .035);
+            overflow: hidden;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .network-card:hover,
+        .network-card:focus-within {
+            border-color: #a6ccd3;
+            box-shadow: 0 6px 20px rgba(28, 47, 70, .08);
+        }
+
+        .network-card .card-body {
+            padding: 24px;
+        }
+
+        .network-card > a.card-body {
+            min-height: 168px;
+        }
+
+        .network-card .network-link {
+            color: #25374b;
+            text-decoration: none;
+        }
+
+        .network-card .network-link:focus {
+            outline: 2px solid #248595;
+            outline-offset: -3px;
+        }
+
+        .network-name {
+            margin: 0 0 6px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -.02em;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+
+        .network-caption {
+            color: #637487;
+            font-size: .8rem;
+        }
+
+        .network-open {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            color: #176b79;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        .network-card > a.card-body .network-open {
+            padding-top: 22px;
+        }
+
+        .network-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #edf4f6;
+            font-size: .7rem;
+            transition: background-color .15s ease, color .15s ease;
+        }
+
+        .network-link:hover .network-arrow,
+        .network-link:focus .network-arrow {
+            background: #248595;
+            color: #fff;
+        }
+
+        .network-card .list-group-item {
+            padding: 14px 24px;
+            border-color: #edf1f5;
+            background: #fbfcfd;
+        }
+
+        .network-card .list-group-item.network-link:hover {
+            background: #edf4f6;
+        }
+
+        .network-instance-id {
+            display: block;
+            font-family: monospace;
+            font-size: .7rem;
+            overflow-wrap: anywhere;
+        }
+
+        .networks-empty {
+            margin-top: 28px;
+            padding: 40px 24px;
+            border: 1px dashed #ccd7e2;
+            border-radius: 12px;
+            background: #fff;
+            color: #637487;
+            text-align: center;
+        }
+
+        @media (max-width: 575.98px) {
+            .networks-header {
+                gap: 14px;
+            }
+
+            .networks-header-icon {
+                width: 54px;
+                height: 54px;
+                border-radius: 16px;
+                font-size: 1.4rem;
+            }
+
+            .networks-heading h1 {
+                font-size: 1.6rem;
+            }
+
+            .network-search {
+                width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .network-card,
+            .network-arrow {
+                transition: none;
+            }
+        }
+    </style>
 </head>
 <body>
 
