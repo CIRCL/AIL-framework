@@ -3285,7 +3285,13 @@ class CrawlerTask:
         cookiejar = self.get_cookiejar()
         if cookiejar:
             cookiejar = Cookiejar(cookiejar)
-            return cookiejar.get_local_storage()
+            storage = cookiejar.get_local_storage()
+            # TEMP: Remove origin fields before sending local storage to Lacus.
+            # TODO: Remove this workaround once playwrigth supports origin fields.
+            if storage:
+                for origin in storage.get('origins', []):
+                    origin.pop('origin', None)
+            return storage
         else:
             return None
 
