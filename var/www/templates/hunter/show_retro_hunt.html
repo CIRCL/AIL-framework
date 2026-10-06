@@ -438,7 +438,7 @@
                                     <td>
                                         <a class="obj-link" target="_blank" href="{{ object['link'] }}{% if object['type'] == 'item' %}&match_uuid={{ dict_task['uuid'] }}{% endif %}" data-object-id="{{ object['type'] }}:{{ object['subtype'] }}:{{ object['id'] }}"
                                            {% if object['type'] in ['ocr', 'item', 'message', 'post'] %}data-preview-url="{{ url_for('correlation.object_content_preview', type=object['type'], id=object['id']) }}"{% endif %}>
-                                            {{ object['id']}}
+                                            {{ object['content'] if object['type'] in ['title', 'barcode', 'qrcode'] else object['id'] }}
                                         </a>
                                         {% include 'hunter/block_match_context.html' %}
                                         <div>
