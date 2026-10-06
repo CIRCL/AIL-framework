@@ -1062,6 +1062,11 @@ class Cookiejar:
             with gzip.open(self.get_local_storage_file()) as f:
                 try:
                     storage = json.loads(f.read())
+                    # TEMP: Remove origin fields before returning local storage to crawlers.
+                    # TODO: Remove this workaround once Playwright supports origin fields.
+                    if storage:
+                        for origin in storage.get('origins', []):
+                            origin.pop('origin', None)
                     if r_json:
                         return json.dumps(storage, indent=2)
                     else:
@@ -3285,13 +3290,7 @@ class CrawlerTask:
         cookiejar = self.get_cookiejar()
         if cookiejar:
             cookiejar = Cookiejar(cookiejar)
-            storage = cookiejar.get_local_storage()
-            # TEMP: Remove origin fields before sending local storage to Lacus.
-            # TODO: Remove this workaround once playwrigth supports origin fields.
-            if storage:
-                for origin in storage.get('origins', []):
-                    origin.pop('origin', None)
-            return storage
+            return cookiejar.get_local_storage()
         else:
             return None
 
