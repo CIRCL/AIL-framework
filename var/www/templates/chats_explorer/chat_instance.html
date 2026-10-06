@@ -335,6 +335,16 @@
             object-fit: cover;
         }
 
+        .instance-chat-icon-default {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            color: #526579;
+            font-size: 1.3rem;
+        }
+
         .instance-chat-info {
             min-width: 0;
             overflow-wrap: anywhere;
@@ -515,11 +525,13 @@
                                         <tr data-chat-id="{{ chat['id'] }}">
                                             <td>
                                                 <div class="instance-chat-identity">
-                                                    {% if chat['icon'] %}
-                                                        <a class="instance-chat-icon-link" href="{{ url_for('chats_explorer.chats_explorer_chat', subtype=chat_instance['uuid'], id=chat['id']) }}" aria-label="Open {{ chat['name'] or chat['username'] or chat['id'] }}">
+                                                    <a class="instance-chat-icon-link" href="{{ url_for('chats_explorer.chats_explorer_chat', subtype=chat_instance['uuid'], id=chat['id']) }}" aria-label="Open {{ chat['name'] or chat['username'] or chat['id'] }}">
+                                                        {% if chat['icon'] %}
                                                             <img src="{{ url_for('objects_image.image', filename=chat['icon']) }}" class="instance-chat-icon" alt="" width="40" height="40" loading="lazy">
-                                                        </a>
-                                                    {% endif %}
+                                                        {% else %}
+                                                            <span class="instance-chat-icon-default" aria-hidden="true"><i class="far fa-comments"></i></span>
+                                                        {% endif %}
+                                                    </a>
                                                     <div class="instance-chat-info">
                                                         <a class="instance-chat-name" href="{{ url_for('chats_explorer.chats_explorer_chat', subtype=chat_instance['uuid'], id=chat['id']) }}">{{ chat['name'] or chat['username'] or chat['id'] }}</a>
                                                         <small class="instance-chat-id">ID: {{ chat['id'] }}</small>
