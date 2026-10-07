@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Meilisearch - AIL Settings</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+</head>
+<body>
+    {% include 'nav_bar.html' %}
+    {% set status = meilisearch_status %}
+    {% set index_colors = {'ready': 'success', 'indexing': 'primary', 'empty': 'secondary', 'missing': 'warning'} %}
+    {% set task_colors = {'succeeded': 'success', 'processing': 'primary', 'enqueued': 'warning', 'failed': 'danger', 'canceled': 'secondary'} %}
+    {% macro number(value) %}{% if value is not none %}{{ '{:,}'.format(value) }}{% else %}—{% endif %}{% endmacro %}
+    {% macro size(value) %}{% if value is not none %}{{ value|filesizeformat(binary=True) }}{% else %}—{% endif %}{% endmacro %}
+    {% macro timestamp(value) %}{% if value %}{{ value|replace('T', ' ')|replace('Z', ' UTC')|replace('+00:00', ' UTC') }}{% else %}—{% endif %}{% endmacro %}
+
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+            <main class="col-12 col-lg-10 py-3" id="core_content">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <div>
+                        <h2 class="mb-1"><i class="fas fa-search text-primary mr-2" aria-hidden="true"></i>Meilisearch</h2>
+                        <div class="text-muted small">
+                            {% if status.enabled %}
+                                {% if status.version %}Version {{ status.version }} · {% endif %}
+                                Checked {{ timestamp(status.checked_at) }}
+                            {% else %}
+                                Search indexing and diagnostics
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mt-2 mt-sm-0">
+                        <span class="badge badge-{{ 'secondary' if not status.enabled else 'success' if status.health == 'available' else 'danger' }} mr-3">{{ status.health|capitalize }}</span>
+                        {% if status.enabled %}
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('settings_b.settings_meilisearch') }}">
+                            <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Refresh
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if not status.enabled %}
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h5 class="mb-2">Meilisearch is disabled</h5>
+                            <p class="text-muted">Meilisearch indexing and search are turned off for this AIL instance. Index and task statistics will appear here once it is enabled.</p>
+                            <p class="mb-2">To enable it, set <code>meilisearch = True</code> in the <code>[Indexer]</code> section of <code>configs/core.cfg</code>.</p>
+                            <p class="mb-0">Configure the Meilisearch URL and API key, start the service, then restart the AIL processes.</p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if status.error %}
+                    <div class="alert alert-danger" role="alert">{{ status.error }}</div>
+                {% endif %}
+                {% for warning in status.warnings %}
+                    <div class="alert alert-warning py-2" role="alert">{{ warning }}</div>
+                {% endfor %}
+
+                {% if status.enabled and status.health == 'available' %}
+                    <div class="row">
+                        <div class="col-sm-6 col-xl-3 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body py-3">
+                                    <div class="text-muted small">Indexed documents</div>
+                                    <div class="h3 mb-0">{{ number(status.total_documents) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body py-3">
+                                    <div class="text-muted small">Indexes</div>
+                                    <div class="h3 mb-0">{{ number(status.total_indexes) }}</div>
+                                    <small class="text-muted">{{ number(status.indexing_indexes) }} currently indexing</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body py-3">
+                                    <div class="text-muted small">Database size on disk</div>
+                                    <div class="h3 mb-0">{{ size(status.database_size) }}</div>
+                                    <small class="text-muted">{{ size(status.used_database_size) }} used by data</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-xl-3 mb-3">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body py-3">
+                                    <div class="text-muted small">Pending tasks</div>
+                                    <div class="h3 mb-0">{{ number(status.task_counts.enqueued + status.task_counts.processing if status.task_counts.enqueued is not none and status.task_counts.processing is not none else none) }}</div>
+                                    <small class="text-muted">{{ number(status.task_counts.processing) }} processing</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if status.missing_indexes %}
+                        <div class="alert alert-warning py-2" role="alert">
+                            {{ status.missing_indexes|length }} index{% if status.missing_indexes|length != 1 %}es{% endif %} expected by AIL {% if status.missing_indexes|length == 1 %}is{% else %}are{% endif %} missing.
+                        </div>
+                    {% endif %}
+
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
+                            <h5 class="mb-0">Indexes</h5>
+                            {% if status.indexes %}
+                                <label for="meilisearch_index_filter" class="sr-only">Filter indexes by name</label>
+                                <input type="search" class="form-control form-control-sm w-auto mt-1" id="meilisearch_index_filter" placeholder="Filter indexes…" autocomplete="off" spellcheck="false">
+                            {% endif %}
+                        </div>
+                        <div class="card-body py-2 text-muted small">Last database update: {{ timestamp(status.last_update) }}</div>
+                        {% if status.indexes %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="thead-light">
+                                        <tr><th scope="col">Index</th><th scope="col">Status</th><th scope="col" class="text-right">Documents</th><th scope="col" class="text-right">Size on disk</th><th scope="col">Fields</th></tr>
+                                    </thead>
+                                    <tbody id="meilisearch_index_rows">
+                                        {% for index in status.indexes %}
+                                            <tr data-index-name="{{ index.name }}">
+                                                <th scope="row" class="font-weight-normal"><code>{{ index.name }}</code></th>
+                                                <td><span class="badge badge-{{ index_colors[index.state] }}">{{ index.state|capitalize }}</span></td>
+                                                <td class="text-right">{{ number(index.documents) }}</td>
+                                                <td class="text-right text-nowrap">{{ size(index.size) }}</td>
+                                                <td>
+                                                    {% if index.fields %}
+                                                        <details>
+                                                            <summary class="small text-muted">{{ index.fields|length }} fields</summary>
+                                                            <dl class="small mb-1 mt-1">
+                                                                {% for field, count in index.fields|dictsort %}
+                                                                    <dt class="font-weight-normal">{{ field }}</dt>
+                                                                    <dd class="mb-1 text-muted">{{ number(count) }} documents</dd>
+                                                                {% endfor %}
+                                                            </dl>
+                                                        </details>
+                                                    {% else %}—{% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                        <tr id="meilisearch_no_matching_indexes" hidden><td colspan="5" class="text-muted text-center py-3">No indexes match this filter.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="card-body text-muted">{% if status.total_indexes is none %}Index statistics are unavailable.{% else %}No indexes found.{% endif %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-light"><h5 class="mb-0">Recent tasks</h5></div>
+                        <div class="card-body py-2">
+                            <div class="d-flex flex-wrap">
+                                <span class="mr-3">Total <strong>{{ number(status.total_tasks) }}</strong></span>
+                                <span class="mr-3">Enqueued <strong>{{ number(status.task_counts.enqueued) }}</strong></span>
+                                <span class="mr-3">Processing <strong>{{ number(status.task_counts.processing) }}</strong></span>
+                                <span>Failed <strong class="text-danger">{{ number(status.task_counts.failed) }}</strong></span>
+                            </div>
+                            <small class="text-muted">Counts cover retained task history. Showing the latest {{ status.tasks|length }} tasks.</small>
+                        </div>
+                        {% if status.tasks %}
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead class="thead-light">
+                                        <tr><th scope="col">ID</th><th scope="col">Index</th><th scope="col">Operation</th><th scope="col">Status</th><th scope="col">Enqueued</th><th scope="col">Finished</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for task in status.tasks %}
+                                            <tr>
+                                                <td>{{ task.uid }}</td>
+                                                <td><code>{{ task.index or 'All indexes' }}</code></td>
+                                                <td>{{ task.type }}</td>
+                                                <td><span class="badge badge-{{ task_colors.get(task.status, 'secondary') }}">{{ task.status|capitalize }}</span></td>
+                                                <td class="small">{{ timestamp(task.enqueued_at) }}</td>
+                                                <td class="small">{{ timestamp(task.finished_at) }}</td>
+                                            </tr>
+                                            {% if task.error %}
+                                                <tr><td colspan="6" class="small text-danger bg-light">Task {{ task.uid }}: {{ task.error }}</td></tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="card-body text-muted">{% if status.total_tasks is none %}Task statistics are unavailable.{% else %}No tasks found.{% endif %}</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            $('#page-options').addClass('active');
+            $('#nav_meilisearch').addClass('active');
+            $('#nav_settings').removeClass('text-muted');
+        });
+
+        const indexFilter = document.getElementById('meilisearch_index_filter');
+        if (indexFilter) {
+            indexFilter.addEventListener('input', function () {
+                const query = this.value.trim().toLowerCase();
+                let visible = 0;
+                document.querySelectorAll('#meilisearch_index_rows tr[data-index-name]').forEach(function (row) {
+                    row.hidden = !row.dataset.indexName.toLowerCase().includes(query);
+                    if (!row.hidden) {
+                        visible += 1;
+                    }
+                });
+                document.getElementById('meilisearch_no_matching_indexes').hidden = visible > 0;
+            });
+        }
+
+        function toggle_sidebar() {
+            const hidden = $('#nav_menu').is(':visible');
+            $('#nav_menu').toggle(!hidden);
+            $('#side_menu').toggleClass('border-right col-lg-2', !hidden);
+            $('#core_content').toggleClass('col-lg-10', !hidden);
+        }
+    </script>
+</body>
+</html>

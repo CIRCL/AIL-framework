@@ -7,6 +7,7 @@ import logging.config
 import sys
 import time
 import uuid
+from datetime import datetime, timezone
 
 import requests
 import meilisearch
@@ -52,6 +53,74 @@ def get_obj_uuid5(obj_gid):
 
 def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
+
+
+def get_meilisearch_status():
+    """Read monitoring data without creating indexes or modifying tasks."""
+    status = {'enabled': is_meilisearch_enabled(), 'health': 'unavailable', 'error': None, 'warnings': [],
+              'checked_at': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'version': None,
+              'indexes': [], 'total_documents': None, 'total_indexes': None, 'indexing_indexes': None,
+              'missing_indexes': [], 'database_size': None, 'used_database_size': None, 'last_update': None,
+              'tasks': [], 'total_tasks': None, 'task_counts': {'enqueued': None, 'processing': None, 'failed': None}}
+    if not status['enabled'] or Engine is None:
+        if not status['enabled']:
+            status['health'] = 'disabled'
+        return status
+    try:
+        health = Engine.client.health()
+    except MeilisearchTimeoutError:
+        status['error'] = 'Meilisearch did not respond in time. Refresh to try again.'
+        return status
+    except MeilisearchCommunicationError:
+        status['error'] = 'Unable to connect to Meilisearch. Check that the service is running.'
+        return status
+    except MeilisearchApiError:
+        status['error'] = 'Meilisearch rejected the health request. Check the configured API permissions.'
+        return status
+    if health.get('status') != 'available':
+        status['error'] = 'Meilisearch reports that the service is unavailable.'
+        return status
+    status['health'] = 'available'
+
+    try:
+        stats = Engine.get_stats()
+    except (MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError):
+        status['warnings'].append('Index statistics could not be loaded. Check the connection and API permissions.')
+    else:
+        indexes = stats.get('indexes', {})
+        expected = set(get_indexes_names())
+        status['missing_indexes'] = sorted(expected - set(indexes))
+        for name in sorted(expected | set(indexes)):
+            index = indexes.get(name)
+            state = 'missing' if index is None else 'indexing' if index.get('isIndexing') else 'empty' if not index.get('numberOfDocuments') else 'ready'
+            status['indexes'].append({'name': name, 'state': state, 'documents': index.get('numberOfDocuments', 0) if index is not None else None,
+                                      'size': index.get('indexSize') if index is not None else None,
+                                      'fields': index.get('fieldDistribution', {}) if index is not None else {}})
+        status['total_documents'] = sum(index.get('numberOfDocuments', 0) for index in indexes.values())
+        status['total_indexes'] = len(indexes)
+        status['indexing_indexes'] = sum(bool(index.get('isIndexing')) for index in indexes.values())
+        status['database_size'] = stats.get('databaseSize')
+        status['used_database_size'] = stats.get('usedDatabaseSize')
+        status['last_update'] = stats.get('lastUpdate')
+
+    try:
+        status['version'] = Engine.client.get_version().get('pkgVersion')
+    except (MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError):
+        status['warnings'].append('The Meilisearch version could not be loaded.')
+
+    try:
+        tasks = Engine.client.get_tasks({'limit': 20})
+        status['total_tasks'] = tasks.total
+        for task in tasks.results:
+            status['tasks'].append({'uid': task.uid, 'index': task.index_uid, 'type': task.type, 'status': task.status,
+                                    'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
+                                    'finished_at': task.finished_at.isoformat() if task.finished_at else None,
+                                    'error': task.error.get('message') if task.error else None})
+        for task_status in status['task_counts']:
+            status['task_counts'][task_status] = Engine.client.get_tasks({'statuses': [task_status], 'limit': 0}).total
+    except (MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError):
+        status['warnings'].append('Some task statistics could not be loaded. Check the connection and API permissions.')
+    return status
 
 
 # TODO One index for all forums ???

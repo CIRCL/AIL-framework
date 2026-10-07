@@ -28,6 +28,7 @@ from lib import ail_users
 from lib import Language
 from lib import d4
 from lib import passivedns
+from lib import search_engine
 from lib.ConfigLoader import ConfigLoader
 # from exporter.MailExporter import MailExporterUsers
 from lib.objects import SSHKeys
@@ -72,6 +73,12 @@ def settings_modules():
     acl_admin = current_user.is_in_role('admin')
     queues_stats = ail_queues.get_modules_queues_stats()
     return render_template("settings/modules.html", acl_admin=acl_admin, queues_stats=queues_stats)
+
+@settings_b.route('/settings/meilisearch', methods=['GET'])
+@login_required
+@login_admin
+def settings_meilisearch():
+    return render_template('meilisearch.html', acl_admin=True, meilisearch_status=search_engine.get_meilisearch_status())
 
 @settings_b.route("/settings/user/profile", methods=['GET'])
 @login_required
