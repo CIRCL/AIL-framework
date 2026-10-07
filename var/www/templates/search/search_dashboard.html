@@ -10,6 +10,7 @@
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
     {% include 'objects/block_obj_css.html' %}
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -49,40 +50,245 @@
       opacity: 1;
     }
 
-    .username-scope-filter {
-      margin-left: 1.5rem;
-      border-color: #dee2e6;
+    /* Search: preserve the full filter list and a single page scroll. */
+    .search-page {
+        background: #f5f7fa;
+        color: #25374b;
     }
 
-    .username-scope-filter select {
-      min-width: 0;
-      cursor: pointer;
+    .search-page .search-workspace {
+        padding: 20px;
     }
+
+    .search-page .search-workspace > .row {
+        margin: 0;
+        align-items: flex-start;
+    }
+
+    .search-page .search-sidebar {
+        flex: 0 0 280px;
+        max-width: 280px;
+        padding: 14px 20px;
+        border: 1px solid #dde5ee;
+        border-radius: 8px;
+        background: #fff;
+    }
+
+    .search-page .search-scope-heading {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .search-page .search-scope-header {
+        margin-bottom: 10px;
+    }
+
+    .search-page .search-sidebar > .mb-3 {
+        margin-bottom: 4px !important;
+    }
+
+    .search-page .search-sidebar .custom-control {
+        min-height: 22px;
+        margin: 2px 0;
+        font-size: .875rem;
+        line-height: 22px;
+    }
+
+    .search-page .search-sidebar .mt-2 {
+        margin-top: 4px !important;
+    }
+
+    .search-page .search-sidebar .mt-3 {
+        margin-top: 8px !important;
+    }
+
+    .search-page .search-sidebar .custom-control-label {
+        cursor: pointer;
+    }
+
+    .search-page .search-sidebar .custom-control-label:hover {
+        color: #0056b3;
+    }
+
+    .search-page .search-sidebar strong.text-muted {
+        color: #526579 !important;
+    }
+
+    .search-page .search-sidebar hr {
+        margin: 10px 0;
+        border-color: #e5ebf1;
+    }
+
+    .search-page .search-sidebar a.small {
+        display: inline-block;
+        padding: 3px 0;
+        font-size: .85rem;
+    }
+
+    .search-page .search-scope-filter > summary {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0;
+        color: #526579;
+        font-size: .8rem;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .search-page .search-scope-filter > summary > span:first-of-type {
+        color: #526579;
+        font-size: .875rem;
+        font-weight: 500;
+        line-height: 1.25;
+    }
+
+    .search-page .search-scope-filter > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .search-page .search-scope-filter > summary::before {
+        content: '▸';
+    }
+
+    .search-page .search-scope-filter[open] > summary::before {
+        content: '▾';
+    }
+
+    .search-page .search-scope-filter > summary:hover {
+        color: #0056b3;
+    }
+
+    .search-page .search-filter-selection {
+        margin-left: auto;
+        font-size: .75rem;
+        white-space: nowrap;
+    }
+
+    .search-page .search-forum-name-option[hidden],
+    .search-page .search-username-type-option[hidden] {
+        display: none;
+    }
+
+    .search-page .search-forum-name-option label,
+    .search-page .search-username-type-option label {
+        overflow-wrap: anywhere;
+    }
+
+    .search-page .search-scope-filter > summary:focus-visible {
+        outline: 2px solid #007bff;
+        outline-offset: 3px;
+    }
+
+    .search-page .search-main {
+        flex: 1;
+        min-width: 0;
+        max-width: calc(100% - 280px);
+        padding: 0 0 0 24px;
+    }
+
+    .search-page .search-controls {
+        padding: 20px;
+        border: 1px solid #dde5ee;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 3px 12px rgba(28, 47, 70, .035);
+    }
+
+    .search-page .search-controls h1 {
+        margin: 0 0 16px;
+        font-size: 1.3rem;
+        font-weight: 600;
+    }
+
+    .search-page .search-controls .form-control {
+        border-color: #ccd7e2;
+    }
+
+    .search-page .search-help {
+        padding-left: 0;
+    }
+
+    .search-page .search-help .btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .search-page .search-options {
+        gap: 12px;
+        margin-top: 18px;
+    }
+
+    .search-page .search-sort {
+        font-size: .9rem;
+    }
+
+    .search-page .search-sort .btn {
+        margin: 0;
+        padding: 8px 16px;
+        font-size: .9rem;
+    }
+
+    .search-page .search-applied-scopes {
+        color: #637487;
+        font-size: .875rem;
+    }
+
+    .search-page .search-applied-scopes .badge {
+        padding: 6px 8px;
+        color: #526579;
+        font-size: .8rem;
+        font-weight: 500;
+    }
+
+    .search-page .search-empty {
+        padding: 24px;
+        border: 1px solid #dde5ee;
+        border-radius: 8px;
+        background: #fff;
+        color: #637487;
+    }
+
+    .search-page .search-empty strong {
+        color: #25374b;
+    }
+
+    .search-page button:focus-visible,
+    .search-page a:focus-visible {
+        outline: 2px solid #007bff;
+        outline-offset: 3px;
+    }
+
     </style>
 
 </head>
-<body>
+<body class="search-page">
 
 	{% include 'nav_bar.html' %}
 
+{% set scope_labels = {'username': 'Usernames', 'web': 'Web (clearnet)', 'onion': 'Tor (.onion)', 'i2p': 'I2P', 'forum': 'Forums', 'title': 'Page titles', 'filename': 'Filenames', 'desc-img': 'Image descriptions', 'desc-screen': 'Screenshot descriptions', 'desc-dom': 'Domain descriptions'} %}
+{% for protocol in chat_protocols %}
+    {% set _ = scope_labels.update({'c' + protocol['id']: protocol['id']|capitalize + ' chats'}) %}
+{% endfor %}
 
 <form method="GET" action="{{ url_for('search_b.search_dashboard') }}" id="searchForm" onsubmit="combineScopes()" autocomplete="off">
 
-  <div class="container-fluid">
+  <div class="container-fluid search-workspace">
     <div class="row">
 
       <!-- =======================
            SIDEBAR (filters only)
            ======================= -->
-      <aside class="col-md-3 col-xl-2 border-right bg-light py-3"
-             style="min-height: 100vh; position: sticky; top: 0;">
+      <aside class="col-md-3 col-xl-2 search-sidebar" aria-label="Search scope filters">
 
-        <h6 class="text-uppercase text-muted mb-3">Search scope</h6>
-
-        <div class="mb-2">
-          <a href="#" class="small" onclick="setAllScopes(true); return false;">All</a>
-          <span class="text-muted mx-1">·</span>
-          <a href="#" class="small" onclick="setAllScopes(false); return false;">None</a>
+        <div class="d-flex justify-content-between align-items-center search-scope-header">
+          <h2 class="search-scope-heading">Search scope</h2>
+          <div>
+            <a href="#" class="small" onclick="setAllScopes(true); return false;">All</a>
+            <span class="text-muted mx-1">·</span>
+            <a href="#" class="small" onclick="setAllScopes(false); return false;">None</a>
+          </div>
         </div>
 
         <!-- CHATS -->
@@ -122,23 +328,48 @@
 
         <!-- USERNAMES -->
         <div class="mb-3">
-          <div class="custom-control custom-checkbox">
-            <input class="custom-control-input scope-item" type="checkbox" id="scope_username"
-                   name="scope" value="username" {% if "username" in selected_scopes %}checked{% endif %}>
-            <label class="custom-control-label d-flex align-items-center" for="scope_username">
-              <span class="scope-icon mr-2"><i class="fas fa-user"></i></span>
-              Usernames
-            </label>
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="custom-control custom-checkbox">
+              <input class="custom-control-input scope-item" type="checkbox" id="scope_username"
+                     name="scope" value="username" {% if "username" in selected_scopes %}checked{% endif %}>
+              <label class="custom-control-label d-flex align-items-center" for="scope_username">
+                <span class="scope-icon mr-2"><i class="fas fa-user"></i></span>
+                Usernames
+              </label>
+            </div>
+            <div>
+              <a href="#" class="small" onclick="toggleUsernameFilters(true); return false;">All</a>
+              <span class="text-muted mx-1">·</span>
+              <a href="#" class="small" onclick="toggleUsernameFilters(false); return false;">None</a>
+            </div>
           </div>
-          <div class="username-scope-filter d-flex align-items-center border rounded bg-white px-2 mt-2">
-            <label for="global_username_type" class="small text-muted mb-0 mr-1">Type</label>
-            <select id="global_username_type" class="custom-select custom-select-sm border-0 bg-transparent" name="username_types" aria-label="Username type">
-              <option value="">All types</option>
-              {% for subtype in username_subtypes %}
-                <option value="{{ subtype }}" {% if subtype == username_types %}selected{% endif %}>{{ subtype|capitalize }}</option>
-              {% endfor %}
-            </select>
-          </div>
+          {% set selected_username_types = username_types.split(',') if username_types else [] %}
+          {% set username_selection = namespace(count=0) %}
+          {% for subtype in username_subtypes %}
+            {% if not selected_username_types or subtype in selected_username_types %}
+              {% set username_selection.count = username_selection.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          <details class="mt-2 pl-3 border-left search-scope-filter" id="usernameTypeFilters">
+            <summary>
+              <span>Username types</span>
+              <span class="search-filter-selection" id="usernameTypeSummary" aria-live="polite">
+                {% if not username_subtypes %}No types{% elif username_selection.count == username_subtypes|length %}All types{% else %}{{ username_selection.count }} selected{% endif %}
+              </span>
+            </summary>
+            <input type="search" class="form-control form-control-sm my-2" id="usernameTypeFilter" placeholder="Search username types…" aria-label="Search username types" autocomplete="off" spellcheck="false" {% if not username_subtypes %}disabled{% endif %}>
+            {% for subtype in username_subtypes %}
+              <div class="custom-control custom-checkbox search-username-type-option">
+                <input class="custom-control-input username-type-item" type="checkbox" id="username_type_{{ loop.index }}"
+                       name="username_type" value="{{ subtype }}"
+                       {% if not selected_username_types or subtype in selected_username_types %}checked{% endif %}>
+                <label class="custom-control-label" for="username_type_{{ loop.index }}">{{ subtype|capitalize }}</label>
+              </div>
+            {% else %}
+              <div class="text-muted small">No username types available.</div>
+            {% endfor %}
+            <p class="text-muted small mb-0" id="usernameTypeNoMatches" role="status" hidden>No username types match this name.</p>
+          </details>
         </div>
 
         <hr>
@@ -253,10 +484,22 @@
             </div>
           </div>
 
-          <div class="mt-2 pl-3 border-left">
-            <div class="small text-muted mb-1">Forum name filter</div>
+          {% set forum_selection = namespace(count=0) %}
+          {% for forum in forums %}
+            {% if not selected_forums or forum['id'] in selected_forums %}
+              {% set forum_selection.count = forum_selection.count + 1 %}
+            {% endif %}
+          {% endfor %}
+          <details class="mt-2 pl-3 border-left search-forum-names search-scope-filter" id="forumNameFilters">
+            <summary>
+              <span>Forum names</span>
+              <span class="search-filter-selection" id="forumSelectionSummary" aria-live="polite">
+                {% if not forums %}No forums{% elif forum_selection.count == forums|length %}All forums{% else %}{{ forum_selection.count }} selected{% endif %}
+              </span>
+            </summary>
+            <input type="search" class="form-control form-control-sm my-2" id="forumNameFilter" placeholder="Search forum names…" aria-label="Search forum names" autocomplete="off" spellcheck="false" {% if not forums %}disabled{% endif %}>
             {% for forum in forums %}
-              <div class="custom-control custom-checkbox">
+              <div class="custom-control custom-checkbox search-forum-name-option">
                 <input class="custom-control-input forum-item forums" type="checkbox" id="forum_{{ loop.index }}"
                        name="forum" value="{{ forum['id'] }}"
                        {% if not selected_forums or forum['id'] in selected_forums %}checked{% endif %}>
@@ -265,7 +508,8 @@
             {% else %}
               <div class="text-muted small">No forums available.</div>
             {% endfor %}
-          </div>
+            <p class="text-muted small mb-0" id="forumNameNoMatches" role="status" hidden>No forums match this name.</p>
+          </details>
         </div>
 
         <hr>
@@ -356,7 +600,7 @@
         </div>
 
         <div class="text-muted small mt-3">
-          Tip: If no scope is selected, treat it as “All”.
+          No scope selected searches all sources.
         </div>
 
       </aside>
@@ -364,13 +608,17 @@
       <!-- =======================
            SEARCH BAR
            ======================= -->
-      <main class="col-md-9 col-xl-10 py-3">
+      <main class="col-md-9 col-xl-10 search-main">
 
-        <div class="row align-items-center mt-2">
+        <section class="search-controls" aria-labelledby="searchHeading">
+        <h1 id="searchHeading">Search</h1>
+        <div class="row align-items-center">
           <div class="col">
             <div class="input-group input-group-lg">
               <input type="search"
                      class="form-control"
+                     id="searchQuery"
+                     aria-label="Search collected data"
                      name="q"
                      autocomplete="off" data-lpignore="true" data-1p-ignore
                      value="{{ request.args.get('q','') }}"
@@ -384,42 +632,49 @@
             </div>
           </div>
 
-          <span class="col-auto text-center mt-1">
-            <i class="fa-solid fa-circle-info fa-2x"
-               style="color: #c0bfbc; cursor: help;"
+          <span class="col-auto text-center search-help">
+            <button type="button" class="btn btn-outline-secondary" aria-label="Search syntax help"
                onmouseenter="show_search_helper_tooltip(this)"
-               onmouseleave="hide_obj_tooltip(this)">
-            </i>
+               onmouseleave="hide_obj_tooltip(this)"
+               onfocus="show_search_helper_tooltip(this)"
+               onblur="hide_obj_tooltip(this)"
+               onclick="show_search_helper_tooltip(this)">
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
+            </button>
           </span>
         </div>
 
-        <div class="d-flex align-items-center justify-content-between my-2 flex-wrap">
+        <div class="d-flex align-items-center justify-content-between flex-wrap search-options">
 
-          <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons" role="group" aria-label="Sort order">
-            <label class="btn btn-outline-secondary {% if sort == 'recent' %}active{% endif %}">
+          <div class="d-flex align-items-center search-sort">
+            <span class="font-weight-bold mr-3">Sort by</span>
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" role="group" aria-label="Sort order">
+            <label class="btn btn-outline-primary {% if sort == 'recent' or not sort %}active{% endif %}">
               <input type="radio" name="sort" value="recent" autocomplete="off"
                      {% if sort == 'recent' or not sort %}checked{% endif %}>
               Most recent
             </label>
 
-            <label class="btn btn-outline-secondary {% if sort == 'best' %}active{% endif %}">
+            <label class="btn btn-outline-primary {% if sort == 'best' %}active{% endif %}">
               <input type="radio" name="sort" value="best" autocomplete="off"
                      {% if sort == 'best' %}checked{% endif %}>
               Best match
             </label>
+            </div>
           </div>
 
           <!-- MORE FILTERS -->
           <div class="mt-2 mt-sm-0 d-flex align-items-center">
-            <a class="btn btn-sm btn-link p-0 mr-3"
+            <a class="btn btn-outline-secondary mr-3"
                data-toggle="collapse"
                href="#moreFilters"
                role="button"
+               aria-expanded="{{ 'true' if request.args.get('from') or request.args.get('to') else 'false' }}"
                aria-controls="moreFilters">
               More filters <i class="fa-solid fa-chevron-down ml-1"></i>
             </a>
 
-            <a class="btn btn-sm btn-outline-primary"
+            <a class="btn btn-outline-primary"
                href="{{ url_for('search_b.search_advanced') }}">
               <i class="fa-solid fa-sliders mr-1"></i>
               Advanced search
@@ -428,7 +683,7 @@
                 <i class="fa-solid fa-at"></i>
                 <i class="fas fa-user"></i>
               </span>
-              <img src="/static/image/passivessh.png" alt="Passive SSH" style="width:25px;">
+              <img src="{{ url_for('static', filename='image/passivessh.png') }}" alt="Passive SSH" style="width:25px;">
             </a>
           </div>
 
@@ -471,6 +726,8 @@
         <input type="hidden" name="scopes" id="scopes">
         <input type="hidden" name="forums" id="forums">
         <input type="hidden" name="forum_types" id="forum_types">
+        <input type="hidden" name="username_types" id="username_types">
+        </section>
 
 </form>
 
@@ -494,11 +751,16 @@
 
         <!-- Optional: show selected scopes as chips -->
         {% if selected_scopes %}
-          <div class="mt-3">
+          <div class="mt-3 search-applied-scopes">
             <span class="text-muted mr-2">Searching in:</span>
             {% for s in selected_scopes %}
-              <span class="badge badge-secondary mr-1 mb-1">{{ s }}</span>
+              <span class="badge badge-light border mr-1 mb-1">{{ scope_labels.get(s, s) }}</span>
             {% endfor %}
+            {% if 'username' in selected_scopes and username_types %}
+              {% for subtype in selected_username_types %}
+                <span class="badge badge-light border mr-1 mb-1">Username type: {{ subtype|capitalize }}</span>
+              {% endfor %}
+            {% endif %}
             <a class="small ml-2" href="{{ url_for('search_b.search_dashboard', q=request.args.get('q','')) }}">Reset</a>
           </div>
         {% endif %}
@@ -546,9 +808,14 @@
 
             {% include 'search/pagination.html' %}
 
-    {% elif request.args.get('q','') and request.args.get('scopes','') %}
-        <div class="text-muted d-block my-4">
-          No Results
+    {% elif request.args.get('q','') and not search_error %}
+        <div class="search-empty my-4" role="status">
+          <strong>No results found.</strong>
+          <p class="mb-0 mt-2">Try another term or adjust the search scope and filters.</p>
+        </div>
+    {% elif not request.args.get('q','') %}
+        <div class="text-muted my-4">
+          Enter a search term above. Use the scope filters to choose which sources to include.
         </div>
     {% endif %}
 
@@ -564,9 +831,123 @@ $(document).ready(function(){
     $("#page-search").addClass("active");
 });
 
+  const forumNameOptions = Array.from(document.querySelectorAll('.search-forum-name-option')).map(row => {
+    return {row: row, input: row.querySelector('input'), name: row.querySelector('label').textContent.trim().toLowerCase()};
+  });
+  const forumNameFilter = document.getElementById('forumNameFilter');
+  const usernameTypeOptions = Array.from(document.querySelectorAll('.search-username-type-option')).map(row => {
+    return {row: row, input: row.querySelector('input'), name: row.querySelector('label').textContent.trim().toLowerCase()};
+  });
+  const usernameTypeFilter = document.getElementById('usernameTypeFilter');
+  const usernameScope = document.getElementById('scope_username');
+
+  function updateUsernameTypeSelection() {
+    const selected = usernameTypeOptions.filter(option => option.input.checked).length;
+    let summary;
+    if (!usernameTypeOptions.length) {
+      summary = 'No types';
+    } else if (selected === usernameTypeOptions.length) {
+      summary = 'All types';
+    } else if (!selected) {
+      summary = 'None selected';
+    } else {
+      summary = selected + ' selected';
+    }
+    document.getElementById('usernameTypeSummary').textContent = summary;
+  }
+
+  function filterUsernameTypes() {
+    const query = usernameTypeFilter.value.trim().toLowerCase();
+    let visible = 0;
+    usernameTypeOptions.forEach(option => {
+      const matches = option.name.includes(query);
+      option.row.hidden = !matches;
+      if (matches) {
+        visible += 1;
+      }
+    });
+    document.getElementById('usernameTypeNoMatches').hidden = !usernameTypeOptions.length || visible > 0;
+  }
+
+  usernameTypeOptions.forEach(option => {
+    option.input.addEventListener('change', function () {
+      // An empty username_types parameter searches all types, so deselecting every type disables this scope.
+      usernameScope.checked = usernameTypeOptions.some(option => option.input.checked);
+      updateUsernameTypeSelection();
+    });
+  });
+  usernameTypeFilter.addEventListener('input', filterUsernameTypes);
+  usernameTypeFilter.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+    }
+  });
+  usernameScope.addEventListener('change', function () {
+    if (usernameScope.checked && !usernameTypeOptions.some(option => option.input.checked)) {
+      toggleUsernameFilters(true);
+    }
+  });
+
+  function updateForumSelection() {
+    const selected = forumNameOptions.filter(option => option.input.checked).length;
+    let summary;
+    if (!forumNameOptions.length) {
+      summary = 'No forums';
+    } else if (selected === forumNameOptions.length) {
+      summary = 'All forums';
+    } else if (!selected) {
+      summary = 'None selected';
+    } else {
+      summary = selected + ' selected';
+    }
+    document.getElementById('forumSelectionSummary').textContent = summary;
+  }
+
+  function filterForumNames() {
+    const query = forumNameFilter.value.trim().toLowerCase();
+    let visible = 0;
+    forumNameOptions.forEach(option => {
+      const matches = option.name.includes(query);
+      option.row.hidden = !matches;
+      if (matches) {
+        visible += 1;
+      }
+    });
+    document.getElementById('forumNameNoMatches').hidden = !forumNameOptions.length || visible > 0;
+  }
+
+  forumNameOptions.forEach(option => {
+    option.input.addEventListener('change', function () {
+      const forumScope = document.getElementById('scope_forum');
+      if (option.input.checked && !forumScope.checked) {
+        forumScope.checked = true;
+        document.querySelectorAll('input.forum_types').forEach(input => {
+          input.checked = true;
+        });
+      }
+      updateForumSelection();
+    });
+  });
+  forumNameFilter.addEventListener('input', filterForumNames);
+  forumNameFilter.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+    }
+  });
+  window.addEventListener('pageshow', function () {
+    updateForumSelection();
+    filterForumNames();
+    updateUsernameTypeSelection();
+    filterUsernameTypes();
+  });
+  updateForumSelection();
+  updateUsernameTypeSelection();
 
   function setAllScopes(on) {
     document.querySelectorAll('.scope-item').forEach(cb => cb.checked = on);
+    if (on && !usernameTypeOptions.some(option => option.input.checked)) {
+      toggleUsernameFilters(true);
+    }
   }
 
   function toggleGroup(groupClass, on) {
@@ -578,7 +959,18 @@ $(document).ready(function(){
     if (forumScope) {
       forumScope.checked = on;
     }
-    document.querySelectorAll('input.forums, input.forum_types').forEach(cb => cb.checked = on);
+    document.querySelectorAll('input.forums, input.forum_types').forEach(cb => {
+      cb.checked = on;
+    });
+    updateForumSelection();
+  }
+
+  function toggleUsernameFilters(on) {
+    usernameScope.checked = on;
+    usernameTypeOptions.forEach(option => {
+      option.input.checked = on;
+    });
+    updateUsernameTypeSelection();
   }
 
   {% if not selected_scopes %}
@@ -595,13 +987,16 @@ $(document).ready(function(){
     const forumTypes = Array.from(
       document.querySelectorAll('input[name="forum_type"]:checked')
     ).map(i => i.value);
+    const usernameTypes = usernameTypeOptions.filter(option => option.input.checked).map(option => option.input.value);
 
     document.getElementById('scopes').value = scopes.join(',');
     document.getElementById('forums').value = forums.join(',');
     document.getElementById('forum_types').value = forumTypes.join(',');
+    document.getElementById('username_types').value = usernameTypes.length === usernameTypeOptions.length ? '' : usernameTypes.join(',');
     document.querySelectorAll('input[name="scope"]').forEach(i => i.disabled = true);
     document.querySelectorAll('input[name="forum"]').forEach(i => i.disabled = true);
     document.querySelectorAll('input[name="forum_type"]').forEach(i => i.disabled = true);
+    document.querySelectorAll('input[name="username_type"]').forEach(i => i.disabled = true);
 
     // avoid empty last_seen_from / last_seen_to
     const last_seen_from = document.getElementById('last_seen_from');
