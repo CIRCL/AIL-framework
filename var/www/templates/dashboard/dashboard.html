@@ -2,7 +2,9 @@
 <html>
 
 <head>
+    <meta charset="utf-8">
   <title>AIL Framework</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
@@ -31,17 +33,102 @@
       letter-spacing: 0.01em;
       margin-bottom: 1rem;
     }
-    .search-panel {
-      background: #f8fafc;
-      border: 1px solid #dbe4ef;
-      border-radius: 0.75rem;
-      padding: 0.85rem;
-      margin: 0.35rem 0 0.8rem;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    /* Dashboard global search */
+    .dashboard-search {
+        margin: .35rem 0 .8rem;
+        padding: 12px 12px 10px;
+        border: 1px solid #dce6f2;
+        border-radius: 12px;
+        background: #f6f9fe;
+        color: #25374b;
+        box-shadow: 0 4px 14px rgba(28, 47, 70, .045);
     }
-    .dashboard-main .form-control {
-      min-height: 2.4rem;
+
+    .dashboard-search-query {
+        align-items: center;
+        flex-wrap: nowrap;
+        height: 42px;
+        border: 1px solid #cad8e8;
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(28, 47, 70, .04);
+        transition: border-color .15s ease, box-shadow .15s ease;
     }
+
+    .dashboard-search-query:hover {
+        border-color: #a7bdd7;
+    }
+
+    .dashboard-search-query:focus-within {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .13);
+    }
+
+    .dashboard-search-query .input-group-text {
+        padding: 0 12px;
+        border: 0;
+        background: transparent;
+        color: #5e7ea6;
+        font-size: .9rem;
+    }
+
+    .dashboard-search-query > .form-control {
+        min-width: 0;
+        height: 40px;
+        padding: 6px 8px 6px 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: #25374b;
+    }
+
+    .dashboard-search-query > .form-control:focus {
+        box-shadow: none;
+    }
+
+    .dashboard-search-query > .form-control::placeholder {
+        color: #71849a;
+    }
+
+    .dashboard-search-query .input-group-append {
+        margin-left: 0;
+    }
+
+    .dashboard-search-query .input-group-append .btn {
+        height: 34px;
+        margin: 3px;
+        padding: 0 16px;
+        border-color: transparent;
+        border-radius: 7px;
+        background: #1769df;
+        font-size: .875rem;
+        font-weight: 600;
+        box-shadow: 0 2px 5px rgba(23, 105, 223, .18);
+    }
+
+    .dashboard-search-query .input-group-append .btn:hover {
+        background: #1257bf;
+    }
+
+    .dashboard-search-query .input-group-append .btn:active {
+        background: #104da8;
+        box-shadow: none;
+    }
+
+    .dashboard-search-options-link {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 4px 0;
+        font-size: .875rem;
+        white-space: nowrap;
+    }
+
+    .dashboard-search button:focus-visible,
+    .dashboard-search a:focus-visible {
+        outline: 2px solid #007bff;
+        outline-offset: 3px;
+    }
+
     .chart-panel {
       border: 1px solid #dbe4ef;
       border-radius: 0.75rem;
@@ -119,24 +206,29 @@
 		<div class="row">
 
             <div class="col-12 col-xl-6">
-                <div class="search-panel">
-                    <form method="GET" action="{{ url_for('search_b.search_dashboard') }}">
-                        <div class="input-group">
-                            <input type="text"
+                <div class="dashboard-search">
+                    <form method="GET" action="{{ url_for('search_b.search_dashboard') }}" role="search" aria-label="Global search" autocomplete="off">
+                        <div class="input-group dashboard-search-query">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" aria-hidden="true"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="search"
                                    class="form-control"
+                                   id="dashboardSearchQuery"
                                    name="q"
-                                   placeholder="Search chats, domains, titles, filenames…">
+                                   aria-label="Search"
+                                   data-lpignore="true" data-1p-ignore
+                                   placeholder="Search…">
                             <div class="input-group-append">
                                 <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-search"></i> Search
+                                    <i class="fas fa-search mr-1" aria-hidden="true"></i> Search
                                 </button>
                             </div>
                         </div>
-                        <div class="mt-1">
-                            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('search_b.search_dashboard') }}">
-                                <i class="fa-solid fa-sliders mr-1"></i> Search options
-                            </a>
-                        </div>
+                        <a class="dashboard-search-options-link" href="{{ url_for('search_b.search_dashboard') }}">
+                            <i class="fa-solid fa-sliders mr-1" aria-hidden="true"></i> Search options
+                            <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                        </a>
                     </form>
                 </div>
                 <div class="chart-panel">
