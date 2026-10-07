@@ -65,7 +65,7 @@
                                 </h5>
                             </div>
 
-                            <pre class="border">{{ obj['result'] }}</pre>
+                            <pre class="border">{{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}</pre>
 
                             <div class="text-center">
                                 {% if obj['tags_safe'] or obj['is_tags_safe'] %}

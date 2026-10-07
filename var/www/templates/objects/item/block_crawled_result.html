@@ -10,7 +10,7 @@
       <div class="flex-grow-1" style="min-width:0;">
 
         <div class="mb-1 block-obj-result">
-          {{ obj['result'] }}
+          {{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}
         </div>
 
         <div class="small text-muted">

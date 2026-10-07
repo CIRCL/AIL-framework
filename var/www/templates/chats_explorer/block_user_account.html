@@ -33,7 +33,7 @@
 
           <!-- RESULT -->
           <div class="mb-2 font-weight-normal block-obj-result">
-            {{ obj['result'] }}
+            {{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}
           </div>
 
           <!-- USER INFO -->

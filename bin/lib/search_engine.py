@@ -4,6 +4,7 @@
 import os
 import json
 import logging.config
+import re
 import sys
 import time
 import uuid
@@ -264,7 +265,9 @@ class MeiliSearch:
         print("Cancellation task:", cancel_task.task_uid)
 
     def _wait_task(self, task, timeout_in_ms=120000):
-        task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
+        task_uid = getattr(task, 'task_uid', None)
+        if task_uid is None:
+            task_uid = task['taskUid']
         return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
 
     def wait_successful_task(self, task):
@@ -273,8 +276,7 @@ class MeiliSearch:
             raise MeilisearchError(f'Meilisearch task failed: {result.error}')
         return result
 
-    def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent', forum_ids=None, forum_types=None, username_types=None):
-        # TODO investigate attributesToRetrieve speed
+    def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent', forum_ids=None, forum_types=None, username_types=None, substring=False):
         end_query = []
         for index in indexes:
             q = {'indexUid': index,
@@ -290,6 +292,10 @@ class MeiliSearch:
             if sort == 'recent':
                 q['sort'] = ['last:desc']
             filters = []
+            if substring:
+                q['q'] = ''
+                escaped_query = query.replace('\\', '\\\\').replace('"', '\\"')
+                filters.append(f'content CONTAINS "{escaped_query}"')
             if index == 'username' and username_types:
                 filters.append('subtype IN ' + json.dumps(username_types))
             if index == 'forum' and forum_ids:
@@ -313,7 +319,18 @@ class MeiliSearch:
             if filters:
                 q['filter'] = ' AND '.join(filters)
             end_query.append(q)
-        return self.search_client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
+        result = self.search_client.multi_search(end_query, {'limit': nb, 'offset': (page - 1) * nb})
+        if substring:
+            # Filter matches have no Meilisearch highlights; show a short snippet around the first literal match.
+            pattern = re.compile(re.escape(query), re.IGNORECASE)
+            for hit in result.get('hits', []):
+                content = hit.get('content', '')
+                match = pattern.search(content)
+                start = max(0, match.start() - 150) if match else 0
+                end = min(len(content), match.end() + 150) if match else 300
+                snippet = pattern.sub(lambda match: f'🔎⏩{match.group(0)}⏪🔍', content[start:end])
+                hit.setdefault('_formatted', {})['content'] = ('…' if start else '') + snippet + ('…' if end < len(content) else '')
+        return result
 
     def get_indexes(self):
         names = []
@@ -322,7 +339,12 @@ class MeiliSearch:
         return names
 
     def _create_index(self, index_name):
-        self.client.create_index(index_name, {'primaryKey': 'uuid'})
+        if index_name == 'username':
+            # Configure existing indexes before creating this new index, so failed setup retries on the next startup.
+            self.setup_substring_search()
+        task = self.client.create_index(index_name, {'primaryKey': 'uuid'})
+        if index_name == 'username':
+            self.wait_successful_task(task)
         self.setup_index_searchable_filterable_sortable(index_name)
 
     def create_indexes(self):
@@ -330,13 +352,20 @@ class MeiliSearch:
             self.ensure_index(index_name)
 
     def create_missing_indexes(self):
-        for index_name in get_indexes_names():
-            self.ensure_index(index_name)
+        self.create_indexes()
 
     def ensure_index(self, index_name):
         if index_name not in self._known_indexes:
             self._create_index(index_name)
             self._known_indexes.add(index_name)
+
+    def setup_substring_search(self):
+        self.client.http.patch('experimental-features', {'containsFilter': True})
+        for index_name in sorted(self._known_indexes & set(get_indexes_names())):
+            index = self.client.index(index_name)
+            filterable = index.get_filterable_attributes()
+            if 'content' not in filterable:
+                self.wait_successful_task(index.update_filterable_attributes(filterable + ['content']))
 
     def setup_index_searchable_filterable_sortable(self, index_name):
         # restrict searchable attributes
@@ -348,8 +377,8 @@ class MeiliSearch:
             filterable_attributes.append('subtype')
         if index_name not in MESSAGES_INDEXES:
             filterable_attributes.append('first')
-        # filter by daterange
-        self.client.index(index_name).update_filterable_attributes(filterable_attributes)
+        # Filter by dates and by literal fragments in every search scope.
+        self.client.index(index_name).update_filterable_attributes(filterable_attributes + ['content'])
         # sort by date
         self.client.index(index_name).update_sortable_attributes(filterable_attributes)
         # result rank
@@ -360,8 +389,11 @@ class MeiliSearch:
         #     "attribute",  -> most important attributes
         #     "sort",
         #     "exactness"
-        self.client.index(index_name).update_ranking_rules(
+        task = self.client.index(index_name).update_ranking_rules(
             ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'])
+        if index_name == 'username':
+            # Wait for the new username index's searchable/filterable/sortable settings before returning.
+            self.wait_successful_task(task)
         # fix issue attributesToSearchOn fails on never-populated index
         # https://github.com/meilisearch/meilisearch/issues/5921
         dummy_document = {'uuid': 'dummy', 'content': 'dummy', 'last': 0, 'id': 'dummy'}
@@ -371,6 +403,7 @@ class MeiliSearch:
         self.remove(index_name, 'dummy')
 
     def setup_indexes_searchable_filterable_sortable(self):
+        self.setup_substring_search()
         for index_name in get_indexes_names():
             self.setup_index_searchable_filterable_sortable(index_name)
 
@@ -676,8 +709,9 @@ def delete_index(index_name):
     Engine._delete(index_name)
     Engine.client._create_index(index_name)
 
-def log(user_id, index, to_search):
-    logger.warning(f'{user_id} search: {index} - {to_search}')
+def log(user_id, index, to_search, substring=False):
+    substring_marker = ' [substring]' if substring else ''
+    logger.warning(f'{user_id} search: {index} - {to_search}{substring_marker}')
 
 
 #### PAGINATION ####
@@ -752,7 +786,10 @@ def api_search(data):
     page = sanityze_page(data.get("page"))
     nb_per_page = 20
     user_id = data.get("user_id")
-    log(user_id, str(indexes), to_search)
+    substring = data.get('substring', False)
+    if isinstance(substring, str) and substring in {'0', '1'}:
+        substring = substring == '1'
+    log(user_id, str(indexes), to_search, substring=substring is True)
 
     r = api_check_indexes(indexes)
     if r[1] != 200:
@@ -784,6 +821,11 @@ def api_search(data):
     if username_types and set(username_types) - set(Usernames.Usernames().get_subtypes()):
         return {"status": "error", "reason": "Invalid username type"}, 400
 
+    if not isinstance(substring, bool):
+        return {"status": "error", "reason": "Invalid substring option"}, 400
+    if substring and (not isinstance(to_search, str) or not to_search.strip()):
+        return {"status": "error", "error_type": "substring_invalid", "reason": "Enter text for substring search"}, 400
+
     timestamp_from = data.get("from")
     timestamp_to = data.get("to")
 
@@ -800,7 +842,11 @@ def api_search(data):
 
     try:
         result = Engine.search(indexes, to_search, page=page, nb=nb_per_page, timestamp_from=timestamp_from, sort=sort,
-                               timestamp_to=timestamp_to, forum_ids=forum_ids, forum_types=forum_types, username_types=username_types)
+                               timestamp_to=timestamp_to, forum_ids=forum_ids, forum_types=forum_types, username_types=username_types, substring=substring)
+    except MeilisearchApiError as error:
+        if substring and error.code in {'feature_not_enabled', 'invalid_search_filter', 'invalid_multi_search_filter'}:
+            return {"status": "error", "error_type": "substring_unavailable", "reason": "Substring search is temporarily unavailable. Please try again or uncheck Substring search."}, 503
+        raise
     except MeilisearchTimeoutError:
         return {
             "status": "error",

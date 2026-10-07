@@ -78,6 +78,7 @@ def search_dashboard():
     last_seen_from = request.args.get('from')
     last_seen_to = request.args.get('to')
     username_types = request.args.get('username_types', '')
+    substring = request.args.get('substring', '0')
 
     page = request.args.get('page', 1)
 
@@ -89,7 +90,7 @@ def search_dashboard():
     if search:
         r = search_engine.api_search({'indexes': indexes, 'search': search, 'page': page, 'user_id': user_id,
                                       'from': last_seen_from, 'to': last_seen_to, 'sort': sort,
-                                      'forum_ids': forum_ids, 'forum_types': forum_types, 'username_types': username_types})
+                                      'forum_ids': forum_ids, 'forum_types': forum_types, 'username_types': username_types, 'substring': substring})
         if r[1] != 200:
             error_type = r[0].get('error_type')
             if error_type == 'meilisearch_timeout':
@@ -104,6 +105,14 @@ def search_dashboard():
                     'title': 'Search service unavailable',
                     'message': r[0].get('reason')
                 }
+                result = None
+                pagination = None
+            elif error_type == 'substring_unavailable':
+                search_error = {'title': 'Substring search unavailable', 'message': r[0].get('reason')}
+                result = None
+                pagination = None
+            elif error_type == 'substring_invalid':
+                search_error = {'title': 'Invalid substring query', 'message': r[0].get('reason')}
                 result = None
                 pagination = None
             else:
@@ -126,6 +135,7 @@ def search_dashboard():
                            selected_scopes=indexes,
                            username_subtypes=ail_core.get_object_all_subtypes('username'),
                            username_types=username_types,
+                           substring=substring == '1',
                            to_search=search,
                            sort=sort,
                            last_seen_from=last_seen_from,

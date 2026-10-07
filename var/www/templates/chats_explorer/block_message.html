@@ -217,7 +217,7 @@
         {% endif %}
         {% if not message['extracted'] %}
             {% if 'result' in message %}
-                <pre class="my-0" style="white-space: pre-wrap;">{{ message['result'] }}</pre>
+                <pre class="my-0" style="white-space: pre-wrap;">{{ message['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}</pre>
             {% else %}
                 <pre class="my-0" style="white-space: pre-wrap;">{{ message['content'] }}</pre>
             {% endif %}

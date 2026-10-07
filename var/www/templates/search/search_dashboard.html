@@ -230,6 +230,53 @@
         font-size: .9rem;
     }
 
+    .search-page .search-substring-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        margin: 4px 0 4px 16px;
+        padding: 7px 10px 7px 12px;
+        border: 1px solid #d5e0eb;
+        border-radius: 8px;
+        background: #f8fafc;
+        white-space: nowrap;
+    }
+
+    .search-page .search-substring-option:hover {
+        border-color: #a9bdd3;
+    }
+
+    .search-page .search-substring-option .custom-control-label {
+        color: #25374b;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .search-page .search-substring-option .custom-control-input:checked ~ .custom-control-label {
+        color: #0056b3;
+    }
+
+    .search-page .search-substring-help {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #637487;
+        cursor: pointer;
+    }
+
+    .search-page .search-substring-help:hover,
+    .search-page .search-substring-help:focus-visible {
+        background: #e6eef8;
+        color: #0056b3;
+    }
+
     .search-page .search-applied-scopes {
         color: #637487;
         font-size: .875rem;
@@ -459,7 +506,7 @@
           </div>
 
           <div class="mt-2 pl-3 border-left">
-            <div class="small text-muted mb-1">Global forum result type</div>
+            <div class="small text-muted mb-1">Include in forum results</div>
             <div class="custom-control custom-checkbox">
               <input class="custom-control-input forum-type-item forum_types" type="checkbox" id="forum_type_post"
                      name="forum_type" value="post"
@@ -633,7 +680,7 @@
           </div>
 
           <span class="col-auto text-center search-help">
-            <button type="button" class="btn btn-outline-secondary" aria-label="Search syntax help"
+            <button type="button" class="btn btn-outline-secondary" aria-label="Search help"
                onmouseenter="show_search_helper_tooltip(this)"
                onmouseleave="hide_obj_tooltip(this)"
                onfocus="show_search_helper_tooltip(this)"
@@ -646,7 +693,7 @@
 
         <div class="d-flex align-items-center justify-content-between flex-wrap search-options">
 
-          <div class="d-flex align-items-center search-sort">
+          <div class="d-flex align-items-center flex-wrap search-sort">
             <span class="font-weight-bold mr-3">Sort by</span>
             <div class="btn-group btn-group-toggle" data-toggle="buttons" role="group" aria-label="Sort order">
             <label class="btn btn-outline-primary {% if sort == 'recent' or not sort %}active{% endif %}">
@@ -660,6 +707,20 @@
                      {% if sort == 'best' %}checked{% endif %}>
               Best match
             </label>
+            </div>
+            <div class="search-substring-option">
+              <div class="custom-control custom-switch">
+                <input class="custom-control-input" type="checkbox" role="switch" id="substring" name="substring" value="1" {% if substring %}checked{% endif %}>
+                <label class="custom-control-label" for="substring">Substring search</label>
+              </div>
+              <button type="button" class="search-substring-help" aria-label="What is substring search?"
+                      onmouseenter="show_search_helper_tooltip(this, true)"
+                      onmouseleave="hide_obj_tooltip(this)"
+                      onfocus="show_search_helper_tooltip(this, true)"
+                      onblur="hide_obj_tooltip(this)"
+                      onclick="show_search_helper_tooltip(this, true)">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
 
@@ -767,7 +828,7 @@
 
 
     {% if result %}
-            {% set endpoint_url = url_for('search_b.search_dashboard', q=to_search, sort=sort, from=last_seen_from or None, to=last_seen_to or None, scopes=indexes_str or None, forums=forum_ids_str or None, forum_types=forum_types_str or None, username_types=username_types or None) %}
+            {% set endpoint_url = url_for('search_b.search_dashboard', q=to_search, sort=sort, from=last_seen_from or None, to=last_seen_to or None, scopes=indexes_str or None, forums=forum_ids_str or None, forum_types=forum_types_str or None, username_types=username_types or None, substring=1 if substring else None) %}
             {% include 'search/pagination.html' %}
             <div class="sticky-top mb-2" style="top: 1px; z-index: 1020;">
                 {% include 'objects/image/block_blur_img_slider.html' %}
@@ -990,9 +1051,16 @@ $(document).ready(function(){
     const usernameTypes = usernameTypeOptions.filter(option => option.input.checked).map(option => option.input.value);
 
     document.getElementById('scopes').value = scopes.join(',');
-    document.getElementById('forums').value = forums.join(',');
-    document.getElementById('forum_types').value = forumTypes.join(',');
-    document.getElementById('username_types').value = usernameTypes.length === usernameTypeOptions.length ? '' : usernameTypes.join(',');
+    const filters = [
+      {name: 'forums', values: forums, total: forumNameOptions.length},
+      {name: 'forum_types', values: forumTypes, total: document.querySelectorAll('input[name="forum_type"]').length},
+      {name: 'username_types', values: usernameTypes, total: usernameTypeOptions.length}
+    ];
+    filters.forEach(filter => {
+      const input = document.getElementById(filter.name);
+      input.value = filter.values.length === filter.total ? '' : filter.values.join(',');
+      input.disabled = !input.value;
+    });
     document.querySelectorAll('input[name="scope"]').forEach(i => i.disabled = true);
     document.querySelectorAll('input[name="forum"]').forEach(i => i.disabled = true);
     document.querySelectorAll('input[name="forum_type"]').forEach(i => i.disabled = true);

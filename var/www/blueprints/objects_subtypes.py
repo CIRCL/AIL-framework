@@ -23,9 +23,7 @@ from lib import ail_core
 from lib.objects import abstract_subtype_object
 from lib.objects import ail_objects
 from lib.objects import CryptoCurrencies
-from lib.objects import Usernames
 from packages import Date
-from lib import search_engine
 
 # ============ BLUEPRINT ============
 objects_subtypes = Blueprint('objects_subtypes', __name__, template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/objects'))
@@ -118,16 +116,6 @@ def objects_dashboard_pgp():
 @login_read_only
 def objects_dashboard_username():
     return subtypes_objects_dashboard('username', request)
-
-@objects_subtypes.route("/objects/usernames/search", methods=['GET', 'POST'])
-@login_required
-@login_read_only
-def objects_username_search():
-    # Keep existing links and POST forms working through the global search.
-    values = request.form if request.method == 'POST' else request.args
-    to_search = values.get('to_search') if request.method == 'POST' else values.get('search')
-    subtype = values.get('search_subtype') if request.method == 'POST' else values.get('subtype')
-    return redirect(url_for('search_b.search_dashboard', q=to_search or '', scopes='username', username_types=subtype if subtype and subtype != 'all' else None))
 
 @objects_subtypes.route("/objects/user-accounts", methods=['GET'])
 @login_required

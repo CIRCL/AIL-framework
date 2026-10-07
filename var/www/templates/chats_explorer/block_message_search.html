@@ -48,7 +48,7 @@
         {% endif %}
 
         <div class="block-obj-result">
-          <pre class="message-pre">{% if 'result' in message %}{{ message['result'] }}{% else %}{{ message['content'] }}{% endif %}</pre>
+          <pre class="message-pre">{% if 'result' in message %}{{ message['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}{% else %}{{ message['content'] }}{% endif %}</pre>
         </div>
 
         {% if message.get('tags') and message['tags'] %}

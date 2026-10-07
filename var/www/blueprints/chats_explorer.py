@@ -63,9 +63,7 @@ def get_tempolocus_request_options():
 @login_read_only
 def chats_explorer_protocols():
     protocols = chats_viewer.get_chat_protocols_meta()
-    return render_template('chats_protocols.html', protocols=protocols, username_subtypes=ail_core.get_object_all_subtypes('username'),
-                           nb_new_chats_monitoring_requests=chats_viewer.get_nb_new_chats_monitoring_requests(),
-                           is_admin=current_user.is_admin())
+    return render_template('chats_protocols.html', protocols=protocols, nb_new_chats_monitoring_requests=chats_viewer.get_nb_new_chats_monitoring_requests(), is_admin=current_user.is_admin())
 
 @chats_explorer.route("chats/explorer/networks", methods=['GET'])
 @login_required

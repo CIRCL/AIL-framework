@@ -124,19 +124,39 @@ function blur_tooltip(){
     }
 }
 
-function show_search_helper_tooltip(container) {
+function show_search_helper_tooltip(container, substringOnly = false) {
     container = $(container);
 
     if (container.data('bs.popover')) {
         container.popover('show');
     } else {
-        let c_helper = "<div class=\"pt-0\"><ul><li>Use <kbd>\"double quotes\"</kbd> for exact phrase searches.</li><li>Use <kbd>-</kbd> to exclude specific words.</li><li>Use <kbd>.</kbd> to match any single character.</li><li>A maximum of <b>10 words</b> can be used in a search query.</li></ul></div>";
+        const substringHelp = `
+            <p class="mb-2"><strong>Default search</strong> finds whole words or the beginning of a word. For example, <code>alex</code> can find <code><span class="bg-warning text-dark">alex</span>42</code>.</p>
+            <p class="mb-2"><strong>Substring search</strong> also finds text in the middle or at the end of a word. For example, <code>alex</code> finds <code>team<span class="bg-warning text-dark">alex</span>42</code>, which default search would miss.</p>
+            <p class="mb-2">Turn this on when you only know part of a name or word. Capital letters do not matter, but the spelling must match.</p>
+            <p class="small text-muted mb-0">Meilisearch only supports this option for short text, so long messages and pages may not match.</p>`;
+        const c_helper = substringOnly ? substringHelp : `
+            <div class="pt-0">
+                <ul>
+                    <li>Use <kbd>"double quotes"</kbd> for exact phrase searches.</li>
+                    <li>Use <kbd>-</kbd> to exclude specific words.</li>
+                    <li>Use <kbd>.</kbd> to match any single character.</li>
+                    <li>A maximum of <b>10 words</b> can be used in a search query.</li>
+                </ul>
+                <div class="border-top pt-2">
+                    <strong>Substring search</strong>
+                    ${substringHelp}
+                </div>
+            </div>`;
 
         container.popover({
+            title: substringOnly ? 'Substring search' : 'Search help',
             content: c_helper,
             html: true,
             container: 'body',
-        })
+            placement: 'auto',
+            trigger: 'manual',
+        });
         container.popover('show');
 
         //let popoverInstance = container.data('bs.popover');

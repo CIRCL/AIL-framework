@@ -55,7 +55,7 @@
                             </div>
 
 {#                            <pre class="border">{% for c in obj['result'] %}{% if loop.index0 % 2 %}<span class="hg-text">{{ c }}</span>{% else %}{{ c }}{% endif %}{% endfor %}</pre>#}
-                            <pre class="border">{{ obj['result'] }}</pre>
+                            <pre class="border">{{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}</pre>
 
                         </div>
                     </div>

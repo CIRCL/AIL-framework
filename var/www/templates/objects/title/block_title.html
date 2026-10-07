@@ -20,7 +20,7 @@
 
                     <!-- filename -->
                     <div class="h5 mb-1 font-weight-normal">
-                        {{ obj['result'] }}
+                        {{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}
                     </div>
 
                     <!-- metadata -->

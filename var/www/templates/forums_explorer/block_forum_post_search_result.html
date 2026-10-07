@@ -15,6 +15,6 @@
     {% if obj.get('full_date') %}
       <div class="text-muted small mb-2">{{ obj.get('full_date') }}</div>
     {% endif %}
-    <div>{{ obj.get('result') }}</div>
+    <div>{{ obj.get('result')|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}</div>
   </div>
 </div>

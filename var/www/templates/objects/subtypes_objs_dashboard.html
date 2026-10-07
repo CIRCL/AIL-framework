@@ -76,11 +76,7 @@
 						<div class="mt-1" id="barchart_type">
 						</div>
 
-                        {% if obj_type == 'username' %}
-                            {% with subtypes=subtypes %}
-                                {% include 'username/block_usernames_search.html' %}
-                            {% endwith %}
-                        {% else %}
+                        {% if obj_type != 'username' %}
 
                             <div class="card border-secondary my-2">
                                 <div class="card-body text-dark">
