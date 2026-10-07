@@ -77,6 +77,7 @@ def search_dashboard():
 
     last_seen_from = request.args.get('from')
     last_seen_to = request.args.get('to')
+    username_types = request.args.get('username_types', '')
 
     page = request.args.get('page', 1)
 
@@ -88,7 +89,7 @@ def search_dashboard():
     if search:
         r = search_engine.api_search({'indexes': indexes, 'search': search, 'page': page, 'user_id': user_id,
                                       'from': last_seen_from, 'to': last_seen_to, 'sort': sort,
-                                      'forum_ids': forum_ids, 'forum_types': forum_types})
+                                      'forum_ids': forum_ids, 'forum_types': forum_types, 'username_types': username_types})
         if r[1] != 200:
             error_type = r[0].get('error_type')
             if error_type == 'meilisearch_timeout':
@@ -123,6 +124,8 @@ def search_dashboard():
                            forum_types_str=forum_types_str,
                            indexes_str=indexes_str,
                            selected_scopes=indexes,
+                           username_subtypes=ail_core.get_object_all_subtypes('username'),
+                           username_types=username_types,
                            to_search=search,
                            sort=sort,
                            last_seen_from=last_seen_from,
@@ -130,14 +133,11 @@ def search_dashboard():
                            search_error=search_error,
                            result=result, pagination=pagination)
 
-# username_subtypes=ail_core.get_object_all_subtypes('username')
-
 @search_b.route("/search/advanced", methods=['GET'])
 @login_required
 @login_read_only
 def search_advanced():
-    return render_template('advanced_search.html',
-                           username_subtypes=ail_core.get_object_all_subtypes('username'))
+    return render_template('advanced_search.html')
 
 @search_b.route("/search/passivessh/host/ssh", methods=['GET', 'POST'])
 @login_required

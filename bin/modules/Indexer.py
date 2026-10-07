@@ -74,6 +74,9 @@ class Indexer(AbstractModule):
                 elif self.obj.type == 'title':
                     search_engine.index_title(self.obj)
 
+                elif self.obj.type == 'username':
+                    search_engine.index_username(self.obj)
+
                 elif self.obj.type == 'post':
                     search_engine.index_forum_post(self.obj)
                     thread_id = self.obj.get_thread_sub_id()

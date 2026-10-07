@@ -1,0 +1,29 @@
+<div class="card mb-3 shadow-sm border-0 block-obj">
+    <a href="{{ obj['link'] }}" class="text-decoration-none text-body">
+        <div class="card-body py-2 px-3">
+            <div class="d-flex align-items-center">
+                <div class="mr-3 text-primary" aria-hidden="true"><i class="fas fa-user fa-lg"></i></div>
+                <div class="flex-grow-1">
+                    <div class="h5 mb-1 font-weight-normal">
+                        {{ obj['result']|forceescape|replace('🔎⏩', '<mark>'|safe)|replace('⏪🔍', '</mark>'|safe) }}
+                    </div>
+                    <div class="text-muted block-obj-meta">
+                        Seen <strong>{{ obj['nb_seen'] }}</strong> times
+                        {% if obj['first_seen'] %}· First: {{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }}{% endif %}
+                        {% if obj['last_seen'] %}· Last: {{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}{% endif %}
+                    </div>
+                    {% if obj['tags'] %}
+                        <div class="mt-1">
+                            {% for tag in obj['tags'] %}
+                                <span class="badge badge-light border mr-1">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="obj-type-col text-right ml-3">
+                    <div class="obj-type-label">username / {{ obj['subtype'] }}</div>
+                </div>
+            </div>
+        </div>
+    </a>
+</div>

@@ -29,8 +29,7 @@ def ensure_indexes_ready(reset=False):
         existing = set(engine.get_indexes())
         required = set(search_engine.get_indexes_names())
         for index_name in sorted(required - existing):
-            engine._create_index(index_name)
-            engine.setup_indexes_searchable_filterable_sortable()
+            engine.ensure_index(index_name)
 
 
 def run_indexing(index_type):

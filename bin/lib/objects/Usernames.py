@@ -13,10 +13,12 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_queues import send_message_from_module
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
 
 config_loader = ConfigLoader()
 baseurl = config_loader.get_config_str("Notifications", "ail_domain")
+IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearch')
 config_loader = None
 
 
@@ -63,6 +65,10 @@ class Username(AbstractSubtypeObject):
         meta['tags'] = self.get_tags(r_list=True) # TODO NB Chats
         return meta
 
+    def get_search_document(self):
+        return {'uuid': self.get_uuid5(), 'id': self.get_global_id(), 'content': self.id, 'subtype': self.subtype,
+                'first': self.get_first_seen_timestamp() or 0, 'last': self.get_last_seen_timestamp() or 0}
+
     def get_misp_object(self):
         obj_attrs = []
         if self.subtype == 'telegram':
@@ -93,8 +99,17 @@ class Username(AbstractSubtypeObject):
                 obj_attr.add_tag(tag)
         return obj
 
+    def add(self, date, obj=None):
+        first_seen = self.get_first_seen()
+        last_seen = self.get_last_seen()
+        super().add(date, obj=obj)
+        if IS_MEILISEARCH_ENABLED and (not first_seen or not last_seen or int(date) < int(first_seen) or int(date) > int(last_seen)):
+            send_message_from_module('Username', self.get_global_id())
+
     def delete(self):
         self._delete()
+        if IS_MEILISEARCH_ENABLED:
+            send_message_from_module('Username', self.get_global_id())
 
     ############################################################################
     ############################################################################

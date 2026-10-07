@@ -110,6 +110,7 @@ def get_object_all_subtypes(obj_type):  # TODO Dynamic subtype
         chat_protocols = r_serv_db.smembers('chat:protocols')
         if not chat_protocols:
             chat_protocols = set()
+        chat_protocols.update(r_object.smembers('all_username:subtypes'))
         chat_protocols.add('jabber')
         chat_protocols.add('telegram')
         return sorted(chat_protocols)

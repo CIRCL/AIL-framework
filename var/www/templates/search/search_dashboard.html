@@ -48,6 +48,16 @@
     label:hover .scope-icon i {
       opacity: 1;
     }
+
+    .username-scope-filter {
+      margin-left: 1.5rem;
+      border-color: #dee2e6;
+    }
+
+    .username-scope-filter select {
+      min-width: 0;
+      cursor: pointer;
+    }
     </style>
 
 </head>
@@ -56,7 +66,7 @@
 	{% include 'nav_bar.html' %}
 
 
-<form method="GET" action="{{ url_for('search_b.search_dashboard') }}" id="searchForm", onsubmit="combineScopes()">
+<form method="GET" action="{{ url_for('search_b.search_dashboard') }}" id="searchForm" onsubmit="combineScopes()" autocomplete="off">
 
   <div class="container-fluid">
     <div class="row">
@@ -106,6 +116,29 @@
               </label>
             </div>
           {% endfor %}
+        </div>
+
+        <hr>
+
+        <!-- USERNAMES -->
+        <div class="mb-3">
+          <div class="custom-control custom-checkbox">
+            <input class="custom-control-input scope-item" type="checkbox" id="scope_username"
+                   name="scope" value="username" {% if "username" in selected_scopes %}checked{% endif %}>
+            <label class="custom-control-label d-flex align-items-center" for="scope_username">
+              <span class="scope-icon mr-2"><i class="fas fa-user"></i></span>
+              Usernames
+            </label>
+          </div>
+          <div class="username-scope-filter d-flex align-items-center border rounded bg-white px-2 mt-2">
+            <label for="global_username_type" class="small text-muted mb-0 mr-1">Type</label>
+            <select id="global_username_type" class="custom-select custom-select-sm border-0 bg-transparent" name="username_types" aria-label="Username type">
+              <option value="">All types</option>
+              {% for subtype in username_subtypes %}
+                <option value="{{ subtype }}" {% if subtype == username_types %}selected{% endif %}>{{ subtype|capitalize }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
 
         <hr>
@@ -336,11 +369,12 @@
         <div class="row align-items-center mt-2">
           <div class="col">
             <div class="input-group input-group-lg">
-              <input type="text"
+              <input type="search"
                      class="form-control"
                      name="q"
+                     autocomplete="off" data-lpignore="true" data-1p-ignore
                      value="{{ request.args.get('q','') }}"
-                     placeholder="Search chats, domains, titles, filenames…">
+                     placeholder="Search usernames, chats, domains, titles, filenames…">
 
               <div class="input-group-append">
                 <button class="btn btn-primary" type="submit">
@@ -471,22 +505,7 @@
 
 
     {% if result %}
-            {% set endpoint_url = url_for('search_b.search_dashboard') + "?q=" + to_search + "&sort=" + sort %}
-            {% if last_seen_from %}
-                {% set endpoint_url = endpoint_url + "&from=" + last_seen_from %}
-            {% endif %}
-            {% if last_seen_to %}
-                {% set endpoint_url = endpoint_url + "&to=" + last_seen_to %}
-            {% endif %}
-            {% if indexes_str %}
-                {% set endpoint_url = endpoint_url + "&scopes=" + indexes_str %}
-            {% endif %}
-            {% if forum_ids_str %}
-                {% set endpoint_url = endpoint_url + "&forums=" + forum_ids_str %}
-            {% endif %}
-            {% if forum_types_str %}
-                {% set endpoint_url = endpoint_url + "&forum_types=" + forum_types_str %}
-            {% endif %}
+            {% set endpoint_url = url_for('search_b.search_dashboard', q=to_search, sort=sort, from=last_seen_from or None, to=last_seen_to or None, scopes=indexes_str or None, forums=forum_ids_str or None, forum_types=forum_types_str or None, username_types=username_types or None) %}
             {% include 'search/pagination.html' %}
             <div class="sticky-top mb-2" style="top: 1px; z-index: 1020;">
                 {% include 'objects/image/block_blur_img_slider.html' %}
@@ -515,6 +534,8 @@
                 {% include 'objects/file-name/block_file_name.html' %}
             {% elif obj.type == 'user-account' %}
                 {% include 'chats_explorer/block_user_account.html' %}
+            {% elif obj.type == 'username' %}
+                {% include 'objects/username/block_username_search_result.html' %}
             {% elif obj.type == 'chat' %}
                 {% include 'chats_explorer/block_chat.html' %}
             {% else %}

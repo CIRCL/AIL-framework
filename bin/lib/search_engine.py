@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import json
 import logging.config
 import sys
 import time
@@ -30,6 +31,7 @@ from lib.objects import Posts
 from lib.objects import Screenshots
 from lib.objects import Titles
 from lib.objects import UsersAccount
+from lib.objects import Usernames
 from lib import chats_viewer
 from packages import Date
 
@@ -69,11 +71,11 @@ def load_messages_indexes():
 
 # FORUMS_INDEXES = load_forums_indexes()
 MESSAGES_INDEXES = load_messages_indexes()
-DATERANGE_INDEXES = {'filename', 'title'}
+DATERANGE_INDEXES = {'filename', 'title', 'username'}
 
 
 def load_indexes_names():
-    names = {'desc-dom', 'desc-img', 'desc-screen', 'filename', 'forum', 'title'}
+    names = {'desc-dom', 'desc-img', 'desc-screen', 'filename', 'forum', 'title', 'username'}
     for domain_types in Domains.get_all_domains_types():
         names.add(domain_types)
     for chat_name in MESSAGES_INDEXES:
@@ -103,6 +105,7 @@ def index_all():
     index_domains_descriptions()
     index_titles()
     index_file_names()
+    index_usernames()
 
 
 class MeiliSearch:
@@ -195,7 +198,13 @@ class MeiliSearch:
         task_uid = getattr(task, 'task_uid', None) or task.get('taskUid')
         return self.client.wait_for_task(task_uid, timeout_in_ms=timeout_in_ms)
 
-    def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent', forum_ids=None, forum_types=None):
+    def wait_successful_task(self, task):
+        result = self._wait_task(task)
+        if result.status != 'succeeded':
+            raise MeilisearchError(f'Meilisearch task failed: {result.error}')
+        return result
+
+    def search(self, indexes, query, nb=20, page=1, timestamp_from=None, timestamp_to=None, sort='recent', forum_ids=None, forum_types=None, username_types=None):
         # TODO investigate attributesToRetrieve speed
         end_query = []
         for index in indexes:
@@ -212,6 +221,8 @@ class MeiliSearch:
             if sort == 'recent':
                 q['sort'] = ['last:desc']
             filters = []
+            if index == 'username' and username_types:
+                filters.append('subtype IN ' + json.dumps(username_types))
             if index == 'forum' and forum_ids:
                 escaped_forum_ids = [forum_id.replace('\\', '\\\\').replace("'", "\\'") for forum_id in forum_ids]
                 filters.append('fid IN [' + ', '.join([f"'{forum_id}'" for forum_id in escaped_forum_ids]) + ']')
@@ -264,6 +275,8 @@ class MeiliSearch:
         filterable_attributes = ['last']
         if index_name == 'forum':
             filterable_attributes.extend(['fid', 'type'])
+        elif index_name == 'username':
+            filterable_attributes.append('subtype')
         if index_name not in MESSAGES_INDEXES:
             filterable_attributes.append('first')
         # filter by daterange
@@ -537,6 +550,37 @@ def index_file_names():
             Engine.update(index, document)
 
 
+def index_username(obj):
+    # Resolve queued updates against current storage, including deletion races.
+    if obj.exists():
+        Engine.update('username', obj.get_search_document())
+    else:
+        try:
+            Engine.remove('username', get_obj_uuid5(obj.get_global_id()))
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as error:
+            raise MeilisearchError(str(error)) from error
+
+
+def index_usernames(batch_size=1000):
+    """Backfill existing usernames in bounded batches; safe to run again."""
+    Engine.ensure_index('username')
+    batch = []
+    total = 0
+    for obj in Usernames.Usernames().get_iterator():
+        if not obj.exists():
+            continue
+        batch.append(obj.get_search_document())
+        if len(batch) >= batch_size:
+            Engine.wait_successful_task(Engine.client.index('username').add_documents(batch, primary_key='uuid'))
+            total += len(batch)
+            print(f'Indexed {total} usernames')
+            batch = []
+    if batch:
+        Engine.wait_successful_task(Engine.client.index('username').add_documents(batch, primary_key='uuid'))
+        total += len(batch)
+    print(f'Indexed {total} usernames')
+
+
 INDEXING_FUNCTIONS = {
     'all': index_all,
     'crawled': index_crawled,
@@ -549,6 +593,7 @@ INDEXING_FUNCTIONS = {
     'domains_descriptions': index_domains_descriptions,
     'titles': index_titles,
     'file_names': index_file_names,
+    'usernames': index_usernames,
 }
 
 ## --INDEXER-- ##
@@ -662,6 +707,14 @@ def api_search(data):
     if invalid_forum_types:
         return {"status": "error", "reason": "Invalid forum result type"}, 400
 
+    username_types = data.get('username_types', [])
+    if isinstance(username_types, str):
+        username_types = [subtype for subtype in username_types.split(',') if subtype]
+    if not isinstance(username_types, list) or any(not isinstance(subtype, str) for subtype in username_types):
+        return {"status": "error", "reason": "Invalid username type"}, 400
+    if username_types and set(username_types) - set(Usernames.Usernames().get_subtypes()):
+        return {"status": "error", "reason": "Invalid username type"}, 400
+
     timestamp_from = data.get("from")
     timestamp_to = data.get("to")
 
@@ -678,7 +731,7 @@ def api_search(data):
 
     try:
         result = Engine.search(indexes, to_search, page=page, nb=nb_per_page, timestamp_from=timestamp_from, sort=sort,
-                               timestamp_to=timestamp_to, forum_ids=forum_ids, forum_types=forum_types)
+                               timestamp_to=timestamp_to, forum_ids=forum_ids, forum_types=forum_types, username_types=username_types)
     except MeilisearchTimeoutError:
         return {
             "status": "error",
@@ -727,6 +780,11 @@ def api_search(data):
                 elif obj_type == 'user-account':
                     obj = UsersAccount.UserAccount(obj_id, subtype)
                     meta = obj.get_meta(options={'link', 'icon', 'info', 'nb_chats', 'protocol', 'tags_safe', 'username', 'usernames'})
+                elif obj_type == 'username':
+                    obj = Usernames.Username(obj_id, subtype)
+                    if not obj.exists():
+                        continue
+                    meta = obj.get_meta(options={'link', 'icon'})
                 elif obj_type == 'image':
                     obj = Images.Image(obj_id)
                     meta = obj.get_meta(options={'link', 'tags_safe'})
