@@ -147,6 +147,22 @@ def get_meilisearch_status():
     return status
 
 
+def cancel_meilisearch_enqueued_tasks():
+    """Cancel all enqueued tasks while preserving their task history."""
+    if not is_meilisearch_enabled() or Engine is None:
+        return {'error': 'Meilisearch is disabled or unavailable.'}, 400
+    try:
+        cancellation = Engine.client.cancel_tasks({'statuses': ['enqueued']})
+        result = Engine.client.wait_for_task(cancellation.task_uid, timeout_in_ms=5000)
+    except MeilisearchTimeoutError:
+        return {'error': 'Cancellation did not finish in time. Refresh to check task status.'}, 504
+    except (MeilisearchApiError, MeilisearchCommunicationError):
+        return {'error': 'Unable to cancel enqueued tasks. Check the connection and API permissions, then refresh to check task status.'}, 503
+    if result.status != 'succeeded':
+        return {'error': 'Meilisearch could not cancel enqueued tasks. Refresh to check the cancellation task.'}, 500
+    return {'message': 'Enqueued tasks were canceled and kept in task history.'}, 200
+
+
 # TODO One index for all forums ???
 # def load_forum_indexes():
 #     indexes = set()
@@ -365,9 +381,7 @@ class MeiliSearch:
         if index_name == 'username':
             # Configure existing indexes before creating this new index, so failed setup retries on the next startup.
             self.setup_substring_search()
-        task = self.client.create_index(index_name, {'primaryKey': 'uuid'})
-        if index_name == 'username':
-            self.wait_successful_task(task)
+        self.client.create_index(index_name, {'primaryKey': 'uuid'})
         self.setup_index_searchable_filterable_sortable(index_name)
 
     def create_indexes(self):
@@ -388,7 +402,7 @@ class MeiliSearch:
             index = self.client.index(index_name)
             filterable = index.get_filterable_attributes()
             if 'content' not in filterable:
-                self.wait_successful_task(index.update_filterable_attributes(filterable + ['content']))
+                index.update_filterable_attributes(filterable + ['content'])
 
     def setup_index_searchable_filterable_sortable(self, index_name):
         # restrict searchable attributes
@@ -412,11 +426,7 @@ class MeiliSearch:
         #     "attribute",  -> most important attributes
         #     "sort",
         #     "exactness"
-        task = self.client.index(index_name).update_ranking_rules(
-            ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'])
-        if index_name == 'username':
-            # Wait for the new username index's searchable/filterable/sortable settings before returning.
-            self.wait_successful_task(task)
+        self.client.index(index_name).update_ranking_rules(['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'])
         # fix issue attributesToSearchOn fails on never-populated index
         # https://github.com/meilisearch/meilisearch/issues/5921
         dummy_document = {'uuid': 'dummy', 'content': 'dummy', 'last': 0, 'id': 'dummy'}

@@ -10,7 +10,7 @@ import sys
 import json
 import pycountry
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, flash
 from flask_login import login_required, current_user
 
 # Import Role_Manager
@@ -79,6 +79,14 @@ def settings_modules():
 @login_admin
 def settings_meilisearch():
     return render_template('meilisearch.html', acl_admin=True, meilisearch_status=search_engine.get_meilisearch_status())
+
+@settings_b.route('/settings/meilisearch/tasks/enqueued/cancel', methods=['POST'])
+@login_required
+@login_admin
+def settings_meilisearch_cancel_enqueued_tasks():
+    result, status_code = search_engine.cancel_meilisearch_enqueued_tasks()
+    flash(result.get('error') or result['message'], 'danger' if status_code >= 400 else 'info')
+    return redirect(url_for('settings_b.settings_meilisearch'))
 
 @settings_b.route("/settings/user/profile", methods=['GET'])
 @login_required

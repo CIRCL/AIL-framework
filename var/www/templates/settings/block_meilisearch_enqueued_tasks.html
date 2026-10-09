@@ -1,7 +1,15 @@
 <div class="card shadow-sm mb-3">
-    <div class="card-header bg-light"><h5 class="mb-0">Enqueued tasks</h5></div>
+    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
+        <h5 class="mb-0">Enqueued tasks</h5>
+        {% if status.enqueued_tasks %}
+            <form action="{{ url_for('settings_b.settings_meilisearch_cancel_enqueued_tasks') }}" method="post" class="mt-1">
+                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-ban mr-1" aria-hidden="true"></i>Cancel all enqueued tasks</button>
+            </form>
+        {% endif %}
+    </div>
     {% if status.enqueued_tasks %}
         <div class="card-body py-2 text-muted small">Showing {{ status.enqueued_tasks|length }} of {{ number(status.task_counts.enqueued) }} enqueued tasks (maximum 100, newest first).</div>
+        <div class="card-body pt-0 pb-2 text-muted small">Cancel all stops enqueued tasks across all indexes, including tasks beyond the 100 shown. Canceled tasks remain in task history.</div>
         <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <thead class="thead-light">

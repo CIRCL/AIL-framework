@@ -43,6 +43,10 @@
                     </div>
                 </div>
 
+                {% for category, message in get_flashed_messages(with_categories=true) %}
+                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                {% endfor %}
+
                 {% if not status.enabled %}
                     <div class="card shadow-sm">
                         <div class="card-body">
