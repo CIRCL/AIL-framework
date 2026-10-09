@@ -1,0 +1,25 @@
+<div class="card shadow-sm mb-3">
+    <div class="card-header bg-light"><h5 class="mb-0">Enqueued tasks</h5></div>
+    {% if status.enqueued_tasks %}
+        <div class="card-body py-2 text-muted small">Showing {{ status.enqueued_tasks|length }} of {{ number(status.task_counts.enqueued) }} enqueued tasks (maximum 100, newest first).</div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="thead-light">
+                    <tr><th scope="col">ID</th><th scope="col">Index</th><th scope="col">Operation</th><th scope="col">Enqueued</th></tr>
+                </thead>
+                <tbody>
+                    {% for task in status.enqueued_tasks %}
+                        <tr>
+                            <td>{{ task.uid }}</td>
+                            <td><code>{{ task.index or 'All indexes' }}</code></td>
+                            <td>{{ task.type }}</td>
+                            <td class="small">{{ timestamp(task.enqueued_at) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card-body text-muted">{% if status.enqueued_tasks is none %}Enqueued tasks are unavailable.{% else %}No enqueued tasks found.{% endif %}</div>
+    {% endif %}
+</div>
