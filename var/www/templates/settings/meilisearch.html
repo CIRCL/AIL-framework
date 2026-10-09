@@ -152,38 +152,7 @@
                         {% endif %}
                     </div>
 
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-header bg-light"><h5 class="mb-0">Latest 20 failed tasks</h5></div>
-                        {% if status.failed_tasks %}
-                            <div class="card-body py-2 text-muted small">Most recent failures in retained task history. Showing {{ status.failed_tasks|length }} tasks.</div>
-                            <div class="table-responsive">
-                                <table class="table table-sm mb-0">
-                                    <thead class="thead-light">
-                                        <tr><th scope="col">ID</th><th scope="col">Index</th><th scope="col">Operation</th><th scope="col">Enqueued</th><th scope="col">Finished</th><th scope="col">Error</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for task in status.failed_tasks %}
-                                            <tr>
-                                                <td>{{ task.uid }}</td>
-                                                <td><code>{{ task.index or 'All indexes' }}</code></td>
-                                                <td>{{ task.type }}</td>
-                                                <td class="small">{{ timestamp(task.enqueued_at) }}</td>
-                                                <td class="small">{{ timestamp(task.finished_at) }}</td>
-                                                <td>
-                                                    {% if task.error_code or task.error_type %}
-                                                        <div class="small mb-1">{% if task.error_code %}<code>{{ task.error_code }}</code>{% endif %}{% if task.error_type %}{% if task.error_code %} · {% endif %}{{ task.error_type }}{% endif %}</div>
-                                                    {% endif %}
-                                                    <div class="small text-danger" style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ task.error or 'No error message provided.' }}</div>
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="card-body text-muted">{% if status.failed_tasks is none %}Failed tasks are unavailable.{% else %}No failed tasks found.{% endif %}</div>
-                        {% endif %}
-                    </div>
+                    {% include 'settings/block_meilisearch_enqueued_tasks.html' %}
 
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-light"><h5 class="mb-0">Recent tasks</h5></div>
@@ -221,6 +190,39 @@
                             </div>
                         {% else %}
                             <div class="card-body text-muted">{% if status.total_tasks is none %}Task statistics are unavailable.{% else %}No tasks found.{% endif %}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-light"><h5 class="mb-0">Latest 20 failed tasks</h5></div>
+                        {% if status.failed_tasks %}
+                            <div class="card-body py-2 text-muted small">Most recent failures in retained task history. Showing {{ status.failed_tasks|length }} tasks.</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0">
+                                    <thead class="thead-light">
+                                        <tr><th scope="col">ID</th><th scope="col">Index</th><th scope="col">Operation</th><th scope="col">Enqueued</th><th scope="col">Finished</th><th scope="col">Error</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for task in status.failed_tasks %}
+                                            <tr>
+                                                <td>{{ task.uid }}</td>
+                                                <td><code>{{ task.index or 'All indexes' }}</code></td>
+                                                <td>{{ task.type }}</td>
+                                                <td class="small">{{ timestamp(task.enqueued_at) }}</td>
+                                                <td class="small">{{ timestamp(task.finished_at) }}</td>
+                                                <td>
+                                                    {% if task.error_code or task.error_type %}
+                                                        <div class="small mb-1">{% if task.error_code %}<code>{{ task.error_code }}</code>{% endif %}{% if task.error_type %}{% if task.error_code %} · {% endif %}{{ task.error_type }}{% endif %}</div>
+                                                    {% endif %}
+                                                    <div class="small text-danger" style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ task.error or 'No error message provided.' }}</div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="card-body text-muted">{% if status.failed_tasks is none %}Failed tasks are unavailable.{% else %}No failed tasks found.{% endif %}</div>
                         {% endif %}
                     </div>
                 {% endif %}
