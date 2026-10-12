@@ -156,8 +156,6 @@
                         {% endif %}
                     </div>
 
-                    {% include 'settings/block_meilisearch_enqueued_tasks.html' %}
-
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-light"><h5 class="mb-0">Recent tasks</h5></div>
                         <div class="card-body py-2">
@@ -196,6 +194,8 @@
                             <div class="card-body text-muted">{% if status.total_tasks is none %}Task statistics are unavailable.{% else %}No tasks found.{% endif %}</div>
                         {% endif %}
                     </div>
+
+                    {% include 'settings/block_meilisearch_running_task.html' %}
 
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-light"><h5 class="mb-0">Latest 20 failed tasks</h5></div>
