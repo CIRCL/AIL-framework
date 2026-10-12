@@ -62,7 +62,7 @@ def get_meilisearch_status():
               'checked_at': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'version': None,
               'indexes': [], 'total_documents': None, 'total_indexes': None, 'indexing_indexes': None,
               'missing_indexes': [], 'database_size': None, 'used_database_size': None, 'last_update': None,
-              'tasks': [], 'running_task': None, 'failed_tasks': None, 'total_tasks': None, 'task_counts': {'enqueued': None, 'processing': None, 'failed': None}}
+              'tasks': [], 'running_tasks': [], 'failed_tasks': None, 'total_tasks': None, 'task_counts': {'enqueued': None, 'processing': None, 'failed': None}}
     if not status['enabled'] or Engine is None:
         if not status['enabled']:
             status['health'] = 'disabled'
@@ -122,15 +122,14 @@ def get_meilisearch_status():
         status['warnings'].append('Some task statistics could not be loaded. Check the connection and API permissions.')
 
     try:
-        running_tasks = Engine.client.get_tasks({'statuses': ['processing'], 'limit': 1})
+        running_tasks = Engine.client.get_tasks({'statuses': ['processing'], 'limit': 100})
         status['task_counts']['processing'] = running_tasks.total
-        if running_tasks.results:
-            task = running_tasks.results[0]
-            status['running_task'] = {'uid': task.uid, 'index': task.index_uid, 'type': task.type,
-                                      'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
-                                      'started_at': task.started_at.isoformat() if task.started_at else None}
+        for task in running_tasks.results:
+            status['running_tasks'].append({'uid': task.uid, 'index': task.index_uid, 'type': task.type,
+                                            'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
+                                            'started_at': task.started_at.isoformat() if task.started_at else None})
     except (MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError):
-        status['warnings'].append('The currently running task could not be loaded. Check the connection and API permissions.')
+        status['warnings'].append('The currently running tasks could not be loaded. Check the connection and API permissions.')
 
     try:
         failed_tasks = Engine.client.get_tasks({'statuses': ['failed'], 'limit': 20})

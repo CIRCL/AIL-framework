@@ -1,27 +1,29 @@
 <div class="card shadow-sm mb-3">
     <div class="card-header bg-light">
-        <h5 class="mb-0">Currently running task</h5>
+        <h5 class="mb-0">Currently running tasks</h5>
     </div>
-    {% if status.running_task %}
-        {% set task = status.running_task %}
+    {% if status.running_tasks %}
+        <div class="card-body py-2 text-muted small">Showing {{ number(status.running_tasks|length) }} of {{ number(status.task_counts.processing) }} processing tasks.</div>
         <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <thead class="thead-light">
                     <tr><th scope="col">ID</th><th scope="col">Index</th><th scope="col">Operation</th><th scope="col">Status</th><th scope="col">Enqueued</th><th scope="col">Started</th></tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>{{ task.uid }}</td>
-                        <td><code>{{ task.index or 'All indexes' }}</code></td>
-                        <td>{{ task.type }}</td>
-                        <td><span class="badge badge-primary">Processing</span></td>
-                        <td class="small">{{ timestamp(task.enqueued_at) }}</td>
-                        <td class="small">{{ timestamp(task.started_at) }}</td>
-                    </tr>
+                    {% for task in status.running_tasks %}
+                        <tr>
+                            <td>{{ task.uid }}</td>
+                            <td><code>{{ task.index or 'All indexes' }}</code></td>
+                            <td>{{ task.type }}</td>
+                            <td><span class="badge badge-primary">Processing</span></td>
+                            <td class="small">{{ timestamp(task.enqueued_at) }}</td>
+                            <td class="small">{{ timestamp(task.started_at) }}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     {% else %}
-        <div class="card-body text-muted">{% if status.task_counts.processing is none %}The currently running task is unavailable.{% else %}No task is currently running.{% endif %}</div>
+        <div class="card-body text-muted">{% if status.task_counts.processing is none %}The currently running tasks are unavailable.{% else %}No task is currently running.{% endif %}</div>
     {% endif %}
 </div>
