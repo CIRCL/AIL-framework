@@ -1,0 +1,26 @@
+{% if dict_domain['redirect_domains'] %}
+    <div class="card mt-3 border-info">
+        <div class="card-header">
+            <i class="fas fa-arrow-right"></i> Observed redirects
+            <span class="badge badge-info">{{ dict_domain['redirect_domains_count'] }}</span>
+        </div>
+        <div class="card-body">
+            <p>Crawls of this domain have ended at:</p>
+            <ul class="list-unstyled mb-0">
+                {% for domain in dict_domain['redirect_domains'] %}
+                    <li style="word-break: break-all;">
+                        <a href="{{ url_for('crawler_splash.showDomain', domain=domain) }}">{{ domain }}</a>
+                        {% if domain == dict_domain['last_redirect'] %}
+                            <span class="badge badge-light">Latest observed destination</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if dict_domain['redirect_domains_count'] > dict_domain['redirect_domains']|length %}
+                <a class="btn btn-outline-info btn-sm mt-2" href="{{ url_for('correlation.show_relationship', type='domain', id=dict_domain['domain'], relationships='redirects-to', filter='domain') }}">
+                    View all {{ dict_domain['redirect_domains_count'] }} destinations
+                </a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

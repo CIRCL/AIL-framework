@@ -51,7 +51,7 @@
 									{% if dict_domain["status"] %}
 										<div style="color:Green;">
 											<i class="fas fa-check-circle fa-2x"></i>
-											UP
+											{% if dict_domain['last_redirect'] %}REDIRECTED{% else %}UP{% endif %}
 										</div>
 									{% else %}
 										<div style="color:Red;">
@@ -131,7 +131,14 @@
                   </tbody>
                 </table>
 
+                {% include 'block_domain_redirects.html' %}
+
                 <div class="d-flex flex-row-reverse bd-highlight mt-2">
+                  {% if dict_domain['has_redirects'] %}
+                      <a href="{{ url_for('correlation.show_relationship', type='domain', id=dict_domain['domain'], relationships='redirects-to', filter='domain,item') }}" class="btn btn-info ml-2">
+                          <i class="fas fa-project-diagram"></i> Show Redirect Relationships
+                      </a>
+                  {% endif %}
                   {% if 'correlation_nb' in dict_domain %}
                       <hr>
                       <div>

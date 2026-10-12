@@ -286,6 +286,10 @@
                                                     <input class="form-check-input" type="checkbox" value="True" id="relationship_mention_Check" name="relationship_mention_Check" {%if "mention" in dict_object["relationships"]%}checked{%endif%}>
                                                     <label class="form-check-label" for="relationship_mention_Check">Mention</label>
                                                 </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="True" id="relationship_redirects-to_Check" name="relationship_redirects-to_Check" {% if "redirects-to" in dict_object["relationships"] %}checked{% endif %}>
+                                                    <label class="form-check-label" for="relationship_redirects-to_Check">Redirects To</label>
+                                                </div>
                                             </li>
 
                                             <input type="hidden" id="obj_type" name="obj_type" value="{{ dict_object["object_type"] }}">

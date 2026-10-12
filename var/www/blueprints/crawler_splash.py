@@ -552,6 +552,17 @@ def showDomain():
 
     dict_domain = domain.get_meta(options={'description', 'last_origin', 'languages'})
     dict_domain['domain'] = domain.id
+    dict_domain['history'] = domain.get_history(status=True)
+    dict_domain['crawler_history_items'] = []
+    last_redirect = domain.get_last_redirect()
+    dict_domain['last_redirect'] = last_redirect['domain'] if last_redirect else None
+    redirect_domains = domain.get_redirect_domains()
+    if last_redirect and last_redirect['domain'] in redirect_domains:
+        redirect_domains.remove(last_redirect['domain'])
+        redirect_domains.insert(0, last_redirect['domain'])
+    dict_domain['redirect_domains'] = redirect_domains[:5]
+    dict_domain['redirect_domains_count'] = len(redirect_domains)
+    dict_domain['has_redirects'] = bool(domain.get_obj_relationships(relationships={'redirects-to'}))
     if domain.was_up():
         dict_domain = {**dict_domain, **domain.get_correlations(filter_types=['cryptocurrency', 'decoded', 'pgp', 'screenshot', 'title'], unpack=True)}
 
@@ -570,31 +581,24 @@ def showDomain():
             nb += dict_domain['correlations_nb'][correl_type]
         dict_domain['correlation_nb'] = nb
         dict_domain['tags_safe'] = Tag.is_tags_safe(dict_domain['tags'])
-        dict_domain['history'] = domain.get_history(status=True)
-        curr_epoch = None
-        # Select valid epoch
-        if epoch:
-            for row in dict_domain['history']:
-                if row['epoch'] == epoch:
-                    curr_epoch = row['epoch']
-                    break
+    else:
+        dict_domain['tags_safe'] = True
+
+    if epoch is not None and not dict_domain['history']:
+        abort(404)
+    if dict_domain['history']:
+        if epoch is None:
+            selected = dict_domain['history'][-1]
         else:
-            curr_epoch = -1
-            for row in dict_domain['history']:
-                if row['epoch'] > curr_epoch:
-                    curr_epoch = row['epoch']
-        dict_domain['epoch'] = curr_epoch
-        dict_domain["date"] = time.strftime('%Y/%m/%d - %H:%M.%S', time.gmtime(curr_epoch))
-
-        # print(dict_domain['epoch'])
-
-        dict_domain['crawler_history_items'] = []
-        for item_id in domain.get_crawled_items_by_epoch(epoch):
+            selected = next((row for row in dict_domain['history'] if row['epoch'] == epoch), None)
+            if selected is None:
+                abort(404)
+        dict_domain['epoch'] = selected['epoch']
+        dict_domain['date'] = selected['date']
+        for item_id in domain.get_crawled_items_by_epoch(selected['epoch']):
             dict_domain['crawler_history_items'].append(Item(item_id).get_meta(options={'crawler'}))
         if dict_domain['crawler_history_items']:
             dict_domain['random_item'] = random.choice(dict_domain['crawler_history_items'])
-    else:
-        dict_domain['tags_safe'] = True
 
     return render_template("showDomain.html",
                            dict_domain=dict_domain, bootstrap_label=bootstrap_label,

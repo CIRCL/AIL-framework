@@ -20,7 +20,8 @@ RELATIONSHIPS = {
     "forwarded_to",  # forwarded_to
     "in",
     "mention",
-    "quote"
+    "quote",
+    "redirects-to"
 }
 
 RELATIONSHIPS_OBJS = { # TODO forward user-account
@@ -43,6 +44,10 @@ RELATIONSHIPS_OBJS = { # TODO forward user-account
     },
     "quote": {
         'post': {'post'},
+    },
+    "redirects-to": {
+        'domain': {'domain', 'item'},
+        'item': {'domain'},
     },
 }
 

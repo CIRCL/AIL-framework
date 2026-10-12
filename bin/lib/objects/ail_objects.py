@@ -543,7 +543,7 @@ def get_misp_objects(objs):
         obj_src = misp_objects[relation['src']]
         obj_dest = misp_objects[relation['dest']]
         if obj_src and obj_dest:
-            obj_src.add_reference(obj_dest.uuid, relation['relationship'], 'ail correlation')
+            obj_src.add_reference(obj_dest.uuid, relation['relationship'], relation.get('comment', 'ail correlation'))
     return misp_objects.values()
 
 # get misp relationship
@@ -564,6 +564,15 @@ def get_objects_relationships(objs):
                     relationship = get_objects_relationship(obj, obj2)
                     if relationship:
                         relation.append(relationship)
+    objects = {obj.get_global_id(): obj for obj in objs}
+    done = {(rel['src'].get_global_id(), rel['dest'].get_global_id(), rel['relationship']) for rel in relation}
+    for obj in objs:
+        for rel in obj.get_obj_relationships(relationships=relationships_engine.get_relationships()):
+            key = (rel['source'], rel['target'], rel['relationship'])
+            if key in done or rel['source'] not in objects or rel['target'] not in objects:
+                continue
+            relation.append({'src': objects[rel['source']], 'dest': objects[rel['target']], 'relationship': rel['relationship'], 'comment': 'ail relationship'})
+            done.add(key)
     return relation
 
 def get_relationship_src_dest(src_type, obj1, obj2):

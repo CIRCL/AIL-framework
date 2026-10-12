@@ -420,18 +420,19 @@ class Crawler(AbstractModule):
                     self.domain.add_tag(tag)
             # Crawler stats
             self.domain.add_history(epoch, root_item=self.root_item)
-            for item in saved_items:
-                item._queue_search_fields()
-
-            if self.domain != self.original_domain:  # TODO ADD RELATIONSHIP REDIRECT
-                self.original_domain.update_daterange(self.date.replace('/', ''))
+            if self.domain.id != self.original_domain.id:
                 if self.root_item:
                     self.original_domain.set_last_origin(parent_id)
                     # Tags
                     for tag in task.get_tags():
-                        self.domain.add_tag(tag)
-                self.original_domain.add_history(epoch, root_item=self.root_item)
-                # crawlers.update_last_crawled_domain(self.original_domain.get_domain_type(), self.original_domain.id, epoch)
+                        self.original_domain.add_tag(tag)
+                    self.original_domain.add_redirect(self.domain, self.root_item, epoch)
+                else:
+                    self.original_domain.update_daterange(self.date.replace('/', ''))
+                    self.original_domain.add_history(epoch)
+
+            for item in saved_items:
+                item._queue_search_fields()
 
             crawlers.update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, epoch)
 
@@ -480,7 +481,7 @@ class Crawler(AbstractModule):
             if entries.get('html'):
                 print('retrieved content')
 
-        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):  # TODO ADD RELATIONSHIP REDIRECT
+        if 'last_redirected_url' in entries and entries.get('last_redirected_url'):
             last_url = entries['last_redirected_url']
             if last_url == 'about:blank':
                 self.logger.warning(f'Error something fails, redirect: about:blank')

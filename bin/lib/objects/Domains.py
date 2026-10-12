@@ -114,6 +114,8 @@ class Domain(AbstractObject):
         r_crawler.hset(f'domain:meta:{self.id}', 'last_origin', origin_id)
 
     def is_up(self):
+        if self.get_last_redirect():
+            return True
         res = r_crawler.zrevrange(f'domain:history:{self.id}', 0, 0, withscores=True)
         if res:
             item_core, epoch = res[0]
@@ -124,7 +126,7 @@ class Domain(AbstractObject):
         return False
 
     def was_up(self):
-        return r_crawler.exists(f'domain:history:{self.id}')
+        return bool(r_crawler.exists(f'domain:history:{self.id}') or self._get_redirect_history())
 
     def is_up_by_month(self, date_month):
         # FIXME DIRTY PATCH
@@ -180,12 +182,51 @@ class Domain(AbstractObject):
         ports.add(port)
         self._set_ports(ports)
 
+    def _get_redirect_history(self):
+        """Resolve outgoing root-item links against the destination's stored history."""
+        roots = {}
+        global_id = self.get_global_id()
+        for rel in self.get_obj_relationships(relationships={'redirects-to'}, filter_types={'item'}):
+            if rel['source'] != global_id:
+                continue
+            root_item = rel['target'].split(':', 2)[2]
+            domain = get_item_domain(root_item)
+            if domain == self.id:
+                continue
+            roots[root_item] = domain
+        if not roots:
+            return {}
+        with r_crawler.pipeline() as pipeline:
+            for root_item, domain in roots.items():
+                pipeline.zscore(f'domain:history:{domain}', root_item)
+            timestamps = pipeline.execute()
+        return {root_item: epoch for root_item, epoch in zip(roots, timestamps) if epoch is not None}
+
+    def get_redirect_domains(self):
+        """Return observed outgoing destinations, excluding incoming redirect links."""
+        global_id = self.get_global_id()
+        relationships = self.get_obj_relationships(relationships={'redirects-to'}, filter_types={'domain'})
+        return sorted({rel['target'].split(':', 2)[2] for rel in relationships if rel['source'] == global_id and rel['target'] != global_id})
+
+    def get_last_redirect(self):
+        """Return the latest redirect unless a local crawl attempt supersedes it."""
+        redirects = self._get_redirect_history()
+        if not redirects:
+            return None
+        root_item, epoch = max(redirects.items(), key=lambda row: (row[1], row[0]))
+        latest = r_crawler.zrevrange(f'domain:history:{self.id}', 0, 0, withscores=True)
+        if latest and latest[0][1] >= epoch:
+            return None
+        return {'domain': get_item_domain(root_item), 'root': root_item, 'epoch': epoch}
+
     def get_history(self, status=False, root=False):
         """
-        Return .
+        Return this domain's stored crawl history, without following redirect links.
 
-        :return:
-        :rtype: list of tuple (item_core, epoch)
+        Stored history is a list of tuples (item_core, epoch): item_core is the
+        root item ID for a successful crawl or the epoch for a failed crawl.
+
+        :return: List of dictionaries containing epoch, date, and optional status/root.
         """
         history_tuple = r_crawler.zrange(f'domain:history:{self.id}', 0, -1, withscores=True)
         history = []
@@ -221,7 +262,7 @@ class Domain(AbstractObject):
     def get_item_timestamp(self, item_id):
         # check if item is crawling root
         timestamp = r_crawler.zscore(f'domain:history:{self.id}', item_id)
-        if timestamp:
+        if timestamp is not None:
             return timestamp
         else:
             parent_id = self.get_obj_parent('item', '', item_id)
@@ -533,6 +574,23 @@ class Domain(AbstractObject):
         nb = r_crawler.zcount(f'domain:history:{self.id}', epoch, epoch)
         return nb > 0
 
+    def _set_up(self, date):
+        r_crawler.srem(f'full_{self.domain_type}_down', self.id)
+        r_crawler.sadd(f'full_{self.domain_type}_up', self.id)
+        r_crawler.sadd(f'{self.domain_type}_up:{date}', self.id)
+        r_crawler.sadd(f'month_{self.domain_type}_up:{date[0:6]}', self.id)
+
+    def add_redirect(self, domain, root_item, epoch):
+        """Record a successful redirect after the destination has saved its history."""
+        if not root_item or domain.id == self.id:
+            return
+        date = time.strftime('%Y%m%d', time.gmtime(epoch))
+        self.update_daterange(date)
+        update_obj_date(date, 'domain', self.domain_type)
+        self._set_up(date)
+        self.add_relationship(domain.get_global_id(), 'redirects-to')
+        self.add_relationship(f'item::{root_item}', 'redirects-to')
+
     # if domain down -> root_item = epoch
     def add_history(self, epoch, root_item=None, date=None):
         if not date:
@@ -550,10 +608,7 @@ class Domain(AbstractObject):
         update_obj_date(date, 'domain', self.domain_type)
         # UP
         if status:
-            r_crawler.srem(f'full_{self.domain_type}_down', self.id)
-            r_crawler.sadd(f'full_{self.domain_type}_up', self.id)
-            r_crawler.sadd(f'{self.domain_type}_up:{date}', self.id) # # TODO:  -> store first day
-            r_crawler.sadd(f'month_{self.domain_type}_up:{date[0:6]}', self.id) # # TODO:  -> store first month
+            self._set_up(date)
             self._add_history_root_item(root_item, epoch)
         else:
             r_crawler.sadd(f'{self.domain_type}_down:{date}', self.id)
