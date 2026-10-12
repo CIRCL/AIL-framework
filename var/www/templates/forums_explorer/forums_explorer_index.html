@@ -76,8 +76,12 @@
                 </div>
               </div>
               <div class="forum-stats">
+                {% if forum.get('nb_subforums') or not forum.get('nb_orphan_subforums') %}
                 <div><strong>{{ forum.get('nb_subforums') or 0 }}</strong> root subforums</div>
+                {% endif %}
+                {% if forum.get('nb_orphan_subforums') or not forum.get('nb_subforums') %}
                 <div><strong>{{ forum.get('nb_orphan_subforums') or 0 }}</strong> orphan subforums</div>
+                {% endif %}
               </div>
             </a>
           {% endfor %}
