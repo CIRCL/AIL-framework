@@ -17,7 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
-from lib.objects.abstract_object import AbstractObject
+from lib.objects.abstract_object import AbstractObject, IS_MEILISEARCH_ENABLED
 from lib.ail_core import get_object_all_subtypes, zscan_iter, get_object_all_subtypes
 from lib.ConfigLoader import ConfigLoader
 from lib.item_basic import is_crawled, get_item_domain
@@ -79,9 +79,13 @@ class AbstractSubtypeObject(AbstractObject, ABC):
             return Date.convert_str_date_to_epoch(first_seen)
 
     def get_last_seen_timestamp(self):
+        if self.type in {'chat', 'user-account'}:
+            timestamp = self._get_field('last_seen_timestamp')
+            if timestamp is not None:
+                return int(timestamp)
         last_seen = self.get_last_seen()
-        if last_seen:
-            return Date.convert_str_date_to_epoch(last_seen)
+        timestamp = Date.convert_str_date_to_epoch(last_seen) if last_seen else 0
+        return timestamp or None
 
     def get_nb_seen(self):
         nb = r_object.zscore(f'{self.type}_all:{self.subtype}', self.id)
@@ -125,19 +129,25 @@ class AbstractSubtypeObject(AbstractObject, ABC):
     def set_last_seen(self, last_seen):
         r_object.hset(f'meta:{self.type}:{self.subtype}:{self.id}', 'last_seen', last_seen)
 
-    def update_daterange(self, date):
+    def update_daterange(self, date, queue_search=True):
         date = int(date)
+        previous_first = previous_last = None
         # obj don't exit
         if not self.exists():
             self.set_first_seen(date)
             self.set_last_seen(date)
         else:
-            first_seen = self.get_first_seen(r_int=True)
-            last_seen = self.get_last_seen(r_int=True)
+            previous_first = self.get_first_seen()
+            previous_last = self.get_last_seen()
+            first_seen = int(previous_first or 99999999)
+            last_seen = int(previous_last or 0)
             if date < first_seen:
                 self.set_first_seen(date)
             if date > last_seen:
                 self.set_last_seen(date)
+        if queue_search:
+            self._queue_search_dates(previous_first, previous_last, date)
+        return previous_first, previous_last
 
     def get_content(self, r_type='str'):
         if r_type == 'str':
@@ -173,9 +183,24 @@ class AbstractSubtypeObject(AbstractObject, ABC):
     def _add_subtype(self):
         r_object.sadd(f'all_{self.type}:subtypes', self.subtype)
 
-    def add(self, date, obj=None):
+    def add(self, date, obj=None, timestamp=None):
+        last_timestamp_changed = False
         self._add_subtype()
-        self.update_daterange(date)
+        first_seen, last_seen = self.update_daterange(date, queue_search=False)
+        if self.type in {'chat', 'user-account'}:
+            if timestamp is None and obj and obj.type in {'message', 'post'}:
+                timestamp = obj.get_timestamp()
+            if timestamp is not None:
+                timestamp = int(timestamp)
+                previous_timestamp = self._get_field('last_seen_timestamp')
+                if timestamp > int(previous_timestamp or 0):
+                    self._set_field('last_seen_timestamp', timestamp)
+                    if IS_MEILISEARCH_ENABLED:
+                        if previous_timestamp is not None:
+                            previous_timestamp = int(previous_timestamp)
+                        elif last_seen:
+                            previous_timestamp = Date.convert_str_date_to_epoch(last_seen)
+                        last_timestamp_changed = timestamp != previous_timestamp
         update_obj_date(date, self.type, self.subtype)
         # daily
         r_object.hincrby(f'{self.type}:{self.subtype}:{date}', self.id, 1)
@@ -200,6 +225,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
                 chat_subtype = obj.get_chat_instance()
                 chat_id = obj.get_chat_id()
                 self.add_correlation('chat', chat_subtype, chat_id)
+        self._queue_search_dates(first_seen, last_seen, date, last_timestamp_changed=last_timestamp_changed)
 
     # TODO:ADD objects + Stats
     # def create(self, first_seen, last_seen):

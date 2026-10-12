@@ -13,7 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
-from lib.objects.abstract_object import AbstractObject, r_object
+from lib.objects.abstract_object import AbstractObject, IS_MEILISEARCH_ENABLED, r_object
 from lib.objects import UsersAccount
 from lib.objects import Images
 
@@ -95,7 +95,13 @@ class Post(AbstractObject):
         return None
 
     def set_content(self, content):
+        previous_content = self._get_field('content') if IS_MEILISEARCH_ENABLED and content else None
         self._set_field('content', content)
+        if IS_MEILISEARCH_ENABLED and content and previous_content != content:
+            if previous_content:
+                self._queue_search_fields('content')
+            else:
+                self._queue_search_fields()
 
     def get_content(self, r_type='str'):
         content = self._get_field('content')
@@ -210,11 +216,12 @@ class Post(AbstractObject):
         return meta
 
     def create(self, post_id, timestamp, content, parent_thread, forum_obj, state=None, quote_ids=None):
-        if content:
-            self.set_content(content)
         if state:
             self.set_state(state)
-        return parent_thread.add_post(self, post_id, timestamp, forum_obj, quote_ids=quote_ids)
+        unresolved = parent_thread.add_post(self, post_id, timestamp, forum_obj, quote_ids=quote_ids)
+        if content:
+            self.set_content(content)
+        return unresolved
 
     def delete(self):
         self._delete()

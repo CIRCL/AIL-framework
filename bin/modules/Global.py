@@ -115,21 +115,12 @@ class Global(AbstractModule):
                             new_obj.sanitize_id()
                             self.set_obj(new_obj)
 
-                            # create subdir
-                            dirname = os.path.dirname(filename)
-                            if not os.path.exists(dirname):
-                                os.makedirs(dirname)
-
-                            with open(filename, 'wb') as f:
-                                f.write(decoded)
+                            self.obj.create(decoded, compressed=True)
 
                             update_obj_date(self.obj.get_date(), 'item')
 
                             self.add_message_to_queue(obj=self.obj, queue='Item')
                             self.processed_item += 1
-
-                            if self.obj.is_crawled():
-                                self.add_message_to_queue(obj=self.obj, queue='Indexers')
 
                             print(self.obj.id)
                             if r_result:
@@ -137,20 +128,17 @@ class Global(AbstractModule):
 
             else:
                 if self.obj.exists():
+                    update_obj_date(self.obj.get_date(), 'item')
                     self.add_message_to_queue(obj=self.obj, queue='Item')
                     self.processed_item += 1
 
-                    if self.obj.is_crawled():
-                        self.add_message_to_queue(obj=self.obj, queue='Indexers')
                 else:
                     self.logger.info(f"Empty Item: {message} not processed")
 
         elif self.obj.type == 'message':
             self.add_message_to_queue(obj=self.obj, queue='Item')
-            self.add_message_to_queue(obj=self.obj, queue='Indexers')
         elif self.obj.type == 'post':
             self.add_message_to_queue(obj=self.obj, queue='Item')
-            self.add_message_to_queue(obj=self.obj, queue='Indexers')
         elif self.obj.type == 'ocr':
             self.add_message_to_queue(obj=self.obj, queue='Item')
         elif self.obj.type == 'image':
@@ -158,9 +146,8 @@ class Global(AbstractModule):
             self.add_message_to_queue(obj=self.obj, queue='Images', message=message)
         elif self.obj.type == 'title':
             self.add_message_to_queue(obj=self.obj, queue='Titles', message=message)
-            self.add_message_to_queue(obj=self.obj, queue='Indexers', message=message)
         elif self.obj.type == 'file-name':
-            self.add_message_to_queue(obj=self.obj, queue='Indexers', message=message)
+            pass
         elif self.obj.type == 'pdf':
             return None
         else:

@@ -217,7 +217,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         thread = None
 
         # date stat + correlation
-        chat.add(date, obj)
+        chat.add(date, obj, timestamp=timestamp)
 
         if meta.get('name'):
             chat.set_name(meta['name'])
@@ -338,7 +338,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         if meta.get('info'):
             user_account.set_info(meta['info'])
 
-        user_account.add(date)
+        user_account.add(date, timestamp=timestamp)
         return user_account
 
     def process_sender(self, new_objs, obj, date, timestamp):
@@ -349,7 +349,7 @@ class AbstractChatFeeder(DefaultFeeder, ABC):
         user_account = UsersAccount.UserAccount(meta['id'], self.get_chat_instance_uuid())
 
         # date stat + correlation
-        user_account.add(date, obj)
+        user_account.add(date, obj, timestamp=timestamp)
 
         if meta.get('username'):
             username = Username(meta['username'], self.get_chat_protocol())

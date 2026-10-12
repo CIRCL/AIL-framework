@@ -529,6 +529,14 @@
                   </svg>
               </span> Threads</label>
             </div>
+            <div class="custom-control custom-checkbox">
+              <input class="custom-control-input forum-type-item forum_types" type="checkbox" id="forum_type_account"
+                     name="forum_type" value="user-account"
+                     {% if not selected_forum_types or 'user-account' in selected_forum_types %}checked{% endif %}>
+              <label class="custom-control-label d-flex align-items-center" for="forum_type_account">
+                <span class="scope-icon mr-2"><i class="far fa-user"></i></span> Accounts
+              </label>
+            </div>
           </div>
 
           {% set forum_selection = namespace(count=0) %}

@@ -11,6 +11,7 @@ from flask import url_for
 sys.path.append(os.environ['AIL_BIN'])
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, r_object
+from lib.objects.abstract_object import IS_MEILISEARCH_ENABLED
 from lib.objects import Posts
 from packages import Date
 
@@ -33,7 +34,15 @@ class ForumThread(AbstractSubtypeObject):
         return self._get_field('name')
 
     def set_name(self, name):
+        previous = self._get_field('name') if IS_MEILISEARCH_ENABLED else None
+        if IS_MEILISEARCH_ENABLED and previous == str(name):
+            return
         self._set_field('name', name)
+        if IS_MEILISEARCH_ENABLED:
+            if previous:
+                self._queue_search_fields('content')
+            else:
+                self._queue_search_fields()
 
     def get_info(self):
         return self._get_field('info')
@@ -291,6 +300,8 @@ class ForumThread(AbstractSubtypeObject):
         pass
 
     def get_search_document(self):
+        if not self.contain_posts():
+            return None
         global_id = self.get_global_id()
         content = self.get_name()
         # info = self.get_info()
@@ -314,7 +325,7 @@ class ForumThread(AbstractSubtypeObject):
 
     def create(self, name=None, url=None, info=None, parent_global_id=None):
         if name:
-            self._set_field('name', name)
+            self.set_name(name)
         if url:
             self.set_url(url)
         if info:

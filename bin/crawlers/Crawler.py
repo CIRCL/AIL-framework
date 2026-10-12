@@ -400,7 +400,8 @@ class Crawler(AbstractModule):
         self.root_item = None
 
         # Save Capture
-        saved = self.save_capture_response(capture, task, parent_id, entries)
+        saved_items = []
+        saved = self.save_capture_response(capture, task, parent_id, entries, saved_items)
         if saved:
             if self.parent != 'lookup':
                 # Update domain first/last seen
@@ -419,6 +420,8 @@ class Crawler(AbstractModule):
                     self.domain.add_tag(tag)
             # Crawler stats
             self.domain.add_history(epoch, root_item=self.root_item)
+            for item in saved_items:
+                item._queue_search_fields()
 
             if self.domain != self.original_domain:  # TODO ADD RELATIONSHIP REDIRECT
                 self.original_domain.update_daterange(self.date.replace('/', ''))
@@ -455,7 +458,7 @@ class Crawler(AbstractModule):
         self.interactive_session = None
         self.root_item = None
 
-    def save_capture_response(self, capture, task, parent_id, entries):
+    def save_capture_response(self, capture, task, parent_id, entries, saved_items):
         filter_page = False
         crawled_domain = None
         crawled_url = None
@@ -562,10 +565,9 @@ class Crawler(AbstractModule):
                     dom_hash.add(self.date.replace('/', ''), item)
                     dom_hash.add_correlation('domain', '', self.domain.id)
 
-                gzip64encoded = crawlers.get_gzipped_b64_item(item.id, entries['html'])
-                # send item to Global
-                relay_message = f'crawler {gzip64encoded}'
-                self.add_message_to_queue(obj=item, message=relay_message, queue='Importers')
+                # Save before registering capture history and enqueueing for search.
+                item.create(entries['html'], content_type='str')
+                self.add_message_to_queue(obj=item, message='crawler', queue='Importers')
 
                 # Tag # TODO replace me with metadata to tags
                 msg = f'infoleak:submission="crawler"'  # TODO FIXME
@@ -576,6 +578,7 @@ class Crawler(AbstractModule):
                 if self.root_item is None:
                     self.root_item = item_id
                 parent_id = item_id
+                saved_items.append(item)
 
                 # TITLE
                 if title_content:
@@ -628,7 +631,7 @@ class Crawler(AbstractModule):
         entries_children = entries.get('children')
         if entries_children:
             for children in entries_children:
-                self.save_capture_response(capture, task, parent_id, children)
+                self.save_capture_response(capture, task, parent_id, children, saved_items)
         if crawled_domain and self.interactive_session:
             crawlers.set_interactive_session_crawled_domain_by_capture(capture.uuid, crawled_domain, url=crawled_url, session=self.interactive_session)
         return True

@@ -217,6 +217,88 @@ def index_all():
     index_usernames()
 
 
+class SearchBatcher:
+    """Single-process buffering; task acceptance completes a submission."""
+
+    def __init__(self, submit, get_document, timeout=60, batch_size=500, max_bytes=5 * 1024 * 1024, clock=time.monotonic):
+        self.submit = submit
+        self.get_document = get_document
+        self.timeout = timeout
+        self.batch_size = batch_size
+        self.max_bytes = max_bytes
+        self.clock = clock
+        self.pending = {}
+        self.started = {}
+
+    def add(self, index, obj, fields=None, timestamp=None, uuid=None):
+        uuid = uuid or obj.get_uuid5()
+        if timestamp is not None:
+            timestamp = int(timestamp)
+        if fields is not None:
+            fields = set(fields) - {'uuid'}
+            if not fields:
+                return
+        if index not in self.pending:
+            self.pending[index] = {}
+            self.started[index] = self.clock()
+        entries = self.pending[index]
+        if uuid not in entries:
+            entries[uuid] = {'obj': obj}
+            if fields is not None:
+                entries[uuid]['fields'] = fields
+        else:
+            entry = entries[uuid]
+            if timestamp is None or entry.get('timestamp') is None or timestamp >= entry['timestamp']:
+                entry['obj'] = obj
+            if fields is None:
+                entry.pop('fields', None)
+            elif 'fields' in entry:
+                entry['fields'].update(fields)
+        if timestamp is not None:
+            entries[uuid]['timestamp'] = max(timestamp, entries[uuid].get('timestamp', timestamp))
+
+    def flush_due(self, force=False):
+        for index in list(self.pending):
+            if force or len(self.pending[index]) >= self.batch_size or self.clock() - self.started[index] >= self.timeout:
+                self.flush(index)
+
+    def _submit(self, index, documents):
+        # Synchronous HTTP submission: events arriving meanwhile stay in AIL's queue.
+        self.submit(index, documents)
+        for document in documents:
+            uuid = document['uuid']
+            del self.pending[index][uuid]
+
+    def flush(self, index):
+        documents = []
+        payload_bytes = 2
+        entries = self.pending[index]
+        for uuid in list(entries):
+            document = self.get_document(index, uuid, entries[uuid])
+            if document is None:
+                # TODO: Handle objects deleted while waiting for batch indexing.
+                del entries[uuid]
+                continue
+            size = len(json.dumps(document, ensure_ascii=True).encode('utf-8'))
+            if documents and (len(documents) >= self.batch_size or payload_bytes + size + 2 > self.max_bytes):
+                self._submit(index, documents)
+                documents = []
+                payload_bytes = 2
+            documents.append(document)
+            payload_bytes += size + (2 if len(documents) > 1 else 0)
+            # A document over the byte target is submitted alone; Meilisearch's
+            # configured HTTP payload limit still applies, and rejection retains it.
+            if payload_bytes >= self.max_bytes:
+                self._submit(index, documents)
+                documents = []
+                payload_bytes = 2
+        if documents:
+            self._submit(index, documents)
+        if not entries:
+            del self.pending[index]
+            del self.started[index]
+
+
 class MeiliSearch:
     def __init__(self):
         self.client = meilisearch.Client(M_URL, M_KEY, timeout=5)
@@ -466,6 +548,22 @@ class MeiliSearch:
                 logger.warning(f'Meilisearch connection failed: {e.message}')
                 raise MeilisearchError(e.message)
 
+    def update_batch(self, index, documents):
+        """Submit one task for many documents; do not wait for task completion."""
+        try:
+            self.ensure_index(index)
+            return self.client.index(index).update_documents(documents, primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as error:
+            raise MeilisearchError(str(error)) from error
+
+    def add_batch(self, index, documents):
+        """Preserve replacement semantics when backfilling description documents."""
+        try:
+            self.ensure_index(index)
+            return self.client.index(index).add_documents(documents, primary_key='uuid')
+        except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as error:
+            raise MeilisearchError(str(error)) from error
+
     def remove(self, index, doc_id):
         self.client.index(index).delete_document(doc_id)
 
@@ -529,6 +627,111 @@ else:
 
 #### INDEXER ####
 
+def get_pending_search_document(index, uuid, entry):
+    """Resolve requested fields from current AIL storage immediately before submission."""
+    obj = entry['obj']
+    if not obj.exists():
+        return None
+    fields = entry.get('fields')
+    timestamp = entry.get('timestamp')
+    if timestamp is not None:
+        timestamp = int(timestamp)
+    if obj.type == 'item':
+        document = {'uuid': uuid, 'last': timestamp}
+        if fields is None or 'content' in fields:
+            document['content'] = obj.get_html2text_content()
+        return document
+    if obj.type in {'chat', 'user-account'}:
+        timestamp = max(timestamp or 0, int(obj.get_last_seen_timestamp() or 0))
+        if not timestamp:
+            return None
+    if obj.type in {'title', 'file-name', 'forum-thread'} and (not obj.get_first_seen_timestamp() or not obj.get_last_seen_timestamp()):
+        return None
+    if obj.type == 'forum-thread' and not obj.contain_posts():
+        return None
+    if fields is None or fields - {'first', 'last'}:
+        if obj.type in {'message', 'chat', 'user-account'}:
+            document = obj.get_search_document(timestamp)
+        elif index == 'desc-dom':
+            document = obj.get_search_description_document()
+        else:
+            document = obj.get_search_document()
+        if not document or fields is None:
+            return document
+        return {field: value for field, value in document.items() if field == 'uuid' or field in fields}
+    document = {'uuid': uuid}
+    if 'first' in fields:
+        document['first'] = obj.get_first_seen_timestamp() or 0
+    if 'last' in fields:
+        document['last'] = timestamp if timestamp is not None else obj.get_last_seen_timestamp() or 0
+    return document
+
+
+def queue_crawled_item(batcher, item, domain=None, timestamp=None):
+    if domain is None:
+        domain = Domains.Domain(item.get_domain())
+    if timestamp is None:
+        timestamp = domain.get_item_timestamp(item.id)
+    if not timestamp:
+        return
+    index = domain.get_domain_type()
+    cid = sha256(item.get_html2text_content().encode()).hexdigest()
+    known = bool(r_search.exists(f'crawled:{index}:{cid}'))
+    batcher.add(index, item, fields={'last'} if known else None, timestamp=timestamp, uuid=cid)
+    r_search.sadd(f'crawled:{index}:contents', cid)
+    r_search.hset(f'crawled:{index}:{cid}', domain.id, item.id)
+
+
+def get_object_index(obj):
+    """Resolve the search destination for live events and complete backfills."""
+    if obj.type == 'item':
+        if obj.is_crawled():
+            return Domains.Domain(obj.get_domain()).get_domain_type()
+    elif obj.type in {'message', 'chat', 'user-account'}:
+        protocol = obj.get_protocol()
+        if protocol:
+            index = f'c{protocol}'
+            MESSAGES_INDEXES.add(index)
+            return index
+        if obj.type == 'user-account' and Forums.Forum(obj.subtype).exists():
+            return 'forum'
+    elif obj.type in {'title', 'file-name', 'username'}:
+        return {'title': 'title', 'file-name': 'filename', 'username': 'username'}[obj.type]
+    elif obj.type in {'post', 'forum-thread'}:
+        return 'forum'
+    return None
+
+
+def queue_indexer_object(batcher, obj, message=''):
+    fields = set(message.split(',')) if message else None
+    index = get_object_index(obj)
+    if not index:
+        return
+    if obj.type == 'item':
+        queue_crawled_item(batcher, obj)
+    else:
+        batcher.add(index, obj, fields=fields)
+
+
+def _index_objects(objects, index=None, replace=False, batch_size=500):
+    """Stream a backfill through bounded requests and submit its final partial batch."""
+    batcher = SearchBatcher(Engine.add_batch if replace else Engine.update_batch, get_pending_search_document, batch_size=batch_size)
+    total = 0
+    for obj in objects:
+        if not obj.exists():
+            continue
+        if index is None:
+            obj_index = get_object_index(obj)
+            if not obj_index:
+                continue
+        else:
+            obj_index = index
+        batcher.add(obj_index, obj)
+        batcher.flush_due()
+        total += 1
+    batcher.flush_due(force=True)
+    return total
+
 ## DOMAIN ##
 
 def index_crawled_item(item):
@@ -539,18 +742,23 @@ def index_crawled_item(item):
     # else: # TODO LOG
 
 
-def _index_crawled_domain(dom_id):
+def _index_crawled_domain(dom_id, batcher=None):
     domain = Domains.Domain(dom_id)
     for timestamp in domain.get_timestamps_up():
         for item_id in domain.get_crawled_items_by_epoch(epoch=timestamp):
             item = Items.Item(item_id)
             if not item.exists():
                 continue
-            Engine.index_crawled_item(domain, item, timestamp)
+            if batcher is None:
+                Engine.index_crawled_item(domain, item, timestamp)
+            else:
+                queue_crawled_item(batcher, item, domain=domain, timestamp=timestamp)
+                batcher.flush_due()
 
 
 def index_crawled():
     # multi process
+    batcher = SearchBatcher(Engine.update_batch, get_pending_search_document)
     if not r_search.exists('to_index:crawled'):
         for domain_type in Domains.get_all_domains_types():
             for dom_id in Domains.get_domains_up_by_type(domain_type):
@@ -558,9 +766,14 @@ def index_crawled():
     while True:
         dom_id = r_search.spop('to_index:crawled')
         if not dom_id:
+            try:
+                batcher.flush_due(force=True)
+            except MeilisearchError:
+                time.sleep(10)
+                continue
             break
         try:
-            _index_crawled_domain(dom_id)
+            _index_crawled_domain(dom_id, batcher=batcher)
         except MeilisearchError:
             # send back for resume
             r_search.sadd('to_index:crawled', dom_id)
@@ -571,25 +784,13 @@ def index_crawled():
 ## MESSAGE ##
 
 def index_chats():
-    for obj in chats_viewer.get_chats_iterator():
-        index = f'c{obj.get_protocol()}'
-        document = obj.get_search_document()
-        if document:
-            Engine.update(index, document)
+    _index_objects(chats_viewer.get_chats_iterator())
 
 def index_messages():
-    for message in chats_viewer.get_messages_iterator():
-        index = f'c{message.get_protocol()}'
-        document = message.get_search_document()
-        if document:
-            Engine.update(index, document)
+    _index_objects(chats_viewer.get_messages_iterator())
 
 def index_user_accounts():
-    for obj in UsersAccount.UserAccounts().get_iterator():
-        index = f'c{obj.get_protocol()}'
-        document = obj.get_search_document()
-        if document:
-            Engine.update(index, document)
+    _index_objects(UsersAccount.UserAccounts().get_iterator())
 
 ## DESCRIPTION ##
 
@@ -600,8 +801,7 @@ def index_image_description(image):
         Engine.add(index, document)
 
 def index_images_descriptions():
-    for image in Images.get_all_images_objects():
-        index_image_description(image)
+    _index_objects(Images.get_all_images_objects(), index='desc-img', replace=True)
 
 
 def index_screenshot_description(screenshot):
@@ -611,8 +811,7 @@ def index_screenshot_description(screenshot):
         Engine.add(index, document)
 
 def index_screenshots_descriptions():
-    for screenshot in Screenshots.get_screenshots_obj_iterator():
-        index_screenshot_description(screenshot)
+    _index_objects(Screenshots.get_screenshots_obj_iterator(), index='desc-screen', replace=True)
 
 
 def index_domain_description(domain_id):
@@ -623,10 +822,8 @@ def index_domain_description(domain_id):
         Engine.add(index, document)
 
 def index_domains_descriptions():
-    for dom_id in Domains.get_domains_up_by_type('onion'):
-        index_domain_description(dom_id)
-    for dom_id in Domains.get_domains_up_by_type('web'):
-        index_domain_description(dom_id)
+    for domain_type in ('onion', 'web'):
+        _index_objects((Domains.Domain(dom_id) for dom_id in Domains.get_domains_up_by_type(domain_type)), index='desc-dom', replace=True)
 
 
 ## TITLE ##  # TODO update only
@@ -639,11 +836,7 @@ def index_title(obj):
 
 
 def index_titles():
-    index = 'title'
-    for obj in Titles.Titles().get_iterator():
-        document = obj.get_search_document()
-        if document:
-            Engine.update(index, document)
+    _index_objects(Titles.Titles().get_iterator(), index='title')
 
 
 ## FILENAME ##  # TODO update only
@@ -661,14 +854,21 @@ def index_forum_post(obj):
         Engine.update(index, document)
 
 def index_forum_posts():
+    batcher = SearchBatcher(Engine.update_batch, get_pending_search_document)
     for forum_id in Forums.get_forums():
         for obj_id, _score in ForumThreads.ForumThreads().get_id_iterators_by_subtype(forum_id):
             thread = ForumThreads.ForumThread(obj_id, forum_id)
-            index_forum_thread(thread)
+            batcher.add('forum', thread)
+            batcher.flush_due()
             posts, _ = thread._get_posts()
             for post_gid, _timestamp in posts:
                 _, _, post_id = post_gid.split(':', 2)
-                index_forum_post(Posts.Post(post_id))
+                batcher.add('forum', Posts.Post(post_id))
+                batcher.flush_due()
+        for account_id, _score in UsersAccount.UserAccounts().get_id_iterators_by_subtype(forum_id):
+            batcher.add('forum', UsersAccount.UserAccount(account_id, forum_id))
+            batcher.flush_due()
+    batcher.flush_due(force=True)
 
 def index_file_name(obj):
     index = 'filename'
@@ -678,11 +878,7 @@ def index_file_name(obj):
 
 
 def index_file_names():
-    index = 'filename'
-    for obj in FilesNames.FilesNames().get_iterator():
-        document = obj.get_search_document()
-        if document:
-            Engine.update(index, document)
+    _index_objects(FilesNames.FilesNames().get_iterator(), index='filename')
 
 
 def index_username(obj):
@@ -696,24 +892,11 @@ def index_username(obj):
             raise MeilisearchError(str(error)) from error
 
 
-def index_usernames(batch_size=1000):
-    """Backfill existing usernames in bounded batches; safe to run again."""
+def index_usernames(batch_size=500):
+    """Backfill usernames in bounded batches, completing on task acceptance."""
     Engine.ensure_index('username')
-    batch = []
-    total = 0
-    for obj in Usernames.Usernames().get_iterator():
-        if not obj.exists():
-            continue
-        batch.append(obj.get_search_document())
-        if len(batch) >= batch_size:
-            Engine.wait_successful_task(Engine.client.index('username').add_documents(batch, primary_key='uuid'))
-            total += len(batch)
-            print(f'Indexed {total} usernames')
-            batch = []
-    if batch:
-        Engine.wait_successful_task(Engine.client.index('username').add_documents(batch, primary_key='uuid'))
-        total += len(batch)
-    print(f'Indexed {total} usernames')
+    total = _index_objects(Usernames.Usernames().get_iterator(), index='username', replace=True, batch_size=batch_size)
+    print(f'Submitted {total} usernames')
 
 
 INDEXING_FUNCTIONS = {
@@ -842,7 +1025,7 @@ def api_search(data):
     forum_types = data.get("forum_types", [])
     if isinstance(forum_types, str):
         forum_types = [forum_type for forum_type in forum_types.split(',') if forum_type]
-    invalid_forum_types = set(forum_types) - {'post', 'forum-thread'}
+    invalid_forum_types = set(forum_types) - {'post', 'forum-thread', 'user-account'}
     if invalid_forum_types:
         return {"status": "error", "reason": "Invalid forum result type"}, 400
 
@@ -928,6 +1111,9 @@ def api_search(data):
                 elif obj_type == 'user-account':
                     obj = UsersAccount.UserAccount(obj_id, subtype)
                     meta = obj.get_meta(options={'link', 'icon', 'info', 'nb_chats', 'protocol', 'tags_safe', 'username', 'usernames'})
+                    if not meta['protocol']:
+                        meta['nb_posts'] = obj.get_nb_posts()
+                        meta['forum_name'] = Forums.Forum(subtype).get_name() or subtype
                 elif obj_type == 'username':
                     obj = Usernames.Username(obj_id, subtype)
                     if not obj.exists():

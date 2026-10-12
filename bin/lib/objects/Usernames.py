@@ -99,17 +99,10 @@ class Username(AbstractSubtypeObject):
                 obj_attr.add_tag(tag)
         return obj
 
-    def add(self, date, obj=None):
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        super().add(date, obj=obj)
-        if IS_MEILISEARCH_ENABLED and (not first_seen or not last_seen or int(date) < int(first_seen) or int(date) > int(last_seen)):
-            send_message_from_module('Username', self.get_global_id())
-
     def delete(self):
         self._delete()
         if IS_MEILISEARCH_ENABLED:
-            send_message_from_module('Username', self.get_global_id())
+            send_message_from_module('Search', self.get_global_id())
 
     ############################################################################
     ############################################################################

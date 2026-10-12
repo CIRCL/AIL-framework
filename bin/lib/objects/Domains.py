@@ -225,8 +225,7 @@ class Domain(AbstractObject):
             return timestamp
         else:
             parent_id = self.get_obj_parent('item', '', item_id)
-            parent_domain = _get_item_domain(parent_id)
-            if parent_id and parent_domain == self.id:
+            if parent_id and _get_item_domain(parent_id) == self.id:
                 return self.get_item_timestamp(parent_id)
         return None
 

@@ -111,19 +111,25 @@ class AbstractDaterangeObject(AbstractObject, ABC):
     def set_last_seen(self, last_seen):
         self._set_field('last_seen', last_seen)
 
-    def update_daterange(self, date):
+    def update_daterange(self, date, queue_search=True):
         date = int(date)
+        previous_first = previous_last = None
         # obj don't exit
         if not self.exists():
             self.set_first_seen(date)
             self.set_last_seen(date)
         else:
-            first_seen = self.get_first_seen(r_int=True)
-            last_seen = self.get_last_seen(r_int=True)
+            previous_first = self.get_first_seen()
+            previous_last = self.get_last_seen()
+            first_seen = int(previous_first or 99999999)
+            last_seen = int(previous_last or 0)
             if date < first_seen:
                 self.set_first_seen(date)
             if date > last_seen:
                 self.set_last_seen(date)
+        if queue_search:
+            self._queue_search_dates(previous_first, previous_last, date)
+        return previous_first, previous_last
 
     def get_sparkline(self):
         sparkline = []
@@ -164,11 +170,12 @@ class AbstractDaterangeObject(AbstractObject, ABC):
 
     def _add(self, date, obj): # TODO OBJ=None
         if not self.exists():
+            first_seen = last_seen = None
             self._add_create()
             self.set_first_seen(date)
             self.set_last_seen(date)
         else:
-            self.update_daterange(date)
+            first_seen, last_seen = self.update_daterange(date, queue_search=False)
         update_obj_date(date, self.type)
 
         r_object.zincrby(f'{self.type}:date:{date}', 1, self.id)
@@ -187,6 +194,7 @@ class AbstractDaterangeObject(AbstractObject, ABC):
                 chat_subtype = obj.get_chat_instance()
                 chat_id = obj.get_chat_id()
                 self.add_correlation('chat', chat_subtype, chat_id)
+        self._queue_search_dates(first_seen, last_seen, date)
 
     def add(self, date, obj):
         self._add(date, obj)

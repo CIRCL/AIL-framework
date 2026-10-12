@@ -14,7 +14,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ail_core import get_ail_uuid
-from lib.objects.abstract_object import AbstractObject
+from lib.objects.abstract_object import AbstractObject, IS_MEILISEARCH_ENABLED
 from lib.ConfigLoader import ConfigLoader
 from lib import Language
 from lib.objects import UsersAccount
@@ -447,13 +447,20 @@ class Message(AbstractObject):
     #- Language -#
 
     def create(self, content, language=None, translation=None, tags=[]):
+        previous_content = self._get_field('content') if IS_MEILISEARCH_ENABLED and content else None
         self._set_field('content', content)
+        r_cache.delete(f'content:{self.get_global_id()}')
         if not language and content:
             language = self.detect_language()
         if translation and content:
             self.set_translation(language, translation)
         for tag in tags:
             self.add_tag(tag)
+        if IS_MEILISEARCH_ENABLED and content and previous_content != content:
+            if previous_content:
+                self._queue_search_fields('content')
+            else:
+                self._queue_search_fields()
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):

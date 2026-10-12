@@ -1814,6 +1814,9 @@ class CrawlerCapturesProcessor:
                         self.domain.add_tag(tag)
             # Domain history
             self.domain.add_history(self.epoch, root_item=self.root_item_id)
+            for obj in objs:
+                if obj.type == 'item':
+                    obj._queue_search_fields()
 
             # ADD to crawled dashboard - new importe feeder section ???
             # update_last_crawled_domain(self.domain.get_domain_type(), self.domain.id, self.epoch)

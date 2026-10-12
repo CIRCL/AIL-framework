@@ -20,7 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib import ail_logger
-from lib.ail_queues import is_obj_in_process
+from lib.ail_queues import is_obj_in_process, send_message_from_module
 from lib import Tag
 from lib.ConfigLoader import ConfigLoader
 from lib import Duplicate
@@ -35,6 +35,7 @@ logging.config.dictConfig(ail_logger.get_config(name='ail'))
 config_loader = ConfigLoader()
 # r_cache = config_loader.get_redis_conn("Redis_Cache")
 r_object = config_loader.get_db_conn("Kvrocks_Objects")
+IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearch')
 config_loader = None
 
 class AbstractObject(ABC):
@@ -122,6 +123,28 @@ class AbstractObject(ABC):
             return r_object.hset(f'meta:{self.type}:{self.id}', field, value)
         else:
             return r_object.hset(f'meta:{self.type}:{self.get_subtype(r_str=True)}:{self.id}', field, value)
+
+    def _queue_search_fields(self, *fields):
+        if not IS_MEILISEARCH_ENABLED:
+            return
+        if self.type == 'forum-thread' and not self.contain_posts():
+            return
+        send_message_from_module('Search', self.get_global_id(), message=','.join(fields))
+
+    def _queue_search_dates(self, first_seen, last_seen, date, last_timestamp_changed=False):
+        if not IS_MEILISEARCH_ENABLED or self.type not in {'chat', 'user-account', 'forum-thread', 'title', 'file-name', 'username'}:
+            return
+        if not first_seen or not last_seen:
+            self._queue_search_fields()
+            return
+        date = int(date)
+        fields = []
+        if self.type not in {'chat', 'user-account'} and date < int(first_seen):
+            fields.append('first')
+        if date > int(last_seen) or last_timestamp_changed:
+            fields.append('last')
+        if fields:
+            self._queue_search_fields(*fields)
 
     def _get_fields_keys(self):
         if not self.subtype:

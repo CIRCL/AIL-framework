@@ -13,6 +13,7 @@ AIL Indexer
 ##################################
 import os
 import sys
+import time
 
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -23,7 +24,6 @@ from modules.abstract_module import AbstractModule
 # from lib.ConfigLoader import ConfigLoader
 from lib.exceptions import MeilisearchError
 from lib import search_engine
-from lib.objects import ForumThreads
 
 
 class Indexer(AbstractModule):
@@ -39,6 +39,10 @@ class Indexer(AbstractModule):
         # config_loader = ConfigLoader()
         self.is_enabled_meilisearch = search_engine.is_meilisearch_enabled()
         self.is_up = False
+        self.pending_seconds = 1
+        self.retry_at = 0
+        self.retry_batch = False
+        self.batcher = search_engine.SearchBatcher(search_engine.Engine.update_batch, search_engine.get_pending_search_document) if self.is_enabled_meilisearch else None
         if self.is_enabled_meilisearch:
             self.is_up = search_engine.Engine.is_up()
             search_engine.Engine.init()
@@ -47,48 +51,27 @@ class Indexer(AbstractModule):
     # check before poping message if meilisearch is up
     def can_process_next_message(self):
         if self.is_enabled_meilisearch:
+            if time.monotonic() < self.retry_at:
+                return False
             if not self.is_up:
                 self.is_up = search_engine.Engine.is_up()
-                return self.is_up
-            else:
-                return True
-        else:
-            return True
+                if not self.is_up:
+                    self.retry_at = time.monotonic() + 10
+                    return False
+            try:
+                self.batcher.flush_due(force=self.retry_batch)
+                self.retry_batch = False
+            except MeilisearchError as error:
+                self.logger.warning(f'Meilisearch batch submission failed; retaining pending updates: {error}')
+                self.is_up = False
+                self.retry_batch = True
+                self.retry_at = time.monotonic() + 10
+                return False
+        return True
 
-    # TODO send timestamp in queue ???? -> item
-    # TODO UPDATE ONLY LAST SEEN ON UPDATE ->     # title  # filename
     def compute(self, message):  # crawled item - message - titles - file-name
         if self.is_enabled_meilisearch and self.obj:
-            try:
-                if self.obj.type == 'message':
-                    # index Message + Chat + UserAccount
-                    search_engine.Engine.index_chat_message(self.obj)
-
-                elif self.obj.type == 'item':
-                    if self.obj.is_crawled():
-                        search_engine.index_crawled_item(self.obj)
-
-                elif self.obj.type == 'file-name':
-                    search_engine.index_file_name(self.obj)
-
-                elif self.obj.type == 'title':
-                    search_engine.index_title(self.obj)
-
-                elif self.obj.type == 'username':
-                    search_engine.index_username(self.obj)
-
-                elif self.obj.type == 'post':
-                    search_engine.index_forum_post(self.obj)
-                    thread_id = self.obj.get_thread_sub_id()
-                    # TODO CACHE
-                    if thread_id:
-                        subtype, thread_id = thread_id.split(':', 1)
-                        search_engine.index_forum_thread(ForumThreads.ForumThread(thread_id, subtype))
-
-            except MeilisearchError:
-                self.is_up = False
-                print('meilisearch down, sending message back to queue')
-                self.send_back_message_to_queue(message)
+            search_engine.queue_indexer_object(self.batcher, self.obj, message)
 
 
 if __name__ == '__main__':

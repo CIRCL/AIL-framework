@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
+from lib.objects.abstract_object import IS_MEILISEARCH_ENABLED
 from lib.timeline_engine import Timeline
 from lib.objects import Usernames
 
@@ -40,7 +41,7 @@ class UserAccount(AbstractSubtypeObject):
     # TODO META + exists check
     def create(self, date, obj, username=None, timestamp=None):
         # daterange + correlation
-        self.add(date, obj)
+        self.add(date, obj, timestamp=timestamp)
         if username:
             username.add(date, self)
             self.update_username_timeline(username.get_global_id(), timestamp)
@@ -126,7 +127,12 @@ class UserAccount(AbstractSubtypeObject):
         return self._get_field('info')
 
     def set_info(self, info):
-        return self._set_field('info', info)
+        if IS_MEILISEARCH_ENABLED and self._get_field('info') == str(info):
+            return 0
+        result = self._set_field('info', info)
+        if IS_MEILISEARCH_ENABLED:
+            self._queue_search_fields('content')
+        return result
 
     def get_search_document(self, timestamp=None):
         if not timestamp:
@@ -142,7 +148,10 @@ class UserAccount(AbstractSubtypeObject):
             description = ''
         content = f'{self.id} {username} {description}'
         if content and timestamp:
-            return {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
+            document = {'uuid': self.get_uuid5(global_id), 'id': global_id, 'content': content, 'last': int(timestamp)}
+            if not self.get_protocol():
+                document.update(fid=self.subtype, type=self.type)
+            return document
         else:
             return None
 
@@ -212,7 +221,11 @@ class UserAccount(AbstractSubtypeObject):
         return self._get_timeline_username().get_objs()
 
     def update_username_timeline(self, username_global_id, timestamp):
-        self._get_timeline_username().add_timestamp(timestamp, username_global_id)
+        timeline = self._get_timeline_username()
+        previous = timeline.get_last_obj_id() if IS_MEILISEARCH_ENABLED else None
+        timeline.add_timestamp(timestamp, username_global_id)
+        if IS_MEILISEARCH_ENABLED and timeline.get_last_obj_id() != previous:
+            self._queue_search_fields('content')
 
     def get_messages(self):
         messages = []

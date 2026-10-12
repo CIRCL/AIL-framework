@@ -52,7 +52,11 @@
           {% endif %}
 
           <div class="text-muted block-obj-meta mt-1">
-            Chats <strong>{{ obj['nb_chats'] }}</strong> ·
+            {% if obj.get('forum_name') %}
+              Posts <strong>{{ obj['nb_posts'] }}</strong> ·
+            {% else %}
+              Chats <strong>{{ obj['nb_chats'] }}</strong> ·
+            {% endif %}
             {% if obj['first_seen'] %}{{ obj['first_seen'][0:4] }}-{{ obj['first_seen'][4:6] }}-{{ obj['first_seen'][6:8] }}{% endif %} → {% if obj['last_seen'] %}{{ obj['last_seen'][0:4] }}-{{ obj['last_seen'][4:6] }}-{{ obj['last_seen'][6:8] }}{% endif %}
           </div>
 
@@ -62,7 +66,7 @@
         <div class="obj-type-col text-right ml-3">
           <div class="obj-type-label">
             <div>{{ obj['type'] }}</div>
-            <div>{{ obj['protocol'] }}</div>
+            <div>{{ obj.get('forum_name') or obj['protocol'] }}</div>
           </div>
         </div>
 

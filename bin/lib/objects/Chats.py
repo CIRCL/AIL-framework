@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
 from lib.objects.abstract_chat_object import AbstractChatObject, AbstractChatObjects
+from lib.objects.abstract_object import IS_MEILISEARCH_ENABLED
 
 
 from lib.objects.abstract_subtype_object import get_all_id
@@ -39,6 +40,20 @@ class Chat(AbstractChatObject):
 
     def __init__(self, id, subtype):
         super(Chat, self).__init__('chat', id, subtype)
+
+    def set_name(self, name):
+        if IS_MEILISEARCH_ENABLED and self._get_field('name') == str(name):
+            return
+        self._set_field('name', name)
+        if IS_MEILISEARCH_ENABLED:
+            self._queue_search_fields('content')
+
+    def set_info(self, info):
+        if IS_MEILISEARCH_ENABLED and self._get_field('info') == str(info):
+            return
+        self._set_field('info', info)
+        if IS_MEILISEARCH_ENABLED:
+            self._queue_search_fields('content')
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
@@ -187,7 +202,11 @@ class Chat(AbstractChatObject):
         return self._get_timeline_username().get_objs_ids()
 
     def update_username_timeline(self, username_global_id, timestamp):
-        self._get_timeline_username().add_timestamp(timestamp, username_global_id)
+        timeline = self._get_timeline_username()
+        previous = timeline.get_last_obj_id() if IS_MEILISEARCH_ENABLED else None
+        timeline.add_timestamp(timestamp, username_global_id)
+        if IS_MEILISEARCH_ENABLED and timeline.get_last_obj_id() != previous:
+            self._queue_search_fields('content')
 
     def get_label(self):
         username = self.get_username()
