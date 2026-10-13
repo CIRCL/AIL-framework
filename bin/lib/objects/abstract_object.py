@@ -29,6 +29,7 @@ from lib.Investigations import is_object_investigated, get_obj_investigations, d
 from lib.relationships_engine import get_obj_nb_relationships, get_obj_relationships, add_obj_relationship
 from lib.Language import get_obj_languages, add_obj_language, remove_obj_language, detect_obj_language, get_obj_language_stats, get_obj_translation, set_obj_translation, delete_obj_translation, get_obj_main_language, delete_obj_language, get_container_language_objs, get_container_languages
 from lib.Tracker import is_obj_tracked, get_obj_trackers, delete_obj_trackers, is_obj_retro_hunted, get_obj_retro_hunts, delete_obj_retro_hunts
+from lib import geo_engine
 
 logging.config.dictConfig(ail_logger.get_config(name='ail'))
 
@@ -199,6 +200,40 @@ class AbstractObject(ABC):
         return Tag.is_tags_safe(tags)
 
     ## -Tags- ##
+
+    ## GEO ##
+
+    def add_geo(self, lon, lat, probability=None, geo_id=None):
+        """Add one GEO observation point to this object."""
+        return geo_engine.add_geo_to_object(
+            self.get_global_id(),
+            self.get_type(),
+            lon,
+            lat,
+            probability=probability,
+            geo_id=geo_id
+        )
+
+    def remove_geo(self, geo_id):
+        """Remove one GEO observation point from this object."""
+        return geo_engine.remove_geo_from_object(
+            self.get_global_id(),
+            self.get_type(),
+            geo_id
+        )
+
+    def is_geo(self):
+        """Return whether this object has at least one GEO observation point."""
+        return geo_engine.object_has_geo(self.get_global_id())
+
+    def delete_geos(self):
+        """Delete all GEO observation points from this object."""
+        return geo_engine.delete_all_geo_from_object(
+            self.get_global_id(),
+            self.get_type()
+        )
+
+    ## -GEO- ##
 
     @abstractmethod
     def get_content(self):
