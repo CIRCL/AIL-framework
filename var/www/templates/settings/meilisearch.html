@@ -11,7 +11,7 @@
 <body>
     {% include 'nav_bar.html' %}
     {% set status = meilisearch_status %}
-    {% set index_colors = {'ready': 'success', 'indexing': 'primary', 'empty': 'secondary', 'missing': 'warning'} %}
+    {% set index_colors = {'ready': 'success', 'indexing': 'primary', 'empty': 'secondary', 'missing': 'warning', 'unavailable': 'secondary'} %}
     {% set task_colors = {'succeeded': 'success', 'processing': 'primary', 'enqueued': 'warning', 'failed': 'danger', 'canceled': 'secondary'} %}
     {% macro number(value) %}{% if value is not none %}{{ '{:,}'.format(value) }}{% else %}—{% endif %}{% endmacro %}
     {% macro size(value) %}{% if value is not none %}{{ value|filesizeformat(binary=True) }}{% else %}—{% endif %}{% endmacro %}
@@ -43,8 +43,8 @@
                     </div>
                 </div>
 
-                {% for category, message in get_flashed_messages(with_categories=true) %}
-                    <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                {% for category, message in get_flashed_messages(with_categories=true, category_filter=['meilisearch-info', 'meilisearch-warning', 'meilisearch-danger']) %}
+                    <div class="alert alert-{{ category|replace('meilisearch-', '') }}" role="alert">{{ message }}</div>
                 {% endfor %}
 
                 {% if not status.enabled %}
@@ -110,52 +110,68 @@
                         </div>
                     {% endif %}
 
-                    <div class="card shadow-sm mb-3">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
-                            <h5 class="mb-0">Indexes</h5>
-                            {% if status.indexes %}
-                                <label for="meilisearch_index_filter" class="sr-only">Filter indexes by name</label>
-                                <input type="search" class="form-control form-control-sm w-auto mt-1" id="meilisearch_index_filter" placeholder="Filter indexes…" autocomplete="off" spellcheck="false">
-                            {% endif %}
-                        </div>
-                        <div class="card-body py-2 text-muted small">Last database update: {{ timestamp(status.last_update) }}</div>
+                {% endif %}
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
+                        <h5 class="mb-0">Indexes</h5>
                         {% if status.indexes %}
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="thead-light">
-                                        <tr><th scope="col">Index</th><th scope="col">Status</th><th scope="col" class="text-right">Documents</th><th scope="col" class="text-right">Size on disk</th><th scope="col">Fields</th></tr>
-                                    </thead>
-                                    <tbody id="meilisearch_index_rows">
-                                        {% for index in status.indexes %}
-                                            <tr data-index-name="{{ index.name }}">
-                                                <th scope="row" class="font-weight-normal"><code>{{ index.name }}</code></th>
-                                                <td><span class="badge badge-{{ index_colors[index.state] }}">{{ index.state|capitalize }}</span></td>
-                                                <td class="text-right">{{ number(index.documents) }}</td>
-                                                <td class="text-right text-nowrap">{{ size(index.size) }}</td>
-                                                <td>
-                                                    {% if index.fields %}
-                                                        <details>
-                                                            <summary class="small text-muted">{{ index.fields|length }} fields</summary>
-                                                            <dl class="small mb-1 mt-1">
-                                                                {% for field, count in index.fields|dictsort %}
-                                                                    <dt class="font-weight-normal">{{ field }}</dt>
-                                                                    <dd class="mb-1 text-muted">{{ number(count) }} documents</dd>
-                                                                {% endfor %}
-                                                            </dl>
-                                                        </details>
-                                                    {% else %}—{% endif %}
-                                                </td>
-                                            </tr>
-                                        {% endfor %}
-                                        <tr id="meilisearch_no_matching_indexes" hidden><td colspan="5" class="text-muted text-center py-3">No indexes match this filter.</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        {% else %}
-                            <div class="card-body text-muted">{% if status.total_indexes is none %}Index statistics are unavailable.{% else %}No indexes found.{% endif %}</div>
+                            <label for="meilisearch_index_filter" class="sr-only">Filter indexes by name</label>
+                            <input type="search" class="form-control form-control-sm w-auto mt-1" id="meilisearch_index_filter" placeholder="Filter indexes…" autocomplete="off" spellcheck="false">
                         {% endif %}
                     </div>
+                    <div class="card-body py-2 text-muted small d-flex justify-content-between align-items-center text-nowrap overflow-auto">
+                        <span>Last database update: {{ timestamp(status.last_update) }}</span>
+                        <span class="ml-3 text-right">Disabling an index stops content document creation and updates and cancels its running and enqueued tasks.</span>
+                    </div>
+                    {% if status.indexes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="thead-light">
+                                    <tr><th scope="col">Index</th><th scope="col">Status</th><th scope="col" class="text-right">Documents</th><th scope="col" class="text-right">Size on disk</th><th scope="col">Fields</th><th scope="col">Indexing</th></tr>
+                                </thead>
+                                <tbody id="meilisearch_index_rows">
+                                    {% for index in status.indexes %}
+                                        <tr data-index-name="{{ index.name }}">
+                                            <th scope="row" class="font-weight-normal"><code>{{ index.name }}</code></th>
+                                            <td><span class="badge badge-{{ index_colors[index.state] }}">{{ index.state|capitalize }}</span></td>
+                                            <td class="text-right">{{ number(index.documents) }}</td>
+                                            <td class="text-right text-nowrap">{{ size(index.size) }}</td>
+                                            <td>
+                                                {% if index.fields %}
+                                                    <details>
+                                                        <summary class="small text-muted">{{ index.fields|length }} fields</summary>
+                                                        <dl class="small mb-1 mt-1">
+                                                            {% for field, count in index.fields|dictsort %}
+                                                                <dt class="font-weight-normal">{{ field }}</dt>
+                                                                <dd class="mb-1 text-muted">{{ number(count) }} documents</dd>
+                                                            {% endfor %}
+                                                        </dl>
+                                                    </details>
+                                                {% else %}—{% endif %}
+                                            </td>
+                                            <td>
+                                                {% set enabled = status.indexing[index.name] %}
+                                                <div class="d-flex align-items-center text-nowrap">
+                                                    <span class="badge badge-{{ 'success' if enabled else 'secondary' }} mr-2">{{ 'Enabled' if enabled else 'Disabled' }}</span>
+                                                    <form method="post" action="{{ url_for('settings_b.settings_meilisearch_indexing', index_name=index.name) }}" class="mb-0">
+                                                        <input type="hidden" name="enabled" value="{{ 'false' if enabled else 'true' }}">
+                                                        <button type="submit" class="btn btn-sm py-0 btn-{{ 'outline-danger' if enabled else 'outline-primary' }}" aria-label="{{ 'Disable' if enabled else 'Enable' }} {{ index.name }} indexing">{{ 'Disable' if enabled else 'Enable' }}</button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    <tr id="meilisearch_no_matching_indexes" hidden><td colspan="6" class="text-muted text-center py-3">No indexes match this filter.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="card-body text-muted">{% if status.total_indexes is none %}Index statistics are unavailable.{% else %}No indexes found.{% endif %}</div>
+                    {% endif %}
+                </div>
 
+                {% if status.enabled and status.health == 'available' %}
                     <div class="card shadow-sm mb-3">
                         <div class="card-header bg-light"><h5 class="mb-0">Recent tasks</h5></div>
                         <div class="card-body py-2">

@@ -9,6 +9,7 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import parse_qs
 
 import requests
 import meilisearch
@@ -45,6 +46,7 @@ IS_MEILISEARCH_ENABLED = config_loader.get_config_boolean('Indexer', 'meilisearc
 M_URL = config_loader.get_config_str('Indexer', 'meilisearch_url')
 M_KEY = config_loader.get_config_str('Indexer', 'meilisearch_key')
 r_search = config_loader.get_db_conn("Kvrocks_Searchs")
+r_cache = config_loader.get_redis_conn("Redis_Cache")
 config_loader = None
 
 
@@ -56,13 +58,74 @@ def is_meilisearch_enabled():
     return IS_MEILISEARCH_ENABLED
 
 
+def is_indexing_enabled(index):
+    """Read the shared Redis switch, loading persistent configuration only on a miss."""
+    enabled = r_cache.get(f'indexing:{index}:enabled')
+    if enabled is None:
+        enabled = str(not r_search.sismember('indexing:disabled', index))
+        # A concurrent settings change must win over this cache fill.
+        r_cache.set(f'indexing:{index}:enabled', enabled, nx=True)
+        enabled = r_cache.get(f'indexing:{index}:enabled')
+    return enabled == 'True'
+
+
+def set_indexing_enabled(index, enabled):
+    if not isinstance(index, str) or not re.fullmatch(r'[A-Za-z0-9_-]+', index):
+        return {'error': 'Invalid index name.'}, 400
+    if enabled:
+        r_search.srem('indexing:disabled', index)
+        r_cache.set(f'indexing:{index}:enabled', 'True')
+        return {'message': f'Indexing enabled for "{index}".'}, 200
+    # Stop new submissions before canceling existing work, even if Meilisearch is offline.
+    r_search.sadd('indexing:disabled', index)
+    r_cache.set(f'indexing:{index}:enabled', 'False')
+    try:
+        client = Engine.client if Engine is not None else meilisearch.Client(M_URL, M_KEY, timeout=5)
+        cancellation = client.cancel_tasks({'indexUids': [index], 'statuses': ['processing', 'enqueued']})
+        result = client.wait_for_task(cancellation.task_uid, timeout_in_ms=5000)
+    except MeilisearchTimeoutError:
+        return {'error': f'Indexing is disabled for "{index}", but task cancellation was not confirmed in time. Refresh to check task status.'}, 504
+    except (MeilisearchApiError, MeilisearchCommunicationError):
+        return {'error': f'Indexing is disabled for "{index}", but tasks could not be canceled. Check the connection and API permissions, then refresh to check task status.'}, 503
+    if result.status != 'succeeded':
+        return {'error': f'Indexing is disabled for "{index}", but Meilisearch could not cancel tasks. Check the cancellation task.'}, 500
+    return {'message': f'Indexing disabled for "{index}". Its running and enqueued tasks were canceled. Existing documents and task history are preserved.'}, 200
+
+
+def get_indexing_settings():
+    """Include expected, discovered, and persistently disabled indexes, even when offline."""
+    names = set(get_indexes_names()) | MESSAGES_INDEXES | r_search.smembers('indexing:disabled')
+    if Engine is not None:
+        names.update(Engine._known_indexes)
+    return {index: is_indexing_enabled(index) for index in sorted(names)}
+
+
+def get_meilisearch_task_index(task):
+    """Cancellation tasks have no indexUid; their original filter describes the scope."""
+    if task.index_uid:
+        return task.index_uid
+    if task.type == 'taskCancelation':
+        original_filter = (task.details or {}).get('originalFilter')
+        if original_filter is None:
+            return 'Unknown scope'
+        filters = parse_qs(original_filter.lstrip('?'), keep_blank_values=True)
+        indexes = [index for value in filters.get('indexUids', []) for index in value.split(',') if index]
+        if indexes and '*' not in indexes:
+            return ', '.join(dict.fromkeys(indexes))
+        if filters.get('uids') or filters.get('batchUids'):
+            return 'Selected tasks'
+    return 'All indexes'
+
+
 def get_meilisearch_status():
     """Read monitoring data without creating indexes or modifying tasks."""
-    status = {'enabled': is_meilisearch_enabled(), 'health': 'unavailable', 'error': None, 'warnings': [],
+    indexing = get_indexing_settings()
+    status = {'enabled': is_meilisearch_enabled(), 'indexing': indexing, 'health': 'unavailable', 'error': None, 'warnings': [],
               'checked_at': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'version': None,
               'indexes': [], 'total_documents': None, 'total_indexes': None, 'indexing_indexes': None,
               'missing_indexes': [], 'database_size': None, 'used_database_size': None, 'last_update': None,
               'tasks': [], 'running_tasks': [], 'failed_tasks': None, 'total_tasks': None, 'task_counts': {'enqueued': None, 'processing': None, 'failed': None}}
+    status['indexes'] = [{'name': name, 'state': 'unavailable', 'documents': None, 'size': None, 'fields': {}} for name in indexing]
     if not status['enabled'] or Engine is None:
         if not status['enabled']:
             status['health'] = 'disabled'
@@ -89,9 +152,11 @@ def get_meilisearch_status():
         status['warnings'].append('Index statistics could not be loaded. Check the connection and API permissions.')
     else:
         indexes = stats.get('indexes', {})
+        status['indexing'].update({name: is_indexing_enabled(name) for name in indexes})
         expected = set(get_indexes_names())
         status['missing_indexes'] = sorted(expected - set(indexes))
-        for name in sorted(expected | set(indexes)):
+        status['indexes'] = []
+        for name in sorted(status['indexing']):
             index = indexes.get(name)
             state = 'missing' if index is None else 'indexing' if index.get('isIndexing') else 'empty' if not index.get('numberOfDocuments') else 'ready'
             status['indexes'].append({'name': name, 'state': state, 'documents': index.get('numberOfDocuments', 0) if index is not None else None,
@@ -113,7 +178,7 @@ def get_meilisearch_status():
         tasks = Engine.client.get_tasks({'limit': 20})
         status['total_tasks'] = tasks.total
         for task in tasks.results:
-            status['tasks'].append({'uid': task.uid, 'index': task.index_uid, 'type': task.type, 'status': task.status,
+            status['tasks'].append({'uid': task.uid, 'index': get_meilisearch_task_index(task), 'type': task.type, 'status': task.status,
                                     'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
                                     'finished_at': task.finished_at.isoformat() if task.finished_at else None,
                                     'error': task.error.get('message') if task.error else None})
@@ -125,7 +190,7 @@ def get_meilisearch_status():
         running_tasks = Engine.client.get_tasks({'statuses': ['processing'], 'limit': 100})
         status['task_counts']['processing'] = running_tasks.total
         for task in running_tasks.results:
-            status['running_tasks'].append({'uid': task.uid, 'index': task.index_uid, 'type': task.type,
+            status['running_tasks'].append({'uid': task.uid, 'index': get_meilisearch_task_index(task), 'type': task.type,
                                             'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
                                             'started_at': task.started_at.isoformat() if task.started_at else None})
     except (MeilisearchApiError, MeilisearchCommunicationError, MeilisearchTimeoutError):
@@ -136,7 +201,7 @@ def get_meilisearch_status():
         status['task_counts']['failed'] = failed_tasks.total
         status['failed_tasks'] = []
         for task in failed_tasks.results:
-            status['failed_tasks'].append({'uid': task.uid, 'index': task.index_uid, 'type': task.type,
+            status['failed_tasks'].append({'uid': task.uid, 'index': get_meilisearch_task_index(task), 'type': task.type,
                                            'enqueued_at': task.enqueued_at.isoformat() if task.enqueued_at else None,
                                            'finished_at': task.finished_at.isoformat() if task.finished_at else None,
                                            'error': task.error.get('message') if task.error else None,
@@ -231,6 +296,8 @@ class SearchBatcher:
         self.started = {}
 
     def add(self, index, obj, fields=None, timestamp=None, uuid=None):
+        if not is_indexing_enabled(index):
+            return
         uuid = uuid or obj.get_uuid5()
         if timestamp is not None:
             timestamp = int(timestamp)
@@ -514,7 +581,7 @@ class MeiliSearch:
         dummy_document = {'uuid': 'dummy', 'content': 'dummy', 'last': 0, 'id': 'dummy'}
         if index_name not in MESSAGES_INDEXES:
             dummy_document['first'] = 0
-        self.add(index_name, dummy_document)
+        self.add(index_name, dummy_document, index_setup=True)
         self.remove(index_name, 'dummy')
 
     def setup_indexes_searchable_filterable_sortable(self):
@@ -523,19 +590,24 @@ class MeiliSearch:
             self.setup_index_searchable_filterable_sortable(index_name)
 
     # replacing existing documents
-    def add(self, index, document, retry=3):
+    def add(self, index, document, retry=3, *, index_setup=False):
+        # Index setup must submit its temporary dummy document even when indexing is disabled.
+        if not index_setup and not is_indexing_enabled(index):
+            return
         try:
             self.client.index(index).add_documents([document], primary_key='uuid')
         except (MeilisearchCommunicationError, MeilisearchApiError, MeilisearchTimeoutError) as e:
             logger.warning(f'Meilisearch connection failed, retry: {retry}')
             if retry > 0:
-                self.add(index, document, retry - 1)
+                self.add(index, document, retry - 1, index_setup=index_setup)
                 time.sleep(10)
             else:
                 logger.warning(f'Meilisearch connection failed: {e.message}')
                 raise MeilisearchError(e.message)
 
     def update(self, index, document, retry=3):
+        if not is_indexing_enabled(index):
+            return
         self.ensure_index(index)
         try:
             self.client.index(index).update_documents([document], primary_key='uuid')
@@ -550,6 +622,8 @@ class MeiliSearch:
 
     def update_batch(self, index, documents):
         """Submit one task for many documents; do not wait for task completion."""
+        if not is_indexing_enabled(index):
+            return
         try:
             self.ensure_index(index)
             return self.client.index(index).update_documents(documents, primary_key='uuid')
@@ -558,6 +632,8 @@ class MeiliSearch:
 
     def add_batch(self, index, documents):
         """Preserve replacement semantics when backfilling description documents."""
+        if not is_indexing_enabled(index):
+            return
         try:
             self.ensure_index(index)
             return self.client.index(index).add_documents(documents, primary_key='uuid')
@@ -589,9 +665,11 @@ class MeiliSearch:
 
     ## INDEX ##
     def index_crawled_item(self, domain, item, timestamp):
+        index = domain.get_domain_type()
+        if not is_indexing_enabled(index):
+            return
         content = item.get_html2text_content()
         cid = sha256(content.encode()).hexdigest()
-        index = domain.get_domain_type()
         # update
         if r_search.exists(f'crawled:{index}:{cid}'):
             document = {'uuid': cid, 'last': timestamp}
@@ -629,6 +707,8 @@ else:
 
 def get_pending_search_document(index, uuid, entry):
     """Resolve requested fields from current AIL storage immediately before submission."""
+    if not is_indexing_enabled(index):
+        return None
     obj = entry['obj']
     if not obj.exists():
         return None
@@ -670,11 +750,13 @@ def get_pending_search_document(index, uuid, entry):
 def queue_crawled_item(batcher, item, domain=None, timestamp=None):
     if domain is None:
         domain = Domains.Domain(item.get_domain())
+    index = domain.get_domain_type()
+    if not is_indexing_enabled(index):
+        return
     if timestamp is None:
         timestamp = domain.get_item_timestamp(item.id)
     if not timestamp:
         return
-    index = domain.get_domain_type()
     cid = sha256(item.get_html2text_content().encode()).hexdigest()
     known = bool(r_search.exists(f'crawled:{index}:{cid}'))
     batcher.add(index, item, fields={'last'} if known else None, timestamp=timestamp, uuid=cid)
@@ -715,6 +797,8 @@ def queue_indexer_object(batcher, obj, message=''):
 
 def _index_objects(objects, index=None, replace=False, batch_size=500):
     """Stream a backfill through bounded requests and submit its final partial batch."""
+    if index is not None and not is_indexing_enabled(index):
+        return 0
     batcher = SearchBatcher(Engine.add_batch if replace else Engine.update_batch, get_pending_search_document, batch_size=batch_size)
     total = 0
     for obj in objects:
@@ -726,6 +810,8 @@ def _index_objects(objects, index=None, replace=False, batch_size=500):
                 continue
         else:
             obj_index = index
+        if not is_indexing_enabled(obj_index):
+            continue
         batcher.add(obj_index, obj)
         batcher.flush_due()
         total += 1
@@ -744,6 +830,8 @@ def index_crawled_item(item):
 
 def _index_crawled_domain(dom_id, batcher=None):
     domain = Domains.Domain(dom_id)
+    if not is_indexing_enabled(domain.get_domain_type()):
+        return
     for timestamp in domain.get_timestamps_up():
         for item_id in domain.get_crawled_items_by_epoch(epoch=timestamp):
             item = Items.Item(item_id)
@@ -761,6 +849,8 @@ def index_crawled():
     batcher = SearchBatcher(Engine.update_batch, get_pending_search_document)
     if not r_search.exists('to_index:crawled'):
         for domain_type in Domains.get_all_domains_types():
+            if not is_indexing_enabled(domain_type):
+                continue
             for dom_id in Domains.get_domains_up_by_type(domain_type):
                 r_search.sadd('to_index:crawled', dom_id)
     while True:
@@ -854,6 +944,8 @@ def index_forum_post(obj):
         Engine.update(index, document)
 
 def index_forum_posts():
+    if not is_indexing_enabled('forum'):
+        return
     batcher = SearchBatcher(Engine.update_batch, get_pending_search_document)
     for forum_id in Forums.get_forums():
         for obj_id, _score in ForumThreads.ForumThreads().get_id_iterators_by_subtype(forum_id):

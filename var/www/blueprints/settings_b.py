@@ -80,12 +80,25 @@ def settings_modules():
 def settings_meilisearch():
     return render_template('meilisearch.html', acl_admin=True, meilisearch_status=search_engine.get_meilisearch_status())
 
+@settings_b.route('/settings/meilisearch/indexing/<index_name>', methods=['POST'])
+@login_required
+@login_admin
+def settings_meilisearch_indexing(index_name):
+    enabled = request.form.get('enabled')
+    if enabled not in {'true', 'false'}:
+        abort(400)
+    result, status_code = search_engine.set_indexing_enabled(index_name, enabled == 'true')
+    if status_code == 400:
+        abort(400)
+    flash(result.get('error') or result['message'], 'meilisearch-warning' if status_code >= 400 else 'meilisearch-info')
+    return redirect(url_for('settings_b.settings_meilisearch'))
+
 @settings_b.route('/settings/meilisearch/tasks/enqueued/cancel', methods=['POST'])
 @login_required
 @login_admin
 def settings_meilisearch_cancel_enqueued_tasks():
     result, status_code = search_engine.cancel_meilisearch_enqueued_tasks()
-    flash(result.get('error') or result['message'], 'danger' if status_code >= 400 else 'info')
+    flash(result.get('error') or result['message'], 'meilisearch-danger' if status_code >= 400 else 'meilisearch-info')
     return redirect(url_for('settings_b.settings_meilisearch'))
 
 @settings_b.route("/settings/user/profile", methods=['GET'])
