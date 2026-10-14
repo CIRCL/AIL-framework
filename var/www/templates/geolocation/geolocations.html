@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Object locations - AIL</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/ail-project.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    {% include 'geolocation/assets.html' %}
+</head>
+<body>
+    {% include 'nav_bar.html' %}
+    <main class="container-fluid py-3">
+        <h2>Object locations</h2>
+        <p class="geo-object-id"><code>{{ geo_gid }}</code></p>
+        {% with obj_type=geo_gid.split(':', 2)[0], obj_subtype=geo_gid.split(':', 2)[1], obj_id=geo_gid.split(':', 2)[2] %}
+            <a href="{{ url_for('correlation.show_correlation', type=obj_type, subtype=obj_subtype, id=obj_id) }}">View object and correlations</a>
+        {% endwith %}
+        {% with geo_open=true %}
+            {% include 'geolocation/panel.html' %}
+        {% endwith %}
+    </main>
+</body>
+</html>

@@ -132,6 +132,7 @@ class Qrcode(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        self.delete_geos()
         r_object.delete(f'qrcode:{self.id}')
 
 

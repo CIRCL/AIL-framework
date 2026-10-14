@@ -46,6 +46,7 @@ class Image(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        self.delete_geos()
         image_similarity.delete(self.id)
         # TODO: delete the image and its remaining metadata and correlations.
 

@@ -44,6 +44,7 @@
             background: #eee;
         }
 	</style>
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -57,6 +58,10 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+                {% with geo_gid=subchannel['type'] ~ ':' ~ subchannel.get('subtype', '') ~ ':' ~ subchannel['id'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
                 {% with meta=subchannel %}
                     {% include 'chats_explorer/card_chat_subchannel.html' %}

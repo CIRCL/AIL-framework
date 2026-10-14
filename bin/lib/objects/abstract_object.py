@@ -99,7 +99,7 @@ class AbstractObject(ABC):
             dict_meta['language'] = self.get_language()
         if 'svg_icon' in options:
             dict_meta['svg_icon'] = self.get_svg_icon()
-        return dict_meta
+        return self._add_geo_meta(dict_meta, options)
 
     def _get_obj_field(self, obj_type, subtype, obj_id, field):
         if not subtype:
@@ -203,24 +203,48 @@ class AbstractObject(ABC):
 
     ## GEO ##
 
-    def add_geo(self, lon, lat, probability=None, geo_id=None):
+    def add_geo(self, lon, lat, geo_id=None, created_by=None, source=None):
         """Add one GEO observation point to this object."""
-        return geo_engine.add_geo_to_object(
-            self.get_global_id(),
-            self.get_type(),
-            lon,
-            lat,
-            probability=probability,
-            geo_id=geo_id
-        )
+        if not self.exists():
+            raise ValueError('Object does not exist')
+        provenance = {}
+        if created_by is not None:
+            provenance['created_by'] = created_by
+        if source is not None:
+            provenance['source'] = source
+        return geo_engine.add_geo_to_object(self.get_global_id(), self.get_type(), lon, lat, geo_id=geo_id, **provenance)
 
-    def remove_geo(self, geo_id):
+    def get_geo(self, geo_id):
+        return geo_engine.get_geo_from_object(self.get_global_id(), geo_id)
+
+    def get_geos(self, offset=0, limit=100):
+        return geo_engine.get_object_geos(self.get_global_id(), offset=offset, limit=limit)
+
+    def get_nb_geos(self):
+        return geo_engine.get_object_nb_geos(self.get_global_id())
+
+    def get_geo_meta(self, offset=0, limit=100):
+        locations = self.get_geos(offset=offset, limit=limit)
+        total = self.get_nb_geos()
+        return {'locations': locations, 'total': total, 'offset': offset, 'limit': limit, 'has_more': offset + limit < total}
+
+    def _add_geo_meta(self, meta, options):
+        if 'geo' in options:
+            meta['geo'] = self.get_geo_meta()
+        if 'geo_count' in options:
+            meta['geo_count'] = meta['geo']['total'] if 'geo' in meta else self.get_nb_geos()
+        return meta
+
+    def update_geo(self, geo_id, lon, lat, expected_revision=None, updated_by=None):
+        if not self.exists():
+            raise ValueError('Object does not exist')
+        provenance = {} if updated_by is None else {'updated_by': updated_by}
+        return geo_engine.update_geo_from_object(self.get_global_id(), self.get_type(), geo_id, lon, lat, expected_revision=expected_revision, **provenance)
+
+    def remove_geo(self, geo_id, expected_revision=None):
         """Remove one GEO observation point from this object."""
-        return geo_engine.remove_geo_from_object(
-            self.get_global_id(),
-            self.get_type(),
-            geo_id
-        )
+        revision = {} if expected_revision is None else {'expected_revision': expected_revision}
+        return geo_engine.remove_geo_from_object(self.get_global_id(), self.get_type(), geo_id, **revision)
 
     def is_geo(self):
         """Return whether this object has at least one GEO observation point."""
@@ -228,10 +252,7 @@ class AbstractObject(ABC):
 
     def delete_geos(self):
         """Delete all GEO observation points from this object."""
-        return geo_engine.delete_all_geo_from_object(
-            self.get_global_id(),
-            self.get_type()
-        )
+        return geo_engine.delete_all_geo_from_object(self.get_global_id(), self.get_type())
 
     ## -GEO- ##
 
@@ -346,6 +367,8 @@ class AbstractObject(ABC):
     ## -Trackers- ##
 
     def _delete_object(self, meta=True):
+        # Remove locations before deleting the owning object's metadata.
+        self.delete_geos()
         # DELETE TAGS
         Tag.delete_object_tags(self.type, self.get_subtype(r_str=True), self.id)
         # remove from tracker

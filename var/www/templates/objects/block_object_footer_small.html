@@ -1,4 +1,7 @@
 <div class="d-flex flex-row-reverse bd-highlight">
+    {% with geo_gid=meta['type'] ~ ':' ~ meta.get('subtype', '') ~ ':' ~ meta['id'], geo_count=meta.get('geo_count') %}
+        {% include 'geolocation/link.html' %}
+    {% endwith %}
 {#  <div>#}
 {#    <a class="btn" target="_blank" href="{{ url_for('import_export.add_object_id_to_export')}}?type={{ meta['type'] }}{% if meta['subtype'] %}&subtype={{ meta['subtype'] }}{%endif%}&id={{ meta['id'] }}&lvl=0">#}
 {#      <img id="misp-logo" src="{{ url_for('static', filename='image/misp-logo.png')}}" height="25">#}

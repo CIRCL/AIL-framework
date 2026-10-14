@@ -40,7 +40,7 @@ class Pgp(AbstractSubtypeObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     # # TODO: 
     def get_meta(self, options=set(), flask_context=False):

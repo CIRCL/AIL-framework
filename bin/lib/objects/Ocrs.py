@@ -264,6 +264,7 @@ class Ocr(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        self.delete_geos()
         r_object.delete(f'ocr:{self.id}')
 
     def draw_bounding_boxs(self):

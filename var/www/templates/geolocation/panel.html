@@ -1,0 +1,50 @@
+{% set geo_count_summary = {'total': geo_count} if geo_count is defined else get_object_geo_count(geo_gid) %}
+<details class="object-geo card my-3" {% if geo_open|default(false) %}open{% endif %}
+         data-gid="{{ geo_gid }}" data-can-write="{{ 'true' if current_user.is_in_role('user_no_api') else 'false' }}"
+         data-list-url="{{ url_for('objects_geo.list_geolocations') }}"
+         data-csrf-url="{{ url_for('objects_geo.get_geolocation_csrf') }}"
+         data-leaflet-js="{{ url_for('static', filename='js/leaflet.js') }}"
+         data-leaflet-css="{{ url_for('static', filename='css/leaflet.css') }}">
+    <summary class="card-header"><i class="fas fa-map-marker-alt mr-1" aria-hidden="true"></i> Object locations <span class="geo-count badge badge-secondary"{% if geo_count_summary.get('status') == 'error' %} title="{{ geo_count_summary['reason'] }}" aria-label="Location count unavailable"{% endif %}>{{ geo_count_summary.get('total', '?') }}</span></summary>
+    <div class="card-body">
+        <div class="geo-status alert alert-info" role="status" aria-live="polite" hidden></div>
+        <div class="d-flex flex-wrap align-items-center mb-2">
+            <button type="button" class="geo-refresh btn btn-sm btn-outline-secondary mr-2">Refresh locations</button>
+            <span class="geo-page small text-muted"></span>
+            <a class="ml-auto small" href="{{ url_for('objects_geo.view_geolocations', gid=geo_gid) }}">Open location page</a>
+        </div>
+        <div class="geo-map" role="region" aria-label="Object location map"></div>
+        <p class="geo-map-status small text-muted mt-2" role="status" aria-live="polite">The map shows the current page of coordinates.</p>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped geo-table">
+                <caption>Original GPS coordinates attached to this object.</caption>
+                <thead><tr><th scope="col">Latitude</th><th scope="col">Longitude</th><th scope="col">Source</th><th scope="col">Last updated</th><th scope="col">Actions</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <p class="geo-empty text-muted" hidden>No locations have been added to this object.</p>
+        <div class="d-flex mb-3">
+            <button type="button" class="geo-prev btn btn-sm btn-outline-secondary mr-2" disabled>Previous</button>
+            <button type="button" class="geo-next btn btn-sm btn-outline-secondary" disabled>Next</button>
+        </div>
+        {% if current_user.is_in_role('user_no_api') %}
+            <form class="geo-form border-top pt-3">
+                <h6 class="geo-form-title">Add a location</h6>
+                <p class="small text-muted">Enter decimal GPS coordinates, or click the map to fill them. Saving attaches the point to this object.</p>
+                <div class="form-row">
+                    <label class="col-sm-5">Latitude
+                        <input class="geo-latitude form-control" name="latitude" type="number" step="any" min="-90" max="90" required placeholder="49.6116">
+                    </label>
+                    <label class="col-sm-5">Longitude
+                        <input class="geo-longitude form-control" name="longitude" type="number" step="any" min="-180" max="180" required placeholder="6.1319">
+                    </label>
+                </div>
+                <button type="submit" class="geo-save btn btn-primary btn-sm">Add location</button>
+                <button type="button" class="geo-cancel btn btn-outline-secondary btn-sm" hidden>Cancel edit</button>
+            </form>
+        {% else %}
+            <p class="small text-muted">You have read-only access to locations.</p>
+        {% endif %}
+        <noscript>JavaScript is required to load and manage object locations.</noscript>
+    </div>
+</details>

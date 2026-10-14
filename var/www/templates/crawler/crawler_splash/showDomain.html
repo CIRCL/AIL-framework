@@ -30,6 +30,7 @@
     }
   </style>
 
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -41,6 +42,10 @@
 			{% include 'crawler/menu_sidebar.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+                {% with geo_gid='domain::' ~ dict_domain['domain'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
 				<div class="row">
 

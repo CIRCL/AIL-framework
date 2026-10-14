@@ -182,7 +182,8 @@
             resize: none !important;
         }
 		</style>
-	</head>
+	    {% include 'geolocation/assets.html' %}
+</head>
 	<body>
 
 		{% include 'nav_bar.html' %}
@@ -250,6 +251,11 @@
                     {% elif dict_object["object_type"] == "ip" %}
 						{% include 'correlation/metadata_card_ip.html' %}
 					{% endif %}
+
+
+                {% with geo_gid=dict_object['gid'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
 
 					<div class="row">
 						<div class="col-xl-10">

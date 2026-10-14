@@ -25,6 +25,8 @@ from lib import crawlers
 from lib import chats_viewer
 from lib import forums_viewer
 from lib import image_similarity
+from lib import geo_api
+from geo_helpers import read_geo_payload
 
 from lib import Investigations
 from lib import Tag
@@ -307,6 +309,61 @@ def v1_object_global_id(object_global_id):
 def v1_object_type_id(object_type, object_id):
     r = ail_objects.api_get_object_type_id(object_type, object_id)
     return create_json_response(r[0], r[1])
+
+
+def geo_json_response(result):
+    response, status = create_json_response(result[0], result[1])
+    response.headers['Cache-Control'] = 'no-store'
+    return response, status
+
+
+def geo_api_actor():
+    _, user_id, user_role = ail_api.get_basic_user_meta(get_auth_from_header())
+    return user_id, user_role
+
+
+@api_rest.route('api/v1/object/geolocations', methods=['GET'])
+@token_required('read_only')
+def v1_object_geolocations():
+    user_id, user_role = geo_api_actor()
+    return geo_json_response(geo_api.list_geolocations(request.args.get('gid'), user_id, user_role, offset=request.args.get('offset'), limit=request.args.get('limit')))
+
+
+@api_rest.route('api/v1/object/geolocations/<geo_id>', methods=['GET'])
+@token_required('read_only')
+def v1_object_geolocation(geo_id):
+    user_id, user_role = geo_api_actor()
+    return geo_json_response(geo_api.get_geolocation(request.args.get('gid'), geo_id, user_id, user_role))
+
+
+@api_rest.route('api/v1/object/geolocations', methods=['POST'])
+@token_required('user')
+def v1_create_object_geolocation():
+    payload, error = read_geo_payload()
+    if error:
+        return geo_json_response(error)
+    user_id, user_role = geo_api_actor()
+    return geo_json_response(geo_api.create_geolocation(request.args.get('gid'), payload, user_id, user_role))
+
+
+@api_rest.route('api/v1/object/geolocations/<geo_id>', methods=['PATCH'])
+@token_required('user')
+def v1_update_object_geolocation(geo_id):
+    payload, error = read_geo_payload()
+    if error:
+        return geo_json_response(error)
+    user_id, user_role = geo_api_actor()
+    return geo_json_response(geo_api.update_geolocation(request.args.get('gid'), geo_id, payload, user_id, user_role))
+
+
+@api_rest.route('api/v1/object/geolocations/<geo_id>', methods=['DELETE'])
+@token_required('user')
+def v1_delete_object_geolocation(geo_id):
+    payload, error = read_geo_payload(required=False)
+    if error:
+        return geo_json_response(error)
+    user_id, user_role = geo_api_actor()
+    return geo_json_response(geo_api.delete_geolocation(request.args.get('gid'), geo_id, payload, user_id, user_role))
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # # # # # # # # # # # # # # #      CHATS      # # # # # # # # # # # # # # # # # # #

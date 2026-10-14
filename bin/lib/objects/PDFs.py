@@ -64,7 +64,7 @@ class PDF(AbstractDaterangeObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def exists(self):
         return os.path.isfile(self.get_filepath())

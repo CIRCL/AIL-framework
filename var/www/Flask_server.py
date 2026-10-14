@@ -71,6 +71,7 @@ from blueprints.objects_pdf import objects_pdf
 from blueprints.objects_author import objects_author
 from blueprints.objects_ssh import objects_ssh
 from blueprints.objects_ip import objects_ip
+from blueprints.objects_geo import objects_geo
 from blueprints.api_rest import api_rest
 
 
@@ -172,6 +173,7 @@ app.register_blueprint(objects_pdf, url_prefix=baseUrl)
 app.register_blueprint(objects_author, url_prefix=baseUrl)
 app.register_blueprint(objects_ssh, url_prefix=baseUrl)
 app.register_blueprint(objects_ip, url_prefix=baseUrl)
+app.register_blueprint(objects_geo, url_prefix=baseUrl)
 app.register_blueprint(search_b, url_prefix=baseUrl)
 app.register_blueprint(api_rest, url_prefix=baseUrl)
 

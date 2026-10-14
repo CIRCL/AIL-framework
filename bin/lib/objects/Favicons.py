@@ -41,7 +41,7 @@ class Favicon(AbstractDaterangeObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def get_link(self, flask_context=False):
         if flask_context:

@@ -21,7 +21,7 @@ AIL_OBJECTS = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'c
                'item', 'image', 'mail', 'message', 'ocr', 'pdf', 'pgp', 'post', 'qrcode', 'screenshot', 'ssh-key', 'subforum', 'title',
                'user-account', 'username'}
 
-AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'cryptocurrency', 'forum', 'forum-thread', 'pgp', 'subforum', 'username', 'user-account'}
+AIL_OBJECTS_WITH_SUBTYPES = {'chat', 'chat-subchannel', 'chat-thread', 'cryptocurrency', 'forum', 'forum-thread', 'pgp', 'subforum', 'username', 'user-account'}
 
 # TODO by object TYPE ???? correlation
 AIL_OBJECTS_CORRELATIONS_DEFAULT = {'author', 'barcode', 'chat', 'chat-subchannel', 'chat-thread', 'cve', 'cryptocurrency',

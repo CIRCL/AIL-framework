@@ -466,7 +466,7 @@ class Message(AbstractObject):
     def delete(self):
         # TODO remove from chat - subchannel - thread
         #   zset timestamp
-        pass
+        self.delete_geos()
 
 def create_obj_id(chat_instance, chat_id, message_id, timestamp, thread_id=None):
     timestamp = int(timestamp)

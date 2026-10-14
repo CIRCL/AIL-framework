@@ -40,7 +40,7 @@ class Title(AbstractDaterangeObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def get_content(self, r_type='str'):
         if r_type == 'str':

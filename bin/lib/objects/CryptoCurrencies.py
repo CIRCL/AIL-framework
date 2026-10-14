@@ -95,7 +95,7 @@ class CryptoCurrency(AbstractSubtypeObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def is_valid_address(self):
         if self.subtype == 'bitcoin':

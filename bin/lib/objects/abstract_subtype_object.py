@@ -121,7 +121,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
             meta['link'] = self.get_link(flask_context=flask_context)
         if 'sparkline' in options:
             meta['sparkline'] = self.get_sparkline()
-        return meta
+        return self._add_geo_meta(meta, options)
 
     def set_first_seen(self, first_seen):
         r_object.hset(f'meta:{self.type}:{self.subtype}:{self.id}', 'first_seen', first_seen)

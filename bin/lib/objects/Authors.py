@@ -118,6 +118,7 @@ class Author(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        self.delete_geos()
         r_object.delete(f'author:{self.id}')
 
 

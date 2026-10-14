@@ -20,6 +20,7 @@
 	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -31,6 +32,10 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+                {% with geo_gid='author::' ~ meta['id'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
                 {% with meta=meta, is_correlation=False %}
                     {% include 'objects/author/card_author.html' %}

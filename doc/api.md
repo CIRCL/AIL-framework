@@ -1292,6 +1292,78 @@ curl https://127.0.0.1:7000/api/v1/image/similarity/phash/search \
 
 Invalid input returns `400`. An unavailable image-similarity Kvrocks backend returns `503`.
 
+## Object geolocation
+
+Attach multiple GPS coordinate entries to an existing AIL object. Every request requires the object's global ID in the `gid` query parameter (`type:subtype:id`, including an empty subtype where applicable). URL-encode this parameter when constructing requests.
+
+| Method | Endpoint | Result |
+| --- | --- | --- |
+| GET | `api/v1/object/geolocations?gid=...` | List locations in creation order. |
+| POST | `api/v1/object/geolocations?gid=...` | Create a location (`201`). |
+| GET | `api/v1/object/geolocations/<geo_id>?gid=...` | Read one location. |
+| PATCH | `api/v1/object/geolocations/<geo_id>?gid=...` | Update coordinates with a revision check. |
+| DELETE | `api/v1/object/geolocations/<geo_id>?gid=...` | Remove one location. |
+
+Use the API key headers described above. `read_only` users may read; `user`, `org_admin`, and `admin` users may read and write. The `user_no_api` role cannot use these token endpoints. A login cookie alone does not authenticate an API request.
+
+List requests accept `offset` (default `0`) and `limit` (default `100`, maximum `1000`). The response contains `gid`, `locations`, `total`, `offset`, `limit`, and `has_more`. Other reads and writes return a `location` object, except DELETE as described below. Successful responses use `200` unless stated otherwise. Responses have `Cache-Control: no-store`.
+
+### Create
+
+Send an `application/json` object containing only named `latitude` and `longitude` fields:
+
+```bash
+curl 'https://AIL_URL/api/v1/object/geolocations?gid=item::example' \
+  --header 'Authorization: YOUR_API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{"latitude":49.6116,"longitude":6.1319}'
+```
+
+Both coordinates must be finite numbers: latitude between `-90` and `90`, longitude between `-180` and `180`. Original coordinates are returned unchanged, including polar latitude. Only the spatial index clamps latitude to the Kvrocks-supported range.
+
+Example response (`201`):
+
+```json
+{
+  "location": {
+    "geo_id": "6e07bdbbd89d4203b0c4cc2e8ba97b57",
+    "obj_gid": "item::example",
+    "latitude": 49.6116,
+    "longitude": 6.1319,
+    "created_at": 1791885600000,
+    "updated_at": 1791885600000,
+    "revision": 1,
+    "created_by": "analyst@example.org",
+    "updated_by": "analyst@example.org",
+    "source": "manual"
+  }
+}
+```
+
+The server generates the location ID and derives the actor from the authenticated API key. Timestamps are Unix milliseconds. Creator/editor/source fields are optional on records created directly by trusted framework code; manual requests always set them. Clients cannot supply IDs, actor/source fields, or confidence scores.
+
+### Update
+
+PATCH accepts `latitude`, `longitude`, and the required positive integer `expected_revision`. Supply at least one coordinate; an omitted coordinate retains its current value.
+
+```json
+{"latitude":49.62,"expected_revision":1}
+```
+
+A coordinate change increments `revision`, updates `updated_at` and `updated_by`, and retains the ID, creation time, creator, and source. Sending unchanged coordinates with the current revision leaves the record unchanged. A stale revision returns `409`; reload the record before editing again.
+
+### Delete
+
+DELETE accepts an optional JSON body with `expected_revision`, for example `{"expected_revision":2}`. Omitting the body removes the location without a revision check. The response is `{"geo_id":"...","removed":true}`; deleting an already absent location returns `200` with `removed:false`.
+
+### Errors
+
+JSON bodies are limited to 4096 bytes. Unknown fields, malformed JSON, invalid coordinates/IDs/subtypes, and invalid pagination return `400`; oversized bodies return `413`; unsupported content types return `415`. Authentication and permission failures return `401` or `403`. A nonexistent object/location or a location belonging to another object returns `404`, without revealing its owner. Stale revisions return `409`; invalid storage returns `500`; an unavailable backend returns `503`. Errors contain `status: "error"` and `reason`.
+
+Session-authenticated routes for the map UI use `/objects/geolocations` and `/objects/geolocations/<geo_id>` with the same request/response format, under the application's configured URL prefix. Fetch `/objects/geolocations/csrf` in the same session and send its `csrf_token` as `X-CSRF-Token` on POST, PATCH, and DELETE. Session users with the `user_no_api` role can also write; read-only users cannot. These session routes are separate from API-key authentication.
+
+The session page `/objects/geolocations/view?gid=...` displays the location table and Leaflet map with manual editing controls appropriate to the user's role. It always uses CIRCL tiles; UI behavior is described in [the deployment notes](geolocation/README.md#map-and-location-editing).
+
 # FUTURE endpoints
 
 <details>

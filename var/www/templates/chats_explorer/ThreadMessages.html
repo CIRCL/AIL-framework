@@ -42,6 +42,7 @@
             background: #eee;
         }
 	</style>
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -55,6 +56,10 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+                {% with geo_gid=meta['type'] ~ ':' ~ meta.get('subtype', '') ~ ':' ~ meta['id'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
                 <div class="card my-3">
                     <div class="card-header" style="background-color:#d9edf7;font-size: 15px">

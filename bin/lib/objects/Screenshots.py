@@ -46,7 +46,7 @@ class Screenshot(AbstractObject):
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def exists(self):
         return os.path.isfile(self.get_filepath())
@@ -141,7 +141,7 @@ class Screenshot(AbstractObject):
         return obj
 
     def get_meta(self, options=set(), flask_context=False):
-        meta = self.get_default_meta(flask_context=flask_context)
+        meta = self.get_default_meta(options=options, flask_context=flask_context)
         meta['img'] = get_screenshot_rel_path(self.id)  ######### # TODO: Rename ME ??????
         meta['tags'] = self.get_tags(r_list=True)
         if 'description' in options:

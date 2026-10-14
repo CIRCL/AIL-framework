@@ -313,12 +313,12 @@ class Domain(AbstractObject):
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'link' in options:
             meta['link'] = self.get_link(flask_context=flask_context)
-        return meta
+        return self._add_geo_meta(meta, options)
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
         # # TODO:
-        pass
+        self.delete_geos()
 
     def get_link(self, flask_context=False):
         if flask_context:

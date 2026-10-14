@@ -1,0 +1,71 @@
+.object-geo > summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.object-geo > summary:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.object-geo .geo-map {
+    height: 340px;
+    background: #eef2f5;
+    border: 1px solid #dee2e6;
+    border-radius: .25rem;
+    isolation: isolate;
+}
+
+.object-geo [hidden] {
+    display: none !important;
+}
+
+.object-geo .geo-table td {
+    vertical-align: middle;
+}
+
+.object-geo .geo-table td:first-child,
+.object-geo .geo-table td:nth-child(2) {
+    font-variant-numeric: tabular-nums;
+}
+
+.object-geo .geo-selected {
+    background: #d9edf7;
+}
+
+.geo-object-id {
+    overflow-wrap: anywhere;
+}
+
+.object-geo .geo-point-tooltip {
+    box-sizing: border-box;
+    white-space: normal;
+    width: 360px;
+    max-width: min(360px, calc(100vw - 96px));
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.object-geo .geo-point-details {
+    display: grid;
+    min-width: 220px;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: .6rem;
+    row-gap: .2rem;
+    margin-bottom: .5rem;
+}
+
+.object-geo .geo-point-details dt {
+    font-weight: 600;
+}
+
+.object-geo .geo-point-details dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575px) {
+    .object-geo .geo-map {
+        height: 260px;
+    }
+}

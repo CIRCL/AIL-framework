@@ -356,6 +356,7 @@
     .forum-banner-card { overflow: hidden; }
   </style>
 
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -367,6 +368,10 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10 account-page" id="core_content">
+                {% with geo_gid=meta['type'] ~ ':' ~ meta.get('subtype', '') ~ ':' ~ meta['id'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
                 {% with show_username_timeline=True %}
                     {% include 'chats_explorer/card_user_account.html' %}

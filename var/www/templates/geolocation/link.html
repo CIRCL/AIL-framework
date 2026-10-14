@@ -1,0 +1,3 @@
+<a class="btn btn-sm btn-outline-secondary" href="{{ url_for('objects_geo.view_geolocations', gid=geo_gid) }}">
+    <i class="fas fa-map-marker-alt" aria-hidden="true"></i> Locations{% if geo_count is defined and geo_count is not none %} <span class="badge badge-light">{{ geo_count }}</span>{% endif %}
+</a>

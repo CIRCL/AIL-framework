@@ -45,6 +45,7 @@
         }
 	</style>
 
+    {% include 'geolocation/assets.html' %}
 </head>
 <body>
 
@@ -58,6 +59,10 @@
 			{% include 'sidebars/sidebar_objects.html' %}
 
 			<div class="col-12 col-lg-10" id="core_content">
+                {% with geo_gid=chat['type'] ~ ':' ~ chat.get('subtype', '') ~ ':' ~ chat['id'] %}
+                    {% include 'geolocation/panel.html' %}
+                {% endwith %}
+
 
                 {% with meta=chat %}
                     {% include 'chats_explorer/card_chat.html' %}

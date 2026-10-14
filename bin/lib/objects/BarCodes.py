@@ -132,6 +132,7 @@ class Barcode(AbstractDaterangeObject):
 
     # # WARNING: UNCLEAN DELETE /!\ TEST ONLY /!\
     def delete(self):
+        self.delete_geos()
         r_object.delete(f'barcode:{self.id}')
 
 
