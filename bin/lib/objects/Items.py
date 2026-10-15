@@ -20,6 +20,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ail_core import get_ail_uuid, rreplace
 from lib.objects.abstract_object import AbstractObject
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib import item_basic
 from lib.Language import LanguagesDetector
 from lib.data_retention_engine import update_obj_date, get_obj_date_first
@@ -221,22 +222,28 @@ class Item(AbstractObject):
 ####################################################################################
 ####################################################################################
 
-    def get_misp_object(self):
-        obj = MISPObject('ail-leak', standalone=True)
+    def get_misp_object(self, include_data=True):
+        obj = MISPObject('ail-leak', standalone=False)
         obj_date = self.get_date()
-        if obj_date:
-            obj.first_seen = obj_date
+        if include_data:
+            obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content())
         else:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
+            obj.add_attribute('origin', value=self.get_source())
+        obj.add_attribute('sensor', value=get_ail_uuid())
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), obj_date, obj_date)
 
-        obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-                     obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-                     obj.add_attribute('sensor', value=get_ail_uuid())]
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_objects(self, include_data=True):
+        obj = self.get_misp_object(include_data=include_data)
+        objects = [obj]
+        url = self.get_url() if self.is_crawled() else None
+        if url:
+            url_obj = MISPObject('url', standalone=False)
+            url_obj.add_attribute('url', value=url)
+            obj_date = self.get_date()
+            finalize_misp_object(url_obj, self.get_global_id(), self.get_tags(), obj_date, obj_date)
+            url_obj.add_reference(obj.uuid, 'extracted-from')
+            objects.append(url_obj)
+        return objects
 
     def is_crawled(self):
         return self.id.startswith('crawled')

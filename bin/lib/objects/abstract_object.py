@@ -369,6 +369,11 @@ class AbstractObject(ABC):
     def get_misp_object(self):
         pass
 
+    def get_misp_objects(self):
+        """Return the primary export and any supplementary MISP objects."""
+        obj = self.get_misp_object()
+        return [obj] if obj is not None else []
+
     @staticmethod
     def get_misp_object_tags(misp_obj):
         """

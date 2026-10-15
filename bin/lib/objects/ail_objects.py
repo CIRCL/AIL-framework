@@ -529,7 +529,6 @@ def get_ui_obj_tag_table_keys(obj_type): # TODO REMOVE ME
 
 # # # # MISP OBJECTS # # # #
 
-# # TODO: CHECK IF object already have an UUID
 def get_misp_object(obj_type, subtype, id):
     obj = get_object(obj_type, subtype, id)
     return obj.get_misp_object()
@@ -537,14 +536,17 @@ def get_misp_object(obj_type, subtype, id):
 
 def get_misp_objects(objs):
     misp_objects = {}
+    exports = []
     for obj in objs:
-        misp_objects[obj] = obj.get_misp_object()
+        objects = obj.get_misp_objects()
+        misp_objects[obj] = objects[0] if objects else None
+        exports.extend(objects)
     for relation in get_objects_relationships(objs):
         obj_src = misp_objects[relation['src']]
         obj_dest = misp_objects[relation['dest']]
         if obj_src and obj_dest:
             obj_src.add_reference(obj_dest.uuid, relation['relationship'], relation.get('comment', 'ail correlation'))
-    return misp_objects.values()
+    return exports
 
 # get misp relationship
 def get_objects_relationships(objs):

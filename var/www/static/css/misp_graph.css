@@ -1,0 +1,49 @@
+.misp-graph-status {
+    padding: .55rem .8rem;
+    border: 1px solid #dee2e6;
+    border-radius: .4rem;
+    background: #f8f9fa;
+    font-size: .9rem;
+}
+.misp-graph-details {
+    max-width: 34rem;
+    max-height: 28rem;
+    overflow: auto;
+    padding: .75rem;
+    color: #f8fafc;
+    background: #1f1f1f;
+    font-size: .875rem;
+    line-height: 1.5;
+}
+.misp-graph-source {
+    color: #cbd5e1;
+    font-size: .8rem;
+    font-weight: 600;
+    margin-bottom: .5rem;
+}
+.misp-graph-fields {
+    display: grid;
+    grid-template-columns: minmax(6rem, 1fr) minmax(0, 3fr);
+    gap: .4rem .75rem;
+    margin: 0;
+    font-size: .9rem;
+}
+.misp-graph-fields dt {
+    font-weight: 600;
+    color: #cbd5e1;
+}
+.misp-graph-fields dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.misp-input-dialog {
+    width: min(38rem, calc(100vw - 2rem));
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .25);
+}
+.misp-input-dialog::backdrop {
+    background: rgba(0, 0, 0, .45);
+}

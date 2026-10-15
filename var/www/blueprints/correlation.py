@@ -16,7 +16,7 @@ sys.path.append('modules')
 import Flask_config
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_read_only
+from Role_Manager import login_admin, login_read_only, no_cache
 
 
 sys.path.append(os.environ['AIL_BIN'])
@@ -27,6 +27,7 @@ from lib.objects import ail_objects
 from lib import chats_viewer
 from lib import Tag
 from lib import images_engine
+from lib import ail_misp
 
 bootstrap_label = Flask_config.bootstrap_label
 vt_enabled = Flask_config.vt_enabled
@@ -110,6 +111,46 @@ def sanitise_objs_hidden(objs_hidden):
     return objs_hidden
 
 # ============= ROUTES ==============
+@correlation.route('/correlation/expansion/catalog', methods=['GET'])
+@login_required
+@no_cache
+def expansion_catalog():
+    try:
+        result = ail_misp.MISPModuleClient().list_expansion_modules()
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify(result)
+
+
+@correlation.route('/correlation/expansion/modules', methods=['GET'])
+@login_required
+@no_cache
+def expansion_modules():
+    try:
+        obj = ail_misp.get_expansion_object(request.args.get('object_id'))
+        result = ail_misp.MISPModuleClient().list_expansions(obj)
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify(result)
+
+
+@correlation.route('/correlation/expansion', methods=['POST'])
+@login_required
+@no_cache
+def expand_object():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or set(data) - {'object_id', 'module', 'input_id'}:
+        return jsonify({'status': 'error', 'code': 'invalid_request', 'reason': 'Expected object_id, module, and optional input_id in a JSON object.'}), 400
+    if data.get('input_id') is not None and not isinstance(data['input_id'], str):
+        return jsonify({'status': 'error', 'code': 'invalid_request', 'reason': 'input_id must identify an exported attribute.'}), 400
+    try:
+        obj = ail_misp.get_expansion_object(data.get('object_id'))
+        result = ail_misp.MISPModuleClient().expand(obj, data.get('module'), data.get('input_id'))
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify(result)
+
+
 @correlation.route('/correlation/show', methods=['GET', 'POST'])
 @login_required
 @login_read_only

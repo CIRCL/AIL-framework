@@ -1,0 +1,118 @@
+.misp-modules-logo {
+    display: block;
+    width: 280px;
+    max-width: 100%;
+    height: auto;
+}
+.misp-secret-preview {
+    color: inherit;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+.misp-settings-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+.misp-module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: .8rem;
+}
+.misp-module-card {
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: border-color .15s, box-shadow .15s;
+}
+.misp-module-card.selected {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, .12);
+}
+.misp-module-card.off {
+    background: #f8f9fa;
+}
+.misp-module-name {
+    color: #212529;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    text-align: left;
+    text-decoration: none !important;
+}
+.misp-module-description {
+    color: #6c757d;
+    font-size: .86rem;
+    margin: .7rem 0 1rem;
+    flex-grow: 1;
+    overflow-wrap: anywhere;
+}
+.misp-switch {
+    display: inline-flex;
+    position: relative;
+    width: 34px;
+    height: 20px;
+    flex-shrink: 0;
+}
+.misp-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    z-index: 1;
+    cursor: pointer;
+}
+.misp-switch-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: #6c757d;
+}
+.misp-switch-track::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 3px;
+    left: 3px;
+    border-radius: 50%;
+    background: white;
+    transition: transform .15s;
+}
+.misp-switch input:checked + .misp-switch-track {
+    background: #007bff;
+}
+.misp-switch input:checked + .misp-switch-track::after {
+    transform: translateX(14px);
+}
+.misp-switch input:focus-visible + .misp-switch-track {
+    outline: 3px solid #80bdff;
+    outline-offset: 2px;
+}
+.misp-switch input:disabled + .misp-switch-track {
+    opacity: .5;
+}
+.misp-panel-heading {
+    overflow-wrap: anywhere;
+}
+@media (max-width: 1199px) {
+    .misp-settings-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 991px) {
+    .misp-modules-page #nav_menu {
+        flex-direction: column !important;
+    }
+    .misp-modules-page #nav_menu .navbar-nav {
+        flex-wrap: wrap;
+        justify-content: flex-start !important;
+    }
+    .misp-modules-page #nav_menu .nav-link {
+        margin-right: 1rem;
+    }
+}

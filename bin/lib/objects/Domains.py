@@ -8,7 +8,7 @@ import sys
 import time
 import zipfile
 
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import url_for
 from io import BytesIO
 from pymisp import MISPObject
@@ -19,6 +19,8 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ConfigLoader
 from lib.objects.abstract_object import AbstractObject
+from lib.objects import Titles
+from lib.ail_misp import finalize_misp_object, normalize_seen
 
 from lib.ail_core import paginate_iterator, get_default_image_description_model
 from lib.item_basic import get_item_children, get_item_date, get_item_url, get_item_domain, get_item_har
@@ -451,6 +453,10 @@ class Domain(AbstractObject):
         else:
             urls = set()
 
+        if epoch is None:
+            timestamps = self.get_timestamps_up()
+            if timestamps:
+                epoch = max(timestamps)
         items = self.get_crawled_items_by_epoch(epoch=epoch)
         if items:
             for item_id in items:
@@ -470,30 +476,49 @@ class Domain(AbstractObject):
         return urls
 
     def get_misp_object(self, epoch=None):
-        # create domain-ip obj
-        obj_attrs = []
-        obj = MISPObject('domain-crawled', standalone=True)
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_check()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
+        if self.domain_type == 'onion':
+            obj = MISPObject('tor-hiddenservice', standalone=False)
+            obj.add_attribute('address', value=self.id)
+            for language in sorted(self.get_languages()):
+                obj.add_attribute('language', value=language)
+            description = self.get_description()
+            if description:
+                obj.add_attribute('description', value=description)
+            titles = self.get_correlation('title').get('title', [])
+            for title_id in sorted(titles):
+                title = Titles.Title(title_id.split(':', 1)[1]).get_content()
+                if title:
+                    obj.add_attribute('title', value=title)
+        else:
+            obj = MISPObject('domain-crawled', standalone=False)
+            obj.add_attribute('domain', value=self.id)
+            for url, seen in sorted(self.get_all_urls(date=True, epoch=epoch).items()):
+                attribute = obj.add_attribute('url', value=url)
+                first_seen = normalize_seen(seen['first_seen'])
+                last_seen = normalize_seen(seen['last_seen'])
+                if first_seen is not None:
+                    attribute.first_seen = first_seen
+                if last_seen is not None:
+                    attribute.last_seen = last_seen
+        # Failed checks are not observations. Include observed redirects as well
+        # as successful local crawl history, without changing stored dates.
+        timestamps = self.get_timestamps_up() + list(self._get_redirect_history().values())
+        first_seen = datetime.fromtimestamp(min(timestamps), timezone.utc) if timestamps else None
+        last_seen = datetime.fromtimestamp(max(timestamps), timezone.utc) if timestamps else None
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), first_seen, last_seen)
 
-        obj_attrs.append(obj.add_attribute('domain', value=self.id))
-        urls = self.get_all_urls(date=True, epoch=epoch)
-        for url in urls:
-            attribute = obj.add_attribute('url', value=url)
-            attribute.first_seen = str(urls[url]['first_seen'])
-            attribute.last_seen = str(urls[url]['last_seen'])
-            obj_attrs.append(attribute)
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_objects(self, epoch=None):
+        obj = self.get_misp_object(epoch=epoch)
+        objects = [obj]
+        if self.domain_type == 'onion':
+            tags = self.get_tags()
+            for url, seen in sorted(self.get_all_urls(date=True, epoch=epoch).items()):
+                url_obj = MISPObject('url', standalone=False)
+                url_obj.add_attribute('url', value=url)
+                finalize_misp_object(url_obj, self.get_global_id(), tags, seen['first_seen'], seen['last_seen'])
+                url_obj.add_reference(obj.uuid, 'hosted-in')
+                objects.append(url_obj)
+        return objects
 
     # TODO ADD MISP Event Export
     # TODO DOWN DOMAIN
@@ -528,8 +553,9 @@ class Domain(AbstractObject):
                     _write_in_zip_buffer(zf, os.path.join(screenshots_dir, f'{screenshot}.png'), f'{basename}.png')
 
             zf.writestr('_URL_MAP_', BytesIO(map_file.encode()).getvalue())
-            misp_object = self.get_misp_object().to_json().encode()
-            zf.writestr('misp.json', BytesIO(misp_object).getvalue())
+            for index, misp_object in enumerate(self.get_misp_objects(epoch=epoch)):
+                filename = 'misp.json' if index == 0 else f'misp-{misp_object.uuid}.json'
+                zf.writestr(filename, misp_object.to_json())
         zip_buffer.seek(0)
         return zip_buffer
 

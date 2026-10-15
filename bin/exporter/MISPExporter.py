@@ -173,9 +173,10 @@ class MISPExporter(AbstractExporter, ABC):
             misp.update_attribute(attribute)
 
     def add_event_object(self, event_id, obj):
-        misp_object = obj.get_misp_object()
+        misp_objects = obj.get_misp_objects()
         misp = self.get_misp()
-        misp.add_object(event_id, misp_object)
+        for misp_object in misp_objects:
+            misp.add_object(event_id, misp_object)
 
     def get_daily_event_id(self):
         misp = self.get_misp()

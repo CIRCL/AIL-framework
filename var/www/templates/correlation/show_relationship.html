@@ -11,6 +11,8 @@
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/misp_graph.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/misp_icons.css') }}" rel="stylesheet">
 
 	  <!-- JS -->
 		<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
@@ -18,6 +20,8 @@
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
         <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/misp_graph.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/misp_graph_pivots.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js')}}"></script>
 
@@ -245,6 +249,7 @@
 										</div>
 										<span>Loading...</span>
 									</div>
+									{% include 'correlation/misp_expansion_controls.html' %}
 									<div id="graph">
 									</div>
 								</div>
@@ -583,6 +588,9 @@ function build_tooltip_html(title, data) {
 function render_pivotick_tooltip(element) {
     const wrapper = document.createElement('div');
     const elementData = typeof element.getData === 'function' ? (element.getData() || {}) : {};
+    if (elementData._misp && all_graph.misp_expansion) {
+        return all_graph.misp_expansion.renderDetails(element);
+    }
     const isNode = (typeof element.degree === 'function') || !!elementData._ail;
     if (!isNode) {
         const label = sanitize_text((elementData && elementData.label) ? elementData.label : 'Relationship');
@@ -600,6 +608,7 @@ function render_pivotick_tooltip(element) {
 
     if (ail.tooltip_html) {
         wrapper.innerHTML = ail.tooltip_html;
+        append_misp_annotations(wrapper, element);
         return wrapper;
     }
 
@@ -610,12 +619,20 @@ function render_pivotick_tooltip(element) {
             const html = build_tooltip_html(title, data);
             ail.tooltip_html = html;
             wrapper.innerHTML = html;
+            append_misp_annotations(wrapper, element);
         }
     ).fail(function(error){
         wrapper.innerHTML = '<div class="card pivotik-tooltip-card"><div class="card-body p-2"><div class="text-danger"><i class="fas fa-times-circle mr-1"></i>' + sanitize_text(error.statusText || 'Error while loading tooltip') + '</div></div></div>';
     });
 
     return wrapper;
+}
+
+
+function append_misp_annotations(wrapper, element) {
+    if (all_graph.misp_expansion?.properties(element).length) {
+        wrapper.append(all_graph.misp_expansion.renderDetails(element));
+    }
 }
 
 
@@ -693,6 +710,9 @@ const SIDEBAR_HIDDEN_KEYS = new Set([
 
 function build_sidebar_properties(element) {
     const data = (element && typeof element.getData === 'function') ? (element.getData() || {}) : (element || {});
+    if (data._misp && all_graph.misp_expansion) {
+        return all_graph.misp_expansion.properties(element);
+    }
     return Object.entries(data)
         .filter(function(entry) {
             const key = entry[0];
@@ -701,7 +721,7 @@ function build_sidebar_properties(element) {
         })
         .map(function(entry) {
             return { name: entry[0], value: entry[1] };
-        });
+        }).concat(all_graph.misp_expansion?.properties(element) || []);
 }
 
 function create_graph(url){
@@ -722,6 +742,7 @@ function create_graph(url){
                     size: n.style.node_radius || n.style.radius || 5,
                     iconClass: build_icon_class(n.style),
                     svgIcon: build_svg_icon(n.style),
+                    text: '',
                     textColor: '#000000',
                 });
                 return nodeById[n.id];
@@ -753,6 +774,7 @@ function create_graph(url){
                 },*/
                 render: {
                     type: 'svg',
+                    enableNodeExpansion: false,
                     defaultEdgeStyle: {
                         curveStyle: 'straight',
                     },
@@ -784,6 +806,9 @@ function create_graph(url){
                     onNodeClick: function(event, node){ click(node); },
                 },
             });
+
+            all_graph.misp_expansion?.destroy();
+            all_graph.misp_expansion = AILMISPGraphPivots.attach(all_graph.node_graph, document.getElementById('misp-expansion-controls'));
 
             if (all_graph.node_graph?.renderer?.fitAndCenter) {
                 all_graph.node_graph.renderer.fitAndCenter(1);
@@ -832,6 +857,9 @@ function get_node_text(nodeLike) {
 
 function doubleclick(event, node) {
     const data = get_node_data(node);
+    if (data._misp) {
+        return;
+    }
     const ail = data._ail || data;
     if (ail.url) {
         window.open(ail.url, '_blank');
@@ -841,7 +869,9 @@ function doubleclick(event, node) {
 function keypressed(event) {
     const keyCode = event ? event.keyCode : d3.event.keyCode;
     if ((keyCode === 72 || keyCode === 104) && currentObject) {
-        window.location.href = correl_link + "&hide=" + encodeURIComponent(currentObject.id);
+        if (!AILMISPGraph.isExpansionNode(currentObject.node)) {
+            window.location.href = correl_link + "&hide=" + encodeURIComponent(currentObject.id);
+        }
     }
 }
 

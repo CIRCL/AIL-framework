@@ -9,12 +9,14 @@ import os
 import sys
 import json
 import pycountry
+import secrets
+import hmac
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, flash
+from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort, flash, session
 from flask_login import login_required, current_user
 
 # Import Role_Manager
-from Role_Manager import login_admin, login_user, login_read_only
+from Role_Manager import login_admin, login_user, login_read_only, no_cache
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -23,6 +25,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib import ail_updates
 from lib import ail_orgs
 from lib import ail_config
+from lib import ail_misp
 from lib import ail_queues
 from lib import ail_users
 from lib import Language
@@ -49,6 +52,72 @@ def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 # ============= ROUTES ==============
+
+@settings_b.route('/settings/misp-modules', methods=['GET'])
+@login_required
+@login_admin
+@no_cache
+def settings_misp_modules():
+    if 'misp_settings_csrf' not in session:
+        session['misp_settings_csrf'] = secrets.token_urlsafe(32)
+    try:
+        settings = ail_misp.MISPModuleClient().get_settings()
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return render_template('misp_modules.html', acl_admin=True, settings=settings, csrf_token=session['misp_settings_csrf'])
+
+
+@settings_b.route('/settings/misp-modules/data', methods=['GET'])
+@login_required
+@login_admin
+@no_cache
+def settings_misp_modules_data():
+    try:
+        settings = ail_misp.MISPModuleClient().get_settings(check_connection=request.args.get('check_connection') == 'true')
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify(settings)
+
+
+def _misp_settings_request():
+    expected = session.get('misp_settings_csrf')
+    supplied = request.headers.get('X-CSRF-Token', '')
+    if not expected or not hmac.compare_digest(expected.encode('utf-8'), supplied.encode('utf-8')):
+        raise ail_misp.MISPModuleError('Reload the settings page before saving.', 'invalid_csrf_token', 403)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        raise ail_misp.MISPModuleError('Expected a JSON object containing settings.', 'invalid_settings', 400)
+    return data
+
+
+@settings_b.route('/settings/misp-modules/service', methods=['POST'])
+@login_required
+@login_admin
+@no_cache
+def settings_misp_modules_service():
+    try:
+        data = _misp_settings_request()
+        client = ail_misp.MISPModuleClient()
+        client.save_service_settings(data)
+        settings = client.get_settings()
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify(settings)
+
+
+@settings_b.route('/settings/misp-modules/module/<name>', methods=['POST'])
+@login_required
+@login_admin
+@no_cache
+def settings_misp_modules_module(name):
+    try:
+        data = _misp_settings_request()
+        client = ail_misp.MISPModuleClient()
+        client.save_module_settings(name, data)
+    except ail_misp.MISPModuleError as error:
+        return jsonify(error.to_dict()), error.status
+    return jsonify({'status': 'success', 'module': name})
+
 
 @settings_b.route("/settings", methods=['GET'])
 @login_required

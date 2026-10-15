@@ -2,6 +2,7 @@
 # -*-coding:UTF-8 -*
 
 import os
+import hashlib
 import re
 import sys
 import magic
@@ -18,6 +19,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from packages import Date
 
@@ -156,26 +158,26 @@ class Decoded(AbstractDaterangeObject):
         zip_content.seek(0)
         return zip_content
 
-    def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('file')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('sha1', value=self.id))
-        obj_attrs.append(obj.add_attribute('mimetype', value=self.get_mimetype()))
-        obj_attrs.append(obj.add_attribute('malware-sample', value=self.id, data=self.get_content(r_type='bytes')))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_object(self, include_data=True):
+        obj = MISPObject('file', standalone=False)
+        obj.add_attribute('sha1', value=self.id)
+        mimetype = self.get_mimetype()
+        if mimetype:
+            obj.add_attribute('mimetype', value=mimetype)
+        size = self.get_size()
+        if size is not None:
+            obj.add_attribute('size-in-bytes', value=int(size))
+        if include_data and mimetype:
+            try:
+                content = self.get_content(r_type='bytes')
+            except FileNotFoundError:
+                self.logger.warning('Decoded content unavailable for MISP export: %s', self.id)
+            else:
+                md5 = hashlib.md5(content).hexdigest()
+                obj.add_attribute('md5', value=md5)
+                obj.add_attribute('sha256', value=hashlib.sha256(content).hexdigest())
+                obj.add_attribute('attachment', value=self.id, data=BytesIO(content))
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     ############################################################################
     ############################################################################

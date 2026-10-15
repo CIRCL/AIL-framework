@@ -1,0 +1,4 @@
+<div id="misp-expansion-controls" class="misp-graph-status m-2 d-flex align-items-center justify-content-between flex-wrap" data-catalog-url="{{ url_for('correlation.expansion_catalog') }}" data-modules-url="{{ url_for('correlation.expansion_modules') }}" data-expand-url="{{ url_for('correlation.expand_object') }}">
+    <span data-misp-status role="status" aria-live="polite">Loading MISP expansion modules…</span>
+    <button type="button" data-misp-reload class="btn btn-sm btn-outline-secondary ml-2">Reload expansion modules</button>
+</div>

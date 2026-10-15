@@ -15,6 +15,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib import crawlers
 from lib.objects import Domains
 from lib.objects import IPAddresses
@@ -65,26 +66,17 @@ class SSHKey(AbstractDaterangeObject):
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf120', 'color': 'grey', 'radius': 5}
 
-    def get_misp_object(self):  # TODO
-        obj = MISPObject('passive-ssh', standalone=True)
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if not first_seen:
-            first_seen = self.get_date()
-            last_seen = first_seen
-        obj.first_seen = first_seen
-        obj.last_seen = last_seen
-        # TODO host (s)
-        # TODO base64 key
-        # TODO banner
-        # hassh ???
-        obj_attrs = [obj.add_attribute('first-seen', value=first_seen),
-                     obj.add_attribute('last_seen', value=last_seen),
-                     obj.add_attribute('fingerprint', value=self.id)]
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_object(self):
+        obj = MISPObject('passive-ssh', standalone=False)
+        obj.add_attribute('fingerprint', value=self.id)
+        for host in sorted(self.get_correlation('ip').get('ip', [])):
+            ip = IPAddresses.sanitize_ip(host.split(':', 1)[1])
+            if ip:
+                obj.add_attribute('host', value=ip)
+        key_type = self.get_key_type()
+        if key_type:
+            obj.comment = f'SSH key type: {key_type}'
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     def get_key_type(self):
         return self._get_field('type')

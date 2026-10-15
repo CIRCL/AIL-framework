@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MISP Modules - AIL Settings</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/misp_modules_settings.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+</head>
+<body class="misp-modules-page">
+    {% include 'nav_bar.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'settings/menu_sidebar.html' %}
+            <main class="col-12 col-lg-10 py-3" id="core_content">
+                <div id="misp-module-settings" data-csrf-token="{{ csrf_token }}" data-settings-url="{{ url_for('settings_b.settings_misp_modules_data') }}" data-service-url="{{ url_for('settings_b.settings_misp_modules_service') }}" data-module-url="{{ url_for('settings_b.settings_misp_modules_module', name='MODULE_NAME') }}">
+                    <header class="mb-3">
+                        <h2 class="mb-1"><img class="misp-modules-logo" src="{{ url_for('static', filename='image/misp-modules-logo.png') }}" alt="MISP Modules" width="5568" height="1435"></h2>
+                        <p class="text-muted mb-0">Configure shared expansion modules for AIL graphs.</p>
+                    </header>
+                    <div id="misp-message" class="alert d-none" role="status" aria-live="polite"></div>
+
+                    <section class="card shadow-sm mb-3" aria-labelledby="misp-service-title">
+                        <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap">
+                            <h5 class="mb-0" id="misp-service-title"><i class="fas fa-server text-primary mr-2" aria-hidden="true"></i>Service</h5>
+                            <div class="d-flex align-items-center">
+                                <span id="misp-service-status" class="badge badge-secondary mr-3">Not checked</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="misp-refresh"><i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Check connection</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <form id="misp-service-form">
+                                <div class="d-flex align-items-center mb-3">
+                                    <label class="misp-switch mr-2 mb-0" for="misp-service-enabled">
+                                        <input type="checkbox" id="misp-service-enabled" role="switch">
+                                        <span class="misp-switch-track" aria-hidden="true"></span>
+                                    </label>
+                                    <label class="mb-0" for="misp-service-enabled">Enable graph expansion</label>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-7">
+                                        <label for="misp-service-url">Service URL</label>
+                                        <input class="form-control" type="url" id="misp-service-url" required placeholder="http://127.0.0.1" aria-describedby="misp-url-help">
+                                        <small class="form-text text-muted" id="misp-url-help">The address AIL uses to reach MISP Modules.</small>
+                                    </div>
+                                    <div class="form-group col-md-2">
+                                        <label for="misp-service-port">Port</label>
+                                        <input class="form-control" type="number" id="misp-service-port" min="1" max="65535" placeholder="6666" aria-describedby="misp-port-help">
+                                        <small class="form-text text-muted" id="misp-port-help">Optional if included in the URL.</small>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <label for="misp-service-timeout">Timeout (seconds)</label>
+                                        <input class="form-control" type="number" id="misp-service-timeout" required min="0.1" step="any">
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <button type="submit" class="btn btn-primary" id="misp-service-save">Save service</button>
+                                    <span class="text-muted small ml-3" id="misp-service-note">Changes apply to new expansion requests.</span>
+                                </div>
+                            </form>
+                            <div class="alert alert-warning mt-3 mb-0 d-none" id="misp-service-error" role="status"></div>
+                        </div>
+                    </section>
+
+                    <div class="misp-settings-layout">
+                        <section class="card shadow-sm" aria-label="Expansion modules">
+                            <div class="card-header bg-white">
+                                <label class="sr-only" for="misp-module-search">Search modules</label>
+                                <input class="form-control form-control-sm mb-2" id="misp-module-search" type="search" placeholder="Search modules" autocomplete="off">
+                                <div class="d-flex flex-wrap" id="misp-module-filters" aria-label="Filter modules">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary active mr-2 mb-1" data-filter="all" aria-pressed="true">All <span data-count="all">9</span></button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mr-2 mb-1" data-filter="enabled" aria-pressed="false">Enabled <span data-count="enabled">0</span></button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary mb-1" data-filter="config" aria-pressed="false">Needs configuration <span data-count="config">0</span></button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div id="misp-module-grid" class="misp-module-grid"></div>
+                                <p id="misp-module-empty" class="text-muted mb-0 d-none" role="status">No modules match your search.</p>
+                            </div>
+                        </section>
+                        <section id="misp-module-panels" aria-label="Selected module configuration"></section>
+                    </div>
+                    <noscript><div class="alert alert-warning mt-3">Enable JavaScript to configure MISP Modules.</div></noscript>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script type="application/json" id="misp-settings-data">{{ settings|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/misp_modules_settings.js') }}" defer></script>
+</body>
+</html>
