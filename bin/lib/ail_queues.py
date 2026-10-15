@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 # -*-coding:UTF-8 -*
 
+import argparse
+import configparser
+import json
 import os
 import sys
 import datetime
+import tempfile
 import time
+from pathlib import Path
 
 import xxhash
 
@@ -360,6 +365,48 @@ def delete_processed_obj(obj_global_id):
 #             #
 # # # # # # # #
 
+def get_module_graph(config_file=MODULES_FILE):
+    config = configparser.ConfigParser()
+    with open(config_file, encoding='utf-8') as source:
+        config.read_file(source)
+
+    nodes = []
+    subscribers = {}
+    for name in sorted(config.sections()):
+        subscribe = config.get(name, 'subscribe', fallback='').strip() or None
+        publish = sorted({channel.strip() for channel in config.get(name, 'publish', fallback='').split(',') if channel.strip()})
+        nodes.append({'id': name, 'subscribe': subscribe, 'publish': publish})
+        if subscribe:
+            subscribers.setdefault(subscribe, []).append(name)
+
+    edges = []
+    for node in nodes:
+        for channel in node['publish']:
+            for target in subscribers.get(channel, []):
+                edges.append({'source': node['id'], 'target': target, 'channel': channel})
+    return {'version': 1, 'nodes': nodes, 'edges': edges}
+
+
+def save_module_graph(config_file=MODULES_FILE, graph_file=None):
+    graph = get_module_graph(config_file)
+    if graph_file is None:
+        graph_file = os.path.join(os.environ['AIL_HOME'], 'var/www/static/json/ail_modules.json')
+    graph_file = Path(graph_file)
+    graph_file.parent.mkdir(parents=True, exist_ok=True)
+    # Readers should always see a complete snapshot during initialization.
+    temporary_file = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=graph_file.parent, delete=False) as output:
+            temporary_file = output.name
+            json.dump(graph, output, indent=2)
+            output.write('\n')
+        os.chmod(temporary_file, 0o644)
+        os.replace(temporary_file, graph_file)
+    finally:
+        if temporary_file is not None and os.path.exists(temporary_file):
+            os.unlink(temporary_file)
+
+
 def get_queue_digraph():
     queues_ail = {}
     modules = {}
@@ -433,6 +480,7 @@ def get_queue_digraph():
 
 def save_queue_digraph():
     import subprocess
+    save_module_graph()
     digraph = get_queue_digraph()
     dot_file = os.path.join(os.environ['AIL_HOME'], 'doc/ail_queues.dot')
     svg_file = os.path.join(os.environ['AIL_HOME'], 'doc/ail_queues.svg')
@@ -452,5 +500,12 @@ def save_queue_digraph():
 
 
 if __name__ == '__main__':
-    # print(get_processed_end_objs())
-    print(get_modules_queues_stats())
+    parser = argparse.ArgumentParser(description='Inspect AIL module queues or regenerate the module graph.')
+    parser.add_argument('--save-module-graph', action='store_true', help='Generate the static JSON topology without changing module queues.')
+    parser.add_argument('--config', default=MODULES_FILE, type=Path)
+    parser.add_argument('--output', default=Path(os.environ['AIL_HOME']) / 'var/www/static/json/ail_modules.json', type=Path)
+    args = parser.parse_args()
+    if args.save_module_graph:
+        save_module_graph(args.config, args.output)
+    else:
+        print(get_modules_queues_stats())

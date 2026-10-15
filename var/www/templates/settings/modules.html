@@ -2,16 +2,22 @@
 <html>
 
 <head>
-  <title>Server Management - AIL</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modules - AIL</title>
 	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
 
   <!-- Core CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/modules_graph.css') }}" rel="stylesheet">
 
   <!-- JS -->
 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/modules_graph.js') }}" defer></script>
 
 </head>
 <body>
@@ -24,18 +30,37 @@
 			{% include 'settings/menu_sidebar.html' %}
             <div class="col-12 col-lg-10" id="core_content">
 
-                <div class="text-center my-4">
-                    <h2><img src="{{ url_for('static', filename='image/ail-project.png')}}" alt="AIL" style="width:80px;"> Modules:</h2>
-                </div>
-                <object data="{{ url_for('static', filename='image/ail_queues.svg') }}" type="image/svg+xml" style="width:100%;"></object>
+                <header class="modules-page-header">
+                    <div class="modules-page-icon" aria-hidden="true"><i class="fas fa-project-diagram"></i></div>
+                    <div>
+                        <h1>Modules</h1>
+                        <p>Explore module connections and inspect processing queues.</p>
+                    </div>
+                </header>
+                <section class="modules-graph" id="modules-graph" aria-label="Module routing graph">
+                    <div class="modules-graph-message" role="status">Loading module graph…</div>
+                    <div class="modules-graph-canvas"></div>
+                    <div class="modules-graph-footer">
+                        <div class="modules-graph-legend" aria-label="Module colours">
+                            <button type="button" class="modules-graph-legend-item" data-module-status="registered" aria-controls="modules-graph" aria-pressed="false" disabled><span class="modules-graph-dot registered" aria-hidden="true"></span>Workers registered</button>
+                            <button type="button" class="modules-graph-legend-item" data-module-status="waiting" aria-controls="modules-graph" aria-pressed="false" disabled><span class="modules-graph-dot waiting" aria-hidden="true"></span>Pending messages, no registered worker</button>
+                            <button type="button" class="modules-graph-legend-item" data-module-status="unknown" aria-controls="modules-graph" aria-pressed="false" disabled><span class="modules-graph-dot unknown" aria-hidden="true"></span>No registered worker or statistics unavailable</button>
+                        </div>
+                        <span class="modules-graph-selection" aria-live="polite">Select a module to highlight its inputs and outputs.</span>
+                    </div>
+                </section>
+                <p class="small text-muted mt-2">Arrows show configured routing; labels identify the published channel. Topology is generated at AIL startup. Worker registrations and queue sizes are a snapshot from this page load and do not confirm process health.</p>
+                <noscript><p class="alert alert-info">JavaScript is required for graph navigation. Module statistics are available below.</p></noscript>
+                <script id="modules-graph-config" type="application/json">{{ {'graphUrl': url_for('static', filename='json/ail_modules.json'), 'stats': queues_stats} | tojson }}</script>
 
                 <h3 class="mt-4">Modules</h3>
+                <div class="table-responsive">
                 <table class="table mb-4">
                     <thead class="bg-dark text-white">
                     <tr>
                         <th>Module Name</th>
-                        <th>Nb Modules Launched</th>
-                        <th>Nb in Queue</th>
+                        <th>Registered workers</th>
+                        <th>Pending messages</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -54,6 +79,7 @@
                     {% endfor %}
                     </tbody>
                 </table>
+                </div>
 
             </div>
 		</div>

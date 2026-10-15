@@ -1,0 +1,217 @@
+.modules-page-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 24px 0 20px;
+}
+
+.modules-page-icon {
+    display: flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    height: 44px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 18px;
+}
+
+.modules-page-header h1 {
+    margin: 0;
+    color: #243247;
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.modules-page-header p {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.modules-graph {
+    border: 1px solid #dce2e8;
+    border-radius: 6px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.modules-graph-selection {
+    color: #536170;
+    font-size: 0.85rem;
+}
+
+.modules-graph-canvas {
+    position: relative;
+    height: clamp(480px, 72vh, 900px);
+    width: 100%;
+    min-width: 0;
+}
+
+/* Initial layout measurements must use the collapsed sidebar's final width. */
+.modules-graph-canvas .pvt-sidebar {
+    transition: none;
+}
+
+.modules-graph-module {
+    --module-accent: #64748b;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 208px;
+    min-height: 64px;
+    padding: 10px 18px 10px 22px;
+    border: 1px solid #d8e1ec;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    box-shadow: inset 4px 0 0 var(--module-accent), 0 2px 6px rgba(15, 23, 42, 0.08);
+    color: #243247;
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    text-align: center;
+    overflow-wrap: anywhere;
+    transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.modules-graph-module-label {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.modules-graph-canvas .pvt-node > foreignObject {
+    overflow: visible;
+}
+
+.modules-graph-module:hover,
+.modules-graph-canvas .pvt-node-highlighted .modules-graph-module {
+    border-color: var(--module-accent);
+    background: #f1f5f9;
+    box-shadow: inset 4px 0 0 var(--module-accent), 0 3px 8px rgba(15, 23, 42, 0.12);
+}
+
+.modules-graph-canvas .pvt-node-selected-highlight .modules-graph-module {
+    border-color: var(--module-accent);
+    background: #eff6ff;
+    box-shadow: inset 4px 0 0 var(--module-accent), 0 0 0 3px color-mix(in srgb, var(--module-accent) 16%, transparent);
+}
+
+/* The card supplies its own hover and selection states. */
+.modules-graph-canvas .pvt-node-selected-highlight > .node,
+.modules-graph-canvas .pvt-node-highlighted > .node {
+    stroke: transparent;
+    filter: none;
+    animation: none;
+}
+
+.modules-graph-message {
+    margin: 12px 16px;
+}
+
+.modules-graph-message:not([hidden]) + .modules-graph-canvas:empty {
+    height: 120px;
+    min-height: 0;
+}
+
+.modules-graph-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 20px;
+    padding: 10px 16px;
+    border-top: 1px solid #dce2e8;
+    background: #f8fafc;
+    font-size: 0.85rem;
+}
+
+.modules-graph-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.modules-graph-legend-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.modules-graph-legend-item:disabled {
+    cursor: default;
+}
+
+.modules-graph-legend-item.is-previewed {
+    border-color: #d8e1ec;
+    background: #eef2f6;
+}
+
+.modules-graph-legend-item[aria-pressed="true"] {
+    border-color: #93c5fd;
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+.modules-graph-legend-item:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.modules-graph-legend-preview .pvt-node:not(.pvt-node-emphasised) > *,
+.modules-graph-legend-preview .pvt-edge-group > * {
+    opacity: 0.15;
+}
+
+.modules-graph-legend-preview .pvt-node.pvt-node-emphasised > * {
+    opacity: 1;
+}
+
+.modules-graph-legend-preview .pvt-node-emphasised .modules-graph-module {
+    border-color: var(--module-accent);
+}
+
+.modules-graph-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.modules-graph-dot.registered {
+    background: #2563eb;
+}
+
+.modules-graph-dot.waiting {
+    background: #b45309;
+}
+
+.modules-graph-dot.unknown {
+    background: #64748b;
+}
+
+@media (max-width: 575px) {
+    .modules-graph-canvas .pvt-layout {
+        --pvt-sidebar-width: calc(100vw - 96px);
+    }
+
+    .modules-graph-canvas {
+        height: 65vh;
+        min-height: 400px;
+    }
+}
