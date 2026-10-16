@@ -106,7 +106,7 @@
 	</div>
 </div>
 
-{% if meta.get('similarity') %}
+{% if meta.get('similarity') and meta['similarity'].values() | selectattr('images') | list %}
     <div class="card my-3">
         <div class="card-header py-2">
             <i class="fas fa-fingerprint"></i> Image similarity
