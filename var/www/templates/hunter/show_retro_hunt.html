@@ -184,6 +184,44 @@
 
 {% include 'modals/retro_hunt_remove_object.html' %}
 
+{% if can_edit %}
+    <div class="modal fade" id="edit_retro_hunt_modal" tabindex="-1" role="dialog" aria-labelledby="edit_retro_hunt_title" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form class="modal-content" action="{{ url_for('hunters.retro_hunt_edit_task') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_retro_hunt_title">Edit retro hunt</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="uuid" value="{{ dict_task['uuid'] }}">
+                    <div class="form-group">
+                        <label for="retro_hunt_name">Name</label>
+                        <input class="form-control" id="retro_hunt_name" name="name" type="text" value="{{ dict_task['name'] }}" maxlength="60" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="retro_hunt_description">Description</label>
+                        <textarea class="form-control" id="retro_hunt_description" name="description" rows="4" maxlength="1000">{{ dict_task['description'] or '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="retro_hunt_level">Level</label>
+                        <select class="custom-select" id="retro_hunt_level" name="level">
+                            <option value="1" {% if dict_task['level'] == 1 %}selected{% endif %}>Global</option>
+                            <option value="2" {% if dict_task['level'] == 2 %}selected{% endif %}>My Organisation</option>
+                        </select>
+                        <small class="form-text text-muted">Global retro hunts are visible to all users, while organisation retro hunts are visible only within your organisation.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
 <div class="container-fluid">
     <div class="row">
 
@@ -219,6 +257,11 @@
                                 <button class="btn btn-info btn-lg" type="button" id="button-search-tags" onclick="getItems();">
                                     <i class="fas fa-search"></i> Show Objects
                                 </button>
+                                {% if can_edit %}
+                                    <button class="btn btn-primary btn-lg" type="button" data-toggle="modal" data-target="#edit_retro_hunt_modal">
+                                        <i class="fas fa-pencil-alt"></i> Edit
+                                    </button>
+                                {% endif %}
                                 {%if dict_task['state']=='paused'%}
                                     <a href="{{ url_for('hunters.retro_hunt_resume_task') }}?uuid={{dict_task['uuid']}}" class="btn btn-success btn-lg">
                                         <i class="fas fa-play"></i> Resume Retro Hunt

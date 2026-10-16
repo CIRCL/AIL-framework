@@ -2083,6 +2083,13 @@ class RetroHunt:
     def get_description(self):
         return self._get_field('description')
 
+    def edit(self, name, description, level=None, org_uuid=None):
+        old_level = self.get_level()
+        if level is not None and old_level != level:
+            self.reset_level(old_level, level, org_uuid)
+        self._set_field('name', escape(name))
+        self._set_field('description', escape(description))
+
     def get_source(self):
         source = self._get_field('source')
         if not source:
@@ -2598,6 +2605,33 @@ def api_check_retro_hunt_task_uuid(task_uuid):
     if not retro_hunt.exists():
         return {"status": "error", "reason": "Unknown uuid"}, 404
     return None
+
+def api_edit_retro_hunt_task(data, user_org, user_id, user_role):
+    task_uuid = data.get('uuid')
+    res = api_check_retro_hunt_task_uuid(task_uuid)
+    if res:
+        return res
+    retro_hunt = RetroHunt(task_uuid)
+    res = api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit')
+    if res:
+        return res
+
+    name = data.get('name', '')
+    description = data.get('description', '')
+    if not isinstance(name, str) or not name.strip() or len(name) > 60:
+        return {'status': 'error', 'reason': 'Name must contain between 1 and 60 characters'}, 400
+    if not isinstance(description, str) or len(description) > 1000:
+        return {'status': 'error', 'reason': 'Description must contain at most 1000 characters'}, 400
+
+    try:
+        level = int(data.get('level', retro_hunt.get_level()))
+    except (TypeError, ValueError):
+        return {'status': 'error', 'reason': 'Invalid level'}, 400
+    if level not in {1, 2}:
+        return {'status': 'error', 'reason': 'Invalid level'}, 400
+
+    retro_hunt.edit(name, description, level=level, org_uuid=user_org)
+    return {'uuid': task_uuid}, 200
 
 def api_pause_retro_hunt_task(user_org, user_id, user_role, task_uuid):
     res = api_check_retro_hunt_task_uuid(task_uuid)

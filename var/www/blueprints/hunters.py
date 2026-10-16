@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+from html import unescape
 from urllib.parse import urlparse
 from urllib.request import urlopen
 from urllib.error import HTTPError, URLError
@@ -827,6 +828,9 @@ def retro_hunt_show_task():
         return res
 
     dict_task = retro_hunt.get_meta(options={'creator', 'date', 'description', 'level', 'org', 'org_name', 'progress', 'filters', 'nb_objs', 'objs_stats','tags'})
+    dict_task['name'] = unescape(dict_task['name'] or '')
+    dict_task['description'] = unescape(dict_task['description'] or '')
+    can_edit = current_user.is_in_role('user_no_api') and Tracker.api_check_retro_hunt_acl(retro_hunt, user_org, user_id, user_role, 'edit') is None
     rule_content = Tracker.get_yara_rule_content(dict_task['rule'])
     dict_task['filters'] = json.dumps(dict_task['filters'], indent=4)
 
@@ -843,11 +847,24 @@ def retro_hunt_show_task():
             dict_task['objs'].append(obj_meta)
 
     return render_template("show_retro_hunt.html", dict_task=dict_task,
+                           can_edit=can_edit,
                            dict_page=dict_page,
                            blocklist_content=retro_hunt.get_blocklist_content(),
                            rule_content=rule_content,
                            bootstrap_label=bootstrap_label)
 
+
+@hunters.route('/retro_hunt/task/edit', methods=['POST'])
+@login_required
+@login_user_no_api
+def retro_hunt_edit_task():
+    data = {'uuid': request.form.get('uuid'), 'name': request.form.get('name', ''), 'description': request.form.get('description', '')}
+    if 'level' in request.form:
+        data['level'] = request.form['level']
+    res = Tracker.api_edit_retro_hunt_task(data, current_user.get_org(), current_user.get_user_id(), current_user.get_role())
+    if res[1] != 200:
+        return create_json_response(res[0], res[1])
+    return redirect(url_for('hunters.retro_hunt_show_task', uuid=res[0]['uuid']))
 
 
 @hunters.route('/retro_hunt/task/export/markdown', methods=['GET'])
