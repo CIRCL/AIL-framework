@@ -380,6 +380,7 @@ SUPPORTED_MODULES = {
     'dns': (),
     'reversedns': (),
     'extract_url_components': (),
+    'pgp_keyserver': (),
 }
 SERVICE_DEFAULTS = {'enabled': 'false', 'url': 'http://127.0.0.1', 'port': '6666', 'timeout': '30'}
 OPTIONAL_MODULE_CONFIG_FIELDS = {
@@ -388,6 +389,7 @@ OPTIONAL_MODULE_CONFIG_FIELDS = {
     'ipasn': ('custom_api',),
     'dns': ('nameserver',),
     'reversedns': ('nameserver',),
+    'pgp_keyserver': ('keyserver', 'timeout', 'max_results', 'extract_signatures', 'max_signatures'),
 }
 BOOLEAN_VALUES = {'1': True, 'yes': True, 'true': True, 'on': True, '0': False, 'no': False, 'false': False, 'off': False}
 MODULE_DESCRIPTIONS = {
@@ -400,10 +402,12 @@ MODULE_DESCRIPTIONS = {
     'dns': 'Resolve a domain using DNS.',
     'reversedns': 'Look up the reverse DNS name of an IP address.',
     'extract_url_components': 'Extract the components of a recorded URL.',
+    'pgp_keyserver': 'Look up OpenPGP keys and identities on an HKP keyserver.',
 }
-EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item'}
+EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp'}
+PGP_EXPANSION_RELATIONS = {'key': 'key-id', 'name': 'user-id-name', 'mail': 'user-id-email'}
 EXPANSION_ATTRIBUTE_TYPES = {'domain', 'hostname', 'onion-address', 'ip-src', 'ip-dst', 'ip', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'url', 'domain|ip', 'ip-src|port', 'ip-dst|port'}
-EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip'}
+EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found'}
 
 
 class MISPModuleError(Exception):
@@ -447,7 +451,7 @@ def get_module_config_fields(module):
 
 def is_secret_config_field(field, include_usernames=False):
     name = field['name'].lower()
-    return field.get('redacted') is True or field.get('type') == 'password' or (include_usernames and name in ('username', 'api_user')) or any(term in name for term in ('password', 'secret', 'token', 'key'))
+    return field.get('redacted') is True or field.get('type') == 'password' or (include_usernames and name in ('username', 'api_user')) or (name != 'keyserver' and any(term in name for term in ('password', 'secret', 'token', 'key')))
 
 
 def mask_config_value(value):
@@ -480,7 +484,7 @@ def parse_module_enrichment_response(response):
         reason = str(response['error']).strip().lower().rstrip('.')
         if reason in EMPTY_MODULE_ERRORS:
             return {'format': 'misp_standard', 'results': {}}
-        if 'timeout' in reason:
+        if 'timeout' in reason or 'timed out' in reason:
             raise MISPModuleError('The module lookup timed out.', 'timeout', 504)
         if 'rate limit' in reason or 'too many requests' in reason:
             raise MISPModuleError('The module provider rate limit was reached.', 'rate_limited', 429)
@@ -525,7 +529,9 @@ def get_expansion_object(global_id):
     if not isinstance(global_id, str):
         raise MISPModuleError('An AIL object global ID is required.', 'invalid_object', 400)
     parts = global_id.split(':', 2)
-    if len(parts) != 3 or parts[0] not in EXPANSION_OBJECT_TYPES or parts[1] or not parts[2]:
+    if len(parts) != 3 or parts[0] not in EXPANSION_OBJECT_TYPES or not parts[2]:
+        raise MISPModuleError('This object is not supported for expansion.', 'invalid_object', 400)
+    if (parts[0] == 'pgp' and parts[1] not in PGP_EXPANSION_RELATIONS) or (parts[0] != 'pgp' and parts[1]):
         raise MISPModuleError('This object is not supported for expansion.', 'invalid_object', 400)
     # Local import avoids a cycle with the object exporters using this library.
     from lib.objects import ail_objects
@@ -539,6 +545,8 @@ def get_expansion_inputs(obj):
     """Reuse semantic exports while keeping attachments out of lookup inputs."""
     if obj.get_type() not in EXPANSION_OBJECT_TYPES:
         raise MISPModuleError('This AIL object is not supported for expansion.', 'invalid_object', 400)
+    if obj.get_type() == 'pgp' and obj.subtype not in PGP_EXPANSION_RELATIONS:
+        raise MISPModuleError('This PGP subtype is not supported for expansion.', 'invalid_object', 400)
     try:
         if obj.get_type() == 'decoded':
             objects = [obj.get_misp_object(include_data=False)]
@@ -551,7 +559,12 @@ def get_expansion_inputs(obj):
     inputs = []
     for misp_object in objects:
         for attribute in misp_object.attributes:
-            if attribute.type in EXPANSION_ATTRIBUTE_TYPES:
+            if obj.get_type() == 'pgp':
+                relation = PGP_EXPANSION_RELATIONS[obj.subtype]
+                compatible = attribute.object_relation == relation and attribute.type in {'text', 'email'} and attribute.value == obj.id
+            else:
+                compatible = attribute.type in EXPANSION_ATTRIBUTE_TYPES
+            if compatible:
                 identity = json.dumps([obj.get_global_id(), misp_object.name, attribute.object_relation, attribute.type, attribute.value], ensure_ascii=False, separators=(',', ':'))
                 input_id = str(uuid.uuid5(MISP_EXPORT_NAMESPACE, identity))
                 inputs.append({'id': input_id, 'uuid': attribute.uuid, 'type': attribute.type, 'value': attribute.value, 'object_relation': attribute.object_relation, 'object_name': misp_object.name, 'object_uuid': misp_object.uuid})

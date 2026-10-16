@@ -17,6 +17,9 @@
     const scalar = value => typeof value === 'string' || typeof value === 'number' && Number.isFinite(value);
     const metadataRelations = new Set(['title', 'language', 'comment', 'description', 'name', 'source', 'origin', 'count', 'counter', 'rrtype', 'rrname', 'rdata', 'filename', 'file-name', 'size-in-bytes', 'filesize', 'file-size', 'mimetype', 'mime-type', 'scheme', 'tld', 'subdomain', 'domain-without-tld', 'resource-path', 'query-string', 'fragment', 'port', 'issuer', 'subject', 'pubkey-info-size', 'validity-not-before', 'validity-not-after', 'knownmalicious']);
     const observableTypes = new Set(['domain', 'hostname', 'onion-address', 'ip', 'ip-src', 'ip-dst', 'url', 'uri', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'sha512', 'ssdeep', 'tlsh', 'AS', 'email', 'email-src', 'email-dst', 'x509-fingerprint-sha1', 'x509-fingerprint-sha256', 'domain|ip', 'ip-src|port', 'ip-dst|port']);
+    const pgpObjects = new Set(['pgp-key', 'pgp-meta', 'pgp-sign']);
+    const pgpRelations = {'key-id': 'pgp-key-id', 'issuer-key-id': 'pgp-key-id', fingerprint: 'pgp-fingerprint', 'key-fingerprint': 'pgp-fingerprint', 'issuer-fingerprint': 'pgp-fingerprint', 'subkey-fingerprint': 'pgp-fingerprint', 'user-id-name': 'pgp-name', 'user-id-email': 'email'};
+    const pgpDetails = new Set(['uid', 'algorithm', 'key-length', 'creation-time', 'expiration-time', 'flags', 'keyserver', 'retrieval-url', 'signature-version', 'signature-type', 'public-key-algorithm', 'hash-algorithm', 'uid-sha256', 'user-attribute-sha256']);
     const canonical = value => JSON.stringify(value);
 
     function hash(value) {
@@ -75,6 +78,8 @@
             }
         } else if (['md5', 'sha1', 'sha256', 'sha512', 'tlsh', 'x509-fingerprint-sha1', 'x509-fingerprint-sha256'].includes(family)) {
             value = value.toLowerCase();
+        } else if (family === 'pgp-key-id' || family === 'pgp-fingerprint') {
+            value = value.replace(/^0x/i, '').replace(/\s+/g, '').toUpperCase();
         } else if (family === 'url') {
             try {
                 value = new URL(value).href;
@@ -89,6 +94,11 @@
         return {type: family, value, key: canonical([family, value])};
     }
 
+    function pgpObservable(id) {
+        const match = /^pgp:(key|name|mail):(.+)$/.exec(id);
+        return match ? normalizedObservable({key: 'pgp-key-id', name: 'pgp-name', mail: 'email'}[match[1]], match[2]) : null;
+    }
+
     function baseIndex(nodes) {
         const index = new Map();
         for (const node of nodes) {
@@ -97,6 +107,7 @@
             if (metadata?.kind === 'observable') {
                 observable = normalizedObservable(metadata.type, metadata.value);
             } else if (!metadata) {
+                observable = pgpObservable(node.id);
                 const match = /^(domain|ip|ssh-key|decoded)::(.+)$/.exec(node.id);
                 if (match) {
                     observable = normalizedObservable({domain: 'domain', ip: 'ip', 'ssh-key': 'ssh-fingerprint', decoded: 'sha1'}[match[1]], match[2]);
@@ -143,7 +154,7 @@
                 if (!grouped.has(date)) {
                     put(date, attribute.value);
                 }
-            } else if (metadataRelations.has(key) || observableTypes.has(attribute.type)) {
+            } else if (metadataRelations.has(key) || observableTypes.has(attribute.type) || pgpObjects.has(record.name) && (Object.hasOwn(pgpRelations, key) || pgpDetails.has(key))) {
                 put(humanize(relation), attribute.value);
             }
         }
@@ -168,6 +179,9 @@
         }
         if (observableTypes.has(attribute.type)) {
             return normalizedObservable(attribute.type, attribute.value);
+        }
+        if (pgpObjects.has(object?.name) && Object.hasOwn(pgpRelations, attribute.object_relation)) {
+            return normalizedObservable(pgpRelations[attribute.object_relation], attribute.value);
         }
         if (object?.name === 'passive-dns') {
             const relation = attribute.object_relation;
@@ -211,7 +225,7 @@
         const edges = new Map();
         const aliases = new Map();
         const observables = baseIndex(baseNodes);
-        const input = normalizedObservable(response.input.type, response.input.value);
+        const input = pgpObservable(source) || normalizedObservable(response.input.type, response.input.value);
         const inputAliases = new Set([response.source.object_uuid, response.source.input_object_uuid, response.source.attribute_uuid, response.input.uuid].filter(Boolean));
         const references = [];
         const returned = new Set();

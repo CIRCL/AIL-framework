@@ -13,7 +13,7 @@
     'use strict';
 
     const dataOf = element => element?.getData?.() || element?.data || {};
-    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components'};
+    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components', pgp_keyserver: 'PGP Keyserver'};
 
     function readableDate(value) {
         if (!value) {
@@ -44,8 +44,15 @@
     }
 
     function inputTypes(node) {
+        if (conversion.isExpansionNode(node)) {
+            return [];
+        }
+        const pgp = /^pgp:(key|name|mail):(.+)$/.exec(node.id);
+        if (pgp) {
+            return pgp[1] === 'mail' ? ['text', 'email'] : ['text'];
+        }
         const match = /^(domain|ip|ssh-key|decoded|item)::(.+)$/.exec(node.id);
-        if (!match || conversion.isExpansionNode(node)) {
+        if (!match) {
             return [];
         }
         return {domain: match[2].endsWith('.onion') ? ['onion-address', 'url'] : ['domain', 'url'], ip: ['ip-dst'], 'ssh-key': ['ssh-fingerprint', 'ip-dst'], decoded: ['sha1'], item: ['url']}[match[1]];
