@@ -837,6 +837,29 @@ class LanguagesDetector:
                 langs.append(lang_code)
         return langs
 
+# Compatibility between detector and backend codes, only for translation requests.
+TRANSLATION_LANGUAGE_FALLBACKS = {'no': 'nb', 'fil': 'tl'}
+
+
+def _get_translation_language(language, languages):
+    language = normalize_bcp47_tag(language)
+    if not language:
+        return None
+    candidate = language
+    while candidate:
+        if candidate in languages:
+            return candidate
+        candidate = candidate.rpartition('-')[0]
+    primary = language.split('-', 1)[0]
+    fallback = TRANSLATION_LANGUAGE_FALLBACKS.get(primary)
+    if fallback in languages:
+        return fallback
+    # Detectors return generic Chinese; newer LibreTranslate uses script tags.
+    if language == 'zh' and 'zh-Hans' in languages:
+        return 'zh-Hans'
+    return None
+
+
 class LanguageTranslator:
 
     def __init__(self):
@@ -897,10 +920,11 @@ class LanguageTranslator:
         l_languages = get_translation_languages()
         if source:
             source = normalize_bcp47_tag(source)
-            if source not in l_languages:
+            if not _get_translation_language(source, l_languages):
                 return None, None
         target = normalize_bcp47_tag(target)
-        if target not in l_languages:
+        target_code = _get_translation_language(target, l_languages)
+        if not target_code:
             return None, None
         translation = None
         if content:
@@ -908,31 +932,21 @@ class LanguageTranslator:
                 source = self.detect(content)
             # print(source, content)
             if source:
-                if source != target:
-                    source = normalize_bcp47_tag(source)
-                    if source not in l_languages:
-                        return None, None
+                source = normalize_bcp47_tag(source)
+                source_code = _get_translation_language(source, l_languages)
+                if not source_code:
+                    return None, None
+                if source_code != target_code:
                     try:
-                        source_iso1 = convert_iso3_code(source)
-                        target_iso1 = convert_iso3_code(target)
+                        translation = self.lt.translate(content, source_code, target_code)
+                        # Fix libretranslate dot panic
+                        if translation.endswith('........'):
+                            translation = translation.replace('........', '.')
                     except Exception as e:
-                        logger.error(f'Failed to Translate: {e}')
-                        source_iso1 = None
-                        target_iso1 = None
+                        logger.error(f'Libretranslate Translation: {e}')
                         translation = None
-                    if source_iso1 and target_iso1:
-                        try:
-                            # print(source_iso1, target_iso1)
-                            translation = self.lt.translate(content, source_iso1, target_iso1)
-                            # Fix libretranslate dot panic
-                            if translation.endswith('........'):
-                                translation = translation.replace('........', '.')
-                        except Exception as e:
-                            logger.error(f'Libretranslate Translation: {e}')
-                            translation = None
-                        if translation == content and filter_same_content:
-                            # print('EQUAL')
-                            translation = None
+                    if translation == content and filter_same_content:
+                        translation = None
         return source, translation
 
 
