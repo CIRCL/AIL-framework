@@ -104,6 +104,23 @@ def is_valid_webhook_url(webhook_url):
 ###################
 ####  TRACKER  ####
 
+def sanitize_match_status(status):
+    return status if status in {'all', 'done', 'rejected', 'read', 'unread'} else 'all'
+
+
+def filter_matches_by_status(tracker, objs, status='all'):
+    status = sanitize_match_status(status)
+    if status == 'all':
+        return objs
+    read = tracker.get_objs_read()
+    done = tracker.get_objs_done()
+    rejected = tracker.get_objs_rejected()
+    if status == 'unread':
+        return set(objs) - read - done - rejected
+    statuses = {'read': read, 'done': done - read, 'rejected': rejected - read - done}
+    return set(objs) & statuses[status]
+
+
 class Tracker:
     def __init__(self, tracker_uuid):
         self.uuid = tracker_uuid
@@ -613,11 +630,11 @@ class Tracker:
         else:
             return objs
 
-    def get_objs_by_daterange(self, date_from, date_to, obj_types):
+    def get_objs_by_daterange(self, date_from, date_to, obj_types, status='all'):
         objs = set()
         for date in Date.get_daterange(date_from, date_to):
             objs |= self.get_objs_by_date(date, obj_types=obj_types)
-        return objs
+        return filter_matches_by_status(self, objs, status)
 
     def get_obj_dates(self, obj_type, subtype, obj_id):
         return r_tracker.smembers(f'obj:tracker:{obj_type}:{subtype}:{obj_id}:{self.uuid}')
@@ -665,6 +682,9 @@ class Tracker:
         self.delete_obj_status(obj_gid)
 
         self.update_daterange()
+
+    def get_objs_read(self):
+        return r_tracker.smembers(f'tracker:objs:read:{self.uuid}')
 
     def get_nb_objs_read(self):
         return r_tracker.scard(f'tracker:objs:read:{self.uuid}')
@@ -2260,18 +2280,21 @@ class RetroHunt:
             nb += self.get_nb_objs_by_type(obj_type)
         return nb
 
-    def get_objs(self):
+    def get_objs(self, status='all'):
         objs = []
         for obj_type in get_objects_retro_hunted():
             for obj in self.get_objs_by_type(obj_type):
                 subtype, obj_id = obj.split(':', 1)
                 objs.append((obj_type, subtype, obj_id))
+        if sanitize_match_status(status) != 'all':
+            matching_gids = filter_matches_by_status(self, {f'{obj_type}:{subtype}:{obj_id}' for obj_type, subtype, obj_id in objs}, status)
+            objs = [obj for obj in objs if f'{obj[0]}:{obj[1]}:{obj[2]}' in matching_gids]
         return objs
 
-    def get_paginated_matches(self, page=1):
+    def get_paginated_matches(self, page=1, status='all'):
         """Read existing match sets and paginate IDs before loading object metadata."""
         page, nb = validate_pagination(page=page, nb=500)
-        objs = sorted(self.get_objs())
+        objs = sorted(self.get_objs(status=status))
         total = len(objs)
         nb_pages = max(1, (total + nb - 1) // nb)
         page = min(page, nb_pages)
@@ -2297,6 +2320,9 @@ class RetroHunt:
         # obj status
         self.delete_obj_status(obj_gid)
         self._decr_nb_match()
+
+    def get_objs_read(self):
+        return r_tracker.smembers(f'retro_hunt:objs:read:{self.uuid}')
 
     def get_nb_objs_read(self):
         return r_tracker.scard(f'retro_hunt:objs:read:{self.uuid}')

@@ -482,7 +482,7 @@
             <form id="tracker-filter-form" action="{{ url_for('hunters.show_tracker') }}" method='post'>
                 <input id="tracker_uuid" name="tracker_uuid" class="form-control" type="text" value="{{ meta['uuid'] }}" hidden>
 
-                <div class="card mb-5 mt-1">
+                <div class="card mb-3 mt-1">
                     <div class="card-body">
 
                         <div class="row mb-3">
@@ -509,9 +509,9 @@
                                 </div>
                             </div>
                         </div>
-                        <h5>Filter Objects:</h5>
-                        <div class="row">
-                            <div class="col-lg-6">
+                        <h6 class="font-weight-bold mb-2">Object types</h6>
+                        <div class="tracker-object-filters">
+                            <div class="tracker-object-filter-group">
                                 <div class="custom-control custom-switch mt-1">
                                     <input class="custom-control-input" type="checkbox" name="decoded_obj" id="decoded_obj" {% if 'decoded' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
                                     <label class="custom-control-label" for="decoded_obj"><i class="fas fa-lock-open"></i>&nbsp;Decoded <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Content that has been decoded from an encoded format, such as base64"></i></label>
@@ -533,7 +533,7 @@
                                     <label class="custom-control-label" for="title_obj"><i class="fas fa-heading"></i>&nbsp;Title <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Title that has been extracted from a HTML page"></i></label>
                                 </div>
                             </div>
-                            <div class="col-lg-6">
+                            <div class="tracker-object-filter-group">
                                 <div class="custom-control custom-switch mt-1">
                                     <input class="custom-control-input" type="checkbox" name="message_obj" id="message_obj" {% if 'message' in filter_obj_types or filter_obj_types|length == 0 %}checked=""{% endif %}>
                                     <label class="custom-control-label" for="message_obj"><i class="fas fa-comment-dots"></i>&nbsp;Message <i class="fas fa-info-circle text-info" data-toggle="tooltip" data-placement="right" title="Messages from Chats"></i></label>
@@ -562,13 +562,16 @@
                             </div>
                         </div>
 
-                        <div class="d-flex flex-wrap align-items-center mt-2">
-                            <button class="btn btn-info mr-2">
-                                <i class="fas fa-search"></i> Tracked Objects
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary mt-2 mt-sm-0" onclick="exportTrackedObjects()">
-                                <i class="fas fa-file-export"></i> Export Markdown
-                            </button>
+                        <div class="hunter-filter-toolbar">
+                            {% include 'hunter/match_status_filter.html' %}
+                            <div class="hunter-filter-actions">
+                                <button class="btn btn-info">
+                                    <i class="fas fa-search"></i> Show Objects
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="exportTrackedObjects()">
+                                    <i class="fas fa-file-export"></i> Export Markdown
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -703,6 +706,8 @@
 				    </table>
                 </div>
                 <hr>
+            {% elif meta['date_from'] %}
+                <p id="tracker-matches" class="text-center mt-4">No matches found.</p>
             {% endif %}
 
             <div id="graphline" class="text-center mb-4"></div>
@@ -811,6 +816,10 @@
                 }
                 const row = statusAction.closest('tr');
                 const newStatus = statusAction.dataset.statusTarget;
+                if ({{ match_status|default('all')|tojson }} !== 'all' && newStatus !== {{ match_status|default('all')|tojson }}) {
+                    window.location.reload();
+                    return;
+                }
                 row.children[3].innerHTML = getStatusIconHtml(newStatus);
                 row.querySelector('.status-action-container').innerHTML = getStatusButtonsHtml(newStatus, row);
             })
@@ -872,14 +881,13 @@
     }
 
     function getItems() {
-        var date_from = $('#date-range-from-input').val();
-        var date_to = $('#date-range-to-input').val();
-        window.location.replace("{{ url_for('hunters.show_tracker') }}?uuid={{ meta['uuid'] }}&date_from=" + date_from + "&date_to=" + date_to);
+        document.getElementById('tracker-filter-form').requestSubmit();
     }
 
     function exportTrackedObjects() {
         const params = new URLSearchParams();
         params.set('uuid', '{{ meta['uuid'] }}');
+        params.set('status', document.querySelector('#match-status-filter input:checked').value);
 
         const dateFrom = $('#date-range-from-input').val();
         const dateTo = $('#date-range-to-input').val();
@@ -914,6 +922,7 @@ function applyDateRangeFromHeatmap(dateFrom, dateTo) {
     params.set('uuid', '{{ meta['uuid'] }}');
     params.set('date_from', dateFrom);
     params.set('date_to', dateTo);
+    params.set('status', document.querySelector('#match-status-filter input:checked').value);
 
     const selectedTypes = [];
     $('input[name$="_obj"]:checked').each(function () {

@@ -226,6 +226,7 @@ def show_tracker():
 
     if request.method == 'POST':
         tracker_uuid = request.form.get('tracker_uuid', None)
+        match_status = Tracker.sanitize_match_status(request.form.get('status', 'all'))
         date_from = request.form.get('date_from')
         date_to = request.form.get('date_to')
         for obj_type in Tracker.get_objects_tracked():
@@ -237,13 +238,14 @@ def show_tracker():
             filter_obj_types = []
         filter_obj_types = ','.join(filter_obj_types)
         if filter_obj_types:
-            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid, date_from=date_from, date_to=date_to, filter=filter_obj_types))
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid, date_from=date_from, date_to=date_to, filter=filter_obj_types, status=match_status))
         else:
-            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid, date_from=date_from, date_to=date_to))
+            return redirect(url_for('hunters.show_tracker', uuid=tracker_uuid, date_from=date_from, date_to=date_to, status=match_status))
 
     tracker_uuid = request.args.get('uuid', None)
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    match_status = Tracker.sanitize_match_status(request.args.get('status', 'all'))
     filter_obj_types = ail_core.sanitize_tracked_objects(request.args.get('filter', '').split(','))
     if len(filter_obj_types) == ail_core.get_nb_objects_tracked():
         filter_obj_types = []
@@ -276,7 +278,7 @@ def show_tracker():
 
     if date_from:
         date_from, date_to = Date.sanitise_daterange(date_from, date_to)
-        objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types)
+        objs = tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types, status=match_status)
         meta['objs'] = []
         options = {'last_full_date', 'pdf', 'match_context'}
         for obj_gid in objs:
@@ -301,6 +303,7 @@ def show_tracker():
                             rule_content=yara_rule_content,
                             typo_squatting=typo_squatting,
                             filter_obj_types=filter_obj_types,
+                            match_status=match_status,
                             bootstrap_label=bootstrap_label,
                             is_admin=current_user.is_admin(),
                             can_edit=can_edit)
@@ -317,6 +320,7 @@ def tracker_export_markdown():
     tracker_uuid = request.args.get('uuid', None)
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    match_status = Tracker.sanitize_match_status(request.args.get('status', 'all'))
     filter_obj_types = ail_core.sanitize_tracked_objects(request.args.get('filter', '').split(','))
     if len(filter_obj_types) == ail_core.get_nb_objects_tracked():
         filter_obj_types = []
@@ -340,7 +344,7 @@ def tracker_export_markdown():
         rule_content = None
 
     exported_objects = []
-    for obj_gid in tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types):
+    for obj_gid in tracker.get_objs_by_daterange(date_from, date_to, filter_obj_types, status=match_status):
         obj_type, obj_subtype, obj_id = obj_gid.split(':', 2)
         obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
         meta = obj.get_meta(options={'last_full_date', 'first_seen', 'last_seen', 'full_date', 'date', 'link', 'protocol', 'tags'}, flask_context=False)
@@ -811,6 +815,7 @@ def retro_hunt_show_task():
 
     task_uuid = request.args.get('uuid', None)
     objs = request.args.get('objs', False)
+    match_status = Tracker.sanitize_match_status(request.args.get('status', 'all'))
 
     # date_from_item = request.args.get('date_from')
     # date_to_item = request.args.get('date_to')
@@ -837,7 +842,7 @@ def retro_hunt_show_task():
     dict_task['objs'] = []
     dict_page = None
     if objs:
-        dict_page = retro_hunt.get_paginated_matches(page=request.args.get('page', 1))
+        dict_page = retro_hunt.get_paginated_matches(page=request.args.get('page', 1), status=match_status)
         options = {'last_full_date', 'pdf', 'match_context'}
         for ob in dict_page['list_elem']:
             obj_type, obj_subtype, obj_id = ob
@@ -849,6 +854,7 @@ def retro_hunt_show_task():
     return render_template("show_retro_hunt.html", dict_task=dict_task,
                            can_edit=can_edit,
                            dict_page=dict_page,
+                           match_status=match_status,
                            blocklist_content=retro_hunt.get_blocklist_content(),
                            rule_content=rule_content,
                            bootstrap_label=bootstrap_label)
@@ -876,6 +882,7 @@ def retro_hunt_export_markdown():
     user_role = current_user.get_role()
 
     task_uuid = request.args.get('uuid', None)
+    match_status = Tracker.sanitize_match_status(request.args.get('status', 'all'))
     res = Tracker.api_check_retro_hunt_task_uuid(task_uuid)
     if res:
         return create_json_response(res[0], res[1])
@@ -889,7 +896,7 @@ def retro_hunt_export_markdown():
     rule_content = Tracker.get_yara_rule_content(retro_hunt_meta['rule'])
 
     exported_objects = []
-    for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs()):
+    for obj_type, obj_subtype, obj_id in sorted(retro_hunt.get_objs(status=match_status)):
         obj = ail_objects.get_object(obj_type, obj_subtype, obj_id)
         meta = obj.get_meta(options={'last_full_date', 'link', 'protocol', 'tags'}, flask_context=False)
         content = markdown_report.normalize_content(obj.get_content())

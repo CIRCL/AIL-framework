@@ -219,6 +219,117 @@
     font-size: .75rem;
 }
 
+.match-status-filter,
+.match-status-options,
+.hunter-filter-actions,
+.hunter-match-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.match-status-heading {
+    color: #495057;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.match-status-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 36px;
+    margin: 0;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.35rem;
+    background: #fff;
+    color: #495057;
+    cursor: pointer;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.match-status-all {
+    --match-status-color: #6c757d;
+}
+
+.match-status-done {
+    --match-status-color: #28a745;
+}
+
+.match-status-rejected {
+    --match-status-color: #dc3545;
+}
+
+.match-status-read {
+    --match-status-color: #17a2b8;
+}
+
+.match-status-unread {
+    --match-status-color: #ffc107;
+    --match-status-text: #212529;
+}
+
+.match-status-choice i {
+    color: var(--match-status-color);
+}
+
+.match-status-choice:hover {
+    border-color: var(--match-status-color);
+}
+
+.match-status-option input:checked + .match-status-choice {
+    border-color: var(--match-status-color);
+    background: var(--match-status-color);
+    color: var(--match-status-text, #fff);
+    font-weight: 600;
+}
+
+.match-status-option input:checked + .match-status-choice i {
+    color: inherit;
+}
+
+.match-status-option input:focus + .match-status-choice {
+    outline: 2px solid var(--match-status-color);
+    outline-offset: 2px;
+}
+
+.hunter-filter-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.tracker-object-filters {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.35rem 1rem;
+}
+
+.tracker-object-filter-group {
+    display: contents;
+}
+
+@media (max-width: 1199.98px) {
+    .tracker-object-filters {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .tracker-object-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media (max-width: 575.98px) {
     .networks-content {
         padding: 24px 8px;
