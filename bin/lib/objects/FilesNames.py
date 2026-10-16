@@ -12,6 +12,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 
 config_loader = ConfigLoader()
@@ -50,15 +51,12 @@ class FileName(AbstractDaterangeObject):
         return {'style': 'far', 'icon': '\uf15b', 'color': '#36F5D5', 'radius': 5}
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('file')
-
-        # obj_attrs.append(obj.add_attribute('sha256', value=self.id))
-        # obj_attrs.append(obj.add_attribute('attachment', value=self.id, data=self.get_file_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        obj = MISPObject('file', strict=True, standalone=False)
+        value = self.id
+        if not value:
+            return None
+        obj.add_attribute('filename', value=value)
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     def get_pdf(self):
         pdfs = self.get_correlation('pdf').get('pdf', set())

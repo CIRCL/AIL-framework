@@ -111,7 +111,8 @@ class Subforum(AbstractSubtypeObject):
         return {'style': 'svg', 'icon': icon, 'color': '#7E57C2', 'radius': 5}
 
     def get_misp_object(self):
-        pass
+        # TODO: choose an upstream MISP representation for subforums.
+        return None
 
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)

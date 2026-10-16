@@ -6,7 +6,6 @@ import sys
 # import re
 
 from flask import url_for
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -14,6 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import create_misp_account, finalize_misp_object
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id
 from lib.objects.abstract_object import IS_MEILISEARCH_ENABLED
 from lib.timeline_engine import Timeline
@@ -299,33 +299,14 @@ class UserAccount(AbstractSubtypeObject):
         return meta
 
     def get_misp_object(self):
-        obj_attrs = []
-        if self.subtype == 'telegram':
-            obj = MISPObject('telegram-account', standalone=True)
-            obj_attrs.append(obj.add_attribute('username', value=self.id))
-
-        elif self.subtype == 'twitter':
-            obj = MISPObject('twitter-account', standalone=True)
-            obj_attrs.append(obj.add_attribute('name', value=self.id))
-
-        else:
-            obj = MISPObject('user-account', standalone=True)
-            obj_attrs.append(obj.add_attribute('username', value=self.id))
-
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        platform = self.get_protocol()
+        if not platform and self.subtype in {'telegram', 'twitter', 'facebook', 'instagram', 'reddit', 'parler', 'jabber', 'xmpp', 'discord', 'matrix'}:
+            platform = self.subtype
+        username = self.get_username()
+        if username:
+            username = username.split(':', 2)[2]
+        obj = create_misp_account(platform, user_id=self.id, username=username, first_name=self.get_first_name(), last_name=self.get_last_name(), phone=self.get_phone(), description=self.get_info(), namespace=self.subtype)
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     def delete(self):
         self._delete()

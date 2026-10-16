@@ -21,6 +21,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects
 from lib.ail_core import unpack_correl_objs_id, zscan_iter, get_chat_protocol
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_chat_objects
 from lib.objects import Messages
 from packages import Date
 
@@ -56,6 +57,9 @@ class AbstractChatObject(AbstractSubtypeObject, ABC):
 
     def get_languages(self):
         return self.get_container_languages()
+
+    def get_misp_objects(self):
+        return list(export_misp_chat_objects([self]).values())
 
     # get useraccount / username
     # get users ?

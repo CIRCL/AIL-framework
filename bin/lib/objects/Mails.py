@@ -9,7 +9,6 @@ import re
 # import idna  # punycode  or .encode('idna').decode()
 
 from hashlib import sha256
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -96,26 +95,10 @@ class Mail(AbstractDaterangeObject):
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf0e0', 'color': 'grey', 'radius': 5}
 
-    def get_misp_object(self):  # TODO
-        pass
-    #     obj = MISPObject('instant-message', standalone=True)
-    #     obj_date = self.get_date()
-    #     if obj_date:
-    #         obj.first_seen = obj_date
-    #     else:
-    #         self.logger.warning(
-    #             f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
-    #
-    #     # obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-    #     #              obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-    #     #              obj.add_attribute('sensor', value=get_ail_uuid())]
-    #     obj_attrs = []
-    #     for obj_attr in obj_attrs:
-    #         for tag in self.get_tags():
-    #             obj_attr.add_tag(tag)
-    #     return obj
+    def get_misp_object(self):
+        # TODO: choose an upstream MISP representation for standalone email addresses.
+        return None
 
-    # options: set of optional meta fields
     def get_meta(self, options=None, flask_context=False):
         """
         :type options: set

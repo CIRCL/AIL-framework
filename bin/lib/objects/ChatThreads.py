@@ -7,14 +7,13 @@ import sys
 from datetime import datetime
 
 from flask import url_for
-# from pymisp import MISPObject
-
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib import ail_core
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_chat
 from lib.objects.abstract_chat_object import AbstractChatObject, AbstractChatObjects
 
 
@@ -85,7 +84,7 @@ class ChatThread(AbstractChatObject):
         return meta
 
     def get_misp_object(self):
-        return
+        return export_misp_chat(self)
 
     def create(self, container_obj, message_id):
         if message_id:

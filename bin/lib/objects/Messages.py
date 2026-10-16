@@ -5,7 +5,7 @@ import os
 import re
 import sys
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pymisp import MISPObject
 
@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.ail_core import get_ail_uuid
 from lib.objects.abstract_object import AbstractObject, IS_MEILISEARCH_ENABLED
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib import Language
 from lib.objects import UsersAccount
 from lib.objects import Images
@@ -118,11 +119,8 @@ class Message(AbstractObject):
         dirs = self.id.split('/')
         return dirs[1]
 
-    def get_message_id(self):  # TODO optimize
-        message_id = self.get_basename().rsplit('/', 1)[1]
-        # if message_id.endswith('.gz'):
-        #     message_id = message_id[:-3]
-        return message_id
+    def get_message_id(self):
+        return self.get_basename()
 
     def get_chat_id(self):  # TODO optimize -> use me to tag Chat
         c_id = self.id.split('/')
@@ -294,28 +292,31 @@ class Message(AbstractObject):
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf4ad', 'color': '#4dffff', 'radius': 5}
 
-    def get_misp_object(self):  # TODO
-        obj = MISPObject('instant-message', standalone=True)
-        obj_date = self.get_date()
-        if obj_date:
-            obj.first_seen = obj_date
-        else:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
+    def get_misp_object(self):
+        try:
+            timestamp = datetime.fromtimestamp(float(self.get_timestamp()), tz=timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            self.logger.warning('Invalid message timestamp for MISP export: %s', self.get_global_id())
+            return None
+        obj = MISPObject('chat-message', strict=True, standalone=False)
+        obj.add_attribute('message-id', value=self.get_message_id())
+        obj.add_attribute('timestamp', value=timestamp)
+        for relation, value in (('content', self.get_content()), ('chat-id', self.get_chat_id()), ('protocol-instance-uuid', self.get_chat_instance()), ('protocol', self.get_protocol()), ('network', self.get_network()), ('address', self.get_address())):
+            if value:
+                obj.add_attribute(relation, value=value)
+        for relation, global_id in (('subchannel-id', self.get_subchannel()), ('thread-id', self.get_current_thread()), ('user-account-id', self.get_user_account())):
+            if global_id:
+                value = global_id.split(':', 2)[2]
+                if relation != 'user-account-id':
+                    value = value.rsplit('/', 1)[-1]
+                obj.add_attribute(relation, value=value)
+        language = self.get_language()
+        if language:
+            obj.add_attribute('language', value=language)
+        for reaction, count in sorted(self.get_reactions().items()):
+            obj.add_attribute('reaction', value=reaction, comment=f'Count: {count}')
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags())
 
-        # obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-        #              obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-        #              obj.add_attribute('sensor', value=get_ail_uuid())]
-        obj_attrs = []
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
-
-    # def get_url(self):
-    #     return r_object.hget(f'meta:item::{self.id}', 'url')
-
-    # options: set of optional meta fields
     def get_meta(self, options=set(), timestamp=None, translation_target='', flask_context=False):
         """
         :type options: set

@@ -7,7 +7,6 @@ import sys
 from hashlib import sha256
 from flask import url_for
 
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -57,23 +56,8 @@ class Etag(AbstractDaterangeObject):
         return {'style': 'fas', 'icon': '\uf02b', 'color': '#556F65', 'radius': 5}
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('etag')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('etag', value=self.get_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        # TODO: Choose an upstream MISP representation for a standalone HTTP ETag.
+        return None
 
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')

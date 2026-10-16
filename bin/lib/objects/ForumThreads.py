@@ -297,7 +297,8 @@ class ForumThread(AbstractSubtypeObject):
         return {'style': 'svg', 'icon': icon, 'color': '#7E57C2', 'radius': 5}
 
     def get_misp_object(self):
-        pass
+        # TODO: choose an upstream MISP representation for forum threads.
+        return None
 
     def get_search_document(self):
         if not self.contain_posts():

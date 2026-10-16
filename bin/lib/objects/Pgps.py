@@ -6,13 +6,13 @@ import re
 import sys
 
 from flask import url_for
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_pgp_objects
 from lib.objects.abstract_subtype_object import AbstractSubtypeObject, AbstractSubtypeObjects, get_all_id, get_all_id_iterator
 
 config_loader = ConfigLoader()
@@ -69,29 +69,11 @@ class Pgp(AbstractSubtypeObject):
         return {'style': 'fas', 'icon': icon, 'color': '#44AA99', 'radius': 5}
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('pgp-meta')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
+        """Export key metadata, including names/emails associated with exactly one key."""
+        # TODO: Support isolated/multi-key names and emails using a suitable MISP
+        # template or recorded per-keyblock UID associations.
+        return export_misp_pgp_objects([self])[self]
 
-        if self.subtype == 'key':
-            obj_attrs.append(obj.add_attribute('key-id', value=self.id))
-        elif self.subtype == 'name':
-            obj_attrs.append(obj.add_attribute('user-id-name', value=self.id))
-        else:  # mail
-            obj_attrs.append(obj.add_attribute('user-id-email', value=self.id))
-
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
 
 
 class Pgps(AbstractSubtypeObjects):

@@ -10,13 +10,13 @@ import time
 from hashlib import sha256
 from io import BytesIO
 from flask import url_for
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_image
 from lib.objects.abstract_object import AbstractObject
 from lib.ail_core import get_default_image_description_model
 # from lib import data_retention_engine
@@ -130,15 +130,11 @@ class Screenshot(AbstractObject):
             return None
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('file')
+        return self.get_misp_objects()[0]
 
-        obj_attrs.append(obj.add_attribute('sha256', value=self.id))
-        obj_attrs.append(obj.add_attribute('attachment', value=self.id, data=self.get_file_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_objects(self):
+        dates = self.get_dates()
+        return export_misp_image(self, min(dates) if dates else None, max(dates) if dates else None)
 
     def get_meta(self, options=set(), flask_context=False):
         meta = self.get_default_meta(flask_context=flask_context)

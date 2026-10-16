@@ -9,7 +9,6 @@ from flask import url_for
 
 # import warnings
 # warnings.filterwarnings("ignore", category=DeprecationWarning)
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -59,23 +58,8 @@ class Title(AbstractDaterangeObject):
         return {'style': 'fas', 'icon': '\uf1dc', 'color': '#3C7CFF', 'radius': 5}
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('tsk-web-history')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('title', value=self.get_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        # TODO: Choose an upstream MISP representation for a standalone web page title.
+        return None
 
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)

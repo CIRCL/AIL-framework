@@ -14,6 +14,9 @@ from redis.exceptions import RedisError
 from datetime import date, datetime, timezone
 from urllib.parse import urlsplit, urlunsplit
 
+import magic
+from pymisp import MISPObject
+
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
@@ -64,11 +67,307 @@ def finalize_misp_object(obj, global_id, tags, first_seen=None, last_seen=None):
     if last_seen is not None:
         obj.last_seen = last_seen
     for attribute in obj.attributes:
-        attribute_identity = json.dumps([obj.uuid, attribute.object_relation, attribute.type, attribute.value], ensure_ascii=False, separators=(',', ':'))
+        value = attribute.value.isoformat() if isinstance(attribute.value, (date, datetime)) else attribute.value
+        attribute_identity = json.dumps([obj.uuid, attribute.object_relation, attribute.type, value], ensure_ascii=False, separators=(',', ':'))
         attribute.uuid = str(uuid.uuid5(MISP_EXPORT_NAMESPACE, attribute_identity))
         for tag in tags:
             attribute.add_tag(tag)
     return obj
+
+
+def export_misp_observable(source, template, relation, strict=True):
+    """Export a stored extracted value rather than its AIL content-hash identifier."""
+    value = source.get_content()
+    if value is None or value == '':
+        source.logger.warning('Missing content for MISP export: %s', source.get_global_id())
+        return None
+    obj = MISPObject(template, strict=strict, standalone=False)
+    obj.add_attribute(relation, value=value, to_ids=False)
+    return finalize_misp_object(obj, source.get_global_id(), source.get_tags(), source.get_first_seen(), source.get_last_seen())
+
+
+def misp_datetime_from_timestamp(value):
+    """Convert a recorded Unix timestamp, leaving unknown or invalid times unset."""
+    if value is None or value == '':
+        return None
+    try:
+        if isinstance(value, bool):
+            raise ValueError
+        return datetime.fromtimestamp(float(value), tz=timezone.utc)
+    except (TypeError, ValueError, OverflowError, OSError):
+        logger.warning('Invalid source timestamp %r; omitting it from the MISP export', value)
+        return None
+
+
+def create_misp_account(platform, user_id=None, username=None, first_name=None, last_name=None, phone=None, description=None, namespace=None):
+    """Keep platform account identifiers separate from handles and display names."""
+    templates = {'telegram': ('telegram-account', 'id', 'username'), 'twitter': ('twitter-account', 'id', 'name'),
+                 'facebook': ('facebook-account', 'account-id', 'account-name'), 'instagram': ('instagram-account', 'account-id', 'account-name'),
+                 'reddit': ('reddit-account', 'account-id', 'account-name'), 'parler': ('parler-account', 'account-id', 'account-name')}
+    template, id_relation, username_relation = templates.get(platform, ('user-account', 'user-id', 'username'))
+    obj = MISPObject(template, strict=True, standalone=False)
+    for relation, value in ((id_relation, user_id), (username_relation, username)):
+        if value:
+            obj.add_attribute(relation, value=value)
+    display_name = ' '.join(name for name in (first_name, last_name) if name)
+    notes = []
+    if namespace and namespace != platform:
+        notes.append(f'AIL account namespace: {namespace}')
+    if template == 'telegram-account':
+        for relation, value in (('first_name', first_name), ('last_name', last_name), ('phone', phone)):
+            if value:
+                obj.add_attribute(relation, value=value)
+        if description:
+            notes.append(description)
+    else:
+        if template == 'user-account' and platform:
+            obj.add_attribute('account-type', value=platform)
+        if display_name and template in ('user-account', 'twitter-account'):
+            obj.add_attribute('display-name' if template == 'user-account' else 'displayed-name', value=display_name)
+        if description:
+            obj.add_attribute('bio' if template == 'parler-account' else 'description', value=description)
+        if phone:
+            notes.append(f'Phone: {phone}')
+        if display_name and template not in ('user-account', 'twitter-account'):
+            notes.append(f'Display name: {display_name}')
+    if notes:
+        obj.comment = '\n'.join(notes)
+    return obj
+
+
+def misp_chat_identity(source):
+    """Return the platform-local ID and containing AIL container, without its instance UUID."""
+    obj_type = source.get_type()
+    if not source.id or not source.subtype:
+        source.logger.warning('Missing scoped chat identity for MISP export: %s', source.get_global_id())
+        return None
+    if obj_type == 'chat':
+        return source.id, None
+    parent = source.get_parent()
+    parts = parent.split(':', 2) if parent else []
+    allowed = {'chat'} if obj_type == 'chat-subchannel' else {'chat', 'chat-subchannel'}
+    if len(parts) == 3 and parts[0] in allowed:
+        parent_type, instance, parent_id = parts
+        prefix = f'{parent_id}/'
+        if instance == source.subtype and parent_id and source.id.startswith(prefix) and source.id[len(prefix):]:
+            return source.id[len(prefix):], (parent_type, parent_id)
+        source.logger.warning('Inconsistent chat parent for MISP export: %s', source.get_global_id())
+        return None
+    # A thread's recorded parent may be its initiating message. The stored path
+    # still identifies the containing chat/subchannel in AIL's canonical format.
+    identifiers = source.id.split('/')
+    lengths = {2} if obj_type == 'chat-subchannel' else {2, 3}
+    if len(identifiers) not in lengths or not all(identifiers):
+        source.logger.warning('Ambiguous chat path for MISP export: %s', source.get_global_id())
+        return None
+    parent_type = 'chat-subchannel' if len(identifiers) == 3 else 'chat'
+    return identifiers[-1], (parent_type, '/'.join(identifiers[:-1]))
+
+
+def export_misp_pgp_objects(sources):
+    """Group PGP components by key when their direct source associations identify only one key."""
+    from lib.objects import ail_objects, Pgps
+
+    components = {source.get_global_id(): source for source in sources}
+    component_sources = {}
+    source_components = {}
+    component_keys = {}
+    key_exports = {}
+
+    def get_component(subtype, identifier):
+        global_id = f'pgp:{subtype}:{identifier}'
+        if global_id not in components:
+            source = Pgps.Pgp(identifier, subtype)
+            components[global_id] = source if source.exists() else None
+        return components[global_id]
+
+    def get_sources(source):
+        global_id = source.get_global_id()
+        if global_id not in component_sources:
+            # Domains and chats aggregate many independent documents/messages.
+            correlations = source.get_correlations(filter_types=['item', 'message', 'ocr'], unpack=True)
+            component_sources[global_id] = {(obj_type, subtype, identifier) for obj_type, values in correlations.items() for subtype, identifier in values}
+        return component_sources[global_id]
+
+    def get_components(identity):
+        if identity not in source_components:
+            obj_type, subtype, identifier = identity
+            source = ail_objects.get_object(obj_type, subtype, identifier)
+            values = set()
+            for entry in source.get_correlation('pgp').get('pgp', set()):
+                subtype, separator, identifier = entry.partition(':')
+                if separator and identifier and subtype in {'key', 'name', 'mail'}:
+                    values.add((subtype, identifier))
+            source_components[identity] = values
+        return source_components[identity]
+
+    def get_keys(source):
+        global_id = source.get_global_id()
+        if global_id not in component_keys:
+            keys = set()
+            for identity in get_sources(source):
+                keys.update(identifier for subtype, identifier in get_components(identity) if subtype == 'key')
+                if len(keys) > 1:
+                    break
+            component_keys[global_id] = keys
+        return component_keys[global_id]
+
+    def export_key(key):
+        if key.id in key_exports:
+            return key_exports[key.id]
+        obj = MISPObject('pgp-meta', strict=True, standalone=False)
+        attribute = obj.add_attribute('key-id', value=key.id)
+        for tag in key.get_tags():
+            attribute.add_tag(tag)
+        candidates = set()
+        for identity in get_sources(key):
+            candidates.update(component for component in get_components(identity) if component[0] in {'name', 'mail'})
+        for subtype, identifier in sorted(candidates):
+            component = get_component(subtype, identifier)
+            if component is None or get_keys(component) != {key.id}:
+                continue
+            relation = 'user-id-name' if subtype == 'name' else 'user-id-email'
+            attribute = obj.add_attribute(relation, value=identifier)
+            for tag in component.get_tags():
+                attribute.add_tag(tag)
+        # Attributes retain their own AIL component's tags; object observations
+        # describe the key, not unrelated sightings of a shared name or email.
+        finalize_misp_object(obj, key.get_global_id(), set(), key.get_first_seen(), key.get_last_seen())
+        key_exports[key.id] = obj
+        return obj
+
+    exports = {}
+    for source in sources:
+        key = source if source.subtype == 'key' and source.id else None
+        if source.subtype in {'name', 'mail'}:
+            keys = get_keys(source)
+            if len(keys) == 1:
+                key = get_component('key', next(iter(keys)))
+        if key is None:
+            # TODO: Support isolated/multi-key names and emails with an upstream
+            # partial-metadata template or recorded per-keyblock UID associations.
+            source.logger.warning('No unique PGP key for MISP export; omitting %s', source.get_global_id())
+            exports[source] = None
+        else:
+            exports[source] = export_key(key)
+    return exports
+
+
+def export_misp_chat(source, username=None):
+    """Export a chat container with the published chat template, including unnamed containers."""
+    identity = misp_chat_identity(source)
+    if identity is None:
+        return None
+    obj = MISPObject('chat', strict=True, standalone=False)
+    kinds = {'chat': 'chat', 'chat-subchannel': 'subchannel', 'chat-thread': 'thread'}
+    fields = {'id': identity[0], 'kind': kinds[source.get_type()], 'name': source.get_name(), 'username': username,
+              'description': source.get_info(), 'protocol': source.get_protocol(), 'network': source.get_network(),
+              'address': source.get_address(), 'created': misp_datetime_from_timestamp(source.get_created_at())}
+    if source.get_type() == 'chat':
+        fields['url'] = source.get_origin_link()
+    for relation, value in fields.items():
+        if value is not None and value != '':
+            obj.add_attribute(relation, value=value)
+    for language in sorted(source.get_languages()):
+        obj.add_attribute('language', value=language)
+    return finalize_misp_object(obj, source.get_global_id(), source.get_tags(), source.get_first_seen(), source.get_last_seen())
+
+
+def export_misp_chat_objects(sources):
+    """Include each requested chat and its existing ancestors once within this export."""
+    from lib.objects import Chats, ChatSubChannels
+
+    constructors = {'chat': Chats.Chat, 'chat-subchannel': ChatSubChannels.ChatSubChannel}
+    sources_by_id = {source.get_global_id(): source for source in sources}
+    exported = {}
+    completed = set()
+
+    def include(source):
+        global_id = source.get_global_id()
+        if global_id in completed:
+            return
+        completed.add(global_id)
+        identity = misp_chat_identity(source)
+        if identity is None:
+            return
+        obj = source.get_misp_object()
+        if obj is None:
+            return
+        exported[source] = obj
+        if identity[1] is None:
+            return
+        parent_type, parent_id = identity[1]
+        parent_global_id = f'{parent_type}:{source.subtype}:{parent_id}'
+        parent = sources_by_id.get(parent_global_id)
+        if parent is None:
+            parent = constructors[parent_type](parent_id, source.subtype)
+            if not parent.exists():
+                source.logger.warning('Missing parent chat %s for MISP export of %s', parent_global_id, global_id)
+                return
+            sources_by_id[parent_global_id] = parent
+        include(parent)
+
+    for source in sources:
+        include(source)
+    add_misp_chat_references(exported)
+    return exported
+
+
+def add_misp_chat_references(objects):
+    """Connect included containers and optional initiating messages using their full AIL scope."""
+    targets = {source.get_global_id(): obj for source, obj in objects.items() if obj is not None}
+    for source, obj in objects.items():
+        if obj is None or source.get_type() not in {'chat-subchannel', 'chat-thread'}:
+            continue
+        identity = misp_chat_identity(source)
+        if identity is None:
+            continue
+        parent_type, parent_id = identity[1]
+        references = [(f'{parent_type}:{source.subtype}:{parent_id}', 'part-of')]
+        if source.get_type() == 'chat-thread':
+            initiator = source.get_parent()
+            if initiator and initiator.startswith(f'message::{source.subtype}/'):
+                references.append((initiator, 'initiated-by'))
+        existing = {(ref.referenced_uuid, ref.relationship_type) for ref in obj.references}
+        for target_id, relationship in references:
+            target = targets.get(target_id)
+            if target is not None and target.uuid != obj.uuid and (target.uuid, relationship) not in existing:
+                obj.add_reference(target.uuid, relationship)
+                existing.add((target.uuid, relationship))
+
+
+def export_misp_image(source, first_seen=None, last_seen=None):
+    """Represent image content with an image object and its hashes with a file object."""
+    file_obj = MISPObject('file', strict=True, standalone=False)
+    file_obj.add_attribute('sha256', value=source.id)
+    try:
+        content = source.get_file_content()
+    except FileNotFoundError:
+        source.logger.warning('Missing image content for MISP export: %s', source.get_global_id())
+        content = None
+    if content is not None:
+        file_obj.add_attribute('size-in-bytes', value=content.getbuffer().nbytes)
+        file_obj.add_attribute('mimetype', value=magic.from_buffer(content.getvalue(), mime=True))
+    tags = source.get_tags()
+    finalize_misp_object(file_obj, source.get_global_id(), tags, first_seen, last_seen)
+    if content is None:
+        return [file_obj]
+    image_obj = MISPObject('image', strict=True, standalone=False)
+    image_obj.add_attribute('attachment', value=f'{source.id}.png' if source.type == 'screenshot' else source.id, data=content)
+    finalize_misp_object(image_obj, source.get_global_id(), tags, first_seen, last_seen)
+    file_obj.add_reference(image_obj.uuid, 'includes')
+    return [image_obj, file_obj]
+
+
+def export_misp_decoded_code(source, template):
+    """Export the observed decoded value without requiring or loading a source image."""
+    value = source.get_content()
+    if value is None or value == '':
+        return None
+    obj = MISPObject(template, strict=True, standalone=False)
+    obj.add_attribute('decoded-value', value=value)
+    obj.add_attribute('source', value='AIL')
+    return finalize_misp_object(obj, source.get_global_id(), source.get_tags(), source.get_first_seen(), source.get_last_seen())
 
 
 SUPPORTED_MODULES = {

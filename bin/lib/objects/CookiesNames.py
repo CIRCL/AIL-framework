@@ -7,13 +7,13 @@ import sys
 from hashlib import sha256
 from flask import url_for
 
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_observable
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 
 config_loader = ConfigLoader()
@@ -57,23 +57,9 @@ class CookieName(AbstractDaterangeObject):
         return {'style': 'fas', 'icon': '\uf564', 'color': '#BFD677', 'radius': 5}  # f563
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('cookie')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('cookie-name', value=self.get_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        # Export the observed name using the upstream template. Its full-cookie
+        # and value requirements are intentionally bypassed for this partial observation.
+        return export_misp_observable(self, 'cookie', 'cookie-name', strict=False)
 
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')

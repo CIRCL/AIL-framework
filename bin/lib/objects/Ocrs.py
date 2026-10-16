@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from packages import Date
 # from lib import Language
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
@@ -129,25 +130,22 @@ class Ocr(AbstractDaterangeObject):
             messages.append(m[1:])
         return messages
 
-    def get_misp_object(self):  # TODO
-        obj = MISPObject('instant-message', standalone=True)
-        obj_date = self.get_date()
-        if obj_date:
-            obj.first_seen = obj_date
-        else:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
+    def get_misp_object(self):
+        content = self.get_content()
+        if not content:
+            return None
+        try:
+            with open(self.get_image_path(), 'rb') as image:
+                data = image.read()
+        except FileNotFoundError:
+            self.logger.warning('Missing required OCR image for MISP export: %s', self.get_global_id())
+            return None
+        obj = MISPObject('ocrized-image', strict=True, standalone=False)
+        obj.add_attribute('ocr-text', value=content)
+        obj.add_attribute('image', value=self.id, data=BytesIO(data))
+        obj.add_attribute('source', value='AIL')
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
-        # obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-        #              obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-        #              obj.add_attribute('sensor', value=get_ail_uuid())]
-        obj_attrs = []
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
-
-    # options: set of optional meta fields
     def get_meta(self, options=None, translation_target='', flask_context=False):
         """
         :type options: set

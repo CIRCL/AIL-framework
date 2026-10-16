@@ -17,6 +17,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 
 config_loader = ConfigLoader()
@@ -60,24 +61,12 @@ class DomHash(AbstractDaterangeObject):
         return {'style': 'fas', 'icon': '\ue58a', 'color': 'grey', 'radius': 5}
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('dom-hash')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('dom-hash', value=self.get_id()))
-        # TODO ############################# URLS
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        obj = MISPObject('dom-hash', strict=True, standalone=False)
+        value = self.id
+        if not value:
+            return None
+        obj.add_attribute('dom-hash', value=value)
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     def get_nb_seen(self):
         return self.get_nb_correlation('domain')

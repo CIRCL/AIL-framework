@@ -13,6 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 from lib.exceptions import AILObjectUnknown
 
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import add_misp_chat_references, export_misp_chat_objects, export_misp_pgp_objects
 from lib.ail_core import get_all_objects, get_object_all_subtypes, get_objects_with_subtypes, get_default_correlation_objects
 from lib import correlations_engine
 from lib import relationships_engine
@@ -537,15 +538,32 @@ def get_misp_object(obj_type, subtype, id):
 def get_misp_objects(objs):
     misp_objects = {}
     exports = []
+    chat_objects = export_misp_chat_objects([obj for obj in objs if obj.get_type() in {'chat', 'chat-subchannel', 'chat-thread'}])
+    pgp_objects = export_misp_pgp_objects([obj for obj in objs if obj.get_type() == 'pgp'])
+    chats_by_id = {source.get_global_id(): obj for source, obj in chat_objects.items()}
     for obj in objs:
-        objects = obj.get_misp_objects()
+        if obj.get_type() in {'chat', 'chat-subchannel', 'chat-thread'}:
+            chat = chats_by_id.get(obj.get_global_id())
+            objects = [chat] if chat is not None else []
+        elif obj.get_type() == 'pgp':
+            pgp = pgp_objects[obj]
+            objects = [pgp] if pgp is not None else []
+        else:
+            objects = obj.get_misp_objects()
         misp_objects[obj] = objects[0] if objects else None
         exports.extend(objects)
+    included = {obj.uuid for obj in exports}
+    for chat in chat_objects.values():
+        if chat.uuid not in included:
+            exports.append(chat)
+            included.add(chat.uuid)
+    exports = list({obj.uuid: obj for obj in exports}.values())
     for relation in get_objects_relationships(objs):
         obj_src = misp_objects[relation['src']]
         obj_dest = misp_objects[relation['dest']]
-        if obj_src and obj_dest:
+        if obj_src and obj_dest and obj_src.uuid != obj_dest.uuid and not any(ref.referenced_uuid == obj_dest.uuid and ref.relationship_type == relation['relationship'] for ref in obj_src.references):
             obj_src.add_reference(obj_dest.uuid, relation['relationship'], relation.get('comment', 'ail correlation'))
+    add_misp_chat_references({**chat_objects, **misp_objects})
     return exports
 
 # get misp relationship
@@ -595,7 +613,13 @@ def get_objects_relationship(obj1, obj2):
     #     {'relation': '', 'src':, 'dest':}
     #     relationship[relation] =
     ##############################################################
-    if 'cryptocurrency' in obj_types:
+    extracted_types = {'mail', 'title', 'etag', 'cookie-name'}
+    source_types = {'item', 'domain', 'message', 'post', 'image', 'screenshot', 'pdf', 'decoded'}
+    if set(obj_types) & extracted_types and set(obj_types) & source_types:
+        extracted_type = next(obj_type for obj_type in obj_types if obj_type in extracted_types)
+        relationship = 'extracted-from'
+        src, dest = get_relationship_src_dest(extracted_type, obj1, obj2)
+    elif 'cryptocurrency' in obj_types:
         relationship = 'extracted-from'
         src, dest = get_relationship_src_dest('cryptocurrency', obj1, obj2)
     elif 'cve' in obj_types:

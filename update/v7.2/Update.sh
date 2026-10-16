@@ -26,8 +26,8 @@ bash ${AIL_BIN}/LAUNCH.sh -lkv
 echo -e $GREEN"Updating pyail."$DEFAULT
 pip install -U pyail
 
-echo -e $GREEN"Updating pymisp."$DEFAULT
-pip install -U pymisp
+echo -e $GREEN"Updating pymisp to the latest version."$DEFAULT
+pip install --upgrade --force-reinstall --no-cache-dir pymisp
 
 echo -e $GREEN"Updating tempolocus."$DEFAULT
 pip install -U 'tempolocus>=1.0.0'

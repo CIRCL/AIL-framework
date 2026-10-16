@@ -13,6 +13,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from packages import Date
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
 
@@ -77,27 +78,16 @@ class Author(AbstractDaterangeObject):
     def get_svg_icon(self):
         return {'style': 'fas', 'icon': '\uf4ff', 'color': 'grey', 'radius': 5}
 
-    def get_misp_object(self):  # TODO
-        pass
-    #     obj = MISPObject('instant-message', standalone=True)
-    #     obj_date = self.get_date()
-    #     if obj_date:
-    #         obj.first_seen = obj_date
-    #     else:
-    #         self.logger.warning(
-    #             f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
-    #
-    #     # obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-    #     #              obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-    #     #              obj.add_attribute('sensor', value=get_ail_uuid())]
-    #     obj_attrs = []
-    #     for obj_attr in obj_attrs:
-    #         for tag in self.get_tags():
-    #             obj_attr.add_tag(tag)
-    #     return obj
+    def get_misp_object(self):
+        name = self.get_content()
+        if not name:
+            return None
+        obj = MISPObject('identity', strict=True, standalone=False)
+        obj.add_attribute('name', value=name)
+        obj.add_attribute('identity_class', value='unknown')
+        obj.add_attribute('roles', value='author')
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
-    # options: set of optional meta fields
-    # flask_context: function run in flask
     def get_meta(self, options=None, flask_context=False):
         """
         :type options: set

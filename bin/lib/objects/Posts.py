@@ -42,7 +42,8 @@ class Post(AbstractObject):
         return {'style': 'svg', 'icon': icon, 'color': '#7E57C2', 'radius': 5}
 
     def get_misp_object(self):
-        pass
+        # TODO: choose an upstream MISP representation for forum posts.
+        return None
 
     def get_timestamp(self):
         dirs = self.id.split('/')

@@ -16,6 +16,7 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 
 config_loader = ConfigLoader()
@@ -86,24 +87,15 @@ class Favicon(AbstractDaterangeObject):
         return self.get_file_content(r_type=r_type)
 
     def get_misp_object(self):
-        obj_attrs = []
-        obj = MISPObject('favicon')
-        first_seen = self.get_first_seen()
-        last_seen = self.get_last_seen()
-        if first_seen:
-            obj.first_seen = first_seen
-        if last_seen:
-            obj.last_seen = last_seen
-        if not first_seen or not last_seen:
-            self.logger.warning(
-                f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={first_seen}, last={last_seen}')
-
-        obj_attrs.append(obj.add_attribute('favicon-mmh3', value=self.id))
-        obj_attrs.append(obj.add_attribute('favicon', value=self.get_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+        obj = MISPObject('favicon', strict=True, standalone=False)
+        obj.add_attribute('favicon-mmh3', value=self.id)
+        try:
+            content = self.get_file_content(r_type='io')
+        except FileNotFoundError:
+            self.logger.warning('Missing favicon content for MISP export: %s', self.get_global_id())
+        else:
+            obj.add_attribute('favicon', value=self.id, data=content)
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)

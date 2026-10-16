@@ -21,8 +21,9 @@ sys.path.append(os.environ['AIL_BIN'])
 # Import Project packages
 ##################################
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import finalize_misp_object
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
-from lib.objects import Items
+from lib.objects import Authors, Items
 from lib import ail_queues
 from lib import Language
 from packages import Date
@@ -156,16 +157,30 @@ class PDF(AbstractDaterangeObject):
         task = Language.get_object_tasks(obj_gid, language_name=language_name)
         return {'translated': translated, 'task': task}
 
-    def get_misp_object(self):  # TODO
-        obj_attrs = []
-        obj = MISPObject('file')
+    def get_misp_object(self):
+        obj = MISPObject('file', strict=True, standalone=False)
+        obj.add_attribute('sha256', value=self.id)
+        obj.add_attribute('mimetype', value='application/pdf')
+        for filename in sorted(set(self.get_file_names())):
+            obj.add_attribute('filename', value=filename)
+        try:
+            content = self.get_file_content()
+        except FileNotFoundError:
+            self.logger.warning('Missing PDF content for MISP export: %s', self.get_global_id())
+        else:
+            obj.add_attribute('size-in-bytes', value=content.getbuffer().nbytes)
+            obj.add_attribute('attachment', value=f'{self.id}.pdf', data=content)
+        return finalize_misp_object(obj, self.get_global_id(), self.get_tags(), self.get_first_seen(), self.get_last_seen())
 
-        obj_attrs.append(obj.add_attribute('sha256', value=self.id))
-        obj_attrs.append(obj.add_attribute('attachment', value=self.id, data=self.get_file_content()))
-        for obj_attr in obj_attrs:
-            for tag in self.get_tags():
-                obj_attr.add_tag(tag)
-        return obj
+    def get_misp_objects(self):
+        obj = self.get_misp_object()
+        objects = [obj]
+        for author_id in sorted(self.get_correlation('author').get('author', ())):
+            author = Authors.Author(author_id.split(':', 1)[1]).get_misp_object()
+            if author is not None:
+                obj.add_reference(author.uuid, 'created-by')
+                objects.append(author)
+        return objects
 
     def get_meta(self, options=set(), flask_context=False):
         meta = self._get_meta(options=options, flask_context=flask_context)

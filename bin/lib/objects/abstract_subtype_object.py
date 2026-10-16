@@ -46,9 +46,7 @@ class AbstractSubtypeObject(AbstractObject, ABC):
         :param obj_type: object type (item, ...)
         :param id: Object ID
         """
-        self.id = id
-        self.type = obj_type
-        self.subtype = subtype
+        super().__init__(obj_type, id, subtype=subtype)
 
     def exists(self):
         return r_object.exists(f'meta:{self.type}:{self.subtype}:{self.id}')

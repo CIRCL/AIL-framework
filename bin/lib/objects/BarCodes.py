@@ -5,7 +5,6 @@ import os
 import sys
 
 from hashlib import sha256
-from pymisp import MISPObject
 
 sys.path.append(os.environ['AIL_BIN'])
 ##################################
@@ -13,6 +12,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib.objects.abstract_daterange_object import AbstractDaterangeObject, AbstractDaterangeObjects
 from lib.ConfigLoader import ConfigLoader
+from lib.ail_misp import export_misp_decoded_code
 from packages import Date
 # from lib.data_retention_engine import update_obj_date, get_obj_date_first
 
@@ -79,26 +79,9 @@ class Barcode(AbstractDaterangeObject):
     def get_svg_icon(self):  # TODO
         return {'style': 'fas', 'icon': '\uf02a', 'color': 'yellow', 'radius': 5}
 
-    def get_misp_object(self):  # TODO
-        pass
-    #     obj = MISPObject('instant-message', standalone=True)
-    #     obj_date = self.get_date()
-    #     if obj_date:
-    #         obj.first_seen = obj_date
-    #     else:
-    #         self.logger.warning(
-    #             f'Export error, None seen {self.type}:{self.subtype}:{self.id}, first={obj_date}')
-    #
-    #     # obj_attrs = [obj.add_attribute('first-seen', value=obj_date),
-    #     #              obj.add_attribute('raw-data', value=self.id, data=self.get_raw_content()),
-    #     #              obj.add_attribute('sensor', value=get_ail_uuid())]
-    #     obj_attrs = []
-    #     for obj_attr in obj_attrs:
-    #         for tag in self.get_tags():
-    #             obj_attr.add_tag(tag)
-    #     return obj
+    def get_misp_object(self):
+        return export_misp_decoded_code(self, 'decoded-barcode')
 
-    # options: set of optional meta fields
     def get_meta(self, options=None):
         """
         :type options: set
