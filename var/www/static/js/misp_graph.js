@@ -16,10 +16,20 @@
     const dataOf = element => element?.getData?.() || element?.data || {};
     const scalar = value => typeof value === 'string' || typeof value === 'number' && Number.isFinite(value);
     const metadataRelations = new Set(['title', 'language', 'comment', 'description', 'name', 'source', 'origin', 'count', 'counter', 'rrtype', 'rrname', 'rdata', 'filename', 'file-name', 'size-in-bytes', 'filesize', 'file-size', 'mimetype', 'mime-type', 'scheme', 'tld', 'subdomain', 'domain-without-tld', 'resource-path', 'query-string', 'fragment', 'port', 'issuer', 'subject', 'pubkey-info-size', 'validity-not-before', 'validity-not-after', 'knownmalicious']);
-    const observableTypes = new Set(['domain', 'hostname', 'onion-address', 'ip', 'ip-src', 'ip-dst', 'url', 'uri', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'sha512', 'ssdeep', 'tlsh', 'AS', 'email', 'email-src', 'email-dst', 'x509-fingerprint-sha1', 'x509-fingerprint-sha256', 'domain|ip', 'ip-src|port', 'ip-dst|port']);
+    const observableTypes = new Set(['domain', 'hostname', 'onion-address', 'ip', 'ip-src', 'ip-dst', 'url', 'uri', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'sha512', 'ssdeep', 'tlsh', 'AS', 'email', 'email-src', 'email-dst', 'whois-registrant-email', 'x509-fingerprint-sha1', 'x509-fingerprint-sha256', 'domain|ip', 'ip-src|port', 'ip-dst|port', 'vulnerability', 'weakness', 'cpe']);
     const pgpObjects = new Set(['pgp-key', 'pgp-meta', 'pgp-sign']);
     const pgpRelations = {'key-id': 'pgp-key-id', 'issuer-key-id': 'pgp-key-id', fingerprint: 'pgp-fingerprint', 'key-fingerprint': 'pgp-fingerprint', 'issuer-fingerprint': 'pgp-fingerprint', 'subkey-fingerprint': 'pgp-fingerprint', 'user-id-name': 'pgp-name', 'user-id-email': 'email'};
     const pgpDetails = new Set(['uid', 'algorithm', 'key-length', 'creation-time', 'expiration-time', 'flags', 'keyserver', 'retrieval-url', 'signature-version', 'signature-type', 'public-key-algorithm', 'hash-algorithm', 'uid-sha256', 'user-attribute-sha256']);
+    const objectDetails = {
+        whois: new Set(['registrar', 'registrant-name', 'registrant-org', 'registrant-phone', 'creation-date', 'expiration-date', 'modification-date', 'text']),
+        vulnerability: new Set(['summary', 'state', 'cvss-score', 'cvss-string', 'created', 'published', 'modified', 'credit', 'impact', 'references']),
+        weakness: new Set(['status', 'weakness-abs']),
+        annotation: new Set(['text', 'type', 'format', 'creation-date', 'modification-date', 'ref']),
+        'epss-score': new Set(['score', 'percentile', 'date', 'reference']),
+        'known-exploited-vulnerability': new Set(['exploited', 'status-reason', 'status-updated-at', 'first-seen-at', 'recorded-at', 'evidence-source', 'reference']),
+        'vulnerability-sighting': new Set(['type', 'observed-at', 'content', 'reference']),
+    };
+    const separateDetails = new Set(['annotation', 'epss-score', 'known-exploited-vulnerability', 'vulnerability-sighting']);
     const canonical = value => JSON.stringify(value);
 
     function hash(value) {
@@ -59,7 +69,7 @@
         if (!scalar(value)) {
             throw new ConversionError('Invalid observable value.');
         }
-        let family = ['ip', 'ip-src', 'ip-dst'].includes(type) ? 'ip' : ['domain', 'hostname'].includes(type) ? 'domain' : ['email', 'email-src', 'email-dst'].includes(type) ? 'email' : type;
+        let family = ['ip', 'ip-src', 'ip-dst'].includes(type) ? 'ip' : ['domain', 'hostname'].includes(type) ? 'domain' : ['email', 'email-src', 'email-dst', 'whois-registrant-email'].includes(type) ? 'email' : type;
         value = String(value).trim();
         if (family === 'ip') {
             if (/^\d+\.\d+\.\d+\.\d+$/.test(value) && value.split('.').every(part => Number(part) <= 255)) {
@@ -80,6 +90,8 @@
             value = value.toLowerCase();
         } else if (family === 'pgp-key-id' || family === 'pgp-fingerprint') {
             value = value.replace(/^0x/i, '').replace(/\s+/g, '').toUpperCase();
+        } else if (family === 'weakness' || family === 'vulnerability' && /^(CVE-|GCVE-|GHSA-)/i.test(value)) {
+            value = value.toUpperCase();
         } else if (family === 'url') {
             try {
                 value = new URL(value).href;
@@ -108,9 +120,9 @@
                 observable = normalizedObservable(metadata.type, metadata.value);
             } else if (!metadata) {
                 observable = pgpObservable(node.id);
-                const match = /^(domain|ip|ssh-key|decoded)::(.+)$/.exec(node.id);
+                const match = /^(domain|ip|ssh-key|decoded|cve)::(.+)$/.exec(node.id);
                 if (match) {
-                    observable = normalizedObservable({domain: 'domain', ip: 'ip', 'ssh-key': 'ssh-fingerprint', decoded: 'sha1'}[match[1]], match[2]);
+                    observable = normalizedObservable({domain: 'domain', ip: 'ip', 'ssh-key': 'ssh-fingerprint', decoded: 'sha1', cve: 'vulnerability'}[match[1]], match[2]);
                 }
             }
             if (observable) {
@@ -123,7 +135,7 @@
     }
 
     function validateAttribute(attribute) {
-        if (!attribute || typeof attribute.type !== 'string' || !scalar(attribute.value)) {
+        if (!attribute || typeof attribute.type !== 'string' || !(scalar(attribute.value) || attribute.type === 'boolean' && typeof attribute.value === 'boolean')) {
             throw new ConversionError('Invalid MISP attribute.');
         }
     }
@@ -136,7 +148,7 @@
     function fieldsFor(record, attributes = []) {
         const grouped = new Map();
         const put = (name, value) => {
-            if (!scalar(value) || value === '') {
+            if (!(scalar(value) || typeof value === 'boolean') || value === '') {
                 return;
             }
             const values = grouped.get(name) || new Set();
@@ -154,7 +166,7 @@
                 if (!grouped.has(date)) {
                     put(date, attribute.value);
                 }
-            } else if (metadataRelations.has(key) || observableTypes.has(attribute.type) || pgpObjects.has(record.name) && (Object.hasOwn(pgpRelations, key) || pgpDetails.has(key))) {
+            } else if (metadataRelations.has(key) || observableTypes.has(attribute.type) || objectDetails[record.name]?.has(key) || pgpObjects.has(record.name) && (Object.hasOwn(pgpRelations, key) || pgpDetails.has(key))) {
                 put(humanize(relation), attribute.value);
             }
         }
@@ -327,11 +339,15 @@
                 const members = object.Attribute.map(attribute => observableNode(attribute, object)).filter(Boolean);
                 const fields = fieldsFor(object, object.Attribute);
                 const hasOtherObservable = members.some(member => member.id !== source);
-                const observation = hasOtherObservable && !inputAliases.has(object.uuid) ? addNode('observation', [object.name, [...new Set(members.map(member => member.key))].sort(), source], object.name, {object_name: object.name}) : source;
+                const identifier = ['vulnerability', 'weakness'].includes(object.name) ? members.find(member => member.role === 'id') : null;
+                const needsObservation = hasOtherObservable || separateDetails.has(object.name) && fields.length;
+                const observation = identifier?.id || (needsObservation && !inputAliases.has(object.uuid) ? addNode('observation', [object.name, [...new Set(members.map(member => member.key))].sort(), source, ...(separateDetails.has(object.name) ? [fields] : [])], object.name, {object_name: object.name}) : source);
                 link(object.uuid, observation);
                 describe(observation, object.name, fields);
                 if (observation !== source) {
                     returned.add(observation);
+                }
+                if (observation !== source || identifier) {
                     for (const member of members) {
                         addEdge(observation, member.id, member.role);
                         describe(member.id, object.name, fields.filter(field => ['First seen', 'Last seen', 'Tags'].includes(field.name)));

@@ -381,6 +381,8 @@ SUPPORTED_MODULES = {
     'reversedns': (),
     'extract_url_components': (),
     'pgp_keyserver': (),
+    'vulnerability_lookup': (),
+    'rdap': (),
 }
 SERVICE_DEFAULTS = {'enabled': 'false', 'url': 'http://127.0.0.1', 'port': '6666', 'timeout': '30'}
 OPTIONAL_MODULE_CONFIG_FIELDS = {
@@ -390,6 +392,7 @@ OPTIONAL_MODULE_CONFIG_FIELDS = {
     'dns': ('nameserver',),
     'reversedns': ('nameserver',),
     'pgp_keyserver': ('keyserver', 'timeout', 'max_results', 'extract_signatures', 'max_signatures'),
+    'vulnerability_lookup': ('api_url', 'timeout', 'max_related', 'with_linked', 'with_comments', 'with_bundles', 'with_sightings', 'with_meta', 'with_epss', 'with_kev', 'with_timeline', 'cpe_source', 'cpe_page'),
 }
 BOOLEAN_VALUES = {'1': True, 'yes': True, 'true': True, 'on': True, '0': False, 'no': False, 'false': False, 'off': False}
 MODULE_DESCRIPTIONS = {
@@ -403,11 +406,13 @@ MODULE_DESCRIPTIONS = {
     'reversedns': 'Look up the reverse DNS name of an IP address.',
     'extract_url_components': 'Extract the components of a recorded URL.',
     'pgp_keyserver': 'Look up OpenPGP keys and identities on an HKP keyserver.',
+    'vulnerability_lookup': 'Look up vulnerability advisories, weaknesses, exploitation reports and EPSS scores.',
+    'rdap': 'Look up public domain and IP registration data using RDAP.',
 }
-EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp'}
+EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp', 'cve'}
 PGP_EXPANSION_RELATIONS = {'key': 'key-id', 'name': 'user-id-name', 'mail': 'user-id-email'}
-EXPANSION_ATTRIBUTE_TYPES = {'domain', 'hostname', 'onion-address', 'ip-src', 'ip-dst', 'ip', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'url', 'domain|ip', 'ip-src|port', 'ip-dst|port'}
-EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found'}
+EXPANSION_ATTRIBUTE_TYPES = {'domain', 'hostname', 'onion-address', 'ip-src', 'ip-dst', 'ip', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'url', 'domain|ip', 'ip-src|port', 'ip-dst|port', 'vulnerability'}
+EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found', 'non existing vulnerability id or cpe', 'non existing vulnerability id'}
 
 
 class MISPModuleError(Exception):
@@ -472,7 +477,7 @@ def _builtin_module_definition(name):
 def _validate_attribute(attribute):
     if not isinstance(attribute, dict) or not isinstance(attribute.get('type'), str) or not attribute['type'] or 'value' not in attribute:
         raise MISPModuleError('Invalid attribute in the module response.', 'invalid_response')
-    if not isinstance(attribute['value'], (str, int, float)) or isinstance(attribute['value'], bool):
+    if not isinstance(attribute['value'], (str, int, float)) or isinstance(attribute['value'], bool) and attribute['type'] != 'boolean':
         raise MISPModuleError('Invalid attribute value in the module response.', 'invalid_response')
 
 
@@ -482,7 +487,7 @@ def parse_module_enrichment_response(response):
         raise MISPModuleError('The module returned an invalid response.', 'invalid_response')
     if 'error' in response:
         reason = str(response['error']).strip().lower().rstrip('.')
-        if reason in EMPTY_MODULE_ERRORS:
+        if reason in EMPTY_MODULE_ERRORS or reason.startswith('no rdap record found for '):
             return {'format': 'misp_standard', 'results': {}}
         if 'timeout' in reason or 'timed out' in reason:
             raise MISPModuleError('The module lookup timed out.', 'timeout', 504)
@@ -569,6 +574,19 @@ def get_expansion_inputs(obj):
                 input_id = str(uuid.uuid5(MISP_EXPORT_NAMESPACE, identity))
                 inputs.append({'id': input_id, 'uuid': attribute.uuid, 'type': attribute.type, 'value': attribute.value, 'object_relation': attribute.object_relation, 'object_name': misp_object.name, 'object_uuid': misp_object.uuid})
     return objects, inputs
+
+
+def module_accepts_input(module, attribute):
+    """Match service input types and keep private naming systems out of RDAP."""
+    if attribute['type'] not in module['input_types']:
+        return False
+    if module['name'] == 'rdap':
+        try:
+            host = urlsplit(attribute['value']).hostname if attribute['type'] == 'url' else attribute['value']
+        except ValueError:
+            return False
+        return bool(host) and not host.lower().rstrip('.').endswith(('.onion', '.i2p'))
+    return True
 
 
 class MISPModuleClient:
@@ -800,7 +818,7 @@ class MISPModuleClient:
         _, inputs = get_expansion_inputs(obj)
         options = []
         for module in self.list_expansion_modules()['modules']:
-            compatible = [item for item in inputs if item['type'] in module['input_types']]
+            compatible = [item for item in inputs if module_accepts_input(module, item)]
             if compatible:
                 options.append({k: v for k, v in module.items() if k != 'input_types'} | {'inputs': [{k: v for k, v in item.items() if k not in ('uuid', 'object_uuid')} for item in compatible]})
         return {'status': 'success', 'object_id': obj.get_global_id(), 'modules': options}
@@ -836,7 +854,7 @@ class MISPModuleClient:
         if module is None:
             raise MISPModuleError('The module is not available on the service.', 'module_unavailable', 503)
         objects, inputs = get_expansion_inputs(obj)
-        compatible = [item for item in inputs if item['type'] in module['mispattributes']['input']]
+        compatible = [item for item in inputs if module_accepts_input({'name': module_name, 'input_types': module['mispattributes']['input']}, item)]
         if input_id is not None:
             compatible = [item for item in compatible if item['id'] == input_id]
         if not compatible:

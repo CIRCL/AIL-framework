@@ -13,7 +13,7 @@
     'use strict';
 
     const dataOf = element => element?.getData?.() || element?.data || {};
-    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components', pgp_keyserver: 'PGP Keyserver'};
+    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components', pgp_keyserver: 'PGP Keyserver', vulnerability_lookup: 'Vulnerability Lookup', rdap: 'RDAP Lookup'};
 
     function readableDate(value) {
         if (!value) {
@@ -51,11 +51,11 @@
         if (pgp) {
             return pgp[1] === 'mail' ? ['text', 'email'] : ['text'];
         }
-        const match = /^(domain|ip|ssh-key|decoded|item)::(.+)$/.exec(node.id);
+        const match = /^(domain|ip|ssh-key|decoded|item|cve)::(.+)$/.exec(node.id);
         if (!match) {
             return [];
         }
-        return {domain: match[2].endsWith('.onion') ? ['onion-address', 'url'] : ['domain', 'url'], ip: ['ip-dst'], 'ssh-key': ['ssh-fingerprint', 'ip-dst'], decoded: ['sha1'], item: ['url']}[match[1]];
+        return {domain: match[2].endsWith('.onion') ? ['onion-address', 'url'] : ['domain', 'url'], ip: ['ip-dst'], 'ssh-key': ['ssh-fingerprint', 'ip-dst'], decoded: ['sha1'], item: ['url'], cve: ['vulnerability']}[match[1]];
     }
 
     function readIcon(className) {
@@ -412,7 +412,7 @@
                 const modules = catalog.modules.filter(module => module.available && Object.hasOwn(labels, module.name));
                 for (const module of modules) {
                     this.definitions.push(this.graph.pivots.register({id: 'misp:' + module.name, label: module.label && module.label !== module.name ? module.label : labels[module.name], appliesTo: nodes => {
-                        const eligible = nodes.filter(node => this.canExpand(node) && inputTypes(node).some(type => module.input_types.includes(type)));
+                        const eligible = nodes.filter(node => this.canExpand(node) && inputTypes(node).some(type => module.input_types.includes(type)) && !(module.name === 'rdap' && /^domain::.*\.(onion|i2p)\.?$/i.test(node.id)));
                         return eligible.length === 1 ? eligible : [];
                     }, fetch: (nodes, narrowing, context) => this.expand(nodes[0], module, context)}));
                 }
