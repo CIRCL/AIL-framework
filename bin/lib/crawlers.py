@@ -4025,6 +4025,9 @@ def check_if_onion_is_safe(onion_url, unknown):
         if isinstance(resp, dict):
             if 'tags' in resp:
                 return Tag.is_tags_safe(resp['tags'])
+            # Unknown onion: lookup API error, {'error': 'domain not found', 'domain': ...}
+            elif resp.get('error') and resp.get('domain'):
+                return not unknown
             elif 'error' in resp:
                 if resp['error']:
                     raise OnionFilteringError(resp['error'])
