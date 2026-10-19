@@ -208,6 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             help.textContent = field.secret ? 'No value is saved.' : field.description || '';
         }
+        if (Object.hasOwn(field, 'default') && field.default !== null) {
+            const value = field.default === '' ? '""' : String(field.default);
+            help.append(element('span', 'd-block', 'Module default: ' + value));
+        }
         input.setAttribute('aria-describedby', help.id);
         const clear = element('input');
         clear.type = 'checkbox';

@@ -430,7 +430,8 @@ class MISPModuleError(Exception):
 def get_module_config_fields(module):
     """Normalize legacy field lists and richer module configuration metadata."""
     fields = module['meta'].get('config', [])
-    if not isinstance(fields, (list, dict)):
+    defaults = module['meta'].get('config_defaults', {})
+    if not isinstance(fields, (list, dict)) or not isinstance(defaults, dict):
         raise MISPModuleError('Invalid module configuration metadata.', 'invalid_response')
     entries = fields.items() if isinstance(fields, dict) else enumerate(fields)
     normalized = []
@@ -438,7 +439,7 @@ def get_module_config_fields(module):
     for key, definition in entries:
         if isinstance(definition, dict):
             name = key if isinstance(key, str) else definition.get('name')
-            field = {k: definition[k] for k in ('type', 'description', 'required', 'redacted', 'null') if k in definition}
+            field = {k: definition[k] for k in ('type', 'description', 'required', 'redacted', 'null', 'default') if k in definition}
         elif isinstance(definition, str):
             name = key if isinstance(key, str) else definition
             field = {'description': definition} if isinstance(key, str) else {}
@@ -448,6 +449,12 @@ def get_module_config_fields(module):
             raise MISPModuleError('Invalid module configuration field.', 'invalid_response')
         names.add(name)
         field['name'] = name
+        if 'default' not in field and name in defaults:
+            field['default'] = defaults[name]
+        if 'default' in field:
+            value = field['default']
+            if value is not None and (not isinstance(value, (str, int, float)) or isinstance(value, float) and not math.isfinite(value)):
+                raise MISPModuleError('Invalid module configuration default.', 'invalid_response')
         field.setdefault('type', 'string')
         field['required'] = name in SUPPORTED_MODULES[module['name']] or field.get('required') is True or field.get('null') is False
         normalized.append(field)
@@ -789,6 +796,8 @@ class MISPModuleClient:
             for field in get_module_config_fields(definition):
                 secret = is_secret_config_field(field)
                 value = values.get(field['name'])
+                if secret and 'default' in field:
+                    field['default'] = mask_config_value(field['default'])
                 fields.append({**field, 'secret': secret, 'configured': field['name'] in values, 'value': None if secret else value, 'masked_value': mask_config_value(value) if secret else None})
             enabled = self._boolean(name, 'enabled', configured)
             discovered = name in definitions if health == 'available' else None
