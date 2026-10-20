@@ -1,0 +1,13 @@
+<div id="match-status-filter" class="match-status-filter" role="radiogroup" aria-labelledby="match-status-filter-label">
+    <span id="match-status-filter-label" class="match-status-heading">Match status</span>
+    <div class="match-status-options">
+        {% for value, label, icon, hint in [('all', 'All', 'fas fa-list', 'Show all matches'), ('done', 'Done', 'fa-solid fa-check-to-slot', 'Reviewed and validated'), ('rejected', 'Rejected', 'fa-solid fa-xmark', 'False positives'), ('read', 'Read', 'fa-solid fa-eye', 'Already reviewed'), ('unread', 'Unread', 'fa-regular fa-eye-slash', 'Needs attention')] %}
+            <span class="match-status-option">
+                <input class="sr-only" type="radio" id="match-status-{{ value }}" name="status" value="{{ value }}" {% if value == match_status|default('all') %}checked{% endif %}>
+                <label class="match-status-choice match-status-{{ value }}" for="match-status-{{ value }}" title="{{ hint }}">
+                    <i class="{{ icon }}" aria-hidden="true"></i> {{ label }}
+                </label>
+            </span>
+        {% endfor %}
+    </div>
+</div>

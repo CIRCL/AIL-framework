@@ -70,6 +70,11 @@
       margin-bottom: 0;
     }
     .misp-logo {
+      width: 266px;
+      max-width: 100%;
+      height: auto;
+    }
+    .flowintel-logo {
       width: 120px;
     }
     .rulezet-logo {
@@ -455,7 +460,7 @@
                             <div class="card-body">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/flowintel-logo.png')}}" alt="FlowIntel" class="misp-logo"></h3>
+                                        <h3 class="card-title text-center"><img src="{{ url_for('static', filename='image/flowintel-logo.png')}}" alt="FlowIntel" class="flowintel-logo"></h3>
 
                                         {% if flowintels|length == 0 %}
                                             <div class="misp-empty-state">
