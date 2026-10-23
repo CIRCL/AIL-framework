@@ -11,6 +11,7 @@ Update AIL clone and fork
 
 import configparser
 import os
+import re
 import sys
 import argparse
 
@@ -187,59 +188,16 @@ def get_git_current_tag(path_current_version):
     return version
 
 def _sort_version_tags(versions, current_version):
+    current_version = tuple(int(part) for part in current_version.split('.'))
     tags = {}
-    rcurrent_version = current_version.split('.')
-    if len(rcurrent_version) == 2:
-        curr_version, curr_subversion = rcurrent_version
-        curr_sub_release = None
-    else:  # len(rcurrent_version) == 3
-        curr_version, curr_subversion, curr_sub_release = rcurrent_version
-        curr_sub_release = int(curr_sub_release)
-    curr_version = int(curr_version)
-    curr_subversion = int(curr_subversion)
-
-    for v in versions:
-        ver = v.split('.')
-        if len(ver) == 2:
-            version, subversion = ver
-            sub_release = None
-        elif len(ver) == 3:
-            version, subversion, sub_release = ver
-            sub_release = int(sub_release)
-        else:
+    for tag in versions:
+        match = re.fullmatch(r'v([0-9]+)\.([0-9]+)(?:\.([0-9]+))?', tag)
+        if not match:
             continue
-        version = int(version[1:])
-        subversion = int(subversion)
-        if version not in tags:
-            tags[version] = {}
-        if subversion not in tags[version]:
-            tags[version][subversion] = set()
-        if sub_release is not None:
-            tags[version][subversion].add(sub_release)
-
-    sorted_versions = []
-    for version in sorted(tags.keys()):
-        if version < curr_version:
-            continue
-        for subversion in sorted(tags[version].keys()):
-            if version == curr_version and subversion < curr_subversion:
-                continue
-            if tags[version][subversion]:
-                r_tag = f'v{version}.{subversion}'
-                if r_tag in versions:
-                    if version != curr_version and subversion != curr_subversion:
-                        sorted_versions.append(r_tag)
-                for sub_release in sorted(tags[version][subversion]):
-                    if curr_sub_release:
-                        if version == curr_version and subversion == curr_subversion and sub_release < curr_sub_release:
-                            continue
-                    sorted_versions.append(f'v{version}.{subversion}.{sub_release}')
-            else:
-                if curr_version <= version and subversion > curr_subversion:
-                    sorted_versions.append(f'v{version}.{subversion}')
-    if sorted_versions[0] == current_version:
-        sorted_versions = sorted_versions[1:]
-    return sorted_versions
+        version = tuple(int(part) for part in match.groups() if part is not None)
+        if version > current_version:
+            tags[tag] = version
+    return sorted(tags, key=tags.get)
 
 
 def get_git_upper_tags_remote(current_tag, is_fork):
@@ -259,24 +217,16 @@ def get_git_upper_tags_remote(current_tag, is_fork):
 
         if process.returncode == 0:
             list_all_tags = process.stdout.decode().splitlines()
-            last_tag = list_all_tags[-1].split('\trefs/tags/')
-            last_commit = last_tag[0]
-            last_tag = last_tag[1].split('^{}')[0]
-            list_upper_tags = []
-            if last_tag[1:] == current_tag:
-                return []
-            else:
-                dict_tags_commit = {}
-                for mess_tag in list_all_tags:
-                    commit, tag = mess_tag.split('\trefs/tags/')
+            dict_tags_commit = {}
+            for mess_tag in list_all_tags:
+                commit, tag = mess_tag.split('\trefs/tags/')
 
-                    tag = tag.replace('^{}', '')
-                    # remove 'v' version
-                    dict_tags_commit[tag] = commit
+                tag = tag.replace('^{}', '')
+                dict_tags_commit[tag] = commit
 
-                sorted_tags = _sort_version_tags(dict_tags_commit.keys(), current_tag)
-                list_upper_tags = [(key, dict_tags_commit[key]) for key in sorted_tags]
-                return list_upper_tags
+            sorted_tags = _sort_version_tags(dict_tags_commit.keys(), current_tag)
+            list_upper_tags = [(key, dict_tags_commit[key]) for key in sorted_tags]
+            return list_upper_tags
         else:
             print(f'{TERMINAL_RED}{process.stderr.decode()}{TERMINAL_DEFAULT}')
             aborting_update()
