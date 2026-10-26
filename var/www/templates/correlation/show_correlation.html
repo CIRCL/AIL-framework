@@ -298,7 +298,7 @@
 								</div>
 							</div>
 
-                            <p>Press <b>H</b> on an object / node to hide it.</p>
+                            <p>Press <b>H</b> on an object / node to hide it. Double click a packed group to unpack it; use its close button to pack it again. Toggle <b>Correlation leaves</b> in <b>Simplify</b> to show all objects separately.</p>
                             {% if dict_object["hidden"] %}
                                 <h5>Hidden objects:</h5>
                                 {% for obj_hidden in dict_object["hidden"] %}
@@ -764,6 +764,45 @@ function build_sidebar_properties(element) {
         }).concat(all_graph.misp_expansion?.properties(element) || []);
 }
 
+function build_group_style(group) {
+    const types = Object.keys(group.typeCounts);
+    if (types.length !== 1 || !types[0]) {
+        return;
+    }
+    const style = group.members[0]?.getStyle() || {};
+    if (!style.iconClass && !style.iconUnicode && !style.svgIcon) {
+        return;
+    }
+    return {
+        badges: [{
+            position: 'ne',
+            color: 'var(--pvt-menu-bg-color)',
+            iconClass: style.iconClass,
+            iconUnicode: style.iconUnicode,
+            svgIcon: style.svgIcon,
+            title: types[0] + ' objects',
+        }],
+    };
+}
+
+function group_correlation_leaves(view) {
+    const groups = new Map();
+    const rootId = {{ dict_object['gid'] | tojson }};
+    for (const node of view.nodes) {
+        const ail = node.getData()._ail;
+        if (!ail || node.id === rootId) {
+            continue;
+        }
+        const neighbours = new Set([...view.inNeighbours(node), ...view.outNeighbours(node)].map(neighbour => neighbour.id));
+        if (neighbours.size !== 1 || neighbours.has(node.id)) {
+            continue;
+        }
+        const type = node.id.split(':', 1)[0];
+        groups.set(node.id, JSON.stringify([[...neighbours][0], type]));
+    }
+    return groups;
+}
+
 
 function create_graph(url){
     return $.getJSON(url)
@@ -816,6 +855,7 @@ function create_graph(url){
                 render: {
                     type: 'svg',
                     enableNodeExpansion: false,
+                    groupStyle: build_group_style,
                     defaultEdgeStyle: {
                         markerEnd: "",
                         markerStart: "",
@@ -825,6 +865,21 @@ function create_graph(url){
                 UI: {
                     mode: 'full',
                     theme: 'dark',
+                    simplify: {
+                        openConfirmAbove: Number.POSITIVE_INFINITY,
+                        typeOf: function(node) {
+                            const ail = node.getData()._ail;
+                            return ail ? ail.id.split(':', 1)[0] : undefined;
+                        },
+                        rules: [{
+                            kind: 'custom',
+                            id: 'correlation-leaves',
+                            label: 'Correlation leaves',
+                            description: 'Objects of the same type whose only neighbour in the displayed graph is the same object.',
+                            minSize: 10,
+                            partition: group_correlation_leaves,
+                        }],
+                    },
                     editors: {
                         nodeCreator: { enabled: false },
                         edgeCreator: { enabled: false },
@@ -913,7 +968,7 @@ function doubleclick(event, node) {
 function keypressed(event) {
     const keyCode = event ? event.keyCode : d3.event.keyCode;
     if ((keyCode === 72 || keyCode === 104) && currentObject) {
-        if (!AILMISPGraph.isExpansionNode(currentObject.node)) {
+        if (get_node_data(currentObject.node)._ail && !AILMISPGraph.isExpansionNode(currentObject.node)) {
             window.location.href = correl_link + "&hide=" + encodeURIComponent(currentObject.id);
         }
     }
