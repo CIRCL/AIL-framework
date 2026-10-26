@@ -11,6 +11,7 @@
 		<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/pivotick.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/correlation_graph.css') }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/misp_graph.css') }}" rel="stylesheet">
         <link href="{{ url_for('static', filename='css/misp_icons.css') }}" rel="stylesheet">
 
@@ -20,6 +21,7 @@
 		<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
 		<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
         <script src="{{ url_for('static', filename='js/pivotick.iife.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/correlation_graph_legend.js') }}"></script>
         <script src="{{ url_for('static', filename='js/misp_graph.js') }}"></script>
         <script src="{{ url_for('static', filename='js/misp_graph_pivots.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/d3.v7.min.js') }}"></script>
@@ -250,6 +252,7 @@
 										<span>Loading...</span>
 									</div>
 									{% include 'correlation/misp_expansion_controls.html' %}
+									{% include 'correlation/graph_legend.html' %}
 									<div id="graph">
 									</div>
 								</div>
@@ -385,14 +388,6 @@
 
 								</div>
 							</div>
-						</div>
-					</div>
-
-					<div class="row">
-						<div class="col-xl-10">
-
-							{% include 'correlation/legend_graph_correlation.html' %}
-
 						</div>
 					</div>
 
@@ -782,6 +777,7 @@ function create_graph(url){
                 UI: {
                     mode: 'full',
                     theme: 'dark',
+                    legend: false,
                     editors: {
                         nodeCreator: { enabled: false },
                         edgeCreator: { enabled: false },
@@ -808,6 +804,8 @@ function create_graph(url){
             });
 
             all_graph.misp_expansion?.destroy();
+            all_graph.legend?.destroy();
+            all_graph.legend = AILCorrelationGraphLegend.attach(all_graph.node_graph, document.getElementById('correlation-graph-legend'));
             all_graph.misp_expansion = AILMISPGraphPivots.attach(all_graph.node_graph, document.getElementById('misp-expansion-controls'));
 
             if (all_graph.node_graph?.renderer?.fitAndCenter) {
