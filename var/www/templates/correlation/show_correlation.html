@@ -301,7 +301,7 @@
 								</div>
 							</div>
 
-                            <p>Press <b>H</b> on an object / node to hide it. Double click a packed group to unpack it; use its close button to pack it again. Toggle <b>Correlation leaves</b> in <b>Simplify</b> to show all objects separately.</p>
+                            <p>Press <b>H</b> on an object / node to hide it. Double click a packed group to unpack it; use its close button to pack it again. Toggle <b>Shared correlations</b> in <b>Simplify</b> to show all objects separately.</p>
                             {% if dict_object["hidden"] %}
                                 <h5>Hidden objects:</h5>
                                 {% for obj_hidden in dict_object["hidden"] %}
@@ -780,7 +780,7 @@ function build_group_style(group) {
     };
 }
 
-function group_correlation_leaves(view) {
+function group_shared_correlations(view) {
     const groups = new Map();
     const rootId = {{ dict_object['gid'] | tojson }};
     for (const node of view.nodes) {
@@ -789,11 +789,11 @@ function group_correlation_leaves(view) {
             continue;
         }
         const neighbours = new Set([...view.inNeighbours(node), ...view.outNeighbours(node)].map(neighbour => neighbour.id));
-        if (neighbours.size !== 1 || neighbours.has(node.id)) {
+        if (neighbours.size === 0 || neighbours.has(node.id)) {
             continue;
         }
         const type = node.id.split(':', 1)[0];
-        groups.set(node.id, JSON.stringify([[...neighbours][0], type]));
+        groups.set(node.id, JSON.stringify([[...neighbours].sort(), type]));
     }
     return groups;
 }
@@ -869,11 +869,11 @@ function create_graph(url){
                         },
                         rules: [{
                             kind: 'custom',
-                            id: 'correlation-leaves',
-                            label: 'Correlation leaves',
-                            description: 'Objects of the same type whose only neighbour in the displayed graph is the same object.',
+                            id: 'shared-correlations',
+                            label: 'Shared correlations',
+                            description: 'Objects of the same type with the same set of neighbours in the displayed graph.',
                             minSize: 10,
-                            partition: group_correlation_leaves,
+                            partition: group_shared_correlations,
                         }],
                     },
                     editors: {
