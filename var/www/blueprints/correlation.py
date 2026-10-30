@@ -42,7 +42,9 @@ correlation = Blueprint('correlation', __name__,
 # ============ FUNCTIONS ============
 
 
-def get_correlation_filter_objects():
+def get_correlation_filter_objects(obj_types=None):
+    if obj_types is None:
+        obj_types = ail_objects.get_all_objects()
     labels = {
         'barcode': 'Barcode',
         'chat-subchannel': 'Chat-Subchannel',
@@ -77,8 +79,12 @@ def get_correlation_filter_objects():
     }
     return [
         {'type': obj_type, 'label': labels.get(obj_type, obj_type.replace('-', ' ').title()), 'icon': ail_objects.get_object_type_svg(obj_type)}
-        for obj_type in sorted(ail_objects.get_all_objects())
+        for obj_type in sorted(obj_types)
     ]
+
+def get_relationship_filter_options(counts=None):
+    counts = counts or {}
+    return [{'id': relationship, 'label': relationship.replace('_', ' ').replace('-', ' ').title(), 'counts': counts.get(relationship, {})} for relationship in sorted(ail_objects.get_relationships())]
 
 def sanitise_graph_mode(graph_mode):
     if graph_mode not in ('inter', 'union'):
@@ -359,6 +365,9 @@ def correlation_tags_add():
     else:
         tags = []
 
+    relationship_view = request.form.get('tag_view') == 'relationship'
+    if relationship_view and 'tag_objects' not in request.form:
+        return {'error': 'An explicit object selection is required'}, 400
     if tags:
         if 'tag_objects' in request.form:
             try:
@@ -372,12 +381,14 @@ def correlation_tags_add():
             ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
                                                        objs_hidden=hidden,
                                                        lvl=level + 1, nb_max=nb_max)
-    return redirect(url_for('correlation.show_correlation',
+    endpoint = 'correlation.show_relationship' if relationship_view else 'correlation.show_correlation'
+    extra = {'relationships': ','.join(sorted(ail_objects.sanitize_relationships(request.form.get('tag_relationships', '').split(','))))} if relationship_view else {}
+    return redirect(url_for(endpoint,
                             type=obj_type, subtype=subtype, id=obj_id,
                             level=level,
                             max_nodes=nb_max,
                             hidden=",".join(sorted(hidden)),
-                            filter=",".join(filter_types)))
+                            filter=",".join(filter_types), **extra))
 
 #####################################################################################
 
@@ -388,8 +399,8 @@ def relationships_graph_node_json():
     obj_id = request.args.get('id')
     subtype = request.args.get('subtype')
     obj_type = request.args.get('type')
-    max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
-    level = sanitise_level(request.args.get('level'))
+    max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'), maximum=10000)
+    level = sanitise_level(request.args.get('level'), default=1)
 
     hidden = request.args.get('hidden')
     if hidden:
@@ -397,7 +408,7 @@ def relationships_graph_node_json():
     else:
         hidden = set()
 
-    filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','))
+    filter_types = ail_objects.sanitize_relationship_object_types(request.args.get('filter', '').split(','))
     relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
 
     json_graph = ail_objects.get_relationships_graph_node(obj_type, subtype, obj_id, relationships=relationships, objs_hidden=hidden, filter_types=filter_types, max_nodes=max_nodes, level=level, flask_context=True)
@@ -433,12 +444,13 @@ def relationships_chord_mentions_graph_json():
 @login_required
 @login_read_only
 def show_relationship():
+    relationship_object_types = ail_objects.get_relationship_object_types()
     if request.method == 'POST':
         object_type = request.form.get('obj_type')
         subtype = request.form.get('subtype')
         obj_id = request.form.get('obj_id')
         max_nodes = request.form.get('max_nb_nodes_in')
-        level = sanitise_level(request.form.get('level'))
+        level = sanitise_level(request.form.get('level'), default=1)
 
         ## get all selected relationships
         relationships = []
@@ -451,7 +463,7 @@ def show_relationship():
 
         ## get all selected objects types
         filter_types = []
-        for ob_type in ail_objects.get_all_objects():
+        for ob_type in sorted(relationship_object_types):
             correl_option = request.form.get(f'{ob_type}_Check')
             if correl_option:
                 filter_types.append(ob_type)
@@ -469,15 +481,15 @@ def show_relationship():
         obj_type = request.args.get('type')
         subtype = request.args.get('subtype', '')
         obj_id = request.args.get('id')
-        max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
-        level = sanitise_level(request.args.get('level'))
+        max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'), maximum=10000)
+        level = sanitise_level(request.args.get('level'), default=1)
         objs_hidden = sanitise_objs_hidden(request.args.get('hidden'))
         obj_to_hide = request.args.get('hide')
         if obj_to_hide:
             objs_hidden.add(obj_to_hide)
 
-        filter_types = ail_objects.sanitize_objs_types(request.args.get('filter', '').split(','), default=True)
-        relationships = ail_objects.sanitize_relationships(request.args.get('relationships', '').split(','))
+        filter_types = ail_objects.sanitize_relationship_object_types(request.args.get('filter', '').split(','))
+        relationships = sorted(ail_objects.sanitize_relationships(request.args.get('relationships', '').split(',')))
 
         # check if obj_id exist
         if not ail_objects.exists_obj(obj_type, subtype, obj_id):
@@ -487,13 +499,15 @@ def show_relationship():
             dict_object = {"type": obj_type,
                            "id": obj_id,
                            "object_type": obj_type,
-                           "max_nodes": max_nodes, "level": level,
+                           "gid": ail_objects.get_obj_global_id(obj_type, subtype, obj_id),
+                           "max_nodes": max_nodes, "level": level, "mode": "union",
                            "correlation_id": obj_id,
                            "relationships": relationships, "relationships_str": ",".join(relationships),
                            "filter": filter_types, "filter_str": ",".join(filter_types),
                            "hidden": objs_hidden, "hidden_str": ",".join(objs_hidden),
 
-                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'info', 'icon', 'username'}, flask_context=True),
+                           "metadata": ail_objects.get_object_meta(obj_type, subtype, obj_id, options={'tags', 'description', 'info', 'icon', 'username'}, flask_context=True),
+                           "correlation_filter_objects": get_correlation_filter_objects(relationship_object_types),
                            "nb_relation": ail_objects.get_obj_nb_relationships(obj_type, subtype, obj_id)
                            }
             if subtype:
@@ -501,9 +515,17 @@ def show_relationship():
                 dict_object["metadata"]['type_id'] = subtype
             else:
                 dict_object["subtype"] = ''
-            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id)
+            card_options = {'similarity'} if obj_type == 'image' else None
+            dict_object["metadata_card"] = ail_objects.get_object_card_meta(obj_type, subtype, obj_id, related_btc=bool(request.args.get('related_btc', False)), options=card_options)
             dict_object["metadata_card"]['tags_safe'] = True
+            dict_object['object_link'] = ail_objects.get_object_link(obj_type, subtype, obj_id, flask_context=True)
+            dict_object['has_dedicated_view'] = urlsplit(dict_object['object_link']).path not in {url_for('correlation.show_correlation'), url_for('correlation.show_relationship')}
+            dict_object['default_filter'] = sorted(relationship_object_types)
+            dict_object['relationship_filter_options'] = get_relationship_filter_options(dict_object['nb_relation'])
+            dict_object['nb_relationships'] = sum(sum(counts.values()) for counts in dict_object['nb_relation'].values())
             return render_template("show_relationship.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data(),
                                    meta=dict_object["metadata_card"],
+                                   ollama_enabled=images_engine.is_ollama_enabled(),
+                                   ollama_models=images_engine.get_ollama_models(),
                                    ail_tags=dict_object["metadata_card"]["add_tags_modal"])

@@ -1,5 +1,5 @@
 {% from 'correlation/node_icon.html' import node_icon %}
-<form id="correlation-settings" class="correlation-settings" action="{{ url_for('correlation.show_correlation') }}" method="get">
+<form id="correlation-settings" class="correlation-settings" action="{{ url_for(page_endpoint) }}" method="get">
     <input type="hidden" name="type" value="{{ dict_object['object_type'] }}">
     <input type="hidden" name="subtype" value="{{ dict_object['subtype'] }}">
     <input type="hidden" name="id" value="{{ dict_object['correlation_id'] }}">
@@ -9,6 +9,24 @@
     <input type="hidden" name="level" id="correlation-level" value="{{ dict_object['level'] }}">
     <input type="hidden" name="max_nodes" id="correlation-max-nodes" value="{{ dict_object['max_nodes'] }}">
     <div class="correlation-settings-fields">
+        {% if relationship_view %}
+            <div class="correlation-field correlation-types-field">
+                <label id="relationship-types-label">Include relationships</label>
+                <details id="relationship-type-picker" data-correlation-popover>
+                    <summary class="form-control" aria-labelledby="relationship-types-label relationship-types-caption"><i class="fas fa-project-diagram" aria-hidden="true"></i> <span id="relationship-types-caption">{{ dict_object['relationships'] | length }}/{{ dict_object['relationship_filter_options'] | length }} relationships</span> <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+                    <div class="correlation-popover">
+                        <div class="correlation-picker-actions"><button type="button" class="btn btn-link btn-sm" data-correlation-action="relationships-all">Select all</button><button type="button" class="btn btn-link btn-sm" data-correlation-action="relationships-clear">Clear</button></div>
+                        <div class="correlation-type-options" role="group" aria-label="Relationships to load">
+                            {% for relationship in dict_object['relationship_filter_options'] %}
+                                <label class="correlation-type-option"><input type="checkbox" data-relationship-type value="{{ relationship['id'] }}" {% if relationship['id'] in dict_object['relationships'] %}checked{% endif %}> {{ relationship['label'] }}</label>
+                            {% endfor %}
+                        </div>
+                        <small>Choose the relationships to follow from the starting object.</small>
+                    </div>
+                </details>
+                <input type="hidden" name="relationships" id="relationship-filter" value="{{ dict_object['relationships_str'] }}">
+            </div>
+        {% endif %}
         <div class="correlation-field correlation-types-field">
             <label id="correlation-types-label">Include object types</label>
             <details id="correlation-type-picker" data-correlation-popover>
@@ -31,7 +49,7 @@
             </details>
         </div>
         <div class="correlation-field correlation-depth-field">
-            <label for="correlation-depth">Correlation depth</label>
+            <label for="correlation-depth">{{ graph_name }} depth</label>
             <div class="correlation-depth-controls">
                 <select class="form-control" id="correlation-depth">
                     <option value="0" {% if dict_object['level'] == 0 %}selected{% endif %}>Direct · 1 step</option>
@@ -39,7 +57,7 @@
                     <option value="2" {% if dict_object['level'] == 2 %}selected{% endif %}>3 steps</option>
                     <option value="custom" {% if dict_object['level'] not in [0, 1, 2] %}selected{% endif %}>Custom…</option>
                 </select>
-                <button class="btn btn-outline-primary" type="button" data-correlation-action="direct" title="Immediately show direct correlations of the starting object, keeping the type and limit settings">Direct only</button>
+                <button class="btn btn-outline-primary" type="button" data-correlation-action="direct" title="Immediately show direct {{ graph_name | lower }}s of the starting object, keeping the type and limit settings">Direct only</button>
             </div>
         </div>
         <div class="correlation-field correlation-custom-field" id="correlation-depth-custom-field" {% if dict_object['level'] in [0, 1, 2] %}hidden{% endif %}>
@@ -64,7 +82,7 @@
     </div>
     <div class="correlation-settings-status">
         <p id="correlation-settings-summary" class="correlation-settings-summary"></p>
-        <div id="incomplete_graph" class="correlation-limit-notice" role="status" title="Some correlations are not shown. Increase the object limit to load more." hidden>
+        <div id="incomplete_graph" class="correlation-limit-notice" role="status" title="Some {{ graph_name | lower }}s are not shown. Increase the object limit to load more." hidden>
             <i class="fas fa-exclamation-triangle" aria-hidden="true"></i><span>Object limit reached</span>
             <button type="button" class="btn btn-link btn-sm" data-correlation-action="increase-limit">Change limit</button>
         </div>

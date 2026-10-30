@@ -1,9 +1,13 @@
+{% set relationship_view = relationship_view | default(false) %}
+{% set graph_name = 'Relationship' if relationship_view else 'Correlation' %}
+{% set page_endpoint = 'correlation.show_relationship' if relationship_view else 'correlation.show_correlation' %}
+{% set graph_endpoint = 'correlation.relationships_graph_node_json' if relationship_view else 'correlation.graph_node_json' %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Correlation - AIL</title>
+    <title>{{ graph_name }} - AIL</title>
     <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
     <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
@@ -25,13 +29,16 @@
     <script src="{{ url_for('static', filename='js/misp_graph.js') }}"></script>
     <script src="{{ url_for('static', filename='js/misp_graph_pivots.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/d3.v7.min.js' if relationship_view else 'js/d3.min.js') }}"></script>
+    {% if relationship_view and dict_object['object_type'] == 'chat' %}
+        <script src="{{ url_for('static', filename='js/d3/chord_directed_diagram.js') }}"></script>
+    {% endif %}
 </head>
-<body class="correlation-page">
+<body class="correlation-page{% if relationship_view %} relationship-page{% endif %}">
     {% include 'nav_bar.html' %}
     <main class="container-fluid correlation-workspace">
         {% include 'correlation/object_summary.html' %}
-        <section class="correlation-graph-card" aria-label="Correlation graph">
+        <section class="correlation-graph-card" aria-label="{{ graph_name }} graph">
             {% include 'correlation/graph_controls.html' %}
             <div class="correlation-selection-bar">
                 {% with compact_legend=True %}{% include 'correlation/graph_legend.html' %}{% endwith %}
@@ -50,9 +57,9 @@
             <div id="correlation-graph-error" class="alert alert-danger correlation-request-error" role="alert" hidden>
                 <span id="correlation-graph-error-message"></span>
                 <button type="button" class="btn btn-sm btn-outline-danger" data-correlation-action="retry">Retry</button>
-                <a class="btn btn-link btn-sm text-danger" href="{{ url_for('correlation.show_correlation', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id']) }}" id="correlation-reload">Reload page</a>
+                <a class="btn btn-link btn-sm text-danger" href="{{ url_for(page_endpoint, type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id']) }}" id="correlation-reload">Reload page</a>
             </div>
-            <div id="correlation-empty" class="correlation-graph-notice" role="status" hidden>No visible correlations for these settings. Include other types, increase the depth, or restore hidden objects.</div>
+            <div id="correlation-empty" class="correlation-graph-notice" role="status" hidden>No visible {{ graph_name | lower }}s for these settings. Include other types{% if relationship_view %} or relationships{% endif %}, increase the depth, or restore hidden objects.</div>
             <div class="correlation-canvas-wrap">
                 <div id="graph_loading" class="correlation-loading" role="status"><span class="spinner-border spinner-border-sm mr-2" aria-hidden="true"></span>Loading graph…</div>
                 <div id="graph"></div>
@@ -72,7 +79,8 @@
         <details class="correlation-help">
             <summary>Graph help and keyboard shortcuts</summary>
             <p>Click a node to select it, or a legend type to select matching objects. Hold Ctrl, Cmd or Shift to add types to your selection. Double-click an object to open it.</p>
-            <p>Groups contain at least 10 objects of the same type with identical visible neighbours. Double-click a group to unpack it immediately; use its close button to pack it again. Toggle <b>Shared correlations</b> in <b>Simplify</b> to show objects separately.</p>
+            <p>Groups contain at least 10 objects of the same type with identical visible neighbours{% if relationship_view %}, relationship types and directions{% endif %}. Double-click a group to unpack it immediately; use its close button to pack it again. Toggle <b>Shared {{ graph_name | lower }}s</b> in <b>Simplify</b> to show objects separately.</p>
+            {% if relationship_view %}<p>Arrows show the direction of each relationship. Hover a link or select it to see its relationship type.</p>{% endif %}
             <p>Press <kbd>H</kbd> while hovering an object or group to hide it. Hiding keeps the loaded objects in memory and does not load replacements. Use <b>Undo last hide</b> or <b>Restore all hidden</b> to show them again. The orange starting object is protected from Hide. Use Pivotick’s <b>Fit and center</b> control to fit the graph.</p>
         </details>
         {% include 'correlation/additional_tools.html' %}
@@ -86,20 +94,24 @@
         {% set activity_url = url_for('objects_cve.objects_cve_graphline_json', id=dict_object['correlation_id']) %}
     {% endif %}
     {% set page_config = {
+        'kind': 'relationship' if relationship_view else 'correlation',
         'object': {'gid': dict_object['gid'], 'type': dict_object['object_type'], 'subtype': dict_object['subtype'], 'id': dict_object['correlation_id']},
-        'state': {'types': dict_object['filter'], 'level': dict_object['level'], 'maxNodes': dict_object['max_nodes'], 'mode': dict_object['mode'], 'hidden': dict_object['hidden'] | list | sort},
-        'defaults': {'types': dict_object['default_filter'], 'level': 1, 'maxNodes': 300},
+        'state': {'types': dict_object['filter'], 'level': dict_object['level'], 'maxNodes': dict_object['max_nodes'], 'mode': dict_object['mode'], 'hidden': dict_object['hidden'] | list | sort, 'relationships': dict_object.get('relationships', [])},
+        'defaults': {'types': dict_object['default_filter'], 'level': 1, 'maxNodes': 300, 'relationships': dict_object.get('relationship_filter_options', []) | map(attribute='id') | list},
         'urls': {
-            'page': url_for('correlation.show_correlation'),
-            'graph': url_for('correlation.graph_node_json', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id'], level=dict_object['level'], max_nodes=dict_object['max_nodes'], mode=dict_object['mode'], filter=dict_object['filter_str'], hidden=dict_object['hidden_str']),
+            'page': url_for(page_endpoint),
+            'graph': url_for(graph_endpoint),
             'description': url_for('correlation.get_description'),
             'screenshot': url_for('objects_item.screenshot', filename=''),
             'favicon': url_for('objects_favicon.favicon', filename=''),
             'image': url_for('objects_image.image', filename=''),
-            'activity': activity_url
+            'activity': activity_url,
+            'forwards': url_for('correlation.relationships_chord_graph_json', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id']) if relationship_view and dict_object['object_type'] == 'chat' else none,
+            'mentions': url_for('correlation.relationships_chord_mentions_graph_json', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id']) if relationship_view and dict_object['object_type'] == 'chat' else none
         }
     } %}
     <script type="application/json" id="correlation-config">{{ page_config | tojson }}</script>
+    {% if relationship_view and dict_object['object_type'] == 'chat' %}{% include 'objects/tooltip_ail_objects.html' %}{% endif %}
     <script src="{{ url_for('static', filename='js/correlation_page.js') }}"></script>
     <script src="{{ url_for('static', filename='js/correlation_graph.js') }}"></script>
 </body>

@@ -1,4 +1,4 @@
-/* Asynchronous exploration, bookmarkable settings and browser history. */
+/* Shared correlation and relationship exploration, settings and browser history. */
 (function () {
     'use strict';
 
@@ -8,6 +8,9 @@
             this.renderGraph = renderGraph;
             this.form = document.getElementById('correlation-settings');
             this.types = [...this.form.querySelectorAll('[data-correlation-type]')];
+            this.relationships = [...this.form.querySelectorAll('[data-relationship-type]')];
+            this.relationshipView = config.kind === 'relationship';
+            this.linkName = this.relationshipView ? 'relationships' : 'correlations';
             this.depth = document.getElementById('correlation-depth');
             this.limit = document.getElementById('correlation-limit');
             this.customDepth = document.getElementById('correlation-depth-custom');
@@ -29,6 +32,8 @@
             this.actions = {
                 'types-all': () => this.selectTypes(true),
                 'types-clear': () => this.selectTypes(false),
+                'relationships-all': () => this.selectRelationships(true),
+                'relationships-clear': () => this.selectRelationships(false),
                 direct: () => {
                     this.depth.value = '0';
                     this.syncSettings();
@@ -128,7 +133,7 @@
             });
             window.addEventListener('popstate', event => {
                 const entry = event.state?.ailCorrelation;
-                if (!entry || entry.object !== this.config.object.gid) {
+                if (!entry || entry.object !== this.config.object.gid || entry.kind !== this.config.kind) {
                     window.location.reload();
                     return;
                 }
@@ -151,7 +156,7 @@
         }
 
         historyEntry(settings, id) {
-            return {...history.state, ailCorrelation: {object: this.config.object.gid, settings, id}};
+            return {...history.state, ailCorrelation: {object: this.config.object.gid, kind: this.config.kind, settings, id}};
         }
 
         hiddenIds(ids) {
@@ -159,10 +164,13 @@
         }
 
         datasetKey(state) {
-            return JSON.stringify([[...state.types].sort(), state.level, state.maxNodes, state.mode]);
+            return JSON.stringify([[...state.types].sort(), state.level, state.maxNodes, state.mode, [...(state.relationships || [])].sort()]);
         }
 
         setControls(state) {
+            this.relationships.forEach(input => {
+                input.checked = state.relationships.includes(input.value);
+            });
             this.types.forEach(input => {
                 input.checked = state.types.includes(input.value);
             });
@@ -182,9 +190,18 @@
             this.syncSettings();
         }
 
+        selectRelationships(checked) {
+            this.relationships.forEach(input => {
+                input.checked = checked;
+            });
+            this.draftRevision++;
+            this.syncSettings();
+        }
+
         draft() {
             return {
                 types: this.types.filter(input => input.checked).map(input => input.value),
+                relationships: this.relationships.filter(input => input.checked).map(input => input.value),
                 level: this.depth.value === 'custom' ? Number(this.customDepth.value) - 1 : Number(this.depth.value),
                 maxNodes: this.limit.value === 'custom' ? Number(this.customLimit.value) : Number(this.limit.value),
             };
@@ -201,19 +218,27 @@
             this.customLimit.required = customLimit;
             const draft = this.draft();
             const validTypes = draft.types.length > 0;
+            const valid = validTypes && (!this.relationshipView || draft.relationships.length > 0);
             document.getElementById('correlation-types-caption').textContent = draft.types.length + '/' + this.types.length + ' types selected';
-            document.getElementById('correlation-apply').disabled = !validTypes;
-            this.form.querySelector('[data-correlation-action="direct"]').disabled = !validTypes;
-            document.getElementById('correlation-settings-error').hidden = validTypes;
+            document.getElementById('correlation-apply').disabled = !valid;
+            this.form.querySelector('[data-correlation-action="direct"]').disabled = !valid;
+            const error = document.getElementById('correlation-settings-error');
+            error.hidden = valid;
+            error.textContent = validTypes ? 'Select at least one relationship.' : 'Select at least one object type.';
+            if (this.relationshipView) {
+                document.getElementById('relationship-types-caption').textContent = draft.relationships.length + '/' + this.relationships.length + ' relationships';
+                document.getElementById('relationship-filter').value = draft.relationships.join(',');
+            }
             document.getElementById('correlation-filter').value = draft.types.join(',');
             document.getElementById('correlation-level').value = draft.level;
             document.getElementById('correlation-max-nodes').value = draft.maxNodes;
             const state = this.config.state;
             this.form.querySelector('[data-correlation-action="direct"]').setAttribute('aria-pressed', String(state.level === 0));
-            const changed = draft.level !== state.level || draft.maxNodes !== state.maxNodes || [...draft.types].sort().join(',') !== [...state.types].sort().join(',');
+            const changed = draft.level !== state.level || draft.maxNodes !== state.maxNodes || [...draft.types].sort().join(',') !== [...state.types].sort().join(',') || this.relationshipView && [...draft.relationships].sort().join(',') !== [...state.relationships].sort().join(',');
             const steps = state.level + 1;
-            document.getElementById('correlation-settings-summary').textContent = state.types.length + '/' + this.types.length + ' types · ' + (steps === 1 ? 'Direct correlations' : steps + ' steps from starting object') + ' · Limit ' + state.maxNodes + (changed ? ' · Changes not applied' : '');
-            return validTypes;
+            const relationships = this.relationshipView ? ' · ' + state.relationships.length + '/' + this.relationships.length + ' relationships' : '';
+            document.getElementById('correlation-settings-summary').textContent = state.types.length + '/' + this.types.length + ' types' + relationships + ' · ' + (steps === 1 ? 'Direct ' + this.linkName : steps + ' steps from starting object') + ' · Limit ' + state.maxNodes + (changed ? ' · Changes not applied' : '');
+            return valid;
         }
 
         urlFor(settings) {
@@ -222,7 +247,12 @@
             url.searchParams.set('type', this.config.object.type);
             url.searchParams.set('subtype', this.config.object.subtype);
             url.searchParams.set('id', this.config.object.id);
-            url.searchParams.set('mode', settings.mode || this.config.state.mode);
+            if (this.relationshipView) {
+                url.searchParams.delete('mode');
+                url.searchParams.set('relationships', settings.relationships.join(','));
+            } else {
+                url.searchParams.set('mode', settings.mode || this.config.state.mode);
+            }
             url.searchParams.set('filter', settings.types.join(','));
             url.searchParams.set('level', settings.level);
             url.searchParams.set('max_nodes', settings.maxNodes);
@@ -275,7 +305,7 @@
                     throw new Error('Unable to read the graph response. Reload the page to check your session.');
                 }
                 if (!response.ok) {
-                    throw new Error(response.status === 404 ? 'This object is no longer available.' : 'Unable to load correlations (HTTP ' + response.status + '). Please try again.');
+                    throw new Error(response.status === 404 ? 'This object is no longer available.' : 'Unable to load ' + this.linkName + ' (HTTP ' + response.status + '). Please try again.');
                 }
                 if (!response.headers.get('Content-Type')?.includes('application/json')) {
                     throw new Error('Unable to read the graph response. Reload the page to check your session.');
@@ -320,7 +350,7 @@
             } catch (error) {
                 if (!abort.signal.aborted && number === this.requestNumber) {
                     this.failedRequest = request;
-                    this.showError(error instanceof SyntaxError ? 'The server returned an invalid graph response. Please try again.' : error.message || 'Unable to load correlations. Please try again.');
+                    this.showError(error instanceof SyntaxError ? 'The server returned an invalid graph response. Please try again.' : error.message || 'Unable to load ' + this.linkName + '. Please try again.');
                 }
             } finally {
                 if (number === this.requestNumber) {
@@ -344,7 +374,7 @@
                 ids.add(node.id);
             }
             if (!ids.has(this.config.object.gid) || data.links.some(edge => !edge || !ids.has(edge.source?.id || edge.source) || !ids.has(edge.target?.id || edge.target))) {
-                throw new Error('The server returned invalid graph correlations. Please try again.');
+                throw new Error('The server returned invalid graph ' + this.linkName + '. Please try again.');
             }
         }
 
@@ -352,6 +382,9 @@
             const state = this.config.state;
             this.form.elements.hidden.value = state.hidden.join(',');
             const form = document.getElementById('correlation-tags-form');
+            if (this.relationshipView) {
+                form.elements.tag_relationships.value = state.relationships.join(',');
+            }
             for (const [name, value] of Object.entries({tag_level: state.level, tag_nb_max: state.maxNodes, tag_filter: state.types.join(','), tag_hidden: state.hidden.join(',')})) {
                 form.elements[name].value = value;
             }

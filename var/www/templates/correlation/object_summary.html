@@ -7,15 +7,26 @@
         </div>
         <div class="correlation-object-actions">
             <details class="correlation-direct-stats" data-correlation-popover>
-                <summary class="btn btn-light">Direct correlations <strong>{{ dict_object['nb_correl'].values() | sum }}</strong> <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+                <summary class="btn btn-light">Direct {{ graph_name | lower }}s <strong>{{ dict_object['nb_relationships'] if relationship_view else dict_object['nb_correl'].values() | sum }}</strong> <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
                 <div class="correlation-popover">
-                    <p>All stored direct correlations for the starting object. Graph filters and depth do not change these counts.</p>
+                    <p>All stored direct {{ graph_name | lower }}s for the starting object. Graph filters and depth do not change these counts.</p>
                     <dl>
-                        {% for object in dict_object['correlation_filter_objects'] if dict_object['nb_correl'].get(object['type'], 0) > 0 %}
-                            <dt data-direct-type="{{ object['type'] }}"><span data-correlation-type-icon="{{ object['type'] }}">{{ node_icon(object['icon']) }}</span> {{ object['label'] }}</dt><dd>{{ dict_object['nb_correl'][object['type']] }}</dd>
+                        {% if relationship_view %}
+                            {% for relationship in dict_object['relationship_filter_options'] if relationship['counts'].values() | sum > 0 %}
+                                <dt class="correlation-direct-relationship">{{ relationship['label'] }}</dt><dd>{{ relationship['counts'].values() | sum }}</dd>
+                                {% for object in dict_object['correlation_filter_objects'] if relationship['counts'].get(object['type'], 0) > 0 %}
+                                    <dt data-direct-relationship="{{ relationship['id'] }}" data-direct-type="{{ object['type'] }}"><span data-correlation-type-icon="{{ object['type'] }}">{{ node_icon(object['icon']) }}</span> {{ object['label'] }}</dt><dd>{{ relationship['counts'][object['type']] }}</dd>
+                                {% endfor %}
+                            {% else %}
+                                <dt>No direct relationships</dt><dd>0</dd>
+                            {% endfor %}
                         {% else %}
-                            <dt>No direct correlations</dt><dd>0</dd>
-                        {% endfor %}
+                            {% for object in dict_object['correlation_filter_objects'] if dict_object['nb_correl'].get(object['type'], 0) > 0 %}
+                                <dt data-direct-type="{{ object['type'] }}"><span data-correlation-type-icon="{{ object['type'] }}">{{ node_icon(object['icon']) }}</span> {{ object['label'] }}</dt><dd>{{ dict_object['nb_correl'][object['type']] }}</dd>
+                            {% else %}
+                                <dt>No direct correlations</dt><dd>0</dd>
+                            {% endfor %}
+                        {% endif %}
                     </dl>
                 </div>
             </details>
@@ -25,6 +36,7 @@
             <details class="correlation-object-menu" data-correlation-popover>
                 <summary class="btn btn-outline-secondary">Actions <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
                 <div class="correlation-popover">
+                    <a class="dropdown-item" href="{{ url_for('correlation.show_correlation' if relationship_view else 'correlation.show_relationship', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id']) }}">{{ 'Correlations' if relationship_view else 'Relationships' }} for this object</a>
                     <a class="dropdown-item" href="{{ url_for('import_export.add_object_id_to_export', type=dict_object['object_type'], subtype=dict_object['subtype'], id=dict_object['correlation_id'], lvl=1) }}" target="_blank" rel="noopener">Export object</a>
                     <button class="dropdown-item" type="button" data-correlation-action="object-details">Object details and actions</button>
                 </div>

@@ -164,6 +164,7 @@
 }
 .correlation-direct-stats dt { display: flex; align-items: center; gap: 7px; font-weight: 400; overflow-wrap: anywhere; }
 .correlation-direct-stats dd { margin: 0; font-weight: 600; align-self: center; }
+.correlation-direct-stats .correlation-direct-relationship { font-weight: 600; margin-top: 5px; }
 .correlation-object-menu .correlation-popover { width: 245px; padding: 5px; }
 .correlation-object-menu .dropdown-item { white-space: normal; padding: 8px; border-radius: 4px; }
 .correlation-object-details { margin-top: 11px; }
@@ -247,6 +248,12 @@
 .correlation-page #correlation-tags-form .tag-ctn { max-width: 100%; }
 .correlation-page #correlation-tags-form input { max-width: 100%; }
 .correlation-page :is(button, summary, input, select, a):focus-visible { outline: 2px solid #2574cb; outline-offset: 2px; }
+@media (min-width: 901px) {
+    .relationship-page .correlation-types-field { width: 220px; }
+    .relationship-page .correlation-depth-field { width: 240px; }
+    .relationship-page .correlation-limit-field { width: 130px; }
+    .relationship-page .correlation-image-controls { flex-basis: 300px; width: 300px; }
+}
 @media (max-width: 900px) {
     .correlation-workspace { padding: 12px; }
     .correlation-object-actions { width: 100%; }

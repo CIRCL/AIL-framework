@@ -815,6 +815,13 @@ def get_correlations_graph_node(obj_type, subtype, obj_id, filter_types=[], max_
 def get_relationships():
     return relationships_engine.get_relationships()
 
+def get_relationship_object_types():
+    return relationships_engine.get_relationship_object_types().intersection(get_all_objects())
+
+def sanitize_relationship_object_types(obj_types):
+    supported_types = get_relationship_object_types()
+    return sorted(set(obj_types).intersection(supported_types) or supported_types)
+
 def sanitize_relationships(relationships):
     return relationships_engine.sanitize_relationships(relationships)
 def get_obj_nb_relationships(obj_type, subtype, obj_id, filter_types=[]):

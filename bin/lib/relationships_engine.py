@@ -54,6 +54,14 @@ RELATIONSHIPS_OBJS = { # TODO forward user-account
 def get_relationships():
     return RELATIONSHIPS
 
+def get_relationship_object_types():
+    obj_types = set()
+    for relationships in RELATIONSHIPS_OBJS.values():
+        obj_types.update(relationships)
+        for targets in relationships.values():
+            obj_types.update(targets)
+    return obj_types
+
 def sanitize_relationships(relationships):
     rels = get_relationships()
     if relationships:

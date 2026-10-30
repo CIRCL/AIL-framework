@@ -1,7 +1,8 @@
-/* Pivotick rendering and object previews for the correlation page. */
+/* Shared Pivotick rendering and previews for correlation and relationship pages. */
 (function () {
     'use strict';
     const config = JSON.parse(document.getElementById('correlation-config').textContent);
+    const relationshipView = config.kind === 'relationship';
     const all_graph = window.all_graph = {};
     const PivotickGraph = window.Pivotick;
     const PivotickNode = PivotickGraph.Node;
@@ -238,6 +239,32 @@
         };
     }
 
+    function group_shared_relationships(view) {
+        const groups = new Map();
+        for (const node of view.nodes) {
+            if (!node.getData()._ail || node.id === config.object.gid) {
+                continue;
+            }
+            const neighbours = new Set([...view.inNeighbours(node), ...view.outNeighbours(node)].map(neighbour => neighbour.id));
+            if (!neighbours.size || neighbours.has(node.id)) {
+                continue;
+            }
+            const relations = new Set();
+            for (const [direction, edges] of [['in', node.getEdgesIn()], ['out', node.getEdgesOut()]]) {
+                for (const edge of edges) {
+                    const other = direction === 'in' ? edge.from : edge.to;
+                    if (edge.visible && neighbours.has(other.id)) {
+                        relations.add(JSON.stringify([direction, edge.getData().label || '', other.id]));
+                    }
+                }
+            }
+            if (relations.size) {
+                groups.set(node.id, JSON.stringify([node.id.split(':', 1)[0], [...relations].sort()]));
+            }
+        }
+        return groups;
+    }
+
     function group_shared_correlations(view) {
         const groups = new Map();
         const rootId = config.object.gid;
@@ -288,7 +315,7 @@
                 nodeById[targetId],
                 { label: l.relationship || '' },
                 {},
-                false
+                relationshipView
             );
         }).filter(edge => edge.from && edge.to);
 
@@ -305,7 +332,7 @@
                 enableNodeExpansion: false,
                 groupStyle: build_group_style,
                 defaultEdgeStyle: {
-                    markerEnd: "",
+                    markerEnd: relationshipView ? 'arrow' : '',
                     markerStart: "",
                     curveStyle: 'straight',
                 },
@@ -322,11 +349,11 @@
                     },
                     rules: [{
                         kind: 'custom',
-                        id: 'shared-correlations',
-                        label: 'Shared correlations',
-                        description: 'Objects of the same type with the same set of neighbours in the displayed graph.',
+                        id: relationshipView ? 'shared-relationships' : 'shared-correlations',
+                        label: relationshipView ? 'Shared relationships' : 'Shared correlations',
+                        description: relationshipView ? 'Objects of the same type with identical visible neighbours, relationship types and directions.' : 'Objects of the same type with the same set of neighbours in the displayed graph.',
                         minSize: 10,
-                        partition: group_shared_correlations,
+                        partition: relationshipView ? group_shared_relationships : group_shared_correlations,
                     }],
                 },
                 editors: {
@@ -344,12 +371,13 @@
                     columns: [
                         {key: 'name', label: 'Object', accessor: get_node_text, filterable: true},
                         {key: 'type', label: 'Type', type: 'select', accessor: node => node.getData()._ail ? node.id.split(':', 1)[0] : node.getData().type, filterable: true},
-                        {key: 'correlations', label: 'Loaded correlations', type: 'numberRange', accessor: node => node.degree(), filterable: true},
+                        {key: 'correlations', label: relationshipView ? 'Loaded relationships' : 'Loaded correlations', type: 'numberRange', accessor: node => node.degree(), filterable: true},
                         {key: 'visibility', label: 'Visibility', accessor: node => !node.visible ? 'Hidden' : node.canvasRepresentative() !== node ? 'Packed' : 'Visible'},
                     ],
                     edgeColumns: [
                         {key: 'source', label: 'From', accessor: edge => get_node_text(edge.from), filterable: true},
                         {key: 'target', label: 'To', accessor: edge => get_node_text(edge.to), filterable: true},
+                        ...(relationshipView ? [{key: 'relationship', label: 'Relationship', accessor: edge => edge.getData().label, filterable: true}] : []),
                     ],
                 },
                 propertiesPanel: {
@@ -427,7 +455,49 @@
         }
     }
 
+    function attach_relationship_charts() {
+        document.querySelectorAll('[data-relationship-chart]').forEach(details => {
+            let loading = false;
+            let loaded = false;
+            const name = details.dataset.relationshipChart;
+            const status = details.querySelector('[data-chart-status]');
+            const retry = details.querySelector('[data-chart-retry]');
+            const load = async () => {
+                if (loading || loaded || !details.open) {
+                    return;
+                }
+                loading = true;
+                status.textContent = 'Loading…';
+                retry.hidden = true;
+                const container = document.getElementById('relationship-' + name + '-chart');
+                try {
+                    const response = await fetch(config.urls[name], {credentials: 'same-origin', headers: {'Accept': 'application/json'}});
+                    if (!response.ok || response.redirected) {
+                        throw new Error('Unable to load this chart. Please try again.');
+                    }
+                    const data = await response.json();
+                    if (!Array.isArray(data.data) || !data.meta) {
+                        throw new Error('The server returned an invalid chart response.');
+                    }
+                    container.replaceChildren();
+                    create_directed_chord_diagram('#' + container.id, data, 0, -1, mouseover_tooltip_ail_obj, mouseout_tooltip_ail_obj);
+                    status.textContent = data.data.length ? 'All stored ' + name + ' for the starting chat. Graph filters do not change this chart.' : 'No ' + name + ' for this chat.';
+                    loaded = true;
+                } catch (error) {
+                    container.replaceChildren();
+                    status.textContent = error.message;
+                    retry.hidden = false;
+                } finally {
+                    loading = false;
+                }
+            };
+            details.addEventListener('toggle', load);
+            retry.addEventListener('click', load);
+        });
+    }
+
     $(function() {
+        attach_relationship_charts();
         all_graph.page = AILCorrelationPage.attach(config, create_graph);
         all_graph.page.load({settings: config.state, url: all_graph.page.appliedUrl, history: 'none'});
         const activity = document.getElementById('correlation-activity');

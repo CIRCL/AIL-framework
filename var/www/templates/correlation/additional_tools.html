@@ -4,6 +4,18 @@
         {% include 'correlation/misp_expansion_controls.html' %}
     </div>
 </details>
+{% if relationship_view and dict_object['object_type'] == 'chat' %}
+    {% for chart, label in [('forwards', 'Forwards'), ('mentions', 'Mentions')] %}
+        <details class="correlation-secondary" data-relationship-chart="{{ chart }}">
+            <summary>{{ label }}</summary>
+            <div class="correlation-secondary-content correlation-chart-scroll">
+                <p role="status" data-chart-status></p>
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-chart-retry hidden>Retry</button>
+                <div id="relationship-{{ chart }}-chart" style="max-width: 900px"></div>
+            </div>
+        </details>
+    {% endfor %}
+{% endif %}
 {% if dict_object['object_type'] in ['cve', 'decoded', 'pgp', 'cryptocurrency', 'username'] %}
     <details class="correlation-secondary" id="correlation-activity">
         <summary>Activity over time</summary>
@@ -15,6 +27,10 @@
     <div class="correlation-secondary-content">
         <p>Tags the <strong id="correlation-tag-count">0</strong> visible AIL objects currently loaded in this graph. Hidden objects and results outside the loaded graph are excluded.</p>
         <form id="correlation-tags-form" action="{{ url_for('correlation.correlation_tags_add') }}" method="post">
+            {% if relationship_view %}
+                <input type="hidden" name="tag_view" value="relationship">
+                <input type="hidden" name="tag_relationships" value="{{ dict_object['relationships_str'] }}">
+            {% endif %}
             <input type="hidden" name="tag_obj_type" value="{{ dict_object['object_type'] }}">
             <input type="hidden" name="tag_subtype" value="{{ dict_object['subtype'] }}">
             <input type="hidden" name="tag_obj_id" value="{{ dict_object['correlation_id'] }}">
