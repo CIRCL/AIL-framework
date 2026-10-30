@@ -295,8 +295,9 @@
         currentObject = null;
         all_graph.misp_expansion?.destroy();
         all_graph.legend?.destroy();
-        all_graph.node_graph?.renderer.getCanvasSelection().interrupt();
         all_graph.node_graph?.destroy();
+        // Cancel viewport animations left by teardown before removing the old SVG.
+        all_graph.node_graph?.renderer.getCanvasSelection().interrupt();
         graphContainer.replaceChildren();
         all_graph.node_graph = new PivotickGraph(graphContainer, { nodes: nodes, edges: edges }, {
             render: {
@@ -442,7 +443,7 @@
             if (event.key.toLowerCase() !== 'h' || event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input, textarea, select, [contenteditable]')) {
                 return;
             }
-            if (currentObject && get_node_data(currentObject.node)._ail && !AILMISPGraph.isExpansionNode(currentObject.node)) {
+            if (currentObject) {
                 event.preventDefault();
                 all_graph.page.hideObjects([currentObject.node]);
             }

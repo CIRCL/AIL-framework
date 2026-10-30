@@ -59,9 +59,11 @@
             </div>
             <div class="correlation-graph-status">
                 <span>Loaded <strong id="correlation-loaded-count">0</strong> objects</span>
+                <span>Visible <strong id="correlation-visible-count">0</strong></span>
                 <span><strong id="correlation-group-count">0</strong> packed groups</span>
                 <span>Hidden <strong id="correlation-hidden-count">{{ dict_object['hidden'] | length }}</strong></span>
-                <button type="button" class="btn btn-link btn-sm" data-correlation-action="restore" {% if not dict_object['hidden'] %}disabled{% endif %}>Restore hidden</button>
+                <button type="button" class="btn btn-link btn-sm" data-correlation-action="undo-hide" disabled>Undo last hide</button>
+                <button type="button" class="btn btn-link btn-sm" data-correlation-action="restore" {% if not dict_object['hidden'] %}disabled{% endif %}>Restore all hidden</button>
                 <span class="correlation-status-spacer"></span>
                 <button type="button" class="btn btn-link btn-sm" data-correlation-action="objects" disabled>Objects list</button>
                 <button type="button" class="btn btn-link btn-sm" data-correlation-action="center" disabled>Center on starting object</button>
@@ -71,7 +73,7 @@
             <summary>Graph help and keyboard shortcuts</summary>
             <p>Click a node to select it, or a legend type to select matching objects. Hold Ctrl, Cmd or Shift to add types to your selection. Double-click an object to open it.</p>
             <p>Groups contain at least 10 objects of the same type with identical visible neighbours. Double-click a group to unpack it immediately; use its close button to pack it again. Toggle <b>Shared correlations</b> in <b>Simplify</b> to show objects separately.</p>
-            <p>Press <kbd>H</kbd> while hovering an object to hide it. The orange node is the starting object. Use Pivotick’s <b>Fit and center</b> control to fit the graph.</p>
+            <p>Press <kbd>H</kbd> while hovering an object or group to hide it. Hiding keeps the loaded objects in memory and does not load replacements. Use <b>Undo last hide</b> or <b>Restore all hidden</b> to show them again. The orange starting object is protected from Hide. Use Pivotick’s <b>Fit and center</b> control to fit the graph.</p>
         </details>
         {% include 'correlation/additional_tools.html' %}
     </main>

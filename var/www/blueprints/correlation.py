@@ -350,6 +350,8 @@ def correlation_tags_add():
             galaxies_tags = json.loads(galaxies_tags)
         except Exception:
             galaxies_tags = []
+    else:
+        galaxies_tags = []
     if taxonomies_tags or galaxies_tags:
         if not Tag.is_valid_tags_taxonomies_galaxy(taxonomies_tags, galaxies_tags):
             return {'error': 'Invalid tag(s)'}, 400
@@ -358,14 +360,23 @@ def correlation_tags_add():
         tags = []
 
     if tags:
-        ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
-                                                   objs_hidden=hidden,
-                                                   lvl=level + 1, nb_max=nb_max)
+        if 'tag_objects' in request.form:
+            try:
+                object_ids = json.loads(request.form['tag_objects'])
+            except (TypeError, json.JSONDecodeError):
+                return {'error': 'Invalid object selection'}, 400
+            result, status = ail_objects.api_add_objects_tags(object_ids, tags)
+            if status != 200:
+                return result, status
+        else:
+            ail_objects.obj_correlations_objs_add_tags(obj_type, subtype, obj_id, tags, filter_types=filter_types,
+                                                       objs_hidden=hidden,
+                                                       lvl=level + 1, nb_max=nb_max)
     return redirect(url_for('correlation.show_correlation',
                             type=obj_type, subtype=subtype, id=obj_id,
                             level=level,
                             max_nodes=nb_max,
-                            hidden=hidden, hidden_str=",".join(hidden),
+                            hidden=",".join(sorted(hidden)),
                             filter=",".join(filter_types)))
 
 #####################################################################################

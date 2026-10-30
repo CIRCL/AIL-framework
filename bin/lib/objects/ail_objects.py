@@ -327,6 +327,31 @@ def add_obj_tags(obj_type, subtype, id, tags):
         obj.add_tag(tag)
 
 
+def api_add_objects_tags(global_ids, tags):
+    """Tag an explicit set of objects after validating the complete selection."""
+    if not isinstance(global_ids, list) or not global_ids or any(not isinstance(value, str) for value in global_ids):
+        return {'error': 'Expected a non-empty list of object IDs'}, 400
+    if not tags or not Tag.is_valid_tags_taxonomies_galaxy(tags):
+        return {'error': 'Invalid tag(s)'}, 400
+    objects = []
+    for global_id in dict.fromkeys(global_ids):
+        parts = global_id.split(':', 2)
+        if len(parts) != 3 or not parts[2]:
+            return {'error': 'Invalid object ID'}, 400
+        obj_type, subtype, obj_id = parts
+        obj_class = get_obj_class(obj_type)
+        if not obj_class or issubclass(obj_class, AbstractSubtypeObject) != bool(subtype):
+            return {'error': 'Invalid object type or subtype'}, 400
+        obj = get_object(obj_type, subtype, obj_id)
+        if not obj.exists():
+            return {'error': 'An object in the selection no longer exists'}, 404
+        objects.append(obj)
+    for obj in objects:
+        for tag in tags:
+            obj.add_tag(tag)
+    return {'tagged': len(objects)}, 200
+
+
 # -TAGS- #
 
 #### OBJ META ####
