@@ -1,0 +1,40 @@
+{% set metadata_templates = {
+    'pgp': 'correlation/metadata_card_pgp.html',
+    'chat': 'chats_explorer/card_chat.html',
+    'chat-subchannel': 'chats_explorer/card_chat_subchannel.html',
+    'user-account': 'chats_explorer/card_user_account.html',
+    'cryptocurrency': 'correlation/metadata_card_cryptocurrency.html',
+    'username': 'correlation/metadata_card_username.html',
+    'decoded': 'correlation/metadata_card_decoded.html',
+    'cve': 'correlation/metadata_card_cve.html',
+    'domain': 'correlation/metadata_card_domain.html',
+    'screenshot': 'correlation/metadata_card_screenshot.html',
+    'title': 'correlation/metadata_card_title.html',
+    'cookie-name': 'correlation/metadata_card_cookie_name.html',
+    'etag': 'correlation/metadata_card_etag.html',
+    'dom-hash': 'correlation/metadata_card_dom_hash.html',
+    'hhhash': 'correlation/metadata_card_hhhash.html',
+    'image': 'objects/image/card_image.html',
+    'ocr': 'objects/ocr/card_ocr.html',
+    'barcode': 'objects/barcode/card_barcode.html',
+    'pdf': 'objects/pdf/card_pdf.html',
+    'author': 'objects/author/card_author.html',
+    'qrcode': 'objects/qrcode/card_qrcode.html',
+    'item': 'correlation/metadata_card_item.html',
+    'favicon': 'correlation/metadata_card_favicon.html',
+    'gtracker': 'correlation/metadata_card_gtracker.html',
+    'file-name': 'correlation/metadata_card_filename.html',
+    'mail': 'correlation/metadata_card_mail.html',
+    'ssh-key': 'correlation/metadata_card_ssh_key.html',
+    'ip': 'correlation/metadata_card_ip.html'
+} %}
+{% set metadata_template = metadata_templates.get(dict_object['object_type']) %}
+{% if metadata_template %}
+    {% include metadata_template %}
+{% else %}
+    <dl class="correlation-metadata-fallback">
+        {% for key, value in dict_object['metadata'].items() %}
+            <dt>{{ key.replace('_', ' ') }}</dt><dd>{{ value }}</dd>
+        {% endfor %}
+    </dl>
+{% endif %}

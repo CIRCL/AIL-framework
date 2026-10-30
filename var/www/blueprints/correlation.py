@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+from urllib.parse import urlsplit
 
 from flask import Flask, render_template, jsonify, request, Blueprint, redirect, url_for, Response, abort
 from flask_login import login_required
@@ -75,7 +76,7 @@ def get_correlation_filter_objects():
         'user-account': 'User-Account',
     }
     return [
-        {'type': obj_type, 'label': labels.get(obj_type, obj_type.replace('-', ' ').title())}
+        {'type': obj_type, 'label': labels.get(obj_type, obj_type.replace('-', ' ').title()), 'icon': ail_objects.get_object_type_svg(obj_type)}
         for obj_type in sorted(ail_objects.get_all_objects())
     ]
 
@@ -85,22 +86,25 @@ def sanitise_graph_mode(graph_mode):
     else:
         return graph_mode
 
-def sanitise_nb_max_nodes(nb_max_nodes):
+def sanitise_nb_max_nodes(nb_max_nodes, maximum=None):
     try:
         nb_max_nodes = int(nb_max_nodes)
         if nb_max_nodes < 2 and nb_max_nodes != 0:
             nb_max_nodes = 300
     except (TypeError, ValueError):
         nb_max_nodes = 300
+    if maximum is not None and (nb_max_nodes == 0 or nb_max_nodes > maximum):
+        nb_max_nodes = maximum
     return nb_max_nodes
 
-def sanitise_level(level):
+def sanitise_level(level, default=2):
+    """Normalize the engine's zero-based level: 0 loads direct neighbours."""
     try:
         level = int(level)
         if level < 0:
-            level = 2
+            level = default
     except (TypeError, ValueError):
-        level = 2
+        level = default
     return level
 
 def sanitise_objs_hidden(objs_hidden):
@@ -165,7 +169,7 @@ def show_correlation():
             mode = 'inter'
         else:
             mode = 'union'
-        level = sanitise_level(request.form.get('level'))
+        level = sanitise_level(request.form.get('level'), default=1)
 
         ## get all selected correlations
         filter_types = []
@@ -187,9 +191,9 @@ def show_correlation():
         obj_type = request.args.get('type')
         subtype = request.args.get('subtype', '')
         obj_id = request.args.get('id')
-        max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
+        max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'), maximum=10000)
         mode = sanitise_graph_mode(request.args.get('mode'))
-        level = sanitise_level(request.args.get('level'))
+        level = sanitise_level(request.args.get('level'), default=1)
         objs_hidden = sanitise_objs_hidden(request.args.get('hidden'))
         obj_to_hide = request.args.get('hide')
         if obj_to_hide:
@@ -228,6 +232,9 @@ def show_correlation():
                 obj_type, subtype, obj_id, related_btc=related_btc, options=card_options
             )
             dict_object["metadata_card"]['tags_safe'] = True
+            dict_object['object_link'] = ail_objects.get_object_link(obj_type, subtype, obj_id, flask_context=True)
+            dict_object['has_dedicated_view'] = urlsplit(dict_object['object_link']).path != url_for('correlation.show_correlation')
+            dict_object['default_filter'] = sorted(ail_objects.get_default_correlation_objects())
 
             return render_template("show_correlation.html", dict_object=dict_object, bootstrap_label=bootstrap_label,
                                    tags_selector_data=Tag.get_tags_selector_data(),
@@ -284,8 +291,8 @@ def graph_node_json():
     obj_id = request.args.get('id')
     subtype = request.args.get('subtype')
     obj_type = request.args.get('type')
-    max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'))
-    level = sanitise_level(request.args.get('level'))
+    max_nodes = sanitise_nb_max_nodes(request.args.get('max_nodes'), maximum=10000)
+    level = sanitise_level(request.args.get('level'), default=1)
 
     hidden = request.args.get('hidden')
     if hidden:
@@ -320,8 +327,8 @@ def correlation_tags_add():
     obj_id = request.form.get('tag_obj_id')
     subtype = request.form.get('tag_subtype', '')
     obj_type = request.form.get('tag_obj_type')
-    nb_max = sanitise_nb_max_nodes(request.form.get('tag_nb_max'))
-    level = sanitise_level(request.form.get('tag_level'))
+    nb_max = sanitise_nb_max_nodes(request.form.get('tag_nb_max'), maximum=10000)
+    level = sanitise_level(request.form.get('tag_level'), default=1)
     filter_types = ail_objects.sanitize_objs_types(request.form.get('tag_filter', '').split(','))
     hidden = sanitise_objs_hidden(request.form.get('tag_hidden'))
 

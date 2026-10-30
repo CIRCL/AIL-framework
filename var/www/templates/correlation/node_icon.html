@@ -1,0 +1,5 @@
+{% macro node_icon(icon, color=none) -%}
+    <span class="correlation-legend-icon" style="background-color: {{ color or icon['color'] }}; color: #000;" aria-hidden="true">
+        {% if icon['style'] == 'svg' %}{{ icon['icon'] | safe }}{% else %}<span class="{{ icon['style'] }}">{{ icon['icon'] }}</span>{% endif %}
+    </span>
+{%- endmacro %}

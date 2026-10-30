@@ -78,9 +78,9 @@ class Decoded(AbstractDaterangeObject):
         return url
 
     def get_svg_icon(self, mimetype=None):
-        if not mimetype:
+        if not mimetype and self.id:
             mimetype = self.get_mimetype()
-        file_type = mimetype.split('/')[0]
+        file_type = mimetype.split('/')[0] if mimetype else ''
         if file_type == 'application':
             icon = '\uf15b'
         elif file_type == 'audio':

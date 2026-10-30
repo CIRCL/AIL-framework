@@ -1,0 +1,73 @@
+{% from 'correlation/node_icon.html' import node_icon %}
+<form id="correlation-settings" class="correlation-settings" action="{{ url_for('correlation.show_correlation') }}" method="get">
+    <input type="hidden" name="type" value="{{ dict_object['object_type'] }}">
+    <input type="hidden" name="subtype" value="{{ dict_object['subtype'] }}">
+    <input type="hidden" name="id" value="{{ dict_object['correlation_id'] }}">
+    <input type="hidden" name="mode" value="{{ dict_object['mode'] }}">
+    <input type="hidden" name="filter" id="correlation-filter" value="{{ dict_object['filter_str'] }}">
+    <input type="hidden" name="hidden" value="{{ dict_object['hidden_str'] }}">
+    <input type="hidden" name="level" id="correlation-level" value="{{ dict_object['level'] }}">
+    <input type="hidden" name="max_nodes" id="correlation-max-nodes" value="{{ dict_object['max_nodes'] }}">
+    <div class="correlation-settings-fields">
+        <div class="correlation-field correlation-types-field">
+            <label id="correlation-types-label">Include object types</label>
+            <details id="correlation-type-picker" data-correlation-popover>
+                <summary class="form-control" aria-labelledby="correlation-types-label correlation-types-caption"><i class="fas fa-filter" aria-hidden="true"></i> <span id="correlation-types-caption">{{ dict_object['filter'] | length }}/{{ dict_object['correlation_filter_objects'] | length }} types selected</span> <i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+                <div class="correlation-popover">
+                    <input class="form-control" id="correlation-type-search" type="search" placeholder="Find an object type" aria-label="Find an object type">
+                    <div class="correlation-picker-actions"><button type="button" class="btn btn-link btn-sm" data-correlation-action="types-all">Select all</button><button type="button" class="btn btn-link btn-sm" data-correlation-action="types-clear">Clear</button></div>
+                    <div class="correlation-type-options" role="group" aria-label="Object types to load">
+                        {% for object in dict_object['correlation_filter_objects'] %}
+                            <label class="correlation-type-option" data-type-label="{{ object['label'] | lower }}">
+                                <input type="checkbox" data-correlation-type value="{{ object['type'] }}" {% if object['type'] in dict_object['filter'] %}checked{% endif %}>
+                                <span class="correlation-type-glyph" data-correlation-type-icon="{{ object['type'] }}">{{ node_icon(object['icon']) }}</span>
+                                <span>{{ object['label'] }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <p class="correlation-picker-empty" id="correlation-type-empty" hidden>No matching object types.</p>
+                    <small>Choose which types to load. Use the legend to select objects already in the graph.</small>
+                </div>
+            </details>
+        </div>
+        <div class="correlation-field correlation-depth-field">
+            <label for="correlation-depth">Correlation depth</label>
+            <div class="correlation-depth-controls">
+                <select class="form-control" id="correlation-depth">
+                    <option value="0" {% if dict_object['level'] == 0 %}selected{% endif %}>Direct · 1 step</option>
+                    <option value="1" {% if dict_object['level'] == 1 %}selected{% endif %}>2 steps</option>
+                    <option value="2" {% if dict_object['level'] == 2 %}selected{% endif %}>3 steps</option>
+                    <option value="custom" {% if dict_object['level'] not in [0, 1, 2] %}selected{% endif %}>Custom…</option>
+                </select>
+                <button class="btn btn-outline-primary" type="button" data-correlation-action="direct" title="Immediately show direct correlations of the starting object, keeping the type and limit settings">Direct only</button>
+            </div>
+        </div>
+        <div class="correlation-field correlation-custom-field" id="correlation-depth-custom-field" {% if dict_object['level'] in [0, 1, 2] %}hidden{% endif %}>
+            <label for="correlation-depth-custom">Steps</label><input class="form-control" type="number" id="correlation-depth-custom" min="1" step="1" value="{{ dict_object['level'] + 1 }}">
+        </div>
+        <div class="correlation-field correlation-limit-field">
+            <label for="correlation-limit">Object limit</label>
+            <select class="form-control" id="correlation-limit">
+                {% for limit in [100, 300, 500, 1000, 10000] %}<option value="{{ limit }}" {% if dict_object['max_nodes'] == limit %}selected{% endif %}>{{ limit }} objects</option>{% endfor %}
+                <option value="custom" {% if dict_object['max_nodes'] not in [100, 300, 500, 1000, 10000] %}selected{% endif %}>Custom…</option>
+            </select>
+        </div>
+        <div class="correlation-field correlation-custom-field" id="correlation-limit-custom-field" {% if dict_object['max_nodes'] in [100, 300, 500, 1000, 10000] %}hidden{% endif %}>
+            <label for="correlation-limit-custom">Objects</label><input class="form-control" type="number" id="correlation-limit-custom" min="2" max="10000" step="1" value="{{ dict_object['max_nodes'] if dict_object['max_nodes'] > 1 else 300 }}">
+        </div>
+        <button class="btn btn-primary" type="submit" id="correlation-apply">Apply</button>
+        <button class="btn btn-link text-secondary" type="button" data-correlation-action="reset">Reset filters</button>
+        <div class="correlation-field correlation-image-controls" aria-label="Image visibility">
+            <label for="blur-slider">Image visibility</label>
+            {% include 'objects/image/block_blur_img_slider.html' %}
+        </div>
+    </div>
+    <div class="correlation-settings-status">
+        <p id="correlation-settings-summary" class="correlation-settings-summary"></p>
+        <div id="incomplete_graph" class="correlation-limit-notice" role="status" title="Some correlations are not shown. Increase the object limit to load more." hidden>
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i><span>Object limit reached</span>
+            <button type="button" class="btn btn-link btn-sm" data-correlation-action="increase-limit">Change limit</button>
+        </div>
+    </div>
+    <p id="correlation-settings-error" class="text-danger mb-0" role="alert" hidden>Select at least one object type.</p>
+</form>

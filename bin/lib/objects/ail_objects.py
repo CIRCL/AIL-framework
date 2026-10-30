@@ -58,6 +58,7 @@ from lib.objects import SSHKeys
 from lib.objects import Titles
 from lib.objects import UsersAccount
 from lib.objects import Usernames
+from lib.objects.abstract_subtype_object import AbstractSubtypeObject
 
 # config_loader = ConfigLoader()
 #
@@ -292,6 +293,17 @@ def get_object_link(obj_type, subtype, id, flask_context=False):
 
 def get_object_svg(obj_type, subtype, id):
     obj = get_object(obj_type, subtype, id)
+    return obj.get_svg_icon()
+
+
+def get_object_type_svg(obj_type):
+    """Return a representative graph icon without looking up a stored object."""
+    obj_class = get_obj_class(obj_type)
+    if issubclass(obj_class, AbstractSubtypeObject):
+        subtype = 'key' if obj_type == 'pgp' else ''
+        obj = obj_class('', subtype)
+    else:
+        obj = obj_class('')
     return obj.get_svg_icon()
 
 

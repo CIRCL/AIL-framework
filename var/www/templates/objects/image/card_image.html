@@ -68,7 +68,7 @@
                         </div>
                         <div id="collapseImage" class="collapse show" aria-labelledby="headingImage" data-parent="#accordion_image">
                             <div class="card-body text-center">
-                                {% include 'objects/image/block_blur_img_slider.html' %}
+                                {% if not blur_controls_in_graph %}{% include 'objects/image/block_blur_img_slider.html' %}{% endif %}
                                 {% with ollama_description=dict_object['metadata']['description'], ollama_descriptions=dict_object['metadata'].get('descriptions', {}), image_gid=dict_object['gid'] %}
                                     {% include 'block_img_ollama.html' %}
                                 {% endwith %}

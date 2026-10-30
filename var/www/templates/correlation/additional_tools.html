@@ -1,0 +1,30 @@
+<details class="correlation-secondary">
+    <summary>Enrichment options</summary>
+    <div class="correlation-secondary-content">
+        {% include 'correlation/misp_expansion_controls.html' %}
+    </div>
+</details>
+{% if dict_object['object_type'] in ['cve', 'decoded', 'pgp', 'cryptocurrency', 'username'] %}
+    <details class="correlation-secondary" id="correlation-activity">
+        <summary>Activity over time</summary>
+        <div class="correlation-secondary-content correlation-chart-scroll"><div id="graph_line"></div></div>
+    </details>
+{% endif %}
+<details class="correlation-secondary">
+    <summary>Tag all objects in this exploration</summary>
+    <div class="correlation-secondary-content">
+        <p>Uses the current object types, depth, object limit and hidden-object settings.</p>
+        <form id="correlation-tags-form" action="{{ url_for('correlation.correlation_tags_add') }}" method="post">
+            <input type="hidden" name="tag_obj_type" value="{{ dict_object['object_type'] }}">
+            <input type="hidden" name="tag_subtype" value="{{ dict_object['subtype'] }}">
+            <input type="hidden" name="tag_obj_id" value="{{ dict_object['correlation_id'] }}">
+            <input type="hidden" name="tag_level" value="{{ dict_object['level'] }}">
+            <input type="hidden" name="tag_nb_max" value="{{ dict_object['max_nodes'] }}">
+            <input type="hidden" name="tag_filter" value="{{ dict_object['filter_str'] }}">
+            <input type="hidden" name="tag_hidden" value="{{ dict_object['hidden_str'] }}">
+            {% include 'tags/block_tags_selector.html' %}
+            <p id="correlation-tags-status" role="status"></p>
+            <button class="btn btn-primary mt-3" type="submit"><i class="fas fa-tag" aria-hidden="true"></i> Add tags</button>
+        </form>
+    </div>
+</details>
