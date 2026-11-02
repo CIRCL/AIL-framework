@@ -554,13 +554,19 @@ def get_expansion_object(global_id):
 
 
 def get_expansion_inputs(obj):
-    """Reuse semantic exports while keeping attachments out of lookup inputs."""
+    """Build semantic lookup inputs without requiring a complete PGP key export."""
     if obj.get_type() not in EXPANSION_OBJECT_TYPES:
         raise MISPModuleError('This AIL object is not supported for expansion.', 'invalid_object', 400)
     if obj.get_type() == 'pgp' and obj.subtype not in PGP_EXPANSION_RELATIONS:
         raise MISPModuleError('This PGP subtype is not supported for expansion.', 'invalid_object', 400)
     try:
-        if obj.get_type() == 'decoded':
+        if obj.get_type() == 'pgp':
+            # Lookup-only metadata: names and emails can be searched without a
+            # known key, even when their correlations contain several keys.
+            lookup = MISPObject('pgp-meta', strict=True, standalone=False)
+            lookup.add_attribute(PGP_EXPANSION_RELATIONS[obj.subtype], value=obj.id, to_ids=False)
+            objects = [finalize_misp_object(lookup, obj.get_global_id(), set())]
+        elif obj.get_type() == 'decoded':
             objects = [obj.get_misp_object(include_data=False)]
         elif obj.get_type() == 'item':
             objects = obj.get_misp_objects(include_data=False)
