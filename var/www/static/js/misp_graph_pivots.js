@@ -465,6 +465,9 @@
                     }
                 }
                 this.report(response.status === 'empty' ? labels[module.name] + ': no results. Existing results remain.' : labels[module.name] + ': results received. Pivotick will add them or open Review.');
+                if (response.status === 'empty') {
+                    this.graph.notifier.info(labels[module.name] + ': no results found.');
+                }
                 return candidates(fragment, graphNodes, this.icons);
             } catch (error) {
                 if (error.name !== 'AbortError') {
