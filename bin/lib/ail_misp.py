@@ -383,6 +383,7 @@ SUPPORTED_MODULES = {
     'pgp_keyserver': (),
     'vulnerability_lookup': (),
     'rdap': (),
+    'sherlock': (),
 }
 SERVICE_DEFAULTS = {'enabled': 'false', 'url': 'http://127.0.0.1', 'port': '6666', 'timeout': '30'}
 OPTIONAL_MODULE_CONFIG_FIELDS = {
@@ -393,6 +394,7 @@ OPTIONAL_MODULE_CONFIG_FIELDS = {
     'reversedns': ('nameserver',),
     'pgp_keyserver': ('keyserver', 'timeout', 'max_results', 'extract_signatures', 'max_signatures'),
     'vulnerability_lookup': ('api_url', 'timeout', 'max_related', 'with_linked', 'with_comments', 'with_bundles', 'with_sightings', 'with_meta', 'with_epss', 'with_kev', 'with_timeline', 'cpe_source', 'cpe_page'),
+    'sherlock': ('sherlock_path', 'sites', 'timeout', 'scan_timeout'),
 }
 BOOLEAN_VALUES = {'1': True, 'yes': True, 'true': True, 'on': True, '0': False, 'no': False, 'false': False, 'off': False}
 MODULE_DESCRIPTIONS = {
@@ -408,11 +410,12 @@ MODULE_DESCRIPTIONS = {
     'pgp_keyserver': 'Look up OpenPGP keys and identities on an HKP keyserver.',
     'vulnerability_lookup': 'Look up vulnerability advisories, weaknesses, exploitation reports and EPSS scores.',
     'rdap': 'Look up public domain and IP registration data using RDAP.',
+    'sherlock': 'Find social media accounts by username with Sherlock.',
 }
-EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp', 'cve'}
+EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp', 'cve', 'username'}
 PGP_EXPANSION_RELATIONS = {'key': 'key-id', 'name': 'user-id-name', 'mail': 'user-id-email'}
 EXPANSION_ATTRIBUTE_TYPES = {'domain', 'hostname', 'onion-address', 'ip-src', 'ip-dst', 'ip', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'url', 'domain|ip', 'ip-src|port', 'ip-dst|port', 'vulnerability'}
-EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found', 'non existing vulnerability id or cpe', 'non existing vulnerability id'}
+EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found', 'non existing vulnerability id or cpe', 'non existing vulnerability id', 'sherlock reported no matching accounts on the queried sites'}
 
 
 class MISPModuleError(Exception):
@@ -543,7 +546,7 @@ def get_expansion_object(global_id):
     parts = global_id.split(':', 2)
     if len(parts) != 3 or parts[0] not in EXPANSION_OBJECT_TYPES or not parts[2]:
         raise MISPModuleError('This object is not supported for expansion.', 'invalid_object', 400)
-    if (parts[0] == 'pgp' and parts[1] not in PGP_EXPANSION_RELATIONS) or (parts[0] != 'pgp' and parts[1]):
+    if (parts[0] == 'pgp' and parts[1] not in PGP_EXPANSION_RELATIONS) or (parts[0] not in {'pgp', 'username'} and parts[1]):
         raise MISPModuleError('This object is not supported for expansion.', 'invalid_object', 400)
     # Local import avoids a cycle with the object exporters using this library.
     from lib.objects import ail_objects
@@ -580,6 +583,8 @@ def get_expansion_inputs(obj):
             if obj.get_type() == 'pgp':
                 relation = PGP_EXPANSION_RELATIONS[obj.subtype]
                 compatible = attribute.object_relation == relation and attribute.type in {'text', 'email'} and attribute.value == obj.id
+            elif obj.get_type() == 'username':
+                compatible = attribute.object_relation in {'username', 'name', 'account-name'} and attribute.type == 'text' and attribute.value == obj.id
             else:
                 compatible = attribute.type in EXPANSION_ATTRIBUTE_TYPES
             if compatible:

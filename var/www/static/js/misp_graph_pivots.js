@@ -13,7 +13,7 @@
     'use strict';
 
     const dataOf = element => element?.getData?.() || element?.data || {};
-    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components', pgp_keyserver: 'PGP Keyserver', vulnerability_lookup: 'Vulnerability Lookup', rdap: 'RDAP Lookup'};
+    const labels = {onion_lookup: 'Onion Lookup', circl_passivedns: 'CIRCL Passive DNS', circl_passivessl: 'CIRCL Passive SSL', passive_ssh: 'Passive SSH', hashlookup: 'CIRCL Hashlookup', ipasn: 'IPASN History', dns: 'DNS Resolver', reversedns: 'Reverse DNS', extract_url_components: 'URL Components', pgp_keyserver: 'PGP Keyserver', vulnerability_lookup: 'Vulnerability Lookup', rdap: 'RDAP Lookup', sherlock: 'Sherlock Lookup'};
 
     function readableDate(value) {
         if (!value) {
@@ -46,6 +46,9 @@
     function inputTypes(node) {
         if (conversion.isExpansionNode(node)) {
             return [];
+        }
+        if (/^username:[^:]*:(.+)$/.test(node.id)) {
+            return ['text'];
         }
         const pgp = /^pgp:(key|name|mail):(.+)$/.exec(node.id);
         if (pgp) {

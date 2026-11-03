@@ -21,6 +21,7 @@
     const pgpRelations = {'key-id': 'pgp-key-id', 'issuer-key-id': 'pgp-key-id', fingerprint: 'pgp-fingerprint', 'key-fingerprint': 'pgp-fingerprint', 'issuer-fingerprint': 'pgp-fingerprint', 'subkey-fingerprint': 'pgp-fingerprint', 'user-id-name': 'pgp-name', 'user-id-email': 'email'};
     const pgpDetails = new Set(['uid', 'algorithm', 'key-length', 'creation-time', 'expiration-time', 'flags', 'keyserver', 'retrieval-url', 'signature-version', 'signature-type', 'public-key-algorithm', 'hash-algorithm', 'uid-sha256', 'user-attribute-sha256']);
     const objectDetails = {
+        'user-account': new Set(['username', 'account-type', 'link']),
         whois: new Set(['registrar', 'registrant-name', 'registrant-org', 'registrant-phone', 'creation-date', 'expiration-date', 'modification-date', 'text']),
         vulnerability: new Set(['summary', 'state', 'cvss-score', 'cvss-string', 'created', 'published', 'modified', 'credit', 'impact', 'references']),
         weakness: new Set(['status', 'weakness-abs']),
@@ -191,6 +192,9 @@
         }
         if (observableTypes.has(attribute.type)) {
             return normalizedObservable(attribute.type, attribute.value);
+        }
+        if (object?.name === 'user-account' && attribute.object_relation === 'link' && attribute.type === 'link') {
+            return normalizedObservable('url', attribute.value);
         }
         if (pgpObjects.has(object?.name) && Object.hasOwn(pgpRelations, attribute.object_relation)) {
             return normalizedObservable(pgpRelations[attribute.object_relation], attribute.value);
