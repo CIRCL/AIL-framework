@@ -1,0 +1,79 @@
+<section class="card dashboard-search" aria-labelledby="search-heading">
+    <div class="search-card-header">
+        <h2 id="search-heading"><span class="search-heading-icon"><i class="fas fa-search" aria-hidden="true"></i></span>Search domains</h2>
+        <ul class="nav nav-pills search-tabs" role="tablist" aria-label="Search by">
+            {% for key, label, icon in [('name', 'Domain name', 'globe'), ('date', 'Crawl date', 'calendar-alt'), ('tags', 'Tags', 'tags'), ('languages', 'Languages', 'language')] %}
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link {% if loop.first %}active{% endif %}" id="search-{{ key }}-tab" data-toggle="pill" href="#search-{{ key }}" role="tab" aria-controls="search-{{ key }}" aria-selected="{{ 'true' if loop.first else 'false' }}"><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <div class="tab-pane active" id="search-name" role="tabpanel" aria-labelledby="search-name-tab">
+                <form action="{{ url_for('crawler_splash.domains_search_name') }}" method="get" id="domain-name-form">
+                    <div class="domain-query-row">
+                        <div class="domain-query-field">
+                            <i class="fas fa-search domain-query-icon" aria-hidden="true"></i>
+                            <input type="search" class="form-control" id="domain-name-query" name="name" placeholder="Search a domain (example.org) or part of one (example)" aria-label="Search a domain name or part of one, for example example.org or example" required>
+                        </div>
+                        <button class="btn btn-primary search-submit" type="submit">Search<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+                    </div>
+                    <fieldset class="search-networks">
+                        <legend>Networks</legend>
+                        <div class="search-network-options">
+                            {% for network, label, icon in [('onion', 'Onion', 'user-secret'), ('i2p', 'I2P', 'user-secret'), ('web', 'Web', 'globe')] %}
+                                <div class="search-network-choice">
+                                    <input type="checkbox" class="search-network-input" id="name-network-{{ network }}" value="{{ network }}" data-name-network checked>
+                                    <label for="name-network-{{ network }}"><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}<i class="fas fa-check network-selected-mark" aria-hidden="true"></i></label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="tab-pane" id="search-date" role="tabpanel" aria-labelledby="search-date-tab">
+                <form action="{{ url_for('crawler_splash.domains_search_date') }}" method="get" id="domain-date-form">
+                    <div class="form-row">
+                        <div class="form-group col-6 col-md-3"><label for="search-date-from">From</label><input type="date" class="form-control" id="search-date-from" name="date_from" value="{{ date[0:4] }}-{{ date[4:6] }}-{{ date[6:8] }}" required></div>
+                        <div class="form-group col-6 col-md-3"><label for="search-date-to">To</label><input type="date" class="form-control" id="search-date-to" name="date_to" value="{{ date[0:4] }}-{{ date[4:6] }}-{{ date[6:8] }}" required></div>
+                        <div class="form-group col-6 col-md-3"><label for="date-network">Network</label><select id="date-network" name="type" class="form-control"><option value="all">All networks</option><option value="onion">Onion</option><option value="i2p">I2P</option><option value="web">Web</option></select></div>
+                        <div class="form-group col-6 col-md-3"><label for="date-status">Domain status</label><select id="date-status" class="form-control"><option value="all">Up and down</option><option value="up">Up only</option><option value="down">Down only</option></select></div>
+                    </div>
+                    <div class="search-submit-row"><button class="btn btn-primary search-submit" type="submit">Search by date<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button></div>
+                </form>
+            </div>
+            <div class="tab-pane" id="search-tags" role="tabpanel" aria-labelledby="search-tags-tab">
+                <form action="{{ url_for('tags_ui.get_obj_by_tags') }}" method="get" id="domain-tags-form">
+                    <label for="dashboard-tags">Domain tags</label>
+                    <input type="text" class="form-control" id="dashboard-tags" autocomplete="off" aria-describedby="tags-help">
+                    <small class="form-text text-muted" id="tags-help">Select one or more tags to find tagged domains.</small>
+                    <p class="small text-muted search-load-status" id="tags-load-status" role="status"></p>
+                    <div class="search-submit-row">
+                        <button class="btn btn-link" type="button" id="tags-retry" hidden>Retry loading tags</button>
+                        <button class="btn btn-primary search-submit" type="submit" id="tags-submit" disabled>Search by tags<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane" id="search-languages" role="tabpanel" aria-labelledby="search-languages-tab">
+                <form action="{{ url_for('crawler_splash.domains_search_languages_get') }}" method="get" id="domain-languages-form">
+                    <div class="search-language-fields">
+                        <div>
+                            <label for="dashboard-languages">Domain languages</label>
+                            <input type="text" class="form-control" id="dashboard-languages" autocomplete="off" aria-describedby="languages-help">
+                            <small class="form-text text-muted" id="languages-help">Select languages detected in crawled domains.</small>
+                        </div>
+                        <div><label for="language-network">Network</label><select id="language-network" class="form-control"><option value="onion,i2p,web">All networks</option><option value="onion">Onion</option><option value="i2p">I2P</option><option value="web">Web</option></select></div>
+                    </div>
+                    <p class="small text-muted search-load-status" id="languages-load-status" role="status"></p>
+                    <div class="search-submit-row">
+                        <button class="btn btn-link" type="button" id="languages-retry" hidden>Retry loading languages</button>
+                        <button class="btn btn-primary search-submit" type="submit" id="languages-submit" disabled>Search by language<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="search-error" class="text-danger small mt-2" role="alert" hidden></div>
+    </div>
+</section>

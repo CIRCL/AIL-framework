@@ -1,342 +1,971 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-	<title>AIL-Framework</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crawler dashboard · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
+    <style>
+        .crawler-dashboard {
+            background: #f5f7fa;
+            color: #263445;
+        }
 
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+        .crawler-dashboard #core_content {
+            min-width: 0;
+            max-width: 1800px;
+        }
 
-	<style>
-		.dashboard-section-title {
-			font-weight: 600;
-			margin-bottom: .75rem;
-		}
-		.metric-card .card-header {
-			padding: .75rem 1rem;
-		}
-		.metric-card h5 {
-			font-size: 1.05rem;
-			margin-bottom: .5rem;
-		}
-		.metric-grid .stat-label {
-			font-size: .8rem;
-			opacity: .9;
-		}
-		.search-section .card {
-			height: 100%;
-		}
-		.table-status-wrapper {
-			overflow-x: auto;
-		}
-		@media (max-width: 991.98px) {
-			.metric-card {
-				margin-bottom: .75rem;
-			}
-		}
-	</style>
+        .dashboard-heading,
+        .dashboard-section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
 
+        .dashboard-heading h1 {
+            font-size: 1.65rem;
+            font-weight: 600;
+            margin-bottom: .4rem;
+        }
+
+        .crawler-dashboard h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: .35rem;
+        }
+
+        .dashboard-actions,
+        .dashboard-footer-links {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .crawler-dashboard .card {
+            border-color: #dce2e9;
+            border-radius: .5rem;
+            box-shadow: 0 2px 5px rgba(26, 44, 66, .03);
+        }
+
+        .crawler-dashboard .dashboard-search {
+            padding: 1.25rem;
+            border-color: #d7e1ec;
+            border-radius: .75rem;
+            box-shadow: none;
+        }
+
+        .search-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .search-card-header h2 {
+            display: flex;
+            align-items: center;
+            gap: .5625rem;
+            margin: 0;
+            font-size: 1.0625rem;
+        }
+
+        .search-heading-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #2468b4;
+            font-size: 1rem;
+        }
+
+        .search-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, auto);
+            gap: .25rem;
+            padding: .1875rem;
+            background: #f0f3f7;
+            border-radius: .6rem;
+        }
+
+        .search-tabs .nav-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            padding: .375rem .625rem;
+            color: #586678;
+            font-size: .8125rem;
+            font-weight: 500;
+            border-radius: .4rem;
+            white-space: nowrap;
+        }
+
+        .search-tabs .nav-link:hover {
+            color: #245e9f;
+            background: #e6edf5;
+        }
+
+        .search-tabs .nav-link.active {
+            color: #1b5ea7;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(26, 44, 66, .12);
+        }
+
+        .search-tabs .nav-link:focus-visible {
+            outline: 2px solid #2468b4;
+            outline-offset: 2px;
+        }
+
+        .dashboard-search .card-body {
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        .dashboard-search form > label,
+        .dashboard-search .form-group > label,
+        .search-language-fields label {
+            margin-bottom: .5rem;
+            font-size: .875rem;
+            font-weight: 600;
+            color: #455469;
+        }
+
+        .dashboard-search .form-control {
+            min-width: 0;
+            height: 3rem;
+            border-color: #ccd7e3;
+            border-radius: .5rem;
+            color: #263445;
+        }
+
+        .dashboard-search .form-control::placeholder {
+            color: #7c8897;
+        }
+
+        .dashboard-search .form-control:focus {
+            border-color: #80b1e7;
+            box-shadow: 0 0 0 .2rem rgba(36, 104, 180, .12);
+        }
+
+        .domain-query-row {
+            display: flex;
+            gap: .75rem;
+        }
+
+        .domain-query-field {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .domain-query-icon {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            color: #7c8897;
+            pointer-events: none;
+        }
+
+        .domain-query-field .form-control {
+            padding-left: 2.75rem;
+        }
+
+        .dashboard-search .search-submit {
+            min-height: 3rem;
+            padding: .6rem 1.25rem;
+            border-radius: .5rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .search-submit-row {
+            display: flex;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-top: 1rem;
+        }
+
+        .search-language-fields {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(10rem, 1fr);
+            gap: 1rem;
+        }
+
+        .search-load-status {
+            margin: .5rem 0 0;
+        }
+
+        .search-load-status:empty {
+            display: none;
+        }
+
+        .search-networks legend {
+            float: left;
+            width: auto;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #687587;
+            margin: .375rem 1rem 0 0;
+        }
+
+        .search-networks {
+            margin: .875rem 0 0;
+        }
+
+        .search-network-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .search-network-choice {
+            position: relative;
+        }
+
+        .search-network-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .search-network-choice label {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin: 0;
+            padding: .3125rem .5625rem;
+            border: 1px solid #d7e0ea;
+            border-radius: .45rem;
+            color: #687587;
+            font-size: .8125rem;
+            cursor: pointer;
+        }
+
+        .search-network-input:checked + label {
+            border-color: #bcd3ee;
+            background: #f0f6ff;
+            color: #245e9f;
+        }
+
+        .search-network-input:focus-visible + label {
+            outline: 2px solid #2468b4;
+            outline-offset: 2px;
+        }
+
+        .network-selected-mark {
+            visibility: hidden;
+            font-size: .65rem;
+        }
+
+        .search-network-input:checked + label .network-selected-mark {
+            visibility: visible;
+        }
+
+        .dashboard-search .tag-ctn,
+        .dashboard-search .tag-res-ctn {
+            width: 100% !important;
+            max-width: 100%;
+        }
+
+        .dashboard-search .tag-ctn input {
+            max-width: calc(100% - 42px);
+            font-size: 1rem;
+        }
+
+        .dashboard-search .tag-ctn {
+            min-height: 3rem;
+            border-color: #ccd7e3;
+            border-radius: .5rem;
+            box-shadow: none;
+        }
+
+        .dashboard-search .tag-sel-ctn {
+            padding: .55rem .5rem;
+        }
+
+        .dashboard-search .tag-ctn .tag-trigger {
+            background: #f5f7fa;
+            border-color: #e1e7ef;
+            border-radius: 0 .5rem .5rem 0;
+        }
+
+        .dashboard-search .tag-ctn .tag-trigger-ico {
+            margin-top: 20px;
+        }
+
+        .dashboard-search .tag-sel-item {
+            max-width: calc(100% - 10px);
+            overflow-wrap: anywhere;
+        }
+
+        .lacus-warning-layout {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: .75rem;
+        }
+
+        .lacus-warning-icon {
+            --fa-animation-duration: 1.8s;
+            --fa-beat-fade-opacity: .65;
+            --fa-beat-fade-scale: 1.08;
+            font-size: 1.85rem;
+        }
+
+        .lacus-warning-message {
+            overflow-wrap: anywhere;
+        }
+
+        .lacus-settings {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .crawler-dashboard .network-card {
+            border-radius: .5rem;
+            box-shadow: none;
+        }
+
+        .network-card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .75rem;
+            min-height: 2.5rem;
+            padding: 0 .9rem;
+            border-bottom: 1px solid #e9eef4;
+        }
+
+        .network-card h3 {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            margin: 0;
+            font-size: .95rem;
+            font-weight: 600;
+        }
+
+        .network-card h3 i {
+            color: #778392;
+            font-size: .85rem;
+        }
+
+        .network-card-heading > a,
+        .network-latest {
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            padding: .25rem 0;
+            color: #2468b4;
+            white-space: nowrap;
+        }
+
+        .network-card-heading > a {
+            font-size: .75rem;
+        }
+
+        .network-card-heading > a i {
+            font-size: .8125rem;
+        }
+
+        .network-latest i {
+            font-size: .75rem;
+        }
+
+        .network-statuses {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            flex: 1;
+            padding: .4rem .5rem;
+        }
+
+        .network-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: .35rem;
+            padding: .4rem .25rem;
+            border-radius: .3rem;
+            font-size: .85rem;
+        }
+
+        .network-status-value {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            font-size: 1.35rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .network-status-value b {
+            min-width: 0;
+            overflow-wrap: anywhere;
+            font-weight: 600;
+        }
+
+        .network-status-value i {
+            font-size: 1rem;
+        }
+
+        .network-status-up {
+            color: #276842;
+        }
+
+        .network-status-down {
+            color: #a1434c;
+        }
+
+        .network-status:hover {
+            color: #2468b4;
+            background: #f5f7fa;
+            text-decoration: underline;
+        }
+
+        .network-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .35rem .5rem;
+            min-height: 2.25rem;
+            padding: 0 .9rem;
+            border-top: 1px solid #e9eef4;
+            color: #647080;
+            font-size: .7rem;
+        }
+
+        .network-card-totals {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .3rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .network-card-totals a {
+            color: inherit;
+        }
+
+        .network-card-totals b {
+            font-weight: 600;
+        }
+
+        .network-card a:focus-visible {
+            outline: 2px solid #2468b4;
+            outline-offset: 2px;
+        }
+
+        .activity-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .35rem 1rem;
+            padding: .7rem .85rem;
+        }
+
+        .activity-header h2 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        #capture-summary {
+            font-size: .72rem;
+            color: #647080;
+        }
+
+        .activity-table-wrapper {
+            overflow: auto;
+            max-height: 30rem;
+        }
+
+        .activity-card th {
+            position: sticky;
+            top: 0;
+            background: #f8fafc;
+            font-size: .7rem;
+            font-weight: 500;
+            color: #647080;
+            border-bottom-width: 1px;
+            z-index: 1;
+        }
+
+        .activity-card th,
+        .activity-card td {
+            padding: .4rem .85rem;
+            vertical-align: middle;
+            border-color: #edf0f5;
+        }
+
+        .activity-card td {
+            font-size: .8125rem;
+        }
+
+        .activity-card .capture-row-ongoing {
+            background: #f1f6fd;
+        }
+
+        .capture-row-ongoing .capture-domain {
+            box-shadow: inset 3px 0 #5994d5;
+        }
+
+        .activity-card tbody tr:hover,
+        .activity-card tbody tr:focus-within {
+            background: #f5f8fb;
+        }
+
+        .activity-card .capture-row-ongoing:hover,
+        .activity-card .capture-row-ongoing:focus-within {
+            background: #e7f0fc;
+        }
+
+        .capture-domain {
+            min-width: 14rem;
+            max-width: 32rem;
+            overflow-wrap: anywhere;
+        }
+
+        .capture-state {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            color: #6b7582;
+            font-size: .75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        .capture-state i {
+            width: .85rem;
+            text-align: center;
+            font-size: .7rem;
+        }
+
+        .capture-network,
+        .activity-card .capture-started {
+            color: #647080;
+            font-size: .75rem;
+        }
+
+        .capture-started {
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .state-ongoing {
+            color: #2468b4;
+            font-weight: 600;
+        }
+
+        .state-queued {
+            color: #805b00;
+        }
+
+        .state-done {
+            color: #23643b;
+        }
+
+        .dashboard-footer-links {
+            gap: .5rem 1.5rem;
+            font-size: .875rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .crawler-dashboard #nav_menu {
+                display: none;
+                flex-direction: column;
+            }
+
+            .crawler-dashboard #nav_menu .navbar-nav {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .dashboard-heading h1 {
+                font-size: 1.4rem;
+            }
+
+            .search-tabs {
+                width: 100%;
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .crawler-dashboard .dashboard-search {
+                padding: 1rem;
+            }
+
+            .search-card-header h2 {
+                font-size: 1rem;
+            }
+
+            .lacus-warning-layout {
+                grid-template-columns: auto minmax(0, 1fr);
+            }
+
+            .lacus-settings {
+                grid-column: 2;
+                justify-self: start;
+            }
+
+            .search-tabs {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .domain-query-row {
+                flex-direction: column;
+            }
+
+            .search-language-fields {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .search-networks legend {
+                float: none;
+                margin: 0 0 .5rem;
+            }
+
+            .search-submit-row .search-submit {
+                width: 100%;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
 </head>
+<body class="crawler-dashboard">
+    {% include 'nav_bar.html' %}
+    <div class="container-fluid">
+        <div class="row">
+            {% include 'crawler/menu_sidebar.html' %}
+            <main class="col-12 col-lg-10 py-4" id="core_content">
+                <div class="dashboard-heading">
+                    <div>
+                        <h1><i class="fas fa-spider text-muted mr-2" aria-hidden="true"></i>Crawler dashboard</h1>
+                        <p class="text-muted mb-0">Find domains, follow captures, and manage your crawlers.</p>
+                    </div>
+                    <nav class="dashboard-actions" aria-label="Crawler actions">
+                        <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.scheduler_dashboard') }}"><i class="fas fa-calendar-alt mr-1" aria-hidden="true"></i> Schedules</a>
+                        <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><i class="fas fa-plus mr-1" aria-hidden="true"></i> New crawl</a>
+                    </nav>
+                </div>
 
-<body>
+                {% include 'crawler/crawler_splash/dashboard_search.html' %}
 
-	{% include 'nav_bar.html' %}
+                <section aria-label="Crawler overview" class="mt-4">
+                    <div id="refresh-error" class="alert alert-warning mt-2" role="alert" hidden>Could not refresh the dashboard. Showing the last available data. Retrying automatically.</div>
+                    <div id="lacus-warning" class="alert alert-warning mt-2" role="status" {% if is_manager_connected['status'] %}hidden{% endif %}>
+                        <div class="lacus-warning-layout">
+                            <i class="fas fa-exclamation-triangle fa-beat-fade lacus-warning-icon" aria-hidden="true"></i>
+                            <div class="lacus-warning-message">
+                                <strong>Lacus is unavailable.</strong> Crawling may be interrupted. You can still search stored domains.
+                                <div class="small" id="lacus-error">{{ is_manager_connected.get('error') or '' }}</div>
+                            </div>
+                            <a href="{{ url_for('crawler_splash.crawler_settings') }}" class="btn btn-dark lacus-settings"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Open crawler settings</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        {% for network, label, icon, explorer in [('onion', 'Onion', 'fas fa-user-secret', 'crawler_splash.domains_explorer_onion'), ('i2p', 'I2P', 'fas fa-user-secret', 'crawler_splash.domains_explorer_i2p'), ('web', 'Web', 'fas fa-globe', 'crawler_splash.domains_explorer_web')] %}
+                            <div class="col-12 col-md-4 mb-3">
+                                <article class="card network-card h-100" aria-labelledby="network-{{ network }}-heading">
+                                    <div class="network-card-heading">
+                                        <h3 id="network-{{ network }}-heading"><i class="{{ icon }}" aria-hidden="true"></i>{{ label }}</h3>
+                                        <a href="{{ url_for(explorer) }}"><i class="fas fa-compass" aria-hidden="true"></i>Explore<span class="sr-only"> {{ label }} domains</span></a>
+                                    </div>
+                                    <div class="network-statuses">
+                                        <a class="network-status network-status-up" data-stat-link="{{ network }}" href="{{ url_for('crawler_splash.domains_search_date', type=network, up='True', date_from=date, date_to=date) }}"><span class="network-status-value"><i class="fas fa-check-circle" aria-hidden="true"></i><b id="stat_{{ network }}_domain_up">{{ crawlers_latest_stats[network]['up'] }}</b></span><span>Up<span class="sr-only"> today</span></span></a>
+                                        <a class="network-status network-status-down" data-stat-link="{{ network }}" href="{{ url_for('crawler_splash.domains_search_date', type=network, up='', down='True', date_from=date, date_to=date) }}"><span class="network-status-value"><i class="fas fa-times-circle" aria-hidden="true"></i><b id="stat_{{ network }}_domain_down">{{ crawlers_latest_stats[network]['down'] }}</b></span><span>Down<span class="sr-only"> today</span></span></a>
+                                    </div>
+                                    <div class="network-card-footer">
+                                        <div class="network-card-totals">
+                                            <a data-stat-link="{{ network }}" href="{{ url_for('crawler_splash.domains_search_date', type=network, up='True', down='True', date_from=date, date_to=date) }}"><b id="stat_{{ network }}_total">{{ crawlers_latest_stats[network]['crawled'] }}</b> crawled<span class="sr-only"> today</span></a>
+                                            <span aria-hidden="true">·</span>
+                                            <span><b id="stat_{{ network }}_queue">{{ crawlers_latest_stats[network]['queue'] }}</b> queued</span>
+                                        </div>
+                                        <a class="network-latest" href="{{ url_for('crawler_splash.crawlers_last_domains', type=network) }}"><i class="fas fa-history" aria-hidden="true"></i>Latest results<span class="sr-only"> for {{ label }}</span></a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
 
-	<div class="container-fluid">
-		<div class="row">
+                <section class="card activity-card" id="capture-activity" aria-labelledby="activity-heading">
+                    <div class="activity-header">
+                        <h2 id="activity-heading">Capture activity</h2>
+                        <span id="capture-summary"></span>
+                    </div>
+                    <div class="activity-table-wrapper">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th scope="col">Domain</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
+                            <tbody id="capture-rows">
+                                {% for crawler in crawlers_status %}
+                                    {% set state = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'}.get(crawler['status']|string, crawler['status']) %}
+                                    <tr class="capture-row capture-row-{{ state|lower }}">
+                                        <td class="capture-domain">{% if crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}</td>
+                                        <td class="capture-network">{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
+                                        <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
+                                        <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="activity-empty" class="text-center text-muted p-4" {% if crawlers_status %}hidden{% endif %}>No captures are currently tracked. Start a new crawl or check your schedules.</div>
+                </section>
+                <nav class="dashboard-footer-links mt-3 mb-2" aria-label="More crawler tools">
+                    <a href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell mr-1" aria-hidden="true"></i> Vanity explorer</a>
+                    <a href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite mr-1" aria-hidden="true"></i> Cookiejars</a>
+                    <a href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Crawler settings</a>
+                </nav>
+            </main>
+        </div>
+    </div>
+    <script id="crawler-dashboard-config" type="application/json">{{ {'statusUrl': url_for('crawler_splash.crawler_dashboard_json'), 'domainUrl': url_for('crawler_splash.showDomain'), 'tagsUrl': url_for('tags_ui.get_all_obj_tags', object_type='domain'), 'languagesUrl': url_for('crawler_splash.domains_all_languages_json'), 'captures': crawlers_status}|tojson }}</script>
+    <script>
+        'use strict';
 
-			{% include 'crawler/menu_sidebar.html' %}
+        function toggle_sidebar() {
+            const visible = $('#nav_menu').is(':visible');
+            $('#nav_menu').toggle(!visible);
+            $('#side_menu').toggleClass('border-right col-lg-2', !visible);
+            $('#core_content').toggleClass('col-lg-10', !visible);
+            $('#side_menu > button').attr('aria-expanded', String(!visible));
+        }
 
-			<div class="col-12 col-lg-10" id="core_content">
+        $(function () {
+            const config = JSON.parse(document.getElementById('crawler-dashboard-config').textContent);
+            const networks = {onion: 'Onion', i2p: 'I2P', web: 'Web'};
+            const states = {ONGOING: 'Running', QUEUED: 'Queued', DONE: 'Awaiting processing', UNKNOWN: 'Unknown'};
+            const stateIcons = {ONGOING: 'circle-notch', QUEUED: 'clock', DONE: 'check-circle', UNKNOWN: 'question-circle'};
+            const numericStates = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'};
+            let captures = config.captures;
+            let refreshTimer = null;
+            let requestPending = false;
+            const selectors = {};
+            const selectorLoading = {};
 
-				{% include 'crawler/crawler_disabled.html' %}
+            $('#page-Crawler, #nav_dashboard').addClass('active');
+            $('#nav_dashboard').attr('aria-current', 'page');
+            $('#side_menu > button').attr({'aria-controls': 'nav_menu', 'aria-expanded': String($('#nav_menu').is(':visible'))});
 
-				<div class="mt-3 mb-2 d-flex justify-content-between align-items-center flex-wrap">
-					<h4 class="dashboard-section-title mb-2 mb-md-0"><i class="fas fa-spider"></i> Crawler Dashboard</h4>
-					<small class="text-muted">Live crawler status and domain search tools</small>
-				</div>
-            
-				<div class="row metric-grid">
-					<div class="col-12 col-md-6 col-xl-4">
+            function captureState(capture) {
+                const raw = String(capture.status).toUpperCase();
+                return numericStates[raw] || (states[raw] ? raw : 'UNKNOWN');
+            }
 
-						<div class="card metric-card mt-1 mb-1">
-						  <div class="card-header text-white bg-dark">
-								<h5><a class="text-white" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=onion"><i class="fas fa-user-secret"></i> Onions Crawlers</a></h5>
-								<div class="row">
-									<div class="col-5">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_onion_domain_up">{{ crawlers_latest_stats['onion']['up'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&date_from={{date}}&date_to={{date}}">UP</a>
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_onion_domain_down">{{ crawlers_latest_stats['onion']['down'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&down=True&date_from={{date}}&date_to={{date}}">DOWN</a>
-									</div>
-									<div class="col-7">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-primary" id="stat_onion_total">{{ crawlers_latest_stats['onion']['crawled'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=onion&up=True&down=True&date_from={{date}}&date_to={{date}}">Crawled</a>
-										<span class="badge badge-warning ml-md-3" id="stat_onion_queue">{{ crawlers_latest_stats['onion']['queue'] }}</span> <small class="stat-label">Queue</small>
-									</div>
-								</div>
-							</div>
-						</div>
+            function renderCaptures() {
+                const counts = {ONGOING: 0, QUEUED: 0, DONE: 0, UNKNOWN: 0};
+                captures.forEach(function (capture) {
+                    counts[captureState(capture)]++;
+                });
+                $('#capture-summary').text(counts.ONGOING + ' running · ' + counts.QUEUED + ' queued · ' + counts.DONE + ' awaiting processing · ' + counts.UNKNOWN + ' unknown');
+                const fragment = document.createDocumentFragment();
+                // The crawler API returns captures in launch order, oldest first.
+                captures.forEach(function (capture) {
+                    const row = document.createElement('tr');
+                    const status = captureState(capture);
+                    row.className = 'capture-row capture-row-' + status.toLowerCase();
+                    const domainCell = row.insertCell();
+                    domainCell.className = 'capture-domain';
+                    if (capture.domain && capture.domain !== 'UNKNOWN') {
+                        const link = document.createElement('a');
+                        const url = new URL(config.domainUrl, window.location.origin);
+                        url.searchParams.set('domain', capture.domain);
+                        link.href = url.href;
+                        link.textContent = capture.domain;
+                        domainCell.appendChild(link);
+                    } else {
+                        domainCell.textContent = 'Unknown domain';
+                    }
+                    const networkCell = row.insertCell();
+                    networkCell.className = 'capture-network';
+                    networkCell.textContent = networks[capture.type] || 'Unknown';
+                    const stateCell = row.insertCell();
+                    const badge = document.createElement('span');
+                    badge.className = 'capture-state state-' + status.toLowerCase();
+                    const statusIcon = document.createElement('i');
+                    statusIcon.className = 'fas fa-' + stateIcons[status];
+                    statusIcon.setAttribute('aria-hidden', 'true');
+                    badge.append(statusIcon, document.createTextNode(states[status]));
+                    stateCell.appendChild(badge);
+                    const startedCell = row.insertCell();
+                    startedCell.className = 'capture-started';
+                    startedCell.textContent = capture.start_time || '—';
+                    fragment.appendChild(row);
+                });
+                document.getElementById('capture-rows').replaceChildren(fragment);
+                $('#activity-empty').prop('hidden', captures.length > 0);
+            }
 
-					</div>
-                    <div class="col-xl-4">
-						<div class="card metric-card mt-1 mb-1">
-							<div class="card-header text-white bg-dark">
-								<h5><a class="text-white" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=i2p"><i class="fas fa-user-secret"></i> I2P Crawlers</a></h5>
-								<div class="row">
-									<div class="col-5">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_i2p_domain_up">{{ crawlers_latest_stats['i2p']['up'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&date_from={{date}}&date_to={{date}}">UP</a>
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_i2p_domain_down">{{ crawlers_latest_stats['i2p']['down'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&down=True&date_from={{date}}&date_to={{date}}">DOWN</a>
-									</div>
-									<div class="col-7">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-primary" id="stat_i2p_total">{{ crawlers_latest_stats['i2p']['crawled'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=i2p&up=True&down=True&date_from={{date}}&date_to={{date}}">Crawled</a>
-										<span class="badge badge-warning ml-md-3" id="stat_i2p_queue">{{ crawlers_latest_stats['i2p']['queue'] }}</span> <small class="stat-label">Queue</small>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="col-xl-4">
-						<div class="card metric-card mt-1 mb-1">
-							<div class="card-header text-white bg-dark">
-								<h5><a class="text-white" href="{{ url_for('crawler_splash.crawlers_last_domains')}}?type=web"><i class="fab fa-html5"></i> Web Crawlers</a></h5>
-								<div class="row">
-									<div class="col-5">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&date_from={{date}}&date_to={{date}}" class="badge badge-success" id="stat_web_domain_up">{{ crawlers_latest_stats['web']['up'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&date_from={{date}}&date_to={{date}}">UP</a>
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-danger ml-md-3" id="stat_web_domain_down">{{ crawlers_latest_stats['web']['down'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&down=True&date_from={{date}}&date_to={{date}}">DOWN</a>
-									</div>
-									<div class="col-7">
-										<a href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&down=True&date_from={{date}}&date_to={{date}}" class="badge badge-primary" id="stat_web_total">{{ crawlers_latest_stats['web']['crawled'] }}</a> <a class="stat-label text-light" href="{{ url_for('crawler_splash.domains_search_date') }}?type=web&up=True&down=True&date_from={{date}}&date_to={{date}}">Crawled</a>
-										<span class="badge badge-warning ml-md-3" id="stat_web_queue">{{ crawlers_latest_stats['web']['queue'] }}</span> <small class="stat-label">Queue</small>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+            function scheduleRefresh() {
+                window.clearTimeout(refreshTimer);
+                refreshTimer = null;
+                if (!document.hidden) {
+                    refreshTimer = window.setTimeout(refreshStatus, 10000);
+                }
+            }
 
-				<div class="row mb-3 mt-2">
-					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
-						<div class="text-center">
-							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_onion')}}" role="button">
-								<i class="fas fa-user-secret"></i> Onion Domain Explorer
-							</a>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-xl-0">
-						<div class="text-center">
-							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_i2p')}}" role="button">
-								<i class="fas fa-user-secret"></i> I2P Domain Explorer
-							</a>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-xl-3 mb-2 mb-md-0">
-						<div class="text-center">
-							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_web')}}" role="button">
-								<i class="fab fa-html5"></i> Web Domain Explorer
-							</a>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-xl-3">
-						<div class="text-center">
-							<a class="btn btn-secondary" href="{{url_for('crawler_splash.domains_explorer_vanity_clusters')}}" role="button">
-								<i class="fas fa-dumbbell"></i> Vanity Explorer
-							</a>
-						</div>
-					</div>
-				</div>
+            function refreshStatus() {
+                window.clearTimeout(refreshTimer);
+                if (requestPending) {
+                    return;
+                }
+                requestPending = true;
+                $.ajax({url: config.statusUrl, dataType: 'json', timeout: 15000}).done(function (data) {
+                    Object.keys(networks).forEach(function (network) {
+                        const stats = data.stats[network];
+                        $('#stat_' + network + '_total').text(stats.crawled);
+                        $('#stat_' + network + '_queue').text(stats.queue);
+                        $('#stat_' + network + '_domain_up').text(stats.up);
+                        $('#stat_' + network + '_domain_down').text(stats.down);
+                    });
+                    if (data.date) {
+                        $('[data-stat-link]').each(function () {
+                            const url = new URL(this.href);
+                            url.searchParams.set('date_from', data.date);
+                            url.searchParams.set('date_to', data.date);
+                            this.href = url.href;
+                        });
+                    }
+                    if (data.is_manager_connected) {
+                        $('#lacus-warning').prop('hidden', data.is_manager_connected.status);
+                        $('#lacus-error').text(data.is_manager_connected.error || '');
+                    }
+                    captures = data.crawlers_status;
+                    renderCaptures();
+                    $('#refresh-error').prop('hidden', true);
+                }).fail(function () {
+                    $('#refresh-error').prop('hidden', false);
+                }).always(function () {
+                    requestPending = false;
+                    scheduleRefresh();
+                });
+            }
 
-				<h5 class="dashboard-section-title mt-3">Recent Crawler Activity</h5>
-				<div class="table-status-wrapper">
-					<table class="table table-sm table-hover">
-					<tbody id="tbody_crawler_onion_info">
-						{% for crawler in crawlers_status %}
-							<tr>
-								<td>
-									<i class="fas fa-{%if crawler['status']%}check{%else%}times{%endif%}-circle" style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};"></i> {{crawler['start_time']}}
-								</td>
-								<td>
-									{%if crawler['type']=='onion'%}
-										<i class="fas fa-user-secret"></i>
-									{%else%}
-										<i class="fab fa-html5">
-									{%endif%}
-								</td>
-								<td>
-									{{crawler['domain']}}
-								</td>
-								<td style="color:{%if crawler['status']%}Green{%else%}Red{%endif%};">
-									{{crawler['status']}}
-								</td>
-							</tr>
-						{% endfor %}
-					</tbody>
-									</table>
-				</div>
+            document.addEventListener('visibilitychange', function () {
+                window.clearTimeout(refreshTimer);
+                if (!document.hidden) {
+                    refreshStatus();
+                }
+            });
 
-				<div class="search-section mt-3">
-					<h5 class="dashboard-section-title"><i class="fas fa-search"></i> Search</h5>
-					<div class="row">
-						<div class="col-12 col-xl-4 mb-3">
-							{% include 'crawler/show_domains_by_daterange.html' %}
-						</div>
-						<div class="col-12 col-xl-4 mb-3">
-							{% with object_type='domain' %}
-								{% include 'tags/block_obj_tags_search.html' %}
-							{% endwith %}
-						</div>
-						<div class="col-12 col-xl-4 mb-3">
-							{% with object_type='domain' %}
-								{% include 'domains/block_languages_search.html' %}
-							{% endwith %}
-						</div>
-					</div>
-				</div>
+            function searchError(message) {
+                $('#search-error').text(message).prop('hidden', !message);
+            }
 
-				{% include 'domains/block_domains_name_search.html' %}
+            function navigateSearch(form, values) {
+                const url = new URL(form.action);
+                Object.keys(values).forEach(function (key) {
+                    url.searchParams.set(key, values[key]);
+                });
+                window.location.assign(url.href);
+            }
 
-			</div>
-		</div>
-	</div>
+            $('#domain-name-form').on('submit', function (event) {
+                event.preventDefault();
+                const name = $('#domain-name-query').val().trim();
+                const selected = $('[data-name-network]:checked').map(function () {
+                    return this.value;
+                }).get();
+                if (!name || !selected.length) {
+                    searchError('Enter a domain name and select at least one network.');
+                    return;
+                }
+                navigateSearch(this, {name: name, domain_types: selected.join(',')});
+            });
+            $('#domain-date-form').on('submit', function (event) {
+                event.preventDefault();
+                const from = $('#search-date-from').val();
+                const to = $('#search-date-to').val();
+                if (from > to) {
+                    searchError('The start date must be on or before the end date.');
+                    return;
+                }
+                const status = $('#date-status').val();
+                navigateSearch(this, {date_from: from, date_to: to, type: $('#date-network').val(), up: status === 'down' ? '' : 'True', down: status === 'up' ? '' : 'True'});
+            });
 
+            function loadSelector(kind) {
+                if (selectors[kind] || selectorLoading[kind]) {
+                    return;
+                }
+                selectorLoading[kind] = true;
+                $('#' + kind + '-load-status').text('Loading choices…');
+                $('#' + kind + '-retry').prop('hidden', true);
+                $.ajax({url: kind === 'tags' ? config.tagsUrl : config.languagesUrl, dataType: 'json', timeout: 15000}).done(function (data) {
+                    selectors[kind] = $('#dashboard-' + kind).tagSuggest({data: data, sortOrder: 'name', maxDropHeight: 200, name: 'dashboard_' + kind, emptyText: kind === 'tags' ? 'Select tags…' : 'Select languages…', inputCfg: {id: 'dashboard-' + kind + '-input', 'aria-describedby': kind + '-help'}});
+                    $('label[for="dashboard-' + kind + '"]').attr('for', 'dashboard-' + kind + '-input');
+                    $('#' + kind + '-submit').prop('disabled', data.length === 0);
+                    $('#' + kind + '-load-status').text(data.length ? '' : 'No ' + kind + ' are available for stored domains yet.');
+                }).fail(function () {
+                    $('#' + kind + '-load-status').text('Could not load ' + kind + '. Try again.');
+                    $('#' + kind + '-retry').prop('hidden', false);
+                }).always(function () {
+                    selectorLoading[kind] = false;
+                });
+            }
 
+            ['tags', 'languages'].forEach(function (kind) {
+                $('#search-' + kind + '-tab').on('shown.bs.tab', function () {
+                    loadSelector(kind);
+                });
+                $('#' + kind + '-retry').on('click', function () {
+                    loadSelector(kind);
+                });
+                $('#domain-' + kind + '-form').on('submit', function (event) {
+                    event.preventDefault();
+                    const values = selectors[kind] ? selectors[kind].getValue() : [];
+                    if (!values.length) {
+                        searchError('Select at least one ' + (kind === 'tags' ? 'tag.' : 'language.'));
+                        return;
+                    }
+                    if (kind === 'tags') {
+                        navigateSearch(this, {ltags: values.join(','), object_type: 'domain'});
+                    } else {
+                        navigateSearch(this, {languages: values.join(','), domain_types: $('#language-network').val()});
+                    }
+                });
+            });
+            $('.search-tabs a').on('shown.bs.tab', function () {
+                searchError('');
+            });
+            $('.search-tabs a').on('keydown', function (event) {
+                const tabs = $('.search-tabs a').toArray();
+                const index = tabs.indexOf(this);
+                let next;
+                if (event.key === 'ArrowRight') {
+                    next = (index + 1) % tabs.length;
+                } else if (event.key === 'ArrowLeft') {
+                    next = (index + tabs.length - 1) % tabs.length;
+                } else if (event.key === 'Home') {
+                    next = 0;
+                } else if (event.key === 'End') {
+                    next = tabs.length - 1;
+                } else {
+                    return;
+                }
+                event.preventDefault();
+                $(tabs[next]).tab('show').trigger('focus');
+            });
+
+            renderCaptures();
+            refreshStatus();
+        });
+    </script>
 </body>
-
-<script>
-var to_refresh = false
-$(document).ready(function(){
-	$("#page-Crawler").addClass("active");
-	$("#nav_dashboard").addClass("active");
-    $('#date-range-from').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-					},
-					setValue: function(s,s1,s2){
-							$('#date-range-from-input').val(s1);
-							$('#date-range-to-input').val(s2);
-					}
-	});
-	$('#date-range-to').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-			},
-			setValue: function(s,s1,s2){
-					$('#date-range-from-input').val(s1);
-					$('#date-range-to-input').val(s2);
-			}
-	});
-	$( window ).on("focus", function() {
-			to_refresh = true
-			refresh_crawler_status();
-	});
-	$( window ).on("blur", function() {
-			to_refresh = false
-	});
-
-	to_refresh = true
-	refresh_crawler_status();
-
-});
-
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
-
-function refresh_crawler_status(){
-
-	$.getJSON("{{ url_for('crawler_splash.crawler_dashboard_json') }}",
-		function(data) {
-
-			$('#stat_onion_domain_up').text(data.stats['onion']['up']);
-			$('#stat_onion_domain_down').text(data.stats['onion']['down']);
-			$('#stat_onion_total').text(data.stats['onion']['crawled']);
-			$('#stat_onion_queue').text(data.stats['onion']['queue']);
-
-            $('#stat_i2p_domain_up').text(data.stats['i2p']['up']);
-            $('#stat_i2p_domain_down').text(data.stats['i2p']['down']);
-            $('#stat_i2p_total').text(data.stats['i2p']['crawled']);
-            $('#stat_i2p_queue').text(data.stats['i2p']['queue']);
-            
-			$('#stat_web_domain_up').text(data.stats['web']['up']);
-			$('#stat_web_domain_down').text(data.stats['web']['down']);
-			$('#stat_web_total').text(data.stats['web']['crawled']);
-			$('#stat_web_queue').text(data.stats['web']['queue']);
-
-            $("#tbody_crawler_onion_info").empty();
-
-			if(data.crawlers_status.length!=0){
-				var tableRef = document.getElementById('tbody_crawler_onion_info');
-				for (var i = 0; i < data.crawlers_status.length; i++) {
-						var crawler = data.crawlers_status[i];
-						var newRow = tableRef.insertRow(tableRef.rows.length);
-						var text_color;
-						var icon;
-						if(crawler['status']){
-							text_color = 'Green';
-							icon = 'check';
-						} else {
-							text_color = 'Red';
-							icon = 'times';
-						}
-
-						if(crawler['type'] === 'onion'){
-							icon_t = 'fas fa-user-secret';
-						} else {
-							icon_t = 'fab fa-html5';
-						}
-
-						var newCell = newRow.insertCell(0);
-						var statusIcon = document.createElement('i');
-						statusIcon.className = 'fas fa-' + icon + '-circle';
-						statusIcon.style.color = text_color;
-						newCell.appendChild(statusIcon);
-						newCell.appendChild(document.createTextNode(' ' + crawler['start_time']));
-
-						newCell = newRow.insertCell(1);
-						var typeIcon = document.createElement('i');
-						typeIcon.className = icon_t;
-						newCell.appendChild(typeIcon);
-
-						newCell = newRow.insertCell(2);
-						newCell.textContent = crawler['domain'];
-
-						newCell = newRow.insertCell(3);
-						var statusText = document.createElement('div');
-						statusText.style.color = text_color;
-						statusText.textContent = crawler['status'];
-						newCell.appendChild(statusText);
-
-						//$("#panel_crawler").show();
-				}
-			}
-		}
-	);
-
-	if (to_refresh) {
-    setTimeout("refresh_crawler_status()", 10000);
-	}
-}
-</script>
+</html>

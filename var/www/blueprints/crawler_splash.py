@@ -116,9 +116,9 @@ def crawlers_dashboard():
 def crawler_dashboard_json():
     crawlers_status = crawlers.get_captures_status()
     crawlers_latest_stats = crawlers.get_crawlers_stats()
-    # print(crawlers_status)
-
     return jsonify({'crawlers_status': crawlers_status,
+                    'date': crawlers.get_current_date(),
+                    'is_manager_connected': crawlers.get_lacus_connection_metadata(),
                     'stats': crawlers_latest_stats})
 
 @crawler_splash.route("/crawlers/dashboard/captures/delete", methods=['GET'])
