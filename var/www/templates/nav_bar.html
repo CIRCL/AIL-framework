@@ -1,3 +1,4 @@
+{% from 'crawler/menu_navbar.html' import menu as crawler_menu, assets as crawler_menu_assets with context %}
 <nav class="navbar navbar-expand-xl navbar-dark bg-dark">
   <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
     <img src="{{ url_for('static', filename='image/ail-project-inverted.png')}}" alt="AIL" style="width:80px;">
@@ -21,9 +22,7 @@
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Tracker" href="{{ url_for('hunters.trackers_dashboard') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Hunting</a>
       </li>
-      <li class="nav-item mr-3">
-        <a class="nav-link" id="page-Crawler" href="{{ url_for('crawler_splash.crawlers_dashboard') }}" tabindex="-1" aria-disabled="true"><i class="fas fa-spider"></i> Crawlers</a>
-      </li>
+      {{ crawler_menu() }}
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Chats-Explorer" href="{{ url_for('chats_explorer.chats_explorer_protocols') }}"><i class="far fa-comments"></i> Chats</a>
       </li>
@@ -68,3 +67,4 @@
 {#    </form>#}
   </div>
 </nav>
+{{ crawler_menu_assets() }}

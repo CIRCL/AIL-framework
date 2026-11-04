@@ -11,8 +11,7 @@
 <body>
 {% include 'nav_bar.html' %}
 <div class="container-fluid"><div class="row">
-{% include 'crawler/menu_sidebar.html' %}
-<div class="col-12 col-lg-10" id="core_content">
+<div class="col-12" id="core_content">
     <div class="jumbotron bg-dark text-white mt-3 shadow-sm">
         <div class="row align-items-center">
             <div class="col-lg-8">
@@ -71,5 +70,9 @@
 </div>
 </div></div>
 </body>
-<script>$(document).ready(function(){ $('#page-Crawler').addClass('active'); });</script>
+<script>
+    $(document).ready(function () {
+        $('#page-Crawler').addClass('active');
+    });
+</script>
 </html>

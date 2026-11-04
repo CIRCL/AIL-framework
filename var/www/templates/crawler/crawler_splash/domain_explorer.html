@@ -90,9 +90,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'crawler/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10 py-3 py-lg-4" id="core_content">
+			<div class="col-12 py-3 py-lg-4" id="core_content">
 
                 <div class="domain-explorer-header p-3 p-lg-4 mb-3">
                     <h1 class="h4 domain-explorer-title">Domain Explorer</h1>
@@ -153,7 +152,8 @@
 
 <script>
   $(document).ready(function(){
-    $('#nav_title_domains_explorer').removeClass("text-muted");
+    $('#page-Crawler').addClass('active');
+    $('#crawler-nav-explorers-toggle').addClass('active');
 
     $('#date-range-from').dateRangePicker({
   			separator : ' to ',
@@ -183,19 +183,6 @@
   	});
   });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 </html>

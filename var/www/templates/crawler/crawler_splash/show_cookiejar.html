@@ -23,9 +23,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'crawler/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 
 				<div class="card mb-3 mt-1">
                     <div class="card-header text-white bg-dark">
@@ -121,24 +120,10 @@
 var chart = {};
 $(document).ready(function(){
 	$('#description-edit-block').hide();
-	$("#page-crawler").addClass("active");
-	$("#nav_title_cookiejar").removeClass("text-muted");
+	$("#page-Crawler").addClass("active");
+	$('#crawler-nav-cookiejar-all').addClass('active');
 });
 
-
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 
 function show_edit_description(){
 	$('#description-edit-block').show();

@@ -1,0 +1,534 @@
+{% macro menu() %}
+<li class="nav-item mr-3 crawler-nav" id="crawler-nav">
+    <div class="crawler-nav-trigger">
+        <a class="nav-link" id="page-Crawler" href="{{ url_for('crawler_splash.crawlers_dashboard') }}"><i class="fas fa-spider" aria-hidden="true"></i> Crawlers</a>
+        <button class="crawler-nav-toggle" id="crawler-nav-toggle" type="button" aria-label="Open crawler navigation" aria-controls="crawler-nav-menu" aria-expanded="false"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+    </div>
+    <ul class="crawler-nav-panel crawler-nav-root" id="crawler-nav-menu" aria-label="Crawler navigation" hidden>
+        <li><a id="crawler-nav-manual" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>New Capture</a></li>
+        <li class="crawler-nav-separator" role="separator"></li>
+        <li>
+            <a id="crawler-nav-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
+                <span class="crawler-nav-dashboard-icon" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                        <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                    </svg>
+                    <i class="fas fa-spider"></i>
+                </span>Dashboard
+            </a>
+        </li>
+        <li class="crawler-nav-group">
+            <button id="crawler-nav-explorers-toggle" class="crawler-nav-submenu-toggle" type="button" aria-expanded="false" aria-controls="crawler-nav-explorers"><i class="fas fa-compass" aria-hidden="true"></i>Domain explorers<i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <ul class="crawler-nav-panel" id="crawler-nav-explorers" aria-label="Domain explorers" hidden>
+                <li><a id="crawler-nav-onion-explorer" href="{{ url_for('crawler_splash.domains_explorer_onion') }}"><i class="fas fa-user-secret" aria-hidden="true"></i>Onion domains</a></li>
+                <li><a id="crawler-nav-i2p-explorer" href="{{ url_for('crawler_splash.domains_explorer_i2p') }}"><i class="fas fa-user-secret" aria-hidden="true"></i>I2P domains</a></li>
+                <li><a id="crawler-nav-web-explorer" href="{{ url_for('crawler_splash.domains_explorer_web') }}"><i class="fas fa-globe" aria-hidden="true"></i>Web domains</a></li>
+                <li><a id="crawler-nav-vanity-explorer" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</a></li>
+            </ul>
+        </li>
+        <li><a id="crawler-nav-cookiejar-all" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite" aria-hidden="true"></i>Cookiejars</a></li>
+        <li class="crawler-nav-separator" role="separator"></li>
+        <li><a id="crawler-nav-scheduler" href="{{ url_for('crawler_splash.scheduler_dashboard') }}"><i class="fas fa-calendar-alt" aria-hidden="true"></i>Scheduler</a></li>
+        <li><a id="crawler-nav-settings" href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog" aria-hidden="true"></i>Crawler settings</a></li>
+    </ul>
+</li>
+{% endmacro %}
+
+{% macro assets() %}
+<style>
+    .crawler-nav {
+        --crawler-menu-text: #231b1c;
+        --crawler-menu-icon: #4d7886;
+        --crawler-menu-hover: rgba(24, 146, 177, .09);
+        --crawler-menu-accent: #13718e;
+        --crawler-menu-border: rgba(12, 58, 74, .11);
+        position: relative;
+    }
+    .crawler-nav-trigger {
+        display: flex;
+        align-items: center;
+        border-radius: .375rem;
+        transition: background-color .12s ease;
+    }
+    .crawler-nav .crawler-nav-trigger > .nav-link {
+        padding-right: .25rem;
+    }
+    .crawler-nav .crawler-nav-trigger > .nav-link > i {
+        transition: color .12s ease;
+    }
+    .crawler-nav .crawler-nav-trigger > .nav-link.active > i {
+        color: #fff;
+    }
+    .crawler-nav-toggle {
+        align-self: stretch;
+        padding: .4rem .5rem;
+        border: 0;
+        border-radius: .375rem;
+        background: transparent;
+        color: rgba(255, 255, 255, .65);
+        font: inherit;
+        font-size: .65rem;
+        cursor: pointer;
+    }
+    .crawler-nav-toggle > i {
+        transition: transform .16s ease;
+    }
+    .crawler-nav-trigger:hover {
+        background: rgba(255, 255, 255, .08);
+    }
+    .crawler-nav.is-open .crawler-nav-trigger {
+        background: rgba(255, 255, 255, .13);
+    }
+    .crawler-nav.is-open .crawler-nav-trigger > .nav-link,
+    .crawler-nav.is-open .crawler-nav-toggle {
+        color: #fff;
+    }
+    .crawler-nav.is-open .crawler-nav-toggle > i {
+        transform: rotate(180deg);
+    }
+    .crawler-nav-panel {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        z-index: 1050;
+        min-width: 15rem;
+        margin: 0;
+        padding: 4px;
+        border: 1px solid var(--crawler-menu-border);
+        border-radius: .5rem;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(12, 58, 74, .06), 0 8px 16px -6px rgba(12, 58, 74, .12), 0 22px 44px -14px rgba(12, 58, 74, .26);
+        list-style: none;
+        color: var(--crawler-menu-text);
+        animation: crawler-menu-appear .14s ease-out;
+    }
+    .crawler-nav-root::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        right: -1px;
+        left: -1px;
+        height: 8px;
+    }
+    .crawler-nav-panel[hidden] {
+        display: none;
+    }
+    .crawler-nav-panel.align-right {
+        right: 0;
+        left: auto;
+    }
+    .crawler-nav-panel li {
+        position: relative;
+    }
+    .crawler-nav-panel a,
+    .crawler-nav-submenu-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 32px;
+        padding: 4px 12px 4px 8px;
+        border: 0;
+        border-radius: .375rem;
+        background: transparent;
+        color: var(--crawler-menu-text);
+        font: inherit;
+        font-size: .875rem;
+        line-height: 1.25rem;
+        text-align: left;
+        text-decoration: none;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color .1s ease, color .1s ease;
+    }
+    .crawler-nav-panel a > i:first-child,
+    .crawler-nav-submenu-toggle > i:first-child {
+        flex: none;
+        width: 1.25rem;
+        color: var(--crawler-menu-icon);
+        font-size: 1rem;
+        text-align: center;
+        transition: color .1s ease;
+    }
+    .crawler-new-capture-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        gap: .25rem;
+        width: 1.875rem;
+        height: 1.25rem;
+    }
+    .crawler-new-capture-icon .fa-plus {
+        font-size: .625rem;
+    }
+    .crawler-new-capture-icon .fa-spider {
+        font-size: 1rem;
+        transform: rotate(-15deg);
+    }
+    .crawler-nav-panel .crawler-new-capture-icon {
+        gap: .125rem;
+        width: 1.25rem;
+        color: var(--crawler-menu-icon);
+        transition: color .1s ease;
+    }
+    .crawler-nav-panel .crawler-new-capture-icon .fa-plus {
+        font-size: .4375rem;
+    }
+    .crawler-nav-panel .crawler-new-capture-icon .fa-spider {
+        font-size: .75rem;
+    }
+    .crawler-nav-panel a:hover > .crawler-new-capture-icon,
+    .crawler-nav-panel a.active > .crawler-new-capture-icon {
+        color: var(--crawler-menu-accent);
+    }
+    .crawler-nav-dashboard-icon {
+        position: relative;
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        color: var(--crawler-menu-icon);
+        transition: color .1s ease;
+    }
+    .crawler-nav-dashboard-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        stroke-width: 2;
+        opacity: .8;
+    }
+    .crawler-nav-dashboard-icon .fa-spider {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        font-size: .625rem;
+        transform: rotate(-15deg);
+    }
+    .crawler-nav-panel a:hover > .crawler-nav-dashboard-icon,
+    .crawler-nav-panel a.active > .crawler-nav-dashboard-icon {
+        color: var(--crawler-menu-accent);
+    }
+    .crawler-nav-submenu-toggle > .fa-chevron-right {
+        margin-left: auto;
+        color: var(--crawler-menu-icon);
+        font-size: .5625rem;
+        transition: transform .16s ease, color .1s ease;
+    }
+    .crawler-nav-panel a:hover,
+    .crawler-nav-panel a.active,
+    .crawler-nav-submenu-toggle:hover,
+    .crawler-nav-submenu-toggle.active,
+    .crawler-nav-submenu-toggle[aria-expanded="true"] {
+        color: #0c3a4a;
+        background: var(--crawler-menu-hover);
+        text-decoration: none;
+    }
+    .crawler-nav-panel a.active,
+    .crawler-nav-submenu-toggle.active {
+        font-weight: 600;
+    }
+    .crawler-nav-panel a:hover > i,
+    .crawler-nav-panel a.active > i,
+    .crawler-nav-submenu-toggle:hover > i,
+    .crawler-nav-submenu-toggle.active > i,
+    .crawler-nav-submenu-toggle[aria-expanded="true"] > i {
+        color: var(--crawler-menu-accent);
+    }
+    .crawler-nav a:focus-visible,
+    .crawler-nav button:focus-visible {
+        outline: 2px solid #1892b1;
+        outline-offset: -2px;
+    }
+    .crawler-nav-separator {
+        height: 1px;
+        margin: 4px 8px;
+        background: rgba(12, 58, 74, .09);
+    }
+    .crawler-nav-group > .crawler-nav-panel {
+        top: -5px;
+        left: calc(100% + 9px);
+        min-width: 14rem;
+    }
+    .crawler-nav-group > .crawler-nav-panel::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -12px;
+        width: 12px;
+    }
+    .crawler-nav-group.open-left > .crawler-nav-panel {
+        right: calc(100% + 9px);
+        left: auto;
+    }
+    .crawler-nav-group.open-left > .crawler-nav-panel::before {
+        right: -12px;
+        left: auto;
+    }
+    @keyframes crawler-menu-appear {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+    @media (max-width: 1199.98px) {
+        .crawler-nav-trigger {
+            display: inline-flex;
+        }
+        .crawler-nav-panel,
+        .crawler-nav-group > .crawler-nav-panel,
+        .crawler-nav-group.open-left > .crawler-nav-panel {
+            position: static;
+            min-width: 0;
+            width: 100%;
+            box-shadow: none;
+            animation: none;
+        }
+        .crawler-nav-root::before,
+        .crawler-nav-group > .crawler-nav-panel::before {
+            display: none;
+        }
+        .crawler-nav-root {
+            margin: .25rem 0 .5rem;
+        }
+        .crawler-nav-group > .crawler-nav-panel {
+            margin-top: .1rem;
+            padding-left: .8rem;
+            border: 0;
+            border-left: 2px solid #d9e8ef;
+            border-radius: 0;
+        }
+        .crawler-nav-panel a,
+        .crawler-nav-submenu-toggle {
+            min-height: 40px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            white-space: normal;
+        }
+        .crawler-nav-submenu-toggle[aria-expanded="true"] > .fa-chevron-right {
+            transform: rotate(90deg);
+        }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .crawler-nav *,
+        .crawler-nav *::before {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+</style>
+<script>
+(function () {
+    'use strict';
+    const nav = document.getElementById('crawler-nav');
+    const toggle = document.getElementById('crawler-nav-toggle');
+    const panel = document.getElementById('crawler-nav-menu');
+    const label = document.getElementById('page-Crawler');
+    const groups = Array.from(nav.querySelectorAll('.crawler-nav-group'));
+    const hover = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const desktop = window.matchMedia('(min-width: 1200px)');
+    const groupModes = new WeakMap();
+    let closeTimer = null;
+    let rowTimer = null;
+    let openMode = null;
+
+    function setGroup(group, open, mode) {
+        const button = group.querySelector(':scope > button');
+        const submenu = group.querySelector(':scope > ul');
+        button.setAttribute('aria-expanded', String(open));
+        submenu.hidden = !open;
+        groupModes.set(group, open ? mode : null);
+        group.classList.remove('open-left');
+        if (open && desktop.matches && submenu.getBoundingClientRect().right > window.innerWidth - 8) {
+            group.classList.add('open-left');
+        }
+    }
+
+    function openGroup(group, mode) {
+        window.clearTimeout(rowTimer);
+        groups.forEach(function (other) {
+            if (other !== group) {
+                setGroup(other, false);
+            }
+        });
+        setGroup(group, true, mode);
+    }
+
+    function close() {
+        window.clearTimeout(closeTimer);
+        window.clearTimeout(rowTimer);
+        groups.forEach(function (group) {
+            setGroup(group, false);
+        });
+        panel.hidden = true;
+        nav.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        openMode = null;
+    }
+
+    function open(mode) {
+        window.clearTimeout(closeTimer);
+        if (panel.hidden || mode !== 'hover') {
+            openMode = mode;
+        }
+        panel.hidden = false;
+        nav.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+        panel.classList.remove('align-right');
+        if (desktop.matches && panel.getBoundingClientRect().right > window.innerWidth - 8) {
+            panel.classList.add('align-right');
+        }
+        groups.forEach(function (group) {
+            if (group.querySelector('a.active')) {
+                group.querySelector(':scope > button').classList.add('active');
+            }
+        });
+    }
+
+    function items(list) {
+        return Array.from(list.querySelectorAll(':scope > li > a, :scope > li > button'));
+    }
+
+    toggle.addEventListener('click', function () {
+        if (!panel.hidden && openMode === 'toggle') {
+            close();
+        } else {
+            open('toggle');
+        }
+    });
+    nav.addEventListener('pointerenter', function (event) {
+        if (hover.matches && event.pointerType === 'mouse') {
+            open('hover');
+        }
+    });
+    nav.addEventListener('pointerleave', function (event) {
+        if (hover.matches && event.pointerType === 'mouse' && openMode === 'hover') {
+            closeTimer = window.setTimeout(function () {
+                if (!nav.contains(document.activeElement)) {
+                    close();
+                }
+            }, 180);
+        }
+    });
+    nav.addEventListener('focusout', function () {
+        window.setTimeout(function () {
+            if (!nav.contains(document.activeElement)) {
+                close();
+            }
+        }, 0);
+    });
+    document.addEventListener('pointerdown', function (event) {
+        if (!nav.contains(event.target)) {
+            close();
+        }
+    });
+    groups.forEach(function (group) {
+        const button = group.querySelector(':scope > button');
+        const submenu = group.querySelector(':scope > ul');
+        button.addEventListener('click', function () {
+            if (!submenu.hidden && groupModes.get(group) === 'toggle') {
+                setGroup(group, false);
+            } else {
+                openGroup(group, 'toggle');
+            }
+        });
+    });
+    panel.querySelectorAll(':scope > li').forEach(function (row) {
+        row.addEventListener('pointerenter', function (event) {
+            if (!hover.matches || !desktop.matches || event.pointerType !== 'mouse') {
+                return;
+            }
+            window.clearTimeout(rowTimer);
+            const current = groups.find(function (group) {
+                return !group.querySelector(':scope > ul').hidden;
+            });
+            if (row === current) {
+                return;
+            }
+            // Allow the pointer to cross a neighbouring row on the way into a flyout.
+            rowTimer = window.setTimeout(function () {
+                if (row.classList.contains('crawler-nav-group')) {
+                    openGroup(row, 'hover');
+                } else if (current) {
+                    setGroup(current, false);
+                }
+            }, current ? 120 : 30);
+        });
+    });
+    groups.forEach(function (group) {
+        group.querySelector(':scope > ul').addEventListener('pointerenter', function () {
+            window.clearTimeout(rowTimer);
+        });
+    });
+    [label, toggle].forEach(function (control) {
+        control.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                open('keyboard');
+                const links = items(panel);
+                links[event.key === 'ArrowUp' ? links.length - 1 : 0].focus();
+            }
+        });
+    });
+    panel.addEventListener('keydown', function (event) {
+        const control = event.target.closest('a, button');
+        if (!control) {
+            return;
+        }
+        const list = control.closest('.crawler-nav-panel');
+        const links = items(list);
+        const index = links.indexOf(control);
+        let next;
+        if (event.key === 'ArrowDown') {
+            next = (index + 1) % links.length;
+        } else if (event.key === 'ArrowUp') {
+            next = (index + links.length - 1) % links.length;
+        } else if (event.key === 'Home') {
+            next = 0;
+        } else if (event.key === 'End') {
+            next = links.length - 1;
+        } else if (event.key === 'ArrowRight' && control.matches('.crawler-nav-submenu-toggle')) {
+            event.preventDefault();
+            const group = control.closest('.crawler-nav-group');
+            openGroup(group, 'keyboard');
+            items(group.querySelector(':scope > ul'))[0].focus();
+            return;
+        } else if (event.key === 'ArrowLeft' && list !== panel) {
+            event.preventDefault();
+            const group = list.closest('.crawler-nav-group');
+            setGroup(group, false);
+            group.querySelector(':scope > button').focus();
+            return;
+        } else {
+            return;
+        }
+        event.preventDefault();
+        links[next].focus();
+    });
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape' || panel.hidden) {
+            return;
+        }
+        event.preventDefault();
+        const focused = nav.contains(document.activeElement);
+        const group = focused ? document.activeElement.closest('.crawler-nav-group') : null;
+        if (group && !group.querySelector(':scope > ul').hidden) {
+            setGroup(group, false);
+            group.querySelector(':scope > button').focus();
+        } else {
+            close();
+            if (focused) {
+                toggle.focus();
+            }
+        }
+    });
+    window.addEventListener('resize', close);
+})();
+</script>
+{% endmacro %}

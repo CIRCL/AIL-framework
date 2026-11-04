@@ -38,9 +38,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'crawler/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 
 				<div class="row">
 
@@ -536,6 +535,7 @@
 <script>
 	var table;
   $(document).ready(function(){
+    $('#page-Crawler').addClass('active');
     {% if 'decoded' in dict_domain%}
       $('#tabledecoded').DataTable();
     {% endif %}
@@ -559,19 +559,6 @@
   	});
   });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 <script>

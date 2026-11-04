@@ -16,7 +16,6 @@
 
         .crawler-dashboard #core_content {
             min-width: 0;
-            max-width: 1800px;
         }
 
         .dashboard-heading,
@@ -75,8 +74,7 @@
             margin-bottom: .35rem;
         }
 
-        .dashboard-actions,
-        .dashboard-footer-links {
+        .dashboard-actions {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
@@ -649,22 +647,6 @@
             color: #23643b;
         }
 
-        .dashboard-footer-links {
-            gap: .5rem 1.5rem;
-            font-size: .875rem;
-        }
-
-        @media (max-width: 991.98px) {
-            .crawler-dashboard #nav_menu {
-                display: none;
-                flex-direction: column;
-            }
-
-            .crawler-dashboard #nav_menu .navbar-nav {
-                flex-direction: column;
-            }
-        }
-
         @media (max-width: 767.98px) {
             .dashboard-heading h1 {
                 font-size: 1.4rem;
@@ -724,8 +706,7 @@
     {% include 'nav_bar.html' %}
     <div class="container-fluid">
         <div class="row">
-            {% include 'crawler/menu_sidebar.html' %}
-            <main class="col-12 col-lg-10 py-4" id="core_content">
+            <main class="col-12 py-4" id="core_content">
                 <div class="dashboard-heading">
                     <div>
                         <h1>
@@ -742,10 +723,11 @@
                     </div>
                     <nav class="dashboard-actions" aria-label="Crawler actions">
                         <div class="header-secondary-actions">
+                            <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Crawler settings</a>
                             <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell mr-1" aria-hidden="true"></i> Vanity explorer</a>
                             <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite mr-1" aria-hidden="true"></i> Cookiejars</a>
                         </div>
-                        <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><i class="fas fa-plus" aria-hidden="true"></i><i class="fas fa-spider mr-1" aria-hidden="true"></i> New Crawl</a>
+                        <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span> New Capture</a>
                     </nav>
                 </div>
 
@@ -798,12 +780,16 @@
                         <table class="table table-hover mb-0">
                             <thead><tr><th scope="col">Domain / forum</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
                             <tbody id="capture-rows">
+                                {% set interactive_labels = {'starting': 'Starting', 'ready': 'Active', 'finishing': 'Finishing', 'processing': 'Processing'} %}
                                 {% for crawler in crawlers_status %}
                                     {% set state = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'}.get(crawler['status']|string, crawler['status']) %}
                                     <tr class="capture-row capture-row-{{ state|lower }}">
-                                        <td class="capture-domain">{% if crawler.get('kind') == 'forum' %}<i class="fas fa-comments capture-kind" role="img" aria-label="Forum crawl" title="Forum crawl"></i><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}</td>
+                                        <td class="capture-domain">
+                                            {% if crawler.get('kind') == 'forum' %}<i class="fas fa-comments capture-kind" role="img" aria-label="Forum crawl" title="Forum crawl"></i>{% elif crawler.get('kind') == 'interactive' %}<i class="fas fa-desktop capture-kind" role="img" aria-label="Interactive session" title="Interactive session"></i>{% endif %}
+                                            {% if crawler.get('kind') == 'forum' %}<a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}
+                                        </td>
                                         <td class="capture-network">{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
-                                        <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
+                                        <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ interactive_labels.get(crawler.get('session_status'), 'Running') if crawler.get('kind') == 'interactive' else {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
                                         <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
                                     </tr>
                                 {% endfor %}
@@ -812,9 +798,6 @@
                     </div>
                     <div id="activity-empty" class="text-center text-muted p-4" {% if crawlers_status %}hidden{% endif %}>No captures are currently tracked. Start a new crawl or check your schedules.</div>
                 </section>
-                <nav class="dashboard-footer-links mt-3 mb-2" aria-label="More crawler tools">
-                    <a href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Crawler settings</a>
-                </nav>
             </main>
         </div>
     </div>
@@ -822,19 +805,13 @@
     <script>
         'use strict';
 
-        function toggle_sidebar() {
-            const visible = $('#nav_menu').is(':visible');
-            $('#nav_menu').toggle(!visible);
-            $('#side_menu').toggleClass('border-right col-lg-2', !visible);
-            $('#core_content').toggleClass('col-lg-10', !visible);
-            $('#side_menu > button').attr('aria-expanded', String(!visible));
-        }
-
         $(function () {
             const config = JSON.parse(document.getElementById('crawler-dashboard-config').textContent);
             const networks = {onion: 'Onion', i2p: 'I2P', web: 'Web'};
             const states = {ONGOING: 'Running', QUEUED: 'Queued', DONE: 'Awaiting processing', UNKNOWN: 'Unknown'};
             const stateIcons = {ONGOING: 'circle-notch', QUEUED: 'clock', DONE: 'check-circle', UNKNOWN: 'question-circle'};
+            const captureKinds = {forum: {icon: 'comments', label: 'Forum crawl'}, interactive: {icon: 'desktop', label: 'Interactive session'}};
+            const interactiveLabels = {starting: 'Starting', ready: 'Active', finishing: 'Finishing', processing: 'Processing'};
             const numericStates = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'};
             let captures = config.captures;
             let refreshTimer = null;
@@ -842,9 +819,7 @@
             const selectors = {};
             const selectorLoading = {};
 
-            $('#page-Crawler, #nav_dashboard').addClass('active');
-            $('#nav_dashboard').attr('aria-current', 'page');
-            $('#side_menu > button').attr({'aria-controls': 'nav_menu', 'aria-expanded': String($('#nav_menu').is(':visible'))});
+            $('#page-Crawler, #crawler-nav-dashboard').addClass('active').attr('aria-current', 'page');
 
             function captureState(capture) {
                 const raw = String(capture.status).toUpperCase();
@@ -858,7 +833,7 @@
                 });
                 $('#capture-summary').text(counts.ONGOING + ' running · ' + counts.QUEUED + ' queued · ' + counts.DONE + ' awaiting processing · ' + counts.UNKNOWN + ' unknown');
                 const fragment = document.createDocumentFragment();
-                // The dashboard API returns domain and forum captures oldest first.
+                // The dashboard API returns all activity oldest first.
                 captures.forEach(function (capture) {
                     const row = document.createElement('tr');
                     const status = captureState(capture);
@@ -866,13 +841,14 @@
                     const domainCell = row.insertCell();
                     domainCell.className = 'capture-domain';
                     const isForum = capture.kind === 'forum';
-                    if (isForum) {
-                        const forumIcon = document.createElement('i');
-                        forumIcon.className = 'fas fa-comments capture-kind';
-                        forumIcon.setAttribute('role', 'img');
-                        forumIcon.setAttribute('aria-label', 'Forum crawl');
-                        forumIcon.title = 'Forum crawl';
-                        domainCell.appendChild(forumIcon);
+                    const captureKind = captureKinds[capture.kind];
+                    if (captureKind) {
+                        const kindIcon = document.createElement('i');
+                        kindIcon.className = 'fas fa-' + captureKind.icon + ' capture-kind';
+                        kindIcon.setAttribute('role', 'img');
+                        kindIcon.setAttribute('aria-label', captureKind.label);
+                        kindIcon.title = captureKind.label;
+                        domainCell.appendChild(kindIcon);
                     }
                     if (isForum || (capture.domain && capture.domain !== 'UNKNOWN')) {
                         const link = document.createElement('a');
@@ -896,7 +872,8 @@
                     const statusIcon = document.createElement('i');
                     statusIcon.className = 'fas fa-' + stateIcons[status];
                     statusIcon.setAttribute('aria-hidden', 'true');
-                    badge.append(statusIcon, document.createTextNode(states[status]));
+                    const statusLabel = capture.kind === 'interactive' ? interactiveLabels[capture.session_status] || states[status] : states[status];
+                    badge.append(statusIcon, document.createTextNode(statusLabel));
                     stateCell.appendChild(badge);
                     const startedCell = row.insertCell();
                     startedCell.className = 'capture-started';

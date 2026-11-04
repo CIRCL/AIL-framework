@@ -25,9 +25,21 @@
   <div class="container-fluid">
 		<div class="row">
 
-			{% include 'crawler/menu_sidebar.html' %}
 
-      <div class="col-12 col-lg-10" id="core_content">
+      <div class="col-12" id="core_content">
+
+        <div class="d-flex flex-wrap align-items-center mt-3 mb-2" role="group" aria-label="Cookiejar actions">
+          <a class="btn btn-info mr-2 mb-2" href="{{url_for('crawler_splash.crawler_cookiejar_add')}}">
+            <i class="fas fa-plus-circle ml-auto"></i>
+            Create Cookiejar
+          </a>
+
+          {% if current_user.is_admin() %}
+            {% with cookiejar_uuid=None, import_label='Import Cookiejar JSON', import_class='mr-2 mb-2' %}
+              {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+            {% endwith %}
+          {% endif %}
+        </div>
 
         <div class="card mb-3 mt-1">
           <div class="card-header text-white bg-dark">
@@ -62,26 +74,14 @@
           </div>
         </div>
 
-        <a class="btn btn-info my-4" href="{{url_for('crawler_splash.crawler_cookiejar_add')}}">
-          <i class="fas fa-plus-circle ml-auto"></i>
-          Create Cookiejar
-        </a>
-
-        {% if current_user.is_admin() %}
-          {% with cookiejar_uuid=None, import_label='Import Cookiejar JSON', import_class='my-4' %}
-            {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
-          {% endwith %}
-        {% endif %}
-
       </div>
 		</div>
 	</div>
 
 <script>
 $(document).ready(function(){
-  $("#page-crawler").addClass("active");
-	$("#nav_cookiejar_all").addClass("active");
-	$("#nav_title_cookiejar").removeClass("text-muted");
+  $("#page-Crawler").addClass("active");
+	$('#crawler-nav-cookiejar-all').addClass('active');
 
   $('#table_user').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
@@ -102,19 +102,6 @@ $(document).ready(function(){
 
 });
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 </body>
