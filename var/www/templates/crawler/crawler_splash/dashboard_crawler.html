@@ -10,12 +10,14 @@
     <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
     <style>
         .crawler-dashboard {
-            background: #f5f7fa;
-            color: #263445;
+            background: #f3f6fa;
+            color: #24384d;
+            -webkit-font-smoothing: antialiased;
         }
 
         .crawler-dashboard #core_content {
             min-width: 0;
+            padding: 1.5rem 1.75rem;
         }
 
         .dashboard-heading,
@@ -30,14 +32,16 @@
 
         .dashboard-heading {
             min-height: 2.625rem;
+            margin-bottom: 1.25rem;
         }
 
         .dashboard-heading h1 {
             display: flex;
             align-items: center;
             margin: 0;
-            font-size: 1.375rem;
-            font-weight: 600;
+            font-size: 1.5rem;
+            font-weight: 650;
+            letter-spacing: -.35px;
         }
 
         .dashboard-header-icon {
@@ -65,7 +69,7 @@
             color: #304b68;
             font-size: 1.35rem;
             transform: rotate(-15deg);
-            text-shadow: -1px -1px 0 #f5f7fa, 1px -1px 0 #f5f7fa, -1px 1px 0 #f5f7fa, 1px 1px 0 #f5f7fa;
+            text-shadow: -1px -1px 0 #f3f6fa, 1px -1px 0 #f3f6fa, -1px 1px 0 #f3f6fa, 1px 1px 0 #f3f6fa;
         }
 
         .crawler-dashboard h2 {
@@ -78,11 +82,8 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: .5rem;
-        }
-
-        .dashboard-actions {
             gap: .75rem;
+            max-width: 100%;
         }
 
         .dashboard-actions .btn {
@@ -92,16 +93,29 @@
             min-height: 2.25rem;
             padding: .4375rem .75rem;
             font-size: .875rem;
+            font-weight: 500;
             border-radius: .375rem;
+        }
+
+        .crawler-dashboard .btn-primary {
+            background: #2563d5;
+            border-color: #2563d5;
+        }
+
+        .crawler-dashboard .btn-primary:hover,
+        .crawler-dashboard .btn-primary:focus-visible {
+            background: #1e54b7;
+            border-color: #1e54b7;
         }
 
         .header-secondary-actions {
             display: flex;
             align-items: center;
+            max-width: 100%;
             padding: .125rem;
             border: 1px solid #dbe3ed;
             border-radius: .4375rem;
-            background: #edf1f6;
+            background: #fff;
         }
 
         .header-secondary-actions .btn {
@@ -125,16 +139,14 @@
         }
 
         .crawler-dashboard .card {
-            border-color: #dce2e9;
-            border-radius: .5rem;
-            box-shadow: 0 2px 5px rgba(26, 44, 66, .03);
+            border-color: #dce5ed;
+            border-radius: .5625rem;
+            box-shadow: 0 2px 5px rgba(25, 48, 70, .025);
         }
 
         .crawler-dashboard .dashboard-search {
             padding: 1.25rem;
-            border-color: #d7e1ec;
-            border-radius: .75rem;
-            box-shadow: none;
+            border-radius: .5625rem;
         }
 
         .search-card-header {
@@ -166,8 +178,8 @@
             grid-template-columns: repeat(4, auto);
             gap: .25rem;
             padding: .1875rem;
-            background: #f0f3f7;
-            border-radius: .6rem;
+            background: #eef3f8;
+            border-radius: .4375rem;
         }
 
         .search-tabs .nav-link {
@@ -191,7 +203,7 @@
         .search-tabs .nav-link.active {
             color: #1b5ea7;
             background: #fff;
-            box-shadow: 0 1px 4px rgba(26, 44, 66, .12);
+            box-shadow: 0 1px 3px rgba(30, 50, 75, .09);
         }
 
         .search-tabs .nav-link:focus-visible {
@@ -406,9 +418,21 @@
             white-space: nowrap;
         }
 
-        .crawler-dashboard .network-card {
-            border-radius: .5rem;
-            box-shadow: none;
+        .dashboard-activity-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 18.75rem;
+            align-items: start;
+            gap: 1.25rem;
+            margin-top: 1.375rem;
+        }
+
+        .network-overview {
+            min-width: 0;
+        }
+
+        .network-cards {
+            display: grid;
+            gap: .875rem;
         }
 
         .network-card-heading {
@@ -417,8 +441,7 @@
             justify-content: space-between;
             gap: .75rem;
             min-height: 2.5rem;
-            padding: 0 .9rem;
-            border-bottom: 1px solid #e9eef4;
+            padding: .8125rem .875rem .1875rem;
         }
 
         .network-card h3 {
@@ -426,12 +449,12 @@
             align-items: center;
             gap: .5rem;
             margin: 0;
-            font-size: .95rem;
+            font-size: .9375rem;
             font-weight: 600;
         }
 
         .network-card h3 i {
-            color: #778392;
+            color: #5d7891;
             font-size: .85rem;
         }
 
@@ -454,32 +477,38 @@
         }
 
         .network-latest i {
-            font-size: .75rem;
+            font-size: .625rem;
+        }
+
+        .network-latest {
+            gap: .25rem;
+            font-size: .625rem;
         }
 
         .network-statuses {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             flex: 1;
-            padding: .4rem .5rem;
+            padding: .5rem .875rem .625rem;
+            gap: .3125rem;
         }
 
         .network-status {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             flex-wrap: wrap;
-            gap: .35rem;
-            padding: .4rem .25rem;
+            gap: .375rem;
+            padding: .3125rem;
             border-radius: .3rem;
-            font-size: .85rem;
+            font-size: .75rem;
         }
 
         .network-status-value {
             display: inline-flex;
             align-items: center;
-            gap: .45rem;
-            font-size: 1.35rem;
+            gap: .375rem;
+            font-size: 1.5rem;
             font-variant-numeric: tabular-nums;
         }
 
@@ -490,7 +519,11 @@
         }
 
         .network-status-value i {
-            font-size: 1rem;
+            font-size: .875rem;
+        }
+
+        .network-status-up .network-status-value i {
+            color: #168a43;
         }
 
         .network-status-up {
@@ -498,7 +531,7 @@
         }
 
         .network-status-down {
-            color: #a1434c;
+            color: #b13d4e;
         }
 
         .network-status:hover {
@@ -511,6 +544,10 @@
             color: #166534;
         }
 
+        .network-status-down:hover {
+            color: #b13d4e;
+        }
+
         .network-card-footer {
             display: flex;
             align-items: center;
@@ -518,10 +555,10 @@
             flex-wrap: wrap;
             gap: .35rem .5rem;
             min-height: 2.25rem;
-            padding: 0 .9rem;
-            border-top: 1px solid #e9eef4;
+            padding: .375rem .875rem;
+            border-top: 1px solid #edf1f6;
             color: #647080;
-            font-size: .7rem;
+            font-size: .625rem;
         }
 
         .network-card-totals {
@@ -545,13 +582,18 @@
             outline-offset: 2px;
         }
 
+        .activity-card {
+            min-width: 0;
+            overflow: hidden;
+        }
+
         .activity-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: .35rem 1rem;
-            padding: .7rem .85rem;
+            padding: .9375rem 1rem;
         }
 
         .activity-header h2 {
@@ -560,7 +602,7 @@
         }
 
         #capture-summary {
-            font-size: .72rem;
+            font-size: .6875rem;
             color: #647080;
         }
 
@@ -577,16 +619,17 @@
             color: #647080;
             border-bottom-width: 1px;
             z-index: 1;
+            padding: .625rem .875rem;
         }
 
         .activity-card th,
         .activity-card td {
-            padding: .4rem .85rem;
             vertical-align: middle;
             border-color: #edf0f5;
         }
 
         .activity-card td {
+            padding: .6875rem .875rem;
             background: #fff;
             border-top: 1px solid #edf0f5;
             font-size: .8125rem;
@@ -598,7 +641,7 @@
         }
 
         .capture-domain {
-            width: 40%;
+            width: 35%;
             min-width: 14rem;
             max-width: 32rem;
             overflow-wrap: anywhere;
@@ -610,12 +653,18 @@
             font-size: .7rem;
         }
 
+        .capture-forum-icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -.125em;
+        }
+
         .capture-state {
             display: inline-flex;
             align-items: center;
             gap: .4rem;
             color: #6b7582;
-            font-size: .75rem;
+            font-size: .6875rem;
             line-height: 1.4;
             white-space: nowrap;
         }
@@ -647,6 +696,10 @@
             white-space: nowrap;
         }
 
+        .activity-card .capture-started {
+            font-size: .6875rem;
+        }
+
         .state-ongoing {
             color: #2468b4;
             font-weight: 600;
@@ -660,6 +713,16 @@
             color: #23643b;
         }
 
+        @media (max-width: 991.98px) {
+            .dashboard-activity-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .network-cards {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 767.98px) {
             .dashboard-heading h1 {
                 font-size: 1.4rem;
@@ -669,11 +732,24 @@
                 width: 100%;
                 grid-template-columns: repeat(4, 1fr);
             }
+
+            .network-cards {
+                grid-template-columns: minmax(0, 1fr);
+            }
         }
 
         @media (max-width: 575.98px) {
+            .crawler-dashboard #core_content {
+                padding: 1.25rem .9375rem;
+            }
+
             .crawler-dashboard .dashboard-search {
                 padding: 1rem;
+            }
+
+            .header-secondary-actions .btn {
+                padding-right: .4375rem;
+                padding-left: .4375rem;
             }
 
             .search-card-header h2 {
@@ -719,7 +795,7 @@
     {% include 'nav_bar.html' %}
     <div class="container-fluid">
         <div class="row">
-            <main class="col-12 py-4" id="core_content">
+            <main class="col-12" id="core_content">
                 <div class="dashboard-heading">
                     <div>
                         <h1>
@@ -746,22 +822,57 @@
 
                 {% include 'crawler/crawler_splash/dashboard_search.html' %}
 
-                <section aria-label="Crawler overview" class="mt-4">
-                    <div id="refresh-error" class="alert alert-warning mt-2" role="alert" hidden>Could not refresh the dashboard. Showing the last available data. Retrying automatically.</div>
-                    <div id="lacus-warning" class="alert alert-warning mt-2" role="status" {% if is_manager_connected['status'] %}hidden{% endif %}>
-                        <div class="lacus-warning-layout">
-                            <i class="fas fa-exclamation-triangle fa-beat-fade lacus-warning-icon" aria-hidden="true"></i>
-                            <div class="lacus-warning-message">
-                                <strong>Lacus is unavailable.</strong> Crawling may be interrupted. You can still search stored domains.
-                                <div class="small" id="lacus-error">{{ is_manager_connected.get('error') or '' }}</div>
-                            </div>
-                            <a href="{{ url_for('crawler_splash.crawler_settings') }}" class="btn btn-dark lacus-settings"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Open crawler settings</a>
+                <div id="refresh-error" class="alert alert-warning mt-2" role="alert" hidden>Could not refresh the dashboard. Showing the last available data. Retrying automatically.</div>
+                <div id="lacus-warning" class="alert alert-warning mt-2" role="status" {% if is_manager_connected['status'] %}hidden{% endif %}>
+                    <div class="lacus-warning-layout">
+                        <i class="fas fa-exclamation-triangle fa-beat-fade lacus-warning-icon" aria-hidden="true"></i>
+                        <div class="lacus-warning-message">
+                            <strong>Lacus is unavailable.</strong> Crawling may be interrupted. You can still search stored domains.
+                            <div class="small" id="lacus-error">{{ is_manager_connected.get('error') or '' }}</div>
                         </div>
+                        <a href="{{ url_for('crawler_splash.crawler_settings') }}" class="btn btn-dark lacus-settings"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Open crawler settings</a>
                     </div>
-                    <div class="row">
-                        {% for network, label, icon, explorer in [('onion', 'Onion', 'fas fa-user-secret', 'crawler_splash.domains_explorer_onion'), ('i2p', 'I2P', 'fas fa-user-secret', 'crawler_splash.domains_explorer_i2p'), ('web', 'Web', 'fas fa-globe', 'crawler_splash.domains_explorer_web')] %}
-                            <div class="col-12 col-md-4 mb-3">
-                                <article class="card network-card h-100" aria-labelledby="network-{{ network }}-heading">
+                </div>
+
+                <div class="dashboard-activity-layout">
+                    <section class="card activity-card" id="capture-activity" aria-labelledby="activity-heading">
+                        <div class="activity-header">
+                            <h2 id="activity-heading">Capture activity</h2>
+                            <span id="capture-summary"></span>
+                        </div>
+                        <div class="activity-table-wrapper">
+                            <table class="table table-hover mb-0">
+                                <thead><tr><th scope="col">Domain / forum</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
+                                <tbody id="capture-rows">
+                                    {% set interactive_labels = {'starting': 'Starting', 'ready': 'Active', 'finishing': 'Finishing', 'processing': 'Processing'} %}
+                                    {% for crawler in crawlers_status %}
+                                        {% set state = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'}.get(crawler['status']|string, crawler['status']) %}
+                                        <tr class="capture-row capture-row-{{ state|lower }}">
+                                            <td class="capture-domain">
+                                                {% if crawler.get('kind') == 'forum' %}
+                                                    <svg class="capture-kind capture-forum-icon" viewBox="0 0 24 24" role="img" aria-label="Forum crawl" title="Forum crawl" focusable="false">
+                                                        <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
+                                                    </svg>
+                                                {% elif crawler.get('kind') == 'interactive' %}
+                                                    <i class="fas fa-desktop capture-kind" role="img" aria-label="Interactive session" title="Interactive session"></i>
+                                                {% endif %}
+                                                {% if crawler.get('kind') == 'forum' %}<a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}
+                                            </td>
+                                            <td class="capture-network"><i class="fas fa-{{ {'onion': 'user-secret', 'i2p': 'user-secret', 'web': 'globe'}.get(crawler['type'], 'question-circle') }}" aria-hidden="true"></i>{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
+                                            <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-play', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ interactive_labels.get(crawler.get('session_status'), 'Running') if crawler.get('kind') == 'interactive' else {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
+                                            <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="activity-empty" class="text-center text-muted p-4" {% if crawlers_status %}hidden{% endif %}>No captures are currently tracked. Start a new crawl or check your schedules.</div>
+                    </section>
+
+                    <section class="network-overview" aria-label="Crawler overview">
+                        <div class="network-cards">
+                            {% for network, label, icon, explorer in [('onion', 'Onion', 'fas fa-user-secret', 'crawler_splash.domains_explorer_onion'), ('i2p', 'I2P', 'fas fa-user-secret', 'crawler_splash.domains_explorer_i2p'), ('web', 'Web', 'fas fa-globe', 'crawler_splash.domains_explorer_web')] %}
+                                <article class="card network-card" aria-labelledby="network-{{ network }}-heading">
                                     <div class="network-card-heading">
                                         <h3 id="network-{{ network }}-heading"><i class="{{ icon }}" aria-hidden="true"></i>{{ label }}</h3>
                                         <a href="{{ url_for(explorer) }}"><i class="fas fa-compass" aria-hidden="true"></i>Explore<span class="sr-only"> {{ label }} domains</span></a>
@@ -779,38 +890,10 @@
                                         <a class="network-latest" href="{{ url_for('crawler_splash.crawlers_last_domains', type=network) }}"><i class="fas fa-history" aria-hidden="true"></i>Latest results<span class="sr-only"> for {{ label }}</span></a>
                                     </div>
                                 </article>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </section>
-
-                <section class="card activity-card" id="capture-activity" aria-labelledby="activity-heading">
-                    <div class="activity-header">
-                        <h2 id="activity-heading">Capture activity</h2>
-                        <span id="capture-summary"></span>
-                    </div>
-                    <div class="activity-table-wrapper">
-                        <table class="table table-hover mb-0">
-                            <thead><tr><th scope="col">Domain / forum</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
-                            <tbody id="capture-rows">
-                                {% set interactive_labels = {'starting': 'Starting', 'ready': 'Active', 'finishing': 'Finishing', 'processing': 'Processing'} %}
-                                {% for crawler in crawlers_status %}
-                                    {% set state = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'}.get(crawler['status']|string, crawler['status']) %}
-                                    <tr class="capture-row capture-row-{{ state|lower }}">
-                                        <td class="capture-domain">
-                                            {% if crawler.get('kind') == 'forum' %}<i class="fas fa-comments capture-kind" role="img" aria-label="Forum crawl" title="Forum crawl"></i>{% elif crawler.get('kind') == 'interactive' %}<i class="fas fa-desktop capture-kind" role="img" aria-label="Interactive session" title="Interactive session"></i>{% endif %}
-                                            {% if crawler.get('kind') == 'forum' %}<a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}
-                                        </td>
-                                        <td class="capture-network"><i class="fas fa-{{ {'onion': 'user-secret', 'i2p': 'user-secret', 'web': 'globe'}.get(crawler['type'], 'question-circle') }}" aria-hidden="true"></i>{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
-                                        <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ interactive_labels.get(crawler.get('session_status'), 'Running') if crawler.get('kind') == 'interactive' else {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
-                                        <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="activity-empty" class="text-center text-muted p-4" {% if crawlers_status %}hidden{% endif %}>No captures are currently tracked. Start a new crawl or check your schedules.</div>
-                </section>
+                            {% endfor %}
+                        </div>
+                    </section>
+                </div>
             </main>
         </div>
     </div>
@@ -823,8 +906,11 @@
             const networks = {onion: 'Onion', i2p: 'I2P', web: 'Web'};
             const networkIcons = {onion: 'user-secret', i2p: 'user-secret', web: 'globe'};
             const states = {ONGOING: 'Running', QUEUED: 'Queued', DONE: 'Awaiting processing', UNKNOWN: 'Unknown'};
-            const stateIcons = {ONGOING: 'circle-notch', QUEUED: 'clock', DONE: 'check-circle', UNKNOWN: 'question-circle'};
-            const captureKinds = {forum: {icon: 'comments', label: 'Forum crawl'}, interactive: {icon: 'desktop', label: 'Interactive session'}};
+            const stateIcons = {ONGOING: 'circle-play', QUEUED: 'clock', DONE: 'check-circle', UNKNOWN: 'question-circle'};
+            const captureKinds = {
+                forum: {path: 'M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1', label: 'Forum crawl'},
+                interactive: {icon: 'desktop', label: 'Interactive session'}
+            };
             const interactiveLabels = {starting: 'Starting', ready: 'Active', finishing: 'Finishing', processing: 'Processing'};
             const numericStates = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'};
             let captures = config.captures;
@@ -857,11 +943,23 @@
                     const isForum = capture.kind === 'forum';
                     const captureKind = captureKinds[capture.kind];
                     if (captureKind) {
-                        const kindIcon = document.createElement('i');
-                        kindIcon.className = 'fas fa-' + captureKind.icon + ' capture-kind';
+                        let kindIcon;
+                        if (captureKind.path) {
+                            kindIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                            kindIcon.setAttribute('class', 'capture-kind capture-forum-icon');
+                            kindIcon.setAttribute('viewBox', '0 0 24 24');
+                            kindIcon.setAttribute('focusable', 'false');
+                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            path.setAttribute('fill', 'currentColor');
+                            path.setAttribute('d', captureKind.path);
+                            kindIcon.appendChild(path);
+                        } else {
+                            kindIcon = document.createElement('i');
+                            kindIcon.className = 'fas fa-' + captureKind.icon + ' capture-kind';
+                        }
                         kindIcon.setAttribute('role', 'img');
                         kindIcon.setAttribute('aria-label', captureKind.label);
-                        kindIcon.title = captureKind.label;
+                        kindIcon.setAttribute('title', captureKind.label);
                         domainCell.appendChild(kindIcon);
                     }
                     if (isForum || (capture.domain && capture.domain !== 'UNKNOWN')) {
