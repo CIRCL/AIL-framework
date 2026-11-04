@@ -1,171 +1,1201 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-	<title>AIL-Framework</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Latest domains · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+    <style>
+        .latest-domains-page {
+            margin: 0;
+            background: #f3f6fa;
+            color: #263d53;
+            -webkit-font-smoothing: antialiased;
+        }
 
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/d3/barchart_stack.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/d3/pie_chart.js') }}"></script>
+        .latest-domains-content {
+            padding: 24px 28px 28px;
+        }
 
-	<style>
-        .domain_name {
-            display:inline-block;
+        .page-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 18px;
+        }
+
+        .page-heading h1 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 650;
+            letter-spacing: -.35px;
+        }
+
+        .page-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            font-size: 25px;
+            color: #657f98;
+        }
+
+        .page-actions, .secondary-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .secondary-actions {
+            padding: 2px;
+            gap: 0;
+            border: 1px solid #dbe4ed;
+            border-radius: 7px;
+            background: #fff;
+        }
+
+        .secondary-actions a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            color: #455d75;
+            font-size: 13px;
+        }
+
+        .secondary-actions a + a {
+            border-left: 1px solid #e0e7ee;
+        }
+
+        .page-actions > .btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            padding: 8px 13px;
+            border-radius: 6px;
+        }
+
+        .page-actions > .btn .fa-spider {
+            transform: rotate(-15deg);
+            margin-right: 3px;
+        }
+
+        .latest-domains-page .btn-primary {
+            background: #2563d5;
+            border-color: #2563d5;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+
+        .context-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .network-switch {
+            display: inline-flex;
+            gap: 4px;
+            padding: 3px;
+            border: 1px solid #dce5ef;
+            border-radius: 8px;
+            background: #eaf0f6;
+        }
+
+        .network-switch a {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 18px;
+            border-radius: 5px;
+            color: #607489;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .network-switch a.selected {
+            background: #fff;
+            color: #245e9b;
+            box-shadow: 0 1px 3px rgba(30, 50, 75, .09);
+        }
+
+        .today-date {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #74879a;
+            font-size: 12px;
+        }
+
+        .today-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            padding: 13px 18px;
+            border: 1px solid #dce5ed;
+            border-radius: 8px;
+            background: #fff;
+            color: #415a73;
+        }
+
+        .stat:hover {
+            text-decoration: none;
+        }
+
+        .stat-label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #718296;
+            font-size: 12px;
+        }
+
+        .stat strong {
+            font-size: 25px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            line-height: 1.2;
+        }
+
+        .stat-up, .stat-up .stat-label {
+            color: #15803d;
+        }
+
+        .stat-down, .stat-down .stat-label {
+            color: #b13d4e;
+        }
+
+        .compact-stats {
+            gap: 0;
+            border: 1px solid #dce5ed;
+            border-radius: 8px;
             overflow: hidden;
+            background: #fff;
+        }
+
+        .compact-stats .stat {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 18px;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .compact-stats .stat + .stat {
+            border-left: 1px solid #e5ebf2;
+        }
+
+        .compact-stats .stat strong {
+            font-size: 23px;
+        }
+
+        .surface {
+            min-width: 0;
+            border: 1px solid #dce5ed;
+            border-radius: 9px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(25, 48, 70, .025);
+            overflow: hidden;
+        }
+
+        .search-surface {
+            margin-bottom: 18px;
+        }
+
+        .date-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
+            margin: 0;
+        }
+
+        .filter-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 8px;
+            font-size: 13px;
+            font-weight: 600;
             white-space: nowrap;
-            text-overflow: ellipsis;
-            max-width: 400px;
         }
-	</style>
 
+        .filter-title i {
+            color: #73869b;
+            font-size: 15px;
+        }
+
+        .date-toolbar > label {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
+            color: #6a7f92;
+            font-size: 12px;
+        }
+
+        .date-toolbar .form-control {
+            width: 166px;
+            height: 37px;
+            padding: 7px 10px;
+            border: 1px solid #cfdbe6;
+            border-radius: 5px;
+            color: #3d546a;
+            font-size: 13px;
+        }
+
+        .status-choices {
+            display: flex;
+            gap: 10px;
+            margin-left: 3px;
+        }
+
+        .status-choices label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 9px;
+            border: 1px solid #e0e7ee;
+            border-radius: 5px;
+            font-size: 12px;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .status-choices input {
+            margin: 0;
+            accent-color: #15803d;
+        }
+
+        .date-toolbar > .btn {
+            margin-left: auto;
+            padding: 8px 13px;
+            white-space: nowrap;
+        }
+
+        .up {
+            color: #15803d;
+        }
+
+        .down {
+            color: #b13d4e;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 17px;
+        }
+
+        .section-heading h2 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .result-count {
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: #eff3f7;
+            color: #718498;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .local-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 280px;
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid #dce5ed;
+            border-radius: 6px;
+            margin: 0;
+            color: #8493a3;
+            font-size: 12px;
+        }
+
+        .local-search input {
+            width: 100%;
+            min-width: 0;
+            outline: none;
+            border: 0;
+            background: transparent;
+            color: #41576e;
+            font: inherit;
+        }
+
+        .local-search input::placeholder {
+            color: #8797a7;
+        }
+
+        .table-frame {
+            overflow-x: auto;
+        }
+
+        .results-card .table {
+            width: 100%;
+            table-layout: auto;
+        }
+
+        .results-card th {
+            padding: 9px 16px;
+            border: 0;
+            border-top: 1px solid #e8eef4;
+            border-bottom: 1px solid #dce5ee;
+            background: #f8fafc;
+            color: #718296;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .results-card td {
+            padding: 10px 16px;
+            vertical-align: middle;
+            border-color: #edf1f6;
+            font-size: 13px;
+        }
+
+        .results-card tr:hover td {
+            background: #f7f9fc;
+        }
+
+        .domain-cell {
+            width: 52%;
+            min-width: 18rem;
+            overflow-wrap: anywhere;
+        }
+
+        .domain-cell a {
+            color: #315b87;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .domain-cell a:hover {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .first-seen {
+            color: #7a8b9d;
+            font-size: 12px !important;
+            white-space: nowrap;
+        }
+
+        .last-check {
+            color: #5e7489;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-status {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .result-status i {
+            font-size: 12px;
+        }
+
+        .chart-card .section-heading {
+            padding-bottom: 5px;
+        }
+
+        .chart-card h2 {
+            font-size: 14px;
+        }
+
+        .chart-body {
+            padding: 9px 14px 12px;
+        }
+
+        .chart-canvas {
+            display: block;
+            width: 100%;
+            height: 164px;
+        }
+
+        .chart-legend {
+            display: inline-flex;
+            gap: 10px;
+            color: #718397;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        .chart-legend > span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chart-legend i {
+            width: 6px;
+            height: 6px;
+            border-radius: 2px;
+        }
+
+        .legend-up {
+            background: #2f9860;
+        }
+
+        .legend-down {
+            background: #c96a76;
+        }
+
+        .results-and-stats {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            align-items: start;
+            gap: 20px;
+        }
+
+        .stats-column {
+            display: grid;
+            gap: 18px;
+        }
+
+        .stats-column .chart-canvas {
+            height: 152px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .monthly-summary .section-heading {
+            padding-bottom: 10px;
+        }
+
+        .month-caption {
+            color: #7a8c9d;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .monthly-donut-layout {
+            display: grid;
+            grid-template-columns: 104px minmax(0, 1fr);
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px 12px;
+        }
+
+        .monthly-donut-layout .month-donut {
+            display: block;
+            width: 104px;
+            height: 104px;
+        }
+
+        .month-status-values {
+            display: grid;
+            gap: 13px;
+        }
+
+        .month-status-values > div {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 5px 10px;
+        }
+
+        .month-status-values > div > span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .month-status-values strong {
+            font-size: 17px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .month-status-values b {
+            grid-column: 2;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .monthly-donut-layout .month-status-values b {
+            grid-row: auto;
+        }
+
+        .summary-footer {
+            padding: 9px 16px;
+            border-top: 1px solid #e9eef4;
+            color: #75879a;
+            font-size: 11px;
+        }
+
+        .bottom-history {
+            margin-top: 20px;
+        }
+
+        .two-history-charts {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .bottom-history .chart-canvas {
+            height: 210px;
+        }
+        .latest-domains-content {
+            min-width: 0;
+        }
+        .page-actions {
+            flex-wrap: wrap;
+        }
+        .stat strong {
+            overflow-wrap: anywhere;
+        }
+        .date-toolbar > label,
+        .date-field {
+            min-width: 0;
+        }
+        .status-choices .down input {
+            accent-color: #b13d4e;
+        }
+        .local-search:focus-within {
+            border-color: #2468b4;
+            box-shadow: 0 0 0 2px rgba(36, 104, 180, .12);
+        }
+        .results-empty {
+            margin: 0;
+            padding: 1.5rem 1rem;
+            color: #718296;
+            font-size: .875rem;
+            text-align: center;
+        }
+        .chart-notice {
+            margin: .5rem 0 0;
+            color: #718296;
+            font-size: .8125rem;
+            text-align: center;
+        }
+        .summary-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .5rem;
+        }
+        .chart-retry {
+            font-size: .8125rem;
+        }
+        .chart-body > .chart-retry {
+            display: block;
+            margin: .25rem auto 0;
+        }
+        .month-donut {
+            width: 104px;
+            height: 104px;
+            flex: none;
+        }
+        .lacus-warning {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .75rem;
+            font-size: .875rem;
+        }
+        .lacus-warning > i {
+            font-size: 1.5rem;
+        }
+        .lacus-warning > a {
+            margin-left: auto;
+            font-size: .875rem;
+            font-weight: 500;
+        }
+        @media (max-width: 1199.98px) {
+            .date-toolbar {
+                flex-wrap: wrap;
+                gap: .75rem;
+            }
+            .date-toolbar .form-control {
+                width: 150px;
+            }
+            .results-and-stats {
+                grid-template-columns: minmax(0, 1fr) 300px;
+                gap: 1rem;
+            }
+            .domain-cell {
+                min-width: 13rem;
+            }
+            .monthly-donut-layout {
+                grid-template-columns: 90px minmax(0, 1fr);
+                gap: .5rem;
+            }
+            .monthly-donut-layout .month-donut {
+                width: 90px;
+                height: 90px;
+            }
+        }
+        @media (max-width: 991.98px) {
+            .page-heading {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+            .results-and-stats {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .stats-column {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                align-items: start;
+            }
+            .two-history-charts {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .compact-stats .stat {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: .5rem;
+            }
+        }
+        @media (max-width: 575.98px) {
+            .latest-domains-content {
+                padding: 1.25rem .9375rem;
+            }
+            .page-heading h1 {
+                font-size: 1.4rem;
+            }
+            .page-actions {
+                gap: .5rem;
+            }
+            .context-row {
+                flex-wrap: wrap;
+                gap: .75rem;
+            }
+            .network-switch a {
+                padding: .4375rem .875rem;
+            }
+            .today-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .compact-stats .stat {
+                padding: .75rem;
+            }
+            .compact-stats .stat:nth-child(3) {
+                border-left: 0;
+            }
+            .compact-stats .stat:nth-child(n+3) {
+                border-top: 1px solid #e5ebf2;
+            }
+            .date-toolbar {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                padding: 1rem;
+            }
+            .date-toolbar > label {
+                display: grid;
+                grid-template-columns: 2rem minmax(0, 1fr);
+            }
+            .date-toolbar .form-control {
+                width: 100%;
+            }
+            .date-toolbar > .btn {
+                width: 100%;
+                margin-left: 0;
+            }
+            .results-heading {
+                flex-wrap: wrap;
+                gap: .75rem;
+            }
+            .local-search {
+                width: 100%;
+            }
+            .stats-column {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            .monthly-donut-layout {
+                grid-template-columns: 104px minmax(0, 1fr);
+            }
+            .monthly-donut-layout .month-donut {
+                width: 104px;
+                height: 104px;
+            }
+            .section-heading {
+                gap: .5rem;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .latest-domains-content .fa-beat-fade {
+                animation: none;
+            }
+        }
+    </style>
 </head>
+<body class="latest-domains-page">
+    {% set network_label = {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}[type] %}
+    {% set explorer = {'onion': 'crawler_splash.domains_explorer_onion', 'i2p': 'crawler_splash.domains_explorer_i2p', 'web': 'crawler_splash.domains_explorer_web'}[type] %}
+    {% set stats = crawler_stats[type] %}
+    {% include 'nav_bar.html' %}
+    <main class="latest-domains-content" id="core_content">
+        <header class="page-heading">
+            <h1><span class="page-mark"><i class="fas fa-history" aria-hidden="true"></i></span>Latest domains</h1>
+            <nav class="page-actions" aria-label="Crawler actions">
+                <div class="secondary-actions">
+                    <a href="{{ url_for('crawler_splash.crawlers_dashboard') }}"><i class="fas fa-spider" aria-hidden="true"></i>Dashboard</a>
+                    <a href="{{ url_for(explorer) }}"><i class="fas fa-compass" aria-hidden="true"></i>Explore {{ network_label }}</a>
+                </div>
+                <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>New Capture</a>
+            </nav>
+        </header>
 
-<body>
+        <div class="context-row">
+            <nav class="network-switch" aria-label="Network">
+                {% for key, label, icon in [('onion', 'Onion', 'user-secret'), ('i2p', 'I2P', 'user-secret'), ('web', 'Web', 'globe')] %}
+                    <a href="{{ url_for('crawler_splash.crawlers_last_domains', type=key) }}" {% if type == key %}class="selected" aria-current="page"{% endif %}><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}</a>
+                {% endfor %}
+            </nav>
+            <span class="today-date"><i class="far fa-calendar-alt" aria-hidden="true"></i><time id="today-label" datetime="{{ date_from }}">{{ date_from }}</time></span>
+        </div>
 
-	{% include 'nav_bar.html' %}
+        {% if not is_manager_connected['status'] %}
+            <div class="alert alert-warning lacus-warning" role="status">
+                <i class="fas fa-exclamation-triangle fa-beat-fade" aria-hidden="true"></i>
+                <div><strong>Lacus is unavailable.</strong> You can still browse stored domains.{% if is_manager_connected.get('error') %}<div class="small">{{ is_manager_connected['error'] }}</div>{% endif %}</div>
+                <a class="btn btn-dark" href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog mr-1" aria-hidden="true"></i>Open crawler settings</a>
+            </div>
+        {% endif %}
 
-	<div class="container-fluid">
-		<div class="row">
+        <div class="today-stats compact-stats" aria-label="Today's {{ network_label }} crawler statistics">
+            <a class="stat stat-up" href="{{ url_for('crawler_splash.domains_search_date', type=type, date_from=date_from, date_to=date_to, up='True') }}"><span class="stat-label"><i class="fas fa-check-circle" aria-hidden="true"></i>Up today</span><strong>{{ '{:,}'.format(stats['up']) }}</strong></a>
+            <a class="stat stat-down" href="{{ url_for('crawler_splash.domains_search_date', type=type, date_from=date_from, date_to=date_to, up='', down='True') }}"><span class="stat-label"><i class="fas fa-times-circle" aria-hidden="true"></i>Down today</span><strong>{{ '{:,}'.format(stats['down']) }}</strong></a>
+            <a class="stat" href="{{ url_for('crawler_splash.domains_search_date', type=type, date_from=date_from, date_to=date_to, up='True', down='True') }}"><span class="stat-label"><i class="fas fa-globe" aria-hidden="true"></i>Crawled today</span><strong>{{ '{:,}'.format(stats['crawled']) }}</strong></a>
+            <div class="stat"><span class="stat-label"><i class="fas fa-clock" aria-hidden="true"></i>Queued</span><strong>{{ '{:,}'.format(stats['queue']) }}</strong></div>
+        </div>
 
+        <section class="surface search-surface" aria-label="Search domains by date">
+            <form class="date-toolbar" id="domain-date-form" method="post" action="{{ url_for('crawler_splash.domains_search_date_post') }}">
+                <strong class="filter-title"><i class="far fa-calendar-alt" aria-hidden="true"></i>Search by date</strong>
+                <input type="hidden" name="type" value="{{ type }}">
+                <label for="date-range-from-input">From<span class="date-field" id="date-range-from"><input class="form-control" id="date-range-from-input" name="date_from" value="{{ date_from }}" placeholder="YYYY-MM-DD" autocomplete="off" required></span></label>
+                <label for="date-range-to-input">To<span class="date-field" id="date-range-to"><input class="form-control" id="date-range-to-input" name="date_to" value="{{ date_to }}" placeholder="YYYY-MM-DD" autocomplete="off" required></span></label>
+                <div class="status-choices" role="group" aria-label="Domain status">
+                    <label class="up"><input id="domains-up" type="checkbox" name="up" value="True" checked><i class="fas fa-check-circle" aria-hidden="true"></i>Up</label>
+                    <label class="down"><input id="domains-down" type="checkbox" name="down" value="True"><i class="fas fa-times-circle" aria-hidden="true"></i>Down</label>
+                </div>
+                {# Keep the fallback after the checkbox: an unchecked Up must reach /domains/date as up=. #}
+                <input type="hidden" name="up" value="">
+                <button class="btn btn-primary" type="submit">Show domains<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+            </form>
+            <p id="date-error" class="text-danger small px-3 pb-3 mb-0" role="alert" hidden></p>
+        </section>
 
-			<div class="col-12" id="core_content">
-
-				{% include 'crawler/crawler_disabled.html' %}
-
-				<div class="row">
-                    <div class="col-12 col-xl-6">
-                        <div class="table-responsive mt-1 table-hover table-borderless table-striped">
-                            <table class="table">
-                                <thead class="thead-dark">
+        <div class="results-and-stats">
+            <section class="surface results-card" aria-labelledby="results-heading">
+                <div class="section-heading results-heading">
+                    <h2 id="results-heading">Latest domains<span class="result-count" id="result-count" aria-live="polite">{{ domains|length }}</span></h2>
+                    <label class="local-search"><i class="fas fa-search" aria-hidden="true"></i><input id="latest-domain-search" type="search" placeholder="Find a domain in these results" aria-label="Search latest domains" disabled></label>
+                </div>
+                <div class="table-frame">
+                    <table class="table mb-0">
+                        <thead><tr><th scope="col">Domain</th><th scope="col">First seen</th><th scope="col">Last check</th><th scope="col">Status</th></tr></thead>
+                        <tbody id="tbody_last_crawled">
+                            {% for domain in domains %}
                                 <tr>
-                                    <th>Domain</th>
-							        <th>First Seen</th>
-                                    <th>Last Check</th>
-							        <th>Status</th>
+                                    <td class="domain-cell"><a target="_blank" rel="noopener noreferrer" title="{{ domain['domain'] }}" href="{{ url_for('crawler_splash.showDomain', domain=domain['domain'], epoch=domain['epoch']) }}">{{ domain['domain'] }}</a></td>
+                                    <td class="first-seen">{{ domain['first_seen']|default('—', true)|replace('/', '-') }}</td>
+                                    <td class="last-check">{{ domain['last']|replace('/', '-')|replace('.', ':') }}</td>
+                                    <td><span class="result-status {{ 'up' if domain['status_epoch'] else 'down' }}" title="Latest known status: {{ 'Up' if domain['status'] else 'Down' }}"><i class="fas fa-{{ 'check-circle' if domain['status_epoch'] else 'times-circle' }}" aria-hidden="true"></i>{{ 'Up' if domain['status_epoch'] else 'Down' }}</span></td>
                                 </tr>
-                                </thead>
-                                <tbody id="tbody_last_crawled">
-                                {% for domain in domains %}
-                                    <tr data-toggle="popover" data-trigger="hover"
-                                        title="<span class='badge badge-dark'>{{domain['domain']}}</span>"
-                                        data-content="epoch: {{domain['epoch']}}<br>last status: {{ domain['status'] }}">
-                                        <td><a target="_blank" class="domain_name" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ domain['domain'] }}&epoch={{domain['epoch']}}">{{ domain['domain'] }}</a></td>
-								        <td>{{domain['first_seen']}}</td>
-                                        <td>{{domain['last']}}</td>
-								        <td>
-                                            {% if domain['status_epoch'] %}
-                                                <div style="color:Green; display:inline-block">
-                                                    <i class="fas fa-check-circle"></i> UP
-											    </div>
-                                            {% else %}
-                                                <div style="color:Red; display:inline-block">
-                                                    <i class="fas fa-times-circle"></i> DOWN
-											    </div>
-                                            {% endif %} 
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p id="results-empty" class="results-empty" role="status" {% if domains %}hidden{% endif %}>No recent domains for {{ network_label }}.</p>
+            </section>
 
-                                        </td>
-                                    </tr>
-										{% endfor %}
-                                </tbody>
-                            </table>
-						</div>
+            <aside class="stats-column" aria-label="Recent activity and monthly breakdown">
+                <section class="surface chart-card" aria-labelledby="week-heading">
+                    <div class="section-heading"><h2 id="week-heading">Last 7 days</h2><span class="chart-legend"><span><i class="legend-up" aria-hidden="true"></i>Up</span><span><i class="legend-down" aria-hidden="true"></i>Down</span></span></div>
+                    <div class="chart-body">
+                        <div id="week-chart" class="chart-canvas" role="img" aria-label="Last seven days of {{ network_label }} domain checks"></div>
+                        <p id="week-notice" class="chart-notice" role="status" hidden></p>
+                        <button class="btn btn-link btn-sm chart-retry" type="button" data-chart="week" hidden>Retry chart</button>
+                    </div>
+                </section>
+                <section class="surface monthly-summary" aria-labelledby="summary-heading">
+                    <div class="section-heading"><h2 id="summary-heading">This month</h2><span class="month-caption" id="month-label"></span></div>
+                    <div class="monthly-donut-layout">
+                        <div id="month-donut" class="month-donut" role="img" aria-label="Monthly Up and Down proportions"></div>
+                        <div class="month-status-values">
+                            <div class="up"><span><i class="fas fa-check-circle" aria-hidden="true"></i>Up</span><strong id="month-up">—</strong><b id="month-up-percent">—</b></div>
+                            <div class="down"><span><i class="fas fa-times-circle" aria-hidden="true"></i>Down</span><strong id="month-down">—</strong><b id="month-down-percent">—</b></div>
+                        </div>
+                    </div>
+                    <div class="summary-footer" role="status"><span id="month-total">Loading monthly statistics…</span><button class="btn btn-link btn-sm chart-retry" type="button" data-chart="month" hidden>Retry</button></div>
+                </section>
+            </aside>
+        </div>
 
-					</div>
-					<div class="col-12 col-xl-6">
-						{% include 'crawler/show_domains_by_daterange.html' %}
+        <div class="bottom-history two-history-charts">
+            {% for key, title in [('month', 'This month'), ('previous', 'Previous month')] %}
+                <section class="surface chart-card" aria-labelledby="{{ key }}-heading">
+                    <div class="section-heading"><h2 id="{{ key }}-heading">{{ title }}</h2><span class="chart-legend"><span><i class="legend-up" aria-hidden="true"></i>Up</span><span><i class="legend-down" aria-hidden="true"></i>Down</span></span></div>
+                    <div class="chart-body">
+                        <div id="{{ key }}-chart" class="chart-canvas" role="img" aria-label="{{ title }}: daily {{ network_label }} Up and Down checks"></div>
+                        <p id="{{ key }}-notice" class="chart-notice" role="status" hidden></p>
+                        <button class="btn btn-link btn-sm chart-retry" type="button" data-chart="{{ key }}" hidden>Retry chart</button>
+                    </div>
+                </section>
+            {% endfor %}
+        </div>
+        <noscript><p class="text-muted mt-3">Enable JavaScript to display statistics charts and search within the latest domains.</p></noscript>
+    </main>
+    <script id="latest-domains-config" type="application/json">{{ {'network': network_label, 'today': date_from, 'weekUrl': url_for('crawler_splash.crawlers_last_domains_json', type=type), 'monthUrl': url_for('crawler_splash.crawlers_last_domains_month_json', type=type), 'previousUrl': url_for('crawler_splash.crawlers_last_domains_previous_month_json', type=type)}|tojson }}</script>
+    <script>
+        (function () {
+            'use strict';
+            const config = JSON.parse(document.getElementById('latest-domains-config').textContent);
+            document.getElementById('page-Crawler').classList.add('active');
+            const today = moment(config.today, 'YYYY-MM-DD', true);
+            document.getElementById('today-label').textContent = today.format('D MMMM YYYY');
+            const monthLabel = today.format('MMMM YYYY');
+            document.getElementById('month-label').textContent = monthLabel;
+            document.getElementById('month-heading').textContent = monthLabel;
+            document.getElementById('previous-heading').textContent = today.clone().subtract(1, 'month').format('MMMM YYYY');
 
-						<div id="barchart_type"></div>
+            const search = document.getElementById('latest-domain-search');
+            const rows = Array.from(document.querySelectorAll('#tbody_last_crawled tr'));
+            const empty = document.getElementById('results-empty');
+            search.disabled = false;
+            search.addEventListener('input', function () {
+                const query = search.value.trim().toLowerCase();
+                let count = 0;
+                rows.forEach(function (row) {
+                    row.hidden = !row.querySelector('.domain-cell a').textContent.toLowerCase().includes(query);
+                    count += Number(!row.hidden);
+                });
+                document.getElementById('result-count').textContent = count;
+                empty.hidden = count > 0;
+                empty.textContent = query ? 'No domains match your search.' : 'No recent domains for ' + config.network + '.';
+            });
 
-					</div>
-				</div>
+            const fromInput = document.getElementById('date-range-from-input');
+            const toInput = document.getElementById('date-range-to-input');
+            const dateError = document.getElementById('date-error');
+            ['#date-range-from', '#date-range-to'].forEach(function (selector) {
+                $(selector).dateRangePicker({
+                    separator: ' to ',
+                    singleMonth: true,
+                    getValue: function () {
+                        const from = moment(fromInput.value, 'YYYY-MM-DD', true);
+                        const to = moment(toInput.value, 'YYYY-MM-DD', true);
+                        return from.isValid() && to.isValid() && !from.isAfter(to) ? fromInput.value + ' to ' + toInput.value : '';
+                    },
+                    setValue: function (value, from, to) {
+                        fromInput.value = from;
+                        toInput.value = to;
+                        dateError.hidden = true;
+                    }
+                });
+            });
+            document.getElementById('domain-date-form').addEventListener('submit', function (event) {
+                const from = moment(fromInput.value, 'YYYY-MM-DD', true);
+                const to = moment(toInput.value, 'YYYY-MM-DD', true);
+                let error = '';
+                if (!from.isValid() || !to.isValid()) {
+                    error = 'Enter valid dates in YYYY-MM-DD format.';
+                } else if (from.isAfter(to)) {
+                    error = 'The start date must be on or before the end date.';
+                } else if (!document.getElementById('domains-up').checked && !document.getElementById('domains-down').checked) {
+                    error = 'Select Up or Down.';
+                }
+                dateError.textContent = error;
+                dateError.hidden = !error;
+                if (error) {
+                    event.preventDefault();
+                }
+            });
 
-                <h3>Month Stats:</h3>
-                <div id="barchart_type_month"></div>
-                <div class="text-center" id="pie_chart_month"></div>
+            const keys = ['week', 'month', 'previous'];
+            const green = '#2f9860';
+            const red = '#c96a76';
+            const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            const formatNumber = function (value) {
+                return value.toLocaleString('en-US');
+            };
+            const states = {};
+            if (!window.echarts) {
+                keys.forEach(function (key) {
+                    document.getElementById(key + '-chart').hidden = true;
+                    const notice = document.getElementById(key + '-notice');
+                    notice.textContent = 'Charts are unavailable. Reload the page to retry.';
+                    notice.hidden = false;
+                });
+                document.getElementById('month-total').textContent = 'Monthly statistics unavailable.';
+                return;
+            }
+            keys.forEach(function (key) {
+                const container = document.getElementById(key + '-chart');
+                states[key] = {chart: echarts.init(container, null, {renderer: 'svg'}), container: container, data: null, loading: false};
+            });
+            const donutContainer = document.getElementById('month-donut');
+            const ring = echarts.init(donutContainer, null, {renderer: 'svg'});
 
-                <h3>Previous Month Stats:</h3>
-                <div id="barchart_type_month"></div>
-                <div class="text-center" id="barchart_type_previous_month"></div>
+            function normalise(data) {
+                if (!Array.isArray(data)) {
+                    throw new TypeError('Expected daily crawler statistics');
+                }
+                return data.map(function (row) {
+                    const up = Number(row.up);
+                    const down = Number(row.down);
+                    if (!moment(row.date, 'YYYY-MM-DD', true).isValid() || !Number.isFinite(up) || !Number.isFinite(down) || up < 0 || down < 0) {
+                        throw new TypeError('Invalid daily crawler statistics');
+                    }
+                    return {date: row.date, up: up, down: down};
+                }).sort(function (a, b) {
+                    return a.date.localeCompare(b.date);
+                });
+            }
 
-			</div>
+            function axisRange(data) {
+                const maximum = Math.max(1, ...data.map(function (row) {
+                    return row.up + row.down;
+                }));
+                const roughStep = Math.max(1, maximum / 4);
+                const power = Math.pow(10, Math.floor(Math.log10(roughStep)));
+                const step = [1, 2, 5, 10].find(function (factor) {
+                    return factor * power >= roughStep;
+                }) * power;
+                return {max: Math.ceil(maximum / step) * step, interval: step};
+            }
 
-		</div>
-	</div>
+            function barOptions(data, compact, range) {
+                const labels = data.map(function (row) {
+                    return moment(row.date, 'YYYY-MM-DD').format(compact ? 'D MMM' : 'D');
+                });
+                return {
+                    animation: false,
+                    textStyle: {fontFamily: font},
+                    grid: {left: Math.max(40, formatNumber(range.max).length * 6 + 10), right: 8, top: 12, bottom: 28},
+                    tooltip: {
+                        trigger: 'axis',
+                        className: 'crawler-chart-tooltip',
+                        confine: true,
+                        axisPointer: {type: 'shadow'},
+                        backgroundColor: '#fff',
+                        borderColor: '#dce5ed',
+                        textStyle: {color: '#344d64', fontSize: 12},
+                        valueFormatter: formatNumber
+                    },
+                    xAxis: {
+                        type: 'category', data: labels,
+                        axisLine: {show: false}, axisTick: {show: false},
+                        axisLabel: {color: '#708396', fontSize: compact ? 10 : 11, margin: 10, hideOverlap: true, interval: function (index) {
+                            return compact || labels.length <= 7 || index % 5 === 0 || index === labels.length - 1;
+                        }}
+                    },
+                    yAxis: {
+                        type: 'value', min: 0, max: range.max, interval: range.interval,
+                        axisLine: {show: false}, axisTick: {show: false},
+                        axisLabel: {color: '#708396', fontSize: compact ? 10 : 11, formatter: formatNumber},
+                        splitLine: {lineStyle: {color: '#e6edf3'}}
+                    },
+                    series: [
+                        {name: 'Up', type: 'bar', stack: 'checks', data: data.map(function (row) {
+                            return row.up;
+                        }), barMaxWidth: 44, barCategoryGap: '40%', itemStyle: {color: green}},
+                        {name: 'Down', type: 'bar', stack: 'checks', data: data.map(function (row) {
+                            return row.down;
+                        }), barMaxWidth: 44, itemStyle: {color: red, borderRadius: [2, 2, 0, 0]}}
+                    ]
+                };
+            }
 
+            function renderBars(key) {
+                const state = states[key];
+                let range = axisRange(state.data);
+                if (key !== 'week' && states.month.data !== null && states.previous.data !== null) {
+                    range = axisRange(states.month.data.concat(states.previous.data));
+                }
+                state.chart.setOption(barOptions(state.data, key === 'week', range), true);
+                state.container.setAttribute('aria-label', config.network + ' domain checks: ' + state.data.map(function (row) {
+                    return row.date + ', ' + row.up + ' Up, ' + row.down + ' Down';
+                }).join('; '));
+            }
 
+            function renderMonth(data) {
+                const up = data.reduce(function (total, row) {
+                    return total + row.up;
+                }, 0);
+                const down = data.reduce(function (total, row) {
+                    return total + row.down;
+                }, 0);
+                const total = up + down;
+                const upPercent = total ? (up / total * 100).toFixed(1) + '%' : '—';
+                const downPercent = total ? (down / total * 100).toFixed(1) + '%' : '—';
+                document.getElementById('month-up').textContent = formatNumber(up);
+                document.getElementById('month-down').textContent = formatNumber(down);
+                document.getElementById('month-up-percent').textContent = upPercent;
+                document.getElementById('month-down-percent').textContent = downPercent;
+                document.getElementById('month-total').textContent = formatNumber(total) + ' checks this month';
+                donutContainer.setAttribute('aria-label', 'This month: ' + formatNumber(up) + ' Up (' + upPercent + '), ' + formatNumber(down) + ' Down (' + downPercent + ')');
+                ring.setOption({
+                    animation: false,
+                    color: [green, red],
+                    textStyle: {fontFamily: font},
+                    tooltip: {trigger: 'item', confine: true, formatter: function (item) {
+                        return item.name + ': ' + formatNumber(item.value) + ' (' + item.percent.toFixed(1) + '%)';
+                    }},
+                    graphic: [
+                        {type: 'text', left: 'center', top: '34%', silent: true, style: {text: upPercent, fill: '#293f54', fontSize: 16, fontWeight: 600, fontFamily: font}},
+                        {type: 'text', left: 'center', top: '57%', silent: true, style: {text: 'Up', fill: '#15803d', fontSize: 11, fontFamily: font}}
+                    ],
+                    series: [{type: 'pie', radius: ['56%', '80%'], center: ['50%', '50%'], startAngle: 90, percentPrecision: 1, label: {show: false}, labelLine: {show: false}, emphasis: {scale: false}, stillShowZeroSum: false, data: total ? [{name: 'Up', value: up}, {name: 'Down', value: down}] : []}]
+                }, true);
+            }
+
+            async function loadChart(key) {
+                const state = states[key];
+                if (state.loading) {
+                    return;
+                }
+                state.loading = true;
+                const notice = document.getElementById(key + '-notice');
+                const retryButtons = document.querySelectorAll('.chart-retry[data-chart="' + key + '"]');
+                notice.hidden = true;
+                state.container.hidden = false;
+                state.chart.resize();
+                state.chart.showLoading('default', {text: 'Loading…', color: '#2468b4', maskColor: 'rgba(255,255,255,.9)', textColor: '#708396', fontSize: 12});
+                retryButtons.forEach(function (button) {
+                    button.hidden = true;
+                });
+                if (key === 'month') {
+                    donutContainer.hidden = false;
+                    ring.resize();
+                    ring.showLoading('default', {text: '', color: '#2468b4', maskColor: 'rgba(255,255,255,.9)'});
+                }
+                const controller = new AbortController();
+                const timeout = setTimeout(function () {
+                    controller.abort();
+                }, 15000);
+                try {
+                    const response = await fetch(config[key + 'Url'], {headers: {'Accept': 'application/json'}, signal: controller.signal});
+                    if (!response.ok) {
+                        throw new Error('Statistics request failed');
+                    }
+                    let data = normalise(await response.json());
+                    if (key !== 'previous') {
+                        data = data.filter(function (row) {
+                            return row.date <= config.today;
+                        });
+                    }
+                    if (key === 'week') {
+                        data = data.slice(-7);
+                    }
+                    state.data = data;
+                    renderBars(key);
+                    if (key !== 'week' && states.month.data !== null && states.previous.data !== null) {
+                        renderBars(key === 'month' ? 'previous' : 'month');
+                    }
+                    if (!data.some(function (row) {
+                        return row.up + row.down > 0;
+                    })) {
+                        notice.textContent = 'No checks in this period.';
+                        notice.hidden = false;
+                    }
+                    if (key === 'month') {
+                        renderMonth(data);
+                    }
+                } catch (error) {
+                    state.container.hidden = true;
+                    notice.textContent = 'Statistics could not be loaded.';
+                    notice.hidden = false;
+                    retryButtons.forEach(function (button) {
+                        button.hidden = false;
+                    });
+                    if (key === 'month') {
+                        donutContainer.hidden = true;
+                        document.getElementById('month-total').textContent = 'Monthly statistics unavailable.';
+                    }
+                } finally {
+                    clearTimeout(timeout);
+                    state.chart.hideLoading();
+                    if (key === 'month') {
+                        ring.hideLoading();
+                    }
+                    state.loading = false;
+                }
+            }
+
+            document.querySelectorAll('.chart-retry').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    loadChart(button.dataset.chart);
+                });
+            });
+            let resizeFrame;
+            const observer = new ResizeObserver(function () {
+                cancelAnimationFrame(resizeFrame);
+                resizeFrame = requestAnimationFrame(function () {
+                    keys.forEach(function (key) {
+                        if (!states[key].container.hidden) {
+                            states[key].chart.resize();
+                        }
+                    });
+                    if (!donutContainer.hidden) {
+                        ring.resize();
+                    }
+                });
+            });
+            keys.forEach(function (key) {
+                observer.observe(states[key].container);
+                loadChart(key);
+            });
+            observer.observe(donutContainer);
+            window.addEventListener('pagehide', function (event) {
+                if (!event.persisted) {
+                    observer.disconnect();
+                    cancelAnimationFrame(resizeFrame);
+                    keys.forEach(function (key) {
+                        states[key].chart.dispose();
+                    });
+                    ring.dispose();
+                }
+            });
+        })();
+    </script>
 </body>
-
-<script>
-var chart = {};
-$(document).ready(function(){
-	$("#page-Crawler").addClass("active");
-
-	$('#date-range-from').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-					},
-					setValue: function(s,s1,s2){
-							$('#date-range-from-input').val(s1);
-							$('#date-range-to-input').val(s2);
-					}
-	});
-	$('#date-range-to').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-			},
-			setValue: function(s,s1,s2){
-					$('#date-range-from-input').val(s1);
-					$('#date-range-to-input').val(s2);
-			}
-	});
-
-    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_json') }}?type={{type}}",
-        function (data) {
-                let div_width = $("#barchart_type").width();
-                barchart_stack("barchart_type", data, {"width": div_width});
-        }
-    );
-
-    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_status_month_json') }}?type={{type}}",
-        function (data) {
-                pie_chart("pie_chart_month", data, {});
-        }
-    );
-
-    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_month_json') }}?type={{type}}",
-        function (data) {
-                let div_width = $("#barchart_type_month").width();
-                barchart_stack("barchart_type_month", data, {"width": div_width});
-        }
-    );
-
-    $.getJSON("{{ url_for('crawler_splash.crawlers_last_domains_previous_month_json') }}?type={{type}}",
-        function (data) {
-                let div_width = $("#barchart_type_previous_month").width();
-                barchart_stack("barchart_type_previous_month", data, {"width": div_width});
-        }
-    );
-
-});
-
-</script>
-
+</html>
