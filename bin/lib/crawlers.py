@@ -55,6 +55,7 @@ from lib.objects import Domains
 from lib.objects import DomHashs
 from lib.objects import Etags
 from lib.objects import Favicons
+from lib.objects import Forums
 from lib.objects import HHHashs
 from lib.objects import Screenshots
 from lib.objects import Titles
@@ -3211,6 +3212,64 @@ def get_captures_status():
         meta['status'] = capture_status
         status.append(meta)
     return status
+
+
+def get_dashboard_captures_status():
+    """Combine domain, forum and interactive activity without private session metadata."""
+    captures = [dict(capture, kind='domain') for capture in get_captures_status()]
+    for forum_id, account_id, launch_time in get_running_forum_crawler_accounts(with_launch_time=True):
+        forum = Forums.Forum(forum_id)
+        if not forum.exists():
+            continue
+        account = forum.get_crawl_account(account_id)
+        if not account.exists() or account.get_status() != 'crawling' or not account.get_current_task_uuid():
+            continue
+        # Use forum-level metadata only; account URLs may contain private information.
+        forum_url = forum.get_current_domain() or forum.get_url() or ''
+        try:
+            domain = urlsplit(forum_url if '://' in forum_url else f'//{forum_url}').hostname
+        except ValueError:
+            domain = None
+        captures.append({
+            'kind': 'forum',
+            'forum_id': forum_id,
+            'name': forum.get_name(),
+            'domain': domain or 'UNKNOWN',
+            'type': Domains.Domain(domain).get_domain_type() if domain else 'UNKNOWN',
+            'start_time': datetime.fromtimestamp(launch_time).strftime('%Y/%m/%d  -  %H:%M.%S'),
+            'status': 'ONGOING',
+        })
+    sessions = r_cache.zrange('crawler:interactive:sessions', 0, -1, withscores=True)
+    interactive_tasks = set()
+    if sessions:
+        with r_cache.pipeline(transaction=False) as pipeline:
+            for session_uuid, _ in sessions:
+                pipeline.hmget(f'crawler:interactive:session:{session_uuid}', ['status', 'url', 'task_uuid'])
+            session_fields = pipeline.execute()
+        session_states = {'starting': 'QUEUED', 'ready': 'ONGOING', 'finishing': 'ONGOING', 'processing': 'ONGOING'}
+        now = int(time.time())
+        for (_, launch_time), fields in zip(sessions, session_fields):
+            session_status, session_url, task_uuid = fields
+            if session_status not in session_states or now - launch_time > INTERACTIVE_SESSION_TTL:
+                continue
+            session_url = session_url or ''
+            try:
+                domain = urlsplit(session_url if '://' in session_url else f'//{session_url}').hostname
+            except ValueError:
+                domain = None
+            captures.append({
+                'kind': 'interactive',
+                'domain': domain or 'UNKNOWN',
+                'type': Domains.Domain(domain).get_domain_type() if domain else 'UNKNOWN',
+                'start_time': datetime.fromtimestamp(launch_time).strftime('%Y/%m/%d  -  %H:%M.%S'),
+                'status': session_states[session_status],
+                'session_status': session_status,
+            })
+            if task_uuid:
+                interactive_tasks.add(task_uuid)
+    captures = [capture for capture in captures if capture.get('uuid') not in interactive_tasks]
+    return sorted(captures, key=lambda capture: capture.get('start_time') or '9999')
+
 
 def delete_captures():
     for capture_uuid in get_crawler_captures():

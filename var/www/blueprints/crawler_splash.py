@@ -98,7 +98,7 @@ def create_json_response(data, status_code):
 @login_read_only
 def crawlers_dashboard():
     is_manager_connected = crawlers.get_lacus_connection_metadata()
-    crawlers_status = crawlers.get_captures_status()
+    crawlers_status = crawlers.get_dashboard_captures_status()
     crawlers_latest_stats = crawlers.get_crawlers_stats()
     # print(crawlers_status)
     # print(crawlers_latest_stats)
@@ -114,7 +114,7 @@ def crawlers_dashboard():
 @login_required
 @login_read_only
 def crawler_dashboard_json():
-    crawlers_status = crawlers.get_captures_status()
+    crawlers_status = crawlers.get_dashboard_captures_status()
     crawlers_latest_stats = crawlers.get_crawlers_stats()
     return jsonify({'crawlers_status': crawlers_status,
                     'date': crawlers.get_current_date(),

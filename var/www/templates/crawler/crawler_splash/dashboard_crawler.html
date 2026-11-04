@@ -603,6 +603,12 @@
             overflow-wrap: anywhere;
         }
 
+        .capture-kind {
+            margin-right: .35rem;
+            color: #647080;
+            font-size: .7rem;
+        }
+
         .capture-state {
             display: inline-flex;
             align-items: center;
@@ -790,12 +796,12 @@
                     </div>
                     <div class="activity-table-wrapper">
                         <table class="table table-hover mb-0">
-                            <thead><tr><th scope="col">Domain</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
+                            <thead><tr><th scope="col">Domain / forum</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
                             <tbody id="capture-rows">
                                 {% for crawler in crawlers_status %}
                                     {% set state = {'-1': 'UNKNOWN', '0': 'QUEUED', '1': 'DONE', '2': 'ONGOING'}.get(crawler['status']|string, crawler['status']) %}
                                     <tr class="capture-row capture-row-{{ state|lower }}">
-                                        <td class="capture-domain">{% if crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}</td>
+                                        <td class="capture-domain">{% if crawler.get('kind') == 'forum' %}<i class="fas fa-comments capture-kind" role="img" aria-label="Forum crawl" title="Forum crawl"></i><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}</td>
                                         <td class="capture-network">{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
                                         <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
                                         <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
@@ -812,7 +818,7 @@
             </main>
         </div>
     </div>
-    <script id="crawler-dashboard-config" type="application/json">{{ {'statusUrl': url_for('crawler_splash.crawler_dashboard_json'), 'domainUrl': url_for('crawler_splash.showDomain'), 'tagsUrl': url_for('tags_ui.get_all_obj_tags', object_type='domain'), 'languagesUrl': url_for('crawler_splash.domains_all_languages_json'), 'captures': crawlers_status}|tojson }}</script>
+    <script id="crawler-dashboard-config" type="application/json">{{ {'statusUrl': url_for('crawler_splash.crawler_dashboard_json'), 'domainUrl': url_for('crawler_splash.showDomain'), 'forumUrl': url_for('forums_explorer.forum_explorer_forums'), 'tagsUrl': url_for('tags_ui.get_all_obj_tags', object_type='domain'), 'languagesUrl': url_for('crawler_splash.domains_all_languages_json'), 'captures': crawlers_status}|tojson }}</script>
     <script>
         'use strict';
 
@@ -852,19 +858,31 @@
                 });
                 $('#capture-summary').text(counts.ONGOING + ' running · ' + counts.QUEUED + ' queued · ' + counts.DONE + ' awaiting processing · ' + counts.UNKNOWN + ' unknown');
                 const fragment = document.createDocumentFragment();
-                // The crawler API returns captures in launch order, oldest first.
+                // The dashboard API returns domain and forum captures oldest first.
                 captures.forEach(function (capture) {
                     const row = document.createElement('tr');
                     const status = captureState(capture);
                     row.className = 'capture-row capture-row-' + status.toLowerCase();
                     const domainCell = row.insertCell();
                     domainCell.className = 'capture-domain';
-                    if (capture.domain && capture.domain !== 'UNKNOWN') {
+                    const isForum = capture.kind === 'forum';
+                    if (isForum) {
+                        const forumIcon = document.createElement('i');
+                        forumIcon.className = 'fas fa-comments capture-kind';
+                        forumIcon.setAttribute('role', 'img');
+                        forumIcon.setAttribute('aria-label', 'Forum crawl');
+                        forumIcon.title = 'Forum crawl';
+                        domainCell.appendChild(forumIcon);
+                    }
+                    if (isForum || (capture.domain && capture.domain !== 'UNKNOWN')) {
                         const link = document.createElement('a');
-                        const url = new URL(config.domainUrl, window.location.origin);
-                        url.searchParams.set('domain', capture.domain);
+                        const url = new URL(isForum ? config.forumUrl : config.domainUrl, window.location.origin);
+                        url.searchParams.set(isForum ? 'id' : 'domain', isForum ? capture.forum_id : capture.domain);
                         link.href = url.href;
-                        link.textContent = capture.domain;
+                        link.textContent = isForum ? capture.name || capture.domain : capture.domain;
+                        if (isForum) {
+                            link.title = capture.domain;
+                        }
                         domainCell.appendChild(link);
                     } else {
                         domainCell.textContent = 'Unknown domain';
