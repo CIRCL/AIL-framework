@@ -29,10 +29,44 @@
             margin-bottom: 1rem;
         }
 
+        .dashboard-heading {
+            min-height: 2.625rem;
+        }
+
         .dashboard-heading h1 {
-            font-size: 1.65rem;
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-size: 1.375rem;
             font-weight: 600;
-            margin-bottom: .4rem;
+        }
+
+        .dashboard-header-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 2.75rem;
+            height: 2.75rem;
+            margin-right: .625rem;
+            color: #73879c;
+        }
+
+        .dashboard-header-icon svg {
+            width: 2.75rem;
+            height: 2.75rem;
+            opacity: .8;
+        }
+
+        .dashboard-header-icon .fa-spider {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            color: #304b68;
+            font-size: 1.35rem;
+            transform: rotate(-15deg);
+            text-shadow: -1px -1px 0 #f5f7fa, 1px -1px 0 #f5f7fa, -1px 1px 0 #f5f7fa, 1px 1px 0 #f5f7fa;
         }
 
         .crawler-dashboard h2 {
@@ -47,6 +81,49 @@
             align-items: center;
             flex-wrap: wrap;
             gap: .5rem;
+        }
+
+        .dashboard-actions {
+            gap: .75rem;
+        }
+
+        .dashboard-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            min-height: 2.25rem;
+            padding: .4375rem .75rem;
+            font-size: .875rem;
+            border-radius: .375rem;
+        }
+
+        .header-secondary-actions {
+            display: flex;
+            align-items: center;
+            padding: .125rem;
+            border: 1px solid #dbe3ed;
+            border-radius: .4375rem;
+            background: #edf1f6;
+        }
+
+        .header-secondary-actions .btn {
+            min-height: 1.875rem;
+            padding: .3125rem .625rem;
+            border: 0;
+            background: transparent;
+            color: #455a71;
+        }
+
+        .header-secondary-actions .btn + .btn {
+            border-left: 1px solid #d6dfe9;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .header-secondary-actions .btn:hover,
+        .header-secondary-actions .btn:focus-visible {
+            color: #1b5ea7;
+            background: #e1e8f1;
         }
 
         .crawler-dashboard .card {
@@ -509,28 +586,18 @@
         }
 
         .activity-card td {
+            background: #fff;
+            border-top: 1px solid #edf0f5;
             font-size: .8125rem;
         }
 
-        .activity-card .capture-row-ongoing {
-            background: #f1f6fd;
-        }
-
-        .capture-row-ongoing .capture-domain {
-            box-shadow: inset 3px 0 #5994d5;
-        }
-
-        .activity-card tbody tr:hover,
-        .activity-card tbody tr:focus-within {
+        .activity-card tbody tr:hover td,
+        .activity-card tbody tr:focus-within td {
             background: #f5f8fb;
         }
 
-        .activity-card .capture-row-ongoing:hover,
-        .activity-card .capture-row-ongoing:focus-within {
-            background: #e7f0fc;
-        }
-
         .capture-domain {
+            width: 40%;
             min-width: 14rem;
             max-width: 32rem;
             overflow-wrap: anywhere;
@@ -655,12 +722,24 @@
             <main class="col-12 col-lg-10 py-4" id="core_content">
                 <div class="dashboard-heading">
                     <div>
-                        <h1><i class="fas fa-spider text-muted mr-2" aria-hidden="true"></i>Crawler dashboard</h1>
-                        <p class="text-muted mb-0">Find domains, follow captures, and manage your crawlers.</p>
+                        <h1>
+                            <span class="dashboard-header-icon" aria-hidden="true">
+                                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                                    <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                                    <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                                    <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                                </svg>
+                                <i class="fas fa-spider"></i>
+                            </span>
+                            Crawler dashboard
+                        </h1>
                     </div>
                     <nav class="dashboard-actions" aria-label="Crawler actions">
-                        <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.scheduler_dashboard') }}"><i class="fas fa-calendar-alt mr-1" aria-hidden="true"></i> Schedules</a>
-                        <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><i class="fas fa-plus mr-1" aria-hidden="true"></i> New crawl</a>
+                        <div class="header-secondary-actions">
+                            <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell mr-1" aria-hidden="true"></i> Vanity explorer</a>
+                            <a class="btn btn-outline-secondary" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite mr-1" aria-hidden="true"></i> Cookiejars</a>
+                        </div>
+                        <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><i class="fas fa-plus" aria-hidden="true"></i><i class="fas fa-spider mr-1" aria-hidden="true"></i> New Crawl</a>
                     </nav>
                 </div>
 
@@ -728,8 +807,6 @@
                     <div id="activity-empty" class="text-center text-muted p-4" {% if crawlers_status %}hidden{% endif %}>No captures are currently tracked. Start a new crawl or check your schedules.</div>
                 </section>
                 <nav class="dashboard-footer-links mt-3 mb-2" aria-label="More crawler tools">
-                    <a href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell mr-1" aria-hidden="true"></i> Vanity explorer</a>
-                    <a href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite mr-1" aria-hidden="true"></i> Cookiejars</a>
                     <a href="{{ url_for('crawler_splash.crawler_settings') }}"><i class="fas fa-cog mr-1" aria-hidden="true"></i> Crawler settings</a>
                 </nav>
             </main>
