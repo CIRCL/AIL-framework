@@ -647,6 +647,19 @@
             overflow-wrap: anywhere;
         }
 
+        .capture-domain a {
+            color: #315b87;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .capture-domain a:hover,
+        .capture-domain a:focus-visible {
+            color: #244a70;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
         .capture-kind {
             margin-right: .35rem;
             color: #647080;
@@ -701,7 +714,7 @@
         }
 
         .state-ongoing {
-            color: #2468b4;
+            color: #15803d;
             font-weight: 600;
         }
 
@@ -710,7 +723,7 @@
         }
 
         .state-done {
-            color: #23643b;
+            color: #6f5aa6;
         }
 
         @media (max-width: 991.98px) {
@@ -842,7 +855,7 @@
                         </div>
                         <div class="activity-table-wrapper">
                             <table class="table table-hover mb-0">
-                                <thead><tr><th scope="col">Domain / forum</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
+                                <thead><tr><th scope="col">Domain</th><th scope="col">Network</th><th scope="col">Status</th><th scope="col">Started</th></tr></thead>
                                 <tbody id="capture-rows">
                                     {% set interactive_labels = {'starting': 'Starting', 'ready': 'Active', 'finishing': 'Finishing', 'processing': 'Processing'} %}
                                     {% for crawler in crawlers_status %}
