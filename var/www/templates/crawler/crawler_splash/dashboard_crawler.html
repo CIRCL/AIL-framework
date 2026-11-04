@@ -622,6 +622,11 @@
             padding: .625rem .875rem;
         }
 
+        .activity-card th:not(:first-child) {
+            width: 1%;
+            white-space: nowrap;
+        }
+
         .activity-card th,
         .activity-card td {
             vertical-align: middle;
@@ -641,9 +646,7 @@
         }
 
         .capture-domain {
-            width: 35%;
             min-width: 14rem;
-            max-width: 32rem;
             overflow-wrap: anywhere;
         }
 
@@ -688,13 +691,9 @@
             font-size: .7rem;
         }
 
-        .capture-network,
-        .activity-card .capture-started {
+        .capture-network {
             color: #647080;
             font-size: .75rem;
-        }
-
-        .capture-network {
             white-space: nowrap;
         }
 
@@ -704,13 +703,11 @@
             text-align: center;
         }
 
-        .capture-started {
+        .activity-card .capture-started {
+            color: #647080;
+            font-size: .8125rem;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
-        }
-
-        .activity-card .capture-started {
-            font-size: .6875rem;
         }
 
         .state-ongoing {
