@@ -494,7 +494,7 @@
         }
 
         .network-status-up {
-            color: #276842;
+            color: #15803d;
         }
 
         .network-status-down {
@@ -505,6 +505,10 @@
             color: #2468b4;
             background: #f5f7fa;
             text-decoration: underline;
+        }
+
+        .network-status-up:hover {
+            color: #166534;
         }
 
         .network-card-footer {
@@ -561,8 +565,7 @@
         }
 
         .activity-table-wrapper {
-            overflow: auto;
-            max-height: 30rem;
+            overflow-x: auto;
         }
 
         .activity-card th {
@@ -627,6 +630,16 @@
         .activity-card .capture-started {
             color: #647080;
             font-size: .75rem;
+        }
+
+        .capture-network {
+            white-space: nowrap;
+        }
+
+        .capture-network i {
+            width: 1rem;
+            margin-right: .35rem;
+            text-align: center;
         }
 
         .capture-started {
@@ -788,7 +801,7 @@
                                             {% if crawler.get('kind') == 'forum' %}<i class="fas fa-comments capture-kind" role="img" aria-label="Forum crawl" title="Forum crawl"></i>{% elif crawler.get('kind') == 'interactive' %}<i class="fas fa-desktop capture-kind" role="img" aria-label="Interactive session" title="Interactive session"></i>{% endif %}
                                             {% if crawler.get('kind') == 'forum' %}<a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crawler['forum_id']) }}" title="{{ crawler['domain'] }}">{{ crawler.get('name') or crawler['domain'] }}</a>{% elif crawler['domain'] != 'UNKNOWN' %}<a href="{{ url_for('crawler_splash.showDomain', domain=crawler['domain']) }}">{{ crawler['domain'] }}</a>{% else %}Unknown domain{% endif %}
                                         </td>
-                                        <td class="capture-network">{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
+                                        <td class="capture-network"><i class="fas fa-{{ {'onion': 'user-secret', 'i2p': 'user-secret', 'web': 'globe'}.get(crawler['type'], 'question-circle') }}" aria-hidden="true"></i>{{ {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}.get(crawler['type'], 'Unknown') }}</td>
                                         <td><span class="capture-state state-{{ state|lower }}"><i class="fas fa-{{ {'ONGOING': 'circle-notch', 'QUEUED': 'clock', 'DONE': 'check-circle'}.get(state, 'question-circle') }}" aria-hidden="true"></i>{{ interactive_labels.get(crawler.get('session_status'), 'Running') if crawler.get('kind') == 'interactive' else {'ONGOING': 'Running', 'QUEUED': 'Queued', 'DONE': 'Awaiting processing'}.get(state, 'Unknown') }}</span></td>
                                         <td class="capture-started">{{ crawler['start_time'] or '—' }}</td>
                                     </tr>
@@ -808,6 +821,7 @@
         $(function () {
             const config = JSON.parse(document.getElementById('crawler-dashboard-config').textContent);
             const networks = {onion: 'Onion', i2p: 'I2P', web: 'Web'};
+            const networkIcons = {onion: 'user-secret', i2p: 'user-secret', web: 'globe'};
             const states = {ONGOING: 'Running', QUEUED: 'Queued', DONE: 'Awaiting processing', UNKNOWN: 'Unknown'};
             const stateIcons = {ONGOING: 'circle-notch', QUEUED: 'clock', DONE: 'check-circle', UNKNOWN: 'question-circle'};
             const captureKinds = {forum: {icon: 'comments', label: 'Forum crawl'}, interactive: {icon: 'desktop', label: 'Interactive session'}};
@@ -865,7 +879,10 @@
                     }
                     const networkCell = row.insertCell();
                     networkCell.className = 'capture-network';
-                    networkCell.textContent = networks[capture.type] || 'Unknown';
+                    const networkIcon = document.createElement('i');
+                    networkIcon.className = 'fas fa-' + (networkIcons[capture.type] || 'question-circle');
+                    networkIcon.setAttribute('aria-hidden', 'true');
+                    networkCell.append(networkIcon, document.createTextNode(networks[capture.type] || 'Unknown'));
                     const stateCell = row.insertCell();
                     const badge = document.createElement('span');
                     badge.className = 'capture-state state-' + status.toLowerCase();
