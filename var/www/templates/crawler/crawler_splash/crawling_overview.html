@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crawl history · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+    <style>
+        .overview-page {
+            margin: 0;
+            background: #f3f6fa;
+            color: #263d53;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .overview-content {
+            min-width: 0;
+            padding: 24px 28px 28px;
+        }
+
+        .overview-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 23px;
+        }
+
+        .overview-heading h1 {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin: 0;
+            font-size: 26px;
+            font-weight: 650;
+            letter-spacing: -.4px;
+        }
+
+        .overview-heading .crawler-history-icon {
+            width: 44px;
+            height: 44px;
+            font-size: 44px;
+            color: #69849c;
+        }
+
+        .overview-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .overview-actions a {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 9px 14px;
+            border: 1px solid #d7e2ec;
+            border-radius: 6px;
+            background: #fff;
+            color: #45627c;
+            font-size: 14px;
+        }
+
+        .overview-actions a.btn-primary {
+            border-color: #2563d5;
+            background: #2563d5;
+            color: #fff;
+        }
+
+        .overview-actions .crawler-nav-dashboard-icon {
+            color: inherit;
+        }
+
+        .overview-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 25px;
+            padding: 18px 20px;
+            border: 1px solid #d4e0eb;
+            border-radius: 9px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(25, 48, 70, .025);
+            margin-bottom: 20px;
+        }
+
+        .overview-results-heading {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .overview-results-heading > i {
+            font-size: 24px;
+            color: #6b859d;
+        }
+
+        .overview-results-heading h2 {
+            margin: 0 0 5px;
+            font-size: 19px;
+            font-weight: 600;
+        }
+
+        .overview-network-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .overview-network-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 185px;
+            padding: 12px 15px;
+            border: 1px solid #cedcea;
+            border-radius: 6px;
+            background: #f5f8fc;
+            color: #2d5d8a;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .overview-network-links a:hover {
+            border-color: #9eb8d4;
+            background: #edf3fa;
+            text-decoration: none;
+        }
+
+        .overview-network-links span > i {
+            margin-right: 9px;
+        }
+
+        .overview-date {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #74879a;
+            font-size: 13px;
+        }
+
+        .overview-card {
+            min-width: 0;
+            overflow: hidden;
+            border: 1px solid #dce5ed;
+            border-radius: 9px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(25, 48, 70, .025);
+        }
+
+        .overview-card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 18px 20px 7px;
+        }
+
+        .overview-card-heading h2 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .overview-legend {
+            display: inline-flex;
+            align-items: center;
+            gap: 16px;
+            color: #6e8296;
+            font-size: 13px;
+        }
+
+        .overview-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .overview-legend i {
+            display: block;
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        .overview-legend-up {
+            background: #2f9860;
+        }
+
+        .overview-legend-down {
+            background: #c96a76;
+        }
+
+        .overview-chart {
+            width: calc(100% - 28px);
+            height: 220px;
+            margin: 0 14px 10px;
+        }
+
+        .overview-week .overview-chart {
+            height: 287px;
+        }
+
+        .overview-summary {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 350px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .overview-networks {
+            margin-top: 20px;
+        }
+
+        .overview-networks .overview-chart {
+            height: 170px;
+        }
+
+        .overview-month-caption {
+            color: #778b9e;
+            font-size: 13px;
+        }
+
+        .overview-donut-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 0 25px 15px;
+        }
+
+        .overview-donut-layout .overview-chart {
+            width: 210px;
+            height: 165px;
+            margin: 0;
+        }
+
+        .overview-values {
+            display: grid;
+            width: 100%;
+            gap: 14px;
+        }
+
+        .overview-values > div {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 5px 10px;
+            font-size: 14px;
+        }
+
+        .overview-values i {
+            margin-right: 6px;
+        }
+
+        .overview-values strong {
+            font-size: 19px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .overview-values b {
+            grid-column: 3;
+            min-width: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .overview-values .up {
+            color: #15803d;
+        }
+
+        .overview-values .down {
+            color: #b13d4e;
+        }
+
+        .overview-summary-footer {
+            padding: 10px 17px;
+            border-top: 1px solid #e9eef4;
+            color: #6c8195;
+            font-size: 13px;
+        }
+
+        .overview-history {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .overview-notice {
+            margin: 0;
+            padding: 0 20px 14px;
+            color: #718296;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .overview-error {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .overview-content [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1199.98px) {
+            .overview-network-links {
+                flex: 1;
+            }
+
+            .overview-network-links a {
+                flex: 1;
+                min-width: 165px;
+            }
+
+            .overview-summary {
+                grid-template-columns: minmax(0, 1fr) 320px;
+            }
+
+            .overview-donut-layout {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .overview-summary,
+            .overview-history {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .overview-donut-layout {
+                display: grid;
+                grid-template-columns: 190px minmax(0, 1fr);
+                gap: 20px;
+                padding: 8px 23px 15px;
+            }
+
+            .overview-donut-layout .overview-chart {
+                width: 190px;
+                height: 190px;
+            }
+
+            .overview-values > div {
+                grid-template-columns: 1fr auto;
+            }
+
+            .overview-values b {
+                grid-column: 2;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .overview-content {
+                padding: 20px 15px;
+            }
+
+            .overview-heading h1 {
+                font-size: 24px;
+            }
+
+            .overview-network-links {
+                width: 100%;
+            }
+
+            .overview-network-links a {
+                flex: 1 0 100%;
+                padding: 10px 12px;
+            }
+
+            .overview-navigation {
+                padding: 16px 14px;
+                gap: 16px;
+            }
+
+            .overview-card-heading {
+                padding: 16px 14px 7px;
+            }
+
+            .overview-card-heading h2 {
+                font-size: 16px;
+            }
+
+            .overview-chart {
+                width: calc(100% - 14px);
+                margin-left: 7px;
+                margin-right: 7px;
+            }
+
+            .overview-donut-layout {
+                grid-template-columns: 125px minmax(0, 1fr);
+                gap: 10px;
+                padding: 8px 12px 16px;
+            }
+
+            .overview-donut-layout .overview-chart {
+                width: 125px;
+                height: 150px;
+            }
+
+            .overview-values > div {
+                gap: 5px 6px;
+            }
+
+            .overview-values strong {
+                font-size: 18px;
+            }
+
+            .overview-summary-footer {
+                padding: 12px 14px;
+            }
+        }
+    </style>
+</head>
+<body class="overview-page">
+    {% include 'nav_bar.html' %}
+    {% macro status_legend() %}
+        <span class="overview-legend"><span><i class="overview-legend-up" aria-hidden="true"></i>Up</span><span><i class="overview-legend-down" aria-hidden="true"></i>Down</span></span>
+    {% endmacro %}
+    <main class="overview-content" id="core_content">
+        <header class="overview-heading">
+            <h1>
+                <span class="crawler-history-icon" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                        <path d="M17.5 14.9A16 16 0 1 1 12.4 30.5" />
+                        <path d="M28 18V27L35 31" />
+                        <path d="M10 3V12" stroke-width="2" />
+                    </svg>
+                    <i class="fas fa-spider"></i>
+                </span>Crawl history
+            </h1>
+            <nav class="overview-actions" aria-label="Crawler actions">
+                <a href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
+                    <span class="crawler-nav-dashboard-icon" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                            <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                        </svg>
+                        <i class="fas fa-spider"></i>
+                    </span>Dashboard
+                </a>
+                <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>New Capture</a>
+            </nav>
+        </header>
+        <div class="overview-navigation">
+            <div class="overview-results-heading">
+                <i class="fas fa-history" aria-hidden="true"></i>
+                <div>
+                    <h2>Latest crawled domains</h2>
+                    <span class="overview-date"><i class="far fa-calendar-alt" aria-hidden="true"></i><time id="overview-date" datetime="{{ today }}">{{ today }}</time></span>
+                </div>
+            </div>
+            <nav class="overview-network-links" aria-label="Latest crawled domains">
+                {% for key, label, icon in [('onion', 'Onion', 'user-secret'), ('i2p', 'I2P', 'user-secret'), ('web', 'Web', 'globe')] %}
+                    <a href="{{ url_for('crawler_splash.crawlers_last_domains', type=key) }}"><span><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }} domains</span></a>
+                {% endfor %}
+            </nav>
+        </div>
+        <div class="alert alert-warning overview-error" id="overview-error" role="alert" hidden>
+            <span id="overview-error-message">Statistics could not be loaded.</span>
+            <button class="btn btn-sm btn-dark" id="overview-retry" type="button">Retry statistics</button>
+        </div>
+        <div class="overview-summary">
+            <section class="overview-card overview-week" aria-labelledby="week-heading">
+                <div class="overview-card-heading"><h2 id="week-heading">Crawling activity · Last 7 days</h2>{{ status_legend() }}</div>
+                <div class="overview-chart" id="week-chart" role="img" aria-label="Daily Up and Down domain counts across all networks during the last seven days"></div>
+                <p class="overview-notice" id="week-notice" role="status" hidden>No checks in this period.</p>
+            </section>
+            <section class="overview-card" aria-labelledby="summary-heading">
+                <div class="overview-card-heading"><h2 id="summary-heading">Up / Down this month</h2><span class="overview-month-caption" id="summary-month"></span></div>
+                <div class="overview-donut-layout">
+                    <div class="overview-chart" id="month-donut" role="img" aria-label="Monthly Up and Down proportions across all networks"></div>
+                    <div class="overview-values">
+                        <div class="up"><span><i class="fas fa-check-circle" aria-hidden="true"></i>Up</span><strong id="month-up">—</strong><b id="month-up-percent">—</b></div>
+                        <div class="down"><span><i class="fas fa-times-circle" aria-hidden="true"></i>Down</span><strong id="month-down">—</strong><b id="month-down-percent">—</b></div>
+                    </div>
+                </div>
+                <div class="overview-summary-footer" id="month-total" role="status">Loading monthly statistics…</div>
+            </section>
+        </div>
+        <div class="overview-history">
+            {% for key, title in [('month', 'This month'), ('previous', 'Previous month')] %}
+                <section class="overview-card" aria-labelledby="{{ key }}-heading">
+                    <div class="overview-card-heading"><h2 id="{{ key }}-heading">{{ title }}</h2>{{ status_legend() }}</div>
+                    <div class="overview-chart" id="{{ key }}-chart" role="img" aria-label="{{ title }}: daily Up and Down domain counts across all networks"></div>
+                    <p class="overview-notice" id="{{ key }}-notice" role="status" hidden>No checks in this period.</p>
+                </section>
+            {% endfor %}
+        </div>
+        <section class="overview-card overview-networks" aria-labelledby="networks-heading">
+            <div class="overview-card-heading"><h2 id="networks-heading">Activity by network · This month</h2>{{ status_legend() }}</div>
+            <div class="overview-chart" id="networks-chart" role="img" aria-label="Monthly Up and Down domain counts for Onion, I2P and Web"></div>
+            <p class="overview-notice" id="networks-notice" role="status" hidden>No checks in this period.</p>
+        </section>
+        <noscript><p class="text-muted mt-3">Enable JavaScript to display crawling statistics. The network links above open the latest domains.</p></noscript>
+    </main>
+    <script type="application/json" id="overview-config">{{ {'url': url_for('crawler_splash.crawlers_overview_json'), 'today': today}|tojson }}</script>
+    <script>
+        (function () {
+            'use strict';
+            const config = JSON.parse(document.getElementById('overview-config').textContent);
+            document.getElementById('page-Crawler').classList.add('active');
+            const menuLink = document.getElementById('crawler-nav-overview');
+            menuLink.classList.add('active');
+            menuLink.setAttribute('aria-current', 'page');
+            const error = document.getElementById('overview-error');
+            const retry = document.getElementById('overview-retry');
+            const number = function (value) {
+                return value.toLocaleString('en-US');
+            };
+            const keys = ['week', 'networks', 'month', 'previous'];
+            const networkKeys = ['onion', 'i2p', 'web'];
+            const networkNames = ['Onion', 'I2P', 'Web'];
+            const green = '#2f9860';
+            const red = '#c96a76';
+            const muted = '#708396';
+            const font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+            function updateDates(date) {
+                const today = moment(date, 'YYYY-MM-DD', true);
+                const time = document.getElementById('overview-date');
+                time.textContent = today.format('D MMMM YYYY');
+                time.dateTime = date;
+                document.getElementById('summary-month').textContent = today.format('MMMM YYYY');
+                document.getElementById('month-heading').textContent = 'This month · ' + today.format('MMMM YYYY');
+                document.getElementById('previous-heading').textContent = 'Previous month · ' + today.clone().subtract(1, 'month').format('MMMM YYYY');
+            }
+            updateDates(config.today);
+
+            if (!window.echarts) {
+                document.getElementById('overview-error-message').textContent = 'Charts are unavailable. Reload the page to retry.';
+                document.getElementById('month-total').textContent = 'Monthly statistics unavailable.';
+                retry.hidden = true;
+                error.hidden = false;
+                return;
+            }
+            const charts = {};
+            keys.concat('donut').forEach(function (key) {
+                const container = document.getElementById(key === 'donut' ? 'month-donut' : key + '-chart');
+                charts[key] = echarts.init(container, null, {renderer: 'svg'});
+            });
+
+            function countsValid(row) {
+                return row && Number.isFinite(row.up) && Number.isFinite(row.down) && row.up >= 0 && row.down >= 0;
+            }
+
+            function validate(data) {
+                if (!data || !moment(data.today, 'YYYY-MM-DD', true).isValid() || !data.networks) {
+                    throw new TypeError('Invalid crawler overview');
+                }
+                ['week', 'month', 'previous'].forEach(function (key) {
+                    if (!Array.isArray(data[key]) || !data[key].every(function (row) {
+                        return countsValid(row) && typeof row.date === 'string' && moment(row.date, 'YYYY-MM-DD', true).isValid() && row.date <= data.today;
+                    })) {
+                        throw new TypeError('Invalid daily crawler statistics');
+                    }
+                    data[key].sort(function (a, b) {
+                        return a.date.localeCompare(b.date);
+                    });
+                });
+                if (!networkKeys.every(function (key) {
+                    return countsValid(data.networks[key]);
+                })) {
+                    throw new TypeError('Invalid crawler network statistics');
+                }
+                return data;
+            }
+
+            function axisRange(data) {
+                const maximum = Math.max(1, ...data.map(function (row) {
+                    return row.up + row.down;
+                }));
+                const roughStep = Math.max(1, maximum / 4);
+                const power = Math.pow(10, Math.floor(Math.log10(roughStep)));
+                const step = [1, 2, 5, 10].find(function (factor) {
+                    return factor * power >= roughStep;
+                }) * power;
+                return {max: Math.ceil(maximum / step) * step, interval: step};
+            }
+
+            function baseOptions() {
+                return {
+                    animation: false,
+                    textStyle: {fontFamily: font},
+                    tooltip: {
+                        trigger: 'axis', confine: true, className: 'overview-tooltip',
+                        axisPointer: {type: 'shadow'}, backgroundColor: '#fff', borderColor: '#dce5ed',
+                        textStyle: {color: '#344d64', fontSize: 14}, valueFormatter: number
+                    }
+                };
+            }
+
+            function renderBars(key, data, range) {
+                const option = baseOptions();
+                option.grid = {left: Math.max(48, number(range.max).length * 7 + 12), right: 16, top: 20, bottom: 34};
+                option.xAxis = {
+                    type: 'category', data: data.map(function (row) {
+                        return moment(row.date, 'YYYY-MM-DD').format(key === 'week' ? 'D MMM' : 'D');
+                    }),
+                    axisLine: {show: false}, axisTick: {show: false},
+                    axisLabel: {color: muted, fontSize: 13, margin: 12, hideOverlap: true, interval: function (index) {
+                        if (key === 'week') {
+                            return charts[key].getWidth() >= 500 || index % 2 === 0 || index === data.length - 1;
+                        }
+                        return data.length <= 7 || index % 5 === 0 || index === data.length - 1;
+                    }}
+                };
+                option.yAxis = {
+                    type: 'value', min: 0, max: range.max, interval: range.interval,
+                    axisLine: {show: false}, axisTick: {show: false},
+                    axisLabel: {color: muted, fontSize: 12, formatter: number}, splitLine: {lineStyle: {color: '#e7eef4'}}
+                };
+                option.series = [
+                    {name: 'Up', type: 'bar', stack: 'checks', barMaxWidth: 62, itemStyle: {color: green}, data: data.map(function (row) {
+                        return row.up;
+                    })},
+                    {name: 'Down', type: 'bar', stack: 'checks', itemStyle: {color: red, borderRadius: [3, 3, 0, 0]}, data: data.map(function (row) {
+                        return row.down;
+                    })}
+                ];
+                charts[key].setOption(option, true);
+                document.getElementById(key + '-chart').setAttribute('aria-label', 'All networks: ' + data.map(function (row) {
+                    return row.date + ', ' + row.up + ' Up, ' + row.down + ' Down';
+                }).join('; '));
+                document.getElementById(key + '-notice').hidden = data.some(function (row) {
+                    return row.up + row.down > 0;
+                });
+            }
+
+            function renderNetworks(networks) {
+                const data = networkKeys.map(function (key) {
+                    return networks[key];
+                });
+                const option = baseOptions();
+                option.grid = {left: 60, right: 62, top: 24, bottom: 32};
+                option.xAxis = {
+                    type: 'value', min: 0, splitNumber: 4,
+                    axisLine: {show: false}, axisTick: {show: false},
+                    axisLabel: {color: muted, fontSize: 12, hideOverlap: true, formatter: number}, splitLine: {lineStyle: {color: '#e7eef4'}}
+                };
+                option.yAxis = {
+                    type: 'category', inverse: true, data: networkNames,
+                    axisLine: {show: false}, axisTick: {show: false}, axisLabel: {color: '#415a73', fontSize: 14}
+                };
+                option.series = [
+                    {name: 'Up', type: 'bar', stack: 'checks', barMaxWidth: 32, itemStyle: {color: green}, data: data.map(function (row) {
+                        return row.up;
+                    })},
+                    {name: 'Down', type: 'bar', stack: 'checks', itemStyle: {color: red, borderRadius: [0, 3, 3, 0]}, data: data.map(function (row) {
+                        return row.down;
+                    }), label: {show: true, position: 'right', color: '#60768b', fontSize: 13, formatter: function (item) {
+                        return number(data[item.dataIndex].up + data[item.dataIndex].down);
+                    }}}
+                ];
+                charts.networks.setOption(option, true);
+                document.getElementById('networks-chart').setAttribute('aria-label', networkNames.map(function (name, index) {
+                    return name + ': ' + data[index].up + ' Up, ' + data[index].down + ' Down this month';
+                }).join('; '));
+                document.getElementById('networks-notice').hidden = data.some(function (row) {
+                    return row.up + row.down > 0;
+                });
+            }
+
+            function renderDonut(data) {
+                const up = data.reduce(function (total, row) {
+                    return total + row.up;
+                }, 0);
+                const down = data.reduce(function (total, row) {
+                    return total + row.down;
+                }, 0);
+                const total = up + down;
+                const upPercent = total ? (up / total * 100).toFixed(1) + '%' : '—';
+                const downPercent = total ? (down / total * 100).toFixed(1) + '%' : '—';
+                document.getElementById('month-up').textContent = number(up);
+                document.getElementById('month-down').textContent = number(down);
+                document.getElementById('month-up-percent').textContent = upPercent;
+                document.getElementById('month-down-percent').textContent = downPercent;
+                document.getElementById('month-total').textContent = number(total) + ' daily domain checks this month';
+                document.getElementById('month-donut').setAttribute('aria-label', 'This month: ' + number(up) + ' Up (' + upPercent + '), ' + number(down) + ' Down (' + downPercent + ')');
+                charts.donut.setOption({
+                    animation: false, color: [green, red], textStyle: {fontFamily: font},
+                    tooltip: {trigger: 'item', confine: true, formatter: function (item) {
+                        return item.name + ': ' + number(item.value) + ' (' + item.percent.toFixed(1) + '%)';
+                    }},
+                    graphic: [
+                        {type: 'text', left: 'center', top: '38%', style: {text: upPercent, fill: '#293f54', fontSize: 22, fontWeight: 600, fontFamily: font}},
+                        {type: 'text', left: 'center', top: '56%', style: {text: 'Up', fill: '#15803d', fontSize: 13, fontFamily: font}}
+                    ],
+                    series: [{type: 'pie', radius: ['64%', '83%'], center: ['50%', '50%'], startAngle: 90, label: {show: false}, labelLine: {show: false}, emphasis: {scale: false}, stillShowZeroSum: false, data: total ? [{name: 'Up', value: up}, {name: 'Down', value: down}] : []}]
+                }, true);
+            }
+
+            let loading = false;
+            let disposed = false;
+            let controller;
+            async function loadStatistics() {
+                if (loading || disposed) {
+                    return;
+                }
+                loading = true;
+                retry.disabled = true;
+                error.hidden = true;
+                Object.values(charts).forEach(function (chart) {
+                    chart.showLoading('default', {text: '', color: '#2468b4', maskColor: 'rgba(255,255,255,.9)'});
+                });
+                controller = new AbortController();
+                const timeout = setTimeout(function () {
+                    controller.abort();
+                }, 15000);
+                try {
+                    const response = await fetch(config.url, {headers: {'Accept': 'application/json'}, signal: controller.signal});
+                    if (!response.ok) {
+                        throw new Error('Statistics request failed');
+                    }
+                    const data = validate(await response.json());
+                    if (disposed) {
+                        return;
+                    }
+                    updateDates(data.today);
+                    renderBars('week', data.week, axisRange(data.week));
+                    const monthRange = axisRange(data.month.concat(data.previous));
+                    renderBars('month', data.month, monthRange);
+                    renderBars('previous', data.previous, monthRange);
+                    renderNetworks(data.networks);
+                    renderDonut(data.month);
+                } catch (failure) {
+                    if (!disposed) {
+                        document.getElementById('month-total').textContent = 'Monthly statistics unavailable.';
+                        error.hidden = false;
+                    }
+                } finally {
+                    clearTimeout(timeout);
+                    if (!disposed) {
+                        Object.values(charts).forEach(function (chart) {
+                            chart.hideLoading();
+                        });
+                    }
+                    retry.disabled = false;
+                    loading = false;
+                }
+            }
+
+            retry.addEventListener('click', loadStatistics);
+            let resizeFrame;
+            const observer = new ResizeObserver(function () {
+                cancelAnimationFrame(resizeFrame);
+                resizeFrame = requestAnimationFrame(function () {
+                    Object.values(charts).forEach(function (chart) {
+                        chart.resize();
+                    });
+                });
+            });
+            Object.values(charts).forEach(function (chart) {
+                observer.observe(chart.getDom());
+            });
+            window.addEventListener('pagehide', function (event) {
+                if (!event.persisted) {
+                    disposed = true;
+                    if (controller) {
+                        controller.abort();
+                    }
+                    observer.disconnect();
+                    cancelAnimationFrame(resizeFrame);
+                    Object.values(charts).forEach(function (chart) {
+                        chart.dispose();
+                    });
+                }
+            });
+            loadStatistics();
+        })();
+    </script>
+</body>
+</html>

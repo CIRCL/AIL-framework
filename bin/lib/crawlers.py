@@ -1637,6 +1637,42 @@ def get_crawlers_stats_by_day(date, domain_type):
         'down': r_crawler.scard(f'{domain_type}_down:{date}'),
     }
 
+def get_crawlers_overview_stats(date=None):
+    """Summarise daily domain/status counts across all crawler networks."""
+    today = datetime.strptime(date or get_current_date(), '%Y%m%d')
+    month_start = today.replace(day=1)
+    previous_start = (month_start - timedelta(days=1)).replace(day=1)
+    dates = [previous_start + timedelta(days=offset) for offset in range((today - previous_start).days + 1)]
+    networks = get_crawler_all_types()
+    with r_crawler.pipeline(transaction=False) as pipeline:
+        for day in dates:
+            day_key = day.strftime('%Y%m%d')
+            for network in networks:
+                pipeline.scard(f'{network}_up:{day_key}')
+                pipeline.scard(f'{network}_down:{day_key}')
+        counts = iter(pipeline.execute())
+
+    daily = []
+    totals = {network: {'up': 0, 'down': 0} for network in networks}
+    for day in dates:
+        row = {'date': day.strftime('%Y-%m-%d'), 'up': 0, 'down': 0}
+        for network in networks:
+            up, down = next(counts), next(counts)
+            row['up'] += up
+            row['down'] += down
+            if day >= month_start:
+                totals[network]['up'] += up
+                totals[network]['down'] += down
+        daily.append(row)
+    month_date = month_start.strftime('%Y-%m-%d')
+    return {
+        'today': today.strftime('%Y-%m-%d'),
+        'week': daily[-7:],
+        'month': [row for row in daily if row['date'] >= month_date],
+        'previous': [row for row in daily if row['date'] < month_date],
+        'networks': totals,
+    }
+
 def get_crawlers_stats_by_month(domain_type, date=None):
     stats = []
     for date in Date.get_month_dates(date=date):

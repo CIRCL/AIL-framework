@@ -452,6 +452,20 @@ def crawler_blacklist_delete():
     return redirect(url_for('crawler_splash.crawler_blacklist'))
 
 
+@crawler_splash.route('/crawlers/overview')
+@login_required
+@login_read_only
+def crawlers_overview():
+    return render_template('crawling_overview.html', today=datetime.now().strftime('%Y-%m-%d'))
+
+
+@crawler_splash.route('/crawlers/overview/json')
+@login_required
+@login_read_only
+def crawlers_overview_json():
+    return jsonify(crawlers.get_crawlers_overview_stats())
+
+
 @crawler_splash.route("/crawlers/last/domains", methods=['GET'])
 @login_required
 @login_read_only

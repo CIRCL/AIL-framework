@@ -28,6 +28,18 @@
                 <li><a id="crawler-nav-vanity-explorer" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</a></li>
             </ul>
         </li>
+        <li>
+            <a id="crawler-nav-overview" href="{{ url_for('crawler_splash.crawlers_overview') }}">
+                <span class="crawler-history-icon" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                        <path d="M17.5 14.9A16 16 0 1 1 12.4 30.5" />
+                        <path d="M28 18V27L35 31" />
+                        <path d="M10 3V12" stroke-width="2" />
+                    </svg>
+                    <i class="fas fa-spider"></i>
+                </span>Crawl history
+            </a>
+        </li>
         <li><a id="crawler-nav-cookiejar-all" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-cookie-bite" aria-hidden="true"></i>Cookiejars</a></li>
         <li class="crawler-nav-separator" role="separator"></li>
         <li><a id="crawler-nav-scheduler" href="{{ url_for('crawler_splash.scheduler_dashboard') }}"><i class="fas fa-calendar-alt" aria-hidden="true"></i>Scheduler</a></li>
@@ -167,6 +179,35 @@
     .crawler-new-capture-icon .fa-spider {
         font-size: 1rem;
         transform: rotate(-15deg);
+    }
+    .crawler-history-icon {
+        position: relative;
+        display: inline-block;
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 1.25rem;
+    }
+    .crawler-history-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .crawler-history-icon .fa-spider {
+        position: absolute;
+        left: 3%;
+        top: 22%;
+        font-size: .36em;
+        line-height: 1;
+        transform: rotate(180deg);
+    }
+    .crawler-nav-panel a > .crawler-history-icon {
+        color: var(--crawler-menu-icon);
+        transition: color .1s ease;
+    }
+    .crawler-nav-panel a:hover > .crawler-history-icon,
+    .crawler-nav-panel a.active > .crawler-history-icon {
+        color: var(--crawler-menu-accent);
     }
     .crawler-nav-panel .crawler-new-capture-icon {
         gap: .125rem;
