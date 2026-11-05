@@ -1,108 +1,826 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cookiejars · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    <style>
+        .cookiejars-page {
+            margin: 0;
+            background: #fff;
+            color: #243348;
+            -webkit-font-smoothing: antialiased;
+        }
 
-  <title>AIL - Cookies</title>
-  <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+        .cookiejars-content {
+            padding: 28px 30px 30px;
+        }
 
-  <!-- Core CSS -->
-  <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+        .cookiejars-page .cookiejar-heading {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 22px;
+            margin-bottom: 26px;
+        }
 
-  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+        .cookiejars-page .cookiejar-heading h1 {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 650;
+            letter-spacing: -.6px;
+        }
+
+        .cookiejars-page .cookiejar-heading h1>i {
+            font-size: 36px;
+            color: #4e6481;
+            width: 44px;
+            text-align: center;
+        }
+
+        .cookiejars-page .cookiejar-actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding-top: 3px;
+        }
+
+        .cookiejars-page .cookiejar-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 13px;
+            border: 1px solid #d8dfe7;
+            border-radius: 7px;
+            background: #fff;
+            color: #42566d;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 1px 2px #17294008;
+        }
+
+        .cookiejars-page .cookiejar-action:hover {
+            text-decoration: none;
+            background: #edf3fa;
+            color: #315b87;
+        }
+
+        .cookiejars-page .cookiejar-action.primary {
+            background: #2563d5;
+            border-color: #2563d5;
+            color: white;
+            font-weight: 500;
+        }
+
+        .cookiejars-page .cookiejar-actions .crawler-nav-dashboard-icon {
+            color: inherit;
+        }
+
+        .cookiejars-page .cookiejar-surface {
+            border: 1px solid #dce2e9;
+            border-radius: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 3px 12px #182c4510;
+            min-width: 0;
+        }
+
+        .cookiejars-page .cookiejar-tools {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 0 18px;
+            min-height: 78px;
+            border-bottom: 1px solid #e5ecf3;
+        }
+
+        .cookiejars-page .cookiejar-scopes {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            align-self: stretch;
+        }
+
+        .cookiejars-page .cookiejar-scopes button {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            background: transparent;
+            color: #5c6b7f;
+            border-radius: 0;
+            padding: 19px 2px;
+            font-size: 14px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .cookiejars-page .cookiejar-scopes button.active {
+            border-bottom-color: #315f9f;
+            background: transparent;
+            color: #284e80;
+            font-weight: 600;
+        }
+
+        .cookiejars-page .cookiejar-scopes b {
+            border-radius: 12px;
+            background: #f0f2f5;
+            color: #677487;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 2px 7px;
+        }
+
+        .cookiejars-page .cookiejar-scopes button.active b {
+            background: #e9eff8;
+            color: #315f9f;
+        }
+
+        .cookiejars-page .cookiejar-search-tools {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cookiejars-page .cookiejar-search {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 340px;
+            min-width: 0;
+            padding: 8px 11px;
+            border: 1px solid #cfdce8;
+            border-radius: 6px;
+            background: #fff;
+            color: #8194a6;
+            margin: 0;
+        }
+
+        .cookiejars-page .cookiejar-search:focus-within {
+            border-color: #638dbb;
+            box-shadow: 0 0 0 2px #2b6ab319;
+        }
+
+        .cookiejars-page .cookiejar-search input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            background: transparent;
+            color: #344e67;
+            font-size: 14px;
+        }
+
+        .cookiejars-page .cookiejar-search input::placeholder {
+            color: #6b7b8d;
+        }
+
+        .cookiejars-page .cookiejar-sort {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #667589;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .cookiejars-page .cookiejar-sort select {
+            font-size: 14px;
+            color: #455f79;
+            border: 1px solid #d7e2ec;
+            border-radius: 5px;
+            background: #fff;
+            padding: 7px 9px;
+        }
+
+        .cookiejars-page .table {
+            color: #3d566f;
+            margin: 0;
+        }
+
+        .cookiejars-page .table th {
+            background: #f6f7f9;
+            border: 0;
+            border-bottom: 1px solid #e0e5eb;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: .1px;
+            color: #5a697b;
+            white-space: nowrap;
+            padding: 12px 16px;
+        }
+
+        .cookiejars-page .table td {
+            border-color: #edf0f3;
+            padding: 11px 16px;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .cookiejars-page .table tbody tr:hover td {
+            background: #eff5fc;
+        }
+
+        .cookiejars-page .jar-name {
+            color: #274f7d;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .cookiejars-page .jar-name:hover {
+            color: #244a70;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .cookiejars-page .jar-uuid {
+            overflow-wrap: anywhere;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
+            font-size: 12px;
+            color: #6c7d8d;
+            margin-top: 4px;
+        }
+
+        .cookiejars-page .copy-id {
+            flex: none;
+            padding: 3px;
+            border: 0;
+            background: none;
+            color: #728397;
+            font-size: 12px;
+        }
+
+        .cookiejars-page .copy-id:hover {
+            color: #315b87;
+        }
+
+        .cookiejars-page .badge-scope {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #e2e6ed;
+            border-radius: 5px;
+            background: #f7f8fa;
+            color: #596a80;
+            padding: 5px 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .cookiejars-page .badge-scope.organisation {
+            border-color: #e2e8f1;
+            background: #f2f5fa;
+            color: #4a6484;
+        }
+
+        .cookiejars-page .badge-scope.global {
+            border-color: #dfece5;
+            background: #f0f6f3;
+            color: #47755e;
+        }
+
+        .cookiejars-page .cell-sub {
+            display: block;
+            font-size: 12px;
+            color: #728091;
+            margin-top: 3px;
+        }
+
+        .cookiejars-page .cookie-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-variant-numeric: tabular-nums;
+            font-size: 15px;
+        }
+
+        .cookiejars-page .cookie-count i {
+            font-size: 13px;
+            color: #8094a7;
+        }
+
+        .cookiejars-page .date-cell {
+            white-space: nowrap;
+            color: #425469;
+            font-size: 14px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .cookiejars-page .never {
+            color: #8c9aa8;
+            font-size: 13px;
+        }
+
+        .cookiejars-page .creator {
+            overflow-wrap: anywhere;
+            font-size: 13px;
+            color: #5f6e80;
+        }
+
+        .cookiejars-page .open-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            background: #edf2f8;
+            font-size: 13px;
+            color: #345b88;
+            white-space: nowrap;
+        }
+
+        .cookiejars-page .open-link:hover {
+            border-color: #7ca0c7;
+            background: #edf4fc;
+            text-decoration: none;
+        }
+
+        .cookiejars-page .cookiejar-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-top: 1px solid #e9eef4;
+            font-size: 13px;
+            color: #657486;
+            background: #fcfcfd;
+        }
+
+        .cookiejars-page #cookiejar-table .identity-cell {
+            width: 31%;
+        }
+
+        .cookiejar-heading-copy {
+            flex: 1;
+            min-width: 300px;
+            max-width: 650px;
+        }
+
+        .cookiejar-explanation {
+            margin: 11px 0 0 57px;
+            max-width: 610px;
+            color: #526477;
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .cookiejar-file-action {
+            cursor: pointer;
+            font-weight: 400;
+        }
+
+        .cookiejar-actions .cookiejar-file-action i {
+            order: -1;
+        }
+
+        .cookiejar-actions > form {
+            margin: 0;
+        }
+
+        .cookiejar-tools {
+            flex-wrap: wrap;
+        }
+
+        .cookiejar-scopes {
+            flex-wrap: wrap;
+        }
+
+        .cookiejar-search-tools {
+            flex-wrap: wrap;
+        }
+
+        .cookiejars-page button:disabled,
+        .cookiejars-page input:disabled,
+        .cookiejars-page select:disabled {
+            opacity: .6;
+        }
+
+        .cookiejars-page button:focus-visible,
+        .cookiejar-action:focus-visible,
+        .cookiejar-file-action:focus-visible {
+            outline: 2px solid #739ac6;
+            outline-offset: 3px;
+        }
+
+        .cookiejars-page .cookiejar-scopes button:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .cookiejar-table-scroll {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        #cookiejar-table {
+            width: 100%;
+            min-width: 1140px;
+            margin: 0 !important;
+            border-collapse: collapse !important;
+        }
+
+        #cookiejar-table .identity-cell {
+            min-width: 310px;
+            max-width: 440px;
+            overflow-wrap: anywhere;
+        }
+
+        #cookiejar-table th.sorting,
+        #cookiejar-table th.sorting_asc,
+        #cookiejar-table th.sorting_desc {
+            cursor: pointer;
+        }
+
+        #cookiejar-table th.sorting::after,
+        #cookiejar-table th.sorting_asc::after,
+        #cookiejar-table th.sorting_desc::after {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            opacity: .55;
+        }
+
+        #cookiejar-table th.sorting::after {
+            content: '↕';
+        }
+
+        #cookiejar-table th.sorting_asc::after {
+            content: '↑';
+            opacity: .9;
+        }
+
+        #cookiejar-table th.sorting_desc::after {
+            content: '↓';
+            opacity: .9;
+        }
+
+        .cookiejar-footer {
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .cookiejar-footer .dataTables_info {
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .cookiejar-footer .dataTables_length label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .cookiejar-footer .dataTables_length select {
+            width: auto;
+            min-width: 4.5rem;
+            height: 32px;
+            padding: 4px 7px;
+            border: 1px solid #d7e2ed;
+            border-radius: 4px;
+            color: #56728e;
+        }
+
+        .cookiejar-footer .pagination {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            margin: 0;
+        }
+
+        .cookiejar-footer .paginate_button a {
+            display: block;
+            padding: 5px 10px;
+            border: 1px solid #d7e2ed;
+            border-radius: 4px;
+            background: #fff;
+            color: #56728e;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .cookiejar-footer .paginate_button.active a {
+            border-color: #a8bfd7;
+            background: #edf3fa;
+            color: #2e6097;
+        }
+
+        .cookiejar-footer .paginate_button.disabled a {
+            opacity: .5;
+        }
+
+        @media (max-width: 1199.98px) {
+            .cookiejar-heading-copy {
+                flex: 1 0 100%;
+                max-width: 760px;
+            }
+
+            .cookiejar-actions {
+                margin-left: 57px;
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .cookiejars-page .cookiejar-tools {
+                padding: 0 18px 16px;
+            }
+
+            .cookiejars-page .cookiejar-scopes button {
+                padding: 12px 2px;
+            }
+
+            .cookiejar-search-tools {
+                width: 100%;
+            }
+
+            .cookiejar-search {
+                flex: 1;
+                min-width: 200px;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .cookiejars-content {
+                padding: 20px 15px;
+            }
+
+            .cookiejar-heading-copy {
+                min-width: 0;
+            }
+
+            .cookiejars-page .cookiejar-heading h1 {
+                font-size: 24px;
+            }
+
+            .cookiejar-explanation {
+                margin-left: 0;
+            }
+
+            .cookiejar-actions {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .cookiejar-actions > a,
+            .cookiejar-actions > button,
+            .cookiejar-actions > form {
+                flex: 1 0 calc(50% - 5px);
+            }
+
+            .cookiejar-actions .cookiejar-action {
+                justify-content: center;
+                padding: 9px 10px;
+            }
+
+            .cookiejar-actions > form label {
+                width: 100%;
+            }
+
+            .cookiejars-page .cookiejar-tools {
+                padding: 0 12px 14px;
+            }
+
+            .cookiejars-page .cookiejar-scopes {
+                gap: 10px;
+            }
+
+            .cookiejars-page .cookiejar-scopes button {
+                padding: 10px 2px;
+            }
+
+            .cookiejar-search {
+                flex: 1 0 100%;
+            }
+        }
+
+    </style>
 </head>
-<body>
-
-  {% include 'nav_bar.html' %}
-
-  <div class="container-fluid">
-		<div class="row">
-
-
-      <div class="col-12" id="core_content">
-
-        <div class="d-flex flex-wrap align-items-center mt-3 mb-2" role="group" aria-label="Cookiejar actions">
-          <a class="btn btn-info mr-2 mb-2" href="{{url_for('crawler_splash.crawler_cookiejar_add')}}">
-            <i class="fas fa-plus-circle ml-auto"></i>
-            Create Cookiejar
-          </a>
-
-          {% if current_user.is_admin() %}
-            {% with cookiejar_uuid=None, import_label='Import Cookiejar JSON', import_class='mr-2 mb-2' %}
-              {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
-            {% endwith %}
-          {% endif %}
-        </div>
-
-        <div class="card mb-3 mt-1">
-          <div class="card-header text-white bg-dark">
-            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Your Cookiejar</h5>
-          </div>
-          <div class="card-body">
-            {% with all_cookiejar=user_cookiejar, table_id='table_user'%}
-              {% include 'crawler/crawler_splash/table_cookiejar.html' %}
-            {% endwith %}
-          </div>
-        </div>
-
-        <div class="card mb-3 mt-1">
-          <div class="card-header text-white bg-dark">
-            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Organisation Cookiejar</h5>
-          </div>
-          <div class="card-body">
-            {% with all_cookiejar=org_cookiejar, table_id='table_org'%}
-              {% include 'crawler/crawler_splash/table_cookiejar.html' %}
-            {% endwith %}
-          </div>
-        </div>
-
-        <div class="card mb-3 mt-1">
-          <div class="card-header text-white bg-dark">
-            <h5 class="card-title"><i class="fas fa-cookie-bite"></i> Global Cookiejar</h5>
-          </div>
-          <div class="card-body">
-            {% with all_cookiejar=global_cookiejar, table_id='table_global'%}
-              {% include 'crawler/crawler_splash/table_cookiejar.html' %}
-            {% endwith %}
-          </div>
-        </div>
-
-      </div>
-		</div>
-	</div>
-
-<script>
-$(document).ready(function(){
-  $("#page-Crawler").addClass("active");
-	$('#crawler-nav-cookiejar-all').addClass('active');
-
-  $('#table_user').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 0, "desc" ]]
-  });
-  $('#table_org').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 0, "desc" ]]
-  });
-  $('#table_global').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 0, "desc" ]]
-  });
-
-
-});
-
-</script>
-
+<body class="cookiejars-page">
+    {% include 'nav_bar.html' %}
+    {% set groups = [('personal', 'Personal', 'user', user_cookiejar), ('organisation', 'Organisation', 'users', org_cookiejar), ('global', 'Global', 'globe', global_cookiejar)] %}
+    {% set total = user_cookiejar|length + org_cookiejar|length + global_cookiejar|length %}
+    {% macro show_date(value, empty='—') %}
+        {% if value %}
+            {% set formatted = value|replace('/', '-') %}
+            {% set parts = formatted.split(' ') %}
+            <time datetime="{{ formatted|replace(' ', 'T') }}">{{ parts[0] }}{% if parts|length > 1 %}<span class="cell-sub">{{ parts[1] }}</span>{% endif %}</time>
+        {% else %}
+            <span class="never">{{ empty }}</span>
+        {% endif %}
+    {% endmacro %}
+    <main class="cookiejars-content" id="core_content">
+        <header class="cookiejar-heading">
+            <div class="cookiejar-heading-copy">
+                <h1><i class="fas fa-cookie-bite" aria-hidden="true"></i>Cookiejars</h1>
+                <p class="cookiejar-explanation">A Cookiejar stores cookies and local storage that a crawler can reuse during a capture, for example to access a website using an existing login session.</p>
+            </div>
+            <nav class="cookiejar-actions" aria-label="Cookiejar actions">
+                <a class="cookiejar-action" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
+                    <span class="crawler-nav-dashboard-icon" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                            <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                        </svg>
+                        <i class="fas fa-spider"></i>
+                    </span>Dashboard
+                </a>
+                {% if current_user.is_admin() %}
+                    {% with cookiejar_uuid=None, import_label='Import JSON file', import_button_class='cookiejar-action cookiejar-file-action', paste_button_class='cookiejar-action', import_submit_class='btn btn-primary' %}
+                        {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+                    {% endwith %}
+                {% endif %}
+                <a class="cookiejar-action primary" href="{{ url_for('crawler_splash.crawler_cookiejar_add') }}"><i class="fas fa-plus" aria-hidden="true"></i>Create Cookiejar</a>
+            </nav>
+        </header>
+        <section class="cookiejar-surface" aria-label="Available Cookiejars">
+            <div class="cookiejar-tools">
+                <nav class="cookiejar-scopes" aria-label="Cookiejar visibility">
+                    <button type="button" class="active" data-cookiejar-scope="all" aria-pressed="true" disabled><i class="fas fa-layer-group" aria-hidden="true"></i>All<b>{{ total }}</b></button>
+                    {% for scope, label, icon, cookiejars in groups %}
+                        <button type="button" data-cookiejar-scope="{{ scope }}" aria-pressed="false" disabled><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}<b>{{ cookiejars|length }}</b></button>
+                    {% endfor %}
+                </nav>
+                <div class="cookiejar-search-tools">
+                    <label class="cookiejar-search"><i class="fas fa-search" aria-hidden="true"></i><input id="cookiejar-search" type="search" placeholder="Search description, UUID or creator" aria-label="Search Cookiejars" disabled></label>
+                    <label class="cookiejar-sort mb-0">Sort<select id="cookiejar-sort" aria-label="Sort Cookiejars" disabled><option value="used">Last used</option><option value="description">Description</option><option value="edited">Last edit</option><option value="created">Created</option><option value="" disabled>Custom order</option></select></label>
+                </div>
+            </div>
+            <table id="cookiejar-table" class="table">
+                <thead>
+                    <tr><th scope="col">Cookiejar</th><th scope="col">Visibility</th><th scope="col">Cookies</th><th scope="col">Last used</th><th scope="col">Last edit</th><th scope="col">Created</th><th scope="col">Creator</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody>
+                    {% for scope, label, icon, cookiejars in groups %}
+                        {% for jar in cookiejars %}
+                            {% set description = jar['description']|default('Untitled Cookiejar', true) %}
+                            {% set created = jar['date'] or '' %}
+                            <tr data-cookiejar-scope="{{ scope }}">
+                                <td class="identity-cell" data-order="{{ description }}" data-search="{{ description }} {{ jar['uuid'] }}">
+                                    <a class="jar-name" href="{{ url_for('crawler_splash.crawler_cookiejar_show', uuid=jar['uuid']) }}">{{ description }}</a>
+                                    <span class="jar-uuid"><span class="uuid-value">{{ jar['uuid'] }}</span><button class="copy-id" type="button" data-uuid="{{ jar['uuid'] }}" aria-label="Copy UUID for {{ description }}" title="Copy UUID"><i class="far fa-copy" aria-hidden="true"></i></button></span>
+                                </td>
+                                <td data-search="{{ label }} {{ jar['org_name'] or '' }} {{ jar['org'] or '' }}">
+                                    <span class="badge-scope {{ scope }}" {% if jar['org'] %}title="{{ jar['org'] }}"{% endif %}><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}</span>
+                                    {% if jar['org_name'] %}<span class="cell-sub">{{ jar['org_name'] }}</span>{% endif %}
+                                </td>
+                                <td data-order="{{ jar['nb_cookies'] }}"><span class="cookie-count"><i class="fas fa-cookie-bite" aria-hidden="true"></i>{{ jar['nb_cookies'] }}</span></td>
+                                <td class="date-cell" data-order="{{ jar.get('last_used') or 0 }}">{{ show_date(jar.get('last_used_date'), 'Never used') }}</td>
+                                <td class="date-cell" data-order="{{ jar.get('last_edit') or 0 }}">{{ show_date(jar.get('last_edit_date')) }}</td>
+                                <td class="date-cell" data-order="{{ created or 0 }}">{% if created %}{{ show_date(created[0:4] ~ '-' ~ created[4:6] ~ '-' ~ created[6:8]) }}{% else %}<span class="never">—</span>{% endif %}</td>
+                                <td class="creator">{{ jar['user'] or '—' }}</td>
+                                <td><a class="open-link" aria-label="Open Cookiejar {{ description }}" href="{{ url_for('crawler_splash.crawler_cookiejar_show', uuid=jar['uuid']) }}">Open<i class="far fa-folder-open" aria-hidden="true"></i></a></td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        <p class="sr-only" id="cookiejar-feedback" role="status" aria-live="polite"></p>
+    </main>
+    <script>
+        (function () {
+            'use strict';
+            $('#page-Crawler, #crawler-nav-cookiejar-all').addClass('active');
+            document.getElementById('crawler-nav-cookiejar-all').setAttribute('aria-current', 'page');
+            const fileAction = document.querySelector('.cookiejar-file-action');
+            if (fileAction) {
+                fileAction.setAttribute('role', 'button');
+                fileAction.tabIndex = 0;
+                fileAction.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        fileAction.querySelector('input[type="file"]').click();
+                    }
+                });
+            }
+            if (!$.fn.DataTable) {
+                return;
+            }
+            const element = document.getElementById('cookiejar-table');
+            const scopes = Array.from(element.tBodies[0].rows).map(function (row) {
+                return row.dataset.cookiejarScope;
+            });
+            let selectedScope = 'all';
+            $.fn.dataTable.ext.search.push(function (settings, values, index) {
+                return settings.nTable !== element || selectedScope === 'all' || scopes[index] === selectedScope;
+            });
+            const table = $(element).DataTable({
+                dom: '<"cookiejar-table-scroll"t><"cookiejar-footer"lip>',
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+                order: [[3, 'desc'], [0, 'asc']],
+                autoWidth: false,
+                columnDefs: [{targets: [0, 1, 6], type: 'string'}, {targets: 7, orderable: false, searchable: false}],
+                language: {
+                    lengthMenu: 'Show _MENU_',
+                    info: 'Showing _START_–_END_ of _TOTAL_ Cookiejars',
+                    infoEmpty: 'No Cookiejars',
+                    infoFiltered: '(from _MAX_ available)',
+                    zeroRecords: 'No Cookiejars match your search.',
+                    emptyTable: 'No Cookiejars yet. Create a Cookiejar to get started.',
+                    paginate: {previous: 'Previous', next: 'Next'}
+                }
+            });
+            const search = document.getElementById('cookiejar-search');
+            const sort = document.getElementById('cookiejar-sort');
+            search.disabled = false;
+            sort.disabled = false;
+            search.addEventListener('input', function () {
+                table.search(search.value.trim(), false, true).draw();
+            });
+            const buttons = Array.from(document.querySelectorAll('[data-cookiejar-scope]')).filter(function (node) {
+                return node.tagName === 'BUTTON';
+            });
+            buttons.forEach(function (button) {
+                button.disabled = false;
+                button.addEventListener('click', function () {
+                    selectedScope = button.dataset.cookiejarScope;
+                    buttons.forEach(function (other) {
+                        const active = other === button;
+                        other.classList.toggle('active', active);
+                        other.setAttribute('aria-pressed', String(active));
+                    });
+                    table.draw();
+                });
+            });
+            const orders = {used: [3, 'desc'], description: [0, 'asc'], edited: [4, 'desc'], created: [5, 'desc']};
+            sort.addEventListener('change', function () {
+                table.order([orders[sort.value], [0, 'asc']]).draw();
+            });
+            table.on('order.dt', function () {
+                const order = table.order()[0];
+                const key = Object.keys(orders).find(function (name) {
+                    return orders[name][0] === order[0] && orders[name][1] === order[1];
+                });
+                sort.value = key || '';
+            });
+            $(element).on('click', '.copy-id', async function () {
+                const button = this;
+                const value = button.dataset.uuid;
+                let copied = false;
+                if (navigator.clipboard && window.isSecureContext) {
+                    try {
+                        await navigator.clipboard.writeText(value);
+                        copied = true;
+                    } catch (error) {
+                        copied = false;
+                    }
+                }
+                if (!copied) {
+                    const input = document.createElement('textarea');
+                    input.value = value;
+                    input.style.position = 'fixed';
+                    input.style.opacity = '0';
+                    document.body.appendChild(input);
+                    input.select();
+                    try {
+                        copied = document.execCommand('copy');
+                    } catch (error) {
+                        copied = false;
+                    } finally {
+                        input.remove();
+                        button.focus();
+                    }
+                }
+                const feedback = document.getElementById('cookiejar-feedback');
+                if (copied) {
+                    button.title = 'UUID copied';
+                    button.querySelector('i').className = 'fas fa-check';
+                    feedback.textContent = 'Cookiejar UUID copied.';
+                    setTimeout(function () {
+                        button.title = 'Copy UUID';
+                        button.querySelector('i').className = 'far fa-copy';
+                    }, 1800);
+                } else {
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(button.previousElementSibling);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                    feedback.textContent = 'UUID selected. Copy it using your browser.';
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

@@ -2,14 +2,14 @@
     {% if cookiejar_uuid %}
         <input type="hidden" name="uuid" value="{{ cookiejar_uuid }}">
     {% endif %}
-    <label class="btn btn-warning mb-0">
-        {{ import_label }} <i class="fas fa-file-import"></i>
+    <label class="{{ import_button_class|default('btn btn-warning') }} mb-0">
+        {{ import_label }} <i class="fas fa-file-import" aria-hidden="true"></i>
         <input type="file" name="file" accept="application/json,.json" onchange="this.form.submit();" hidden>
     </label>
 </form>
 
-<button class="btn btn-warning {{ import_class|default('') }}" type="button" data-toggle="modal" data-target="#cookiejar-json-import-modal">
-    Paste JSON <i class="fas fa-paste"></i>
+<button class="{{ paste_button_class|default('btn btn-warning') }} {{ import_class|default('') }}" type="button" data-toggle="modal" data-target="#cookiejar-json-import-modal">
+    Paste JSON <i class="fas fa-paste" aria-hidden="true"></i>
 </button>
 
 <div class="modal fade" id="cookiejar-json-import-modal" tabindex="-1" role="dialog" aria-labelledby="cookiejar-json-import-title" aria-hidden="true">
@@ -31,7 +31,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning"><i class="fas fa-file-import"></i> Import JSON</button>
+                    <button type="submit" class="{{ import_submit_class|default('btn btn-warning') }}"><i class="fas fa-file-import" aria-hidden="true"></i> Import JSON</button>
                 </div>
             </form>
         </div>
