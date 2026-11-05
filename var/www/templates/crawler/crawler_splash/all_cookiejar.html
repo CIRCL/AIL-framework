@@ -724,6 +724,12 @@
             $.fn.dataTable.ext.search.push(function (settings, values, index) {
                 return settings.nTable !== element || selectedScope === 'all' || scopes[index] === selectedScope;
             });
+            // DataTables decodes HTML entities in filter values; keep search metadata as plain text.
+            element.querySelectorAll('[data-search]').forEach(function (cell) {
+                const text = document.createElement('span');
+                text.textContent = cell.dataset.search;
+                cell.dataset.search = text.innerHTML;
+            });
             const table = $(element).DataTable({
                 dom: '<"cookiejar-table-scroll"t><"cookiejar-footer"lip>',
                 pageLength: 10,

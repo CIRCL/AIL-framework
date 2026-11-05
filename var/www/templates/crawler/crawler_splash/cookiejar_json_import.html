@@ -1,4 +1,6 @@
+{% set cookiejar_csrf = cookiejar_import_csrf_token() %}
 <form class="d-inline-block {{ import_class|default('') }}" action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ cookiejar_csrf }}">
     {% if cookiejar_uuid %}
         <input type="hidden" name="uuid" value="{{ cookiejar_uuid }}">
     {% endif %}
@@ -12,28 +14,501 @@
     Paste JSON <i class="fas fa-paste" aria-hidden="true"></i>
 </button>
 
-<div class="modal fade" id="cookiejar-json-import-modal" tabindex="-1" role="dialog" aria-labelledby="cookiejar-json-import-title" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+<style>
+    #cookiejar-json-import-modal .modal-dialog {
+        width: calc(100% - 32px);
+        max-width: 800px;
+        margin: 28px auto;
+    }
+
+    #cookiejar-json-import-modal .modal-content {
+        overflow: hidden;
+        border: 1px solid #dce3ed;
+        border-radius: 12px;
+        background: #fff;
+        color: #344b65;
+        box-shadow: 0 18px 65px #172b4633;
+        text-align: left;
+    }
+
+    #cookiejar-json-import-modal .modal-header {
+        align-items: flex-start;
+        padding: 23px 24px 20px;
+        border-bottom: 1px solid #e9edf3;
+    }
+
+    #cookiejar-json-import-modal .import-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 13px;
+        min-width: 0;
+    }
+
+    #cookiejar-json-import-modal .import-heading-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        flex: none;
+        border: 1px solid #e1e8f2;
+        border-radius: 10px;
+        background: #f1f5fb;
+        color: #647f9e;
+        font-size: 19px;
+    }
+
+    #cookiejar-json-import-modal .modal-title {
+        margin: 0;
+        color: #2c4059;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: -.25px;
+        line-height: 1.5;
+    }
+
+    #cookiejar-json-import-modal .import-subtitle {
+        margin: 5px 0 0;
+        color: #7c8da2;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    #cookiejar-json-import-modal .import-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 31px;
+        height: 31px;
+        flex: none;
+        margin-left: 14px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        background: #f4f6f9;
+        color: #8997a9;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    #cookiejar-json-import-modal .import-close:hover {
+        background: #eaf0f7;
+        color: #536e91;
+    }
+
+    #cookiejar-json-import-modal .modal-body {
+        max-height: calc(100vh - 235px);
+        overflow-y: auto;
+        padding: 20px 24px 22px;
+    }
+
+    #cookiejar-json-import-modal .import-notice {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        margin: 0 0 18px;
+        padding: 11px 13px;
+        border: 1px solid #ede1c7;
+        border-radius: 7px;
+        background: #fcf8ee;
+        color: #977941;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    #cookiejar-json-import-modal .import-notice i {
+        margin-top: 4px;
+        flex: none;
+    }
+
+    #cookiejar-json-import-modal .import-editor {
+        overflow: hidden;
+        border: 1px solid #d6e0ec;
+        border-radius: 8px;
+        background: #fbfcfe;
+    }
+
+    #cookiejar-json-import-modal .import-editor:focus-within {
+        border-color: #779bc7;
+        box-shadow: 0 0 0 3px #3a73bd12;
+    }
+
+    #cookiejar-json-import-modal .import-editor-toolbar {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 11px 13px;
+        border-bottom: 1px solid #e5ebf3;
+        background: #f4f7fb;
+    }
+
+    #cookiejar-json-import-modal .import-editor-toolbar label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        color: #657e9b;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    #cookiejar-json-import-modal .import-paste-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid #2563d5;
+        border-radius: 7px;
+        background: #2563d5;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 2px 5px #2563d51a;
+        cursor: pointer;
+    }
+
+    #cookiejar-json-import-modal .import-paste-button:hover {
+        border-color: #1e54bb;
+        background: #1e54bb;
+    }
+
+    #cookiejar-json-import-modal .import-paste-button:disabled {
+        opacity: .65;
+        cursor: wait;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-data {
+        display: block;
+        width: 100%;
+        height: min(370px, 43vh);
+        min-height: 160px;
+        margin: 0;
+        padding: 17px 18px;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        box-shadow: none;
+        background: transparent;
+        color: #4f6785;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.75;
+        resize: vertical;
+        tab-size: 2;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-data::placeholder {
+        color: #a0afc1;
+        opacity: 1;
+    }
+
+    #cookiejar-json-import-modal .import-editor-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 13px;
+        border-top: 1px solid #e7ecf3;
+        background: #fff;
+        color: #91a0b3;
+        font-size: 12px;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        line-height: 1.5;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-status[data-state="valid"] {
+        color: #5b856b;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-status[data-state="invalid"] {
+        color: #b26270;
+    }
+
+    #cookiejar-json-import-modal #cookiejar-json-status[data-state="notice"] {
+        color: #657e9b;
+    }
+
+    #cookiejar-json-import-modal .modal-footer {
+        gap: 9px;
+        padding: 16px 24px;
+        border-top: 1px solid #e7ecf3;
+        background: #fafbfd;
+    }
+
+    #cookiejar-json-import-modal .modal-footer .btn {
+        margin: 0;
+        padding: 9px 15px;
+        border: 1px solid #d6e0eb;
+        border-radius: 7px;
+        background: #fff;
+        color: #627b97;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: none;
+    }
+
+    #cookiejar-json-import-modal .modal-footer [type="submit"] {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        border-color: #2563d5;
+        background: #2563d5;
+        color: #fff;
+    }
+
+    #cookiejar-json-import-modal .modal-footer [type="submit"]:disabled {
+        opacity: .5;
+        cursor: default;
+    }
+
+    #cookiejar-json-import-modal button:focus:not(:focus-visible) {
+        outline: none;
+    }
+
+    #cookiejar-json-import-modal button:focus-visible {
+        outline: 2px solid #739ac6;
+        outline-offset: 3px;
+    }
+
+    @media (max-width: 575.98px) {
+        #cookiejar-json-import-modal .modal-dialog {
+            width: calc(100% - 20px);
+            margin: 10px auto;
+        }
+
+        #cookiejar-json-import-modal .modal-header {
+            padding: 18px 15px;
+        }
+
+        #cookiejar-json-import-modal .import-heading-icon {
+            width: 34px;
+            height: 34px;
+            font-size: 16px;
+        }
+
+        #cookiejar-json-import-modal .modal-title {
+            font-size: 18px;
+        }
+
+        #cookiejar-json-import-modal .modal-body {
+            max-height: calc(100vh - 240px);
+            padding: 15px;
+        }
+
+        #cookiejar-json-import-modal .import-editor-toolbar {
+            padding: 10px;
+        }
+
+        #cookiejar-json-import-modal .import-paste-button {
+            width: 100%;
+            padding: 10px 14px;
+        }
+
+        #cookiejar-json-import-modal #cookiejar-json-data {
+            padding: 13px;
+            font-size: 12px;
+        }
+
+        #cookiejar-json-import-modal .modal-footer {
+            padding: 13px 15px;
+        }
+    }
+</style>
+
+<div class="modal fade" id="cookiejar-json-import-modal" tabindex="-1" role="dialog" aria-labelledby="cookiejar-json-import-title" aria-describedby="cookiejar-json-import-subtitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <form action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post">
+            <form id="cookiejar-json-form" action="{{ url_for('crawler_splash.crawler_cookiejar_json_import') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ cookiejar_csrf }}">
                 {% if cookiejar_uuid %}
                     <input type="hidden" name="uuid" value="{{ cookiejar_uuid }}">
                 {% endif %}
                 <div class="modal-header">
-                    <h5 class="modal-title" id="cookiejar-json-import-title">Import Cookiejar JSON</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <div class="import-heading">
+                        <span class="import-heading-icon"><i class="fas fa-file-import" aria-hidden="true"></i></span>
+                        <div><h5 class="modal-title" id="cookiejar-json-import-title">Import Cookiejar JSON</h5><p class="import-subtitle" id="cookiejar-json-import-subtitle">{% if cookiejar_uuid %}Update this Cookiejar from a JSON export.{% else %}Create a Cookiejar from a JSON export.{% endif %}</p></div>
+                    </div>
+                    <button type="button" class="import-close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <label for="cookiejar-json-data">Cookiejar JSON</label>
-                    <textarea class="form-control text-monospace" id="cookiejar-json-data" name="json_data" rows="14" placeholder="Paste the cookiejar JSON here" required></textarea>
+                    {% if cookiejar_uuid %}<p class="import-notice"><i class="fas fa-circle-info" aria-hidden="true"></i>Importing replaces this Cookiejar’s cookies and local storage.</p>{% endif %}
+                    <div class="import-editor">
+                        <div class="import-editor-toolbar">
+                            <label for="cookiejar-json-data"><i class="fas fa-code" aria-hidden="true"></i>Cookiejar JSON</label>
+                            <button class="import-paste-button" type="button" id="cookiejar-json-paste" hidden><i class="fas fa-paste" aria-hidden="true"></i>Paste JSON</button>
+                        </div>
+                        <textarea id="cookiejar-json-data" name="json_data" rows="14" spellcheck="false" autocomplete="off" autocapitalize="off" aria-describedby="cookiejar-json-status" placeholder='{
+  "description": "Example session",
+  "storage": {
+    "cookies": [
+      {
+        "name": "session_id",
+        "value": "...",
+        "domain": ".example.org"
+      }
+    ]
+  }
+}' required></textarea>
+                        <div class="import-editor-footer"><span id="cookiejar-json-status" role="status" aria-live="polite" data-state="empty"><i class="far fa-circle" aria-hidden="true"></i><span>Paste JSON to validate</span></span><span id="cookiejar-json-lines">0 lines</span></div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="{{ import_submit_class|default('btn btn-warning') }}"><i class="fas fa-file-import" aria-hidden="true"></i> Import JSON</button>
+                    <button type="submit" id="cookiejar-json-submit" class="{{ import_submit_class|default('btn btn-warning') }}" title="Import JSON (Ctrl+Enter)"><i class="fas fa-file-import" aria-hidden="true"></i><span>Import JSON</span></button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        'use strict';
+        const modal = document.getElementById('cookiejar-json-import-modal');
+        const form = document.getElementById('cookiejar-json-form');
+        const editor = document.getElementById('cookiejar-json-data');
+        const submit = document.getElementById('cookiejar-json-submit');
+        const status = document.getElementById('cookiejar-json-status');
+        const statusText = status.querySelector('span');
+        const statusIcon = status.querySelector('i');
+        const lines = document.getElementById('cookiejar-json-lines');
+        const paste = document.getElementById('cookiejar-json-paste');
+        let timer;
+        let pasteRequest = 0;
+
+        function validate() {
+            clearTimeout(timer);
+            const text = editor.value.trim();
+            const count = editor.value ? editor.value.split('\n').length : 0;
+            lines.textContent = count + (count === 1 ? ' line' : ' lines');
+            let parsed;
+            let error = '';
+            if (text) {
+                try {
+                    parsed = JSON.parse(text);
+                    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                        error = 'Use a JSON object containing the Cookiejar data.';
+                    }
+                } catch (exception) {
+                    const location = exception.message.match(/line \d+ column \d+/i);
+                    error = 'Invalid JSON' + (location ? ' (' + location[0] + ')' : '') + '. Check quotes, commas and brackets.';
+                }
+            }
+            const valid = Boolean(text) && !error;
+            status.dataset.state = error ? 'invalid' : valid ? 'valid' : 'empty';
+            statusText.textContent = error || (valid ? 'Valid JSON' : 'Paste JSON to validate');
+            statusIcon.className = error ? 'fas fa-circle-exclamation' : valid ? 'fas fa-circle-check' : 'far fa-circle';
+            editor.setAttribute('aria-invalid', String(Boolean(error)));
+            submit.disabled = !valid;
+            return valid ? parsed : null;
+        }
+
+        editor.addEventListener('input', function () {
+            clearTimeout(timer);
+            pasteRequest += 1;
+            paste.disabled = false;
+            submit.disabled = true;
+            timer = setTimeout(validate, 180);
+        });
+        function showPasteHint(message) {
+            status.dataset.state = 'notice';
+            statusText.textContent = message;
+            statusIcon.className = 'fas fa-circle-info';
+            editor.focus();
+        }
+
+        paste.hidden = false;
+        paste.addEventListener('click', async function () {
+            validate();
+            const request = ++pasteRequest;
+            const shortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘V' : 'Ctrl+V';
+            const manualPaste = 'Use ' + shortcut + ' to paste JSON into the editor.';
+            if (!navigator.clipboard || !navigator.clipboard.readText || !window.isSecureContext) {
+                showPasteHint(manualPaste);
+                return;
+            }
+            paste.disabled = true;
+            submit.disabled = true;
+            status.dataset.state = 'notice';
+            statusText.textContent = 'Reading clipboard…';
+            statusIcon.className = 'fas fa-circle-info';
+            let hint = '';
+            try {
+                const text = await navigator.clipboard.readText();
+                if (request !== pasteRequest) {
+                    return;
+                }
+                if (text.trim()) {
+                    editor.value = text;
+                    editor.focus();
+                    editor.setSelectionRange(0, 0);
+                    editor.scrollTop = 0;
+                    editor.scrollLeft = 0;
+                } else {
+                    hint = 'The clipboard is empty. Copy JSON, then try again.';
+                }
+            } catch (error) {
+                if (request === pasteRequest) {
+                    hint = manualPaste;
+                }
+            } finally {
+                if (request === pasteRequest) {
+                    paste.disabled = false;
+                    validate();
+                    if (hint) {
+                        showPasteHint(hint);
+                    }
+                }
+            }
+        });
+        editor.addEventListener('keydown', function (event) {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                if (!paste.disabled && validate()) {
+                    form.requestSubmit(submit);
+                }
+            }
+        });
+        form.addEventListener('submit', function (event) {
+            if (paste.disabled) {
+                event.preventDefault();
+                return;
+            }
+            if (!validate()) {
+                event.preventDefault();
+                editor.focus();
+                return;
+            }
+            submit.disabled = true;
+            submit.querySelector('span').textContent = 'Importing…';
+        });
+        $(modal).on('shown.bs.modal', function () {
+            submit.querySelector('span').textContent = 'Import JSON';
+            validate();
+            editor.focus();
+        });
+        $(modal).on('hide.bs.modal', function () {
+            pasteRequest += 1;
+            paste.disabled = false;
+            clearTimeout(timer);
+        });
+        window.addEventListener('pageshow', function () {
+            submit.querySelector('span').textContent = 'Import JSON';
+            validate();
+        });
+        validate();
+    })();
+</script>

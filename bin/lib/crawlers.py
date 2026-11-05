@@ -1296,12 +1296,56 @@ def api_export_cookiejar_json(user_org, user_id, user_role, cookiejar_uuid):
     }, 200
 
 
-def _import_storage_in_cookiejar(cookiejar, storage):
+def validate_cookiejar_storage(storage):
+    if not isinstance(storage, dict):
+        return {'error': 'Cookiejar storage must be an object'}, 400
     cookies = storage.get('cookies', [])
     origins = storage.get('origins')
+    if origins is None:
+        origins = []
+    if not isinstance(cookies, list) or any(not isinstance(cookie, dict) for cookie in cookies):
+        return {'error': 'Cookies must be a list of objects'}, 400
+    if not isinstance(origins, list) or any(not isinstance(origin, dict) for origin in origins):
+        return {'error': 'Local storage origins must be a list of objects'}, 400
 
-    if not cookies and not origins:
+    usable_cookies = 0
+    for cookie in cookies:
+        name, value = cookie.get('name'), cookie.get('value')
+        if not name or not value:
+            continue
+        if not isinstance(name, str) or not isinstance(value, str):
+            return {'error': 'Cookie names and values must be strings'}, 400
+        for field in ('domain', 'path', 'sameSite'):
+            if cookie.get(field) is not None and not isinstance(cookie[field], str):
+                return {'error': f'Cookie {field} must be a string'}, 400
+        for field in ('secure', 'httpOnly'):
+            if cookie.get(field) is not None and not isinstance(cookie[field], bool):
+                return {'error': f'Cookie {field} must be a boolean'}, 400
+        expires = cookie.get('expires')
+        if expires is not None and (isinstance(expires, bool) or not isinstance(expires, (str, int, float))):
+            return {'error': 'Cookie expires must be a timestamp'}, 400
+        usable_cookies += 1
+
+    for origin in origins:
+        if not isinstance(origin.get('origin'), str) or not origin['origin']:
+            return {'error': 'Each local storage origin must contain an origin string'}, 400
+        entries = origin.get('localStorage', [])
+        if not isinstance(entries, list) or any(not isinstance(entry, dict) or not isinstance(entry.get('name'), str) or not isinstance(entry.get('value'), str) for entry in entries):
+            return {'error': 'Local storage entries must contain string names and values'}, 400
+
+    if not usable_cookies and not origins:
         return {'error': 'No cookies or local storage to import'}, 400
+    try:
+        json.dumps(storage, allow_nan=False)
+    except (TypeError, ValueError, RecursionError):
+        return {'error': 'Invalid cookiejar storage JSON'}, 400
+
+
+def _import_storage_in_cookiejar(cookiejar, storage):
+    error = validate_cookiejar_storage(storage)
+    if error:
+        return error
+    cookies = storage.get('cookies', [])
 
     cookiejar.delete_cookies()
     cookiejar.delete_local_storage()
@@ -1310,6 +1354,8 @@ def _import_storage_in_cookiejar(cookiejar, storage):
 
 
 def _get_storage_from_cookiejar_json(data):
+    if not isinstance(data, dict):
+        return None
     storage = data.get('storage')
     if storage is None:
         storage = data.get('local_storage', data)
@@ -1527,8 +1573,8 @@ def api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
     domain = cookie_dict.get('domain')
     path = cookie_dict.get('path')
     text = cookie_dict.get('text')
-    httponly = bool(cookie_dict.get('httponly'))
-    secure = bool(cookie_dict.get('secure'))
+    httponly = cookie_dict.get('httpOnly', cookie_dict.get('httponly'))
+    secure = cookie_dict.get('secure')
     cookiejar.add_cookie(name, value, domain=domain, httponly=httponly, path=path, secure=secure, text=text)
     return resp, 200
 

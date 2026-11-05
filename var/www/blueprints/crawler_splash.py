@@ -6,14 +6,16 @@
 """
 
 import os
+import hmac
 import json
 import random
+import secrets
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
 
-from flask import render_template, jsonify, request, Blueprint, redirect, url_for, Response, send_file, abort, current_app
+from flask import render_template, jsonify, request, session, Blueprint, redirect, url_for, Response, send_file, abort, current_app
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -931,6 +933,19 @@ def domains_explorer_vanity_explore():
 
 
 ## Cookiejar ##
+def get_cookiejar_import_csrf_token():
+    token = session.get('cookiejar_import_csrf')
+    if not isinstance(token, str) or not token:
+        token = secrets.token_urlsafe(32)
+        session['cookiejar_import_csrf'] = token
+    return token
+
+
+@crawler_splash.context_processor
+def cookiejar_import_context():
+    return {'cookiejar_import_csrf_token': get_cookiejar_import_csrf_token}
+
+
 @crawler_splash.route('/crawler/cookiejar/add', methods=['GET'])
 @login_required
 @login_user_no_api
@@ -1028,7 +1043,8 @@ def crawler_cookiejar_show():
     else:
         cookiejar_meta = res[0]
 
-    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_meta)
+    cookies = [{**cookie, 'fields': json.loads(cookie['data'])} for cookie in cookiejar_meta['cookies']]
+    return render_template("show_cookiejar.html", cookiejar_metadata=cookiejar_meta, cookies=cookies)
 
 
 @crawler_splash.route('/crawler/cookie/delete', methods=['GET'])
@@ -1083,6 +1099,11 @@ def crawler_cookiejar_json_export():
 @login_required
 @login_admin
 def crawler_cookiejar_json_import():
+    expected = session.get('cookiejar_import_csrf')
+    supplied = request.form.get('csrf_token', '')
+    if not isinstance(expected, str) or not expected or not hmac.compare_digest(expected.encode('utf-8'), supplied.encode('utf-8')):
+        return create_json_response({'error': 'Invalid CSRF token. Reload the page before importing.'}, 403)
+
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     user_role = current_user.get_role()
@@ -1100,8 +1121,11 @@ def crawler_cookiejar_json_import():
 
     try:
         data = json.loads(json_data)
-    except json.decoder.JSONDecodeError:
+    except (ValueError, RecursionError):
         return create_json_response({'error': 'invalid cookiejar JSON'}, 400)
+
+    if not isinstance(data, dict):
+        return create_json_response({'error': 'Cookiejar JSON must be an object'}, 400)
 
     if cookiejar_uuid:
         res = crawlers.api_import_cookiejar_json(user_org, user_id, user_role, cookiejar_uuid, data)
