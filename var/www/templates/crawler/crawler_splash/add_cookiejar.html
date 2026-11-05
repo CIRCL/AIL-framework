@@ -1,94 +1,965 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-	<title>AIL - Add Cookies</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Cookiejar · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <style>
+        .cookiejar-create {
+            margin: 0;
+            background: #f5f7fa;
+            color: #2b405b;
+            -webkit-font-smoothing: antialiased;
+        }
 
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+        .cookiejar-create .cookiejar-content {
+            padding: 24px 30px 35px;
+        }
 
+        .cookiejar-create button,
+        .cookiejar-create input,
+        .cookiejar-create select {
+            font-family: inherit;
+        }
+
+        .cookiejar-create button {
+            cursor: pointer;
+        }
+
+        .cookiejar-create button:focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        .cookiejar-create button:focus-visible,
+        .cookiejar-create a:focus-visible {
+            outline: 2px solid #739ac6;
+            outline-offset: 3px;
+        }
+
+        .cookiejar-create [hidden] {
+            display: none!important;
+        }
+
+        .cookiejar-create .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #72839b;
+            font-size: 14px;
+            margin-bottom: 22px;
+        }
+
+        .cookiejar-create .page-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 26px;
+        }
+
+        .cookiejar-create .page-heading h1 {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            font-size: 28px;
+            font-weight: 650;
+            letter-spacing: -.5px;
+            margin: 0;
+        }
+
+        .cookiejar-create .title-icon {
+            font-size: 35px;
+            color: #627e9e;
+            width: 40px;
+        }
+
+        .cookiejar-create .page-heading p {
+            margin: 9px 0 0 53px;
+            color: #7e90a7;
+            font-size: 14px;
+        }
+
+        .cookiejar-create .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .cookiejar-create .header-actions>form {
+            margin: 0;
+        }
+
+        .cookiejar-create .action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 10px 15px;
+            border: 1px solid #d8e2ed;
+            border-radius: 7px;
+            background: #fff;
+            color: #5b7595;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .cookiejar-create .action:hover {
+            background: #f3f7fc;
+            text-decoration: none;
+        }
+
+        .cookiejar-create .action.primary {
+            background: #2563d5;
+            border-color: #2563d5;
+            color: #fff;
+        }
+
+        .cookiejar-create .header-actions>.action,
+        .cookiejar-create .header-actions>form>.action {
+            min-height: 48px;
+            font-size: 16px;
+            padding: 10px 17px;
+        }
+
+        .cookiejar-create .header-actions .action i {
+            font-size: 17px;
+        }
+
+        .cookiejar-create .header-actions label {
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .cookiejar-create .header-actions label i {
+            order: -1;
+        }
+
+        .cookiejar-create .surface {
+            border: 1px solid #dce4ee;
+            border-radius: 11px;
+            box-shadow: 0 2px 8px #29466a06;
+            background: #fff;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .cookiejar-create .field label {
+            display: block;
+            color: #4b6380;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .cookiejar-create .field label>span {
+            color: #98a6b8;
+            font-size: 12px;
+            font-weight: 400;
+            margin-left: 6px;
+        }
+
+        .cookiejar-create .field input,
+        .cookiejar-create .field select {
+            display: block;
+            width: 100%;
+            height: 46px;
+            padding: 10px 13px;
+            border: 1px solid #d6e1ee;
+            border-radius: 7px;
+            background: #fff;
+            color: #486584;
+            font-size: 15px;
+        }
+
+        .cookiejar-create .field input::placeholder {
+            color: #a2b0c1;
+        }
+
+        .cookiejar-create .field input:focus,
+        .cookiejar-create .field select:focus,
+        .cookiejar-create .cookie-entry input:focus {
+            outline: none;
+            border-color: #7e9fc9;
+            box-shadow: 0 0 0 3px #3975c010;
+        }
+
+        .cookiejar-create .field-hint {
+            display: block;
+            margin-top: 8px;
+            color: #8a9bb0;
+            font-size: 12px;
+        }
+
+        .cookiejar-create .cookies-section {
+            padding: 22px 26px 25px;
+            border-top: 1px solid #e9eef5;
+        }
+
+        .cookiejar-create .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .cookiejar-create h2 {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 0;
+            color: #405d7d;
+        }
+
+        .cookiejar-create h2>i {
+            color: #7d95af;
+            font-size: 17px;
+        }
+
+        .cookiejar-create .count {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #6d8cb1;
+            background: #edf3fb;
+            border-radius: 15px;
+            padding: 3px 8px;
+        }
+
+        .cookiejar-create .add-cookie {
+            min-height: 37px;
+            padding: 7px 12px;
+            font-size: 14px;
+            color: #5279a8;
+        }
+
+        .cookiejar-create .cookie-grid {
+            display: grid;
+            grid-template-columns: minmax(180px,35%) minmax(0,1fr) 40px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .cookiejar-create .cookie-grid-head {
+            padding: 0 0 10px;
+            color: #8394aa;
+            font-size: 12px;
+        }
+
+        .cookiejar-create .cookie-entry {
+            margin-bottom: 12px;
+        }
+
+        .cookiejar-create .cookie-entry input {
+            width: 100%;
+            min-width: 0;
+            height: 44px;
+            border: 1px solid #dbe4ef;
+            border-radius: 6px;
+            background: #fbfcfe;
+            padding: 10px 12px;
+            color: #526f91;
+            font-size: 14px;
+        }
+
+        .cookiejar-create .cookie-entry input::placeholder {
+            color: #a8b5c6;
+        }
+
+        .cookiejar-create .cookie-entry input.cookie-value {
+            font-family: ui-monospace,Consolas,monospace;
+            font-size: 13px;
+        }
+
+        .cookiejar-create .remove-cookie {
+            width: 36px;
+            height: 36px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: #b9939a;
+            font-size: 14px;
+        }
+
+        .cookiejar-create .remove-cookie:hover {
+            color: #a6606b;
+            background: #fcf1f3;
+        }
+
+        .cookiejar-create .browser-import {
+            border: 1px solid #e4ebf4;
+            background: #f9fbfd;
+            border-radius: 7px;
+            margin-top: 25px;
+        }
+
+        .cookiejar-create .browser-import summary {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            list-style: none;
+            padding: 14px 15px;
+            font-size: 13px;
+            color: #7890ad;
+            cursor: pointer;
+        }
+
+        .cookiejar-create .browser-import summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .cookiejar-create .browser-import summary>span {
+            flex: 1;
+        }
+
+        .cookiejar-create .browser-import summary small {
+            margin-left: 7px;
+            font-size: 11px;
+            color: #9baaBD;
+        }
+
+        .cookiejar-create .browser-import summary>.fa-chevron-down {
+            font-size: 10px;
+            color: #a1b0c2;
+        }
+
+        .cookiejar-create .browser-import-content {
+            border-top: 1px solid #e7edf5;
+            padding: 15px;
+        }
+
+        .cookiejar-create .browser-import-content p {
+            font-size: 13px;
+            color: #8396ae;
+            margin: 0 0 13px;
+        }
+
+        .cookiejar-create .browser-import-content input {
+            font-size: 13px;
+            max-width: 100%;
+            color: #738aa7;
+        }
+
+        .cookiejar-create .cancel {
+            color: #8395ac;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .cookiejar-create .create-button {
+            min-height: 48px;
+            font-size: 16px;
+            padding: 10px 18px;
+        }
+
+        .cookiejar-create .summary-layout {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 310px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .cookiejar-create .details-card>h2 {
+            padding: 22px 24px 0;
+        }
+
+        .cookiejar-create .summary-layout .details-fields {
+            display: block;
+            padding: 22px 24px 24px;
+        }
+
+        .cookiejar-create .visibility-choices {
+            border: 0;
+            padding: 0;
+            margin: 0;
+            min-width: 0;
+        }
+
+        .cookiejar-create .visibility-choices legend {
+            color: #4b6380;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 11px;
+            padding: 0;
+        }
+
+        .cookiejar-create .visibility-choice {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            vertical-align: top;
+            width: calc((100% - 26px)/3);
+            padding: 13px;
+            border: 1px solid #dfe7f1;
+            border-radius: 8px;
+            margin: 0 8px 0 0;
+            cursor: pointer;
+            background: #fff;
+        }
+
+        .cookiejar-create .visibility-choice:last-child {
+            margin-right: 0;
+        }
+
+        .cookiejar-create .visibility-choice.selected {
+            border-color: #9eb9dc;
+            background: #f4f8fe;
+            box-shadow: 0 0 0 1px #aac2e515;
+        }
+
+        .cookiejar-create .visibility-choice input {
+            accent-color: #4175bb;
+            width: 14px;
+            height: 14px;
+            flex: none;
+        }
+
+        .cookiejar-create .choice-icon {
+            font-size: 17px;
+            color: #92a6c0;
+        }
+
+        .cookiejar-create .visibility-choice.selected .choice-icon {
+            color: #6489ba;
+        }
+
+        .cookiejar-create .visibility-choice strong {
+            display: block;
+            color: #647e9e;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .cookiejar-create .visibility-choice small {
+            display: block;
+            color: #9aaac0;
+            font-size: 11px;
+            margin-top: 3px;
+        }
+
+        .cookiejar-create .cookies-card {
+            margin-top: 20px;
+        }
+
+        .cookiejar-create .cookies-card .cookies-section {
+            border: 0;
+            padding: 23px 24px 24px;
+        }
+
+        .cookiejar-create .summary {
+            padding: 24px;
+        }
+
+        .cookiejar-create .summary h2 {
+            font-size: 16px;
+            margin-bottom: 27px;
+        }
+
+        .cookiejar-create .summary-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #4a6c94;
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 1.5;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #eaf0f6;
+            overflow-wrap: anywhere;
+        }
+
+        .cookiejar-create .summary-name>i {
+            font-size: 24px;
+            color: #89a1bd;
+            flex: none;
+        }
+
+        .cookiejar-create .summary dl {
+            margin: 22px 0 0;
+        }
+
+        .cookiejar-create .summary dl>div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 19px;
+        }
+
+        .cookiejar-create .summary dt {
+            font-size: 13px;
+            color: #92a1b6;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .cookiejar-create .summary dd {
+            font-size: 14px;
+            color: #6c86a6;
+            margin: 0;
+        }
+
+        .cookiejar-create .summary dd>b {
+            font-weight: 500;
+        }
+
+        .cookiejar-create .global-badge {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            color: #6d927e!important;
+            font-size: 12px!important;
+            background: #eff6f2;
+            border-radius: 5px;
+            padding: 5px 8px;
+        }
+
+        .cookiejar-create .summary-note {
+            font-size: 12px;
+            color: #97a6ba;
+            margin: 0 0 26px;
+        }
+
+        .cookiejar-create .summary .create-button {
+            width: 100%;
+            font-size: 15px;
+            padding: 10px;
+        }
+
+        .cookiejar-create .summary .cancel {
+            display: block;
+            text-align: center;
+            margin-top: 17px;
+        }
+
+        .cookiejar-create .page-heading {
+            flex-wrap: wrap;
+        }
+
+        .cookiejar-create .header-actions {
+            flex-wrap: wrap;
+        }
+
+        .cookiejar-create .header-actions .file-action {
+            margin: 0;
+        }
+
+        .cookiejar-create .header-actions > form > .action {
+            display: inline-flex;
+        }
+
+        .cookiejar-create .details-fields {
+            display: block;
+        }
+
+        .cookiejar-create .description-field {
+            margin-bottom: 25px;
+        }
+
+        .cookiejar-create .visibility-options {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .cookiejar-create .visibility-choice {
+            display: flex;
+            width: auto;
+            margin: 0;
+            min-width: 0;
+        }
+
+        .cookiejar-create .visibility-choice:focus-within {
+            outline: 2px solid #739ac6;
+            outline-offset: 2px;
+        }
+
+        .cookiejar-create .visibility-choice strong,
+        .cookiejar-create .visibility-choice small {
+            overflow-wrap: anywhere;
+        }
+
+        .cookiejar-create .choice-icon {
+            flex: none;
+        }
+
+        .cookiejar-create .summary {
+            position: sticky;
+            top: 20px;
+        }
+
+        .cookiejar-create .summary-name span {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        .cookiejar-create .summary #summary-visibility {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 5px;
+            padding: 5px 8px;
+            color: #5b779b;
+            background: #eef3fa;
+            font-size: 12px;
+        }
+
+        .cookiejar-create .summary #summary-visibility[data-level="1"] {
+            background: #eff6f2;
+            color: #6d927e;
+        }
+
+        .cookiejar-create .summary dd.file-name {
+            max-width: 170px;
+            overflow-wrap: anywhere;
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .cookiejar-create #file-summary {
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .cookiejar-create .empty-cookies {
+            margin: 14px 0;
+            padding: 20px 12px;
+            color: #8a9bb0;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .cookiejar-create .form-error {
+            margin: 0 0 18px;
+            color: #ae5969;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .cookiejar-create .form-error:focus {
+            outline: none;
+        }
+
+        .cookiejar-create .create-button:disabled {
+            opacity: .65;
+            cursor: wait;
+        }
+
+        .cookiejar-create .remove-cookie {
+            cursor: pointer;
+        }
+
+        @media (max-width: 991.98px) {
+            .cookiejar-create .summary-layout {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .cookiejar-create .summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .cookiejar-create .cookiejar-content {
+                padding: 20px 15px;
+            }
+
+            .cookiejar-create .page-heading h1 {
+                font-size: 24px;
+            }
+
+            .cookiejar-create .page-heading p {
+                margin-left: 0;
+                line-height: 1.6;
+            }
+
+            .cookiejar-create .header-actions {
+                width: 100%;
+            }
+
+            .cookiejar-create .header-actions > form,
+            .cookiejar-create .header-actions > button {
+                flex: 1 0 100%;
+            }
+
+            .cookiejar-create .header-actions > form > .action {
+                width: 100%;
+            }
+
+            .cookiejar-create .summary-layout .details-fields,
+            .cookiejar-create .cookies-card .cookies-section {
+                padding: 20px 16px;
+            }
+
+            .cookiejar-create .details-card > h2 {
+                padding: 20px 16px 0;
+            }
+
+            .cookiejar-create .visibility-options {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .cookiejar-create .cookie-grid-head {
+                display: none;
+            }
+
+            .cookiejar-create .cookie-entry {
+                grid-template-columns: minmax(0, 1fr) 32px;
+                gap: 9px;
+                padding: 12px 8px 12px 12px;
+                border: 1px solid #e6edf6;
+                border-radius: 8px;
+            }
+
+            .cookiejar-create .cookie-entry input {
+                grid-column: 1;
+            }
+
+            .cookiejar-create .cookie-entry .cookie-value {
+                grid-row: 2;
+            }
+
+            .cookiejar-create .cookie-entry .remove-cookie {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+                width: 30px;
+            }
+
+            .cookiejar-create .summary {
+                padding: 22px 18px;
+            }
+        }
+    </style>
 </head>
+<body class="cookiejar-create">
+    {% include 'nav_bar.html' %}
+    <main class="cookiejar-content" id="core_content">
+        <a class="back" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}"><i class="fas fa-arrow-left" aria-hidden="true"></i>All Cookiejars</a>
+        <header class="page-heading">
+            <div><h1><span class="title-icon"><i class="fas fa-cookie-bite" aria-hidden="true"></i></span>Create Cookiejar</h1><p>Add cookies and choose who can use them.</p></div>
+            {% if current_user.is_admin() %}
+                <nav class="header-actions" aria-label="Import a complete Cookiejar">
+                    {% with cookiejar_uuid=None, import_label='Import JSON file', import_button_class='action file-action', paste_button_class='action', import_submit_class='btn btn-primary' %}
+                        {% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
+                    {% endwith %}
+                </nav>
+            {% endif %}
+        </header>
+        <form id="create-form" action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ cookiejar_import_csrf_token() }}">
+            <div class="summary-layout">
+                <div class="form-column">
+                    <section class="surface details-card" aria-labelledby="cookiejar-details-title">
+                        <h2 id="cookiejar-details-title">Cookiejar details</h2>
+                        <div class="details-fields">
+                            <div class="field description-field"><label for="description">Description <span>Optional</span></label><input id="description" name="description" type="text" placeholder="e.g. Forum monitoring" autocomplete="off"><small class="field-hint">A name to recognise this Cookiejar</small></div>
+                            <fieldset class="visibility-choices">
+                                <legend>Visibility</legend>
+                                <div class="visibility-options">
+                                    {% for level, icon, label, helper in [('0', 'user', 'Personal', 'Only you'), ('2', 'users', 'Organisation', 'Your organisation'), ('1', 'globe', 'Global', 'All users')] %}
+                                        <label class="visibility-choice{% if level == '0' %} selected{% endif %}"><input type="radio" name="level" value="{{ level }}" {% if level == '0' %}checked{% endif %}><span class="choice-icon"><i class="fas fa-{{ icon }}" aria-hidden="true"></i></span><span><strong>{{ label }}</strong><small>{{ helper }}</small></span></label>
+                                    {% endfor %}
+                                </div>
+                            </fieldset>
+                        </div>
+                    </section>
+                    <section class="surface cookies-card" aria-labelledby="cookiejar-cookies-title">
+                        <div class="cookies-section">
+                            <div class="section-heading"><h2 id="cookiejar-cookies-title"><i class="fas fa-cookie-bite" aria-hidden="true"></i>Cookies<b class="count" data-count>0</b></h2><button class="action add-cookie" type="button" id="add-cookie" hidden><i class="fas fa-plus" aria-hidden="true"></i>Add cookie</button></div>
+                            <div class="cookie-grid cookie-grid-head" aria-hidden="true"><span>Cookie name</span><span>Value</span><span></span></div>
+                            <div id="cookie-fields">
+                                <div class="cookie-grid cookie-entry"><input name="first_cookie" type="text" aria-label="Cookie name" placeholder="Cookie name" autocomplete="off" spellcheck="false"><input name="first_cookie" type="text" class="cookie-value" aria-label="Cookie value" placeholder="Cookie value" autocomplete="off" spellcheck="false"><button type="button" class="remove-cookie" aria-label="Remove cookie" title="Remove cookie" hidden><i class="fas fa-trash-can" aria-hidden="true"></i></button></div>
+                            </div>
+                            <p class="empty-cookies" id="empty-cookies" hidden>No cookies added.</p>
+                            <details class="browser-import">
+                                <summary><i class="fas fa-file-arrow-up" aria-hidden="true"></i><span>Browser cookies file <small>Optional</small></span><i class="fas fa-chevron-down" aria-hidden="true"></i></summary>
+                                <div class="browser-import-content"><p>Attach a browser cookie export to import alongside these cookies.</p><input id="browser-cookies" name="file" type="file" accept="application/json,.json" aria-label="Browser cookies JSON file"></div>
+                            </details>
+                        </div>
+                    </section>
+                </div>
+                <aside class="surface summary" aria-labelledby="cookiejar-summary-title">
+                    <h2 id="cookiejar-summary-title">Cookiejar summary</h2>
+                    <div class="summary-name"><i class="fas fa-cookie-bite" aria-hidden="true"></i><span id="summary-description">Untitled Cookiejar</span></div>
+                    <dl><div><dt>Visibility</dt><dd id="summary-visibility" data-level="0"><i class="fas fa-user" aria-hidden="true"></i><span>Personal</span></dd></div><div><dt id="summary-count-label">Cookies</dt><dd><b data-count>0</b></dd></div><div id="file-summary" hidden><dt>Browser file</dt><dd class="file-name" id="summary-file"></dd></div></dl>
+                    <p class="summary-note" id="summary-note">Only you can use this Cookiejar</p>
+                    <p class="form-error" id="create-error" tabindex="-1" role="alert" hidden></p>
+                    <button class="action primary create-button" type="submit" id="create-cookiejar"><i class="fas fa-plus" aria-hidden="true"></i><span>Create Cookiejar</span></button>
+                    <a class="cancel" href="{{ url_for('crawler_splash.crawler_cookiejar_all') }}">Cancel</a>
+                </aside>
+            </div>
+        </form>
+    </main>
+    <script>
+        (function () {
+            'use strict';
+            const form = document.getElementById('create-form');
+            const rows = document.getElementById('cookie-fields');
+            const file = document.getElementById('browser-cookies');
+            const create = document.getElementById('create-cookiejar');
+            const error = document.getElementById('create-error');
+            const add = document.getElementById('add-cookie');
+            let nextIndex = 1;
+            let submitting = false;
+            const visibility = {
+                '0': {label: 'Personal', icon: 'user', hint: 'Only you can use this Cookiejar'},
+                '2': {label: 'Organisation', icon: 'users', hint: 'Available to your organisation'},
+                '1': {label: 'Global', icon: 'globe', hint: 'Available to all users'}
+            };
 
-<body>
+            function refresh() {
+                let count = 0;
+                rows.querySelectorAll('.cookie-entry').forEach(function (row) {
+                    const inputs = row.querySelectorAll('input');
+                    const hasName = Boolean(inputs[0].value.trim());
+                    const hasValue = Boolean(inputs[1].value);
+                    inputs[0].setCustomValidity(hasValue && !hasName ? 'Enter a cookie name.' : '');
+                    inputs[1].setCustomValidity(hasName && !hasValue ? 'Enter a cookie value.' : '');
+                    if (hasName && hasValue) {
+                        count += 1;
+                    }
+                });
+                document.querySelectorAll('[data-count]').forEach(function (node) {
+                    node.textContent = count;
+                });
+                document.getElementById('empty-cookies').hidden = rows.children.length > 0;
+                document.getElementById('summary-description').textContent = document.getElementById('description').value.trim() || 'Untitled Cookiejar';
+                const level = form.querySelector('input[name="level"]:checked').value;
+                document.querySelectorAll('.visibility-choice').forEach(function (choice) {
+                    choice.classList.toggle('selected', choice.querySelector('input').checked);
+                });
+                const badge = document.getElementById('summary-visibility');
+                badge.dataset.level = level;
+                badge.querySelector('span').textContent = visibility[level].label;
+                badge.querySelector('i').className = 'fas fa-' + visibility[level].icon;
+                document.getElementById('summary-note').textContent = visibility[level].hint;
+                const selectedFile = file.files[0];
+                document.getElementById('file-summary').hidden = !selectedFile;
+                document.getElementById('summary-file').textContent = selectedFile ? selectedFile.name : '';
+                document.getElementById('summary-count-label').textContent = selectedFile ? 'Manual cookies' : 'Cookies';
+            }
 
-	{% include 'nav_bar.html' %}
+            form.addEventListener('input', refresh);
+            form.addEventListener('change', refresh);
+            add.hidden = false;
+            rows.querySelectorAll('.remove-cookie').forEach(function (button) {
+                button.hidden = false;
+            });
+            add.addEventListener('click', function () {
+                const row = document.createElement('div');
+                row.className = 'cookie-grid cookie-entry';
+                ['Cookie name', 'Cookie value'].forEach(function (label, index) {
+                    const input = document.createElement('input');
+                    input.name = 'cookie_' + nextIndex;
+                    input.type = 'text';
+                    input.placeholder = label;
+                    input.setAttribute('aria-label', label);
+                    input.autocomplete = 'off';
+                    input.spellcheck = false;
+                    if (index) {
+                        input.className = 'cookie-value';
+                    }
+                    row.append(input);
+                });
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'remove-cookie';
+                button.setAttribute('aria-label', 'Remove cookie');
+                button.title = 'Remove cookie';
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-trash-can';
+                icon.setAttribute('aria-hidden', 'true');
+                button.append(icon);
+                row.append(button);
+                rows.append(row);
+                nextIndex += 1;
+                row.querySelector('input').focus();
+                refresh();
+            });
+            rows.addEventListener('click', function (event) {
+                const button = event.target.closest('.remove-cookie');
+                if (button) {
+                    const row = button.closest('.cookie-entry');
+                    const next = row.nextElementSibling || row.previousElementSibling;
+                    row.remove();
+                    refresh();
+                    if (next) {
+                        next.querySelector('input').focus();
+                    } else {
+                        add.focus();
+                    }
+                }
+            });
 
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12" id="core_content">
-
-				<div class="card mb-3 mt-1">
-						<div class="card-header text-white bg-dark">
-							<h5 class="card-title"><i class="fas fa-box"></i> Create Cookiejar <i class="fas fa-cookie"></i></h5>
-						</div>
-						<div class="card-body">
-							{% if current_user.is_admin() %}
-								<div class="mb-3">
-									<h5>Import a complete cookiejar</h5>
-									{% with cookiejar_uuid=None, import_label='Import Cookiejar JSON' %}
-										{% include 'crawler/crawler_splash/cookiejar_json_import.html' %}
-									{% endwith %}
-								</div>
-								<hr>
-							{% endif %}
-
-							<form action="{{ url_for('crawler_splash.crawler_cookiejar_add_post') }}" method="post" enctype="multipart/form-data">
-
-								<div class="row">
-									<div class="col-12 col-md-9">
-										<div class="input-group mb-2 mr-sm-2">
-											<div class="input-group-prepend">
-												<div class="input-group-text"><i class="fas fa-tag"></i></div>
-											</div>
-											<input id="description" name="description" class="form-control" placeholder="cookies description - (optional)" type="text">
-										</div>
-									</div>
-									<div class="col-12 col-md-3">
-
-                                        <label  class="mt-3" for="level_selector">View Level</label>
-                                        <select class="custom-select" id="level_selector" name="level">
-                                            <option value="1" selected>Global</option>
-                                            <option value="2">My Organisation</option>
-                                            <option value="0">My User</option>
-                                        </select>
-
-									</div>
-								</div>
-
-								<hr>
-
-								{% include 'crawler/crawler_splash/add_cookies_block.html' %}
-
-								<div class="form-group">
-									<button class="btn btn-info" type="submit" value=Upload><i class="fas fa-cookie-bite"></i> Create Cookiejar</button>
-								</div>
-
-							</form>
-
-						</div>
-					</div>
-
-
-
-			</div>
-		</div>
-	</div>
-
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                if (submitting) {
+                    return;
+                }
+                refresh();
+                if (!form.reportValidity()) {
+                    return;
+                }
+                submitting = true;
+                create.disabled = true;
+                create.querySelector('span').textContent = 'Creating…';
+                error.hidden = true;
+                let created = false;
+                try {
+                    const response = await fetch(form.action, {method: 'POST', body: new FormData(form), headers: {Accept: 'application/json'}, credentials: 'same-origin'});
+                    const data = await response.json();
+                    if (!response.ok || !data.url) {
+                        error.textContent = typeof data.error === 'string' ? data.error : 'Could not create the Cookiejar. Please try again.';
+                        error.hidden = false;
+                        error.focus();
+                        return;
+                    }
+                    window.location.assign(data.url);
+                    created = true;
+                } catch (exception) {
+                    error.textContent = 'Could not create the Cookiejar. Check your connection and try again.';
+                    error.hidden = false;
+                    error.focus();
+                } finally {
+                    if (!created) {
+                        submitting = false;
+                        create.disabled = false;
+                        create.querySelector('span').textContent = 'Create Cookiejar';
+                    }
+                }
+            });
+            window.addEventListener('pageshow', function () {
+                submitting = false;
+                create.disabled = false;
+                create.querySelector('span').textContent = 'Create Cookiejar';
+                refresh();
+            });
+            document.querySelectorAll('.header-actions .file-action').forEach(function (label) {
+                label.tabIndex = 0;
+                label.setAttribute('role', 'button');
+                label.addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        label.querySelector('input[type="file"]').click();
+                    }
+                });
+            });
+            document.getElementById('page-Crawler').classList.add('active');
+            const menu = document.getElementById('crawler-nav-cookiejar-all');
+            menu.classList.add('active');
+            menu.setAttribute('aria-current', 'page');
+            refresh();
+        })();
+    </script>
 </body>
-
-<script>
-var chart = {};
-$(document).ready(function(){
-	$("#page-Crawler").addClass("active");
-	$('#crawler-nav-cookiejar-all').addClass('active');
-});
-
-</script>
+</html>

@@ -1597,6 +1597,21 @@ def api_delete_cookie(user_org, user_id, user_role, cookie_uuid):
 
 ##  - -  ##
 ## Cookies import ##       # TODO: add browser type ?
+def validate_browser_cookie_export(cookies):
+    if not isinstance(cookies, list):
+        return {'error': 'Use a browser cookie export here. For a complete Cookiejar export, use Import JSON file.'}, 400
+    for cookie in cookies:
+        if not isinstance(cookie, dict) or not isinstance(cookie.get('Name raw'), str) or not cookie['Name raw'] or not isinstance(cookie.get('Content raw'), str) or not cookie['Content raw']:
+            return {'error': 'Each browser cookie must contain a name and value.'}, 400
+        for field in ('Path raw', 'HTTP only raw', 'Send for', 'Host raw'):
+            if field in cookie and not isinstance(cookie[field], str):
+                return {'error': 'Invalid browser cookie fields.'}, 400
+        try:
+            unpack_imported_json_cookie(cookie)
+        except ValueError:
+            return {'error': 'Invalid browser cookie host.'}, 400
+
+
 def import_cookies_from_json(json_cookies, cookiejar_uuid):
     cookiejar = Cookiejar(cookiejar_uuid)
     for cookie in json_cookies:

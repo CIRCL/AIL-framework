@@ -957,51 +957,67 @@ def crawler_cookiejar_add():
 @login_required
 @login_user_no_api
 def crawler_cookiejar_add_post():
+    expected = session.get('cookiejar_import_csrf')
+    supplied = request.form.get('csrf_token', '')
+    if not isinstance(expected, str) or not expected or not hmac.compare_digest(expected.encode('utf-8'), supplied.encode('utf-8')):
+        return create_json_response({'error': 'Invalid CSRF token. Reload the page before creating a Cookiejar.'}, 403)
+
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
     user_role = current_user.get_role()
 
     description = request.form.get('description')
-    level = request.form.get('level')
+    level = request.form.get('level', '0')
 
     try:
         level = int(level)
-    except TypeError:
-        level = 1
+    except (TypeError, ValueError):
+        return create_json_response({'error': 'Choose a valid visibility.'}, 400)
     if level not in range(0, 3):
-        level = 1
+        return create_json_response({'error': 'Choose a valid visibility.'}, 400)
 
-    if 'file' in request.files:
-        file = request.files['file']
-        json_cookies = file.read().decode()
-    else:
-        json_cookies = None
+    json_cookies = None
+    file = request.files.get('file')
+    if file and file.filename:
+        try:
+            json_cookies = file.read().decode('utf-8')
+            browser_cookies = json.loads(json_cookies)
+        except (UnicodeDecodeError, ValueError, RecursionError):
+            return create_json_response({'error': 'The browser cookies file must contain valid UTF-8 JSON.'}, 400)
+        error = crawlers.validate_browser_cookie_export(browser_cookies)
+        if error:
+            return create_json_response(error[0], error[1])
 
     # Get cookies to add
     l_manual_cookie = []
-    l_invalid_cookie = []
     for obj_tuple in list(request.form):
+        if obj_tuple in ('csrf_token', 'description', 'level'):
+            continue
         l_input = request.form.getlist(obj_tuple)
-        if len(l_input) == 2:
-            if l_input[0]:  # Cookie Name
-                cookie_dict = {'name': l_input[0], 'value': l_input[1]}
-                l_manual_cookie.append(cookie_dict)
-            elif l_input[1]:  # Cookie Value
-                l_invalid_cookie.append({'name': '', 'value': l_input[1]})
-    if l_invalid_cookie:
-        return create_json_response({'error': 'invalid cookie', 'invalid fields': l_invalid_cookie}, 400)
+        if len(l_input) != 2:
+            return create_json_response({'error': 'Each cookie needs a name and value.'}, 400)
+        name, value = l_input
+        if not name.strip() and not value:
+            continue
+        if not name.strip() or not value:
+            return create_json_response({'error': 'Each cookie needs a name and value.'}, 400)
+        l_manual_cookie.append({'name': name, 'value': value})
 
     # Create Cookiejar
     cookiejar_uuid = crawlers.create_cookiejar(user_org, user_id, level=level, description=description)
 
     # Create Cookies
-    if json_cookies: # TODO CHECK Import
+    if json_cookies:
         res = crawlers.api_import_cookies_from_json(user_org, user_id, user_role, cookiejar_uuid, json_cookies)
         if res:
             return create_json_response(res[0], res[1])
     for cookie_dict in l_manual_cookie:
-        crawlers.api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
+        res = crawlers.api_create_cookie(user_org, user_id, user_role, cookiejar_uuid, cookie_dict)
+        if res[1] != 200:
+            return create_json_response(res[0], res[1])
 
+    if request.accept_mimetypes.best == 'application/json':
+        return jsonify({'url': url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid)})
     return redirect(url_for('crawler_splash.crawler_cookiejar_show', uuid=cookiejar_uuid))
 
 
