@@ -616,11 +616,13 @@
         .vanity-grid {
             display:grid;
             grid-template-columns:repeat(3,minmax(0,1fr));
-            align-items:start;
+            align-items:stretch;
             gap:18px;
         }
 
         .vanity-domain-card {
+            display:flex;
+            flex-direction:column;
             min-width:0;
             border:1px solid #dce4ee;
             border-radius:9px;
@@ -631,6 +633,7 @@
 
         .vanity-screenshot {
             display:block;
+            flex:none;
             margin:0;
             padding:0;
             border-bottom:1px solid #e4ebf4;
@@ -649,6 +652,7 @@
 
         .vanity-no-screenshot {
             display:flex;
+            flex:none;
             align-items:center;
             justify-content:center;
             gap:10px;
@@ -680,6 +684,9 @@
         }
 
         .vanity-domain-body {
+            display:flex;
+            flex:1;
+            flex-direction:column;
             padding:12px 14px 0;
         }
 
@@ -763,6 +770,7 @@
             display:flex;
             flex-wrap:wrap;
             gap:5px;
+            margin-bottom:10px;
         }
 
         .vanity-tags a {
@@ -787,7 +795,7 @@
             justify-content:space-between;
             flex-wrap:wrap;
             gap:8px;
-            margin-top:10px;
+            margin-top:auto;
             padding:9px 0;
             border-top:1px solid #e8eef5;
         }

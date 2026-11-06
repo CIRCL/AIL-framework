@@ -367,10 +367,12 @@
             display:grid;
             grid-template-columns:repeat(3,minmax(0,1fr));
             gap:20px;
-            align-items:start;
+            align-items:stretch;
         }
 
         .explorer-content .domain-card {
+            display:flex;
+            flex-direction:column;
             min-width:0;
             overflow:hidden;
             background:white;
@@ -382,6 +384,7 @@
 
         .explorer-content .shot {
             display:block;
+            flex:none;
             background:#edf1f5;
             margin:0;
             padding:0;
@@ -418,6 +421,9 @@
         }
 
         .explorer-content .card-body {
+            display:flex;
+            flex:1;
+            flex-direction:column;
             padding:15px 16px 0;
             min-width:0;
         }
@@ -506,6 +512,7 @@
             flex-wrap:wrap;
             min-height:24px;
             align-items:center;
+            margin-bottom:14px;
         }
 
         .explorer-content .tags a {
@@ -529,7 +536,7 @@
             justify-content:space-between;
             gap:8px;
             border-top:1px solid #e8edf4;
-            margin-top:14px;
+            margin-top:auto;
             padding:12px 0;
         }
 
@@ -632,6 +639,7 @@
 
         .explorer-content .no-screenshot {
             display:flex;
+            flex:none;
             align-items:center;
             justify-content:center;
             gap:10px;
