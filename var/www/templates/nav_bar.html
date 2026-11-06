@@ -1,7 +1,132 @@
 {% from 'crawler/menu_navbar.html' import menu as crawler_menu, assets as crawler_menu_assets with context %}
-<nav class="navbar navbar-expand-xl navbar-dark bg-dark">
-  <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
-    <img src="{{ url_for('static', filename='image/ail-project-inverted.png')}}" alt="AIL" style="width:80px;">
+<style>
+    .ail-navbar {
+        min-height:56px;
+        padding:8px 18px;
+        box-shadow:0 1px 3px #16253418;
+    }
+    .ail-navbar.bg-dark {
+        background-color:#2d333b !important;
+    }
+    .ail-navbar .navbar-brand {
+        display:flex;
+        align-items:center;
+        gap:7px;
+        margin:0 23px 0 0;
+        padding:0;
+        line-height:1;
+    }
+    .ail-navbar .ail-brand-symbol {
+        display:block;
+        flex:none;
+        width:44px;
+        height:36px;
+        overflow:hidden;
+    }
+    .ail-navbar .ail-brand-symbol img {
+        display:block;
+        width:44px;
+        height:44px;
+        max-width:none;
+    }
+    .ail-navbar .ail-brand-wordmark {
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:3px;
+        color:#fff;
+    }
+    .ail-navbar .ail-brand-name {
+        font-size:19px;
+        font-weight:650;
+        letter-spacing:1px;
+    }
+    .ail-navbar .ail-brand-project {
+        color:#c1c9d4;
+        font-size:11px;
+        font-weight:400;
+        letter-spacing:.4px;
+    }
+    .ail-navbar .navbar-nav>.nav-item>.nav-link,
+    .ail-navbar .crawler-nav-trigger>.nav-link {
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+        min-height:40px;
+        padding-top:8px;
+        padding-bottom:8px;
+        color:#c6cbd2;
+        font-size:15px;
+        line-height:24px;
+        white-space:nowrap;
+    }
+    .ail-navbar .navbar-nav>.nav-item>.nav-link:hover,
+    .ail-navbar .navbar-nav>.nav-item>.nav-link.active,
+    .ail-navbar .crawler-nav-trigger>.nav-link.active {
+        color:#fff;
+    }
+    .ail-navbar .navbar-nav>.nav-item>.nav-link.active,
+    .ail-navbar .crawler-nav-trigger:has(.nav-link.active) {
+        border-radius:0;
+        background:transparent;
+        box-shadow:0 3px 0 #e0e5ed;
+    }
+    .ail-navbar .crawler-nav-toggle {
+        padding:6px 8px;
+    }
+    @media (min-width:1200px) {
+        .ail-navbar .navbar-nav {
+            width:100%;
+        }
+        .ail-navbar .navbar-nav>.nav-item {
+            margin-right:8px !important;
+        }
+        .ail-navbar #page-Dashboard {
+            margin-right:0 !important;
+        }
+        .ail-navbar .ail-navbar-utilities {
+            margin-left:auto;
+        }
+        .ail-navbar .navbar-nav>.nav-item:last-child {
+            margin-right:0 !important;
+        }
+        .ail-navbar .crawler-nav-trigger {
+            align-items:stretch;
+        }
+        .ail-navbar .crawler-nav-root {
+            top:calc(100% + 8px);
+        }
+        .ail-navbar .crawler-nav-root::before {
+            top:-12px;
+            height:12px;
+        }
+    }
+    @media (min-width:1200px) and (max-width:1399px) {
+        .ail-navbar .navbar-brand {
+            margin-right:12px;
+        }
+        .ail-navbar .navbar-nav>.nav-item {
+            margin-right:3px !important;
+        }
+        .ail-navbar .navbar-nav>.nav-item>.nav-link,
+        .ail-navbar .crawler-nav-trigger>.nav-link {
+            padding-right:5px;
+            padding-left:5px;
+        }
+    }
+    @media (max-width:1199.98px) {
+        .ail-navbar .navbar-nav>.nav-item>.nav-link,
+        .ail-navbar .crawler-nav-trigger>.nav-link {
+            min-height:44px;
+            padding-top:10px;
+            padding-bottom:10px;
+        }
+    }
+</style>
+<nav class="navbar navbar-expand-xl navbar-dark bg-dark sticky-top ail-navbar">
+  <a class="navbar-brand" href="{{ url_for('dashboard.index') }}" aria-label="AIL project home">
+    <span class="ail-brand-symbol"><img src="{{ url_for('static', filename='image/ail-project-inverted.png') }}" alt=""></span>
+    <span class="ail-brand-wordmark" aria-hidden="true"><strong class="ail-brand-name">AIL</strong><small class="ail-brand-project">project</small></span>
   </a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -47,7 +172,7 @@
 {#      <li class="nav-item mr-3">#}
 {#        <a class="nav-link" href="{{ url_for('trendingmodules.moduletrending') }}" aria-disabled="true"><i class="fas fa-chart-bar"></i> Statistics</a>#}
 {#      </li>#}
-      <li class="nav-item mr-3">
+      <li class="nav-item mr-3 ail-navbar-utilities">
         <a class="nav-link" id="page-options" href="{{ url_for('settings_b.settings_page') }}" aria-disabled="true"><i class="fas fa-cog"></i> Settings</a>
       </li>
       <li class="nav-item mr-3">
