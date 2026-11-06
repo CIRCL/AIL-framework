@@ -35,7 +35,7 @@
             <input type="hidden" name="vanity" value="{{ vanity }}">
             <input type="hidden" name="min" value="{{ minimum }}">
             <label class="vanity-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" name="q" value="{{ query }}" placeholder="Search these domains…" aria-label="Search these domains" maxlength="255"></label>
-            <label class="vanity-filter"><span class="sr-only">Domains per page</span><select name="size" aria-label="Domains per page" data-auto-submit>{% for size in [12, 24, 48] %}<option value="{{ size }}" {% if pagination.page_size == size %}selected{% endif %}>{{ size }} per page</option>{% endfor %}</select></label>
+            <label class="vanity-filter vanity-page-size">Per page<select name="size" aria-label="Domains per page" data-auto-submit>{% for size in [10, 25, 50, 100] %}<option value="{{ size }}" {% if pagination.page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
             <button class="vanity-submit" type="submit">Search</button>
             {% if query %}<a class="vanity-clear" href="{{ url_for('crawler_splash.domains_explorer_vanity_explore', vanity=vanity, min=minimum, size=pagination.page_size) }}">Clear</a>{% endif %}
             <div class="vanity-blur" role="group" aria-label="Screenshot visibility">
@@ -101,8 +101,16 @@
 {% block vanity_scripts %}
     <script>
         const blurSlider = document.getElementById('blur-slider');
+        if (document.documentElement.dataset.screenshotVisibility !== undefined) {
+            blurSlider.value = document.documentElement.dataset.screenshotVisibility;
+        }
         function blurImages() {
             document.documentElement.style.setProperty('--object-image-blur', (15 - Number(blurSlider.value)) + 'px');
+            try {
+                sessionStorage.setItem('ail.vanity-explorer.screenshot-visibility', blurSlider.value);
+            } catch (error) {
+                // Blur controls still work when browser storage is unavailable.
+            }
         }
         document.querySelectorAll('[data-blur]').forEach(function (button) {
             button.addEventListener('click', function () {

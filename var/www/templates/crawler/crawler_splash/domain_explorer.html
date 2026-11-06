@@ -1,188 +1,1026 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Show Domain - AIL</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Domain Explorer · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
-
     <style>
-        body {
-            background-color: #f8f9fb;
+        .explorer-page {
+            background:#f7f9fc;
+            color:#293d55;
+            font-size:16px;
         }
 
-        .domain-explorer-header {
-            border: 1px solid #e8ecf2;
-            border-radius: 0.6rem;
-            background: linear-gradient(120deg, #ffffff 0%, #f5f8ff 100%);
-            box-shadow: 0 4px 18px rgba(31, 45, 61, 0.06);
+        .explorer-content {
+            padding:28px 32px 25px;
+            max-width:2200px;
+            margin:auto;
         }
 
-        .domain-explorer-title {
-            font-weight: 600;
-            color: #22313f;
-            margin-bottom: 0.35rem;
+        .explorer-content button, .explorer-content input, .explorer-content select {
+            font:inherit;
         }
 
-        .domain-explorer-subtitle {
-            color: #6c7a89;
-            margin-bottom: 0;
+        .explorer-content button, .explorer-content a, .explorer-content input, .explorer-content select {
+            outline-offset:3px;
         }
 
-        .control-panel {
-            border: 1px solid #e8ecf2;
-            border-radius: 0.6rem;
-            background-color: #ffffff;
-            box-shadow: 0 2px 10px rgba(31, 45, 61, 0.04);
-            height: 100%;
+        .explorer-content button {
+            cursor:pointer;
         }
 
-        .result-section {
-            margin-top: 1.5rem;
-            border: 1px solid #e8ecf2;
-            border-radius: 0.6rem;
-            background-color: #ffffff;
-            box-shadow: 0 2px 10px rgba(31, 45, 61, 0.04);
-            padding: 1rem;
+        .explorer-content a {
+            color:#45688f;
+            text-decoration:none;
         }
 
-        .result-header {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid #edf1f6;
-            padding-bottom: 0.75rem;
+        .explorer-content a:hover {
+            color:#254e7e;
+            text-decoration:none;
         }
 
-        .result-title {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 1.1rem;
-            font-weight: 600;
+        .explorer-content .heading {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:25px;
+            gap:22px;
         }
 
-        .result-meta {
-            margin: 0;
-            color: #6c7a89;
-            font-size: 0.95rem;
+        .explorer-content .title {
+            display:flex;
+            align-items:center;
+            gap:16px;
         }
 
-        .pagination-wrap {
-            margin-top: 1rem;
+        .explorer-content .explorer-compass {
+            flex:none;
+            width:47px;
+            height:47px;
+            color:#526f91;
         }
+
+        .explorer-compass-needle {
+            transform-origin:256px 256px;
+            transform:rotate(0deg);
+            animation:explorer-compass-north 6.5s ease-in-out infinite;
+        }
+
+        @keyframes explorer-compass-north {
+            0%, 72%, 100% {
+                transform:rotate(0deg);
+            }
+            12% {
+                transform:rotate(19deg);
+            }
+            28% {
+                transform:rotate(-13deg);
+            }
+            44% {
+                transform:rotate(7deg);
+            }
+            58% {
+                transform:rotate(-3deg);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .explorer-compass-needle {
+                animation:none;
+            }
+        }
+
+        .explorer-content .heading h1 {
+            font-size:29px;
+            letter-spacing:-.6px;
+            font-weight:650;
+            margin:0;
+            line-height:1.25;
+        }
+
+        .explorer-content .heading p {
+            font-size:15px;
+            color:#728197;
+            margin:7px 0 0;
+        }
+
+        .explorer-content .surface {
+            background:#fff;
+            border:1px solid #dce4ed;
+            border-radius:9px;
+            overflow:hidden;
+            box-shadow:0 1px 4px #30496804;
+        }
+
+        .explorer-content .filters {
+            margin-bottom:24px;
+        }
+
+        .explorer-content .filter-top, .explorer-content .filter-bottom {
+            display:flex;
+            align-items:center;
+            gap:14px;
+            padding:17px 20px;
+        }
+
+        .explorer-content .filter-top {
+            justify-content:space-between;
+        }
+
+        .explorer-content .filter-bottom {
+            border-top:1px solid #e7edf4;
+            background:#fcfdff;
+        }
+
+        .explorer-content .networks {
+            display:flex;
+            align-items:center;
+            gap:7px;
+        }
+
+        .explorer-content .networks a {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:9px;
+            min-height:43px;
+            padding:10px 16px;
+            background:#fff;
+            border:1px solid transparent;
+            border-radius:6px;
+            color:#657c96;
+            font-size:15px;
+            font-weight:500;
+        }
+
+        .explorer-content .networks a.selected {
+            background:#edf3fb;
+            border-color:#c8d8ec;
+            color:#355f91;
+        }
+
+        .explorer-content .networks a i {
+            font-size:16px;
+        }
+
+        .explorer-content .date-controls {
+            display:flex;
+            align-items:flex-end;
+            gap:10px;
+        }
+
+        .explorer-content .date-controls label {
+            margin:0;
+            color:#718399;
+            font-size:12px;
+        }
+
+        .explorer-content .date-controls label>span {
+            display:flex;
+            align-items:center;
+            gap:9px;
+            height:39px;
+            border:1px solid #d6e0ec;
+            padding:0 8px;
+            border-radius:6px;
+            margin-top:4px;
+        }
+
+        .explorer-content .date-controls input {
+            border:0;
+            outline:0;
+            color:#425e7d;
+            width:138px;
+            font-size:14px;
+        }
+
+        .explorer-content .date-dash {
+            padding-bottom:10px;
+            color:#8b9db2;
+        }
+
+        .explorer-content .primary {
+            height:41px;
+            padding:9px 18px;
+            color:#fff;
+            background:#416c9e;
+            border:1px solid #416c9e;
+            border-radius:6px;
+            font-size:15px;
+            font-weight:500;
+        }
+
+        .explorer-content .primary:hover {
+            background:#345b89;
+        }
+
+        .explorer-content .search {
+            display:flex;
+            align-items:center;
+            gap:11px;
+            height:44px;
+            border:1px solid #d5dfeb;
+            border-radius:6px;
+            background:white;
+            padding:0 13px;
+            margin:0;
+            width:480px;
+            flex:1 1 330px;
+            max-width:520px;
+            min-width:0;
+        }
+
+        .explorer-content .search i {
+            color:#8a9eb6;
+            font-size:15px;
+        }
+
+        .explorer-content .search input {
+            border:0;
+            outline:0;
+            color:#3e5876;
+            background:transparent;
+            width:100%;
+            min-width:0;
+            font-size:15px;
+        }
+
+        .explorer-content .search input::placeholder {
+            color:#8799ae;
+            opacity:1;
+        }
+
+        .explorer-content select {
+            height:40px;
+            border:1px solid #d6e0eb;
+            border-radius:6px;
+            color:#5a7391;
+            background:#fff;
+            padding:7px 30px 7px 12px;
+            font-size:14px;
+            cursor:pointer;
+        }
+
+        .explorer-content .sort {
+            margin-left:auto;
+            display:flex;
+            gap:9px;
+            align-items:center;
+            color:#7a8ca2;
+            font-size:14px;
+        }
+
+        .explorer-content .explorer-page-size {
+            display:inline-flex;
+            align-items:center;
+            gap:9px;
+            margin:0;
+            color:#496789;
+            font-size:14px;
+            font-weight:600;
+            white-space:nowrap;
+        }
+
+        .explorer-content .explorer-page-size select {
+            min-width:88px;
+            height:44px;
+            border-color:#8faed0;
+            background:#eef4fc;
+            color:#355d8b;
+            font-size:16px;
+            font-weight:600;
+            box-shadow:0 1px 3px #3049680d;
+        }
+
+        .explorer-content .explorer-page-size select:hover {
+            border-color:#517cac;
+            background:#e7f0fb;
+        }
+
+        .explorer-content .results-head {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:15px;
+            margin-bottom:17px;
+            min-height:41px;
+        }
+
+        .explorer-content .results-head h2 {
+            font-size:19px;
+            font-weight:600;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            margin:0;
+        }
+
+        .explorer-content .results-head h2>span {
+            font-size:14px;
+            background:#eaf0f7;
+            color:#647c9a;
+            border-radius:6px;
+            padding:5px 9px;
+            font-weight:500;
+        }
+
+        .explorer-content .result-options {
+            display:flex;
+            align-items:center;
+            gap:19px;
+        }
+
+        .explorer-content .blur {
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+
+        .explorer-content .blur button {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            background:white;
+            color:#597493;
+            border:1px solid #d5dfeb;
+            border-radius:6px;
+            padding:8px 11px;
+            font-size:14px;
+            height:40px;
+        }
+
+        .explorer-content .blur input {
+            width:91px;
+            height:5px;
+            accent-color:#708db4;
+            cursor:pointer;
+        }
+
+        .explorer-content .domain-grid {
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            gap:20px;
+            align-items:start;
+        }
+
+        .explorer-content .domain-card {
+            min-width:0;
+            overflow:hidden;
+            background:white;
+            border:1px solid #dce4ed;
+            border-radius:8px;
+            box-shadow:0 1px 4px #30496804;
+            height:auto;
+        }
+
+        .explorer-content .shot {
+            display:block;
+            background:#edf1f5;
+            margin:0;
+            padding:0;
+            overflow:hidden;
+            border-bottom:1px solid #e4e9f0;
+        }
+
+        .explorer-content .shot img {
+            display:block;
+            width:auto;
+            height:auto;
+            max-width:100%;
+            max-height:280px;
+            margin:0 auto;
+            filter:blur(var(--object-image-blur,5px));
+        }
+
+        .explorer-content .no-screenshot.sensitive {
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            align-items:center;
+            justify-content:center;
+            aspect-ratio:16/9;
+            background:#f5f3ef;
+            color:#8a714e;
+            font-size:14px;
+            font-weight:500;
+        }
+
+        .explorer-content .sensitive svg {
+            width:42px;
+            height:32px;
+        }
+
+        .explorer-content .card-body {
+            padding:15px 16px 0;
+            min-width:0;
+        }
+
+        .explorer-content .domain-top {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:9px;
+            margin-bottom:9px;
+        }
+
+        .explorer-content .status {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            font-size:13px;
+            font-weight:650;
+            white-space:nowrap;
+        }
+
+        .explorer-content .status i {
+            font-size:16px;
+        }
+
+        .explorer-content .up {
+            color:#218746;
+        }
+
+        .explorer-content .down {
+            color:#bb5760;
+        }
+
+        .explorer-content .languages {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            font-size:12px;
+            color:#7a8fa7;
+            flex-wrap:wrap;
+            min-width:0;
+            white-space:normal;
+        }
+
+        .explorer-content .languages i {
+            font-size:15px;
+            color:#849ab4;
+        }
+
+        .explorer-content .domain-name {
+            display:block;
+            font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+            font-size:14px;
+            line-height:1.65;
+            overflow-wrap:anywhere;
+            word-break:break-all;
+            color:#42658d;
+            font-weight:500;
+            margin:0 0 12px;
+        }
+
+        .explorer-content .seen {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:9px;
+            margin:0 0 12px;
+        }
+
+        .explorer-content .seen dt {
+            font-size:12px;
+            font-weight:400;
+            color:#8899ae;
+            margin:0 0 3px;
+        }
+
+        .explorer-content .seen dd {
+            font-size:14px;
+            color:#526d8d;
+            font-weight:500;
+            margin:0;
+        }
+
+        .explorer-content .tags {
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+            min-height:24px;
+            align-items:center;
+        }
+
+        .explorer-content .tags a {
+            font-size:11px;
+            background:#edf3fb;
+            color:#6481a5;
+            border-radius:4px;
+            padding:4px 7px;
+            max-width:100%;
+            overflow-wrap:anywhere;
+        }
+
+        .explorer-content .tags .tlp {
+            background:#eff5f1;
+            color:#6c8e76;
+        }
+
+        .explorer-content .actions {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:8px;
+            border-top:1px solid #e8edf4;
+            margin-top:14px;
+            padding:12px 0;
+        }
+
+        .explorer-content .actions>a {
+            font-size:12px;
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            color:#5c7c9f;
+            white-space:nowrap;
+        }
+
+        .explorer-content .actions i {
+            font-size:11px;
+        }
+
+        .explorer-content .actions .export img {
+            width:29px;
+            height:auto;
+        }
+
+        .explorer-content .paging {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:19px 0 2px;
+            color:#7c8fa6;
+            font-size:14px;
+        }
+
+        .explorer-content .paging b {
+            font-weight:500;
+            color:#617d9e;
+        }
+
+        .explorer-content .paging i {
+            font-size:11px;
+        }
+
+        .explorer-content .header-actions {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:12px;
+            margin-left:auto;
+        }
+
+        .explorer-content .explorer-dashboard,
+        .explorer-content .explorer-vanity {
+            display:inline-flex;
+            align-items:center;
+            gap:11px;
+            min-height:52px;
+            padding:12px 20px;
+            border:1px solid #d6dfe9;
+            border-radius:7px;
+            background:#fff;
+            color:#4e6683;
+            font-size:17px;
+            font-weight:500;
+        }
+
+        .explorer-vanity .fa-dumbbell {
+            font-size:22px;
+        }
+
+        .explorer-dashboard .crawler-nav-dashboard-icon {
+            width:24px;
+            height:24px;
+        }
+
+        .explorer-dashboard .crawler-nav-dashboard-icon .fa-spider {
+            font-size:12px;
+        }
+
+        .explorer-content .explorer-dashboard:hover,
+        .explorer-content .explorer-vanity:hover {
+            background:#eef4fc;
+        }
+
+        .explorer-content .heading,
+        .explorer-content .filter-top,
+        .explorer-content .filter-bottom,
+        .explorer-content .results-head,
+        .explorer-content .result-options,
+        .explorer-content .domain-top,
+        .explorer-content .actions,
+        .explorer-content .paging {
+            flex-wrap:wrap;
+        }
+
+        .explorer-content .date-controls button {
+            flex:none;
+        }
+
+        .explorer-content .search:focus-within {
+            outline:2px solid #8caed5;
+            outline-offset:2px;
+        }
+
+        .explorer-content .no-screenshot {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            min-height:130px;
+            padding:20px;
+            border-bottom:1px solid #e4ebf4;
+            background:#f0f4f8;
+            color:#8ea0b6;
+            font-size:14px;
+        }
+
+        .explorer-content .no-screenshot i {
+            font-size:24px;
+        }
+
+        .explorer-content .empty {
+            grid-column:1 / -1;
+            padding:48px 24px;
+            color:#7b8fa8;
+            text-align:center;
+        }
+
+        .explorer-content .empty i {
+            display:block;
+            margin-bottom:13px;
+            color:#a5b6cb;
+            font-size:28px;
+        }
+
+        .explorer-content .page-link {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:33px;
+            min-height:33px;
+            padding:5px 8px;
+            border:1px solid #d9e3ef;
+            border-radius:5px;
+            background:#fff;
+            color:#7188a4;
+            font-size:13px;
+        }
+
+        .explorer-content .page-link[aria-current=page] {
+            background:#eaf2fc;
+            color:#426a9a;
+            border-color:#bed1e9;
+        }
+
+        .explorer-content .page-link[aria-disabled=true] {
+            color:#b6c2d0;
+        }
+
+        .explorer-content .paging nav {
+            display:flex;
+            align-items:center;
+            gap:7px;
+        }
+
+        .explorer-content a:focus-visible,
+        .explorer-content button:focus-visible,
+        .explorer-content select:focus-visible {
+            outline:2px solid #6d96c6;
+            outline-offset:3px;
+        }
+
+        @media (min-width:1400px) {
+            .explorer-content .domain-grid {
+                grid-template-columns:repeat(4,minmax(0,1fr));
+            }
+        }
+
+        @media (min-width:1800px) {
+            .explorer-content .domain-grid {
+                grid-template-columns:repeat(5,minmax(0,1fr));
+            }
+        }
+
+        @media (min-width:2200px) {
+            .explorer-content .domain-grid {
+                grid-template-columns:repeat(6,minmax(0,1fr));
+            }
+        }
+
+        @media (max-width:1100px) {
+            .explorer-content .domain-grid {
+                grid-template-columns:repeat(2,minmax(0,1fr));
+            }
+        }
+
+        @media (max-width:600px) {
+            .explorer-content {
+                padding:22px 14px;
+            }
+
+            .explorer-content .heading h1 {
+                font-size:25px;
+            }
+
+            .explorer-content .heading p {
+                font-size:14px;
+            }
+
+            .explorer-content .header-actions {
+                gap:8px;
+            }
+
+            .explorer-content .header-actions>a {
+                gap:8px;
+                min-height:48px;
+                padding:10px 11px;
+                font-size:15px;
+            }
+
+            .explorer-content .explorer-compass {
+                width:40px;
+                height:40px;
+            }
+
+            .explorer-content .filter-top,
+            .explorer-content .filter-bottom {
+                padding:14px 12px;
+            }
+
+            .explorer-content .date-controls {
+                flex-wrap:wrap;
+                gap:8px;
+            }
+
+            .explorer-content .date-controls label {
+                flex:1;
+                min-width:0;
+            }
+
+            .explorer-content .date-controls input {
+                min-width:0;
+                width:100%;
+                font-size:14px;
+            }
+
+            .explorer-content .date-dash {
+                display:none;
+            }
+
+            .explorer-content .search {
+                flex-basis:100%;
+            }
+
+            .explorer-content .search input {
+                font-size:14px;
+            }
+
+            .explorer-content .sort {
+                margin-left:0;
+            }
+
+            .explorer-content .domain-grid {
+                grid-template-columns:minmax(0,1fr);
+            }
+
+            .explorer-content .result-options {
+                gap:12px;
+            }
+
+            .explorer-content .paging {
+                gap:14px;
+            }
+        }
+
     </style>
-
+    <script>
+        (function () {
+            try {
+                const savedVisibility = sessionStorage.getItem('ail.domain-explorer.screenshot-visibility');
+                if (savedVisibility !== null && savedVisibility.trim() !== '' && Number.isFinite(Number(savedVisibility)) && Number(savedVisibility) >= 0 && Number(savedVisibility) <= 15) {
+                    document.documentElement.dataset.screenshotVisibility = savedVisibility;
+                    document.documentElement.style.setProperty('--object-image-blur', (15 - Number(savedVisibility)) + 'px');
+                }
+            } catch (error) {
+                // Keep the default blur when browser storage is unavailable.
+            }
+        })();
+    </script>
 </head>
-<body>
-
-	{% include 'nav_bar.html' %}
-
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12 py-3 py-lg-4" id="core_content">
-
-                <div class="domain-explorer-header p-3 p-lg-4 mb-3">
-                    <h1 class="h4 domain-explorer-title">Domain Explorer</h1>
-                    <p class="domain-explorer-subtitle">Browse crawled domains with clearer filters, improved image controls, and streamlined navigation.</p>
+<body class="explorer-page">
+    {% include 'nav_bar.html' %}
+    {% set filters = dict(q=dict_data.query, date_from=dict_data.date_from, date_to=dict_data.date_to, size=dict_data.page_size, sort=dict_data.sort) %}
+    <main class="explorer-content" id="core_content">
+        <header class="heading">
+            <div class="title">
+                <svg class="explorer-compass" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true" focusable="false">
+                    <!-- Adapted from Font Awesome Free 6.6.0 by @fontawesome (compass).
+                         Copyright 2024 Fonticons, Inc., CC BY 4.0: https://fontawesome.com/license/free -->
+                    <defs>
+                        <mask id="explorer-compass-face" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
+                            <rect width="512" height="512" fill="#fff"/>
+                            <g class="explorer-compass-needle">
+                                <path fill="#000" d="M306.7 325.1L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4z"/>
+                                <circle cx="256" cy="256" r="32" fill="#fff"/>
+                            </g>
+                        </mask>
+                    </defs>
+                    <circle cx="256" cy="256" r="256" mask="url(#explorer-compass-face)"/>
+                </svg>
+                <div><h1>Domain Explorer</h1><p>Browse domains by network and crawl date.</p></div>
+            </div>
+            <nav class="header-actions" aria-label="Explorer navigation">
+                <a class="explorer-vanity" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</a>
+                <a class="explorer-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
+                    <span class="crawler-nav-dashboard-icon" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                            <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                        </svg>
+                        <i class="fas fa-spider"></i>
+                    </span>Dashboard
+                </a>
+            </nav>
+        </header>
+        <form class="filters surface" id="domain-explorer-filters" action="{{ url_for(endpoint) }}" method="get" role="search">
+            <div class="filter-top">
+                <nav class="networks" aria-label="Network">
+                    {% for network, label, icon in [('onion', 'Onion', 'user-secret'), ('i2p', 'I2P', 'user-secret'), ('web', 'Web', 'globe')] %}
+                        <a class="{% if domain_type == network %}selected{% endif %}" href="{{ url_for('crawler_splash.domains_explorer_' + network, **filters) }}" {% if domain_type == network %}aria-current="page"{% endif %}><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}</a>
+                    {% endfor %}
+                </nav>
+                <div class="date-controls">
+                    <label for="explorer-date-from">From<span><input id="explorer-date-from" type="date" name="date_from" value="{{ dict_data.date_from[:4] + '-' + dict_data.date_from[4:6] + '-' + dict_data.date_from[6:8] if dict_data.date_from else '' }}"></span></label>
+                    <span class="date-dash" aria-hidden="true">–</span>
+                    <label for="explorer-date-to">To<span><input id="explorer-date-to" type="date" name="date_to" value="{{ dict_data.date_to[:4] + '-' + dict_data.date_to[4:6] + '-' + dict_data.date_to[6:8] if dict_data.date_to else '' }}"></span></label>
+                    <button class="primary" type="submit">Apply</button>
                 </div>
-
-                <div class="row">
-                    <div class="col-12 col-xl-7 mb-3">
-                        <div class="control-panel p-3 p-lg-4">
-                            {% with domain_type=dict_data['domain_type'], date_from=dict_data['date_from'], date_to=dict_data['date_to'], domain_type=domain_type%}
-                                {% include 'domains/filter_domains.html' %}
-                            {% endwith %}
+            </div>
+            <div class="filter-bottom">
+                <label class="search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" name="q" value="{{ dict_data.query }}" placeholder="Domain or part of a domain, e.g. archive" aria-label="Search domains" maxlength="255"></label>
+                <button class="primary" type="submit">Search</button>
+                <label class="sort">Sort<select name="sort" aria-label="Sort domains" data-auto-submit><option value="asc" {% if dict_data.sort == 'asc' %}selected{% endif %}>Domain A–Z</option><option value="desc" {% if dict_data.sort == 'desc' %}selected{% endif %}>Domain Z–A</option></select></label>
+            </div>
+        </form>
+        <section class="results" aria-labelledby="domains-heading">
+            <div class="results-head">
+                <h2 id="domains-heading">Domains <span>{{ '{:,}'.format(dict_data.nb_all_elem) }}</span></h2>
+                <div class="result-options">
+                    <div class="blur" role="group" aria-label="Screenshot visibility">
+                        <button type="button" data-blur="0"><i class="fas fa-eye-slash" aria-hidden="true"></i>Hide</button>
+                        <input type="range" id="blur-slider" min="0" max="15" step="0.1" value="10" aria-label="Screenshot visibility">
+                        <button type="button" data-blur="15"><i class="fas fa-image" aria-hidden="true"></i>Reveal</button>
+                    </div>
+                    <label class="explorer-page-size">Per page<select form="domain-explorer-filters" name="size" aria-label="Domains per page" data-auto-submit>{% for size in [10, 25, 50, 100] %}<option value="{{ size }}" {% if dict_data.page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
+                </div>
+            </div>
+            <div class="domain-grid">
+            {% for domain in dict_data.list_elem %}
+                {% set domain_url = url_for('crawler_splash.showDomain', domain=domain.id) %}
+                <article class="domain-card">
+                    {% if domain.is_tags_safe and domain.screenshot %}
+                        {% set screenshot_url = url_for('objects_item.screenshot', filename=domain.screenshot) %}
+                        <a class="shot" href="{{ screenshot_url }}" target="_blank" rel="noopener noreferrer" aria-label="Open full screenshot for {{ domain.id }}">
+                            <img src="{{ screenshot_url }}" alt="Screenshot of {{ domain.id }}" loading="lazy" data-screenshot>
+                        </a>
+                    {% elif not domain.is_tags_safe %}
+                        <div class="no-screenshot sensitive">
+                            <svg class="vanity-sensitive-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 64" width="84" height="64" fill="#9a743d">
+                                <!-- Adapted from Font Awesome Free 6.6.0 by @fontawesome (eye-slash and triangle-exclamation).
+                                     Copyright 2024 Fonticons, Inc. Icons licensed under CC BY 4.0:
+                                     https://fontawesome.com/license/free -->
+                                <title>Sensitive screenshot hidden</title>
+                                <path transform="translate(2 5) scale(.06875)" d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z"/>
+                                <path transform="translate(25 19) scale(.046875)" stroke="#fff" stroke-width="50" stroke-linejoin="round" paint-order="stroke fill" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
+                            </svg>
+                            <span>Sensitive screenshot hidden</span>
+                        </div>
+                    {% else %}
+                        <div class="no-screenshot"><i class="fas fa-image" aria-hidden="true"></i>No screenshot</div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="domain-top">
+                            {% if domain.status %}
+                                <span class="status up"><i class="fas fa-check-circle" aria-hidden="true"></i>UP</span>
+                            {% else %}
+                                <span class="status down"><i class="fas fa-times-circle" aria-hidden="true"></i>DOWN</span>
+                            {% endif %}
+                            {% if domain.languages %}<div class="languages"><i class="fas fa-language" aria-hidden="true"></i><span class="sr-only">Languages:</span>{% for language in domain.languages %}<span>{{ language }}</span>{% if not loop.last %}<span aria-hidden="true">·</span>{% endif %}{% endfor %}</div>{% endif %}
+                        </div>
+                        <a class="domain-name" href="{{ domain_url }}">{{ domain.id }}</a>
+                        <dl class="seen">
+                            <div><dt>First seen</dt><dd>{{ domain.first_seen or 'Unknown' }}</dd></div>
+                            <div><dt>Last seen</dt><dd>{{ domain.last_check or 'Unknown' }}</dd></div>
+                        </dl>
+                        {% if domain.tags %}<div class="tags">{% for tag in domain.tags %}<a {% if tag.startswith('tlp:') %}class="tlp" {% endif %}href="{{ url_for('tags_ui.get_obj_by_tags', object_type='domain', ltags=tag) }}">{{ tag }}</a>{% endfor %}</div>{% endif %}
+                        <div class="actions">
+                            <a href="{{ domain_url }}">View domain<i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                            <a class="correlations" href="{{ url_for('correlation.show_correlation', type='domain', id=domain.id) }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-project-diagram" aria-hidden="true"></i>Correlations</a>
+                            <a class="export" href="{{ url_for('import_export.add_object_id_to_export', type='domain', id=domain.id, lvl=0) }}" target="_blank" rel="noopener noreferrer" aria-label="Add {{ domain.id }} to export" title="Add to export"><img src="{{ url_for('static', filename='image/misp-logo.png') }}" alt="MISP"></a>
                         </div>
                     </div>
-                    <div class="col-12 col-xl-5 mb-3">
-                        <div class="control-panel p-3 p-lg-4">
-                            {% include 'objects/image/block_blur_img_slider.html' %}
-                        </div>
-                    </div>
-                </div>
-
-                <section class="result-section" aria-label="Domain results">
-                    <div class="result-header">
-                        <h2 class="result-title">Discovered Domains</h2>
-                        {% if 'nb_all_elem' in dict_data %}
-                            <p class="result-meta mb-0">Total: {{ dict_data['nb_all_elem'] }}</p>
+                </article>
+            {% else %}
+                <div class="empty surface"><i class="fas fa-search" aria-hidden="true"></i>{{ 'No domains match your search and filters.' if dict_data.query else 'No domains found for this network and date range.' }}</div>
+            {% endfor %}
+            </div>
+            <footer class="paging">
+                <span>{{ dict_data.nb_first_elem }}–{{ dict_data.nb_last_elem }} of <b>{{ '{:,}'.format(dict_data.nb_all_elem) }}</b> domains</span>
+                {% if dict_data.nb_pages > 1 %}
+                    <nav aria-label="Domain pages">
+                        {% if dict_data.page > 1 %}
+                            <a class="page-link" href="{{ url_for(endpoint, page=dict_data.page - 1, **filters) }}" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                        {% else %}
+                            <span class="page-link" aria-disabled="true" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
                         {% endif %}
-                    </div>
-
-                    {% with l_dict_domains=dict_data['list_elem'], bootstrap_label=bootstrap_label %}
-                        {% include 'domains/card_img_domain.html' %}
-                    {% endwith %}
-
-                    {%if 'list_elem' in dict_data%}
-                        <div class="pagination-wrap">
-                            {% with page=dict_data['page'], nb_page_max=dict_data['nb_pages'],  nb_first_elem=dict_data['nb_first_elem'], nb_last_elem=dict_data['nb_last_elem'], nb_all_elem=dict_data['nb_all_elem'] %}
-                                {% set object_name="domain" %}
-                                {%if domain_type=='onion'%}
-                                    {% set target_url=url_for('crawler_splash.domains_explorer_onion') + "?domain_type=onion" %}
-                                {%elif domain_type=='i2p'%}
-                                    {% set target_url=url_for('crawler_splash.domains_explorer_i2p') + "?domain_type=i2p" %}
-                                {%else%}
-                                    {% set target_url=url_for('crawler_splash.domains_explorer_web') + "?domain_type=regular" %}
-                                {%endif%}
-                                {%if 'date_from' in dict_data %}
-                                    {% set target_url = target_url + '&date_from=' + dict_data['date_from'] + '&date_to=' + dict_data['date_to'] %}
-                                {%endif%}
-                                {% include 'pagination.html' %}
-                            {% endwith %}
-                        </div>
-                    {%endif%}
-                </section>
-			</div>
-		</div>
-	</div>
+                        {% set previous = namespace(number=0) %}
+                        {% for number in [1, dict_data.page - 1, dict_data.page, dict_data.page + 1, dict_data.nb_pages]|unique|sort %}
+                            {% if 1 <= number <= dict_data.nb_pages %}
+                                {% if previous.number and number > previous.number + 1 %}<span aria-hidden="true">…</span>{% endif %}
+                                {% if number == dict_data.page %}
+                                    <span class="page-link" aria-current="page">{{ number }}</span>
+                                {% else %}
+                                    <a class="page-link" href="{{ url_for(endpoint, page=number, **filters) }}" aria-label="Page {{ number }}">{{ number }}</a>
+                                {% endif %}
+                                {% set previous.number = number %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if dict_data.page < dict_data.nb_pages %}
+                            <a class="page-link" href="{{ url_for(endpoint, page=dict_data.page + 1, **filters) }}" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+                        {% else %}
+                            <span class="page-link" aria-disabled="true" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            </footer>
+        </section>
+    </main>
+    <script>
+        document.getElementById('page-Crawler').classList.add('active');
+        document.getElementById('crawler-nav-explorers-toggle').classList.add('active');
+        document.getElementById('crawler-nav-{{ domain_type }}-explorer').classList.add('active');
+        const filters = document.getElementById('domain-explorer-filters');
+        const dateFrom = document.getElementById('explorer-date-from');
+        const dateTo = document.getElementById('explorer-date-to');
+        function validateDates() {
+            dateFrom.setCustomValidity(dateTo.value && !dateFrom.value ? 'Choose a start date.' : '');
+            dateTo.setCustomValidity(dateFrom.value && !dateTo.value ? 'Choose an end date.' : '');
+            dateFrom.max = dateTo.value;
+            dateTo.min = dateFrom.value;
+        }
+        dateFrom.addEventListener('input', validateDates);
+        dateTo.addEventListener('input', validateDates);
+        validateDates();
+        document.querySelectorAll('[data-auto-submit]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                filters.requestSubmit();
+            });
+        });
+        const blurSlider = document.getElementById('blur-slider');
+        if (document.documentElement.dataset.screenshotVisibility !== undefined) {
+            blurSlider.value = document.documentElement.dataset.screenshotVisibility;
+        }
+        function blurImages() {
+            document.documentElement.style.setProperty('--object-image-blur', (15 - Number(blurSlider.value)) + 'px');
+            try {
+                sessionStorage.setItem('ail.domain-explorer.screenshot-visibility', blurSlider.value);
+            } catch (error) {
+                // Blur controls still work when browser storage is unavailable.
+            }
+        }
+        document.querySelectorAll('[data-blur]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                blurSlider.value = button.dataset.blur;
+                blurImages();
+            });
+        });
+        blurSlider.addEventListener('input', blurImages);
+        blurImages();
+        document.querySelectorAll('[data-screenshot]').forEach(function (image) {
+            function showMissingScreenshot() {
+                if (!image.parentElement) {
+                    return;
+                }
+                const message = document.createElement('div');
+                message.className = 'no-screenshot';
+                message.textContent = 'Screenshot unavailable';
+                image.parentElement.replaceWith(message);
+            }
+            image.addEventListener('error', showMissingScreenshot, {once: true});
+            if (image.complete && image.naturalWidth === 0 && image.currentSrc) {
+                showMissingScreenshot();
+            }
+        });
+    </script>
 </body>
-
-
-<script>
-  $(document).ready(function(){
-    $('#page-Crawler').addClass('active');
-    $('#crawler-nav-explorers-toggle').addClass('active');
-
-    $('#date-range-from').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  					},
-  					setValue: function(s,s1,s2){
-  							$('#date-range-from-input').val(s1);
-  							$('#date-range-to-input').val(s2);
-  					}
-  	});
-  	$('#date-range-to').dateRangePicker({
-  			separator : ' to ',
-  			getValue: function(){
-  					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-  							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-  					else
-  							return '';
-  			},
-  			setValue: function(s,s1,s2){
-  					$('#date-range-from-input').val(s1);
-  					$('#date-range-to-input').val(s2);
-  			}
-  	});
-  });
-
-</script>
-
 </html>

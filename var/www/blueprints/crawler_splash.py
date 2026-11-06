@@ -680,69 +680,41 @@ def domains_explorer_post_filter():
             return redirect(url_for('crawler_splash.domains_explorer_onion'))
 
 
+def _render_domain_explorer(domain_type):
+    date_from = request.args.get('date_from', '').strip().replace('-', '')
+    date_to = request.args.get('date_to', '').strip().replace('-', '')
+    if date_from or date_to:
+        if not (len(date_from) == 8 and len(date_to) == 8 and Date.validate_str_date(date_from) and Date.validate_str_date(date_to) and date_from <= date_to):
+            abort(400, description='Choose a valid start and end date, with the start before or equal to the end.')
+    dict_data = Domains.get_domains_up_by_filers([domain_type], page=request.args.get('page', 1, type=int), date_from=date_from, date_to=date_to, nb_obj=request.args.get('size', 25, type=int), query=request.args.get('q', ''), sort=request.args.get('sort', 'asc'))
+    return render_template('domain_explorer.html', dict_data=dict_data, domain_type=domain_type, endpoint=f'crawler_splash.domains_explorer_{domain_type}')
+
+
 @crawler_splash.route('/domains/explorer/all', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_all():
-    page = request.args.get('page')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    dict_data = Domains.get_domains_up_by_filers(Domains.get_all_domains_types(), page=page, date_from=date_from, date_to=date_to)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label, domain_type='all')
+    filters = {key: request.args[key] for key in ('q', 'date_from', 'date_to', 'size', 'sort', 'page') if key in request.args}
+    return redirect(url_for('crawler_splash.domains_explorer_onion', **filters))
 
 
 @crawler_splash.route('/domains/explorer/onion', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_onion():
-    page = request.args.get('page')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    dict_data = Domains.get_domains_up_by_filers(['onion'], page=page, date_from=date_from, date_to=date_to)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
-                           domain_type='onion')
+    return _render_domain_explorer('onion')
 
 @crawler_splash.route('/domains/explorer/i2p', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_i2p():
-    page = request.args.get('page')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    dict_data = Domains.get_domains_up_by_filers(['i2p'], page=page, date_from=date_from, date_to=date_to)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
-                           domain_type='i2p')
+    return _render_domain_explorer('i2p')
 
 @crawler_splash.route('/domains/explorer/web', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_web():
-    page = request.args.get('page')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    dict_data = Domains.get_domains_up_by_filers(['web'], page=page, date_from=date_from, date_to=date_to)
-    return render_template("domain_explorer.html", dict_data=dict_data, bootstrap_label=bootstrap_label,
-                           domain_type='regular')
+    return _render_domain_explorer('web')
 
 
 @crawler_splash.route('/domains/languages/all/json', methods=['GET'])
@@ -907,8 +879,8 @@ def domains_explorer_vanity_clusters():
     sort = request.args.get('sort', 'domains')
     sort = sort if sort in {'prefix', 'domains'} else 'domains'
     direction = 'asc' if request.args.get('direction') == 'asc' else 'desc'
-    page_size = request.args.get('size', 12, type=int)
-    page_size = page_size if page_size in {12, 24, 48} else 12
+    page_size = request.args.get('size', 25, type=int)
+    page_size = page_size if page_size in {10, 25, 50, 100} else 25
     vanity_clusters = Domains.get_vanity_clusters(nb_min=nb_min)
     return render_template('explorer_vanity_clusters.html', vanity_clusters=vanity_clusters, query=query, minimum=nb_min, sort=sort, direction=direction, page_size=page_size, page=max(1, request.args.get('page', 1, type=int)))
 
@@ -921,7 +893,7 @@ def domains_explorer_vanity_explore():
         abort(400)
     nb_min = max(0, request.args.get('min', 2, type=int))
     query = request.args.get('q', '').strip().lower()[:255]
-    pagination = Domains.get_vanity_explorer_page(vanity, nb_min=nb_min, query=query, page=request.args.get('page', 1, type=int), page_size=request.args.get('size', 12, type=int))
+    pagination = Domains.get_vanity_explorer_page(vanity, nb_min=nb_min, query=query, page=request.args.get('page', 1, type=int), page_size=request.args.get('size', 25, type=int))
     return render_template('explorer_vanity_domains.html', pagination=pagination, vanity=vanity, query=query, minimum=nb_min)
 
 ##--  --##

@@ -781,30 +781,28 @@ def get_domains_meta(domains):
     return metas
 
 # TODO ADD TAGS FILTER
-def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=[], nb_obj=28, page=1):
+def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=None, nb_obj=25, page=1, query='', sort='asc'):
     if not domain_types:
         domain_types = get_all_domains_types()
     if not tags:
-        domains = []
+        domains = set()
         if not date_from and not date_to:
             for domain_type in domain_types:
-                domains[0:0] = get_domains_up_by_type(domain_type)
+                domains.update(get_domains_up_by_type(domain_type))
         else:
             for domain_type in domain_types:
-                domains[0:0] = get_domains_by_daterange(date_from, date_to, domain_type)
-        domains = sorted(domains)
-        domains = paginate_iterator(domains, nb_obj=nb_obj, page=page)
-        meta = []
-        for dom in domains['list_elem']:
-            domain = Domain(dom)
-            meta.append(domain.get_meta(options={'languages', 'screenshot', 'tags_safe'}))
-        domains['list_elem'] = meta
-        domains['domain_types'] = domain_types
-        if date_from:
-            domains['date_from'] = date_from
-        if date_to:
-            domains['date_to'] = date_to
-        return domains
+                domains.update(get_domains_by_daterange(date_from, date_to, domain_type))
+        query = query.strip().lower()[:255]
+        sort = 'desc' if sort == 'desc' else 'asc'
+        domains = sorted((domain for domain in domains if query in domain.lower()), reverse=sort == 'desc')
+        nb_obj = nb_obj if nb_obj in {10, 25, 50, 100} else 25
+        total = len(domains)
+        pages = max(1, (total + nb_obj - 1) // nb_obj)
+        page = min(max(1, page), pages)
+        start = (page - 1) * nb_obj
+        # Filter and slice domain IDs before fetching screenshot, language and tag metadata.
+        meta = [Domain(domain).get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'}) for domain in domains[start:start + nb_obj]]
+        return {'list_elem': meta, 'domain_types': domain_types, 'date_from': date_from or '', 'date_to': date_to or '', 'query': query, 'sort': sort, 'page_size': nb_obj, 'page': page, 'nb_pages': pages, 'nb_all_elem': total, 'nb_first_elem': start + 1 if total else 0, 'nb_last_elem': min(start + nb_obj, total)}
     else:
         return None
 
@@ -868,15 +866,15 @@ def get_domain_vanity(domain, len_vanity=4):
 def get_vanity_clusters(nb_min=4):
     return r_crawler.zrange('vanity:onion:4', nb_min, '+inf', byscore=True, withscores=True)
 
-def _paginate_vanity_results(rows, page=1, page_size=12):
-    page_size = page_size if page_size in {12, 24, 48} else 12
+def _paginate_vanity_results(rows, page=1, page_size=25):
+    page_size = page_size if page_size in {10, 25, 50, 100} else 25
     total = len(rows)
     pages = max(1, (total + page_size - 1) // page_size)
     page = min(max(1, page), pages)
     start = (page - 1) * page_size
     return {'items': rows[start:start + page_size], 'total': total, 'page': page, 'pages': pages, 'page_size': page_size, 'start': start + 1 if total else 0, 'end': min(start + page_size, total)}
 
-def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=12):
+def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=25):
     domains = get_vanity_domains(vanity[:4], len_vanity=4)
     matching = sorted(domain for domain in domains if domain.startswith(vanity))
     children = {}

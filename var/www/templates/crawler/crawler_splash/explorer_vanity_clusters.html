@@ -209,6 +209,30 @@
             font-size:14px;
         }
 
+        .vanity-page-size {
+            color:#496789;
+            font-weight:600;
+            white-space:nowrap;
+        }
+
+        .vanity-page-size select {
+            min-width:88px;
+            height:44px;
+            padding:8px 12px;
+            border-color:#8faed0;
+            background:#eef4fc;
+            color:#355d8b;
+            font-size:16px;
+            font-weight:600;
+            box-shadow:0 1px 3px #3049680d;
+            cursor:pointer;
+        }
+
+        .vanity-page-size select:hover {
+            border-color:#517cac;
+            background:#e7f0fb;
+        }
+
         .vanity-submit {
             min-height:41px;
             padding:8px 13px;
@@ -983,6 +1007,19 @@
         }
 
     </style>
+    <script>
+        (function () {
+            try {
+                const savedVisibility = sessionStorage.getItem('ail.vanity-explorer.screenshot-visibility');
+                if (savedVisibility !== null && savedVisibility.trim() !== '' && Number.isFinite(Number(savedVisibility)) && Number(savedVisibility) >= 0 && Number(savedVisibility) <= 15) {
+                    document.documentElement.dataset.screenshotVisibility = savedVisibility;
+                    document.documentElement.style.setProperty('--object-image-blur', (15 - Number(savedVisibility)) + 'px');
+                }
+            } catch (error) {
+                // Keep the default blur when browser storage is unavailable.
+            }
+        })();
+    </script>
 </head>
 <body class="vanity-page">
     {% include 'nav_bar.html' %}
@@ -1060,7 +1097,7 @@
                     <div class="vanity-section-title"><h2 id="prefix-heading">All prefixes</h2><span class="vanity-count" id="vanity-prefix-count">{{ '{:,}'.format(vanity_clusters|length) }}</span></div>
                     <label class="vanity-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" id="vanity-prefix-search" name="q" value="{{ query }}" placeholder="Search prefixes, e.g. alph" aria-label="Search prefixes" maxlength="56" disabled></label>
                     <label class="vanity-filter">Minimum domains<input type="number" id="vanity-prefix-minimum" name="min" min="0" step="1" value="{{ minimum }}" aria-label="Minimum domains" disabled></label>
-                    <label class="vanity-filter">Show<select id="vanity-prefix-size" name="size" aria-label="Prefixes per page" disabled>{% for size in [12, 24, 48] %}<option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
+                    <label class="vanity-filter vanity-page-size">Per page<select id="vanity-prefix-size" name="size" aria-label="Prefixes per page" disabled>{% for size in [10, 25, 50, 100] %}<option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
                     <input type="hidden" name="sort" value="{{ sort }}">
                     <input type="hidden" name="direction" value="{{ direction }}">
                     <button class="vanity-submit" type="submit" disabled>Search</button>
@@ -1119,7 +1156,7 @@
                 serverSide: false,
                 dom: '<"vanity-table-wrap"t><"vanity-datatable-footer"ip>',
                 pageLength: Number(size.value),
-                lengthMenu: [12, 24, 48],
+                lengthMenu: [10, 25, 50, 100],
                 autoWidth: false,
                 order: initialOrder,
                 search: {search: search.value.trim(), regex: false, smart: false},
