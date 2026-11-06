@@ -342,9 +342,8 @@
   <div class="container-fluid">
     <div class="row">
 
-      {% include 'hunter/menu_sidebar.html' %}
 
-      <div class="col-12 col-lg-10" id="core_content">
+      <div class="col-12" id="core_content">
         {% set org_count = retro_hunts_org|length if retro_hunts_org else 0 %}
         {% set global_count = retro_hunts_global|length if retro_hunts_global else 0 %}
         {% set total_count = org_count + global_count %}
@@ -473,8 +472,6 @@
 
 <script>
 $(document).ready(function(){
-  $('#nav_title_retro_hunt').removeClass("text-muted");
-  $("#nav_retro_hunts").addClass("active");
 
   function initRetroTable(selector) {
     if ($(selector).length) {
@@ -497,19 +494,6 @@ $(document).ready(function(){
   initRetroTable('#table_retro_hunts_global');
 });
 
-function toggle_sidebar(){
-  if($('#nav_menu').is(':visible')){
-    $('#nav_menu').hide();
-    $('#side_menu').removeClass('border-right');
-    $('#side_menu').removeClass('col-lg-2');
-    $('#core_content').removeClass('col-lg-10');
-  }else{
-    $('#nav_menu').show();
-    $('#side_menu').addClass('border-right');
-    $('#side_menu').addClass('col-lg-2');
-    $('#core_content').addClass('col-lg-10');
-  }
-}
 </script>
 
 </body>

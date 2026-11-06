@@ -376,9 +376,8 @@
 <div class="container-fluid">
     <div class="row">
 
-        {% include 'hunter/menu_sidebar.html' %}
 
-        <div class="col-12 col-lg-10" id="core_content">
+        <div class="col-12" id="core_content">
             {% set user_count = user_trackers|length if user_trackers else 0 %}
             {% set org_count = org_trackers|length if org_trackers else 0 %}
             {% set global_count = global_trackers|length if global_trackers else 0 %}
@@ -523,8 +522,6 @@
 <script>
     $(document).ready(function () {
         $("#page-Tracker").addClass("active");
-        $("#nav_title_trackers").removeClass("text-muted");
-        $("#nav_tracker_{{tracker_type}}").addClass("active");
 
         {% for tracker in user_trackers %}
             sparkline("sparklines_{{ tracker['uuid'] }}", {{ tracker['sparkline'] }}, { height: 40 });
@@ -558,19 +555,6 @@
         initTrackerTable('#table_global_trackers');
     });
 
-    function toggle_sidebar() {
-        if ($('#nav_menu').is(':visible')) {
-            $('#nav_menu').hide();
-            $('#side_menu').removeClass('border-right');
-            $('#side_menu').removeClass('col-lg-2');
-            $('#core_content').removeClass('col-lg-10');
-        } else {
-            $('#nav_menu').show();
-            $('#side_menu').addClass('border-right');
-            $('#side_menu').addClass('col-lg-2');
-            $('#core_content').addClass('col-lg-10');
-        }
-    }
 </script>
 
 </body>

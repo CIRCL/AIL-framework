@@ -91,9 +91,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'hunter/menu_sidebar.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 				<div class="container-fluid retro-shell py-3 py-xl-4">
 					<div class="card retro-hero text-white mb-4">
 						<div class="card-body p-4 p-xl-5">
@@ -351,8 +350,6 @@
 var ltags;
 var chart = {};
 $(document).ready(function(){
-	$('#nav_title_retro_hunt').removeClass("text-muted");
-    $("#nav_retro_hunts_add").addClass("active");
 
 	$('#date-range-from').dateRangePicker({
 		separator : ' to ',
@@ -412,20 +409,6 @@ $(document).ready(function(){
 
 
 });
-
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 
 function item_source_input_controller() {
 	if($('#item_obj').is(':checked')){

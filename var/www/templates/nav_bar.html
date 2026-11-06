@@ -1,3 +1,4 @@
+{% from 'hunter/menu_navbar.html' import menu as hunter_menu with context %}
 {% from 'crawler/menu_navbar.html' import menu as crawler_menu, assets as crawler_menu_assets with context %}
 <style>
     .ail-navbar {
@@ -144,9 +145,7 @@
       <li class="nav-item mr-3">
         <a class="nav-link" id="navbar-tags" href="{{ url_for('tags_ui.tags_search_items') }}" aria-disabled="true"><i class="fas fa-tag"></i> Tags</a>
       </li>
-      <li class="nav-item mr-3">
-        <a class="nav-link" id="page-Tracker" href="{{ url_for('hunters.trackers_dashboard') }}" aria-disabled="true"><i class="fas fa-crosshairs"></i> Hunting</a>
-      </li>
+      {{ hunter_menu() }}
       {{ crawler_menu() }}
       <li class="nav-item mr-3">
         <a class="nav-link" id="page-Chats-Explorer" href="{{ url_for('chats_explorer.chats_explorer_protocols') }}"><i class="far fa-comments"></i> Chats</a>

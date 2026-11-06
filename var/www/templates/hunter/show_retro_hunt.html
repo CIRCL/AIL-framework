@@ -267,9 +267,8 @@
 <div class="container-fluid">
     <div class="row">
 
-        {% include 'hunter/menu_sidebar.html' %}
 
-        <div class="col-12 col-lg-10" id="core_content">
+        <div class="col-12" id="core_content">
 
             <div class="row">
                 <div class="col-12 my-2">
@@ -632,7 +631,6 @@
 
 <script>
 $(document).ready(function(){
-        $('#nav_title_retro_hunt').removeClass("text-muted");
 
         {% if dict_task['objs'] %}
         init_match_content_previews($('#objs_table'));
@@ -705,20 +703,6 @@ document.addEventListener('click', function(event) {
             console.error(error);
         });
 });
-
-function toggle_sidebar(){
-    if($('#nav_menu').is(':visible')){
-        $('#nav_menu').hide();
-        $('#side_menu').removeClass('border-right')
-        $('#side_menu').removeClass('col-lg-2')
-        $('#core_content').removeClass('col-lg-10')
-    }else{
-        $('#nav_menu').show();
-        $('#side_menu').addClass('border-right')
-        $('#side_menu').addClass('col-lg-2')
-        $('#core_content').addClass('col-lg-10')
-    }
-}
 
 </script>
 

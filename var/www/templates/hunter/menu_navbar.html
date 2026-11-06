@@ -1,0 +1,38 @@
+{% macro menu() %}
+{% set endpoint = request.endpoint or '' %}
+<li class="nav-item mr-3 crawler-nav" id="hunter-nav">
+    <div class="crawler-nav-trigger">
+        <a class="nav-link{% if request.blueprint == 'hunters' %} active{% endif %}" id="page-Tracker" href="{{ url_for('hunters.trackers_dashboard') }}"><i class="fas fa-crosshairs" aria-hidden="true"></i> Hunting</a>
+        <button class="crawler-nav-toggle" id="hunter-nav-toggle" type="button" aria-label="Open hunting navigation" aria-controls="hunter-nav-menu" aria-expanded="false"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+    </div>
+    <ul class="crawler-nav-panel crawler-nav-root" id="hunter-nav-menu" aria-label="Hunting navigation" hidden>
+        <li><a{% if endpoint == 'hunters.trackers_dashboard' %} class="active" aria-current="page"{% endif %} href="{{ url_for('hunters.trackers_dashboard') }}"><i class="fas fa-crosshairs" aria-hidden="true"></i>Dashboard</a></li>
+        <li class="crawler-nav-group">
+            <button class="crawler-nav-submenu-toggle{% if endpoint.startswith('hunters.tracked_menu') or endpoint == 'hunters.show_tracker' %} active{% endif %}" type="button" aria-expanded="false" aria-controls="hunter-nav-trackers"><i class="fas fa-ruler-combined" aria-hidden="true"></i>Trackers<i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+            <ul class="crawler-nav-panel" id="hunter-nav-trackers" aria-label="Trackers" hidden>
+                {% for route, label, icon in [
+                    ('tracked_menu', 'All Trackers', 'fa-ruler-combined'),
+                    ('tracked_menu_word', 'Words', 'fa-font'),
+                    ('tracked_menu_set', 'Sets', 'fa-layer-group'),
+                    ('tracked_menu_regex', 'Regex', 'fa-drafting-compass'),
+                    ('tracked_menu_yara', 'YARA Rules', ''),
+                    ('tracked_menu_typosquatting', 'Typo-squatting', 'fa-clone')
+                ] %}
+                <li>
+                    <a{% if endpoint == 'hunters.' ~ route %} class="active" aria-current="page"{% endif %} href="{{ url_for('hunters.' ~ route) }}">
+                        {% if route == 'tracked_menu_yara' %}
+                        <span class="bg-danger text-white font-weight-bold px-2 py-1 rounded" aria-hidden="true">{</span>
+                        {% else %}
+                        <i class="fas {{ icon }}" aria-hidden="true"></i>
+                        {% endif %}
+                        {{ label }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        <li class="crawler-nav-separator" role="separator"></li>
+        <li><a{% if endpoint in ['hunters.retro_hunt_all_tasks', 'hunters.retro_hunt_all_tasks_admin', 'hunters.retro_hunt_show_task'] %} class="active"{% endif %} href="{{ url_for('hunters.retro_hunt_all_tasks') }}"><i class="fas fa-history" aria-hidden="true"></i>All Retro Hunts</a></li>
+    </ul>
+</li>
+{% endmacro %}

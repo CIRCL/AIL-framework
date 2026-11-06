@@ -365,12 +365,11 @@
     }
 </style>
 <script>
-(function () {
+document.querySelectorAll('.crawler-nav').forEach(function (nav) {
     'use strict';
-    const nav = document.getElementById('crawler-nav');
-    const toggle = document.getElementById('crawler-nav-toggle');
-    const panel = document.getElementById('crawler-nav-menu');
-    const label = document.getElementById('page-Crawler');
+    const toggle = nav.querySelector('.crawler-nav-toggle');
+    const panel = nav.querySelector('.crawler-nav-root');
+    const label = nav.querySelector('.nav-link');
     const groups = Array.from(nav.querySelectorAll('.crawler-nav-group'));
     const hover = window.matchMedia('(hover: hover) and (pointer: fine)');
     const desktop = window.matchMedia('(min-width: 1200px)');
@@ -570,6 +569,6 @@
         }
     });
     window.addEventListener('resize', close);
-})();
+});
 </script>
 {% endmacro %}
