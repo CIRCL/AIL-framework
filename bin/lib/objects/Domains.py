@@ -278,8 +278,8 @@ class Domain(AbstractObject):
 
 
     # TODO ADD RANDOM OPTION
-    def get_screenshot(self):
-        last_item = self.get_last_item_root()
+    def get_screenshot(self, last_up=False):
+        last_item = self.get_last_item_root(last_up=True) if last_up else self.get_last_item_root()
         if last_item:
             screenshot = self.get_obj_correlations('item', '', last_item, ['screenshot']).get('screenshot')
             if screenshot:
@@ -307,7 +307,9 @@ class Domain(AbstractObject):
             meta['last_origin'] = self.get_last_origin(obj=True)
         if 'languages' in options:
             meta['languages'] = self.get_languages()
-        if 'screenshot' in options:
+        if 'screenshot_last_up' in options:
+            meta['screenshot'] = self.get_screenshot(last_up=True)
+        elif 'screenshot' in options:
             meta['screenshot'] = self.get_screenshot()
         if 'img' in options:
             meta['img'] = self.get_screenshot()
@@ -362,17 +364,20 @@ class Domain(AbstractObject):
                 crawled_items.extend(self.get_crawled_items_children(item_id))
         return crawled_items
 
-    def get_last_item_root(self):
-        root_item = r_crawler.zrevrange(f'domain:history:{self.id}', 0, 0, withscores=True)
-        if not root_item:
-            return None
-        root_item = root_item[0][0]
-        try:
-            int(root_item)
-            return None
-        except ValueError:
-            pass
-        return root_item
+    def get_last_item_root(self, last_up=False):
+        """Return the latest root, optionally skipping failed checks in bounded batches."""
+        offset = 0
+        batch_size = 32 if last_up else 1
+        while True:
+            history = r_crawler.zrevrange(f'domain:history:{self.id}', offset, offset + batch_size - 1, withscores=True)
+            for root_item, _ in history:
+                try:
+                    int(root_item)
+                except ValueError:
+                    return root_item
+            if not last_up or len(history) < batch_size:
+                return None
+            offset += batch_size
 
     def get_item_root_by_epoch(self, epoch):
         root_item = r_crawler.zrevrangebyscore(f'domain:history:{self.id}', int(epoch), int(epoch), withscores=True)
@@ -888,7 +893,7 @@ def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=12):
         tree.append({'prefix': prefix, 'count': sum(domain.startswith(prefix) for domain in domains)})
     filtered = [domain for domain in matching if query in domain] if query else matching
     result = _paginate_vanity_results(filtered, page=page, page_size=page_size)
-    result['items'] = [Domain(domain).get_meta(options={'languages', 'screenshot', 'tags_safe'}) for domain in result['items']]
+    result['items'] = [Domain(domain).get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'}) for domain in result['items']]
     result['matching'] = len(matching)
     result['children'] = children
     result['tree'] = tree
