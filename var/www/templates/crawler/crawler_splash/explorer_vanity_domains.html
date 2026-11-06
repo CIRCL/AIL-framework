@@ -79,8 +79,8 @@
                         </div>
                         <a class="vanity-domain-name" href="{{ domain_url }}"><mark>{{ domain.id[:vanity|length] }}</mark>{{ domain.id[vanity|length:] }}</a>
                         <dl class="vanity-seen">
-                            <div><dt>First seen</dt><dd>{{ domain.first_seen or 'Unknown' }}</dd></div>
-                            <div><dt>Last seen</dt><dd>{{ domain.last_check or 'Unknown' }}</dd></div>
+                            <div><dt>First seen</dt><dd>{{ domain.first_seen|crawler_date }}</dd></div>
+                            <div><dt>Last seen</dt><dd>{{ domain.last_check|crawler_date }}</dd></div>
                         </dl>
                         {% if domain.tags %}<div class="vanity-tags">{% for tag in domain.tags %}<a href="{{ url_for('tags_ui.get_obj_by_tags', object_type='domain', ltags=tag) }}">{{ tag }}</a>{% endfor %}</div>{% endif %}
                         <div class="vanity-domain-actions">

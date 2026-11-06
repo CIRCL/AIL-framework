@@ -48,6 +48,16 @@ crawler_splash = Blueprint('crawler_splash', __name__,
                            template_folder=os.path.join(os.environ['AIL_FLASK'], 'templates/crawler/crawler_splash'))
 
 
+@crawler_splash.app_template_filter('crawler_date')
+def format_crawler_date(value):
+    if not value:
+        return 'Unknown'
+    try:
+        return datetime.strptime(value, '%Y/%m/%d').strftime('%d %b %Y')
+    except (TypeError, ValueError):
+        return 'Unknown'
+
+
 # ============ VARIABLES ============
 
 
