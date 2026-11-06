@@ -549,6 +549,53 @@
             white-space:nowrap;
         }
 
+        @supports (grid-template-rows:subgrid) {
+            .explorer-content .domain-card {
+                display:grid;
+                grid-row:span 6;
+                grid-template-rows:subgrid;
+                row-gap:0;
+            }
+
+            .explorer-content .domain-card>.shot,
+            .explorer-content .domain-card>.no-screenshot {
+                grid-row:1;
+                align-self:stretch;
+            }
+
+            .explorer-content .card-body {
+                display:grid;
+                grid-row:2 / span 5;
+                grid-template-rows:subgrid;
+                row-gap:0;
+            }
+
+            .explorer-content .domain-top {
+                grid-row:1;
+                align-self:start;
+                align-items:flex-start;
+            }
+
+            .explorer-content .domain-name {
+                grid-row:2;
+                align-self:start;
+            }
+
+            .explorer-content .seen {
+                grid-row:3;
+                align-self:start;
+            }
+
+            .explorer-content .tags {
+                grid-row:4;
+                align-self:start;
+            }
+
+            .explorer-content .actions {
+                grid-row:5;
+            }
+        }
+
         .explorer-content .actions i {
             font-size:11px;
         }

@@ -809,6 +809,53 @@
             line-height:1.4;
         }
 
+        @supports (grid-template-rows:subgrid) {
+            .vanity-domain-card {
+                display:grid;
+                grid-row:span 6;
+                grid-template-rows:subgrid;
+                row-gap:0;
+            }
+
+            .vanity-domain-card>.vanity-screenshot,
+            .vanity-domain-card>.vanity-no-screenshot {
+                grid-row:1;
+                align-self:stretch;
+            }
+
+            .vanity-domain-body {
+                display:grid;
+                grid-row:2 / span 5;
+                grid-template-rows:subgrid;
+                row-gap:0;
+            }
+
+            .vanity-domain-top {
+                grid-row:1;
+                align-self:start;
+                align-items:flex-start;
+            }
+
+            .vanity-domain-name {
+                grid-row:2;
+                align-self:start;
+            }
+
+            .vanity-seen {
+                grid-row:3;
+                align-self:start;
+            }
+
+            .vanity-tags {
+                grid-row:4;
+                align-self:start;
+            }
+
+            .vanity-domain-actions {
+                grid-row:5;
+            }
+        }
+
         .vanity-domain-actions i {
             color:#91a9c7;
             font-size:12px;
