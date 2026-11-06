@@ -46,14 +46,35 @@
             letter-spacing:-.6px;
         }
 
-        .vanity-heading h1>i {
-            width:43px;
+        .vanity-lift-icon {
+            flex:none;
+            width:56px;
+            height:63px;
             color:#526f91;
-            font-size:35px;
+            overflow:visible;
+        }
+
+        .vanity-heading .vanity-lifting-arm {
+            animation:vanity-dumbbell-lift 1.8s ease-in-out infinite;
+        }
+
+        @keyframes vanity-dumbbell-lift {
+            0%, 100% {
+                transform:translateY(0);
+            }
+            50% {
+                transform:translateY(-4px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .vanity-heading .vanity-lifting-arm {
+                animation:none;
+            }
         }
 
         .vanity-heading p {
-            margin:9px 0 0 56px;
+            margin:9px 0 0 69px;
             color:#728197;
             font-size:15px;
         }
@@ -439,46 +460,53 @@
         .vanity-next h2 {
             margin:0 0 5px;
             color:#344d6c;
-            font-size:15px;
+            font-size:16px;
             font-weight:600;
         }
 
         .vanity-next p {
             margin:0;
-            color:#91a2b7;
-            font-size:12px;
+            color:#6f839c;
+            font-size:13px;
         }
 
         .vanity-children {
             display:flex;
             flex-wrap:wrap;
-            gap:9px;
+            gap:12px;
         }
 
         .vanity-child {
             display:inline-flex;
             align-items:center;
-            gap:10px;
-            padding:8px 10px;
-            border:1px solid #dfe7f0;
+            gap:11px;
+            min-height:46px;
+            padding:10px 13px;
+            border:1px solid #aebfd2;
             border-radius:6px;
             background:#fff;
             color:#7087a3;
             font-size:14px;
+            box-shadow:0 1px 2px #263d5a08;
+            transition:background-color .12s,border-color .12s;
         }
 
         .vanity-child:hover {
-            border-color:#9fbbdf;
-            background:#f6f9ff;
+            border-color:#7196c2;
+            background:#f2f7fd;
             text-decoration:none;
+            box-shadow:0 2px 6px #29466a0d;
         }
 
         .vanity-child code {
-            color:#7a8da7;
+            color:#344f70;
+            font-size:15px;
+            font-weight:600;
+            letter-spacing:.2px;
             overflow-wrap:anywhere;
         }
 
-        .vanity-child mark,.vanity-domain-name mark {
+        .vanity-domain-name mark {
             padding:1px 2px;
             border-radius:3px;
             background:#edf3fc;
@@ -486,17 +514,36 @@
             font-weight:650;
         }
 
+        .vanity-child mark {
+            display:inline-block;
+            margin-left:1px;
+            padding:2px 4px;
+            border-radius:4px;
+            background:#315f94;
+            color:#fff;
+            font-size:inherit;
+            font-weight:650;
+            line-height:1.15;
+        }
+
         .vanity-child b {
-            padding-left:10px;
-            border-left:1px solid #e6edf6;
-            color:#8ea1b9;
-            font-size:12px;
-            font-weight:500;
+            padding:4px 7px;
+            border:0;
+            border-radius:5px;
+            background:#eef2f7;
+            color:#536d8c;
+            font-size:13px;
+            font-weight:600;
         }
 
         .vanity-child i {
-            color:#9bb0cb;
-            font-size:10px;
+            color:#587699;
+            font-size:12px;
+        }
+
+        .vanity-child:focus-visible {
+            outline:3px solid #87a9d2;
+            outline-offset:3px;
         }
 
         .vanity-domain-tools {
@@ -591,6 +638,21 @@
 
         .vanity-no-screenshot i {
             font-size:22px;
+        }
+
+        .vanity-sensitive-screenshot {
+            gap:14px;
+            border-bottom-color:#e6e4df;
+            background:#f5f3ef;
+            color:#8a714e;
+            font-size:14px;
+            font-weight:500;
+        }
+
+        .vanity-sensitive-icon {
+            flex:none;
+            width:42px;
+            height:32px;
         }
 
         .vanity-domain-body {
@@ -960,7 +1022,24 @@
     <main class="vanity-content" id="core_content">
         <header class="vanity-heading">
             <div>
-                <h1><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</h1>
+                <h1>
+                    <svg class="vanity-lift-icon" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -4 56 70" fill="currentColor" aria-hidden="true" focusable="false">
+                        <title>Muscular arm lifting a dumbbell</title>
+                        <!-- Arm adapted from the supplied SVG. Dumbbell adapted from Font Awesome Free 6.6.0
+                             by @fontawesome, Copyright 2024 Fonticons, Inc., CC BY 4.0:
+                             https://fontawesome.com/license/free -->
+                        <g transform="translate(3 14)">
+                            <path d="M21.37 36c1.45-5.25 6.52-9 12.36-8.38c5.56.59 9.98 5.28 10.26 10.86c.07 1.47-.13 2.88-.56 4.19c-.26.8-1.04 1.33-1.89 1.33H11.758c-5.048 0-8.834-4.619-7.844-9.569L5 29c5-1 11 1 16.37 7Z"/>
+                            <circle cx="12" cy="33" r="8"/>
+                        </g>
+                        <g class="vanity-lifting-arm">
+                            <path transform="scale(.065625)" d="M96 64c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32l0 160 0 64 0 160c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-64-32 0c-17.7 0-32-14.3-32-32l0-64c-17.7 0-32-14.3-32-32s14.3-32 32-32l0-64c0-17.7 14.3-32 32-32l32 0 0-64zm448 0l0 64 32 0c17.7 0 32 14.3 32 32l0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 64c0 17.7-14.3 32-32 32l-32 0 0 64c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-160 0-64 0-160c0-17.7 14.3-32 32-32l32 0c17.7 0 32 14.3 32 32zM416 224l0 64-192 0 0-64 192 0z"/>
+                            <path transform="translate(3 14)" d="M5 32L12 14l-1-9c0-2.2 1.6-4 3.7-4h4.8C21.5 1 23 2.7 23 4.8v4.7c0 3-2 5.3-4.9 5.7L20 32c-2 4-12 5-15 0Z"/>
+                            <path d="M16.5 17v4m3.5-4v4m3.5-4v3" fill="none" stroke="#f7f9fc" stroke-width=".85" stroke-linecap="round"/>
+                        </g>
+                    </svg>
+                    <span>Vanity explorer</span>
+                </h1>
                 <p>Explore onion domains that share the same starting characters.</p>
             </div>
             <a class="vanity-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
