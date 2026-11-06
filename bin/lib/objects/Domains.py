@@ -863,6 +863,37 @@ def get_domain_vanity(domain, len_vanity=4):
 def get_vanity_clusters(nb_min=4):
     return r_crawler.zrange('vanity:onion:4', nb_min, '+inf', byscore=True, withscores=True)
 
+def _paginate_vanity_results(rows, page=1, page_size=12):
+    page_size = page_size if page_size in {12, 24, 48} else 12
+    total = len(rows)
+    pages = max(1, (total + page_size - 1) // page_size)
+    page = min(max(1, page), pages)
+    start = (page - 1) * page_size
+    return {'items': rows[start:start + page_size], 'total': total, 'page': page, 'pages': pages, 'page_size': page_size, 'start': start + 1 if total else 0, 'end': min(start + page_size, total)}
+
+def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=12):
+    domains = get_vanity_domains(vanity[:4], len_vanity=4)
+    matching = sorted(domain for domain in domains if domain.startswith(vanity))
+    children = {}
+    if len(vanity) < 56:
+        for domain in matching:
+            if len(vanity) >= len(domain.removesuffix('.onion')):
+                continue
+            prefix = domain[:len(vanity) + 1]
+            children[prefix] = children.get(prefix, 0) + 1
+    children = sorted(((prefix, count) for prefix, count in children.items() if count >= nb_min), key=lambda row: (-row[1], row[0]))
+    tree = []
+    for length in range(4, len(vanity) + 1):
+        prefix = vanity[:length]
+        tree.append({'prefix': prefix, 'count': sum(domain.startswith(prefix) for domain in domains)})
+    filtered = [domain for domain in matching if query in domain] if query else matching
+    result = _paginate_vanity_results(filtered, page=page, page_size=page_size)
+    result['items'] = [Domain(domain).get_meta(options={'languages', 'screenshot', 'tags_safe'}) for domain in result['items']]
+    result['matching'] = len(matching)
+    result['children'] = children
+    result['tree'] = tree
+    return result
+
 def get_vanity_domains(vanity, len_vanity=4, meta=False):
     if len_vanity == 4:
         domains = r_crawler.smembers(f'vanity:{int(len_vanity)}:{vanity}')

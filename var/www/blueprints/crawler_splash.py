@@ -902,32 +902,27 @@ def domains_search_date_post():
 @login_required
 @login_read_only
 def domains_explorer_vanity_clusters():
-    nb_min = request.args.get('min', 4)
-    if int(nb_min) < 0:
-        nb_min = 4
+    nb_min = max(0, request.args.get('min', 4, type=int))
+    query = request.args.get('q', '').strip().lower()[:56]
+    sort = request.args.get('sort', 'domains')
+    sort = sort if sort in {'prefix', 'domains'} else 'domains'
+    direction = 'asc' if request.args.get('direction') == 'asc' else 'desc'
+    page_size = request.args.get('size', 12, type=int)
+    page_size = page_size if page_size in {12, 24, 48} else 12
     vanity_clusters = Domains.get_vanity_clusters(nb_min=nb_min)
-    return render_template("explorer_vanity_clusters.html", vanity_clusters=vanity_clusters,
-                           length=4)
+    return render_template('explorer_vanity_clusters.html', vanity_clusters=vanity_clusters, query=query, minimum=nb_min, sort=sort, direction=direction, page_size=page_size, page=max(1, request.args.get('page', 1, type=int)))
 
 @crawler_splash.route('/domains/explorer/vanity/explore', methods=['GET'])
 @login_required
 @login_read_only
 def domains_explorer_vanity_explore():
-    vanity = request.args.get('vanity')
-    nb_min = request.args.get('min', 2)   # TODO SHOW DOMAINS OPTIONS + HARD CODED DOMAINS LIMIT FOR RENDER
-    length = len(vanity)
-    if int(nb_min) < 0:
-        nb_min = 4
-    vanity_clusters = Domains.get_vanity_cluster(vanity, len_vanity=length+1, nb_min=nb_min)
-    vanity_domains = Domains.get_vanity_domains(vanity, len_vanity=length, meta=True)
-    vanities_tree = []
-    for i in range(4, length):
-        vanities_tree.append(vanity[:i])
-    if length == len(vanity):
-        vanities_tree.append(vanity)
-    return render_template("explorer_vanity_domains.html", vanity_clusters=vanity_clusters,
-                           bootstrap_label=bootstrap_label, vanity=vanity, vanities_tree=vanities_tree,
-                           vanity_domains=vanity_domains, length=length)
+    vanity = request.args.get('vanity', '').strip().lower()
+    if not 4 <= len(vanity) <= 56 or any(character not in 'abcdefghijklmnopqrstuvwxyz234567' for character in vanity):
+        abort(400)
+    nb_min = max(0, request.args.get('min', 2, type=int))
+    query = request.args.get('q', '').strip().lower()[:255]
+    pagination = Domains.get_vanity_explorer_page(vanity, nb_min=nb_min, query=query, page=request.args.get('page', 1, type=int), page_size=request.args.get('size', 12, type=int))
+    return render_template('explorer_vanity_domains.html', pagination=pagination, vanity=vanity, query=query, minimum=nb_min)
 
 ##--  --##
 

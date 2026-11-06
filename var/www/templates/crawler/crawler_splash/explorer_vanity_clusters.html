@@ -1,81 +1,1174 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Vanity Explorer - AIL</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vanity Explorer · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
-
+    {% block vanity_table_assets %}
+        <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+        <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
+    {% endblock %}
     <style>
-        .card-columns {
-            column-count: 4;
+        .vanity-page {
+            margin:0;
+            background:#f7f9fc;
+            color:#293d55;
+            -webkit-font-smoothing:antialiased;
         }
+
+        .vanity-content {
+            padding:28px 32px 32px;
+        }
+
+        .vanity-heading {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:20px;
+            margin-bottom:26px;
+        }
+
+        .vanity-heading h1 {
+            display:flex;
+            align-items:center;
+            gap:13px;
+            margin:0;
+            font-size:29px;
+            font-weight:650;
+            letter-spacing:-.6px;
+        }
+
+        .vanity-heading h1>i {
+            width:43px;
+            color:#526f91;
+            font-size:35px;
+        }
+
+        .vanity-heading p {
+            margin:9px 0 0 56px;
+            color:#728197;
+            font-size:15px;
+        }
+
+        .vanity-dashboard {
+            display:inline-flex;
+            align-items:center;
+            gap:11px;
+            min-height:52px;
+            padding:12px 20px;
+            border:1px solid #d6dfe9;
+            border-radius:7px;
+            background:#fff;
+            color:#4e6683;
+            font-size:17px;
+            font-weight:500;
+        }
+
+        .vanity-dashboard .crawler-nav-dashboard-icon {
+            width:24px;
+            height:24px;
+        }
+
+        .vanity-dashboard .crawler-nav-dashboard-icon .fa-spider {
+            font-size:12px;
+        }
+
+        .vanity-dashboard:hover {
+            background:#eef4fc;
+            text-decoration:none;
+        }
+
+        .vanity-surface {
+            min-width:0;
+            border:1px solid #dce4ed;
+            border-radius:10px;
+            background:#fff;
+            overflow:hidden;
+        }
+
+        .vanity-tools {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:17px;
+            padding:18px 22px;
+            border-bottom:1px solid #e6ecf3;
+        }
+
+        .vanity-section-title {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            margin-right:auto;
+        }
+
+        .vanity-section-title h2 {
+            margin:0;
+            font-size:18px;
+            font-weight:600;
+            color:#344d6c;
+        }
+
+        .vanity-count {
+            display:inline-block;
+            padding:4px 9px;
+            border-radius:6px;
+            background:#edf2f8;
+            color:#637b98;
+            font-size:13px;
+            font-weight:500;
+            line-height:1.5;
+        }
+
+        .vanity-search {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            min-width:180px;
+            height:43px;
+            width:300px;
+            margin:0;
+            padding:0 12px;
+            border:1px solid #d7e1eb;
+            border-radius:7px;
+            background:#fff;
+        }
+
+        .vanity-search>i {
+            color:#899cb3;
+            font-size:15px;
+        }
+
+        .vanity-search:focus-within {
+            border-color:#7b9fc9;
+            box-shadow:0 0 0 2px #3672b814;
+        }
+
+        .vanity-search input {
+            width:100%;
+            min-width:0;
+            padding:0;
+            border:0;
+            outline:0;
+            background:none;
+            color:#405b7c;
+            font-size:15px;
+        }
+
+        .vanity-search input::placeholder {
+            color:#899aaf;
+        }
+
+        .vanity-filter {
+            display:flex;
+            align-items:center;
+            gap:9px;
+            margin:0;
+            color:#74869b;
+            font-size:14px;
+            font-weight:400;
+        }
+
+        .vanity-filter input,.vanity-filter select {
+            height:40px;
+            max-width:110px;
+            padding:6px 9px;
+            border:1px solid #dae3ee;
+            border-radius:6px;
+            background:#fff;
+            color:#4a6380;
+            font-size:14px;
+        }
+
+        .vanity-submit {
+            min-height:41px;
+            padding:8px 13px;
+            border:1px solid #cedced;
+            border-radius:6px;
+            background:#f1f6fd;
+            color:#4c709d;
+            font-size:14px;
+            cursor:pointer;
+        }
+
+        .vanity-clear {
+            color:#7b91ad;
+            font-size:13px;
+        }
+
+        .vanity-table-wrap {
+            overflow-x:auto;
+        }
+
+        .vanity-table {
+            width:100%;
+            table-layout:fixed;
+        }
+
+        .vanity-table th:first-child {
+            width:40%;
+        }
+
+        .vanity-table th:nth-child(2) {
+            width:33%;
+        }
+
+        .vanity-table th {
+            padding:14px 23px;
+            border-bottom:1px solid #e5ebf3;
+            background:#f8fafd;
+            color:#7c8da2;
+            font-size:13px;
+            font-weight:500;
+        }
+
+        .vanity-table th a {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            color:inherit;
+        }
+
+        .vanity-table th i {
+            color:#9eafc2;
+            font-size:11px;
+        }
+
+        .vanity-table td {
+            padding:13px 23px;
+            border-bottom:1px solid #edf1f6;
+        }
+
+        .vanity-table tr:last-child td {
+            border-bottom:0;
+        }
+
+        .vanity-table tbody tr:hover {
+            background:#f7faff;
+        }
+
+        .vanity-prefix {
+            color:#3e689b;
+        }
+
+        .vanity-prefix code {
+            color:inherit;
+            font-size:18px;
+            font-weight:600;
+            letter-spacing:.7px;
+        }
+
+        .vanity-number {
+            white-space:nowrap;
+        }
+
+        .vanity-number strong {
+            display:inline-block;
+            min-width:50px;
+            color:#4c6481;
+            font-size:16px;
+            font-weight:600;
+        }
+
+        .vanity-bar {
+            display:inline-block;
+            width:145px;
+            height:5px;
+            border-radius:5px;
+            background:#f0f4f9;
+            vertical-align:middle;
+        }
+
+        .vanity-bar>span {
+            display:block;
+            height:100%;
+            border-radius:5px;
+            background:#a8bfdc;
+        }
+
+        .vanity-explore {
+            text-align:right;
+        }
+
+        .vanity-explore a {
+            display:inline-flex;
+            align-items:center;
+            gap:12px;
+            color:#6d86a5;
+            font-size:14px;
+        }
+
+        .vanity-explore i {
+            font-size:12px;
+        }
+
+        .vanity-pagination {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:14px;
+            padding:17px 22px;
+            border-top:1px solid #e6ecf4;
+            color:#8a9bb0;
+            font-size:13px;
+        }
+
+        .vanity-pagination nav {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:6px;
+        }
+
+        .vanity-page-link {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:31px;
+            min-height:31px;
+            padding:4px 8px;
+            border:1px solid #dfe7f1;
+            border-radius:5px;
+            background:#fff;
+            color:#6f89a9;
+        }
+
+        .vanity-page-link[aria-current] {
+            border-color:#c6d7ed;
+            background:#edf3fc;
+            color:#537eb4;
+        }
+
+        .vanity-page-link[aria-disabled] {
+            color:#c0ccdc;
+        }
+
+        .vanity-journey {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:12px;
+            padding:14px 18px;
+            margin:0 0 20px;
+            list-style:none;
+        }
+
+        .vanity-journey li {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            min-width:0;
+            max-width:100%;
+        }
+
+        .vanity-journey li>i {
+            color:#aab9cc;
+            font-size:11px;
+        }
+
+        .vanity-step {
+            display:block;
+            min-width:0;
+            padding:7px 10px;
+            border-radius:6px;
+            color:#6283ac;
+        }
+
+        .vanity-step:hover {
+            background:#f2f6fc;
+            text-decoration:none;
+        }
+
+        .vanity-step code {
+            color:inherit;
+            font-size:17px;
+            font-weight:500;
+            letter-spacing:.4px;
+            word-break:break-all;
+        }
+
+        .vanity-step small {
+            display:block;
+            margin-top:4px;
+            color:#8e9fb5;
+            font-size:11px;
+            white-space:nowrap;
+        }
+
+        .vanity-step[aria-current] {
+            background:#edf3fc;
+            color:#3b659a;
+        }
+
+        .vanity-step[aria-current] code {
+            font-weight:650;
+        }
+
+        .vanity-root {
+            display:flex;
+            align-items:center;
+            gap:10px;
+            color:#6c84a2;
+            font-size:14px;
+        }
+
+        .vanity-root>i {
+            color:#94a8c0;
+            font-size:18px;
+        }
+
+        .vanity-next {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:18px;
+            padding:16px 20px;
+            margin-bottom:23px;
+        }
+
+        .vanity-next h2 {
+            margin:0 0 5px;
+            color:#344d6c;
+            font-size:15px;
+            font-weight:600;
+        }
+
+        .vanity-next p {
+            margin:0;
+            color:#91a2b7;
+            font-size:12px;
+        }
+
+        .vanity-children {
+            display:flex;
+            flex-wrap:wrap;
+            gap:9px;
+        }
+
+        .vanity-child {
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding:8px 10px;
+            border:1px solid #dfe7f0;
+            border-radius:6px;
+            background:#fff;
+            color:#7087a3;
+            font-size:14px;
+        }
+
+        .vanity-child:hover {
+            border-color:#9fbbdf;
+            background:#f6f9ff;
+            text-decoration:none;
+        }
+
+        .vanity-child code {
+            color:#7a8da7;
+            overflow-wrap:anywhere;
+        }
+
+        .vanity-child mark,.vanity-domain-name mark {
+            padding:1px 2px;
+            border-radius:3px;
+            background:#edf3fc;
+            color:#32649b;
+            font-weight:650;
+        }
+
+        .vanity-child b {
+            padding-left:10px;
+            border-left:1px solid #e6edf6;
+            color:#8ea1b9;
+            font-size:12px;
+            font-weight:500;
+        }
+
+        .vanity-child i {
+            color:#9bb0cb;
+            font-size:10px;
+        }
+
+        .vanity-domain-tools {
+            padding:0;
+            margin-bottom:18px;
+            border:0;
+        }
+
+        .vanity-domain-tools .vanity-search {
+            margin-left:auto;
+        }
+
+        .vanity-blur {
+            display:flex;
+            align-items:center;
+            gap:10px;
+        }
+
+        .vanity-blur button {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            min-height:40px;
+            padding:8px 11px;
+            border:1px solid #d5dfeb;
+            border-radius:6px;
+            background:#fff;
+            color:#587493;
+            font-size:14px;
+            cursor:pointer;
+        }
+
+        .vanity-blur button:hover {
+            border-color:#a9bed8;
+            background:#f3f7fd;
+        }
+
+        .vanity-blur input {
+            width:95px;
+            height:5px;
+            accent-color:#708db4;
+            cursor:pointer;
+        }
+
+        .vanity-grid {
+            display:grid;
+            grid-template-columns:repeat(3,minmax(0,1fr));
+            align-items:start;
+            gap:18px;
+        }
+
+        .vanity-domain-card {
+            min-width:0;
+            border:1px solid #dce4ee;
+            border-radius:9px;
+            background:#fff;
+            box-shadow:0 1px 4px #30496806;
+            overflow:hidden;
+        }
+
+        .vanity-screenshot {
+            display:block;
+            margin:0;
+            padding:0;
+            border-bottom:1px solid #e4ebf4;
+            background:#eef2f7;
+        }
+
+        .vanity-screenshot img {
+            display:block;
+            width:auto;
+            height:auto;
+            max-width:100%;
+            max-height:280px;
+            margin:0 auto;
+            filter:blur(var(--object-image-blur,5px));
+        }
+
+        .vanity-no-screenshot {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            min-height:110px;
+            padding:20px;
+            border-bottom:1px solid #e4ebf4;
+            background:#f0f4f8;
+            color:#8ea0b6;
+            font-size:13px;
+        }
+
+        .vanity-no-screenshot i {
+            font-size:22px;
+        }
+
+        .vanity-domain-body {
+            padding:12px 14px 0;
+        }
+
+        .vanity-domain-top {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:7px;
+        }
+
+        .vanity-status {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            font-size:12px;
+            font-weight:600;
+        }
+
+        .vanity-status i {
+            font-size:16px;
+        }
+
+        .vanity-up {
+            color:#218e4d;
+        }
+
+        .vanity-down {
+            color:#be6571;
+        }
+
+        .vanity-languages {
+            display:flex;
+            align-items:center;
+            flex-wrap:wrap;
+            gap:5px;
+            color:#8098b4;
+            font-size:12px;
+        }
+
+        .vanity-languages i {
+            color:#9bb0c7;
+            font-size:14px;
+        }
+
+        .vanity-domain-name {
+            display:block;
+            margin:9px 0 11px;
+            color:#5c789c;
+            font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+            font-size:14px;
+            line-height:1.55;
+            overflow-wrap:anywhere;
+            word-break:break-all;
+        }
+
+        .vanity-seen {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:10px;
+            margin:0 0 10px;
+        }
+
+        .vanity-seen dt {
+            margin:0 0 2px;
+            color:#91a2b7;
+            font-size:11px;
+            font-weight:400;
+            line-height:1.4;
+        }
+
+        .vanity-seen dd {
+            margin:0;
+            color:#65809f;
+            font-size:13px;
+            font-weight:500;
+            line-height:1.4;
+        }
+
+        .vanity-tags {
+            display:flex;
+            flex-wrap:wrap;
+            gap:5px;
+        }
+
+        .vanity-tags a {
+            max-width:100%;
+            padding:3px 6px;
+            border-radius:4px;
+            background:#edf3fb;
+            color:#6a87ad;
+            font-size:11px;
+            line-height:1.4;
+            overflow-wrap:anywhere;
+        }
+
+        .vanity-tags a:nth-child(even) {
+            background:#eff5f1;
+            color:#70927b;
+        }
+
+        .vanity-domain-actions {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-top:10px;
+            padding:9px 0;
+            border-top:1px solid #e8eef5;
+        }
+
+        .vanity-domain-actions a {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            color:#6284af;
+            font-size:12px;
+            line-height:1.4;
+        }
+
+        .vanity-domain-actions i {
+            color:#91a9c7;
+            font-size:12px;
+        }
+
+        .vanity-domain-actions .vanity-export {
+            margin-left:auto;
+        }
+
+        .vanity-export img {
+            height:18px;
+            width:auto;
+        }
+
+        .vanity-results>.vanity-pagination {
+            padding:18px 0 0;
+            border:0;
+        }
+
+        .vanity-empty {
+            grid-column:1 / -1;
+            padding:48px 24px;
+            color:#7b8fa8;
+            text-align:center;
+        }
+
+        .vanity-empty i {
+            display:block;
+            margin-bottom:13px;
+            color:#a5b6cb;
+            font-size:28px;
+        }
+
+        .vanity-page a:focus-visible,.vanity-page button:focus-visible {
+            outline:2px solid #6d96c6;
+            outline-offset:3px;
+        }
+
+        @media (min-width:1400px) {
+            .vanity-grid {
+                grid-template-columns:repeat(4,minmax(0,1fr));
+            }
+        }
+
+        @media (min-width:1800px) {
+            .vanity-grid {
+                grid-template-columns:repeat(5,minmax(0,1fr));
+            }
+        }
+
+        @media (min-width:2200px) {
+            .vanity-grid {
+                grid-template-columns:repeat(6,minmax(0,1fr));
+            }
+        }
+
+        @media (max-width:1100px) {
+            .vanity-grid {
+                grid-template-columns:repeat(2,minmax(0,1fr));
+            }
+            .vanity-bar {
+                width:85px;
+            }
+        }
+
+        @media (max-width:600px) {
+            .vanity-content {
+                padding:20px 15px;
+            }
+            .vanity-grid {
+                grid-template-columns:minmax(0,1fr);
+            }
+            .vanity-heading h1 {
+                font-size:25px;
+            }
+            .vanity-heading p {
+                margin-left:0;
+            }
+            .vanity-tools {
+                padding:15px;
+                gap:12px;
+            }
+            .vanity-section-title {
+                width:100%;
+            }
+            .vanity-search {
+                width:100%;
+            }
+            .vanity-table th,.vanity-table td {
+                padding:12px;
+            }
+            .vanity-bar {
+                display:none;
+            }
+            .vanity-table th:first-child {
+                width:25%;
+            }
+            .vanity-table th:nth-child(2) {
+                width:25%;
+            }
+            .vanity-explore a {
+                gap:5px;
+                font-size:12px;
+            }
+            .vanity-journey {
+                padding:10px;
+                gap:5px;
+            }
+            .vanity-journey li {
+                gap:5px;
+            }
+            .vanity-step {
+                padding:6px;
+            }
+            .vanity-step code {
+                font-size:14px;
+            }
+            .vanity-step small {
+                font-size:10px;
+            }
+            .vanity-domain-tools {
+                padding:0;
+            }
+            .vanity-blur {
+                margin-left:auto;
+            }
+            .vanity-domain-tools .vanity-filter {
+                flex:1;
+            }
+        }
+
+        .vanity-prefixes .dataTables_wrapper {
+            display:block;
+        }
+
+        .vanity-prefixes .vanity-clear {
+            padding:0;
+            border:0;
+            background:none;
+            cursor:pointer;
+        }
+
+        .vanity-prefixes .vanity-clear[hidden] {
+            display:none;
+        }
+
+        .vanity-prefixes .vanity-table {
+            margin:0 !important;
+        }
+
+        .vanity-datatable-footer {
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+            gap:14px;
+            padding:17px 22px;
+            border-top:1px solid #e6ecf4;
+            color:#8a9bb0;
+            font-size:13px;
+        }
+
+        .vanity-datatable-footer .dataTables_info {
+            padding:0;
+            white-space:normal;
+        }
+
+        .vanity-datatable-footer .pagination {
+            display:flex;
+            flex-wrap:wrap;
+            gap:5px;
+            margin:0;
+        }
+
+        .vanity-datatable-footer .pagination>li>a,
+        .vanity-datatable-footer .pagination>li>span {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:31px;
+            min-height:31px;
+            padding:4px 8px;
+            border:1px solid #dfe7f1;
+            border-radius:5px;
+            background:#fff;
+            color:#6f89a9;
+        }
+
+        .vanity-datatable-footer .pagination>.active>a {
+            border-color:#c6d7ed;
+            background:#edf3fc;
+            color:#537eb4;
+        }
+
+        .vanity-datatable-footer .pagination>.disabled>a {
+            color:#bac6d5;
+            cursor:default;
+        }
+
+        .vanity-prefixes .dataTables_empty {
+            padding:45px 20px;
+            color:#7b8fa8;
+            text-align:center;
+        }
+
     </style>
-
 </head>
-<body>
-
-	{% include 'nav_bar.html' %}
-
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12" id="core_content">
-
-                <h1><i class="fas fa-dumbbell"></i> Vanity Explorer</h1>
-
-                <table id="tableClusters" class="table">
-                    <thead class="bg-dark text-white">
-                    <tr>
-                        <th>Vanity</th>
-                        <th>NB Domains</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody style="font-size: 15px;">
-                    {% for row in vanity_clusters %}
-                        <tr>
-                            <td>
-                                <a href="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}?vanity={{row[0]}}&length={{ length }}">{{ row[0] }}</a>
-                            </td>
-                            <td>{{ row[1] | int }}</td>
-                            <td>
-
-                            </td>
-                        </tr>
+<body class="vanity-page">
+    {% include 'nav_bar.html' %}
+    {% macro page_link(number, endpoint, filters) -%}
+        {{ url_for(endpoint, page=number, **filters) }}
+    {%- endmacro %}
+    {% macro pagination_controls(data, endpoint, filters, label) %}
+        <footer class="vanity-pagination">
+            <span>{{ data.start }}–{{ data.end }} of {{ '{:,}'.format(data.total) }} {{ label }}</span>
+            {% if data.pages > 1 %}
+                <nav aria-label="{{ label|capitalize }} pages">
+                    {% if data.page > 1 %}
+                        <a class="vanity-page-link" href="{{ page_link(data.page - 1, endpoint, filters) }}" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+                    {% else %}
+                        <span class="vanity-page-link" aria-disabled="true" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+                    {% endif %}
+                    {% for number in range(1, data.pages + 1) %}
+                        {% if number == 1 or number == data.pages or (number - data.page)|abs <= 1 %}
+                            {% if number == data.page %}
+                                <span class="vanity-page-link" aria-current="page">{{ number }}</span>
+                            {% else %}
+                                <a class="vanity-page-link" href="{{ page_link(number, endpoint, filters) }}" aria-label="Page {{ number }}">{{ number }}</a>
+                            {% endif %}
+                        {% elif number == data.page - 2 or number == data.page + 2 %}
+                            <span aria-hidden="true">…</span>
+                        {% endif %}
                     {% endfor %}
-                    </tbody>
+                    {% if data.page < data.pages %}
+                        <a class="vanity-page-link" href="{{ page_link(data.page + 1, endpoint, filters) }}" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+                    {% else %}
+                        <span class="vanity-page-link" aria-disabled="true" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        </footer>
+    {% endmacro %}
+    <main class="vanity-content" id="core_content">
+        <header class="vanity-heading">
+            <div>
+                <h1><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</h1>
+                <p>Explore onion domains that share the same starting characters.</p>
+            </div>
+            <a class="vanity-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
+                <span class="crawler-nav-dashboard-icon" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+                            <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+                        </svg>
+                        <i class="fas fa-spider"></i>
+                    </span>
+                Dashboard
+            </a>
+        </header>
+        {% block vanity_content %}
+            <section class="vanity-surface vanity-prefixes" aria-labelledby="prefix-heading">
+                <form class="vanity-tools" id="vanity-prefix-filters" method="get" action="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}" role="search">
+                    <div class="vanity-section-title"><h2 id="prefix-heading">All prefixes</h2><span class="vanity-count" id="vanity-prefix-count">{{ '{:,}'.format(vanity_clusters|length) }}</span></div>
+                    <label class="vanity-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" id="vanity-prefix-search" name="q" value="{{ query }}" placeholder="Search prefixes, e.g. alph" aria-label="Search prefixes" maxlength="56" disabled></label>
+                    <label class="vanity-filter">Minimum domains<input type="number" id="vanity-prefix-minimum" name="min" min="0" step="1" value="{{ minimum }}" aria-label="Minimum domains" disabled></label>
+                    <label class="vanity-filter">Show<select id="vanity-prefix-size" name="size" aria-label="Prefixes per page" disabled>{% for size in [12, 24, 48] %}<option value="{{ size }}" {% if page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
+                    <input type="hidden" name="sort" value="{{ sort }}">
+                    <input type="hidden" name="direction" value="{{ direction }}">
+                    <button class="vanity-submit" type="submit" disabled>Search</button>
+                    <button class="vanity-clear" id="vanity-prefix-clear" type="button" hidden>Clear</button>
+                </form>
+                <table class="vanity-table" id="vanity-prefix-table" data-explore-url="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}" data-minimum="{{ minimum }}" data-sort="{{ sort }}" data-direction="{{ direction }}" data-page="{{ page }}">
+                    <thead><tr><th scope="col">Prefix</th><th scope="col">Domains</th><th scope="col"><span class="sr-only">Explore</span></th></tr></thead>
+                    <tbody></tbody>
                 </table>
-
-
-			</div>
-		</div>
-	</div>
+                <script type="application/json" id="vanity-prefix-data">{{ vanity_clusters|tojson }}</script>
+                <noscript><p class="vanity-empty">Enable JavaScript to search and browse the prefix table.</p></noscript>
+            </section>
+        {% endblock %}
+    </main>
+    <script>
+        document.getElementById('page-Crawler').classList.add('active');
+        document.getElementById('crawler-nav-explorers-toggle').classList.add('active');
+        document.getElementById('crawler-nav-vanity-explorer').classList.add('active');
+        document.querySelectorAll('[data-auto-submit]').forEach(function (select) {
+            select.addEventListener('change', function () {
+                select.form.requestSubmit();
+            });
+        });
+    </script>
+    <script>
+        (function () {
+            const element = document.getElementById('vanity-prefix-table');
+            if (!element || !$.fn.DataTable) {
+                return;
+            }
+            const rows = JSON.parse(document.getElementById('vanity-prefix-data').textContent);
+            const form = document.getElementById('vanity-prefix-filters');
+            const search = document.getElementById('vanity-prefix-search');
+            const minimum = document.getElementById('vanity-prefix-minimum');
+            const loadedMinimum = Number(element.dataset.minimum);
+            const size = document.getElementById('vanity-prefix-size');
+            const clear = document.getElementById('vanity-prefix-clear');
+            const count = document.getElementById('vanity-prefix-count');
+            const largest = rows.reduce(function (maximum, row) {
+                return Math.max(maximum, Number(row[1]) || 0);
+            }, 1);
+            function exploreLink(prefix) {
+                const url = new URL(element.dataset.exploreUrl, document.baseURI);
+                url.searchParams.set('vanity', prefix);
+                const link = document.createElement('a');
+                link.href = url.href;
+                return link;
+            }
+            $.fn.dataTable.ext.search.push(function (settings, values, index, row) {
+                return settings.nTable !== element || Number(row[1]) >= Math.max(0, Number(minimum.value) || 0);
+            });
+            const initialOrder = element.dataset.sort === 'prefix' ? [[0, element.dataset.direction]] : [[1, element.dataset.direction], [0, 'asc']];
+            const table = $(element).DataTable({
+                data: rows,
+                deferRender: true,
+                serverSide: false,
+                dom: '<"vanity-table-wrap"t><"vanity-datatable-footer"ip>',
+                pageLength: Number(size.value),
+                lengthMenu: [12, 24, 48],
+                autoWidth: false,
+                order: initialOrder,
+                search: {search: search.value.trim(), regex: false, smart: false},
+                columns: [
+                    {
+                        type: 'string',
+                        render: function (value, type, row) {
+                            const prefix = String(row[0]);
+                            if (type === 'filter') {
+                                // DataTables decodes filter values through HTML; encode the plain text first.
+                                const text = document.createElement('span');
+                                text.textContent = prefix;
+                                return text.innerHTML;
+                            }
+                            if (type !== 'display') {
+                                return prefix;
+                            }
+                            const link = exploreLink(prefix);
+                            link.className = 'vanity-prefix';
+                            const code = document.createElement('code');
+                            code.textContent = prefix;
+                            link.append(code);
+                            return link.outerHTML;
+                        }
+                    },
+                    {
+                        type: 'num',
+                        searchable: false,
+                        className: 'vanity-number',
+                        render: function (value, type, row) {
+                            const total = Math.max(0, Math.floor(Number(row[1]) || 0));
+                            if (type !== 'display') {
+                                return total;
+                            }
+                            const wrapper = document.createElement('span');
+                            const number = document.createElement('strong');
+                            number.textContent = total.toLocaleString('en-US');
+                            const bar = document.createElement('span');
+                            bar.className = 'vanity-bar';
+                            bar.setAttribute('aria-hidden', 'true');
+                            const fill = document.createElement('span');
+                            fill.style.width = Math.min(100, 100 * total / largest) + '%';
+                            bar.append(fill);
+                            wrapper.append(number, bar);
+                            return wrapper.innerHTML;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        className: 'vanity-explore',
+                        render: function (value, type, row) {
+                            if (type !== 'display') {
+                                return '';
+                            }
+                            const link = exploreLink(String(row[0]));
+                            link.textContent = 'Explore domains';
+                            const icon = document.createElement('i');
+                            icon.className = 'fas fa-arrow-right';
+                            icon.setAttribute('aria-hidden', 'true');
+                            link.append(icon);
+                            return link.outerHTML;
+                        }
+                    }
+                ],
+                language: {
+                    info: '_START_–_END_ of _TOTAL_ prefixes',
+                    infoEmpty: '0 prefixes',
+                    infoFiltered: '(from _MAX_ available)',
+                    zeroRecords: 'No prefixes match these filters.',
+                    emptyTable: 'No prefixes available.',
+                    paginate: {previous: 'Previous', next: 'Next'}
+                }
+            });
+            const initialPage = Math.max(0, Math.min(Number(element.dataset.page) - 1, table.page.info().pages - 1));
+            table.page(initialPage).draw('page');
+            function updateState() {
+                const info = table.page.info();
+                const order = table.order()[0];
+                form.elements.sort.value = order[0] === 0 ? 'prefix' : 'domains';
+                form.elements.direction.value = order[1];
+                count.textContent = info.recordsDisplay.toLocaleString('en-US');
+                clear.hidden = search.value.length === 0;
+                const url = new URL(window.location.href);
+                url.searchParams.set('q', search.value.trim());
+                url.searchParams.set('min', String(Math.max(0, Number(minimum.value) || 0)));
+                url.searchParams.set('size', String(info.length));
+                url.searchParams.set('sort', order[0] === 0 ? 'prefix' : 'domains');
+                url.searchParams.set('direction', order[1]);
+                url.searchParams.set('page', String(info.page + 1));
+                window.history.replaceState(null, '', url);
+            }
+            function applySearch() {
+                table.search(search.value.trim(), false, false).draw();
+            }
+            table.on('draw.dt', updateState);
+            search.addEventListener('input', applySearch);
+            minimum.addEventListener('input', function () {
+                table.draw();
+            });
+            minimum.addEventListener('change', function () {
+                if (minimum.validity.valid && Number(minimum.value) < loadedMinimum) {
+                    form.requestSubmit();
+                }
+            });
+            size.addEventListener('change', function () {
+                table.page.len(Number(size.value)).draw();
+            });
+            form.addEventListener('submit', function (event) {
+                // A lower cutoff needs prefixes that were excluded from the initial Redis read.
+                if (Number(minimum.value) < loadedMinimum) {
+                    return;
+                }
+                event.preventDefault();
+                applySearch();
+            });
+            clear.addEventListener('click', function () {
+                search.value = '';
+                applySearch();
+                search.focus();
+            });
+            form.querySelectorAll(':disabled').forEach(function (control) {
+                control.disabled = false;
+            });
+            updateState();
+        })();
+    </script>
+    {% block vanity_scripts %}{% endblock %}
 </body>
-
-
-<script>
-  $(document).ready(function(){
-    $('#page-Crawler').addClass('active');
-    $('#crawler-nav-explorers-toggle').addClass('active');
-    $("#crawler-nav-vanity-explorer").addClass("active");
-    $('#tableClusters').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 1, "desc" ]]
-    });
-
-  });
-
-</script>
-
 </html>

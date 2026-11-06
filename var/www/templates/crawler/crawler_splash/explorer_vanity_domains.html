@@ -1,124 +1,119 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Vanity Explorer - AIL</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
+{% extends 'crawler/crawler_splash/explorer_vanity_clusters.html' %}
 
-    <style>
-        .card-columns {
-            column-count: 4;
-        }
-    </style>
+{% block vanity_table_assets %}{% endblock %}
 
-</head>
-<body>
-
-	{% include 'nav_bar.html' %}
-
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12" id="core_content">
-
-                <h1><i class="fas fa-dumbbell"></i> Vanity Explorer: </h1>
-
-                <div class="row">
-                    <div class="col-12 col-lg-6">
-
-                        <div class="my-2">
-                            {% if vanities_tree | length > 1 %}
-                                <i class="fas fa-arrow-right"></i>
-                                {% for vanity in vanities_tree[:-1] %}
-                                    <a class="btn btn-primary" href="{{url_for('crawler_splash.domains_explorer_vanity_explore')}}?vanity={{vanity}}&length={{ vanity | length }}">{{ vanity }}</a> <i class="fas fa-arrow-right"></i>
-                                {% endfor %}
-                                    <btn class="btn btn-primary disabled">{{ vanities_tree[-1] }}</btn>
+{% block vanity_content %}
+    {% set filters = dict(vanity=vanity, q=query, min=minimum, size=pagination.page_size) %}
+    <nav aria-label="Prefix navigation">
+        <ol class="vanity-journey vanity-surface">
+            <li><a class="vanity-step vanity-root" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-layer-group" aria-hidden="true"></i>All prefixes</a></li>
+            {% for step in pagination.tree %}
+                <li>
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    {% if loop.last %}
+                        <span class="vanity-step" aria-current="page"><code>{{ step.prefix }}</code><small>{{ step.prefix|length }} characters · {{ '{:,}'.format(step.count) }} domains</small></span>
+                    {% else %}
+                        <a class="vanity-step" href="{{ url_for('crawler_splash.domains_explorer_vanity_explore', vanity=step.prefix, min=minimum, size=pagination.page_size) }}"><code>{{ step.prefix }}</code><small>{{ step.prefix|length }} characters · {{ '{:,}'.format(step.count) }} domains</small></a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+    {% if pagination.children %}
+        <section class="vanity-next vanity-surface" aria-labelledby="next-prefix-heading">
+            <div><h2 id="next-prefix-heading">Continue with the next character</h2><p>{{ vanity|length + 1 }}-character prefixes</p></div>
+            <div class="vanity-children">
+                {% for prefix, count in pagination.children %}
+                    <a class="vanity-child" href="{{ url_for('crawler_splash.domains_explorer_vanity_explore', vanity=prefix, min=minimum, size=pagination.page_size) }}"><code>{{ prefix[:-1] }}<mark>{{ prefix[-1] }}</mark></code><b>{{ '{:,}'.format(count) }}</b><i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+    <section class="vanity-results" aria-labelledby="domains-heading">
+        <form class="vanity-tools vanity-domain-tools" method="get" action="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}" role="search">
+            <div class="vanity-section-title"><h2 id="domains-heading">Domains</h2><span class="vanity-count">{{ '{:,}'.format(pagination.matching) }}</span></div>
+            <input type="hidden" name="vanity" value="{{ vanity }}">
+            <input type="hidden" name="min" value="{{ minimum }}">
+            <label class="vanity-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" name="q" value="{{ query }}" placeholder="Search these domains…" aria-label="Search these domains" maxlength="255"></label>
+            <label class="vanity-filter"><span class="sr-only">Domains per page</span><select name="size" aria-label="Domains per page" data-auto-submit>{% for size in [12, 24, 48] %}<option value="{{ size }}" {% if pagination.page_size == size %}selected{% endif %}>{{ size }} per page</option>{% endfor %}</select></label>
+            <button class="vanity-submit" type="submit">Search</button>
+            {% if query %}<a class="vanity-clear" href="{{ url_for('crawler_splash.domains_explorer_vanity_explore', vanity=vanity, min=minimum, size=pagination.page_size) }}">Clear</a>{% endif %}
+            <div class="vanity-blur" role="group" aria-label="Screenshot visibility">
+                <button type="button" data-blur="0"><i class="fas fa-eye-slash" aria-hidden="true"></i>Hide</button>
+                <input type="range" id="blur-slider" min="0" max="15" step="0.1" value="10" aria-label="Screenshot visibility">
+                <button type="button" data-blur="15"><i class="fas fa-image" aria-hidden="true"></i>Reveal</button>
+            </div>
+        </form>
+        <div class="vanity-grid">
+            {% for domain in pagination['items'] %}
+                {% set domain_url = url_for('crawler_splash.showDomain', domain=domain.id) %}
+                <article class="vanity-domain-card">
+                    {% if domain.is_tags_safe and domain.screenshot %}
+                        {% set screenshot_url = url_for('objects_item.screenshot', filename=domain.screenshot) %}
+                        <a class="vanity-screenshot" href="{{ screenshot_url }}" target="_blank" rel="noopener noreferrer" aria-label="Open full screenshot for {{ domain.id }}">
+                            <img src="{{ screenshot_url }}" alt="Screenshot of {{ domain.id }}" loading="lazy" data-screenshot>
+                        </a>
+                    {% else %}
+                        <div class="vanity-no-screenshot"><i class="fas fa-{{ 'eye-slash' if not domain.is_tags_safe else 'image' }}" aria-hidden="true"></i>{{ 'Screenshot hidden' if not domain.is_tags_safe else 'No screenshot' }}</div>
+                    {% endif %}
+                    <div class="vanity-domain-body">
+                        <div class="vanity-domain-top">
+                            {% if domain.status %}
+                                <span class="vanity-status vanity-up"><i class="fas fa-check-circle" aria-hidden="true"></i>UP</span>
                             {% else %}
-                                <i class="fas fa-arrow-right"></i>
-                                {% for vanity in vanities_tree %}
-                                    <a class="btn btn-primary" href="{{url_for('crawler_splash.domains_explorer_vanity_explore')}}?vanity={{vanity}}&length={{ vanity | length }}">{{ vanity }}</a>
-                                {% endfor %}
+                                <span class="vanity-status vanity-down"><i class="fas fa-times-circle" aria-hidden="true"></i>DOWN</span>
                             {% endif %}
+                            {% if domain.languages %}<div class="vanity-languages"><i class="fas fa-language" aria-hidden="true"></i><span class="sr-only">Languages:</span>{% for language in domain.languages %}<span>{{ language }}</span>{% if not loop.last %}<span aria-hidden="true">·</span>{% endif %}{% endfor %}</div>{% endif %}
                         </div>
-                        <div><b>Vanity Length:</b> {{ length }}</div>
-
-                    </div>
-                    <div class="col-12 col-xl-6">
-
-                        <table id="tableClusters" class="table">
-                            <thead class="bg-dark text-white">
-                            <tr>
-                                <th>Length+1 Vanities</th>
-                                <th>NB Domains</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-                            <tbody style="font-size: 15px;">
-                            {% for row in vanity_clusters %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('crawler_splash.domains_explorer_vanity_explore') }}?vanity={{row}}&length={{ length + 1 }}">{{ row }}</a>
-                                    </td>
-                                    <td>{{ vanity_clusters[row] }}</td>
-                                    <td>
-
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-
-
-                {% if vanity_domains %}
-                    <div class="my-3">
-                        {% include 'objects/image/block_blur_img_slider.html' %}
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header bg-dark text-white" style="background-color:#d9edf7;font-size: 15px">
-                            <h4>{{ vanity }} <span class="badge badge-primary">{{ vanity_domains | length }}</span></h4>
-                        </div>
-                        <div class="card-body">
-                            {% with l_dict_domains=vanity_domains, bootstrap_label=bootstrap_label %}
-                                {% include 'domains/card_img_domain.html' %}
-                            {% endwith %}
+                        <a class="vanity-domain-name" href="{{ domain_url }}"><mark>{{ domain.id[:vanity|length] }}</mark>{{ domain.id[vanity|length:] }}</a>
+                        <dl class="vanity-seen">
+                            <div><dt>First seen</dt><dd>{{ domain.first_seen or 'Unknown' }}</dd></div>
+                            <div><dt>Last seen</dt><dd>{{ domain.last_check or 'Unknown' }}</dd></div>
+                        </dl>
+                        {% if domain.tags %}<div class="vanity-tags">{% for tag in domain.tags %}<a href="{{ url_for('tags_ui.get_obj_by_tags', object_type='domain', ltags=tag) }}">{{ tag }}</a>{% endfor %}</div>{% endif %}
+                        <div class="vanity-domain-actions">
+                            <a href="{{ domain_url }}">View domain<i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                            <a class="vanity-correlation" href="{{ url_for('correlation.show_correlation', type='domain', id=domain.id) }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-project-diagram" aria-hidden="true"></i>Correlations</a>
+                            <a class="vanity-export" href="{{ url_for('import_export.add_object_id_to_export', type='domain', id=domain.id, lvl=0) }}" target="_blank" rel="noopener noreferrer" aria-label="Add {{ domain.id }} to export" title="Add to export"><img src="{{ url_for('static', filename='image/misp-logo.png') }}" alt="MISP"></a>
                         </div>
                     </div>
+                </article>
+            {% else %}
+                <div class="vanity-empty vanity-surface"><i class="fas fa-search" aria-hidden="true"></i>{{ 'No domains match this search.' if query else 'No domains found for this prefix.' }}</div>
+            {% endfor %}
+        </div>
+        {{ pagination_controls(pagination, 'crawler_splash.domains_explorer_vanity_explore', filters, 'domains') }}
+    </section>
+{% endblock %}
 
-                {% endif %}
-
-			</div>
-		</div>
-	</div>
-</body>
-
-
-<script>
-  $(document).ready(function(){
-    $('#page-Crawler').addClass('active');
-    $('#crawler-nav-explorers-toggle').addClass('active');
-    $("#crawler-nav-vanity-explorer").addClass("active");
-    $('#tableClusters').DataTable({
-        "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
-        "iDisplayLength": 10,
-        "order": [[ 1, "desc" ]]
-    });
-
-  });
-
-</script>
-
-</html>
+{% block vanity_scripts %}
+    <script>
+        const blurSlider = document.getElementById('blur-slider');
+        function blurImages() {
+            document.documentElement.style.setProperty('--object-image-blur', (15 - Number(blurSlider.value)) + 'px');
+        }
+        document.querySelectorAll('[data-blur]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                blurSlider.value = button.dataset.blur;
+                blurImages();
+            });
+        });
+        blurSlider.addEventListener('input', blurImages);
+        blurImages();
+        document.querySelectorAll('[data-screenshot]').forEach(function (image) {
+            function showMissingScreenshot() {
+                if (!image.parentElement) {
+                    return;
+                }
+                const message = document.createElement('div');
+                message.className = 'vanity-no-screenshot';
+                message.textContent = 'Screenshot unavailable';
+                image.parentElement.replaceWith(message);
+            }
+            image.addEventListener('error', showMissingScreenshot, {once: true});
+            if (image.complete && image.naturalWidth === 0) {
+                showMissingScreenshot();
+            }
+        });
+    </script>
+{% endblock %}
