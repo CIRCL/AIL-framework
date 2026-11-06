@@ -25,8 +25,7 @@
 {% include 'nav_bar.html' %}
 <div class="container-fluid">
   <div class="row">
-    {% include 'sidebars/sidebar_objects.html' %}
-    <div class="col-12 col-lg-10" id="core_content">
+    <div class="col-12" id="core_content">
       {% set subforum = meta['subforum'] %}
       {% with obj_type='subforum', obj_id=subforum['id'], obj_subtype=subforum['subtype'] %}
         {% include 'investigations/block_object_investigations.html' %}
@@ -104,7 +103,6 @@
 <script>
 $(document).ready(function() {
   $('#page-Forums-Explorer').addClass('active');
-  $('#nav_explorer_forum').addClass('active');
 });
 
 function applyForumNameTranslations(names) {
@@ -139,17 +137,6 @@ function translateSubforumNames(subtype, subforumId, buttonElement) {
     });
 }
 
-function toggle_sidebar() {
-  if ($('#nav_menu').is(':visible')) {
-    $('#nav_menu').hide();
-    $('#side_menu').removeClass('border-right col-lg-2');
-    $('#core_content').removeClass('col-lg-10');
-  } else {
-    $('#nav_menu').show();
-    $('#side_menu').addClass('border-right col-lg-2');
-    $('#core_content').addClass('col-lg-10');
-  }
-}
 </script>
 </body>
 </html>

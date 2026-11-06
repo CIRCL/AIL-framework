@@ -52,9 +52,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 
                 <div class="card my-3">
                     <div class="card-header" style="background-color:#d9edf7;font-size: 15px">
@@ -203,7 +202,6 @@
     var chart = {};
     $(document).ready(function(){
         $("#page-Chats-Explorer").addClass("active");
-        $("#nav_chat").addClass("active");
         {% if message_id %}
             if (!window.location.hash) {
                 document.location.hash = '#{{ message_id }}';
@@ -214,19 +212,6 @@
     let sticky_up_btn = document.getElementById("sticky_btn_up");
     window.onscroll = function() {sticky_btn_up_scroll(sticky_up_btn)};
 
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 </script>
 
 </body>

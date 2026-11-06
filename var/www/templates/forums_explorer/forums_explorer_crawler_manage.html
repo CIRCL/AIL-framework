@@ -41,8 +41,7 @@
 <body>
 {% include 'nav_bar.html' %}
 <div class="container-fluid"><div class="row">
-{% include 'sidebars/sidebar_objects.html' %}
-<div class="col-12 col-lg-10" id="core_content">
+<div class="col-12" id="core_content">
 {% set forum = meta['forum'] %}{% set config = meta['config'] %}
 {% set weekdays = [('mon', 'Mon'), ('tue', 'Tue'), ('wed', 'Wed'), ('thu', 'Thu'), ('fri', 'Fri'), ('sat', 'Sat'), ('sun', 'Sun')] %}
 <nav aria-label="breadcrumb" class="mt-3"><ol class="breadcrumb">
@@ -140,7 +139,6 @@
 <script>
 $(document).ready(function() {
   $('#page-Forums-Explorer').addClass('active');
-  $('#nav_explorer_forum').addClass('active');
 
   $('.copy-local-login-command').on('click', function() {
     const button = $(this);
@@ -152,16 +150,5 @@ $(document).ready(function() {
   });
 });
 
-function toggle_sidebar() {
-  if ($('#nav_menu').is(':visible')) {
-    $('#nav_menu').hide();
-    $('#side_menu').removeClass('border-right col-lg-2');
-    $('#core_content').removeClass('col-lg-10');
-  } else {
-    $('#nav_menu').show();
-    $('#side_menu').addClass('border-right col-lg-2');
-    $('#core_content').addClass('col-lg-10');
-  }
-}
 </script>
 </body></html>

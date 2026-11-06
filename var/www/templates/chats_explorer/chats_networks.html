@@ -254,9 +254,8 @@
     <div class="container-fluid">
         <div class="row">
 
-            {% include 'sidebars/sidebar_objects.html' %}
 
-            <div class="col-12 col-lg-10 networks-page" id="core_content">
+            <div class="col-12 networks-page" id="core_content">
                 <div class="networks-content">
                     <a class="networks-back" href="{{ url_for('chats_explorer.chats_explorer_protocols') }}">
                         <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i> All protocols
@@ -326,7 +325,6 @@
 <script>
     $(document).ready(function() {
         $("#page-Chats-Explorer").addClass("active");
-        $("#nav_explorer_chat").addClass("active");
 
         $("#network-search").on("input", function() {
             var query = $(this).val().trim().toLowerCase();
@@ -344,19 +342,6 @@
         });
     });
 
-    function toggle_sidebar() {
-        if ($('#nav_menu').is(':visible')) {
-            $('#nav_menu').hide();
-            $('#side_menu').removeClass('border-right');
-            $('#side_menu').removeClass('col-lg-2');
-            $('#core_content').removeClass('col-lg-10');
-        } else {
-            $('#nav_menu').show();
-            $('#side_menu').addClass('border-right');
-            $('#side_menu').addClass('col-lg-2');
-            $('#core_content').addClass('col-lg-10');
-        }
-    }
 </script>
 
 </body>

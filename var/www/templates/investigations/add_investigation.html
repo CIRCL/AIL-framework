@@ -89,9 +89,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_investigations.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 				<div class="container-fluid investigation-shell py-3 py-xl-4">
 					<div class="card investigation-hero text-white mb-4">
 						<div class="card-body p-4 p-xl-5">
@@ -281,8 +280,6 @@
 <script>
 $(document).ready(function(){
     $("#page-investigation").addClass("active");
-	$('#nav_investigation').removeClass("text-muted");
-	$("#nav_add_investigation").addClass("active");
 
 	{% if edit %}
 		var investigation_date = "{{metadata['date']}}";

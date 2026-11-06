@@ -22,8 +22,7 @@
 {% include 'nav_bar.html' %}
 <div class="container-fluid">
   <div class="row">
-    {% include 'sidebars/sidebar_objects.html' %}
-    <div class="col-12 col-lg-10" id="core_content">
+    <div class="col-12" id="core_content">
       <div class="forum-hero my-3 p-4">
         <h1 class="mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                    <path d="M0 0h24v24H0z" fill="none" />
@@ -94,8 +93,9 @@
 </div>
 
 <script>
-$(document).ready(function(){ $('#page-Forums-Explorer').addClass('active'); $('#nav_explorer_forum').addClass('active'); });
-function toggle_sidebar(){ if($('#nav_menu').is(':visible')){ $('#nav_menu').hide(); $('#side_menu').removeClass('border-right col-lg-2'); $('#core_content').removeClass('col-lg-10'); }else{ $('#nav_menu').show(); $('#side_menu').addClass('border-right col-lg-2'); $('#core_content').addClass('col-lg-10'); } }
+$(document).ready(function () {
+    $('#page-Forums-Explorer').addClass('active');
+});
 </script>
 
 </body>

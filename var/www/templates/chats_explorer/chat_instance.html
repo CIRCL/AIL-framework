@@ -437,8 +437,7 @@
     {% include 'nav_bar.html' %}
     <div class="container-fluid">
         <div class="row">
-            {% include 'sidebars/sidebar_objects.html' %}
-            <div class="col-12 col-lg-10 networks-page instance-page" id="core_content">
+            <div class="col-12 networks-page instance-page" id="core_content">
                 <div class="networks-content">
                     <nav class="instance-navigation" aria-label="Chat navigation">
                         <a class="networks-back" href="{{ url_for('chats_explorer.chats_explorer_protocols') }}">
@@ -575,7 +574,6 @@
 <script>
     $(document).ready(function() {
         $("#page-Chats-Explorer").addClass("active");
-        $("#nav_explorer_chat").addClass("active");
 
         const chatLanguagesById = {};
         {% for chat in chat_instance["chats"] %}
@@ -695,18 +693,6 @@
         }
     });
 
-    function toggle_sidebar() {
-        if ($('#nav_menu').is(':visible')) {
-            $('#nav_menu').hide();
-            $('#side_menu').removeClass('border-right col-lg-2');
-            $('#core_content').removeClass('col-lg-10');
-        } else {
-            $('#nav_menu').show();
-            $('#side_menu').addClass('border-right col-lg-2');
-            $('#core_content').addClass('col-lg-10');
-        }
-        window.dispatchEvent(new Event('resize'));
-    }
 </script>
 
 </body>

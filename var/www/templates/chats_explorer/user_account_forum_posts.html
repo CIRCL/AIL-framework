@@ -13,8 +13,7 @@
 {% include 'nav_bar.html' %}
 <div class="container-fluid">
   <div class="row">
-    {% include 'sidebars/sidebar_objects.html' %}
-    <div class="col-12 col-lg-10" id="core_content">
+    <div class="col-12" id="core_content">
       {% set user_account = meta['user-account'] %}
       {% set forum = user_account.get('forum') %}
       <nav aria-label="breadcrumb" class="mt-3">
@@ -77,7 +76,9 @@
   </div>
 </div>
 <script>
-$(document).ready(function(){ $('#page-Chats-Explorer').addClass('active'); $('#nav_chat').addClass('active'); });
+$(document).ready(function () {
+    $('#page-Chats-Explorer').addClass('active');
+});
 </script>
 </body>
 </html>

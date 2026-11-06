@@ -54,9 +54,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 
                 {% with meta=subchannel %}
                     {% include 'chats_explorer/card_chat_subchannel.html' %}
@@ -180,7 +179,6 @@
     var chart = {};
     $(document).ready(function(){
         $("#page-Chats-Explorer").addClass("active");
-        $("#nav_chat").addClass("active");
         {% if subchannel['threads'] %}
             $('#tablethreads').DataTable({
                 "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
@@ -197,20 +195,6 @@
 
     let sticky_up_btn = document.getElementById("sticky_btn_up");
     window.onscroll = function() {sticky_btn_up_scroll(sticky_up_btn)};
-
-function toggle_sidebar(){
-	if($('#nav_menu').is(':visible')){
-		$('#nav_menu').hide();
-		$('#side_menu').removeClass('border-right')
-		$('#side_menu').removeClass('col-lg-2')
-		$('#core_content').removeClass('col-lg-10')
-	}else{
-		$('#nav_menu').show();
-		$('#side_menu').addClass('border-right')
-		$('#side_menu').addClass('col-lg-2')
-		$('#core_content').addClass('col-lg-10')
-	}
-}
 
 d3.json("{{ url_for('chats_explorer.chats_explorer_messages_stats_week_all') }}?type=chat-subchannel&subtype={{ subchannel['subtype'] }}&id={{ subchannel['id'] }}")
     .then(function(data) {

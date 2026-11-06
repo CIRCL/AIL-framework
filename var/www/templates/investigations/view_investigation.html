@@ -27,9 +27,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_investigations.html' %}
 
-			<div class="col-12 col-lg-10" id="core_content">
+			<div class="col-12" id="core_content">
 
 				<div class="card my-1">
 					<div class="card-header bg-dark text-white">
@@ -232,7 +231,6 @@
 
 <script>
 $(document).ready(function(){
-	$('#nav_sync').removeClass("text-muted");
 
   $('#table_sync_queues').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],

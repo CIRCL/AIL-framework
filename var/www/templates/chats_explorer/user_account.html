@@ -364,9 +364,8 @@
 	<div class="container-fluid">
 		<div class="row">
 
-			{% include 'sidebars/sidebar_objects.html' %}
 
-			<div class="col-12 col-lg-10 account-page" id="core_content">
+			<div class="col-12 account-page" id="core_content">
 
                 {% with show_username_timeline=True %}
                     {% include 'chats_explorer/card_user_account.html' %}
@@ -575,7 +574,6 @@
 <script>
     $(document).ready(function(){
         $("#page-Chats-Explorer").addClass("active");
-        $("#nav_chat").addClass("active");
 
 {#        {% if meta['subchannels'] %}#}
 {#            $('#tablesubchannels').DataTable({#}

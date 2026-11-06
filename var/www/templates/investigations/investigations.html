@@ -227,9 +227,8 @@
     <div class="container-fluid">
         <div class="row">
 
-            {% include 'sidebars/sidebar_investigations.html' %}
 
-            <div class="col-12 col-lg-10" id="core_content">
+            <div class="col-12" id="core_content">
 
                 <div class="page-hero mt-3 p-4 p-lg-5 mb-4">
                     <div class="row align-items-center">
@@ -344,12 +343,6 @@
                                         <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>' }}</td>
                                         <td>{{ dict_investigation['nb_objects']}}</td>
                                     </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="{{ 5 if is_admin else 4 }}">
-                                            <div class="investigation-empty">No investigation available for your organisation yet.</div>
-                                        </td>
-                                    </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
@@ -404,12 +397,6 @@
                                         <td>{{ dict_investigation['last_change'] or '<span class="muted-dash">—</span>' }}</td>
                                         <td>{{ dict_investigation['nb_objects']}}</td>
                                     </tr>
-                                {% else %}
-                                    <tr>
-                                        <td colspan="5">
-                                            <div class="investigation-empty">No global investigations available.</div>
-                                        </td>
-                                    </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
@@ -427,14 +414,13 @@
 <script>
 $(document).ready(function(){
     $("#page-investigation").addClass("active");
-    $('#nav_investigation').removeClass("text-muted");
-    $("#nav_investigation_dashboard").addClass("active");
 
     $('#table_investigation').DataTable({
         "aLengthMenu": [[5, 10, 15, -1], [5, 10, 15, "All"]],
         "iDisplayLength": 10,
         "order": [[ 2, "desc" ]],
         "language": {
+            "emptyTable": '<div class="investigation-empty">No investigation available for your organisation yet.</div>',
             "search": "Search investigations:",
             "lengthMenu": "Show _MENU_ entries"
         }
@@ -445,6 +431,7 @@ $(document).ready(function(){
         "iDisplayLength": 10,
         "order": [[ 3, "desc" ]],
         "language": {
+            "emptyTable": '<div class="investigation-empty">No global investigations available.</div>',
             "search": "Search global investigations:",
             "lengthMenu": "Show _MENU_ entries"
         }
