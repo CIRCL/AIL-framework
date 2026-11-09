@@ -411,7 +411,7 @@
             return {
                 selected: this.selectedObjects().map(node => node.id),
                 hideBatches: this.hideBatches.map(batch => [...batch]),
-                rules: graph.simplify.getRules().map(rule => ({id: rule.id, enabled: rule.enabled, minSize: rule.minSize})),
+                rules: graph.simplify.getRules().map(rule => ({id: rule.id, enabled: rule.enabled, setting: rule.setting?.value})),
                 open: graph.simplify.getGroups().filter(group => group.open).map(group => this.groupKey(group)),
                 positions: graph.getCanvasNodes().filter(node => Number.isFinite(node.x) && Number.isFinite(node.y)).map(node => [node.isGroup ? 'group:' + this.groupKey(node.info) : node.id, node.x, node.y, node.fx, node.fy]),
                 viewport: {x: (canvas.width / 2 - transform.x) / transform.k, y: (canvas.height / 2 - transform.y) / transform.k, scale: transform.k},
@@ -434,7 +434,7 @@
             if (view) {
                 for (const rule of view.rules) {
                     graph.simplify.setRuleEnabled(rule.id, rule.enabled);
-                    graph.simplify.setRuleMinSize(rule.id, rule.minSize);
+                    graph.simplify.setRuleSetting(rule.id, rule.setting);
                 }
                 const open = new Set(view.open);
                 graph.simplify.getGroups().forEach(group => {

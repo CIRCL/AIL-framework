@@ -79,7 +79,8 @@
         <details class="correlation-help">
             <summary>Graph help and keyboard shortcuts</summary>
             <p>Click a node to select it, or a legend type to select matching objects. Hold Ctrl, Cmd or Shift to add types to your selection. Double-click an object to open it.</p>
-            <p>Groups contain at least 10 objects of the same type with identical visible neighbours{% if relationship_view %}, relationship types and directions{% endif %}. Double-click a group to unpack it immediately; use its close button to pack it again. Toggle <b>Shared {{ graph_name | lower }}s</b> in <b>Simplify</b> to show objects separately.</p>
+            <p><b>Shared {{ graph_name | lower }}s</b> groups at least 10 objects of the same type with identical visible neighbours{% if relationship_view %}, relationship types and directions{% endif %}. Double-click a group to unpack it immediately; use its close button to pack it again. Toggle the rule in <b>Simplify</b> to show objects separately.</p>
+            <p><b>Simplify</b> also offers Pivotick’s <b>Same neighbours</b>, <b>Chains</b>, <b>Few links</b>, <b>Outside the core</b> and <b>Communities</b> rules. Enable each rule and adjust its settings in the menu. <b>Pivot landings</b> groups results brought in by a pivot; <b>By hand</b> controls groups created from selected objects.</p>
             {% if relationship_view %}<p>Arrows show the direction of each relationship. Hover a link or select it to see its relationship type.</p>{% endif %}
             <p>Press <kbd>H</kbd> while hovering an object or group to hide it. Hiding keeps the loaded objects in memory and does not load replacements. Use <b>Undo last hide</b> or <b>Restore all hidden</b> to show them again. The orange starting object is protected from Hide. Use Pivotick’s <b>Fit and center</b> control to fit the graph.</p>
         </details>

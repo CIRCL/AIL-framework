@@ -347,14 +347,23 @@
                         const ail = node.getData()._ail;
                         return ail ? ail.id.split(':', 1)[0] : undefined;
                     },
-                    rules: [{
-                        kind: 'custom',
-                        id: relationshipView ? 'shared-relationships' : 'shared-correlations',
-                        label: relationshipView ? 'Shared relationships' : 'Shared correlations',
-                        description: relationshipView ? 'Objects of the same type with identical visible neighbours, relationship types and directions.' : 'Objects of the same type with the same set of neighbours in the displayed graph.',
-                        minSize: 10,
-                        partition: relationshipView ? group_shared_relationships : group_shared_correlations,
-                    }],
+                    rules: [
+                        {
+                            kind: 'custom',
+                            id: relationshipView ? 'shared-relationships' : 'shared-correlations',
+                            label: relationshipView ? 'Shared relationships' : 'Shared correlations',
+                            description: relationshipView ? 'Objects of the same type with identical visible neighbours, relationship types and directions.' : 'Objects of the same type with the same set of neighbours in the displayed graph.',
+                            minSize: 10,
+                            partition: relationshipView ? group_shared_relationships : group_shared_correlations,
+                        },
+                        {kind: 'neighbours', enabled: false},
+                        {kind: 'chains', enabled: false},
+                        {kind: 'degree', enabled: false},
+                        {kind: 'kcore', enabled: false},
+                        {kind: 'communities', enabled: false},
+                        {kind: 'landings', enabled: false},
+                        {kind: 'manual', enabled: false},
+                    ],
                 },
                 editors: {
                     nodeCreator: { enabled: false },
@@ -406,7 +415,7 @@
         const graph = all_graph.node_graph;
         for (const rule of view?.rules || []) {
             graph.simplify.setRuleEnabled(rule.id, rule.enabled);
-            graph.simplify.setRuleMinSize(rule.id, rule.minSize);
+            graph.simplify.setRuleSetting(rule.id, rule.setting);
         }
         const open = new Set(view?.open || []);
         graph.simplify.getGroups().forEach(group => {
