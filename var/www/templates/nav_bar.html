@@ -191,4 +191,14 @@
 {#    </form>#}
   </div>
 </nav>
+<script>
+    (function () {
+        const navbar = document.querySelector('.ail-navbar');
+        function updateNavbarHeight() {
+            document.documentElement.style.setProperty('--ail-navbar-height', navbar.getBoundingClientRect().height + 'px');
+        }
+        updateNavbarHeight();
+        new ResizeObserver(updateNavbarHeight).observe(navbar);
+    })();
+</script>
 {{ crawler_menu_assets() }}

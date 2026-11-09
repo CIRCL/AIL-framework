@@ -171,6 +171,11 @@
 }
 
 /* Shared chat explorer layout */
+.chat-media-controls {
+    top: var(--ail-navbar-height, 56px);
+    z-index: 1010;
+}
+
 .networks-page {
     background: #f5f7fa;
     min-height: calc(100vh - 56px);
