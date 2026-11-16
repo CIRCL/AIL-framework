@@ -8,6 +8,7 @@
   <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/forums_explorer.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/forum.css') }}" rel="stylesheet">
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
@@ -15,9 +16,13 @@
 </head>
 <body class="forum-page">
 {% include 'nav_bar.html' %}
-{% from 'forums_explorer/forum_macros.html' import forum_header with context %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, forum_metadata, crawler_dashboard_icon with context %}
 <main class="forum-content" id="core_content">
   {{ forum_header(forum) }}
+  {% call forum_metadata(forum) %}
+    <button class="btn forum-metadata-button forum-translate-names" type="button" data-translation-url="{{ url_for('forums_explorer.forum_explorer_translate_json') }}" data-object-id="{{ forum['id'] }}"><i class="fas fa-language" aria-hidden="true"></i>Translate</button>
+    {% if is_admin %}<a class="btn forum-metadata-button forum-crawlers" href="{{ url_for('forums_explorer.forum_explorer_crawler_status', id=forum['id']) }}">{{ crawler_dashboard_icon() }}Crawlers</a>{% endif %}
+  {% endcall %}
   <div class="forum-trail">
     <nav aria-label="Forum breadcrumb">
       <ol class="breadcrumb">
@@ -27,8 +32,6 @@
     </nav>
     <div class="forum-tools">
       {% with obj_type='forum', obj_id=forum['id'], obj_subtype='' %}{% include 'investigations/block_object_investigations.html' %}{% endwith %}
-      <button class="btn btn-sm forum-translate-names" type="button" data-translation-url="{{ url_for('forums_explorer.forum_explorer_translate_json') }}" data-object-id="{{ forum['id'] }}"><i class="fas fa-language mr-1" aria-hidden="true"></i>Translate names</button>
-      {% if is_admin %}<a class="btn btn-sm" href="{{ url_for('forums_explorer.forum_explorer_crawler_status', id=forum['id']) }}">Crawler status</a>{% endif %}
     </div>
   </div>
   {% if forum.get('banner') and forum.get('info') %}<p class="forum-subforum-heading">{{ forum['info'] }}</p>{% endif %}

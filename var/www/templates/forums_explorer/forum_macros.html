@@ -14,13 +14,40 @@
       </div>
     {% endif %}
   </header>
-  {% if forum and (forum.get('url') or forum.get('forum_type')) %}
-    <div class="forum-metadata">
-      {% if forum.get('url') %}<span>{{ forum['url'] }}</span>{% endif %}
-      {% if forum.get('forum_type') %}<span>Parser: {{ forum['forum_type'] }}</span>{% endif %}
-    </div>
-  {% endif %}
 {% endmacro %}
+
+{% macro forum_metadata(forum, current_url=none) %}
+  <div class="forum-metadata-toolbar">
+    <div class="forum-metadata-fields">
+      {% if forum and (forum.get('url') or forum.get('forum_type')) %}
+        <div class="forum-metadata-source">
+          {% if forum.get('url') %}<span class="forum-metadata-label">Forum:</span><span class="forum-metadata-url forum-metadata-forum-url">{{ forum['url'] }}</span>{% endif %}
+          {% if forum.get('forum_type') %}
+            {% if forum.get('url') %}<span class="forum-metadata-separator" aria-hidden="true">·</span>{% endif %}
+            <span class="forum-metadata-parser">Parser: {{ forum['forum_type'] }}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+      {% if current_url %}
+        <div class="forum-metadata-current">
+          <i class="fas fa-link" aria-hidden="true"></i><span class="sr-only">Current URL: </span><span class="forum-metadata-url forum-metadata-current-url">{{ current_url }}</span>
+        </div>
+      {% endif %}
+    </div>
+    <div class="forum-tools forum-metadata-tools">{{ caller() }}</div>
+  </div>
+{% endmacro %}
+
+{% macro crawler_dashboard_icon() -%}
+  <span class="forum-crawlers-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+      <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+      <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+      <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+    </svg>
+    <i class="fas fa-spider"></i>
+  </span>
+{%- endmacro %}
 
 {% macro author_name(user) -%}
   {%- if not user or user.get('id') == 'UNKNOWN' -%}
