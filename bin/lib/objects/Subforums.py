@@ -92,8 +92,8 @@ class Subforum(AbstractSubtypeObject):
     def get_nb_threads(self):
         return len(self.get_threads())
 
-    def get_threads_by_last_post(self):
-        return r_object.zrevrange(f'last:subforum:{self.subtype}:{self.id}', 0, -1, withscores=True)
+    def get_threads_by_last_post(self, start=0, end=-1):
+        return r_object.zrevrange(f'last:subforum:{self.subtype}:{self.id}', start, end, withscores=True)
 
     def get_thread_last_post_timestamp(self, thread_id):
         return r_object.zscore(f'last:subforum:{self.subtype}:{self.id}', thread_id)

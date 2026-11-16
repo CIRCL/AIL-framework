@@ -554,7 +554,7 @@ def forum_explorer_subforum():
     meta = forums_viewer.api_get_subforum(subtype, subforum_id)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
-    return render_template('forums_explorer_subforum.html', meta=meta[0], bootstrap_label=bootstrap_label)
+    return render_template('forums_explorer_subforum.html', meta=meta[0], bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
 
 
 @forums_explorer.route("/forums/explorer/subforum/translate/json", methods=['POST'])

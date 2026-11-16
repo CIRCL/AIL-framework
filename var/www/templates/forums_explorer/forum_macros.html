@@ -1,0 +1,67 @@
+{% macro translated_name(obj) -%}
+  <span class="forum-name-translation" data-object-type="{{ obj['type'] }}" data-object-subtype="{{ obj.get('subtype') or '' }}" data-object-id="{{ obj['id'] }}" {% if not obj.get('name_translation') %}hidden{% endif %}>{{ obj.get('name_translation') or '' }}</span>
+{%- endmacro %}
+
+{% macro forum_header(forum) %}
+  <header class="forum-masthead">
+    {% if forum and forum.get('banner') %}
+      <h1 class="sr-only">{{ forum.get('name') or forum['id'] }}</h1>
+      <img class="forum-banner" src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="{{ forum.get('name') or forum['id'] }} banner">
+    {% else %}
+      <div class="forum-title">
+        <h1><i class="far fa-comments mr-2" aria-hidden="true"></i>{{ (forum.get('name') or forum['id']) if forum else 'Forums' }}</h1>
+        {% if forum and forum.get('info') %}<p>{{ forum['info'] }}</p>{% endif %}
+      </div>
+    {% endif %}
+  </header>
+  {% if forum and (forum.get('url') or forum.get('forum_type')) %}
+    <div class="forum-metadata">
+      {% if forum.get('url') %}<span>{{ forum['url'] }}</span>{% endif %}
+      {% if forum.get('forum_type') %}<span>Parser: {{ forum['forum_type'] }}</span>{% endif %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+{% macro author_name(user) -%}
+  {%- if not user or user.get('id') == 'UNKNOWN' -%}
+    Unknown author
+  {%- elif user.get('username') is mapping -%}
+    {{ user['username'].get('id') or user.get('id') or 'Unknown author' }}
+  {%- else -%}
+    {{ (user.get('username') or user.get('id') or 'Unknown author') if user else 'Unknown author' }}
+  {%- endif -%}
+{%- endmacro %}
+
+{% macro author_link(user) -%}
+  {% if user and user.get('subtype') and user.get('id') != 'UNKNOWN' %}
+    <a href="{{ url_for('chats_explorer.objects_user_account', subtype=user['subtype'], id=user['id']) }}">{{ author_name(user) }}</a>
+  {% else %}
+    {{ author_name(user) }}
+  {% endif %}
+{%- endmacro %}
+
+{% macro last_post(post, show_thread=true) %}
+  {% if post %}
+    {% set user = post.get('user-account') or {} %}
+    {% set name = author_name(user)|trim %}
+    {% set thread = post['thread'] %}
+    {% set post_url = url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=post['page'], _anchor=post['id']) %}
+    <div class="forum-last-post">
+      {% if user.get('icon') %}
+        <img class="forum-post-avatar" src="{{ url_for('objects_image.image', filename=user['icon']) }}" alt="" loading="lazy">
+      {% else %}
+        <span class="forum-post-avatar" aria-hidden="true">{{ name[:2]|upper }}</span>
+      {% endif %}
+      <div class="forum-last-post-info">
+        {% if show_thread %}
+          <a class="forum-last-thread" href="{{ post_url }}">{{ thread.get('name') or thread['id'] }}</a>
+          {{ translated_name(thread) }}
+        {% endif %}
+        <div>by {{ author_link(user) }}</div>
+        <a class="forum-post-date" href="{{ post_url }}" title="Go to the last collected post">{{ post['full_date'] }} UTC</a>
+      </div>
+    </div>
+  {% else %}
+    <span class="forum-no-posts">No collected posts</span>
+  {% endif %}
+{% endmacro %}

@@ -259,7 +259,8 @@ class ForumThread(AbstractSubtypeObject):
     def add_post(self, post, post_id, timestamp, forum_obj, quote_ids=None):
         r_object.zadd(f'posts:forum-thread:{self.subtype}:{self.id}', {post.get_global_id(): float(timestamp)})
         subforum_id = self.get_parent().split(':', 2)[2]
-        r_object.zadd(f'last:subforum:{self.subtype}:{subforum_id}', {self.id: float(timestamp)})
+        # Older posts can arrive after newer ones during imports and recrawls.
+        r_object.zadd(f'last:subforum:{self.subtype}:{subforum_id}', {self.id: self.get_timestamp_last_post()}, gt=True)
         post.set_parent(self.get_global_id())
         forum_obj.add_post_global_id(post_id, post.get_global_id())
 
