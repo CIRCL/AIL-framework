@@ -67,18 +67,21 @@
   {% endif %}
 {%- endmacro %}
 
+{% macro author_avatar(user) -%}
+  {% if user and user.get('icon') %}
+    <img class="forum-post-avatar" src="{{ url_for('objects_image.image', filename=user['icon']) }}" alt="" loading="lazy">
+  {% else %}
+    <span class="forum-post-avatar" aria-hidden="true">{{ (author_name(user)|trim)[:2]|upper }}</span>
+  {% endif %}
+{%- endmacro %}
+
 {% macro last_post(post, show_thread=true) %}
   {% if post %}
     {% set user = post.get('user-account') or {} %}
-    {% set name = author_name(user)|trim %}
     {% set thread = post['thread'] %}
     {% set post_url = url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=post['page'], _anchor=post['id']) %}
     <div class="forum-last-post">
-      {% if user.get('icon') %}
-        <img class="forum-post-avatar" src="{{ url_for('objects_image.image', filename=user['icon']) }}" alt="" loading="lazy">
-      {% else %}
-        <span class="forum-post-avatar" aria-hidden="true">{{ name[:2]|upper }}</span>
-      {% endif %}
+      {{ author_avatar(user) }}
       <div class="forum-last-post-info">
         {% if show_thread %}
           <a class="forum-last-thread" href="{{ post_url }}">{{ thread.get('name') or thread['id'] }}</a>

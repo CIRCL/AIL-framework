@@ -956,9 +956,12 @@ def api_get_forum_thread(subtype, thread_id, page=1, nb=50, translation_target=N
     thread_meta = next((entry for entry in reversed(breadcrumb) if entry.get('type') == 'forum-thread'), None)
     if not thread_meta:
         thread_meta = _thread_meta(thread)
+    first_posts = thread.get_first_post()
+    first_post = thread.get_post_meta(first_posts[0], options={'user-account', 'timestamp'}) if first_posts else None
     return {
         'forum': forum_meta,
         'thread': thread_meta,
+        'first_post': first_post,
         'breadcrumb': breadcrumb,
         'posts': posts,
         'pagination': pagination,

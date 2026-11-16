@@ -1,315 +1,516 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Thread - AIL</title>
+  {% set thread = meta['thread'] %}
+  {% set forum = meta.get('forum') %}
+  {% set pagination = meta['pagination'] %}
+  {% set first_post = meta.get('first_post') or {} %}
+  {% set first_author = first_post.get('user-account') or {} %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ thread.get('name') or thread['id'] }} - AIL</title>
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
   <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <link href="{{ url_for('static', filename='css/forums_explorer.css') }}" rel="stylesheet">
   <style>
-    .thread-title-card { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
-    .forum-banner { width: 100%; max-height: 220px; object-fit: cover; }
-    .forum-banner-card { overflow: hidden; }
-    .forum-post { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.07); background: white; }
-    .forum-post-user { background: #f6f9fb; border-right: 1px solid #d7dee2; min-width: 190px; }
-    .forum-post-body { min-width: 0; }
-    .forum-post-header { background: #eef3f6; border-bottom: 1px solid #d7dee2; }
-    .forum-post-content { white-space: pre-wrap; font-family: inherit; font-size: 1rem; line-height: 1.45; }
-    .forum-avatar { width: 72px; height: 72px; object-fit: cover; }
-    .forum-post-image { max-width: 100%; max-height: 420px; object-fit: contain; }
-    .object_image { filter: blur(var(--object-image-blur, 5px)); }
-    .date-divider { display: flex; align-items: center; color: #6c757d; }
-    .date-divider:before, .date-divider:after { content: ''; flex: 1; height: 1px; background: #d7dee2; }
-    .date-divider span { margin: 0 .75rem; font-weight: 600; }
+    .forum-thread-page {
+        --thread-page: #e8edf5;
+        --thread-surface: #fff;
+        --thread-text: #2e4259;
+        --thread-muted: #71849b;
+        --thread-link: #2f5d8d;
+        --thread-border: #bfcddd;
+        --thread-line: #dae3ee;
+        --thread-accent: #426d99;
+        margin: 0;
+        background: var(--thread-page);
+        color: var(--thread-text);
+        font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .forum-thread-page [hidden] { display: none !important; }
+    .forum-thread-page .forum-shell { width: 100%; padding: 16px 20px 0; margin: 0; }
+    .forum-thread-page .forum-shell a { color: var(--thread-link); }
+    .forum-thread-page .forum-shell button, .forum-thread-page .forum-shell select, .forum-thread-page .compact-blur-bar button { font-family: inherit; }
+    .forum-thread-page button { cursor: pointer; }
+    .forum-thread-page button:disabled { cursor: wait; opacity: .6; }
+    .forum-thread-page :is(button, a, select, input, summary) { outline-offset: 3px; }
+    .forum-thread-page :is(button, a, summary):focus-visible { outline: 2px solid var(--thread-link); }
+    .forum-thread-page .forum-shell > .forum-masthead { box-sizing: border-box; width: 100%; max-width: 100%; margin: 0; padding: 0; background: #fff; border: 1px solid var(--thread-border); border-bottom: 0; border-radius: 5px 5px 0 0; overflow: hidden; }
+    .forum-thread-page .forum-masthead > .forum-banner { display: block; box-sizing: border-box; width: 100%; max-width: 100%; height: auto; max-height: 220px; margin: 0; padding: 0; object-fit: contain; object-position: center; }
+    .forum-thread-page .forum-title { padding: 24px 28px; }
+    .forum-thread-page .forum-title h1 { font-size: 28px; font-weight: 600; color: var(--thread-link); margin: 0 0 5px; letter-spacing: -.4px; overflow-wrap: anywhere; }
+    .forum-thread-page .forum-title h1 i { color: #69809a; font-size: 27px; }
+    .forum-thread-page .forum-title p { color: var(--thread-muted); font-size: 12px; margin: 0; }
+    .forum-thread-page .forum-nav { display: flex; align-items: center; min-height: 46px; border: 1px solid var(--thread-border); border-top: 0; background: linear-gradient(#fff, #f0f4f9); box-shadow: 0 2px 3px #243c4a04; }
+    .forum-thread-page .forum-nav > .selected { display: flex; align-items: center; gap: 9px; align-self: stretch; padding: 0 23px; border-right: 1px solid var(--thread-border); background: #4e739b; color: #fff; box-shadow: inset 0 -3px 0 #355c85; font-size: 13px; font-weight: 600; }
+    .forum-thread-page .forum-nav > nav { min-width: 0; padding: 9px 20px; }
+    .forum-thread-page .thread-breadcrumb { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 14px; padding: 0; margin: 0; list-style: none; font-size: 12px; }
+    .forum-thread-page .thread-breadcrumb li { min-width: 0; overflow-wrap: anywhere; }
+    .forum-thread-page .thread-breadcrumb li + li::before { content: '›'; margin-right: 14px; color: #9aabb7; }
+    .forum-thread-page .thread-breadcrumb small { display: block; color: var(--thread-muted); font-size: 10px; }
+    .forum-thread-page .ail-tools-toggle { display: flex; align-items: center; flex: none; gap: 8px; border: 0; border-left: 1px solid var(--thread-line); background: transparent; color: var(--thread-muted); margin-left: auto; padding: 5px 19px; font-size: 11px; }
+    .forum-thread-page .ail-tools-toggle i:first-child { font-size: 10px; }
+    .forum-thread-page .ail-tools-toggle i:last-child { font-size: 8px; }
+    .forum-thread-page .ail-tools { border: 1px solid var(--thread-border); border-top: 0; background: #fff; padding: 16px 20px; font-size: 11px; }
+    .forum-thread-page .thread-details { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 14px; margin: 0 0 14px; }
+    .forum-thread-page .thread-details dt { color: var(--thread-muted); font-weight: 400; }
+    .forum-thread-page .thread-details dd { margin: 0; }
+    .forum-thread-page .source-url { font-family: Consolas, "Liberation Mono", monospace; overflow-wrap: anywhere; user-select: all; }
+    .forum-thread-page .edit-url { padding: 0 6px; border: 0; background: transparent; color: #69809a; }
+    .forum-thread-page .thread-tools-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding-top: 12px; border-top: 1px solid var(--thread-line); }
+    .forum-thread-page .thread-tools-actions form { margin: 0; }
+    .forum-thread-page .thread-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bfd0e1; background: #f1f5fa; color: var(--thread-link); border-radius: 2px; padding: 5px 9px; font-size: 11px; }
+    .forum-thread-page .thread-page { padding-bottom: 24px; }
+    .forum-thread-page .thread-heading { padding: 16px 0 12px; }
+    .forum-thread-page .thread-heading h2 { font-size: 27px; font-weight: 500; letter-spacing: -.5px; line-height: 1.3; margin: 0 0 6px; color: var(--thread-text); overflow-wrap: anywhere; }
+    .forum-thread-page .thread-heading > .forum-thread-name-translation { margin: 0 0 9px; color: var(--thread-muted); }
+    .forum-thread-page .thread-subtitle { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 11px; color: var(--thread-muted); }
+    .forum-thread-page .thread-subtitle i { font-size: 10px; }
+    .forum-thread-page .thread-subtitle a { color: var(--thread-muted); }
+    .forum-thread-page .thread-description { font-size: 12px; margin: 12px 0 0; color: var(--thread-muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+    .forum-thread-page .reading-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 18px; padding: 7px 12px; margin-bottom: 10px; border: 1px solid #bfd0e1; border-radius: 2px; background: #fff; }
+    .forum-thread-page .control-group { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; }
+    .forum-thread-page .control-group label, .forum-thread-page .control-label { display: inline-flex; align-items: center; gap: 7px; margin: 0 3px 0 0; color: #69809a; font-size: 11px; font-weight: 400; }
+    .forum-thread-page .control-group label i, .forum-thread-page .control-label i { font-size: 13px; }
+    .forum-thread-page .control-group select { min-width: 105px; width: 108px; max-width: 108px; height: 28px; border: 1px solid #bfd0e1; border-radius: 2px; background: #fff; color: var(--thread-text); padding: 4px 8px; font-size: 11px; }
+    .forum-thread-page .control-group button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 28px; border: 1px solid #bfd0e1; border-radius: 2px; background: #f1f5fa; color: var(--thread-link); padding: 4px 8px; font-size: 11px; white-space: nowrap; box-shadow: inset 0 1px 0 #fff; }
+    .forum-thread-page .control-group button:hover { background: #e1eaf5; border-color: #426d99; }
+    .forum-thread-page .control-group .translate-all { background: #426d99; border-color: #426d99; color: #fff; box-shadow: none; padding-left: 10px; padding-right: 10px; }
+    .forum-thread-page .control-group .translate-all:hover { background: #31577d; }
+    .forum-thread-page .control-group input[type=range] { width: 112px; height: 4px; accent-color: #426d99; }
+    .forum-thread-page .image-control { margin-left: auto; border-left: 1px solid var(--thread-line); padding-left: 18px; flex: none; }
+    .forum-thread-page .thread-navigation { margin-bottom: 10px; }
+    .forum-thread-page .pagination-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .forum-thread-page .pagination-controls :is(a, .page-current, .page-ellipsis) { display: inline-flex; align-items: center; justify-content: center; min-width: 33px; height: 31px; padding: 0 10px; border: 1px solid #bfd0e1; border-radius: 2px; background: #fff; color: var(--thread-link); font-size: 12px; text-decoration: none; }
+    .forum-thread-page .pagination-controls a:hover { background: #e1eaf5; }
+    .forum-thread-page .pagination-controls .page-current { background: #426d99; border-color: #426d99; color: #fff; }
+    .forum-thread-page .pagination-controls .page-ellipsis { min-width: 22px; padding: 0 4px; border-color: transparent; background: transparent; }
+    .forum-thread-page .pagination-controls .page-next, .forum-thread-page .pagination-controls .page-prev { gap: 9px; padding: 0 13px; }
+    .forum-thread-page .pagination-controls i { font-size: 11px; }
+    .forum-thread-page .pagination-controls .page-count { margin-left: 8px; color: var(--thread-muted); font-size: 10px; }
+    .forum-thread-page .bottom-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 18px; }
+    .forum-thread-page .page-jump { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 11px; color: var(--thread-muted); }
+    .forum-thread-page .page-jump label { margin: 0; }
+    .forum-thread-page .page-jump input[type=number] { width: 60px; border: 1px solid #bfd0e1; border-radius: 2px; padding: 4px 6px; color: var(--thread-text); background: #fff; }
+    .forum-thread-page .board-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; min-height: 36px; padding: 8px 14px; border: 1px solid #23364c; border-bottom: 0; border-radius: 3px 3px 0 0; background: #2c425b; color: #f3f6fb; font-size: 12px; line-height: 1.4; }
+    .forum-thread-page .board-header > span:first-child { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+    .forum-thread-page .board-header > span:last-child { margin-left: auto; color: #c5d3e2; font-size: 11px; text-align: right; }
+    .forum-thread-page .board-header .utc { margin-left: 4px; }
+    .forum-thread-page .date-divider { margin: 12px 0 8px; padding: 0 2px; font-size: 11px; color: var(--thread-muted); }
+    .forum-thread-page .forum-post { display: flex; position: relative; min-width: 0; border: 1px solid var(--thread-border); border-radius: 2px; background: #fff; scroll-margin-top: calc(var(--ail-navbar-height, 56px) + 52px); }
+    .forum-thread-page .forum-post + .forum-post { margin-top: 12px; }
+    .forum-thread-page .board-header + .forum-post { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+    .forum-thread-page .author-profile { display: flex; align-items: center; flex-direction: column; flex: 0 0 163px; padding: 12px; border-right: 1px solid var(--thread-border); border-radius: 2px 0 0 2px; background: linear-gradient(#e6edf6, #f0f4fa); }
+    .forum-thread-page .avatar { display: block; margin-bottom: 8px; text-decoration: none; }
+    .forum-thread-page .username { max-width: 100%; font-size: 14px; font-weight: 600; letter-spacing: -.15px; overflow-wrap: anywhere; text-align: center; }
+    .forum-thread-page .starter { margin-top: 8px; padding: 2px 11px; border: 1px solid #bfd0e1; border-radius: 3px; background: #e1eaf5; color: var(--thread-link); font-size: 9px; }
+    .forum-thread-page .post-main { display: flex; flex-direction: column; flex: 1; min-width: 0; border-radius: 0 2px 2px 0; background: #fff; }
+    .forum-thread-page .post-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 16px; background: #e2ebf5; color: var(--thread-muted); box-shadow: inset 0 -1px 0 #cbd8e6; font-size: 11px; }
+    .forum-thread-page .post-header > div { display: flex; align-items: center; gap: 13px; }
+    .forum-thread-page .post-header .post-number { color: var(--thread-muted); }
+    .forum-thread-page .post-content { flex: 1; min-width: 0; padding: 12px 16px; }
+    .forum-thread-page .forum-post-content { white-space: pre-wrap; font: inherit; line-height: 1.6; overflow-wrap: anywhere; }
+    .forum-thread-page .post-images { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-top: 12px; }
+    .forum-thread-page .post-attachment { max-width: 100%; margin: 0; border: 1px solid #bfd0e1; border-radius: 4px; }
+    .forum-thread-page .forum-post-image { display: block; max-width: 100%; max-height: 420px; object-fit: contain; }
+    .forum-thread-page .object_image { filter: blur(var(--object-image-blur, 5px)); clip-path: inset(0 round 3px 3px 0 0); }
+    .forum-thread-page .post-attachment figcaption { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #bfd0e1; border-radius: 0 0 3px 3px; background: #e3ebf4; padding: 8px 12px; font-size: 10px; }
+    .forum-thread-page .post-attachment figcaption > span { display: flex; align-items: center; gap: 6px; }
+    .forum-thread-page .image-actions { display: flex; align-items: center; gap: 8px; }
+    .forum-thread-page .post-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px; }
+    .forum-thread-page .post-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; margin: 0 16px; padding: 6px 0; border-top: 1px solid var(--thread-line); background: #f7f9fc; }
+    .forum-thread-page .reactions { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+    .forum-thread-page .reaction-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bfd0e1; border-radius: 2px; padding: 2px 8px; background: #f1f5fa; font-size: 12px; line-height: 1.5; }
+    .forum-thread-page .reaction-chip > b { color: var(--thread-muted); font-size: 10px; font-weight: 500; }
+    .forum-thread-page .reaction-chip > span { min-width: 0; overflow-wrap: anywhere; }
+    .forum-thread-page .post-actions { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+    .forum-thread-page .post-language-controls { display: inline-flex; align-items: center; gap: 6px; }
+    .forum-thread-page .post-language-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 27px; padding: 4px 8px; border: 1px solid #bfd0e1; border-radius: 2px; background: #fff; color: var(--thread-link); font-size: 10px; }
+    .forum-thread-page .post-language-controls button:hover { background: #e1eaf5; border-color: #426d99; }
+    .forum-thread-page .post-language-controls .language-button > i:first-child { font-size: 13px; }
+    .forum-thread-page .post-language-controls .language-button > i:last-child { font-size: 7px; margin-left: 2px; color: #69809a; }
+    .forum-thread-page .post-language-controls .post-translate { width: 28px; padding: 4px; background: #f1f5fa; }
+    .forum-thread-page .post-actions .post-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 27px; color: #69809a; text-decoration: none; }
+    .forum-thread-page .post-actions .correlation-link i { font-size: 9px; }
+    .forum-thread-page .post-tools { position: relative; }
+    .forum-thread-page .post-tools summary { list-style: none; cursor: pointer; padding: 0 3px; color: var(--thread-muted); font-size: 14px; }
+    .forum-thread-page .post-tools summary::-webkit-details-marker { display: none; }
+    .forum-thread-page .post-tools > div { position: absolute; right: 0; bottom: 24px; z-index: 5; width: 170px; border: 1px solid var(--thread-border); border-radius: 4px; box-shadow: 0 5px 12px #10233115; background: #fff; padding: 6px 0; }
+    .forum-thread-page .post-tools > div a { display: block; font-size: 11px; padding: 6px 12px; }
+    .forum-thread-page .post-tools > div a:hover { background: #eaf0f7; }
+    .forum-thread-page .language-editor { margin-top: 16px; padding: 12px; border: 1px solid #bfd0e1; border-radius: 4px; background: #eaf0f7; font-size: 11px; }
+    .forum-thread-page .language-editor label { color: var(--thread-muted); margin: 0 8px 0 0; }
+    .forum-thread-page .language-editor select { max-width: 100%; color: var(--thread-link); border: 1px solid #bfd0e1; border-radius: 3px; background: #fff; padding: 4px 7px; }
+    .forum-thread-page .language-editor-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+    .forum-thread-page .translation { margin-top: 18px; padding: 11px 13px; border: 1px solid #bfd0e1; border-left: 3px solid #426d99; border-radius: 3px; background: #eaf0f7; }
+    .forum-thread-page .translation-caption { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; color: var(--thread-link); font-size: 10px; }
+    .forum-thread-page .translation-caption > i { font-size: 13px; }
+    .forum-thread-page .translation-caption button { margin-left: auto; padding: 0; border: 0; background: none; color: #69809a; font-size: 10px; }
+    .forum-thread-page .post-translation-text { color: var(--thread-link); font-size: 13px; white-space: pre-wrap; line-height: 1.75; overflow-wrap: anywhere; }
+    .forum-thread-page .post-status { margin-top: 14px; padding: 8px 10px; color: #84442e; background: #fff3e9; border-radius: 3px; font-size: 12px; }
+    .forum-thread-page .thread-empty { padding: 25px 20px; border: 1px solid var(--thread-border); background: #fff; color: var(--thread-muted); }
+    .forum-thread-page .compact-blur-bar { position: fixed; top: calc(var(--ail-navbar-height, 56px) + 5px); right: 20px; z-index: 1010; display: flex; align-items: center; gap: 6px; width: 232px; height: 34px; padding: 4px 7px; border: 1px solid #bfd0e1; border-radius: 4px; background: #fff; box-shadow: 0 2px 5px #263c4d10; }
+    .forum-thread-page .compact-blur-bar > span { color: #69809a; font-size: 10px; }
+    .forum-thread-page .compact-blur-bar > button { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex: none; padding: 0; border: 1px solid #bfd0e1; border-radius: 3px; background: #f1f5fa; color: var(--thread-link); font-size: 11px; }
+    .forum-thread-page .compact-blur-bar > button:hover { background: #e1eaf5; border-color: #426d99; }
+    .forum-thread-page .compact-blur-bar input { min-width: 0; width: 90px; flex: 1; height: 4px; accent-color: #426d99; }
+
+    @media (max-width: 1100px) {
+        .forum-thread-page .reading-toolbar { gap: 12px 16px; }
+        .forum-thread-page .control-group label, .forum-thread-page .control-label { font-size: 10px; gap: 5px; }
+    }
+    @media (max-width: 900px) {
+        .forum-thread-page .image-control { margin-left: 0; padding-left: 0; border-left: 0; }
+    }
+    @media (max-width: 800px) {
+        .forum-thread-page .forum-shell { padding: 16px 15px 0; }
+        .forum-thread-page .forum-nav > .selected { padding: 0 15px; }
+        .forum-thread-page .forum-nav > nav { padding-left: 13px; padding-right: 13px; }
+        .forum-thread-page .thread-breadcrumb { font-size: 11px; gap: 5px 9px; }
+        .forum-thread-page .thread-breadcrumb li + li::before { margin-right: 9px; }
+        .forum-thread-page .ail-tools-toggle { padding: 5px 13px; }
+        .forum-thread-page .author-profile { flex-basis: 144px; }
+        .forum-thread-page .post-content { padding-left: 16px; padding-right: 16px; }
+        .forum-thread-page .post-header { padding-left: 16px; padding-right: 16px; }
+    }
+    @media (max-width: 600px) {
+        .forum-thread-page .forum-shell { padding: 12px 10px 0; }
+        .forum-thread-page .forum-title { padding: 20px 17px; }
+        .forum-thread-page .forum-title h1 { font-size: 24px; }
+        .forum-thread-page .forum-title h1 i { font-size: 23px; }
+        .forum-thread-page .forum-nav { flex-wrap: wrap; }
+        .forum-thread-page .forum-nav > .selected { min-height: 40px; font-size: 12px; }
+        .forum-thread-page .forum-nav > nav { flex: 1; padding: 9px 13px; }
+        .forum-thread-page .thread-breadcrumb { font-size: 10px; gap: 4px 7px; }
+        .forum-thread-page .thread-breadcrumb li:first-child:not(:last-child) { display: none; }
+        .forum-thread-page .thread-breadcrumb li + li::before { margin-right: 7px; }
+        .forum-thread-page .thread-breadcrumb li:nth-child(2)::before { display: none; }
+        .forum-thread-page .ail-tools-toggle { font-size: 10px; padding: 5px 12px; gap: 6px; }
+        .forum-thread-page .ail-tools-toggle i:last-child { font-size: 7px; }
+        .forum-thread-page .ail-tools { padding: 12px; }
+        .forum-thread-page .thread-heading { padding: 14px 0 12px; }
+        .forum-thread-page .thread-heading h2 { font-size: 23px; }
+        .forum-thread-page .thread-subtitle { font-size: 10px; gap: 6px; }
+        .forum-thread-page .reading-toolbar { padding: 9px 10px; gap: 8px; margin-bottom: 10px; }
+        .forum-thread-page .translation-control { width: 100%; flex-wrap: wrap; }
+        .forum-thread-page .control-group { gap: 6px; }
+        .forum-thread-page .control-group select { min-width: 85px; max-width: none; flex: 1; }
+        .forum-thread-page .control-group button { font-size: 10px; padding: 4px 7px; }
+        .forum-thread-page .image-control { width: 100%; padding-top: 8px; border-top: 1px solid var(--thread-line); }
+        .forum-thread-page .image-control input[type=range] { flex: 1; width: 70px; }
+        .forum-thread-page .thread-navigation { margin-bottom: 10px; }
+        .forum-thread-page .pagination-controls :is(a, .page-current) { min-width: 29px; height: 29px; padding: 0 8px; }
+        .forum-thread-page .pagination-controls .page-next, .forum-thread-page .pagination-controls .page-prev { padding: 0 8px; gap: 5px; }
+        .forum-thread-page .pagination-controls .page-count { display: none; }
+        .forum-thread-page .board-header { padding: 8px 12px; font-size: 11px; }
+        .forum-thread-page .board-header > span:last-child { font-size: 10px; }
+        .forum-thread-page .board-header .utc { display: none; }
+        .forum-thread-page .forum-post { flex-direction: column; }
+        .forum-thread-page .author-profile { flex: auto; flex-direction: row; gap: 10px; min-height: 66px; padding: 13px 14px; border-right: 0; border-bottom: 1px solid var(--thread-border); border-radius: 2px 2px 0 0; }
+        .forum-thread-page .avatar { margin: 0; flex: none; }
+        .forum-thread-page .username { font-size: 13px; text-align: left; }
+        .forum-thread-page .starter { margin: 0 0 0 auto; font-size: 8px; padding: 2px 6px; flex: none; }
+        .forum-thread-page .post-header { padding: 9px 14px; font-size: 9px; }
+        .forum-thread-page .post-content { padding: 12px 14px; }
+        .forum-thread-page .forum-post-content { font-size: 13px; }
+        .forum-thread-page .post-footer { margin: 0 13px; gap: 8px; }
+        .forum-thread-page .post-actions { gap: 9px; }
+        .forum-thread-page .post-language-controls { gap: 5px; }
+        .forum-thread-page .post-language-controls button { padding: 4px 6px; font-size: 9px; }
+        .forum-thread-page .post-language-controls .post-translate { padding: 4px; }
+        .forum-thread-page .reaction-chip { font-size: 11px; padding: 2px 6px; gap: 4px; }
+        .forum-thread-page .reaction-chip > b { font-size: 9px; }
+        .forum-thread-page .reactions { gap: 4px; }
+        .forum-thread-page .post-translation-text { font-size: 12px; }
+        .forum-thread-page .translation { padding: 10px; }
+        .forum-thread-page .language-editor { padding: 10px; }
+        .forum-thread-page .compact-blur-bar { right: 10px; }
+    }
   </style>
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 </head>
-<body>
+<body class="forum-page forum-thread-page" data-post-translation-url="{{ url_for('forums_explorer.objects_post_translate_json') }}">
 {% include 'nav_bar.html' %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12" id="core_content">
-      {% set thread = meta['thread'] %}
-      <nav aria-label="breadcrumb" class="mt-3">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
-          {% for crumb in meta['breadcrumb'] %}
-            {% if crumb['type'] == 'forum' %}
-              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
-            {% elif crumb['type'] == 'subforum' %}
-              <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum') }}?subtype={{ crumb['subtype'] }}&id={{ crumb['id'] }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation {% if loop.revindex == 2 %}forum-subforum-name-translation {% endif %}{% if crumb.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ crumb.get('name_translation') or '' }}</small></li>
-            {% endif %}
-          {% endfor %}
-          <li class="breadcrumb-item active">{{ thread.get('name') or thread['id'] }}<small class="forum-breadcrumb-translation forum-thread-name-translation {% if thread.get('name_translation') %}d-block{% else %}d-none{% endif %} text-muted">/ {{ thread.get('name_translation') or '' }}</small></li>
-        </ol>
-      </nav>
-
-      {% if request.args.get('success') %}<div class="alert alert-success">{{ request.args.get('success') }}</div>{% endif %}
-      {% if request.args.get('error') %}<div class="alert alert-danger">{{ request.args.get('error') }}</div>{% endif %}
-
-      <div class="thread-title-card forum-banner-card mb-4">
-        {% if meta.get('forum') and meta['forum'].get('banner') %}<img class="forum-banner" src="{{ url_for('objects_image.image', filename=meta['forum']['banner']) }}" alt="{{ meta['forum'].get('name') or meta['forum']['id'] }} banner">{% endif %}
-        <div class="p-4">
-        <div class="d-flex justify-content-between align-items-start">
-        <h1 class="mb-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                   <path d="M0 0h24v24H0z" fill="none" />
-                   <path fill="currentColor" d="M2 16.59L5.59 13H15a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2zM2 18H1V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3H6zm19 2.59V10a2 2 0 0 0-2-2V7a3 3 0 0 1 3 3v12h-1l-4-4H8c-1.24 0-2.3-.75-2.76-1.82l.8-.8C6.21 16.3 7 17 8 17h9.41z" />
-                 </svg> {{ thread.get('name') or thread['id'] }}</h1>
-        <div class="forum-thread-name-translation mb-2" {% if not thread.get('name_translation') %}style="display:none"{% endif %}>{{ thread.get('name_translation') or '' }}</div>
-        {% if is_admin %}
-          <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_crawl') }}" class="ml-3">
-            <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
-            <input type="hidden" name="id" value="{{ thread['id'] }}">
-            <button type="submit" class="btn btn-sm btn-outline-light px-2" title="Recrawl this complete thread with high priority" aria-label="Recrawl this complete thread with high priority" onclick="return confirm('Queue this complete thread for a high-priority recrawl?')"><i class="fas fa-spider" aria-hidden="true"></i></button>
-          </form>
-        {% endif %}
-        </div>
-        <div>
-          <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ thread['id'] }}</span>
-          <span class="mr-3"><i class="fas fa-layer-group"></i> {{ thread['subtype'] }}</span>
-          <span class="mr-3"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                     <path d="M0 0h24v24H0z" fill="none" />
-                     <path fill="currentColor" d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2M6 9h12v2H6m8 3H6v-2h8m4-4H6V6h12" />
-                   </svg> {{ thread.get('nb_posts') or 0 }} posts</span>
-          {% if thread.get('url') %}<span class="text-white"><i class="fas fa-link"></i> {{ thread['url'] }}</span>{% endif %}
-          {% if is_admin %}<button type="button" class="btn btn-sm btn-link text-white p-0 ml-1" data-toggle="modal" data-target="#editThreadUrlModal" title="Edit thread URL" aria-label="Edit thread URL"><i class="fas fa-pencil-alt" aria-hidden="true"></i></button>{% endif %}
-        </div>
-        {% if thread.get('info') %}<div class="mt-3 bg-light text-dark rounded p-3">{{ thread['info'] }}</div>{% endif %}
-        </div>
-      </div>
-
-      {% if is_admin %}
-      <div class="modal fade" id="editThreadUrlModal" tabindex="-1" role="dialog" aria-labelledby="editThreadUrlModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content text-dark">
-            <form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_url_edit') }}">
-              <div class="modal-header">
-                <h5 class="modal-title" id="editThreadUrlModalLabel">Edit thread URL</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-              </div>
-              <div class="modal-body">
-                <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
-                <input type="hidden" name="id" value="{{ thread['id'] }}">
-                <input type="url" class="form-control" name="url" value="{{ thread.get('url') or '' }}" required>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      {% set pagination = meta['pagination'] %}
-      {% with obj_type='forum-thread', obj_id=thread['id'], obj_subtype=thread['subtype'] %}
-        {% include 'investigations/block_object_investigations.html' %}
-      {% endwith %}
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0">Posts</h3>
-        <span class="text-muted">Showing {{ pagination.get('nb_first') }}-{{ pagination.get('nb_last') }} of {{ pagination.get('total') }}</span>
-      </div>
-
-      {% with pagination_position='top', show_page_jump=false %}
-        {% include 'forums_explorer/thread_pagination.html' %}
-      {% endwith %}
-
-      {% if meta['posts'] %}
-        <div class="row mb-3">
-          <div class="col-md-6 mb-2 mb-md-0">{% include 'objects/image/block_blur_img_slider.html' %}</div>
-          <div class="col-md-6">{% with translate_url=url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype']), obj_id=thread['id'], pagination=pagination %}{% include 'chats_explorer/block_translation.html' %}{% endwith %}</div>
-        </div>
-        {% for date, posts in meta['posts'].items() %}
-          <div class="date-divider my-4"><span>{{ date }}</span></div>
-          {% for post in posts %}
-            {% set user = post['user-account'] %}
-            <div class="forum-post d-flex mb-3" id="{{ post['id'] }}">
-              <div class="forum-post-user text-center p-3">
-                {% if user.get('subtype') and user.get('id') != 'UNKNOWN' %}
-                  <a href="{{ url_for('chats_explorer.objects_user_account') }}?subtype={{ user['subtype'] }}&id={{ user['id'] }}">
-                    <img src="{% if user.get('icon') %}{{ url_for('objects_image.image', filename=user['icon']) }}{% else %}{{ url_for('static', filename='image/ail-icon.png') }}{% endif %}" class="rounded-circle forum-avatar mb-2" alt="{{ user['id'] }}" loading="lazy">
-                  </a>
-                {% else %}
-                  <img src="{{ url_for('static', filename='image/ail-icon.png') }}" class="rounded-circle forum-avatar mb-2" alt="UNKNOWN" loading="lazy">
-                {% endif %}
-                <div class="font-weight-bold">
-                  {% if user.get('username') %}{{ user['username']['id'] }}{% else %}{{ user.get('id') or 'UNKNOWN' }}{% endif %}
-                </div>
-                <div class="text-muted small">{{ user.get('id') or 'UNKNOWN' }}</div>
-              </div>
-              <div class="forum-post-body flex-grow-1">
-                <div class="forum-post-header d-flex justify-content-between align-items-center px-3 py-2">
-                  <div><i class="far fa-clock"></i> {{ post.get('full_date') or post.get('date') ~ ' ' ~ post.get('hour') }}</div>
-                  <div>
-                    {% if post.get('state') and post.get('state') != 'visible' %}<span class="badge badge-info mr-1">{{ post['state'] }}</span>{% endif %}
-                    {% if post.get('link') %}<a href="{{ post['link'] }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i> View post</a>{% endif %}
-                    <a href="{{ url_for('correlation.show_correlation', type='post', id=post['id']) }}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-project-diagram"></i> Correlation</a>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <div class="forum-post-content">{{ post.get('content') or '' }}</div>
-                  {% if post.get('reactions') %}
-                    <div class="mt-2">
-                      {% for reaction in post['reactions'] %}
-                        <span class="border rounded px-1">{{ reaction }} {{ post['reactions'][reaction] }}</span>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                  {% if post.get('images') %}
-                    <div class="mt-3 d-flex flex-wrap align-items-start">
-                      {% for post_image in post['images'] %}
-                        <div class="mr-2 mb-2">
-                          <a href="{{ url_for('correlation.show_correlation', type='image', id=post_image['id']) }}" target="_blank" title="Open image correlation">
-                            <img class="object_image forum-post-image border rounded mb-1" src="{{ url_for('objects_image.image', filename=post_image['id']) }}" loading="lazy" alt="Post image {{ loop.index }}">
-                          </a>
-                          <div>
-                            {% if post_image.get('ocr') %}
-                              <a class="btn btn-info btn-sm" target="_blank" href="{{ url_for('objects_ocr.object_ocr', id=post_image['id']) }}"><i class="fas fa-expand"></i> OCR</a>
-                            {% endif %}
-                            {% if ollama_enabled or post_image.get('description') %}
-                              {% with ollama_description=post_image['description'], ollama_descriptions=post_image.get('descriptions', {}), image_gid='image::'+post_image['id'] %}
-                                {% include 'objects/image/block_img_ollama_small.html' %}
-                              {% endwith %}
-                            {% endif %}
-                          </div>
-                        </div>
-                      {% endfor %}
-                    </div>
-                  {% endif %}
-                  {% set post_id_escape = post['id'] | replace('/', '_') %}
-                  <div id="postTranslationBlock{{ post_id_escape }}" {% if not post.get('translation') %}style="display: none;"{% endif %}>
-                    <hr class="m-1">
-                    <div id="postTranslationText{{ post_id_escape }}" class="forum-post-content text-secondary">{{ post.get('translation') or '' }}</div>
-                  </div>
-                  <div class="mt-2">
-                    <span class="btn btn-outline-dark p-0 px-1" type="button" data-toggle="collapse" data-target="#collapseTrans{{ post_id_escape }}" aria-expanded="false" aria-controls="collapseTrans{{ post_id_escape }}">
-                      <i class="fas fa-language"></i> {% if post.get('language') %}{{ post['language'] }}{% endif %}
-                    </span>
-                    {% if post.get('language') %}
-                      <button class="btn btn-outline-dark p-0 px-1" type="button" title="Translate to preferred language" onclick='translatePostToPreferredLanguage({{ post['id'] | tojson }}, {{ post_id_escape | tojson }}, this)'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24">
-                          <path d="M0 0h24v24H0z" fill="none" />
-                          <path fill="currentColor" d="m11.9 22l4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4l5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45l-.75 2.05l-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z" />
-                        </svg>
-                      </button>
-                    {% endif %}
-                    <div class="collapse mt-2" id="collapseTrans{{ post_id_escape }}">
-                      <div class="card card-body">
-                        <form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
-                          <input type="text" name="id" value="{{ post['id'] }}" hidden>
-                          <span class="badge badge-primary">Source:</span>
-                          <select name="language_target" class="form-select" aria-label="Post Language" onchange="$(this).closest('form').find('textarea[name=translation]').val('');">
-                            {% if post.get('language') and post['language'] in all_languages %}
-                              <option selected value="{{ post['language'] }}">{{ all_languages[post['language']] }}</option>
-                            {% else %}
-                              <option selected disabled value="">Unknown</option>
-                            {% endif %}
-                            {% for language in all_languages %}
-                              <option value="{{ language }}">{{ all_languages[language] }}</option>
-                            {% endfor %}
-                          </select>
-                          {% if translation_target %}
-                            <input type="text" name="target" value="{{ translation_target }}" hidden>
-                            &nbsp;&nbsp;<span class="badge badge-primary">Target:</span><span>{{ translation_target }}</span>
-                            <textarea class="form-control mt-2" name="translation">{{ post.get('translation') or '' }}</textarea>
-                            <button class="btn btn-dark mt-2" type="submit"><i class="fas fa-pen-alt"></i> Update Language or Translation</button>
-                          {% else %}
-                            <button class="btn btn-dark ml-2" type="submit"><i class="fas fa-pen-alt"></i> Update Language</button>
-                          {% endif %}
-                        </form>
-                        <div class="mt-2">
-                          <a class="btn btn-primary" href="{{ url_for('forums_explorer.objects_post_detect_language') }}?id={{ post['id'] }}"><i class="fas fa-redo"></i> Detect Language</a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {% if post.get('tags') %}
-                    <div class="mt-3">
-                      {% for tag in post['tags'] %}<span class="badge badge-info mr-1">{{ tag }}</span>{% endfor %}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          {% endfor %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, author_name, author_link, author_avatar with context %}
+<main class="forum-shell" id="core_content">
+  {{ forum_header(forum) }}
+  <div class="forum-nav">
+    <a href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) if forum else url_for('forums_explorer.forum_explorer_forums') }}" class="selected"><i class="far fa-comments" aria-hidden="true"></i>Forums</a>
+    <nav aria-label="Forum breadcrumb">
+      <ol class="thread-breadcrumb">
+        {% for crumb in meta['breadcrumb'] %}
+          {% if crumb['type'] == 'forum' %}
+            <li><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+          {% elif crumb['type'] == 'subforum' %}
+            <li><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation{% if loop.revindex == 2 %} forum-subforum-name-translation{% endif %}" {% if not crumb.get('name_translation') %}hidden{% endif %}>{{ crumb.get('name_translation') or '' }}</small></li>
+          {% endif %}
         {% endfor %}
-      {% else %}
-        <div class="alert alert-info">No posts found.</div>
-      {% endif %}
-
-      {% with pagination_position='bottom', show_page_jump=true %}
-        {% include 'forums_explorer/thread_pagination.html' %}
-      {% endwith %}
-    </div>
+        <li class="sr-only" aria-current="page">{{ thread.get('name') or thread['id'] }}<small class="forum-breadcrumb-translation forum-thread-name-translation" {% if not thread.get('name_translation') %}hidden{% endif %}>{{ thread.get('name_translation') or '' }}</small></li>
+      </ol>
+    </nav>
+    <button type="button" class="ail-tools-toggle" aria-expanded="false" aria-controls="thread-tools"><i class="fas fa-sliders-h" aria-hidden="true"></i>AIL tools<i class="fas fa-chevron-down" aria-hidden="true"></i></button>
   </div>
-</div>
+  <section class="ail-tools" id="thread-tools" hidden aria-label="AIL thread tools">
+    <dl class="thread-details">
+      {% if forum and forum.get('url') %}<dt>Forum</dt><dd class="source-url">{{ forum['url'] }}</dd>{% endif %}
+      <dt>Thread URL</dt><dd class="source-url">{{ thread.get('url') or 'Not available' }}{% if is_admin %}<button type="button" class="edit-url" data-toggle="modal" data-target="#editThreadUrlModal" title="Edit thread URL" aria-label="Edit thread URL"><i class="fas fa-pencil-alt" aria-hidden="true"></i></button>{% endif %}</dd>
+      <dt>Thread ID</dt><dd class="source-url">{{ thread['id'] }}</dd>
+      <dt>Subtype</dt><dd>{{ thread['subtype'] }}</dd>
+      {% if forum and forum.get('forum_type') %}<dt>Parser</dt><dd>{{ forum['forum_type'] }}</dd>{% endif %}
+    </dl>
+    <div class="thread-tools-actions">
+      {% with obj_type='forum-thread', obj_id=thread['id'], obj_subtype=thread['subtype'] %}{% include 'investigations/block_object_investigations.html' %}{% endwith %}
+      {% if is_admin %}<form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_crawl') }}"><input type="hidden" name="subtype" value="{{ thread['subtype'] }}"><input type="hidden" name="id" value="{{ thread['id'] }}"><button type="submit" class="thread-button" title="Recrawl this complete thread with high priority" onclick="return confirm('Queue this complete thread for a high-priority recrawl?')"><i class="fas fa-spider" aria-hidden="true"></i>Recrawl thread</button></form>{% endif %}
+    </div>
+  </section>
+  {% if request.args.get('success') %}<div class="alert alert-success mt-3" role="status">{{ request.args.get('success') }}</div>{% endif %}
+  {% if request.args.get('error') %}<div class="alert alert-danger mt-3" role="alert">{{ request.args.get('error') }}</div>{% endif %}
+  <div class="thread-page">
+    <header class="thread-heading">
+      <h2>{{ thread.get('name') or thread['id'] }}</h2>
+      <p class="forum-thread-name-translation" {% if not thread.get('name_translation') %}hidden{% endif %}>{{ thread.get('name_translation') or '' }}</p>
+      <div class="thread-subtitle">
+        {% if first_author %}<i class="far fa-user" aria-hidden="true"></i>{{ author_link(first_author) }}<span aria-hidden="true">·</span>{% endif %}
+        {% if first_post.get('date') %}<i class="far fa-clock" aria-hidden="true"></i><span>{{ first_post['date'] }}</span><span aria-hidden="true">·</span>{% endif %}
+        <span>{{ thread.get('nb_posts') or 0 }} posts</span>
+      </div>
+      {% if thread.get('info') %}<p class="thread-description">{{ thread['info'] }}</p>{% endif %}
+    </header>
+    {% if meta['posts'] %}
+      <div class="reading-toolbar" aria-label="Thread reading controls">
+        <form class="translation-control control-group" method="get" action="{{ url_for('forums_explorer.forum_explorer_thread') }}">
+          <input type="hidden" name="subtype" value="{{ thread['subtype'] }}"><input type="hidden" name="id" value="{{ thread['id'] }}"><input type="hidden" name="page" value="{{ pagination['page'] }}"><input type="hidden" name="nb" value="{{ pagination['nb'] }}">
+          <label for="thread-translation"><svg xmlns="http://www.w3.org/2000/svg" width="1.15em" height="1.15em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.9 22 4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4 5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45-.75 2.05-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg>Translation</label>
+          <select id="thread-translation" name="target" aria-label="Thread translation language">
+            <option value="" {% if not translation_target or translation_target == "Don't Translate" %}selected{% endif %}>Don't translate</option>
+            {% if translation_target and translation_target != "Don't Translate" and translation_target not in translation_languages %}<option value="{{ translation_target }}" selected>{{ all_languages.get(translation_target, translation_target) }}</option>{% endif %}
+            {% for language, label in translation_languages.items() %}<option value="{{ language }}" {% if translation_target == language %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+          <button type="submit" class="translate-all"><svg xmlns="http://www.w3.org/2000/svg" width="1.15em" height="1.15em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.9 22 4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4 5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45-.75 2.05-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg>Translate posts</button>
+        </form>
+        <div class="image-control control-group"><span class="control-label"><i class="far fa-image" aria-hidden="true"></i>Images</span><button type="button" data-image-visibility="0"><i class="far fa-eye-slash" aria-hidden="true"></i>Hide</button><input class="visibility-slider" type="range" min="0" max="15" step="0.1" value="10" aria-label="Image visibility, from hidden to revealed"><button type="button" class="image-reveal" data-image-visibility="15"><i class="far fa-eye" aria-hidden="true"></i>Reveal</button></div>
+      </div>
+    {% endif %}
+    {% if pagination.get('nb_pages', 0) > 1 %}
+      <div class="thread-navigation">
+        {% with pagination_position='top', show_page_jump=false %}{% include 'forums_explorer/thread_pagination.html' %}{% endwith %}
+      </div>
+    {% endif %}
+    <section class="thread-board" aria-label="Thread posts">
+      <div class="board-header"><span><i class="far fa-comment-alt" aria-hidden="true"></i>Thread discussion</span><span>Showing {{ pagination.get('nb_first', 0) if meta['posts'] else 0 }}–{{ pagination.get('nb_last', 0) }} of {{ pagination.get('total', 0) }}<span class="utc"> · All times UTC</span></span></div>
+      {% set counter = namespace(number=pagination.get('nb_first', 1)) %}
+      {% for date, posts in meta['posts'].items() %}
+        {% if not loop.first %}<div class="date-divider">{{ date }} · UTC</div>{% endif %}
+        {% for post in posts %}
+          {% set user = post.get('user-account') or {} %}
+          {% set display_name = author_name(user)|trim %}
+          {% set known_author = user.get('subtype') and user.get('id') and user.get('id') != 'UNKNOWN' %}
+          {% set is_starter = known_author and user.get('id') == first_author.get('id') and user.get('subtype') == first_author.get('subtype') %}
+          {% set editor_id = 'post-language-' ~ counter.number %}
+          <article class="forum-post" id="{{ post['id'] }}" data-post-id="{{ post['id'] }}">
+            <aside class="author-profile">
+              {% if known_author %}<a class="avatar" href="{{ url_for('chats_explorer.objects_user_account', subtype=user['subtype'], id=user['id']) }}" aria-label="View {{ display_name }} profile">{% else %}<span class="avatar">{% endif %}
+                {{ author_avatar(user) }}
+              {% if known_author %}</a>{% else %}</span>{% endif %}
+              <div class="username">{{ author_link(user) }}</div>
+              {% if is_starter %}<span class="starter">Author</span>{% endif %}
+            </aside>
+            <div class="post-main">
+              <header class="post-header"><time>{{ post.get('full_date') or post.get('date', '') ~ ' ' ~ post.get('hour', '') }}</time><div>{% if post.get('state') and post['state'] != 'visible' %}<span class="badge badge-info">{{ post['state'] }}</span>{% endif %}<a href="#{{ post['id'] }}" class="post-number" aria-label="Post {{ counter.number }}">#{{ counter.number }}</a></div></header>
+              <div class="post-content">
+                <div class="forum-post-content">{{ post.get('content') or '' }}</div>
+                {% if post.get('images') %}
+                  <div class="post-images">
+                    {% for post_image in post['images'] %}
+                      <figure class="post-attachment">
+                        <a href="{{ url_for('correlation.show_correlation', type='image', id=post_image['id']) }}" target="_blank" rel="noopener" title="Open image correlation"><img class="object_image forum-post-image" src="{{ url_for('objects_image.image', filename=post_image['id']) }}" loading="lazy" alt="Post image {{ loop.index }}"></a>
+                        <figcaption><span><i class="far fa-image" aria-hidden="true"></i>Image {{ loop.index }}</span><div class="image-actions">
+                          {% if post_image.get('ocr') %}<a target="_blank" rel="noopener" href="{{ url_for('objects_ocr.object_ocr', id=post_image['id']) }}">OCR</a>{% endif %}
+                          {% if ollama_enabled or post_image.get('description') or post_image.get('descriptions') %}{% with ollama_description=post_image.get('description'), ollama_descriptions=post_image.get('descriptions', {}), image_gid='image::' + post_image['id'], image_message_anchor=post['id'] %}{% include 'objects/image/block_img_ollama_small.html' %}{% endwith %}{% endif %}
+                        </div></figcaption>
+                      </figure>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <div class="post-status" role="status" aria-live="polite" hidden></div>
+                <section class="translation" {% if not post.get('translation') %}hidden{% endif %}><div class="translation-caption"><i class="fas fa-language" aria-hidden="true"></i>Translation<button type="button" data-hide-translation aria-label="Hide translation"><i class="fas fa-times" aria-hidden="true"></i></button></div><div class="post-translation-text">{{ post.get('translation') or '' }}</div></section>
+                <section class="language-editor" id="{{ editor_id }}" hidden aria-label="Post language and translation">
+                  <form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
+                    <input type="hidden" name="id" value="{{ post['id'] }}">
+                    <label for="{{ editor_id }}-source">Source language</label>
+                    <select id="{{ editor_id }}-source" name="language_target" required>
+                      {% if not post.get('language') or post['language'] not in all_languages %}<option value="" selected disabled>Unknown</option>{% endif %}
+                      {% for language, label in all_languages.items() %}<option value="{{ language }}" {% if post.get('language') == language %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                    {% if translation_target and translation_target != "Don't Translate" %}<input type="hidden" name="target" value="{{ translation_target }}"><label for="{{ editor_id }}-text">Translation ({{ all_languages.get(translation_target, translation_target) }})</label><textarea id="{{ editor_id }}-text" class="form-control mt-2" name="translation">{{ post.get('translation') or '' }}</textarea>{% endif %}
+                    <div class="language-editor-actions"><button type="submit" class="thread-button">{% if translation_target and translation_target != "Don't Translate" %}Update language or translation{% else %}Update language{% endif %}</button><a href="{{ url_for('forums_explorer.objects_post_detect_language', id=post['id']) }}">Detect language</a></div>
+                  </form>
+                </section>
+                {% if post.get('tags') %}<div class="post-tags">{% for tag in post['tags'] %}<span class="badge badge-info">{{ tag }}</span>{% endfor %}</div>{% endif %}
+              </div>
+              <footer class="post-footer">
+                {% if post.get('reactions') %}<div class="reactions" aria-label="Collected reactions">{% for reaction, count in post['reactions'].items() %}<span class="reaction-chip" title="Collected reaction: {{ reaction }} — {{ count }}"><span>{{ reaction }}</span><b>{{ count }}</b></span>{% endfor %}</div>{% endif %}
+                <div class="post-actions">
+                  <div class="post-language-controls"><button type="button" class="language-button" data-language-editor="{{ editor_id }}" aria-expanded="false" aria-controls="{{ editor_id }}" title="Edit source language"><i class="fas fa-language" aria-hidden="true"></i><span>{{ (post.get('language') or '?')|upper }}</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button><button type="button" class="post-translate post-icon-button" data-translate-post title="Translate to preferred language" aria-label="Translate post {{ counter.number }} to preferred language"><svg xmlns="http://www.w3.org/2000/svg" width="1.15em" height="1.15em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.9 22 4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4 5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45-.75 2.05-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg></button></div>
+                  <a class="post-icon-button correlation-link" href="{{ url_for('correlation.show_correlation', type='post', id=post['id']) }}" title="Post correlation" aria-label="Open correlation for post {{ counter.number }}"><i class="fas fa-project-diagram" aria-hidden="true"></i></a>
+                  <details class="post-tools"><summary><i class="fas fa-ellipsis-h" aria-hidden="true"></i><span class="sr-only">More post tools</span></summary><div><a href="{{ post.get('link') or url_for('forums_explorer.objects_post', id=post['id']) }}">Post details</a></div></details>
+                </div>
+              </footer>
+            </div>
+          </article>
+          {% set counter.number = counter.number + 1 %}
+        {% endfor %}
+      {% else %}<div class="thread-empty">No posts found.</div>{% endfor %}
+    </section>
+    {% with pagination_position='bottom', show_page_jump=true %}{% include 'forums_explorer/thread_pagination.html' %}{% endwith %}
+  </div>
+</main>
+{% if meta['posts'] %}<div class="compact-blur-bar" role="group" aria-label="Quick image visibility controls" hidden><span>Images</span><button type="button" data-image-visibility="0" title="Hide images" aria-label="Hide images"><i class="far fa-eye-slash" aria-hidden="true"></i></button><input class="visibility-slider" type="range" min="0" max="15" step="0.1" value="10" aria-label="Quick image visibility, from hidden to revealed"><button type="button" data-image-visibility="15" title="Reveal images" aria-label="Reveal images"><i class="far fa-eye" aria-hidden="true"></i></button></div>{% endif %}
+{% if is_admin %}
+<div class="modal fade" id="editThreadUrlModal" tabindex="-1" role="dialog" aria-labelledby="editThreadUrlModalLabel" aria-hidden="true"><div class="modal-dialog" role="document"><div class="modal-content"><form method="post" action="{{ url_for('forums_explorer.forum_explorer_thread_url_edit') }}"><div class="modal-header"><h5 class="modal-title" id="editThreadUrlModalLabel">Edit thread URL</h5><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><input type="hidden" name="subtype" value="{{ thread['subtype'] }}"><input type="hidden" name="id" value="{{ thread['id'] }}"><input type="url" class="form-control" name="url" value="{{ thread.get('url') or '' }}" aria-label="Thread URL" required></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div></div></div>
+{% endif %}
 <script>
-$(document).ready(function() {
-  $('#page-Forums-Explorer').addClass('active');
-});
+(() => {
+    'use strict';
 
-function translatePostToPreferredLanguage(postId, postIdEscape, buttonElement) {
-  if (!postId) {
-    return;
-  }
+    const page = document.querySelector('.forum-thread-page');
+    const toolbar = page.querySelector('.reading-toolbar');
+    const quickControls = page.querySelector('.compact-blur-bar');
+    const navbar = document.querySelector('.ail-navbar');
+    const sliders = page.querySelectorAll('.visibility-slider');
+    const toolsToggle = page.querySelector('.ail-tools-toggle');
+    const tools = page.querySelector('#thread-tools');
+    document.getElementById('page-Forums-Explorer').classList.add('active');
 
-  const formData = new URLSearchParams();
-  formData.append('id', postId);
-  buttonElement.disabled = true;
-
-  fetch("{{ url_for('forums_explorer.objects_post_translate_json') }}", {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
-    credentials: 'same-origin',
-    body: formData.toString()
-  })
-    .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
-    .then(({ ok, data }) => {
-      if (!ok || !data || !data.translation) {
-        return;
-      }
-
-      const translationBlock = document.getElementById('postTranslationBlock' + postIdEscape);
-      const translationText = document.getElementById('postTranslationText' + postIdEscape);
-      if (translationBlock && translationText) {
-        translationText.textContent = data.translation;
-        translationBlock.style.display = '';
-      }
-
-      if (data.thread_name_translation) {
-        document.querySelectorAll('.forum-thread-name-translation').forEach(element => {
-          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.thread_name_translation : data.thread_name_translation;
-          element.classList.remove('d-none');
-          element.style.display = '';
+    if (toolsToggle) {
+        toolsToggle.addEventListener('click', () => {
+            tools.hidden = !tools.hidden;
+            toolsToggle.setAttribute('aria-expanded', String(!tools.hidden));
         });
-      }
+    }
 
-      if (data.subforum_name_translation) {
-        document.querySelectorAll('.forum-subforum-name-translation').forEach(element => {
-          element.textContent = element.tagName === 'SMALL' ? '/ ' + data.subforum_name_translation : data.subforum_name_translation;
-          element.classList.remove('d-none');
-          element.style.display = '';
+    function setImageVisibility(value) {
+        const visibility = Math.max(0, Math.min(15, Number(value)));
+        const blur = 15 - visibility;
+        page.style.setProperty('--object-image-blur', blur + 'px');
+        sliders.forEach(slider => {
+            slider.value = visibility;
+            slider.setAttribute('aria-valuetext', blur === 0 ? 'Images revealed' : blur === 15 ? 'Images hidden' : blur + ' pixel blur');
         });
-      }
+        page.querySelectorAll('[data-image-visibility]').forEach(button => {
+            button.setAttribute('aria-pressed', String(Number(button.dataset.imageVisibility) === visibility));
+        });
+    }
 
-      if (data.breadcrumb_name_translations) {
-        document.querySelectorAll('.forum-breadcrumb-translation').forEach((element, index) => {
-          const translation = data.breadcrumb_name_translations[index];
-          if (translation) {
-            element.textContent = '/ ' + translation;
-            element.classList.remove('d-none');
-            element.classList.add('d-block');
-          }
-        });
-      }
-    })
-    .finally(() => {
-      buttonElement.disabled = false;
+    sliders.forEach(slider => slider.addEventListener('input', () => setImageVisibility(slider.value)));
+    page.querySelectorAll('[data-image-visibility]').forEach(button => {
+        button.addEventListener('click', () => setImageVisibility(button.dataset.imageVisibility));
     });
-}
 
+    if (toolbar && quickControls) {
+        let scrollFrame = null;
+        function updateQuickControls() {
+            const navBottom = navbar ? navbar.getBoundingClientRect().bottom : 0;
+            quickControls.hidden = toolbar.getBoundingClientRect().bottom > navBottom;
+            scrollFrame = null;
+        }
+        window.addEventListener('scroll', () => {
+            if (scrollFrame === null) {
+                scrollFrame = requestAnimationFrame(updateQuickControls);
+            }
+        }, {passive: true});
+        const resizeObserver = new ResizeObserver(updateQuickControls);
+        resizeObserver.observe(toolbar);
+        if (navbar) {
+            resizeObserver.observe(navbar);
+        }
+        window.addEventListener('pageshow', updateQuickControls);
+        updateQuickControls();
+        setImageVisibility(sliders[0].value);
+    }
+
+    page.querySelectorAll('[data-language-editor]').forEach(button => {
+        const editor = document.getElementById(button.dataset.languageEditor);
+        button.addEventListener('click', () => {
+            editor.hidden = !editor.hidden;
+            button.setAttribute('aria-expanded', String(!editor.hidden));
+        });
+    });
+
+    page.querySelectorAll('.language-editor select').forEach(select => {
+        select.addEventListener('change', () => {
+            const textarea = select.form.querySelector('textarea[name="translation"]');
+            if (textarea) {
+                textarea.value = '';
+            }
+        });
+    });
+
+    function showNameTranslations(data) {
+        if (data.thread_name_translation) {
+            page.querySelectorAll('.forum-thread-name-translation').forEach(element => {
+                element.textContent = data.thread_name_translation;
+                element.hidden = false;
+            });
+        }
+        if (data.subforum_name_translation) {
+            page.querySelectorAll('.forum-subforum-name-translation').forEach(element => {
+                element.textContent = data.subforum_name_translation;
+                element.hidden = false;
+            });
+        }
+        if (data.breadcrumb_name_translations) {
+            page.querySelectorAll('.forum-breadcrumb-translation').forEach((element, index) => {
+                const translation = data.breadcrumb_name_translations[index];
+                if (translation) {
+                    element.textContent = translation;
+                    element.hidden = false;
+                }
+            });
+        }
+    }
+
+    page.querySelectorAll('[data-translate-post]').forEach(button => {
+        button.addEventListener('click', async () => {
+            const article = button.closest('.forum-post');
+            const status = article.querySelector('.post-status');
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+            status.hidden = true;
+            try {
+                const response = await fetch(page.dataset.postTranslationUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'},
+                    credentials: 'same-origin',
+                    body: new URLSearchParams({id: article.dataset.postId}).toString()
+                });
+                const data = await response.json();
+                if (!response.ok || !data.translation) {
+                    throw new Error('No translation was returned. Check your preferred language and try again.');
+                }
+                article.querySelector('.post-translation-text').textContent = data.translation;
+                article.querySelector('.translation').hidden = false;
+                showNameTranslations(data);
+            } catch (error) {
+                status.textContent = 'Unable to translate this post. ' + error.message;
+                status.hidden = false;
+            } finally {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+            }
+        });
+    });
+
+    page.querySelectorAll('[data-hide-translation]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.closest('.translation').hidden = true;
+        });
+    });
+})();
 </script>
 </body>
 </html>

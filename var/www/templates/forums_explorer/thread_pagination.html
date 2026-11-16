@@ -1,51 +1,25 @@
 {% if pagination.get('nb_pages', 0) > 1 %}
-  <nav aria-label="Forum thread pages{% if pagination_position == 'top' %} above posts{% endif %}" class="d-flex flex-column align-items-center {% if pagination_position == 'top' %}mb-3{% else %}my-4 pb-2{% endif %}">
-    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-{% if show_page_jump %}3{% else %}0{% endif %}">
-      <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
-        {% if pagination['page'] <= 1 %}
-          <span class="page-link" aria-disabled="true"><i class="fas fa-angle-double-left" aria-hidden="true"></i> First</span>
-        {% else %}
-          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=1, nb=pagination['nb'], target=translation_target) }}" aria-label="Go to first page"><i class="fas fa-angle-double-left" aria-hidden="true"></i> First</a>
-        {% endif %}
-      </li>
-      <li class="page-item {% if pagination['page'] <= 1 %}disabled{% endif %}">
-        {% if pagination['page'] <= 1 %}
-          <span class="page-link" aria-disabled="true"><i class="fas fa-angle-left" aria-hidden="true"></i> Previous</span>
-        {% else %}
-          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['page'] - 1, nb=pagination['nb'], target=translation_target) }}" rel="prev"><i class="fas fa-angle-left" aria-hidden="true"></i> Previous</a>
-        {% endif %}
-      </li>
-      <li class="page-item active" aria-current="page"><span class="page-link">{{ pagination['page'] }} <span class="sr-only">(current page)</span></span></li>
-      <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
-        {% if pagination['page'] >= pagination['nb_pages'] %}
-          <span class="page-link" aria-disabled="true">Next <i class="fas fa-angle-right" aria-hidden="true"></i></span>
-        {% else %}
-          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['page'] + 1, nb=pagination['nb'], target=translation_target) }}" rel="next">Next <i class="fas fa-angle-right" aria-hidden="true"></i></a>
-        {% endif %}
-      </li>
-      <li class="page-item {% if pagination['page'] >= pagination['nb_pages'] %}disabled{% endif %}">
-        {% if pagination['page'] >= pagination['nb_pages'] %}
-          <span class="page-link" aria-disabled="true">Last <i class="fas fa-angle-double-right" aria-hidden="true"></i></span>
-        {% else %}
-          <a class="page-link" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=pagination['nb_pages'], nb=pagination['nb'], target=translation_target) }}" aria-label="Go to last page">Last <i class="fas fa-angle-double-right" aria-hidden="true"></i></a>
-        {% endif %}
-      </li>
-    </ul>
+  {% set current_page = pagination['page'] %}
+  {% set total_pages = pagination['nb_pages'] %}
+  {% set first_visible = [1, current_page - 2]|max %}
+  {% set last_visible = [total_pages, current_page + 2]|min %}
+  <div class="{% if pagination_position == 'bottom' %}bottom-pagination{% else %}thread-pagination{% endif %}">
+    <nav class="pagination-controls" aria-label="Thread pages {{ pagination_position }}">
+      {% if current_page > 1 %}<a class="page-prev" rel="prev" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=current_page - 1, nb=pagination['nb'], target=translation_target) }}" aria-label="Previous page"><i class="fas fa-angle-left" aria-hidden="true"></i></a>{% endif %}
+      {% if first_visible > 1 %}<a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=1, nb=pagination['nb'], target=translation_target) }}" aria-label="Page 1">1</a>{% if first_visible > 2 %}<span class="page-ellipsis" aria-hidden="true">…</span>{% endif %}{% endif %}
+      {% for page_number in range(first_visible, last_visible + 1) %}
+        {% if page_number == current_page %}<span class="page-current" aria-current="page">{{ page_number }}</span>{% else %}<a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=page_number, nb=pagination['nb'], target=translation_target) }}" aria-label="Page {{ page_number }}">{{ page_number }}</a>{% endif %}
+      {% endfor %}
+      {% if last_visible < total_pages %}{% if last_visible < total_pages - 1 %}<span class="page-ellipsis" aria-hidden="true">…</span>{% endif %}<a href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=total_pages, nb=pagination['nb'], target=translation_target) }}" aria-label="Page {{ total_pages }}">{{ total_pages }}</a>{% endif %}
+      {% if current_page < total_pages %}<a class="page-next" rel="next" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id'], page=current_page + 1, nb=pagination['nb'], target=translation_target) }}">Next<i class="fas fa-angle-right" aria-hidden="true"></i></a>{% endif %}
+      <span class="page-count">Page {{ current_page }} of {{ total_pages }}</span>
+    </nav>
     {% if show_page_jump %}
-      <form method="get" action="{{ url_for('forums_explorer.forum_explorer_thread') }}" class="form-inline justify-content-center rounded border bg-light px-3 py-2">
-        <input type="hidden" name="subtype" value="{{ thread['subtype'] }}">
-        <input type="hidden" name="id" value="{{ thread['id'] }}">
-        <input type="hidden" name="nb" value="{{ pagination['nb'] }}">
+      <form method="get" action="{{ url_for('forums_explorer.forum_explorer_thread') }}" class="page-jump">
+        <input type="hidden" name="subtype" value="{{ thread['subtype'] }}"><input type="hidden" name="id" value="{{ thread['id'] }}"><input type="hidden" name="nb" value="{{ pagination['nb'] }}">
         {% if translation_target %}<input type="hidden" name="target" value="{{ translation_target }}">{% endif %}
-        <label for="thread-page-jump" class="font-weight-bold mr-2 mb-0">Jump to page</label>
-        <div class="input-group input-group-sm">
-          <input id="thread-page-jump" class="form-control text-center" style="width: 5rem;" type="number" name="page" value="{{ pagination['page'] }}" min="1" max="{{ pagination['nb_pages'] }}" required aria-describedby="thread-page-count">
-          <div class="input-group-append">
-            <span id="thread-page-count" class="input-group-text">of {{ pagination['nb_pages'] }}</span>
-            <button type="submit" class="btn btn-primary px-3">Go</button>
-          </div>
-        </div>
+        <label for="thread-page-jump">Jump to page</label><input id="thread-page-jump" type="number" name="page" value="{{ current_page }}" min="1" max="{{ total_pages }}" required aria-describedby="thread-page-count"><span id="thread-page-count">of {{ total_pages }}</span><button type="submit" class="thread-button">Go</button>
       </form>
     {% endif %}
-  </nav>
+  </div>
 {% endif %}
