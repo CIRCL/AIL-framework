@@ -1,7 +1,7 @@
 <div id="edit_tags_modal" class="modal fade" role="dialog">
   <div class="modal-dialog modal-lg">
 
-    <div id="add_tags_modal_content" class="modal-content">
+    <div id="edit_tags_modal_content" class="modal-content">
       <div class="modal-header" style="border-bottom: 4px solid #cccccc; background-color: #cccccc; color: #ffffff;">
         <h4>Edit Tag</h4>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -36,21 +36,19 @@
 </div>
 
 <script>
-// tagid + objtype + objid
 $('#edit_tags_modal').on('show.bs.modal', function (event) {
-    var tag_confirm = $('#modal_tag_confirm');
-    tag_confirm.hide();
-    var button = $(event.relatedTarget);
-    var tagid = button.data('tagid')
-    var objtype = button.data('objtype')
-    var objsubtype = button.data('objsubtype')
-    var objid = button.data('objid')
-    var modal = $(this)
-    modal.find('#modal_tag_edit_tag_id').text(tagid)
-    if (tagid.startsWith("infoleak:automatic-detection")) {
-        tag_confirm.show();
-        modal.find('#modal_tag_confirm').prop("href", "{{ url_for('tags_ui.tag_confirm') }}?type="+ objtype +"&subtype="+ objsubtype +"&id="+ objid +"&tag="+ tagid);
-    }
-    modal.find('#modal_tag_edit_delete_tag').prop("href", "{{ url_for('tags_ui.delete_tag') }}?type="+ objtype +"&subtype="+ objsubtype +"&id="+ objid +"&tag="+ tagid);
-  })
+    const modal = $(this);
+    const button = $(event.relatedTarget);
+    const tag = button.attr('data-tagid') || '';
+    const parameters = new URLSearchParams({
+        type: button.attr('data-objtype') || '',
+        subtype: button.attr('data-objsubtype') || '',
+        id: button.attr('data-objid') || '',
+        tag: tag
+    });
+    modal.find('#modal_tag_edit_tag_id').text(tag);
+    modal.find('#modal_tag_confirm').toggle(tag.startsWith('infoleak:automatic-detection'));
+    modal.find('#modal_tag_confirm').prop('href', "{{ url_for('tags_ui.tag_confirm') }}?" + parameters.toString());
+    modal.find('#modal_tag_edit_delete_tag').prop('href', "{{ url_for('tags_ui.delete_tag') }}?" + parameters.toString());
+});
 </script>

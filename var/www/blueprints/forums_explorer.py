@@ -585,11 +585,13 @@ def forum_explorer_thread():
         return create_json_response(meta[0], meta[1])
     languages = Language.get_all_languages()
     translation_languages = Language.get_translation_languages()
+    can_annotate = current_user.is_in_role('user_no_api')
     return render_template('forums_explorer_thread.html', meta=meta[0], bootstrap_label=bootstrap_label,
                            ollama_enabled=images_engine.is_ollama_enabled(),
                            ollama_models=images_engine.get_ollama_models(),
                            all_languages=languages, translation_languages=translation_languages, translation_target=target,
-                           is_admin=current_user.is_admin())
+                           is_admin=current_user.is_admin(), can_annotate=can_annotate,
+                           modal_add_tags=Tag.get_modal_add_tags(thread_id, object_type='forum-thread', object_subtype=subtype) if can_annotate else None)
 
 
 @forums_explorer.route("/forums/explorer/thread/crawl", methods=['POST'])

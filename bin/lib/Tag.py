@@ -1591,7 +1591,7 @@ def add_obj_tags(object_id, object_subtype, object_type, tags=[], galaxy_tags=[]
     for tag in tags:
         if tag:
             taxonomy = get_taxonomie_from_tag(tag)
-            if is_taxonomy_tag_enabled(taxonomy, tag):
+            if is_taxonomy_tag_enabled(taxonomy, tag) or is_custom_tag_enabled(tag):
                 add_object_tag(tag, object_type, object_id, object_subtype)
             else:
                 return {'status': 'error', 'reason': 'Tags or Galaxy not enabled', 'value': tag}, 400
