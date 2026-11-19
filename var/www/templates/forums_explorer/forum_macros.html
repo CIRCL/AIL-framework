@@ -75,6 +75,28 @@
   {% endif %}
 {%- endmacro %}
 
+{% set post_reaction_emojis = {
+  'angry': '😠',
+  'care': '🤗',
+  'dislike': '👎',
+  'funny': '😂',
+  'haha': '😂',
+  'laugh': '😂',
+  'laughing': '😂',
+  'like': '👍',
+  'love': '❤️',
+  'sad': '😢',
+  'thank_you': '🙏',
+  'thanks': '🙏',
+  'wow': '😮',
+} %}
+
+{% macro post_reaction_label(reaction) -%}
+  {% set reaction_key = reaction|trim|lower|replace('-', '_')|replace(' ', '_') -%}
+  {% set emoji = post_reaction_emojis.get(reaction_key) -%}
+  <span{% if emoji %} role="img" aria-label="{{ reaction }}"{% endif %}>{{ emoji or reaction }}</span>
+{%- endmacro %}
+
 {% macro last_post(post, show_thread=true) %}
   {% if post %}
     {% set user = post.get('user-account') or {} %}

@@ -268,7 +268,7 @@
 </head>
 <body class="forum-page forum-thread-page" data-post-translation-url="{{ url_for('forums_explorer.objects_post_translate_json') }}">
 {% include 'nav_bar.html' %}
-{% from 'forums_explorer/forum_macros.html' import forum_header, author_name, author_link, author_avatar with context %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, author_name, author_link, author_avatar, post_reaction_label with context %}
 <main class="forum-shell{% if thread.get('url') %} has-thread-source{% endif %}" id="core_content">
   {% if thread.get('url') %}
     <div class="thread-source">{{ thread['url'] }}</div>
@@ -427,7 +427,13 @@
                 {% if post.get('tags') %}<div class="post-tags">{% for tag in post['tags'] %}<span class="badge badge-info">{{ tag }}</span>{% endfor %}</div>{% endif %}
               </div>
               <footer class="post-footer">
-                {% if post.get('reactions') %}<div class="reactions" aria-label="Collected reactions">{% for reaction, count in post['reactions'].items() %}<span class="reaction-chip" title="Collected reaction: {{ reaction }} — {{ count }}"><span>{{ reaction }}</span><b>{{ count }}</b></span>{% endfor %}</div>{% endif %}
+                {% if post.get('reactions') %}
+                  <div class="reactions" aria-label="Collected reactions">
+                    {% for reaction, count in post['reactions'].items() %}
+                      <span class="reaction-chip" title="{{ reaction }}: {{ count }}">{{ post_reaction_label(reaction) }}<b>{{ count }}</b></span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
                 <div class="post-actions">
                   <div class="post-language-controls"><button type="button" class="language-button" data-language-editor="{{ editor_id }}" aria-expanded="false" aria-controls="{{ editor_id }}" title="Edit source language"><i class="fas fa-language" aria-hidden="true"></i><span>{{ (post.get('language') or '?')|upper }}</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button><button type="button" class="post-translate post-icon-button" data-translate-post title="Translate to preferred language" aria-label="Translate post {{ counter.number }} to preferred language"><svg xmlns="http://www.w3.org/2000/svg" width="1.15em" height="1.15em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.9 22 4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4 5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45-.75 2.05-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg></button></div>
                   <a class="post-icon-button correlation-link" href="{{ url_for('correlation.show_correlation', type='post', id=post['id']) }}" title="Post correlation" aria-label="Open correlation for post {{ counter.number }}"><i class="fas fa-project-diagram" aria-hidden="true"></i></a>
