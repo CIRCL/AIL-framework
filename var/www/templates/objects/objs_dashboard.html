@@ -162,7 +162,7 @@
                                     <a href="{{ url_for('hunters.show_tracker') }}?uuid={{ tracker['uuid'] }}">{{ tracker['tracked'] }}</a>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                    <a href="{{ tracker['obj']['link'] }}" data-object-tooltip-gid="{{ tracker['obj']['gid'] }}">
                                         <svg height="26" width="26" style="pointer-events:none;">
                                         <g class="nodes">
                                             <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>
@@ -192,7 +192,7 @@
                         {% for t_obj in tagged_objs %}
                             <tr>
                                 <td>
-                                    <a href="{{ t_obj['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ t_obj['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                    <a href="{{ t_obj['link'] }}" data-object-tooltip-gid="{{ t_obj['gid'] }}">
                                         <svg height="26" width="26">
                                             <g class="nodes">
                                                 <circle cx="13" cy="13" r="13" fill="{{ t_obj['icon']['color'] }}"></circle>
@@ -360,13 +360,8 @@ function create_obj_svg(container, obj_gid, url, color, fa_style, icon) {
     }
     var svg_obj = '<svg height="26" width="26"> <g class="nodes"> <circle cx="13" cy="13" r="13" fill="' + color + '"></circle>' + icon_markup + '</g> </svg>';
     var obj_link = $('<a>');
-    obj_link.on('mouseenter',  function () {
-        show_obj_tooltip(this, obj_gid);
-    });
-    obj_link.on('mouseleave',  function () {
-        hide_obj_tooltip(this);
-    });
     obj_link.attr('href', url);
+    obj_link.attr('data-object-tooltip-gid', obj_gid);
     obj_link.html(svg_obj);
     container.append(obj_link);
     return container
@@ -390,7 +385,8 @@ function update_tags_obj_dashboard(data) {
         var row = $('<tr></tr>');
         ntd = $('<td></td>');
         row.append(create_obj_svg(ntd, obj['gid'], obj.link, obj['icon']['color'], obj['icon']['style'], obj['icon']['icon']))
-        row.append('<td style="word-break: break-all;"><a href="'+ obj['link'] + '">' + sanitize_text(obj['id']) + '</a></td>');
+        const objectLink = $('<a>').attr('href', obj['link']).text(obj['id']);
+        row.append($('<td>').css('word-break', 'break-all').append(objectLink));
         ntd = $('<td></td>');
         row.append(create_tags_badges(ntd, obj['tags']));
         row.append('<td>' + obj['date_tag'] + '</td>');

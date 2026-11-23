@@ -416,7 +416,7 @@
                                                     </a>
                                                 </td>
                                                 <td class="text-center">
-                                                    <a class="tracker-object-link" href="{{ tracker['obj']['link'] }}" onmouseenter="show_obj_tooltip(this, '{{ tracker['obj']['gid'] }}')" onmouseleave="hide_obj_tooltip(this)">
+                                                    <a class="tracker-object-link" href="{{ tracker['obj']['link'] }}" data-object-tooltip-gid="{{ tracker['obj']['gid'] }}">
                                                         <svg height="26" width="26" style="pointer-events:none;">
                                                             <g class="nodes">
                                                                 <circle cx="13" cy="13" r="13" fill="{{ tracker['obj']['icon']['color'] }}"></circle>

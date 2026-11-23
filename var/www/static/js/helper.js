@@ -3,6 +3,14 @@ function sanitize_text(str_to_sanitize) {
     return $("<span\>").text(str_to_sanitize).html()
 }
 
+$(document).on('mouseenter', 'a[data-object-tooltip-gid]', function () {
+    show_obj_tooltip(this, this.dataset.objectTooltipGid);
+});
+
+$(document).on('mouseleave', 'a[data-object-tooltip-gid]', function () {
+    hide_obj_tooltip(this);
+});
+
 // REQUIRE var url_obj_description
 function show_obj_tooltip(container, obj_gid) {
     container = $(container);
@@ -24,7 +32,7 @@ function show_obj_tooltip(container, obj_gid) {
         let popoverInstance = container.data('bs.popover');
 
 
-        $.getJSON(url_obj_description + obj_gid, function (data) {
+        $.getJSON(url_obj_description + encodeURIComponent(obj_gid), function (data) {
 
             let desc = "<div class=\"card-body bg-dark text-white pb-1 pt-2\"><dl class=\"row py-0 my-0\">"
             Object.keys(data).forEach(function(key) {
