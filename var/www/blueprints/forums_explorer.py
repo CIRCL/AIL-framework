@@ -9,6 +9,7 @@ import os
 import sys
 import json
 import shlex
+from datetime import datetime, time
 
 from flask import render_template, jsonify, request, Blueprint, Response, abort, redirect, url_for, send_file, flash
 from flask_login import login_required, current_user
@@ -22,7 +23,7 @@ sys.path.append(os.environ['AIL_BIN'])
 ##################################
 from lib import forums_viewer
 from lib.ConfigLoader import ConfigLoader
-from lib.objects import Forums
+from lib.objects import Forums, ail_objects
 from lib import crawlers
 from lib import Language
 from lib import ail_users
@@ -40,6 +41,21 @@ forums_explorer = Blueprint('forums_explorer', __name__, template_folder=os.path
 
 # ============ VARIABLES ============
 bootstrap_label = ['primary', 'success', 'danger', 'warning', 'info']
+
+
+@forums_explorer.app_template_filter('forum_post_date')
+def format_forum_post_date(value):
+    try:
+        timestamp = datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return value or 'Unknown date'
+
+    date = timestamp.strftime('%d %b %Y')
+    post_time = timestamp.time()
+    if post_time == time.min:
+        return date
+    precision = 'auto' if post_time.second or post_time.microsecond else 'minutes'
+    return f'{date}, {post_time.isoformat(timespec=precision)} UTC'
 
 
 def create_json_response(data, status_code):
@@ -98,7 +114,9 @@ def forum_explorer_forums():
         if meta[1] != 200:
             return create_json_response(meta[0], meta[1])
         # TODO CREATE OTHER TEMPLATE with NEW ENDPOINT
-        return render_template('forums_explorer_forum.html', meta=meta[0], bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
+        subforum_icon = ail_objects.get_object_type_svg('subforum')['icon']
+        return render_template('forums_explorer_forum.html', meta=meta[0], bootstrap_label=bootstrap_label,
+                               is_admin=current_user.is_admin(), subforum_icon=subforum_icon)
 
     forums = forums_viewer.get_forums()
     return render_template('forums_explorer_index.html', forums=forums, parser_types=forums_viewer.FORUM_PARSER_TYPES, bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
@@ -554,7 +572,10 @@ def forum_explorer_subforum():
     meta = forums_viewer.api_get_subforum(subtype, subforum_id)
     if meta[1] != 200:
         return create_json_response(meta[0], meta[1])
-    return render_template('forums_explorer_subforum.html', meta=meta[0], bootstrap_label=bootstrap_label, is_admin=current_user.is_admin())
+    subforum_icon = ail_objects.get_object_type_svg('subforum')['icon']
+    thread_icon = ail_objects.get_object_type_svg('forum-thread')['icon']
+    return render_template('forums_explorer_subforum.html', meta=meta[0], bootstrap_label=bootstrap_label,
+                           is_admin=current_user.is_admin(), subforum_icon=subforum_icon, thread_icon=thread_icon)
 
 
 @forums_explorer.route("/forums/explorer/subforum/translate/json", methods=['POST'])

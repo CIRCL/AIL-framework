@@ -3,24 +3,26 @@
   {% for category, boards in subforums|groupby('category') %}
     <section class="forum-board" aria-label="{{ category or title }}">
       <div class="forum-board-header forum-columns">
-        <h2>{{ category or title }}</h2>
+        <h2><span aria-hidden="true">{{ subforum_icon | safe }}</span>{{ category or title }}</h2>
         <span>Threads</span>
         <span>Last post</span>
       </div>
       <div role="list">
         {% for subforum in boards %}
+          {% set children = subforum.get('child_subforums') or [] %}
+          {% set child_count = subforum.get('nb_subforums') or 0 %}
           <div class="forum-row forum-columns" role="listitem">
             <div class="forum-row-main">
-              <span class="forum-icon" aria-hidden="true"><i class="far fa-comment"></i></span>
+              <span class="forum-icon" aria-hidden="true">{{ subforum_icon | safe }}</span>
               <div class="forum-row-identity">
                 <a class="forum-row-title" href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=subforum['subtype'], id=subforum['id']) }}" title="{{ subforum['id'] }}">{{ subforum.get('name') or subforum['id'] }}</a>
-                {% if subforum.get('nb_subforums') %}<span class="forum-child-count">{{ subforum['nb_subforums'] }} subforum{% if subforum['nb_subforums'] != 1 %}s{% endif %}</span>{% endif %}
+                {% if child_count > children|length %}<span class="forum-child-count">{{ child_count }} subforum{% if child_count != 1 %}s{% endif %}</span>{% endif %}
                 {{ translated_name(subforum) }}
                 {% if subforum.get('info') %}<div class="forum-description">{{ subforum['info'] }}</div>{% endif %}
-                {% if subforum.get('child_subforums') %}
+                {% if children %}
                   <div class="forum-child-links">
                     <span><i class="fas fa-sitemap mr-1" aria-hidden="true"></i>Subforums:</span>
-                    {% for child in subforum['child_subforums'] %}
+                    {% for child in children %}
                       <a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=child['subtype'], id=child['id']) }}">{{ child.get('name') or child['id'] }}{{ translated_name(child) }}</a>{% if not loop.last %}<span aria-hidden="true"> · </span>{% endif %}
                     {% endfor %}
                   </div>

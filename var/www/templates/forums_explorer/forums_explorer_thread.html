@@ -46,14 +46,6 @@
     .forum-thread-page .forum-title h1 { font-size: 28px; font-weight: 600; color: var(--thread-link); margin: 0 0 5px; letter-spacing: -.4px; overflow-wrap: anywhere; }
     .forum-thread-page .forum-title h1 i { color: #69809a; font-size: 27px; }
     .forum-thread-page .forum-title p { color: var(--thread-muted); font-size: 12px; margin: 0; }
-    .forum-thread-page .forum-nav { display: flex; align-items: center; min-height: 46px; border: 1px solid var(--thread-border); border-top: 0; background: #f9fafc; }
-    .forum-thread-page .forum-nav > .selected { display: flex; align-items: center; gap: 9px; align-self: stretch; padding: 0 23px; border-right: 1px solid var(--thread-border); background: #4e739b; color: #fff; box-shadow: inset 0 -3px 0 #355c85; font-size: 13px; font-weight: 600; }
-    .forum-thread-page .forum-nav > nav { min-width: 0; padding: 9px 20px; }
-    .forum-thread-page .thread-breadcrumb { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 14px; padding: 0; margin: 0; list-style: none; font-size: 12px; }
-    .forum-thread-page .thread-breadcrumb li { min-width: 0; overflow-wrap: anywhere; }
-    .forum-thread-page .thread-breadcrumb li:nth-last-child(2) a { color: #354a60; font-weight: 600; }
-    .forum-thread-page .thread-breadcrumb li + li::before { content: '›'; margin-right: 14px; color: #9aabb7; }
-    .forum-thread-page .thread-breadcrumb small { display: block; color: var(--thread-muted); font-size: 10px; }
     .forum-thread-page .ail-tools-toggle { display: flex; align-items: center; flex: none; gap: 8px; border: 0; border-left: 1px solid var(--thread-line); background: transparent; color: #596e83; margin-left: auto; padding: 5px 19px; font-size: 12px; }
     .forum-thread-page .ail-tools-toggle i:first-child { font-size: 10px; }
     .forum-thread-page .ail-tools-toggle i:last-child { font-size: 8px; }
@@ -71,23 +63,13 @@
     .forum-thread-page .thread-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
     .forum-thread-page .thread-heading h2 { flex: 1; min-width: 0; font-size: 28px; font-weight: 600; letter-spacing: -.5px; line-height: 1.3; margin: 0; color: var(--thread-text); overflow-wrap: anywhere; }
     .forum-thread-page .thread-title-actions { display: flex; align-items: center; flex: none; gap: 8px; margin-top: 3px; }
-    .forum-thread-page .thread-header-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 30px; padding: 4px 10px; border: 1px solid #c5d0dc; border-radius: 3px; background: #fff; color: #465f78; font: inherit; font-size: 12px; }
-    .forum-thread-page .thread-header-button:hover, .forum-thread-page .thread-header-button[aria-expanded=true] { border-color: #9fb3c9; background: #f7f9fc; }
     .forum-thread-page .thread-add-tags { width: 32px; height: 30px; padding: 0; }
-    .forum-thread-page .thread-header-button > i { font-size: 12px; }
-    .forum-thread-page .thread-header-button > .fa-chevron-down { margin-left: 2px; color: var(--thread-muted); font-size: 8px; }
-    .forum-thread-page .thread-investigation-count { padding: 1px 6px; border-radius: 9px; background: #edf2f7; color: #4f6a82; font-size: 10px; line-height: 1.4; }
-    .forum-thread-page .thread-investigation-menu { width: 294px; max-width: calc(100vw - 48px); max-height: min(400px, calc(100vh - 100px)); overflow-y: auto; padding: 7px 0; border-color: #c5d0dc; border-radius: 4px; box-shadow: 0 4px 12px #253c5417; }
-    .forum-thread-page .thread-investigation-menu .dropdown-header { padding: 5px 13px 8px; color: #6b7c8d; font-size: 11px; }
-    .forum-thread-page .thread-investigation-menu .dropdown-item { display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 13px; border: 0; background: transparent; color: var(--thread-link); font-size: 12px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
-    .forum-thread-page .thread-investigation-menu .dropdown-item:hover, .forum-thread-page .thread-investigation-menu .dropdown-item:focus { background: #edf2f7; }
-    .forum-thread-page .thread-investigation-menu .dropdown-item > i { flex: none; color: #8194a7; font-size: 11px; }
     .forum-thread-page .thread-applied-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
     .forum-thread-page .thread-tag { max-width: 100%; min-height: 26px; padding: 2px 9px; border: 1px solid #cbd8e6; border-radius: 3px; background: #e8eff7; color: #476988; font-size: 11px; line-height: 1.5; text-align: left; overflow-wrap: anywhere; }
     .forum-thread-page .thread-tag:nth-child(even) { border-color: #cbded3; background: #edf4f1; color: #4d7460; }
     .forum-thread-page button.thread-tag:hover { border-color: #9fb3c9; background: #dfe9f4; }
-    .forum-thread-page :is(#add_tags_modal, #investigations_register_obj_modal) :is(.tag-ctn, .tag-res-ctn) { width: 100% !important; max-width: 100%; }
-    .forum-thread-page :is(#add_tags_modal, #investigations_register_obj_modal) .tag-ctn input { max-width: calc(100% - 42px); }
+    .forum-thread-page #add_tags_modal :is(.tag-ctn, .tag-res-ctn) { width: 100% !important; max-width: 100%; }
+    .forum-thread-page #add_tags_modal .tag-ctn input { max-width: calc(100% - 42px); }
     .forum-thread-page .thread-heading > .forum-thread-name-translation { margin: 8px 0 0; color: var(--thread-muted); }
     .forum-thread-page .thread-subtitle { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--thread-muted); }
     .forum-thread-page .thread-subtitle i { font-size: 10px; }
@@ -198,10 +180,6 @@
     }
     @media (max-width: 800px) {
         .forum-thread-page .forum-shell { padding: 16px 15px 0; }
-        .forum-thread-page .forum-nav > .selected { padding: 0 15px; }
-        .forum-thread-page .forum-nav > nav { padding-left: 13px; padding-right: 13px; }
-        .forum-thread-page .thread-breadcrumb { font-size: 11px; gap: 5px 9px; }
-        .forum-thread-page .thread-breadcrumb li + li::before { margin-right: 9px; }
         .forum-thread-page .ail-tools-toggle { padding: 5px 13px; }
         .forum-thread-page .author-profile { flex-basis: 144px; }
         .forum-thread-page .post-content { padding-left: 16px; padding-right: 16px; }
@@ -212,12 +190,7 @@
         .forum-thread-page .forum-title { padding: 20px 17px; }
         .forum-thread-page .forum-title h1 { font-size: 24px; }
         .forum-thread-page .forum-title h1 i { font-size: 23px; }
-        .forum-thread-page .forum-nav { flex-wrap: wrap; }
-        .forum-thread-page .forum-nav > .selected { min-height: 40px; font-size: 12px; }
-        .forum-thread-page .forum-nav > nav { flex: 1; padding: 9px 13px; }
-        .forum-thread-page .thread-breadcrumb { font-size: 10px; gap: 4px 7px; }
         .forum-thread-page .thread-breadcrumb li:first-child:not(:last-child) { display: none; }
-        .forum-thread-page .thread-breadcrumb li + li::before { margin-right: 7px; }
         .forum-thread-page .thread-breadcrumb li:nth-child(2)::before { display: none; }
         .forum-thread-page .ail-tools-toggle { font-size: 10px; padding: 5px 12px; gap: 6px; }
         .forum-thread-page .ail-tools-toggle i:last-child { font-size: 7px; }
@@ -265,36 +238,30 @@
   <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
   <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/forums_explorer.js') }}" defer></script>
 </head>
 <body class="forum-page forum-thread-page" data-post-translation-url="{{ url_for('forums_explorer.objects_post_translate_json') }}">
 {% include 'nav_bar.html' %}
-{% from 'forums_explorer/forum_macros.html' import forum_header, author_name, author_link, author_avatar, post_reaction_label with context %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, author_name, author_link, author_avatar, post_reaction_label, forum_navigation, forum_investigations_menu with context %}
 <main class="forum-shell{% if thread.get('url') %} has-thread-source{% endif %}" id="core_content">
   {% if thread.get('url') %}
     <div class="thread-source">{{ thread['url'] }}</div>
   {% endif %}
   {{ forum_header(forum) }}
-  <div class="forum-nav">
-    <a href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) if forum else url_for('forums_explorer.forum_explorer_forums') }}" class="selected">
-      <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M0 0h24v24H0z" fill="none" />
-        <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
-      </svg>Forums
-    </a>
-    <nav aria-label="Forum breadcrumb">
-      <ol class="thread-breadcrumb">
-        {% for crumb in meta['breadcrumb'] %}
-          {% if crumb['type'] == 'forum' %}
-            <li><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
-          {% elif crumb['type'] == 'subforum' %}
-            <li><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation{% if loop.revindex == 2 %} forum-subforum-name-translation{% endif %}" {% if not crumb.get('name_translation') %}hidden{% endif %}>{{ crumb.get('name_translation') or '' }}</small></li>
-          {% endif %}
-        {% endfor %}
-        <li class="sr-only" aria-current="page">{{ thread.get('name') or thread['id'] }}<small class="forum-breadcrumb-translation forum-thread-name-translation" {% if not thread.get('name_translation') %}hidden{% endif %}>{{ thread.get('name_translation') or '' }}</small></li>
-      </ol>
-    </nav>
+  {% set forums_url = url_for('forums_explorer.forum_explorer_forums', id=forum['id']) if forum else url_for('forums_explorer.forum_explorer_forums') %}
+  {% set thread_details_button %}
     <button type="button" class="ail-tools-toggle" aria-expanded="false" aria-controls="thread-tools"><i class="fas fa-sliders-h" aria-hidden="true"></i>Thread details<i class="fas fa-chevron-down" aria-hidden="true"></i></button>
-  </div>
+  {% endset %}
+  {% call forum_navigation(forums_url, thread_details_button) %}
+    {% for crumb in meta['breadcrumb'] %}
+      {% if crumb['type'] == 'forum' %}
+        <li><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+      {% elif crumb['type'] == 'subforum' %}
+        <li><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a><small class="forum-breadcrumb-translation{% if loop.revindex == 2 %} forum-subforum-name-translation{% endif %}" {% if not crumb.get('name_translation') %}hidden{% endif %}>{{ crumb.get('name_translation') or '' }}</small></li>
+      {% endif %}
+    {% endfor %}
+    <li class="sr-only" aria-current="page">{{ thread.get('name') or thread['id'] }}<small class="forum-breadcrumb-translation forum-thread-name-translation" {% if not thread.get('name_translation') %}hidden{% endif %}>{{ thread.get('name_translation') or '' }}</small></li>
+  {% endcall %}
   <section class="ail-tools" id="thread-tools" hidden aria-label="Thread details">
     <dl class="thread-details">
       {% if forum and forum.get('url') %}<dt>Forum</dt><dd class="source-url">{{ forum['url'] }}</dd>{% endif %}
@@ -316,17 +283,7 @@
         {% if can_annotate or thread_investigations %}
           <div class="thread-title-actions">
             {% if can_annotate %}<button type="button" class="thread-header-button thread-add-tags" data-toggle="modal" data-target="#add_tags_modal" title="Add tags to thread" aria-label="Add tags to thread"><i class="fas fa-tag" aria-hidden="true"></i></button>{% endif %}
-            <div class="dropdown thread-investigations">
-              <button type="button" class="thread-header-button" id="thread-investigations-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-microscope" aria-hidden="true"></i>Investigations{% if thread_investigations %}<span class="thread-investigation-count">{{ thread_investigations|length }}</span>{% endif %}<i class="fas fa-chevron-down" aria-hidden="true"></i></button>
-              <div class="dropdown-menu dropdown-menu-right thread-investigation-menu" aria-labelledby="thread-investigations-toggle">
-                {% if thread_investigations %}
-                  <h3 class="dropdown-header">Linked investigations</h3>
-                  {% for investigation in thread_investigations %}<a class="dropdown-item" href="{{ url_for('investigations_b.show_investigation', uuid=investigation['uuid']) }}"><i class="fas fa-microscope" aria-hidden="true"></i>{{ investigation['info'] or investigation['uuid'] }}</a>{% endfor %}
-                  {% if can_annotate %}<div class="dropdown-divider"></div>{% endif %}
-                {% endif %}
-                {% if can_annotate %}<button type="button" class="dropdown-item" data-toggle="modal" data-target="#investigations_register_obj_modal"><i class="fas fa-plus" aria-hidden="true"></i>Add to investigation</button>{% endif %}
-              </div>
-            </div>
+            {{ forum_investigations_menu(thread_investigations, can_annotate) }}
           </div>
         {% endif %}
       </div>
@@ -469,15 +426,6 @@
     const sliders = page.querySelectorAll('.visibility-slider');
     const toolsToggle = page.querySelector('.ail-tools-toggle');
     const tools = page.querySelector('#thread-tools');
-    const investigationsToggle = page.querySelector('#thread-investigations-toggle');
-    document.getElementById('page-Forums-Explorer').classList.add('active');
-
-    if (investigationsToggle) {
-        $('#investigations_register_obj_modal').on('hidden.bs.modal', function () {
-            investigationsToggle.focus();
-        });
-    }
-
     if (toolsToggle) {
         toolsToggle.addEventListener('click', () => {
             tools.hidden = !tools.hidden;

@@ -1,5 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('page-Forums-Explorer')?.classList.add('active');
+    document.querySelectorAll('[data-forum-banner]').forEach(image => {
+        const showBanner = () => {
+            image.classList.add('is-loaded');
+        };
+        if (image.complete && image.naturalWidth > 0) {
+            showBanner();
+        } else {
+            image.addEventListener('load', showBanner, {once: true});
+        }
+    });
+    const investigationsToggle = document.getElementById('thread-investigations-toggle');
+    const investigationsModal = document.getElementById('investigations_register_obj_modal');
+    if (investigationsToggle && investigationsModal) {
+        $(investigationsModal).on('hidden.bs.modal', () => investigationsToggle.focus());
+    }
     document.querySelectorAll('.forum-translate-names').forEach(button => {
         button.addEventListener('click', async () => {
             const status = document.querySelector('.forum-translation-status');

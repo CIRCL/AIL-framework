@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   {% set forum = meta['forum'] %}
+  {% set can_annotate = current_user.is_in_role('user_no_api') %}
+  {% set investigations = get_object_investigations('forum', '', forum['id']) %}
   <title>{{ forum.get('name') or forum['id'] }} - AIL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
@@ -16,25 +18,21 @@
 </head>
 <body class="forum-page">
 {% include 'nav_bar.html' %}
-{% from 'forums_explorer/forum_macros.html' import forum_header, forum_metadata, crawler_dashboard_icon with context %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, forum_metadata, crawler_dashboard_icon, forum_navigation, forum_investigations_menu with context %}
 <main class="forum-content" id="core_content">
   {{ forum_header(forum) }}
   {% call forum_metadata(forum) %}
     <button class="btn forum-metadata-button forum-translate-names" type="button" data-translation-url="{{ url_for('forums_explorer.forum_explorer_translate_json') }}" data-object-id="{{ forum['id'] }}"><i class="fas fa-language" aria-hidden="true"></i>Translate</button>
     {% if is_admin %}<a class="btn forum-metadata-button forum-crawlers" href="{{ url_for('forums_explorer.forum_explorer_crawler_status', id=forum['id']) }}">{{ crawler_dashboard_icon() }}Crawlers</a>{% endif %}
   {% endcall %}
-  <div class="forum-trail">
-    <nav aria-label="Forum breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ forum.get('name') or forum['id'] }}</li>
-      </ol>
-    </nav>
-    <div class="forum-tools">
-      {% with obj_type='forum', obj_id=forum['id'], obj_subtype='' %}{% include 'investigations/block_object_investigations.html' %}{% endwith %}
-    </div>
-  </div>
-  {% if forum.get('banner') and forum.get('info') %}<p class="forum-subforum-heading">{{ forum['info'] }}</p>{% endif %}
+  {% call forum_navigation(url_for('forums_explorer.forum_explorer_forums'), forum_investigations_menu(investigations, can_annotate)) %}
+    <li aria-current="page">{{ forum.get('name') or forum['id'] }}</li>
+  {% endcall %}
+  {% set forum_info = (forum.get('info') or '')|trim %}
+  {% set forum_url = (forum.get('url') or '')|trim %}
+  {% if forum.get('banner') and forum_info and forum_info.rstrip('/') != forum_url.rstrip('/') %}
+    <p class="forum-subforum-heading">{{ forum_info }}</p>
+  {% endif %}
   <div class="forum-translation-status" role="status" aria-live="polite"></div>
   {% if meta['subforums'] or not meta['orphan_subforums'] %}
     {% with subforums=meta['subforums'], title='Subforums' %}
@@ -50,5 +48,8 @@
     </details>
   {% endif %}
 </main>
+{% if can_annotate %}
+  {% with obj_type='forum', obj_id=forum['id'], obj_subtype='', show_object_investigations=false %}{% include 'modals/investigations_register_obj.html' %}{% endwith %}
+{% endif %}
 </body>
 </html>

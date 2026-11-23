@@ -3,6 +3,8 @@
 <head>
   {% set subforum = meta['subforum'] %}
   {% set forum = meta.get('forum') %}
+  {% set can_annotate = current_user.is_in_role('user_no_api') %}
+  {% set investigations = get_object_investigations('subforum', subforum['subtype'], subforum['id']) %}
   <title>{{ subforum.get('name') or subforum['id'] }} - AIL</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
@@ -17,31 +19,23 @@
 </head>
 <body class="forum-page">
 {% include 'nav_bar.html' %}
-{% from 'forums_explorer/forum_macros.html' import forum_header, forum_metadata, crawler_dashboard_icon, translated_name, last_post, author_link with context %}
+{% from 'forums_explorer/forum_macros.html' import forum_header, forum_metadata, crawler_dashboard_icon, translated_name, last_post, author_link, forum_navigation, forum_investigations_menu with context %}
 <main class="forum-content" id="core_content">
   {{ forum_header(forum) }}
   {% call forum_metadata(forum, subforum.get('url')) %}
     <button class="btn forum-metadata-button forum-translate-names" type="button" data-translation-url="{{ url_for('forums_explorer.forum_explorer_subforum_translate_json') }}" data-object-id="{{ subforum['id'] }}" data-object-subtype="{{ subforum['subtype'] }}"><i class="fas fa-language" aria-hidden="true"></i>Translate</button>
     {% if forum and is_admin %}<a class="btn forum-metadata-button forum-crawlers" href="{{ url_for('forums_explorer.forum_explorer_crawler_status', id=forum['id']) }}">{{ crawler_dashboard_icon() }}Crawlers</a>{% endif %}
   {% endcall %}
-  <div class="forum-trail">
-    <nav aria-label="Forum breadcrumb">
-      <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums') }}">Forums</a></li>
-        {% for crumb in meta['breadcrumb'] %}
-          {% if crumb['type'] == 'forum' %}
-            <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
-          {% elif crumb['type'] == 'subforum' and crumb['id'] != subforum['id'] %}
-            <li class="breadcrumb-item"><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a>{{ translated_name(crumb) }}</li>
-          {% endif %}
-        {% endfor %}
-        <li class="breadcrumb-item active" aria-current="page">{{ subforum.get('name') or subforum['id'] }}{{ translated_name(subforum) }}</li>
-      </ol>
-    </nav>
-    <div class="forum-tools">
-      {% with obj_type='subforum', obj_id=subforum['id'], obj_subtype=subforum['subtype'] %}{% include 'investigations/block_object_investigations.html' %}{% endwith %}
-    </div>
-  </div>
+  {% call forum_navigation(url_for('forums_explorer.forum_explorer_forums'), forum_investigations_menu(investigations, can_annotate)) %}
+    {% for crumb in meta['breadcrumb'] %}
+      {% if crumb['type'] == 'forum' %}
+        <li><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a></li>
+      {% elif crumb['type'] == 'subforum' and crumb['id'] != subforum['id'] %}
+        <li><a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a>{{ translated_name(crumb) }}</li>
+      {% endif %}
+    {% endfor %}
+    <li aria-current="page">{{ subforum.get('name') or subforum['id'] }}{{ translated_name(subforum) }}</li>
+  {% endcall %}
   <div class="forum-subforum-heading">
     <h2>{{ subforum.get('name') or subforum['id'] }}</h2>
     {{ translated_name(subforum) }}
@@ -49,13 +43,13 @@
   </div>
   <div class="forum-translation-status" role="status" aria-live="polite"></div>
   {% if meta['subforums'] %}
-    {% with subforums=meta['subforums'], title='Subforums' %}
+    {% with subforums=meta['subforums'], title='Child subforums' %}
       {% include 'forums_explorer/subforums_table.html' %}
     {% endwith %}
   {% endif %}
   <section class="forum-board" aria-label="Threads">
     <div class="forum-board-header forum-columns">
-      <h2>Threads</h2>
+      <h2><span aria-hidden="true">{{ thread_icon | safe }}</span>Thread</h2>
       <span>Posts</span>
       <span>Last post</span>
     </div>
@@ -64,7 +58,7 @@
         {% for thread in meta['threads'] %}
           <div class="forum-row forum-columns" role="listitem">
             <div class="forum-row-main">
-              <span class="forum-icon" aria-hidden="true"><i class="far fa-comments"></i></span>
+              <span class="forum-icon" aria-hidden="true">{{ thread_icon | safe }}</span>
               <div class="forum-row-identity">
                 <a class="forum-row-title" href="{{ url_for('forums_explorer.forum_explorer_thread', subtype=thread['subtype'], id=thread['id']) }}" title="{{ thread['id'] }}">{{ thread.get('name') or thread['id'] }}</a>
                 {{ translated_name(thread) }}
@@ -81,5 +75,8 @@
     {% endif %}
   </section>
 </main>
+{% if can_annotate %}
+  {% with obj_type='subforum', obj_id=subforum['id'], obj_subtype=subforum['subtype'], show_object_investigations=false %}{% include 'modals/investigations_register_obj.html' %}{% endwith %}
+{% endif %}
 </body>
 </html>

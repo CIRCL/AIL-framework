@@ -1,102 +1,266 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Forums - AIL</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forums Explorer - AIL</title>
   <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
   <link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-  <script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
+  <link href="{{ url_for('static', filename='css/forum.css') }}" rel="stylesheet">
+  <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/forums_explorer.js') }}" defer></script>
   <style>
-    .forum-hero { background: linear-gradient(135deg, #263238, #455a64); color: white; border-radius: .35rem; }
-    .forum-board { border: 1px solid #d7dee2; border-radius: .35rem; overflow: hidden; box-shadow: 0 .1rem .35rem rgba(0,0,0,.08); }
-    .forum-board-header { background: #2f3d46; color: white; font-weight: 600; padding: .75rem 1rem; }
-    .forum-row { display: flex; align-items: center; padding: 1rem; border-top: 1px solid #e8ecef; color: inherit; }
-    .forum-row:hover { background: #f6f9fb; text-decoration: none; color: inherit; }
-    .forum-icon { width: 48px; height: 48px; border-radius: 50%; background: #d9edf7; color: #2f6f8f; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin-right: 1rem; flex: 0 0 48px; }
-    .forum-stats { min-width: 170px; text-align: right; color: #6c757d; }
+    .forum-directory-page {
+      background: #f4f7fa;
+      color: #273c53;
+    }
+    .forum-directory {
+      max-width: 2200px;
+      margin: 0 auto;
+      padding: 26px 32px 32px;
+      font: 15px/1.45 Arial, sans-serif;
+    }
+    .forum-directory-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #d8e2ed;
+    }
+    .forum-directory-heading h1 {
+      margin: 0;
+      font-size: 29px;
+      font-weight: 650;
+      letter-spacing: -.5px;
+    }
+    .forum-directory-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .forum-directory-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #d8e2ed;
+      background: #fff;
+      color: #2d5b86;
+    }
+    .forum-directory-actions .forum-create-toggle {
+      background: #eaf0f7;
+    }
+    .forum-directory-actions .btn:hover {
+      border-color: #a9bdd2;
+      background: #e2ecf6;
+    }
+    .forum-directory-results {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 18px 0 14px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .forum-directory-results span {
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #eaf0f7;
+      color: #536980;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .forum-gallery {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .forum-gallery-card {
+      display: block;
+      height: 100%;
+      padding: 8px;
+      border: 1px solid #d8e2ed;
+      border-radius: 8px;
+      background: #fff;
+      color: inherit;
+    }
+    .forum-gallery-card:hover {
+      border-color: #a9bdd2;
+      color: inherit;
+      text-decoration: none;
+    }
+    .forum-gallery-card:focus-visible {
+      outline: 2px solid #376ca3;
+      outline-offset: 3px;
+    }
+    .forum-gallery-banner {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: clamp(110px, 10vw, 167px);
+      padding: 12px;
+      overflow: hidden;
+      border-radius: 5px;
+      background: #e7eef5;
+      color: #344f6b;
+    }
+    .forum-gallery-banner img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      visibility: hidden;
+    }
+    .forum-gallery-banner img.is-loaded {
+      visibility: visible;
+    }
+    .forum-gallery-banner img.is-loaded + .forum-gallery-wordmark {
+      visibility: hidden;
+    }
+    .forum-gallery-wordmark {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      text-align: center;
+      font-size: clamp(1.25rem, 2vw, 2.25rem);
+      font-weight: 650;
+      line-height: 1.15;
+    }
+    .forum-gallery-info {
+      padding: 11px 7px 7px;
+      overflow-wrap: anywhere;
+    }
+    .forum-gallery-name {
+      margin: 0 0 3px;
+      color: #245884;
+      font-size: 17px;
+      font-weight: 650;
+    }
+    .forum-gallery-url {
+      color: #536980;
+      font: 13px/1.45 Consolas, monospace;
+    }
+    .forum-gallery-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px 7px;
+      margin-top: 8px;
+      color: #536980;
+      font-size: 13px;
+    }
+    .forum-gallery-meta span + span::before {
+      content: '·';
+      margin-inline-end: 7px;
+    }
+    @media (min-width: 1400px) {
+      .forum-gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (max-width: 950px) {
+      .forum-directory { padding-inline: 22px; }
+      .forum-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    }
+    @media (max-width: 520px) {
+      .forum-directory { padding: 17px 12px 24px; }
+      .forum-directory-heading h1 { font-size: 25px; }
+      .forum-gallery { grid-template-columns: minmax(0, 1fr); }
+      .forum-gallery-banner { height: 126px; }
+    }
   </style>
 </head>
-<body>
+<body class="forum-directory-page">
 {% include 'nav_bar.html' %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12" id="core_content">
-      <div class="forum-hero my-3 p-4">
-        <h1 class="mb-1"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                   <path d="M0 0h24v24H0z" fill="none" />
-                   <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
-                 </svg> Forums Explorer</h1>
-        <p class="mb-0">Forums are automatically crawled and imported</p>
-        <a class="btn btn-sm btn-outline-light mt-3" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}"><i class="fas fa-spider"></i> Forum crawler status</a>
-      </div>
-
+{% from 'forums_explorer/forum_macros.html' import crawler_dashboard_icon %}
+<main class="forum-directory" id="core_content">
+  <header class="forum-directory-heading">
+    <h1>Forums Explorer</h1>
+    <div class="forum-directory-actions">
+      <a class="btn btn-sm" href="{{ url_for('forums_explorer.forum_explorer_crawler_status') }}">{{ crawler_dashboard_icon() }}Forum crawler status</a>
       {% if is_admin|default(false) %}
-      <div class="mb-4">
-        <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#createForumManual" aria-expanded="false" aria-controls="createForumManual">
-          <i class="fas fa-plus"></i> Create Forum manually
-        </button>
-      </div>
-      <div class="collapse" id="createForumManual">
-        <div class="forum-board mb-4">
-          <div class="forum-board-header">Create Forum manually</div>
-          <div class="p-3">
-            <form method="post" action="{{ url_for('forums_explorer.forum_explorer_forum_create') }}">
-              <div class="form-row">
-                <div class="form-group col-md-3"><label>forum_id</label><input class="form-control" name="forum_id" placeholder="forum identifier" required></div>
-                <div class="form-group col-md-3"><label>Parser type</label>{% if parser_types %}<select class="form-control" name="forum_type" required>{% for parser_type in parser_types %}<option value="{{ parser_type }}" {% if parser_type == 'generic' %}selected{% endif %}>{{ parser_type }}</option>{% endfor %}</select>{% else %}<input class="form-control" disabled>{% endif %}</div>
-                <div class="form-group col-md-3"><label>name</label><input class="form-control" name="name" placeholder="Display name"></div>
-                <div class="form-group col-md-3"><label>url</label><input class="form-control" name="url" placeholder="https://forum.example/"></div>
-              </div>
-              <div class="form-group"><label>info</label><textarea class="form-control" name="info" rows="2" placeholder="Optional operator notes"></textarea></div>
-              <button class="btn btn-primary"><i class="fas fa-plus"></i> Create Forum</button>
-            </form>
-          </div>
-        </div>
-      </div>
-      {% endif %}
-
-      {% if forums %}
-        <div class="forum-board mb-4">
-          <div class="forum-board-header">Imported forums</div>
-          {% for forum in forums %}
-            <a class="forum-row" href="{{ url_for('forums_explorer.forum_explorer_forums') }}?id={{ forum['id'] }}">
-              <div class="forum-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M0 0h24v24H0z" fill="none" />
-                  <path fill="currentColor" d="M17 12V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v14l4-4h10a1 1 0 0 0 1-1m4-6h-2v9H6v2a1 1 0 0 0 1 1h11l4 4V7a1 1 0 0 0-1-1" />
-              </svg></div>
-              <div class="flex-grow-1">
-                <h5 class="mb-1">{{ forum.get('name') or forum['id'] }}</h5>
-                <div class="text-muted">
-                  <span class="mr-3"><i class="fas fa-fingerprint"></i> {{ forum['id'] }}</span>
-                  <span class="mr-3"><i class="fas fa-layer-group"></i> {{ forum.get('forum_type') or '' }}</span>
-                  {% if forum.get('url') %}<span><i class="fas fa-link"></i> {{ forum['url'] }}</span>{% endif %}
-                </div>
-              </div>
-              <div class="forum-stats">
-                {% if forum.get('nb_subforums') or not forum.get('nb_orphan_subforums') %}
-                <div><strong>{{ forum.get('nb_subforums') or 0 }}</strong> root subforums</div>
-                {% endif %}
-                {% if forum.get('nb_orphan_subforums') or not forum.get('nb_subforums') %}
-                <div><strong>{{ forum.get('nb_orphan_subforums') or 0 }}</strong> orphan subforums</div>
-                {% endif %}
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="alert alert-info">No imported forums found.</div>
+        <button class="btn btn-sm forum-create-toggle" type="button" data-toggle="collapse" data-target="#createForumManual" aria-expanded="false" aria-controls="createForumManual"><i class="fas fa-plus" aria-hidden="true"></i>Create forum</button>
       {% endif %}
     </div>
-  </div>
-</div>
+  </header>
 
-<script>
-$(document).ready(function () {
-    $('#page-Forums-Explorer').addClass('active');
-});
-</script>
+  {% if is_admin|default(false) %}
+    <div class="collapse" id="createForumManual">
+      <div class="card mt-3">
+        <h2 class="card-header h6">Create forum manually</h2>
+        <form class="card-body" method="post" action="{{ url_for('forums_explorer.forum_explorer_forum_create') }}">
+          <div class="form-row">
+            <div class="form-group col-md-3">
+              <label for="create-forum-id">Forum ID</label>
+              <input class="form-control" id="create-forum-id" name="forum_id" placeholder="Forum identifier" required>
+            </div>
+            <div class="form-group col-md-3">
+              <label for="create-forum-parser">Parser type</label>
+              <select class="form-control" id="create-forum-parser" name="forum_type" {% if not parser_types %}disabled{% endif %}>
+                {% for parser_type in parser_types %}
+                  <option value="{{ parser_type }}" {% if parser_type == 'generic' %}selected{% endif %}>{{ parser_type }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label for="create-forum-name">Name</label>
+              <input class="form-control" id="create-forum-name" name="name" placeholder="Display name">
+            </div>
+            <div class="form-group col-md-3">
+              <label for="create-forum-url">URL</label>
+              <input class="form-control" id="create-forum-url" name="url" placeholder="https://forum.example/">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="create-forum-info">Info</label>
+            <textarea class="form-control" id="create-forum-info" name="info" rows="2" placeholder="Optional operator notes"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit"><i class="fas fa-plus mr-1" aria-hidden="true"></i>Create forum</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
 
+  <section aria-labelledby="imported-forums-heading">
+    <h2 class="forum-directory-results" id="imported-forums-heading">Imported forums <span>{{ forums|length }}</span></h2>
+    {% if forums %}
+      <ul class="forum-gallery">
+        {% for forum in forums %}
+          {% set forum_name = forum.get('name') or forum['id'] %}
+          {% set root_count = forum.get('nb_subforums') or 0 %}
+          {% set orphan_count = forum.get('nb_orphan_subforums') or 0 %}
+          <li>
+            <a class="forum-gallery-card" href="{{ url_for('forums_explorer.forum_explorer_forums', id=forum['id']) }}" aria-labelledby="forum-gallery-name-{{ loop.index }}">
+              <div class="forum-gallery-banner" aria-hidden="true">
+                {% if forum.get('banner') %}
+                  <img data-forum-banner src="{{ url_for('objects_image.image', filename=forum['banner']) }}" alt="" loading="lazy" decoding="async">
+                {% endif %}
+                <span class="forum-gallery-wordmark">{{ forum_name }}</span>
+              </div>
+              <div class="forum-gallery-info">
+                <h3 class="forum-gallery-name" id="forum-gallery-name-{{ loop.index }}">{{ forum_name }}</h3>
+                {% if forum.get('url') %}<div class="forum-gallery-url">{{ forum['url'] }}</div>{% endif %}
+                <div class="forum-gallery-meta">
+                  {% if forum.get('forum_type') %}<span>{{ forum['forum_type'] }}</span>{% endif %}
+                  {% if root_count or not orphan_count %}<span>{{ root_count }} root subforum{% if root_count != 1 %}s{% endif %}</span>{% endif %}
+                  {% if orphan_count %}<span>{{ orphan_count }} orphan subforum{% if orphan_count != 1 %}s{% endif %}</span>{% endif %}
+                </div>
+              </div>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="alert alert-info mb-0">No imported forums found.</p>
+    {% endif %}
+  </section>
+</main>
 </body>
 </html>
