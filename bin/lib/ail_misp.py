@@ -412,7 +412,7 @@ MODULE_DESCRIPTIONS = {
     'rdap': 'Look up public domain and IP registration data using RDAP.',
     'sherlock': 'Find social media accounts by username with Sherlock.',
 }
-EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp', 'cve', 'username'}
+EXPANSION_OBJECT_TYPES = {'domain', 'ip', 'ssh-key', 'decoded', 'item', 'pgp', 'mail', 'cve', 'username'}
 PGP_EXPANSION_RELATIONS = {'key': 'key-id', 'name': 'user-id-name', 'mail': 'user-id-email'}
 EXPANSION_ATTRIBUTE_TYPES = {'domain', 'hostname', 'onion-address', 'ip-src', 'ip-dst', 'ip', 'ssh-fingerprint', 'md5', 'sha1', 'sha256', 'url', 'domain|ip', 'ip-src|port', 'ip-dst|port', 'vulnerability'}
 EMPTY_MODULE_ERRORS = {'not found', 'empty result', 'empty results', 'non existing hash', 'nxdomain', 'unable to find the history of this ip', 'no matching public keys found', 'non existing vulnerability id or cpe', 'non existing vulnerability id', 'sherlock reported no matching accounts on the queried sites'}
@@ -558,20 +558,29 @@ def get_expansion_object(global_id):
 
 def get_expansion_inputs(obj):
     """Build semantic lookup inputs without requiring a complete PGP key export."""
-    if obj.get_type() not in EXPANSION_OBJECT_TYPES:
+    object_type = obj.get_type()
+    if object_type not in EXPANSION_OBJECT_TYPES:
         raise MISPModuleError('This AIL object is not supported for expansion.', 'invalid_object', 400)
-    if obj.get_type() == 'pgp' and obj.subtype not in PGP_EXPANSION_RELATIONS:
-        raise MISPModuleError('This PGP subtype is not supported for expansion.', 'invalid_object', 400)
+    lookup_relation = None
+    if object_type == 'pgp':
+        lookup_relation = PGP_EXPANSION_RELATIONS.get(obj.subtype)
+        if lookup_relation is None:
+            raise MISPModuleError('This PGP subtype is not supported for expansion.', 'invalid_object', 400)
+    elif object_type == 'mail':
+        lookup_relation = PGP_EXPANSION_RELATIONS['mail']
     try:
-        if obj.get_type() == 'pgp':
+        if lookup_relation is not None:
             # Lookup-only metadata: names and emails can be searched without a
             # known key, even when their correlations contain several keys.
+            lookup_value = obj.get_content() if object_type == 'mail' else obj.id
+            if not lookup_value:
+                return [], []
             lookup = MISPObject('pgp-meta', strict=True, standalone=False)
-            lookup.add_attribute(PGP_EXPANSION_RELATIONS[obj.subtype], value=obj.id, to_ids=False)
+            lookup.add_attribute(lookup_relation, value=lookup_value, to_ids=False)
             objects = [finalize_misp_object(lookup, obj.get_global_id(), set())]
-        elif obj.get_type() == 'decoded':
+        elif object_type == 'decoded':
             objects = [obj.get_misp_object(include_data=False)]
-        elif obj.get_type() == 'item':
+        elif object_type == 'item':
             objects = obj.get_misp_objects(include_data=False)
         else:
             objects = obj.get_misp_objects()
@@ -580,10 +589,9 @@ def get_expansion_inputs(obj):
     inputs = []
     for misp_object in objects:
         for attribute in misp_object.attributes:
-            if obj.get_type() == 'pgp':
-                relation = PGP_EXPANSION_RELATIONS[obj.subtype]
-                compatible = attribute.object_relation == relation and attribute.type in {'text', 'email'} and attribute.value == obj.id
-            elif obj.get_type() == 'username':
+            if lookup_relation is not None:
+                compatible = attribute.object_relation == lookup_relation and attribute.type in {'text', 'email'} and attribute.value == lookup_value
+            elif object_type == 'username':
                 compatible = attribute.object_relation in {'username', 'name', 'account-name'} and attribute.type == 'text' and attribute.value == obj.id
             else:
                 compatible = attribute.type in EXPANSION_ATTRIBUTE_TYPES

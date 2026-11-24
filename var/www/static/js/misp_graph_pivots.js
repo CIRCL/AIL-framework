@@ -50,9 +50,11 @@
         if (/^username:[^:]*:(.+)$/.test(node.id)) {
             return ['text'];
         }
-        const pgp = /^pgp:(key|name|mail):(.+)$/.exec(node.id);
-        if (pgp) {
-            return pgp[1] === 'mail' ? ['text', 'email'] : ['text'];
+        if (/^(?:mail::|pgp:mail:).+$/.test(node.id)) {
+            return ['text', 'email'];
+        }
+        if (/^pgp:(key|name):.+$/.test(node.id)) {
+            return ['text'];
         }
         const match = /^(domain|ip|ssh-key|decoded|item|cve)::(.+)$/.exec(node.id);
         if (!match) {

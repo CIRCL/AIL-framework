@@ -241,7 +241,7 @@
         const edges = new Map();
         const aliases = new Map();
         const observables = baseIndex(baseNodes);
-        const input = pgpObservable(source) || normalizedObservable(response.input.type, response.input.value);
+        const input = pgpObservable(source) || normalizedObservable(source.startsWith('mail::') ? 'email' : response.input.type, response.input.value);
         const inputAliases = new Set([response.source.object_uuid, response.source.input_object_uuid, response.source.attribute_uuid, response.input.uuid].filter(Boolean));
         const references = [];
         const returned = new Set();
