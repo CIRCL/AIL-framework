@@ -800,71 +800,45 @@ def domains_search_name():
                            send_to_crawler=send_to_crawler,
                            domains_types=domains_types)
 
+def _render_domains_date(date_from, date_to):
+    date = Date.sanitise_date_range(date_from, date_to)
+    start = datetime.strptime(date['date_from'], '%Y%m%d').date().isoformat()
+    end = datetime.strptime(date['date_to'], '%Y%m%d').date().isoformat()
+    network = request.args.get('type', 'all')
+    domain_types = Domains.get_all_domains_types()
+    if network in domain_types:
+        domain_types = [network]
+    else:
+        network = 'all'
+
+    up = request.args.get('up', 'True').lower() not in {'', 'false', '0'}
+    down = request.args.get('down', '').lower() not in {'', 'false', '0'}
+    query = request.args.get('q', '').strip()[:255]
+    sort = request.args.get('sort', 'date')
+    if sort not in {'date', 'domain', 'first_seen', 'last_check'}:
+        sort = 'date'
+    direction = request.args.get('direction')
+    if direction not in {'asc', 'desc'}:
+        direction = 'asc' if sort == 'domain' else 'desc'
+
+    pagination = Domains.get_domains_date_page(start.replace('-', ''), end.replace('-', ''), domain_types, up=up, down=down, query=query, sort=sort, descending=direction == 'desc', page=request.args.get('page', 1, type=int), page_size=request.args.get('size', 25, type=int))
+    filters = dict(type=network, date_from=start, date_to=end, up='True' if up else '', down='True' if down else '', q=query, sort=sort, direction=direction, size=pagination['page_size'])
+    return render_template('domains_daterange.html', pagination=pagination, filters=filters)
+
+
 @crawler_splash.route('/domains/today', methods=['GET'])
 @login_required
 @login_read_only
 def domains_search_today():
-    dom_types = request.args.get('type')
-    down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up', True))
-    # page = request.args.get('page')
+    today = Date.get_today_date_str()
+    return _render_domains_date(today, today)
 
-    all_types = Domains.get_all_domains_types()
-    if dom_types == 'all':
-        domain_types = all_types
-    elif dom_types in Domains.get_all_domains_types():
-        domain_types = [dom_types]
-    else:
-        dom_types = 'all'
-        domain_types = all_types
-
-    date = Date.get_today_date_str()
-    domains_date = Domains.get_domains_dates_by_daterange(date, date, domain_types, up=up, down=down)
-    dict_domains = {}
-    for d in domains_date:
-        dict_domains[d] = Domains.get_domains_meta(domains_date[d])
-    date_from = f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
-    date_to = date_from
-
-    return render_template("domains_daterange.html", date_from=date_from, date_to=date_to,
-                           bootstrap_label=bootstrap_label,
-                           filter_down=down, filter_up=up,
-                           dict_domains=dict_domains, type=dom_types)
 
 @crawler_splash.route('/domains/date', methods=['GET'])
 @login_required
 @login_read_only
 def domains_search_date():
-    # TODO sanitize type + date
-    dom_types = request.args.get('type')
-    date_from = request.args.get('date_from')
-    date_to = request.args.get('date_to')
-    down = bool(request.args.get('down', False))
-    up = bool(request.args.get('up', True))
-    # page = request.args.get('page')
-
-    all_types = Domains.get_all_domains_types()
-    if dom_types == 'all':
-        domain_types = all_types
-    elif dom_types in Domains.get_all_domains_types():
-        domain_types = [dom_types]
-    else:
-        dom_types = 'all'
-        domain_types = all_types
-
-    date = Date.sanitise_date_range(date_from, date_to)
-    domains_date = Domains.get_domains_dates_by_daterange(date['date_from'], date['date_to'], domain_types,
-                                                          up=up, down=down)
-    dict_domains = {}
-    for d in domains_date:
-        dict_domains[d] = Domains.get_domains_meta(domains_date[d])
-    date_from = f"{date['date_from'][0:4]}-{date['date_from'][4:6]}-{date['date_from'][6:8]}"
-    date_to = f"{date['date_to'][0:4]}-{date['date_to'][4:6]}-{date['date_to'][6:8]}"
-
-    return render_template("domains_daterange.html", date_from=date_from, date_to=date_to,
-                           bootstrap_label=bootstrap_label,
-                           filter_down=down, filter_up=up,
-                           dict_domains=dict_domains, type=dom_types)
+    return _render_domains_date(request.args.get('date_from'), request.args.get('date_to'))
 
 
 @crawler_splash.route('/domains/date/post', methods=['POST'])

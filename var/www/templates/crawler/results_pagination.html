@@ -1,0 +1,29 @@
+{% macro numbered_pages(endpoint, filters, page, pages) %}
+    {% if pages > 1 %}
+        <nav aria-label="Domain pages">
+            {% if page > 1 %}
+                <a class="page-link" href="{{ url_for(endpoint, page=page - 1, **filters) }}" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
+            {% else %}
+                <span class="page-link" aria-disabled="true" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
+            {% endif %}
+            {% set previous = namespace(number=0) %}
+            {% set numbers = range(1, pages + 1) if pages <= 5 else [1, page - 1, page, page + 1, pages]|unique|sort %}
+            {% for number in numbers %}
+                {% if 1 <= number <= pages %}
+                    {% if previous.number and number > previous.number + 1 %}<span aria-hidden="true">…</span>{% endif %}
+                    {% if number == page %}
+                        <span class="page-link" aria-current="page">{{ number }}</span>
+                    {% else %}
+                        <a class="page-link" href="{{ url_for(endpoint, page=number, **filters) }}" aria-label="Page {{ number }}">{{ number }}</a>
+                    {% endif %}
+                    {% set previous.number = number %}
+                {% endif %}
+            {% endfor %}
+            {% if page < pages %}
+                <a class="page-link" href="{{ url_for(endpoint, page=page + 1, **filters) }}" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></a>
+            {% else %}
+                <span class="page-link" aria-disabled="true" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endmacro %}

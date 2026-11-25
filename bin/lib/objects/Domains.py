@@ -780,6 +780,43 @@ def get_domains_meta(domains):
         metas.append(dom.get_meta())
     return metas
 
+def _paginate_domain_results(rows, page=1, page_size=25):
+    page_size = page_size if page_size in {10, 25, 50, 100} else 25
+    total = len(rows)
+    pages = max(1, (total + page_size - 1) // page_size)
+    page = min(max(1, page), pages)
+    start = (page - 1) * page_size
+    return {'items': rows[start:start + page_size], 'total': total, 'page': page, 'pages': pages, 'page_size': page_size, 'start': start + 1 if total else 0, 'end': min(start + page_size, total)}
+
+def get_domains_date_page(date_from, date_to, domain_types, up=True, down=False, query='', sort='date', descending=True, page=1, page_size=25):
+    if not (up or down):
+        return _paginate_domain_results([], page=page, page_size=page_size)
+    domains_by_date = get_domains_dates_by_daterange(date_from, date_to, domain_types, up=up, down=down)
+    query = query.lower()
+    rows = []
+    for date in sorted(domains_by_date, reverse=sort != 'date' or descending):
+        rows.extend((date, domain) for domain in sorted(domains_by_date[date]) if query in domain.lower())
+
+    if sort == 'domain':
+        rows.sort(key=lambda row: row[1].lower(), reverse=descending)
+    elif sort in {'first_seen', 'last_check'}:
+        # Read only the requested sort field for matches before loading a page of metadata.
+        domains = list(dict.fromkeys(domain for _, domain in rows))
+        values = {}
+        with r_crawler.pipeline(transaction=False) as pipeline:
+            for start in range(0, len(domains), 1000):
+                batch = domains[start:start + 1000]
+                for domain in batch:
+                    pipeline.hget(f'domain:meta:{domain}', sort)
+                values.update(zip(batch, pipeline.execute()))
+        rows.sort(key=lambda row: values[row[1]] or '', reverse=descending)
+
+    result = _paginate_domain_results(rows, page=page, page_size=page_size)
+    domain_ids = dict.fromkeys(domain for _, domain in result['items'])
+    metadata = {meta['id']: meta for meta in get_domains_meta(domain_ids)}
+    result['items'] = [dict(metadata[domain], crawl_date=f'{date[:4]}-{date[4:6]}-{date[6:8]}') for date, domain in result['items']]
+    return result
+
 # TODO ADD TAGS FILTER
 def get_domains_up_by_filers(domain_types, date_from=None, date_to=None, tags=None, nb_obj=25, page=1, query='', sort='asc'):
     if not domain_types:
@@ -866,14 +903,6 @@ def get_domain_vanity(domain, len_vanity=4):
 def get_vanity_clusters(nb_min=4):
     return r_crawler.zrange('vanity:onion:4', nb_min, '+inf', byscore=True, withscores=True)
 
-def _paginate_vanity_results(rows, page=1, page_size=25):
-    page_size = page_size if page_size in {10, 25, 50, 100} else 25
-    total = len(rows)
-    pages = max(1, (total + page_size - 1) // page_size)
-    page = min(max(1, page), pages)
-    start = (page - 1) * page_size
-    return {'items': rows[start:start + page_size], 'total': total, 'page': page, 'pages': pages, 'page_size': page_size, 'start': start + 1 if total else 0, 'end': min(start + page_size, total)}
-
 def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=25):
     domains = get_vanity_domains(vanity[:4], len_vanity=4)
     matching = sorted(domain for domain in domains if domain.startswith(vanity))
@@ -890,7 +919,7 @@ def get_vanity_explorer_page(vanity, nb_min=2, query='', page=1, page_size=25):
         prefix = vanity[:length]
         tree.append({'prefix': prefix, 'count': sum(domain.startswith(prefix) for domain in domains)})
     filtered = [domain for domain in matching if query in domain] if query else matching
-    result = _paginate_vanity_results(filtered, page=page, page_size=page_size)
+    result = _paginate_domain_results(filtered, page=page, page_size=page_size)
     result['items'] = [Domain(domain).get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'}) for domain in result['items']]
     result['matching'] = len(matching)
     result['children'] = children

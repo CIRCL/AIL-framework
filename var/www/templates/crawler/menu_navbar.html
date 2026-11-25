@@ -1,3 +1,14 @@
+{% macro dashboard_icon() -%}
+<span class="crawler-nav-dashboard-icon" aria-hidden="true">
+    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
+        <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
+        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
+        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
+    </svg>
+    <i class="fas fa-spider"></i>
+</span>
+{%- endmacro %}
+
 {% macro menu() %}
 <li class="nav-item mr-3 crawler-nav" id="crawler-nav">
     <div class="crawler-nav-trigger">
@@ -9,14 +20,7 @@
         <li class="crawler-nav-separator" role="separator"></li>
         <li>
             <a id="crawler-nav-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
-                <span class="crawler-nav-dashboard-icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
-                        <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
-                        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
-                        <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
-                    </svg>
-                    <i class="fas fa-spider"></i>
-                </span>Dashboard
+                {{ dashboard_icon() }}Dashboard
             </a>
         </li>
         <li class="crawler-nav-group">

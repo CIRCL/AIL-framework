@@ -1,3 +1,5 @@
+{% from 'crawler/menu_navbar.html' import dashboard_icon %}
+{% from 'crawler/results_pagination.html' import numbered_pages %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -896,14 +898,7 @@
             <nav class="header-actions" aria-label="Explorer navigation">
                 <a class="explorer-vanity" href="{{ url_for('crawler_splash.domains_explorer_vanity_clusters') }}"><i class="fas fa-dumbbell" aria-hidden="true"></i>Vanity explorer</a>
                 <a class="explorer-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
-                    <span class="crawler-nav-dashboard-icon" aria-hidden="true">
-                        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
-                            <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
-                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
-                            <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
-                        </svg>
-                        <i class="fas fa-spider"></i>
-                    </span>Dashboard
+                    {{ dashboard_icon() }}Dashboard
                 </a>
             </nav>
         </header>
@@ -991,32 +986,7 @@
             </div>
             <footer class="paging">
                 <span>{{ dict_data.nb_first_elem }}–{{ dict_data.nb_last_elem }} of <b>{{ '{:,}'.format(dict_data.nb_all_elem) }}</b> domains</span>
-                {% if dict_data.nb_pages > 1 %}
-                    <nav aria-label="Domain pages">
-                        {% if dict_data.page > 1 %}
-                            <a class="page-link" href="{{ url_for(endpoint, page=dict_data.page - 1, **filters) }}" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></a>
-                        {% else %}
-                            <span class="page-link" aria-disabled="true" aria-label="Previous page"><i class="fas fa-chevron-left" aria-hidden="true"></i></span>
-                        {% endif %}
-                        {% set previous = namespace(number=0) %}
-                        {% for number in [1, dict_data.page - 1, dict_data.page, dict_data.page + 1, dict_data.nb_pages]|unique|sort %}
-                            {% if 1 <= number <= dict_data.nb_pages %}
-                                {% if previous.number and number > previous.number + 1 %}<span aria-hidden="true">…</span>{% endif %}
-                                {% if number == dict_data.page %}
-                                    <span class="page-link" aria-current="page">{{ number }}</span>
-                                {% else %}
-                                    <a class="page-link" href="{{ url_for(endpoint, page=number, **filters) }}" aria-label="Page {{ number }}">{{ number }}</a>
-                                {% endif %}
-                                {% set previous.number = number %}
-                            {% endif %}
-                        {% endfor %}
-                        {% if dict_data.page < dict_data.nb_pages %}
-                            <a class="page-link" href="{{ url_for(endpoint, page=dict_data.page + 1, **filters) }}" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></a>
-                        {% else %}
-                            <span class="page-link" aria-disabled="true" aria-label="Next page"><i class="fas fa-chevron-right" aria-hidden="true"></i></span>
-                        {% endif %}
-                    </nav>
-                {% endif %}
+                {{ numbered_pages(endpoint, filters, dict_data.page, dict_data.nb_pages) }}
             </footer>
         </section>
     </main>

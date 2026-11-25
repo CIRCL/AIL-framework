@@ -1,140 +1,288 @@
+{% from 'crawler/menu_navbar.html' import dashboard_icon %}
+{% from 'crawler/results_pagination.html' import numbered_pages %}
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-	<title>AIL-Framework</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Domains by date · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-results.css') }}">
+    <style>
+        .domains-date-page .date-page-icon {
+            flex: none;
+            width: 44px;
+            color: #657f98;
+            font-size: 36px;
+            text-align: center;
+        }
 
-	<!-- JS -->
- 	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js')}}"></script>
- 	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
- 	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js')}}"></script>
- 	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
- 	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
+        .domains-date-page .network-switch {
+            flex-wrap: wrap;
+        }
 
+        .domains-date-page .network-switch a {
+            white-space: nowrap;
+        }
+
+        .results-controls,
+        .results-controls .page-size,
+        .results-paging,
+        .paging-controls,
+        .results-paging nav,
+        .page-jump {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+
+        .results-controls .page-size,
+        .page-jump label {
+            margin: 0;
+            color: #63798e;
+            font-size: 13px;
+        }
+
+        .results-controls .form-control,
+        .page-jump .form-control {
+            width: auto;
+            height: 37px;
+            padding: 5px 8px;
+            border-color: #dce5ed;
+            color: #3d546a;
+            font-size: 14px;
+        }
+
+        .results-controls .btn,
+        .page-jump .btn {
+            min-height: 37px;
+            font-size: 14px;
+        }
+
+        .domains-date-page .sort-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #315b87;
+        }
+
+        .domains-date-page .sort-link i {
+            color: #64819c;
+        }
+
+        .domains-date-page .crawl-date {
+            color: #405e7a;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .domain-tags {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 4px;
+        }
+
+        .domain-tags a {
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid #dfe8f1;
+            border-radius: 4px;
+            background: #f8fafc;
+            color: #496784;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .results-paging {
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-top: 1px solid #e1e9f0;
+            color: #63798e;
+            font-size: 13px;
+        }
+
+        .paging-controls {
+            gap: .75rem;
+        }
+
+        .results-paging .page-link {
+            min-width: 34px;
+            margin: 0;
+            padding: 7px 8px;
+            border: 1px solid #dce5ed;
+            border-radius: 5px;
+            color: #315b87;
+            text-align: center;
+        }
+
+        .results-paging .page-link[aria-current="page"] {
+            border-color: #2563d5;
+            background: #2563d5;
+            color: #fff;
+        }
+
+        .results-paging .page-link[aria-disabled="true"] {
+            background: #f7f9fc;
+            color: #718296;
+        }
+
+        .page-jump .form-control {
+            width: 5.5rem;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
 </head>
-<body>
+{% set endpoint = 'crawler_splash.domains_search_date' %}
+{% set network_labels = {'all': 'All networks', 'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'} %}
 
-	{% include 'nav_bar.html' %}
+{% macro hidden_filters(exclude=()) %}
+    {% for name, value in filters.items() if name not in exclude %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+{% endmacro %}
 
-	<div class="container-fluid">
-		<div class="row">
+{% macro sort_heading(key, label) %}
+    {% set active = filters.sort == key %}
+    {% if active %}
+        {% set direction = 'desc' if filters.direction == 'asc' else 'asc' %}
+    {% else %}
+        {% set direction = 'asc' if key == 'domain' else 'desc' %}
+    {% endif %}
+    {% set icon = {'asc': 'sort-up', 'desc': 'sort-down'}[filters.direction] if active else 'sort' %}
+    <th scope="col"{% if active %} aria-sort="{{ 'ascending' if filters.direction == 'asc' else 'descending' }}"{% endif %}>
+        <a class="sort-link" href="{{ url_for(endpoint, **dict(filters, sort=key, direction=direction)) }}">{{ label }}<i class="fas fa-{{ icon }}" aria-hidden="true"></i></a>
+    </th>
+{% endmacro %}
 
+<body class="crawler-domain-results-page domains-date-page">
+    {% include 'nav_bar.html' %}
 
-			<div class="col-12" id="core_content">
+    <main class="crawler-domain-results-content" id="core_content">
+        <header class="page-heading">
+            <h1><i class="far fa-calendar-alt date-page-icon" aria-hidden="true"></i>Domains by date</h1>
+            <nav class="page-actions" aria-label="Crawler actions">
+                <div class="secondary-actions">
+                    <a href="{{ url_for('crawler_splash.crawlers_dashboard') }}">{{ dashboard_icon() }}Dashboard</a>
+                    <a href="{{ url_for('crawler_splash.domains_explorer_' ~ filters.type, date_from=filters.date_from, date_to=filters.date_to) }}"><i class="fas fa-compass" aria-hidden="true"></i>Domain Explorer</a>
+                </div>
+                <a class="btn btn-primary" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>New Capture</a>
+            </nav>
+        </header>
 
-                {% include 'crawler/show_domains_by_daterange.html' %}
-
-
-                {% for date in dict_domains %}
-                    <div class="card text-center mt-1 mb-3">
-                        <div class="card-header bg-dark text-white">
-                            <h3 style="text-align:center;">{{'{}/{}/{}'.format(date[0:4], date[4:6], date[6:8])}}</h3>
-                        </div>
-                        <div class="card-body px-1">
-
-                            <table id="table_{{date}}" class="table table-striped table-bordered">
-                                <thead class="bg-dark text-white">
-                                <tr>
-                                    <th>Domain</th>
-                                    <th>First Seen</th>
-                                    <th>Last Check</th>
-                                    <th>Status</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                {% for dict_domain in dict_domains[date] %}
-                                    <tr>
-                                        <td>
-                                            <a target="_blank" href="{{ url_for('crawler_splash.showDomain') }}?domain={{ dict_domain['domain'] }}">{{ dict_domain['domain'] }}</a>
-                                            <div>
-                                                {% for tag in dict_domain['tags'] %}
-                                                    <a href="{{ url_for('tags_ui.get_obj_by_tags') }}?object_type=domain&ltags={{ tag }}">
-                                                        <span class="badge badge-{{ bootstrap_label[loop.index0 % 5] }}">{{ tag }}</span>
-                                                    </a>
-                                                {%  endfor %}
-                                            </div>
-                                        </td>
-                                        <td>{{dict_domain['first_seen']}}</td>
-                                        <td>{{dict_domain['last_check']}}</td>
-                                        <td>
-                                            {% if dict_domain['status'] %}
-                                                <div style="color:Green; display:inline-block">
-                                                    <i class="fas fa-check-circle"></i> UP
-                                                </div>
-                                            {% else %}
-                                                <div style="color:Red; display:inline-block">
-                                                    <i class="fas fa-times-circle"></i> DOWN
-                                                </div>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-
-                        </div>
-                    </div>
-
-                {% endfor %}
-
+        <div class="context-row">
+            <div class="network-navigation">
+                <a class="overview-link" href="{{ url_for('crawler_splash.crawlers_overview') }}"><i class="fas fa-arrow-left" aria-hidden="true"></i>Crawl history</a>
+                <nav class="network-switch" aria-label="Network">
+                    {% for network, icon in [('all', 'layer-group'), ('onion', 'user-secret'), ('i2p', 'user-secret'), ('web', 'globe')] %}
+                        <a href="{{ url_for(endpoint, **dict(filters, type=network)) }}"{% if filters.type == network %} class="selected" aria-current="page"{% endif %}><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ network_labels[network] }}</a>
+                    {% endfor %}
+                </nav>
             </div>
         </div>
 
-    </div>
+        <section class="surface search-surface" aria-label="Search domains by date">
+            <form class="date-toolbar" method="get" action="{{ url_for(endpoint) }}">
+                <strong class="filter-title"><i class="far fa-calendar-alt" aria-hidden="true"></i>Search by date</strong>
+                {{ hidden_filters(('date_from', 'date_to', 'up', 'down')) }}
+                <label for="domains-date-from">From<input class="form-control" id="domains-date-from" type="date" name="date_from" value="{{ filters.date_from }}" required></label>
+                <label for="domains-date-to">To<input class="form-control" id="domains-date-to" type="date" name="date_to" value="{{ filters.date_to }}" required></label>
+                <div class="status-choices" role="group" aria-label="Status on crawl date">
+                    <label class="up"><input type="checkbox" name="up" value="True"{% if filters.up %} checked{% endif %}><i class="fas fa-check-circle" aria-hidden="true"></i>Up</label>
+                    <label class="down"><input type="checkbox" name="down" value="True"{% if filters.down %} checked{% endif %}><i class="fas fa-times-circle" aria-hidden="true"></i>Down</label>
+                </div>
+                {# An unchecked Up must reach /domains/date as up=. Keep the fallback after the checkbox. #}
+                <input type="hidden" name="up" value="">
+                <button class="btn btn-primary" type="submit">Show domains<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+            </form>
+        </section>
 
+        <section class="surface results-card" aria-labelledby="results-heading">
+            <div class="section-heading results-heading">
+                <h2 id="results-heading">Results<span class="result-count">{{ '{:,}'.format(pagination.total) }}</span></h2>
+                <form class="results-controls" method="get" action="{{ url_for(endpoint) }}">
+                    {{ hidden_filters(('q', 'size')) }}
+                    <label class="local-search"><i class="fas fa-search" aria-hidden="true"></i><input type="search" name="q" value="{{ filters.q }}" placeholder="Find a domain in these results" aria-label="Find a domain in these results" maxlength="255"></label>
+                    <button class="btn btn-outline-primary" type="submit">Search</button>
+                    <label class="page-size" for="domains-date-size">Rows per page
+                        <select class="form-control" name="size" id="domains-date-size">
+                            {% for size in [10, 25, 50, 100] %}
+                                <option value="{{ size }}"{% if filters.size == size %} selected{% endif %}>{{ size }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </form>
+            </div>
+            {% if not pagination.total %}
+                <p class="results-empty">
+                    {% if not (filters.up or filters.down) %}
+                        Select Up or Down to view domains.
+                    {% elif filters.q %}
+                        No domains match your search and filters.
+                    {% else %}
+                        No domains found for this network and date range.
+                    {% endif %}
+                </p>
+            {% else %}
+                <div class="table-frame" role="region" aria-label="Domain results table" tabindex="0">
+                    <table class="table mb-0" aria-labelledby="results-heading">
+                        <thead><tr>
+                            {{ sort_heading('date', 'Crawl date') }}
+                            {{ sort_heading('domain', 'Domain') }}
+                            {{ sort_heading('first_seen', 'First seen') }}
+                            {{ sort_heading('last_check', 'Last check') }}
+                            <th scope="col">Latest status</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for domain in pagination['items'] %}
+                                <tr>
+                                    <td class="crawl-date"><time datetime="{{ domain.crawl_date }}">{{ domain.crawl_date }}</time></td>
+                                    <td class="domain-cell">
+                                        <a href="{{ url_for('crawler_splash.showDomain', domain=domain.id) }}" target="_blank" rel="noopener noreferrer">{{ domain.id }}</a>
+                                        {% if domain.tags %}
+                                            <div class="domain-tags">
+                                                {% for tag in domain.tags %}
+                                                    <a href="{{ url_for('tags_ui.get_obj_by_tags', object_type='domain', ltags=tag) }}">{{ tag }}</a>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="first-seen">{{ domain.first_seen|default('—', true)|replace('/', '-') }}</td>
+                                    <td class="last-check">{{ domain.last_check|default('—', true)|replace('/', '-') }}</td>
+                                    <td><span class="result-status {{ 'up' if domain.status else 'down' }}"><i class="fas fa-{{ 'check-circle' if domain.status else 'times-circle' }}" aria-hidden="true"></i>{{ 'Up' if domain.status else 'Down' }}</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <footer class="results-paging">
+                    <span>{{ '{:,}'.format(pagination.start) }}–{{ '{:,}'.format(pagination.end) }} of {{ '{:,}'.format(pagination.total) }} results</span>
+                    <div class="paging-controls">
+                        {{ numbered_pages(endpoint, filters, pagination.page, pagination.pages) }}
+                        {% if pagination.pages > 5 %}
+                            <form class="page-jump" method="get" action="{{ url_for(endpoint) }}">
+                                {{ hidden_filters() }}
+                                <label for="domains-date-page">Go to page</label>
+                                <input class="form-control" id="domains-date-page" name="page" type="number" min="1" max="{{ pagination.pages }}" value="{{ pagination.page }}" required>
+                                <button class="btn btn-outline-primary" type="submit">Go</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </footer>
+            {% endif %}
+        </section>
+    </main>
+    <script>
+        document.getElementById('page-Crawler').classList.add('active');
+        document.getElementById('domains-date-size').addEventListener('change', function (event) {
+            event.target.form.requestSubmit();
+        });
+    </script>
 </body>
-
-<script>
-$(document).ready(function(){
-	$("#page-Crawler").addClass("active");
-
-	$('#date-range-from').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-					},
-					setValue: function(s,s1,s2){
-							$('#date-range-from-input').val(s1);
-							$('#date-range-to-input').val(s2);
-					}
-	});
-	$('#date-range-to').dateRangePicker({
-			separator : ' to ',
-			getValue: function(){
-					if ($('#date-range-from-input').val() && $('#date-range-to-input').val() )
-							return $('#date-range-from-input').val() + ' to ' + $('#date-range-to-input').val();
-					else
-							return '';
-			},
-			setValue: function(s,s1,s2){
-					$('#date-range-from-input').val(s1);
-					$('#date-range-to-input').val(s2);
-			}
-	});
-
-		{% for date in dict_domains %}
-			$('#table_{{date}}').DataTable({
-				"aLengthMenu": [[5, 15, 30, -1], [5, 15, 30, "All"]],
-				"iDisplayLength": 15,
-				"order": [[ 0, "asc" ]]
-			});
-		{% endfor %}
-
-});
-
-
-</script>
-
 </html>

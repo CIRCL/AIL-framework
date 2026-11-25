@@ -1,3 +1,4 @@
+{% from 'crawler/menu_navbar.html' import dashboard_icon %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,143 +15,13 @@
     <script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-results.css') }}">
     <style>
-        .latest-domains-page {
-            margin: 0;
-            background: #f3f6fa;
-            color: #263d53;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .latest-domains-content {
-            padding: 24px 28px 28px;
-        }
-
-        .page-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 24px;
-            margin-bottom: 18px;
-        }
-
-        .page-heading h1 {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 0;
-            font-size: 24px;
-            font-weight: 650;
-            letter-spacing: -.35px;
-        }
-
         .page-heading .crawler-history-icon {
             width: 44px;
             height: 44px;
             font-size: 44px;
             color: #657f98;
-        }
-
-        .page-actions, .secondary-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .secondary-actions {
-            padding: 2px;
-            gap: 0;
-            border: 1px solid #dbe4ed;
-            border-radius: 7px;
-            background: #fff;
-        }
-
-        .secondary-actions a {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 11px;
-            color: #455d75;
-            font-size: 14px;
-        }
-
-        .secondary-actions a + a {
-            border-left: 1px solid #e0e7ee;
-        }
-
-        .secondary-actions .crawler-nav-dashboard-icon {
-            color: inherit;
-        }
-
-        .page-actions > .btn {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            padding: 8px 13px;
-            border-radius: 6px;
-        }
-
-        .page-actions > .btn .fa-spider {
-            transform: rotate(-15deg);
-            margin-right: 3px;
-        }
-
-        .latest-domains-page .btn-primary {
-            background: #2563d5;
-            border-color: #2563d5;
-            font-size: 14px;
-            font-weight: 500;
-            border-radius: 6px;
-        }
-
-        .context-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 18px;
-        }
-
-        .overview-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            margin-right: 12px;
-            color: #315b87;
-            font-size: 14px;
-        }
-
-        .network-navigation {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .network-switch {
-            display: inline-flex;
-            gap: 4px;
-            padding: 3px;
-            border: 1px solid #dce5ef;
-            border-radius: 8px;
-            background: #eaf0f6;
-        }
-
-        .network-switch a {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            padding: 7px 18px;
-            border-radius: 5px;
-            color: #607489;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .network-switch a.selected {
-            background: #fff;
-            color: #245e9b;
-            box-shadow: 0 1px 3px rgba(30, 50, 75, .09);
         }
 
         .today-date {
@@ -230,226 +101,6 @@
 
         .compact-stats .stat strong {
             font-size: 23px;
-        }
-
-        .surface {
-            min-width: 0;
-            border: 1px solid #dce5ed;
-            border-radius: 9px;
-            background: #fff;
-            box-shadow: 0 2px 5px rgba(25, 48, 70, .025);
-            overflow: hidden;
-        }
-
-        .search-surface {
-            margin-bottom: 18px;
-        }
-
-        .date-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 14px 18px;
-            margin: 0;
-        }
-
-        .filter-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-right: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .filter-title i {
-            color: #73869b;
-            font-size: 15px;
-        }
-
-        .date-toolbar > label {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 0;
-            color: #6a7f92;
-            font-size: 14px;
-        }
-
-        .date-toolbar .form-control {
-            width: 166px;
-            height: 37px;
-            padding: 7px 10px;
-            border: 1px solid #cfdbe6;
-            border-radius: 5px;
-            color: #3d546a;
-            font-size: 14px;
-        }
-
-        .status-choices {
-            display: flex;
-            gap: 10px;
-            margin-left: 3px;
-        }
-
-        .status-choices label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 9px;
-            border: 1px solid #e0e7ee;
-            border-radius: 5px;
-            font-size: 14px;
-            margin: 0;
-            white-space: nowrap;
-        }
-
-        .status-choices input {
-            margin: 0;
-            accent-color: #15803d;
-        }
-
-        .date-toolbar > .btn {
-            margin-left: auto;
-            padding: 8px 13px;
-            white-space: nowrap;
-        }
-
-        .up {
-            color: #15803d;
-        }
-
-        .down {
-            color: #b13d4e;
-        }
-
-        .section-heading {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 16px;
-            padding: 14px 17px;
-        }
-
-        .section-heading h2 {
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .result-count {
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #eff3f7;
-            color: #718498;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .local-search {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            width: 310px;
-            height: 37px;
-            padding: 0 10px;
-            border: 1px solid #dce5ed;
-            border-radius: 6px;
-            margin: 0;
-            color: #8493a3;
-            font-size: 14px;
-        }
-
-        .local-search input {
-            width: 100%;
-            min-width: 0;
-            outline: none;
-            border: 0;
-            background: transparent;
-            color: #41576e;
-            font: inherit;
-        }
-
-        .local-search input::placeholder {
-            color: #8797a7;
-        }
-
-        .table-frame {
-            overflow-x: auto;
-        }
-
-        .results-card .table {
-            width: 100%;
-            table-layout: auto;
-        }
-
-        .results-card th {
-            padding: 9px 16px;
-            border: 0;
-            border-top: 1px solid #e8eef4;
-            border-bottom: 1px solid #dce5ee;
-            background: #f8fafc;
-            color: #718296;
-            font-size: 13px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .results-card td {
-            padding: 10px 16px;
-            vertical-align: middle;
-            border-color: #edf1f6;
-            font-size: 14px;
-        }
-
-        .results-card tr:hover td {
-            background: #f7f9fc;
-        }
-
-        .domain-cell {
-            width: 52%;
-            min-width: 18rem;
-            overflow-wrap: anywhere;
-        }
-
-        .domain-cell a {
-            color: #315b87;
-            font-size: 15px;
-            font-weight: 500;
-            text-decoration: none;
-        }
-
-        .domain-cell a:hover {
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
-
-        .first-seen {
-            color: #7a8b9d;
-            white-space: nowrap;
-        }
-
-        .last-check {
-            color: #5e7489;
-            white-space: nowrap;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .result-status {
-            display: inline-flex;
-            gap: 6px;
-            align-items: center;
-            font-size: 14px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-
-        .result-status i {
-            font-size: 14px;
         }
 
         .chart-card .section-heading {
@@ -597,32 +248,8 @@
         .bottom-history .chart-canvas {
             height: 210px;
         }
-        .latest-domains-content {
-            min-width: 0;
-        }
-        .page-actions {
-            flex-wrap: wrap;
-        }
         .stat strong {
             overflow-wrap: anywhere;
-        }
-        .date-toolbar > label,
-        .date-field {
-            min-width: 0;
-        }
-        .status-choices .down input {
-            accent-color: #b13d4e;
-        }
-        .local-search:focus-within {
-            border-color: #2468b4;
-            box-shadow: 0 0 0 2px rgba(36, 104, 180, .12);
-        }
-        .results-empty {
-            margin: 0;
-            padding: 1.5rem 1rem;
-            color: #718296;
-            font-size: .875rem;
-            text-align: center;
         }
         .chart-notice {
             margin: .5rem 0 0;
@@ -664,24 +291,9 @@
             font-weight: 500;
         }
         @media (max-width: 1199.98px) {
-            .date-toolbar {
-                flex-wrap: wrap;
-                gap: .75rem;
-            }
-            .date-toolbar .form-control {
-                width: 150px;
-            }
             .results-and-stats {
                 grid-template-columns: minmax(0, 1fr) 300px;
                 gap: 1rem;
-            }
-            .domain-cell {
-                min-width: 12rem;
-            }
-            .results-card th,
-            .results-card td {
-                padding-left: 12px;
-                padding-right: 12px;
             }
             .monthly-donut-layout {
                 grid-template-columns: 90px minmax(0, 1fr);
@@ -693,10 +305,6 @@
             }
         }
         @media (max-width: 991.98px) {
-            .page-heading {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
             .results-and-stats {
                 grid-template-columns: minmax(0, 1fr);
             }
@@ -714,22 +322,6 @@
             }
         }
         @media (max-width: 575.98px) {
-            .latest-domains-content {
-                padding: 1.25rem .9375rem;
-            }
-            .page-heading h1 {
-                font-size: 1.4rem;
-            }
-            .page-actions {
-                gap: .5rem;
-            }
-            .context-row {
-                flex-wrap: wrap;
-                gap: .75rem;
-            }
-            .network-switch a {
-                padding: .4375rem .875rem;
-            }
             .today-stats {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -742,29 +334,6 @@
             .compact-stats .stat:nth-child(n+3) {
                 border-top: 1px solid #e5ebf2;
             }
-            .date-toolbar {
-                display: grid;
-                grid-template-columns: minmax(0, 1fr);
-                padding: 1rem;
-            }
-            .date-toolbar > label {
-                display: grid;
-                grid-template-columns: 2rem minmax(0, 1fr);
-            }
-            .date-toolbar .form-control {
-                width: 100%;
-            }
-            .date-toolbar > .btn {
-                width: 100%;
-                margin-left: 0;
-            }
-            .results-heading {
-                flex-wrap: wrap;
-                gap: .75rem;
-            }
-            .local-search {
-                width: 100%;
-            }
             .stats-column {
                 grid-template-columns: minmax(0, 1fr);
             }
@@ -775,9 +344,6 @@
                 width: 104px;
                 height: 104px;
             }
-            .section-heading {
-                gap: .5rem;
-            }
         }
         @media (prefers-reduced-motion: reduce) {
             .latest-domains-content .fa-beat-fade {
@@ -786,12 +352,12 @@
         }
     </style>
 </head>
-<body class="latest-domains-page">
+<body class="latest-domains-page crawler-domain-results-page">
     {% set network_label = {'onion': 'Onion', 'i2p': 'I2P', 'web': 'Web'}[type] %}
     {% set explorer = {'onion': 'crawler_splash.domains_explorer_onion', 'i2p': 'crawler_splash.domains_explorer_i2p', 'web': 'crawler_splash.domains_explorer_web'}[type] %}
     {% set stats = crawler_stats[type] %}
     {% include 'nav_bar.html' %}
-    <main class="latest-domains-content" id="core_content">
+    <main class="latest-domains-content crawler-domain-results-content" id="core_content">
         <header class="page-heading">
             <h1>
                 <span class="crawler-history-icon" aria-hidden="true">
@@ -806,14 +372,7 @@
             <nav class="page-actions" aria-label="Crawler actions">
                 <div class="secondary-actions">
                     <a href="{{ url_for('crawler_splash.crawlers_dashboard') }}">
-                        <span class="crawler-nav-dashboard-icon" aria-hidden="true">
-                            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.3" focusable="false">
-                                <path d="M24 4V44 M4 24H44 M10 10L38 38 M10 38L38 10" />
-                                <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" />
-                                <path d="M24 4Q27 12 38 10Q36 19 44 24Q36 27 38 38Q29 36 24 44Q21 36 10 38Q12 29 4 24Q12 21 10 10Q19 12 24 4Z" transform="translate(8 8) scale(.6667)" />
-                            </svg>
-                            <i class="fas fa-spider"></i>
-                        </span>Dashboard
+                        {{ dashboard_icon() }}Dashboard
                     </a>
                     <a href="{{ url_for(explorer) }}"><i class="fas fa-compass" aria-hidden="true"></i>Explore {{ network_label }}</a>
                 </div>
