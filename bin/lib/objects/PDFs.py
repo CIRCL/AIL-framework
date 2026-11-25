@@ -219,7 +219,8 @@ class PDF(AbstractDaterangeObject):
             # p += 1
             # if p != 31:
             #     continue
-            tabs = page.find_tables()  # detect the tables
+            # PyMuPDF cannot compute a bounding box for a table without cells.
+            tabs = [tab for tab in page.find_tables() if tab.cells]
             tabs_extracted = {}
             html_box_tables = []
             for tab in tabs:
