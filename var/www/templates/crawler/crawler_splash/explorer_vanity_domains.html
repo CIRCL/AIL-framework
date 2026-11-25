@@ -1,6 +1,8 @@
 {% extends 'crawler/crawler_splash/explorer_vanity_clusters.html' %}
 
-{% block vanity_table_assets %}{% endblock %}
+{% block vanity_table_assets %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-cards.css') }}">
+{% endblock %}
 
 {% block vanity_content %}
     {% set filters = dict(vanity=vanity, q=query, min=minimum, size=pagination.page_size) %}

@@ -24,6 +24,19 @@
     min-height:41px;
 }
 
+.domain-card-results .results-head:has([data-screenshot-slider]),
+.vanity-results .vanity-domain-tools {
+    position:sticky;
+    top:var(--ail-navbar-height, 56px);
+    z-index:1010;
+    padding-block:8px;
+    background:#f7f9fc;
+}
+
+.crawler-domain-results-page .results-head:has([data-screenshot-slider]) {
+    background:#f3f6fa;
+}
+
 .domain-card-results .results-head h2 {
     font-size:19px;
     font-weight:600;

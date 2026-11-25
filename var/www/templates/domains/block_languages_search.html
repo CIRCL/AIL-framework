@@ -1,79 +1,22 @@
-<div class="card mb-0 shadow-sm h-100">
-	<div class="card-header text-white bg-dark">
-		<h5 class="card-title mb-0">
-			<i class="fas fa-language" style="font-size: 1.8rem;"></i> Domains by Languages
-		</h5>
-	</div>
-		<div class="card-body">
-
-			<div class="input-group">
-			  <div class="input-group-prepend">
-					<button class="btn btn-outline-danger" type="button" id="button-clear" style="z-index: 1;" onclick="emptySearch()">
-						<i class="fas fa-eraser"></i>
-					</button>
-			  </div>
-				<input id="llanguages" name="llanguages" type="text" class="form-control" aria-describedby="button-clear" autocomplete="off">
-			</div>
-
-			<div class="mb-3">
-				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_onion_switch" value="" id="domain_onion_switch" {%if not domains_types%}checked{%elif 'onion' in domains_types%}checked{%endif%}>
-					<label class="custom-control-label" for="domain_onion_switch">
-						<span class="badge badge-danger"><i class="fas fa-user-secret"></i> Onion Domains</span>
-					</label>
-				</div>
-				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_i2p_switch" value="True" id="domain_i2p_switch" {%if not domains_types%}checked{%elif 'i2p' in domains_types%}checked{%endif%}>
-					<label class="custom-control-label" for="domain_i2p_switch">
-						<span class="badge badge-info"><i class="fas fa-user-secret"></i> I2P Domains</span>
-					</label>
-				</div>
-				<div class="custom-control custom-switch">
-					<input class="custom-control-input" type="checkbox" name="domain_web_switch" value="True" id="domain_web_switch" {%if not domains_types%}checked{%elif 'web' in domains_types%}checked{%endif%}>
-					<label class="custom-control-label" for="domain_web_switch">
-						<span class="badge badge-warning"><i class="fab fa-html5"></i> Web Domains</span>
-					</label>
-				</div>
-			</div>
-
-			<button class="btn btn-primary" type="button" id="button-search" onclick="searchLanguages()">
-				<i class="fas fa-search"></i> Search
-			</button>
-
-			</div>
-	</div>
-
-
-<link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet" type="text/css" />
-<script src="{{ url_for('static', filename='js/tags.js') }}"></script>
-<script>
-  var llanguages;
-  $.getJSON("{{ url_for('crawler_splash.domains_all_languages_json') }}", //?object_type={{ object_type }}"
-    function(data) {
-      llanguages = $('#llanguages').tagSuggest({
-        data: data,
-				value: [{%if current_languages%}{% for language in current_languages %}{{language|tojson}},{%endfor%}{%endif%}],
-        sortOrder: 'name',
-        maxDropHeight: 200,
-        name: 'llanguages'
-      });
-  });
-
-  function searchLanguages() {
-		var all_domain_types = ['onion', 'i2p', 'web'] // TODO: load from flask
-		var l_domains_types = [];
-
-  	var data = llanguages.getValue();
-		for (var i = 0; i < all_domain_types.length; i++) {
-			if (document.getElementById('domain_'+ all_domain_types[i] +'_switch').checked) {
-				l_domains_types.push(all_domain_types[i])
-			}
-		}
-		var parameter = "?languages=" + data + "&domain_types=" + l_domains_types  +"{%if page%}&page={{ page }}{%endif%}";
-		window.location.href = "{{ url_for('crawler_splash.domains_search_languages_get') }}" + parameter;
-  }
-  function emptySearch() {
-  	llanguages.clear();
-  }
-
-</script>
+<form class="surface search-surface domain-language-form" action="{{ url_for('crawler_splash.domains_search_languages_get') }}" method="get" role="search" aria-label="Search domains by language">
+    <div class="language-query">
+        <label for="domain-languages">Languages</label>
+        <div class="language-picker">
+            <input type="text" class="form-control" id="domain-languages" name="languages" value="{{ current_languages|join(',') }}" data-choices='{{ language_choices|tojson }}' placeholder="Select languages…" autocomplete="off">
+            <button class="btn btn-outline-secondary" type="button" id="clear-domain-languages" hidden>Clear</button>
+        </div>
+    </div>
+    <fieldset class="search-networks">
+        <legend>Networks</legend>
+        <div class="search-network-options">
+            {% for network, label, icon in [('onion', 'Onion', 'user-secret'), ('i2p', 'I2P', 'user-secret'), ('web', 'Web', 'globe')] %}
+                <div class="search-network-choice">
+                    <input type="checkbox" class="search-network-input" id="language-network-{{ network }}" name="domain_types" value="{{ network }}"{% if network in domains_types %} checked{% endif %}>
+                    <label for="language-network-{{ network }}"><i class="fas fa-{{ icon }}" aria-hidden="true"></i>{{ label }}<i class="fas fa-check network-selected-mark" aria-hidden="true"></i></label>
+                </div>
+            {% endfor %}
+        </div>
+    </fieldset>
+    <button class="btn btn-primary search-submit" type="submit">Search<i class="fas fa-arrow-right ml-2" aria-hidden="true"></i></button>
+    <p class="language-search-error text-danger small mb-0" id="language-search-error" role="alert" hidden>Select at least one language.</p>
+</form>

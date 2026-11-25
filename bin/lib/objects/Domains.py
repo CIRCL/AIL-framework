@@ -679,6 +679,8 @@ def get_all_domains_languages():
 # TODO sanitize type
 # TODO sanitize languages
 def get_domains_by_languages(languages, domain_types):
+    if not languages:
+        return set()
     if len(languages) == 1:
         if len(domain_types) == 1:
             return r_crawler.smembers(f'language:domains:{domain_types[0]}:{languages[0]}')

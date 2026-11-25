@@ -1,81 +1,236 @@
+{% from 'crawler/domain_cards.html' import domain_card, screenshot_visibility %}
+{% from 'crawler/menu_navbar.html' import dashboard_icon %}
+{% from 'crawler/results_pagination.html' import numbered_pages %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Show Domain - AIL</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Domains by language · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-results.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-name-form.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-cards.css') }}">
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/crawler-domain-cards.js') }}" defer></script>
+    <style>
+        .domain-language-page .crawler-domain-results-content {
+            max-width: 2200px;
+            margin: auto;
+        }
 
-  <style>
-    .card-columns {
-      column-count: 4;
-    }
-  </style>
+        .domain-language-page .page-heading h1 i {
+            color: #657f98;
+        }
 
+        .domain-language-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: .75rem 1rem;
+            padding: .875rem 1rem;
+            overflow: visible;
+        }
+
+        .domain-language-form .language-query {
+            flex: 1 1 22rem;
+            max-width: 36rem;
+            min-width: 0;
+        }
+
+        .domain-language-form .language-query > label,
+        .domain-language-form .search-networks legend {
+            float: none;
+            margin: 0 0 .375rem;
+            color: #587087;
+            font-size: .8125rem;
+            font-weight: 600;
+        }
+
+        .domain-language-form .search-networks {
+            margin: 0;
+            min-width: 0;
+        }
+
+        .domain-language-form .language-picker {
+            display: flex;
+            align-items: flex-end;
+            gap: .5rem;
+        }
+
+        .domain-language-form .form-control,
+        .domain-language-form .tag-ctn {
+            flex: 1;
+            min-width: 0;
+            border-color: #ccd7e3;
+            border-radius: .5rem;
+            box-shadow: none;
+        }
+
+        .domain-language-form .tag-ctn {
+            height: auto !important;
+        }
+
+        .domain-language-form .tag-sel-ctn {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .25rem;
+            min-height: 2.25rem;
+            padding: .3125rem 2rem .3125rem .375rem;
+            overflow: visible;
+        }
+
+        .domain-language-form .tag-ctn input[type="text"] {
+            flex: 1 0 min(8rem, 100%);
+            width: auto !important;
+            min-width: 0;
+            margin: 0;
+        }
+
+        .domain-language-form .tag-trigger {
+            border-radius: 0 .5rem .5rem 0;
+            border-color: #e1e7ef;
+            background: #f5f7fa;
+        }
+
+        .domain-language-form .tag-ctn .tag-sel-item {
+            max-width: 100%;
+            margin: 0;
+            background: #eaf2fc;
+            color: #355f91;
+            overflow-wrap: anywhere;
+        }
+
+        .domain-language-form .tag-close-btn {
+            opacity: .7;
+            filter: invert(1);
+        }
+
+        .domain-language-form .tag-res-ctn {
+            position: absolute;
+            top: 100%;
+            width: calc(100% + 2px) !important;
+        }
+
+        .domain-language-form .search-network-choice label,
+        .domain-language-form .btn {
+            min-height: 2.375rem;
+        }
+
+        .domain-language-form .language-search-error {
+            flex-basis: 100%;
+        }
+
+        .domain-language-results .no-screenshot.sensitive {
+            justify-self: stretch;
+        }
+
+        .domain-language-results[data-screenshot-visibility="0"] .shot {
+            display: none;
+        }
+
+        .domain-language-results[data-screenshot-visibility="0"] .shot + .screenshot-hidden {
+            display: flex;
+        }
+    </style>
 </head>
-<body>
-
-	{% include 'nav_bar.html' %}
-
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12" id="core_content">
-
-        <div class="row">
-          	<div class="col-12 col-lg-6">
-
-              {% include 'domains/block_languages_search.html' %}
-
-
-            </div>
-            <div class="col-12 col-xl-6">
-
-                <div class="my-3">
-                    {% include 'objects/image/block_blur_img_slider.html' %}
+<body class="crawler-domain-results-page domain-language-page">
+    {% include 'nav_bar.html' %}
+    <main class="crawler-domain-results-content" id="core_content">
+        <header class="page-heading">
+            <h1><i class="fas fa-language" aria-hidden="true"></i>Domains by language</h1>
+            <nav class="page-actions" aria-label="Crawler actions">
+                <div class="secondary-actions">
+                    <a href="{{ url_for('crawler_splash.domains_explorer_onion') }}"><i class="fas fa-compass" aria-hidden="true"></i>Domain Explorer</a>
+                    <a href="{{ url_for('crawler_splash.crawlers_dashboard') }}">{{ dashboard_icon() }}Dashboard</a>
                 </div>
+            </nav>
+        </header>
 
+        {% include 'domains/block_languages_search.html' %}
+
+        <section class="domain-card-results domain-language-results" aria-labelledby="language-results-heading" data-screenshot-storage="ail.domain-language-search.screenshot-visibility">
+            <div class="results-head">
+                <h2 id="language-results-heading">Domains <span>{{ '{:,}'.format(l_dict_domains.nb_all_elem) }}</span></h2>
+                {% if l_dict_domains.list_elem %}
+                    <div class="result-options">{{ screenshot_visibility() }}</div>
+                {% endif %}
             </div>
-        </div>
 
+            <div class="domain-grid">
+                {% for domain in l_dict_domains.list_elem %}
+                    {{ domain_card(domain, show_network=true, new_tab=true, last_check_label='Last check') }}
+                {% else %}
+                    <div class="empty surface">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                        {% if current_languages %}
+                            <h3 class="h5">No matching domains</h3>
+                            <p class="mb-0">Try different languages or select more networks.</p>
+                        {% else %}
+                            <p class="mb-0">Select one or more languages to find matching domains.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
 
-        {% with l_dict_domains=l_dict_domains['list_elem'], bootstrap_label=bootstrap_label %}
-          {% include 'domains/card_img_domain.html' %}
-        {% endwith %}
+            {% if l_dict_domains.list_elem %}
+                <footer class="paging">
+                    <span>{{ '{:,}'.format(l_dict_domains.nb_first_elem) }}–{{ '{:,}'.format(l_dict_domains.nb_last_elem) }} of <b>{{ '{:,}'.format(l_dict_domains.nb_all_elem) }}</b> domains</span>
+                    {{ numbered_pages('crawler_splash.domains_search_languages_get', dict(languages=current_languages|join(','), domain_types=domains_types|join(',')), l_dict_domains.page, l_dict_domains.nb_pages) }}
+                </footer>
+            {% endif %}
+        </section>
+    </main>
+    <script>
+        document.getElementById('page-Crawler').classList.add('active');
+        document.getElementById('crawler-nav-explorers-toggle').classList.add('active');
 
-        <br>
-        <br>
+        const languageForm = document.querySelector('.domain-language-form');
+        const languageInput = document.getElementById('domain-languages');
+        const clearLanguages = document.getElementById('clear-domain-languages');
+        const languageError = document.getElementById('language-search-error');
+        const selectedLanguages = languageInput.value.split(',').filter(Boolean);
+        const availableLanguages = JSON.parse(languageInput.dataset.choices);
+        const inputConfig = {id: languageInput.id, autocomplete: 'off', placeholder: languageInput.placeholder, 'aria-describedby': languageError.id};
+        // TagSuggest gives the original element's attributes precedence over its options.
+        const languagePicker = $(languageInput).removeAttr('id value').tagSuggest({
+            data: [...new Set([...availableLanguages, ...selectedLanguages])],
+            value: selectedLanguages,
+            sortOrder: 'name',
+            maxDropHeight: 200,
+            name: 'languages',
+            inputCfg: inputConfig
+        });
 
-        {%if l_dict_domains['list_elem']%}
-          {% with page=l_dict_domains['page'], nb_page_max=l_dict_domains['nb_pages'],  nb_first_elem=l_dict_domains['nb_first_elem'], nb_last_elem=l_dict_domains['nb_last_elem'], nb_all_elem=l_dict_domains['nb_all_elem'] %}
-            {% set target_url=url_for('crawler_splash.domains_search_languages_get') + "?languages=" + ','.join(current_languages)%}
-            {%if domains_types %}
-              {% set target_url = target_url + '&domain_types=' + ','.join(domains_types)%}
-            {%endif%}
-            {% include 'pagination.html' %}
-  				{% endwith %}
-        {%endif%}
+        clearLanguages.hidden = false;
+        clearLanguages.addEventListener('click', function () {
+            languagePicker.clear();
+            languagePicker.empty();
+            languagePicker.input.trigger('focus');
+        });
 
+        $(languagePicker).on('selectionchange', function () {
+            languageError.hidden = true;
+        });
 
-			</div>
-		</div>
-	</div>
+        languageForm.addEventListener('submit', function (event) {
+            if (!languagePicker.getValue().length) {
+                event.preventDefault();
+                languageError.hidden = false;
+                languagePicker.input.trigger('focus');
+            }
+        });
+
+        languageForm.addEventListener('formdata', function (event) {
+            event.formData.set('languages', languagePicker.getValue().join(','));
+        });
+    </script>
 </body>
-
-
-<script>
-  $(document).ready(function(){
-    $('#page-Crawler').addClass('active');
-    $('#crawler-nav-explorers-toggle').addClass('active');
-
-  });
-
-</script>
-
 </html>

@@ -740,25 +740,14 @@ def domains_all_languages_json():
 @login_required
 @login_read_only
 def domains_search_languages_get():
-    page = request.args.get('page')
-    try:
-        page = int(page)
-    except:
-        page = 1
-
-    domains_types = request.args.getlist('domain_types')
-    if domains_types:
-        domains_types = domains_types[0].split(',')
-    domains_types = Domains.sanitize_domains_types(domains_types)
-
-    languages = request.args.getlist('languages')
-    if languages:
-        languages = languages[0].split(',')
-    l_dict_domains = Domains.api_get_domains_by_languages(domains_types, Language.get_iso_from_languages(languages),
-                                                          meta=True, page=page)
-    return render_template("domains/domains_filter_languages.html", template_folder='../../',
-                           l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
-                           current_languages=languages, domains_types=domains_types)
+    page = max(1, request.args.get('page', 1, type=int))
+    domains_types = [network for value in request.args.getlist('domain_types') for network in value.split(',')]
+    domains_types = Domains.sanitize_domains_types(dict.fromkeys(domains_types))
+    languages = [language.strip() for value in request.args.getlist('languages') for language in value.split(',') if language.strip()]
+    l_dict_domains = Domains.api_get_domains_by_languages(domains_types, Language.get_iso_from_languages(languages), meta=True, page=page)
+    language_names = Language.get_all_languages()
+    language_choices = sorted({language_names.get(code, code) for code in Domains.get_all_domains_languages()})
+    return render_template('domains/domains_filter_languages.html', l_dict_domains=l_dict_domains, current_languages=languages, domains_types=domains_types, language_choices=language_choices)
 
 
 @crawler_splash.route('/domains/name/search', methods=['GET'])
