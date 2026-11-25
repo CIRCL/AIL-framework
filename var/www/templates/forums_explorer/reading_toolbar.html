@@ -1,0 +1,30 @@
+{% from 'forums_explorer/forum_macros.html' import forum_translation_icon %}
+
+{% macro image_visibility_controls(compact) %}
+  <div {% if compact %}class="compact-blur-bar" role="group" aria-label="Quick image visibility controls" hidden{% else %}class="image-control control-group"{% endif %}>
+    <span {% if not compact %}class="control-label"{% endif %}>{% if not compact %}<i class="far fa-image" aria-hidden="true"></i>{% endif %}Images</span>
+    <button type="button" data-image-visibility="0" title="Hide images" aria-label="Hide images"><i class="far fa-eye-slash" aria-hidden="true"></i>{% if not compact %}Hide{% endif %}</button>
+    <input class="visibility-slider" type="range" min="0" max="15" step="0.1" value="10" aria-label="{% if compact %}Quick image visibility{% else %}Image visibility{% endif %}, from hidden to revealed">
+    <button type="button" data-image-visibility="15" title="Reveal images" aria-label="Reveal images"><i class="far fa-eye" aria-hidden="true"></i>{% if not compact %}Reveal{% endif %}</button>
+  </div>
+{% endmacro %}
+
+{% set target = translation_target if translation_target != "Don't Translate" else none %}
+<div class="reading-toolbar" role="group" aria-label="{{ reading_label }} reading controls">
+  <form class="translation-control control-group" method="get" action="{{ reading_action }}">
+    {% for name, value in reading_params.items() %}
+      <input type="hidden" name="{{ name }}" value="{{ value }}">
+    {% endfor %}
+    <label for="reading-translation-target">{{ forum_translation_icon() }}Translation</label>
+    <select id="reading-translation-target" name="target" aria-label="{{ reading_label }} translation language">
+      <option value="" {% if not target %}selected{% endif %}>Don't translate</option>
+      {% if target and target not in translation_languages %}<option value="{{ target }}" selected>{{ all_languages.get(target, target) }}</option>{% endif %}
+      {% for language, label in translation_languages.items() %}
+        <option value="{{ language }}" {% if target == language %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="translate-all">{{ forum_translation_icon() }}Translate</button>
+  </form>
+  {% if show_image_controls %}{{ image_visibility_controls(false) }}{% endif %}
+</div>
+{% if show_image_controls %}{{ image_visibility_controls(true) }}{% endif %}

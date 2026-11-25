@@ -31,6 +31,38 @@
   </div>
 {% endmacro %}
 
+{% macro forum_parent_breadcrumb(crumbs, forum=none, subforum=none) %}
+  {% set parent_forum = (crumbs|selectattr('type', 'equalto', 'forum')|first)|default(forum) %}
+  {% if parent_forum %}
+    <li class="forum-breadcrumb-root"><a href="{{ url_for('forums_explorer.forum_explorer_forums', id=parent_forum['id']) }}">{{ parent_forum.get('name') or parent_forum['id'] }}</a></li>
+  {% endif %}
+  {% set subforums = crumbs|selectattr('type', 'equalto', 'subforum')|list %}
+  {% for crumb in subforums or ([subforum] if subforum else []) %}
+    <li>
+      <a href="{{ url_for('forums_explorer.forum_explorer_subforum', subtype=crumb['subtype'], id=crumb['id']) }}">{{ crumb.get('name') or crumb['id'] }}</a>
+      <small class="{% if subforums %}forum-breadcrumb-translation {% endif %}{% if loop.last %}forum-subforum-name-translation{% endif %}" {% if not crumb.get('name_translation') %}hidden{% endif %}>{{ crumb.get('name_translation') or '' }}</small>
+    </li>
+  {% endfor %}
+{% endmacro %}
+
+{% macro forum_add_tags_button(object_name) %}
+  <button type="button" class="thread-header-button forum-add-tags" data-toggle="modal" data-target="#add_tags_modal" title="Add tags to {{ object_name }}" aria-label="Add tags to {{ object_name }}"><i class="fas fa-tag" aria-hidden="true"></i></button>
+{% endmacro %}
+
+{% macro forum_object_tags(tags, obj_type, obj_id, obj_subtype, can_annotate, label) %}
+  {% if tags %}
+    <div class="forum-object-tags" role="group" aria-label="{{ label }}">
+      {% for tag in tags %}
+        {% if can_annotate %}
+          <button type="button" class="forum-object-tag" data-toggle="modal" data-target="#edit_tags_modal" data-tagid="{{ tag }}" data-objtype="{{ obj_type }}" data-objsubtype="{{ obj_subtype }}" data-objid="{{ obj_id }}" title="Edit or remove tag" aria-label="Edit or remove tag {{ tag }}">{{ tag }}</button>
+        {% else %}
+          <span class="forum-object-tag" title="{{ tag }}">{{ tag }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
 {% macro forum_investigations_menu(investigations, can_annotate=false) %}
   {% if investigations or can_annotate %}
     <div class="dropdown thread-investigations">
@@ -148,3 +180,7 @@
     <span class="forum-no-posts">No collected posts</span>
   {% endif %}
 {% endmacro %}
+
+{% macro forum_translation_icon() -%}
+  <svg xmlns="http://www.w3.org/2000/svg" width="1.15em" height="1.15em" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m11.9 22 4.55-12h2.1l4.55 12H21l-1.075-3.05h-4.85L14 22zM4 19l-1.4-1.4 5.05-5.05q-.875-.875-1.588-2T4.75 8h2.1q.5.975 1 1.7t1.2 1.45q.825-.825 1.713-2.313T12.1 6H1V4h7V2h2v2h7v2h-2.9q-.525 1.8-1.575 3.7t-2.075 2.9l2.4 2.45-.75 2.05-3.05-3.125zm11.7-1.8h3.6l-1.8-5.1z"/></svg>
+{%- endmacro %}

@@ -527,11 +527,13 @@ def objects_post():
     translation_languages = Language.get_translation_languages()
     extracted = module_extractor.extract(current_user.get_user_id(), 'post', '', post['id'], content=post.get('content') or '')
     post['extracted_matches'] = module_extractor.get_extracted_by_match(extracted)
+    can_annotate = current_user.is_in_role('user_no_api')
+    thread_icon = ail_objects.get_object_type_svg('forum-thread')['icon']
     return render_template('forums_explorer_post.html', meta=post, extracted=extracted, bootstrap_label=bootstrap_label,
                            ollama_enabled=images_engine.is_ollama_enabled(), ollama_models=images_engine.get_ollama_models(),
                            all_languages=languages, translation_languages=translation_languages,
-                           translation_target=target,
-                           modal_add_tags=Tag.get_modal_add_tags(post['id'], object_type='post'))
+                           translation_target=target, can_annotate=can_annotate, thread_icon=thread_icon,
+                           modal_add_tags=Tag.get_modal_add_tags(post['id'], object_type='post') if can_annotate else None)
 
 
 @forums_explorer.route("/objects/post/translate/json", methods=['POST'])

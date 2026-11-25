@@ -1,0 +1,116 @@
+{% from 'forums_explorer/forum_macros.html' import author_name, author_link, author_avatar, post_reaction_label, forum_translation_icon %}
+{% set user = post.get('user-account') or {} %}
+{% set display_name = author_name(user)|trim %}
+{% set known_author = user.get('subtype') and user.get('id') and user['id'] != 'UNKNOWN' %}
+{% set is_starter = in_thread and known_author and user['id'] == first_author.get('id') and user['subtype'] == first_author.get('subtype') %}
+{% set editor_id = 'post-language-' ~ (post_number or 'standalone') %}
+<article class="forum-post" id="{{ post['id'] }}" data-post-id="{{ post['id'] }}">
+  <aside class="author-profile">
+    {% if known_author %}
+      <a class="avatar" href="{{ url_for('chats_explorer.objects_user_account', subtype=user['subtype'], id=user['id']) }}" aria-label="View {{ display_name }} profile">{{ author_avatar(user) }}</a>
+    {% else %}
+      <span class="avatar">{{ author_avatar(user) }}</span>
+    {% endif %}
+    <div class="username">{{ author_link(user) }}</div>
+    {% if is_starter %}<span class="starter">Author</span>{% endif %}
+  </aside>
+  <div class="post-main">
+    <header class="post-header">
+      <time>{{ post.get('full_date') or post.get('date', '') ~ ' ' ~ post.get('hour', '') }} <span class="post-timezone">UTC</span></time>
+      <div>
+        {% if post.get('state') and post['state'] != 'visible' %}<span class="badge badge-info">{{ post['state'] }}</span>{% endif %}
+        {% if post_number %}<a href="#{{ post['id']|urlencode }}" class="post-number" aria-label="Post {{ post_number }}">#{{ post_number }}</a>{% endif %}
+      </div>
+    </header>
+    <div class="post-content">
+      {% include 'forums_explorer/post_content.html' %}
+      {% if post.get('images') %}
+        <div class="post-images">
+          {% for image in post['images'] %}
+            <figure class="post-attachment">
+              <a href="{{ url_for('correlation.show_correlation', type='image', id=image['id']) }}" target="_blank" rel="noopener" title="Open image correlation"><img class="object_image forum-post-image" src="{{ url_for('objects_image.image', filename=image['id']) }}" loading="lazy" alt="Post image {{ loop.index }}"></a>
+              <figcaption>
+                <span><i class="far fa-image" aria-hidden="true"></i>Image {{ loop.index }}</span>
+                <div class="image-actions">
+                  {% if image.get('ocr') %}<a target="_blank" rel="noopener" href="{{ url_for('objects_ocr.object_ocr', id=image['id']) }}">OCR</a>{% endif %}
+                  {% with ollama_description=image.get('description'), ollama_descriptions=image.get('descriptions', {}), image_gid='image::' ~ image['id'], image_message_anchor=post['id'] %}
+                    {% include 'objects/image/block_img_ollama_small.html' %}
+                  {% endwith %}
+                </div>
+              </figcaption>
+            </figure>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="post-status" role="status" hidden></div>
+      <section class="translation" {% if not post.get('translation') %}hidden{% endif %}>
+        <div class="translation-caption">
+          <i class="fas fa-language" aria-hidden="true"></i>Translation
+          <button type="button" data-hide-translation aria-label="Hide translation"><i class="fas fa-times" aria-hidden="true"></i></button>
+        </div>
+        <div class="post-translation-text">{{ post.get('translation') or '' }}</div>
+      </section>
+      {% if can_annotate %}
+        <section class="language-editor" id="{{ editor_id }}" hidden aria-labelledby="{{ editor_id }}-title">
+          <form method="post" action="{{ url_for('forums_explorer.objects_post_translate') }}">
+            <input type="hidden" name="id" value="{{ post['id'] }}">
+            {% set editing_translation = translation_target and translation_target != "Don't Translate" %}
+            <h3 class="language-editor-heading" id="{{ editor_id }}-title"><i class="fas fa-language" aria-hidden="true"></i>{% if editing_translation %}Edit language and translation{% else %}Edit source language{% endif %}</h3>
+            <div class="language-editor-field">
+              <label for="{{ editor_id }}-source">Source language</label>
+              <select id="{{ editor_id }}-source" name="language_target" required>
+                {% if post.get('language') not in all_languages %}<option value="" selected disabled>Unknown</option>{% endif %}
+                {% for language, label in all_languages.items() %}<option value="{{ language }}" {% if post.get('language') == language %}selected{% endif %}>{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            {% if editing_translation %}
+              <input type="hidden" name="target" value="{{ translation_target }}">
+              <div class="language-editor-field language-editor-field-translation">
+                <label for="{{ editor_id }}-text">Translation ({{ all_languages.get(translation_target, translation_target) }})</label>
+                <textarea id="{{ editor_id }}-text" name="translation" rows="4">{{ post.get('translation') or '' }}</textarea>
+              </div>
+            {% endif %}
+            <div class="language-editor-actions">
+              <button type="submit" class="language-save"><i class="fas fa-check" aria-hidden="true"></i>Save changes</button>
+              <a class="language-detect" href="{{ url_for('forums_explorer.objects_post_detect_language', id=post['id']) }}">Detect language</a>
+            </div>
+          </form>
+        </section>
+      {% endif %}
+      {% if in_thread and post.get('tags') %}
+        <div class="post-tags" aria-label="Post tags">
+          {% for tag in post['tags'] %}
+            <span class="badge badge-info">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    {% if post.get("reactions") or can_annotate or in_thread %}
+      <footer class="post-footer">
+        {% if post.get('reactions') %}
+          <div class="reactions" aria-label="Collected reactions">
+            {% for reaction, count in post['reactions'].items() %}
+              <span class="reaction-chip" title="{{ reaction }}: {{ count }}">{{ post_reaction_label(reaction) }}<b>{{ count }}</b></span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if can_annotate or in_thread %}
+          <div class="post-actions">
+            {% if can_annotate %}
+              <div class="post-language-controls">
+                <button type="button" class="language-button" data-language-editor aria-expanded="false" aria-controls="{{ editor_id }}" title="Edit source language" aria-label="Edit source language ({{ post.get('language') or 'unknown' }})"><i class="fas fa-language" aria-hidden="true"></i><span>{{ (post.get('language') or '?')|upper }}</span><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+                <button type="button" class="post-translate post-icon-button" data-translate-post title="Translate to preferred language" aria-label="Translate post{% if post_number %} {{ post_number }}{% endif %} to preferred language">
+                  {{ forum_translation_icon() }}
+                </button>
+              </div>
+            {% endif %}
+            {% if in_thread %}
+              <a class="post-icon-button correlation-link" href="{{ url_for('correlation.show_correlation', type='post', id=post['id']) }}" title="Post correlation" aria-label="Open correlation for post {{ post_number }}"><i class="fas fa-project-diagram" aria-hidden="true"></i></a>
+              <a class="post-icon-button" href="{{ post.get('link') or url_for('forums_explorer.objects_post', id=post['id']) }}" title="Post details" aria-label="Open details for post {{ post_number }}"><i class="far fa-eye" aria-hidden="true"></i></a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </footer>
+    {% endif %}
+  </div>
+</article>

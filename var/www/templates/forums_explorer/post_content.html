@@ -1,0 +1,38 @@
+{% set content = post.get('content') or '' %}
+<div class="forum-post-content">
+  {%- if not extracted -%}
+    {{ content }}
+  {%- else -%}
+    {{ content[:extracted[0][0]] }}
+    {%- for start, end, _, matches in extracted -%}
+      {%- set popover_content -%}
+        <ul class="list-group list-group-flush">
+          {% for match_id, value in matches %}
+            {% set match = post['extracted_matches'][match_id] %}
+            <li class="list-group-item px-2 py-2">
+              <div class="d-flex align-items-start">
+                <svg height="26" width="26" class="mr-2 mt-1 flex-shrink-0">
+                  <g class="nodes">
+                    <circle cx="13" cy="13" r="13" fill="{{ match['icon']['color']|forceescape }}"></circle>
+                    <text x="13" y="13" text-anchor="middle" dominant-baseline="central" class="{{ match['icon']['style']|forceescape }}" font-size="16px">{{ match['icon']['icon']|forceescape }}</text>
+                  </g>
+                </svg>
+                <div>
+                  <div class="font-weight-bold text-capitalize">{{ match['subtype']|replace('_', ' ')|forceescape }}</div>
+                  <div><span class="badge badge-light border">{{ match['id']|forceescape }}</span></div>
+                  {% if match['subtype'] in ('tracker', 'retro_hunt') %}
+                    {% if match.get('name') %}<div class="small font-weight-bold mt-1">{{ match['name']|forceescape }}</div>{% endif %}
+                    {% if match.get('description') %}<div class="small text-muted mt-1">{{ match['description']|forceescape }}</div>{% endif %}
+                  {% endif %}
+                  <div class="small mt-1"><span class="text-muted">Matched value:</span> <b>{{ value|forceescape }}</b></div>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {%- endset -%}
+      <span class="hg-text" data-toggle="popover" data-trigger="hover" data-html="true" title="Matched indicators" data-content="{{ popover_content|forceescape }}" id="{{ start }}:{{ end }}">{{ content[start:end] }}</span>
+      {{- content[end:(extracted[loop.index][0] if not loop.last else content|length)] -}}
+    {%- endfor -%}
+  {%- endif -%}
+</div>
