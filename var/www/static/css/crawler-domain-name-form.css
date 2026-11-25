@@ -1,0 +1,130 @@
+.dashboard-search .form-control,
+.domain-name-form .form-control {
+    min-width: 0;
+    height: 3rem;
+    border-color: #ccd7e3;
+    border-radius: .5rem;
+    color: #263445;
+}
+
+.dashboard-search .form-control::placeholder,
+.domain-name-form .form-control::placeholder {
+    color: #7c8897;
+}
+
+.dashboard-search .form-control:focus,
+.domain-name-form .form-control:focus {
+    border-color: #80b1e7;
+    box-shadow: 0 0 0 .2rem rgba(36, 104, 180, .12);
+}
+
+.domain-query-row {
+    display: flex;
+    align-items: flex-end;
+    gap: .75rem;
+}
+
+.domain-query-field {
+    flex: 1;
+    min-width: 0;
+}
+
+.domain-query-input {
+    position: relative;
+}
+
+.domain-query-icon {
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    color: #7c8897;
+    pointer-events: none;
+}
+
+.domain-query-field .form-control {
+    padding-left: 2.75rem;
+}
+
+.dashboard-search .search-submit,
+.domain-name-form .search-submit {
+    min-height: 3rem;
+    padding: .6rem 1.25rem;
+    border-radius: .5rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.search-networks legend {
+    float: left;
+    width: auto;
+    font-size: .8rem;
+    font-weight: 600;
+    color: #687587;
+    margin: .375rem 1rem 0 0;
+}
+
+.search-networks {
+    margin: .875rem 0 0;
+}
+
+.search-network-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.search-network-choice {
+    position: relative;
+}
+
+.search-network-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.search-network-choice label {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin: 0;
+    padding: .3125rem .5625rem;
+    border: 1px solid #d7e0ea;
+    border-radius: .45rem;
+    color: #687587;
+    font-size: .8125rem;
+    cursor: pointer;
+}
+
+.search-network-input:checked + label {
+    border-color: #bcd3ee;
+    background: #f0f6ff;
+    color: #245e9f;
+}
+
+.search-network-input:focus-visible + label {
+    outline: 2px solid #2468b4;
+    outline-offset: 2px;
+}
+
+.network-selected-mark {
+    visibility: hidden;
+    font-size: .65rem;
+}
+
+.search-network-input:checked + label .network-selected-mark {
+    visibility: visible;
+}
+
+@media (max-width: 575.98px) {
+    .domain-query-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-networks legend {
+        float: none;
+        margin: 0 0 .5rem;
+    }
+}

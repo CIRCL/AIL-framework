@@ -1,3 +1,4 @@
+{% from 'crawler/domain_cards.html' import domain_card, screenshot_visibility %}
 {% from 'crawler/menu_navbar.html' import dashboard_icon %}
 {% from 'crawler/results_pagination.html' import numbered_pages %}
 <!DOCTYPE html>
@@ -12,6 +13,8 @@
     <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
     <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/crawler-domain-cards.css') }}">
+    <script src="{{ url_for('static', filename='js/crawler-domain-cards.js') }}" defer></script>
     <style>
         .explorer-page {
             background:#f7f9fc;
@@ -305,326 +308,6 @@
             background:#e7f0fb;
         }
 
-        .explorer-content .results-head {
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:15px;
-            margin-bottom:17px;
-            min-height:41px;
-        }
-
-        .explorer-content .results-head h2 {
-            font-size:19px;
-            font-weight:600;
-            display:flex;
-            gap:10px;
-            align-items:center;
-            margin:0;
-        }
-
-        .explorer-content .results-head h2>span {
-            font-size:14px;
-            background:#eaf0f7;
-            color:#647c9a;
-            border-radius:6px;
-            padding:5px 9px;
-            font-weight:500;
-        }
-
-        .explorer-content .result-options {
-            display:flex;
-            align-items:center;
-            gap:19px;
-        }
-
-        .explorer-content .blur {
-            display:flex;
-            align-items:center;
-            gap:10px;
-        }
-
-        .explorer-content .blur button {
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            gap:7px;
-            background:white;
-            color:#597493;
-            border:1px solid #d5dfeb;
-            border-radius:6px;
-            padding:8px 11px;
-            font-size:14px;
-            height:40px;
-        }
-
-        .explorer-content .blur input {
-            width:91px;
-            height:5px;
-            accent-color:#708db4;
-            cursor:pointer;
-        }
-
-        .explorer-content .domain-grid {
-            display:grid;
-            grid-template-columns:repeat(3,minmax(0,1fr));
-            gap:20px;
-            align-items:stretch;
-        }
-
-        .explorer-content .domain-card {
-            display:flex;
-            flex-direction:column;
-            min-width:0;
-            overflow:hidden;
-            background:white;
-            border:1px solid #dce4ed;
-            border-radius:8px;
-            box-shadow:0 1px 4px #30496804;
-            height:auto;
-        }
-
-        .explorer-content .shot {
-            display:block;
-            flex:none;
-            background:#edf1f5;
-            margin:0;
-            padding:0;
-            overflow:hidden;
-            border-bottom:1px solid #e4e9f0;
-        }
-
-        .explorer-content .shot img {
-            display:block;
-            width:auto;
-            height:auto;
-            max-width:100%;
-            max-height:280px;
-            margin:0 auto;
-            filter:blur(var(--object-image-blur,5px));
-        }
-
-        .explorer-content .no-screenshot.sensitive {
-            display:flex;
-            flex-direction:column;
-            gap:12px;
-            align-items:center;
-            justify-content:center;
-            aspect-ratio:16/9;
-            background:#f5f3ef;
-            color:#8a714e;
-            font-size:14px;
-            font-weight:500;
-        }
-
-        .explorer-content .sensitive svg {
-            width:56px;
-            height:43px;
-        }
-
-        .explorer-content .card-body {
-            display:flex;
-            flex:1;
-            flex-direction:column;
-            padding:15px 16px 0;
-            min-width:0;
-        }
-
-        .explorer-content .domain-top {
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:9px;
-            margin-bottom:9px;
-        }
-
-        .explorer-content .status {
-            display:inline-flex;
-            align-items:center;
-            gap:6px;
-            font-size:13px;
-            font-weight:650;
-            white-space:nowrap;
-        }
-
-        .explorer-content .status i {
-            font-size:16px;
-        }
-
-        .explorer-content .up {
-            color:#218746;
-        }
-
-        .explorer-content .down {
-            color:#bb5760;
-        }
-
-        .explorer-content .languages {
-            display:inline-flex;
-            align-items:center;
-            gap:6px;
-            font-size:12px;
-            color:#7a8fa7;
-            flex-wrap:wrap;
-            min-width:0;
-            white-space:normal;
-        }
-
-        .explorer-content .languages i {
-            font-size:15px;
-            color:#849ab4;
-        }
-
-        .explorer-content .domain-name {
-            display:block;
-            font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-            font-size:14px;
-            line-height:1.65;
-            overflow-wrap:anywhere;
-            word-break:break-all;
-            color:#42658d;
-            font-weight:500;
-            margin:0 0 12px;
-        }
-
-        .explorer-content .seen {
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:9px;
-            margin:0 0 12px;
-        }
-
-        .explorer-content .seen dt {
-            font-size:12px;
-            font-weight:400;
-            color:#8899ae;
-            margin:0 0 3px;
-        }
-
-        .explorer-content .seen dd {
-            font-size:14px;
-            color:#526d8d;
-            font-weight:500;
-            margin:0;
-        }
-
-        .explorer-content .tags {
-            display:flex;
-            gap:6px;
-            flex-wrap:wrap;
-            min-height:24px;
-            align-items:center;
-            margin-bottom:14px;
-        }
-
-        .explorer-content .tags a {
-            font-size:11px;
-            background:#edf3fb;
-            color:#6481a5;
-            border-radius:4px;
-            padding:4px 7px;
-            max-width:100%;
-            overflow-wrap:anywhere;
-        }
-
-        .explorer-content .tags .tlp {
-            background:#eff5f1;
-            color:#6c8e76;
-        }
-
-        .explorer-content .actions {
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:8px;
-            border-top:1px solid #e8edf4;
-            margin-top:auto;
-            padding:12px 0;
-        }
-
-        .explorer-content .actions>a {
-            font-size:12px;
-            display:inline-flex;
-            align-items:center;
-            gap:6px;
-            color:#5c7c9f;
-            white-space:nowrap;
-        }
-
-        @supports (grid-template-rows:subgrid) {
-            .explorer-content .domain-card {
-                display:grid;
-                grid-row:span 6;
-                grid-template-rows:subgrid;
-                row-gap:0;
-            }
-
-            .explorer-content .domain-card>.shot,
-            .explorer-content .domain-card>.no-screenshot {
-                grid-row:1;
-                align-self:stretch;
-            }
-
-            .explorer-content .card-body {
-                display:grid;
-                grid-row:2 / span 5;
-                grid-template-rows:subgrid;
-                row-gap:0;
-            }
-
-            .explorer-content .domain-top {
-                grid-row:1;
-                align-self:start;
-                align-items:flex-start;
-            }
-
-            .explorer-content .domain-name {
-                grid-row:2;
-                align-self:start;
-            }
-
-            .explorer-content .seen {
-                grid-row:3;
-                align-self:start;
-            }
-
-            .explorer-content .tags {
-                grid-row:4;
-                align-self:start;
-            }
-
-            .explorer-content .actions {
-                grid-row:5;
-            }
-        }
-
-        .explorer-content .actions i {
-            font-size:11px;
-        }
-
-        .explorer-content .actions .export img {
-            width:29px;
-            height:auto;
-        }
-
-        .explorer-content .paging {
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            padding:19px 0 2px;
-            color:#7c8fa6;
-            font-size:14px;
-        }
-
-        .explorer-content .paging b {
-            font-weight:500;
-            color:#617d9e;
-        }
-
-        .explorer-content .paging i {
-            font-size:11px;
-        }
-
         .explorer-content .header-actions {
             display:flex;
             align-items:center;
@@ -668,12 +351,7 @@
 
         .explorer-content .heading,
         .explorer-content .filter-top,
-        .explorer-content .filter-bottom,
-        .explorer-content .results-head,
-        .explorer-content .result-options,
-        .explorer-content .domain-top,
-        .explorer-content .actions,
-        .explorer-content .paging {
+        .explorer-content .filter-bottom {
             flex-wrap:wrap;
         }
 
@@ -686,97 +364,11 @@
             outline-offset:2px;
         }
 
-        .explorer-content .no-screenshot {
-            display:flex;
-            flex:none;
-            align-items:center;
-            justify-content:center;
-            gap:10px;
-            min-height:130px;
-            padding:20px;
-            border-bottom:1px solid #e4ebf4;
-            background:#f0f4f8;
-            color:#8ea0b6;
-            font-size:14px;
-        }
-
-        .explorer-content .no-screenshot i {
-            font-size:24px;
-        }
-
-        .explorer-content .empty {
-            grid-column:1 / -1;
-            padding:48px 24px;
-            color:#7b8fa8;
-            text-align:center;
-        }
-
-        .explorer-content .empty i {
-            display:block;
-            margin-bottom:13px;
-            color:#a5b6cb;
-            font-size:28px;
-        }
-
-        .explorer-content .page-link {
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            min-width:33px;
-            min-height:33px;
-            padding:5px 8px;
-            border:1px solid #d9e3ef;
-            border-radius:5px;
-            background:#fff;
-            color:#7188a4;
-            font-size:13px;
-        }
-
-        .explorer-content .page-link[aria-current=page] {
-            background:#eaf2fc;
-            color:#426a9a;
-            border-color:#bed1e9;
-        }
-
-        .explorer-content .page-link[aria-disabled=true] {
-            color:#b6c2d0;
-        }
-
-        .explorer-content .paging nav {
-            display:flex;
-            align-items:center;
-            gap:7px;
-        }
-
         .explorer-content a:focus-visible,
         .explorer-content button:focus-visible,
         .explorer-content select:focus-visible {
             outline:2px solid #6d96c6;
             outline-offset:3px;
-        }
-
-        @media (min-width:1400px) {
-            .explorer-content .domain-grid {
-                grid-template-columns:repeat(4,minmax(0,1fr));
-            }
-        }
-
-        @media (min-width:1800px) {
-            .explorer-content .domain-grid {
-                grid-template-columns:repeat(5,minmax(0,1fr));
-            }
-        }
-
-        @media (min-width:2200px) {
-            .explorer-content .domain-grid {
-                grid-template-columns:repeat(6,minmax(0,1fr));
-            }
-        }
-
-        @media (max-width:1100px) {
-            .explorer-content .domain-grid {
-                grid-template-columns:repeat(2,minmax(0,1fr));
-            }
         }
 
         @media (max-width:600px) {
@@ -845,33 +437,9 @@
                 margin-left:0;
             }
 
-            .explorer-content .domain-grid {
-                grid-template-columns:minmax(0,1fr);
-            }
-
-            .explorer-content .result-options {
-                gap:12px;
-            }
-
-            .explorer-content .paging {
-                gap:14px;
-            }
         }
 
     </style>
-    <script>
-        (function () {
-            try {
-                const savedVisibility = sessionStorage.getItem('ail.domain-explorer.screenshot-visibility');
-                if (savedVisibility !== null && savedVisibility.trim() !== '' && Number.isFinite(Number(savedVisibility)) && Number(savedVisibility) >= 0 && Number(savedVisibility) <= 15) {
-                    document.documentElement.dataset.screenshotVisibility = savedVisibility;
-                    document.documentElement.style.setProperty('--object-image-blur', (15 - Number(savedVisibility)) + 'px');
-                }
-            } catch (error) {
-                // Keep the default blur when browser storage is unavailable.
-            }
-        })();
-    </script>
 </head>
 <body class="explorer-page">
     {% include 'nav_bar.html' %}
@@ -922,64 +490,17 @@
                 <label class="sort">Sort<select name="sort" aria-label="Sort domains" data-auto-submit><option value="asc" {% if dict_data.sort == 'asc' %}selected{% endif %}>Domain A–Z</option><option value="desc" {% if dict_data.sort == 'desc' %}selected{% endif %}>Domain Z–A</option></select></label>
             </div>
         </form>
-        <section class="results" aria-labelledby="domains-heading">
+        <section class="results domain-card-results" aria-labelledby="domains-heading" data-screenshot-storage="ail.domain-explorer.screenshot-visibility">
             <div class="results-head">
                 <h2 id="domains-heading">Domains <span>{{ '{:,}'.format(dict_data.nb_all_elem) }}</span></h2>
                 <div class="result-options">
-                    <div class="blur" role="group" aria-label="Screenshot visibility">
-                        <button type="button" data-blur="0"><i class="fas fa-eye-slash" aria-hidden="true"></i>Hide</button>
-                        <input type="range" id="blur-slider" min="0" max="15" step="0.1" value="10" aria-label="Screenshot visibility">
-                        <button type="button" data-blur="15"><i class="fas fa-image" aria-hidden="true"></i>Reveal</button>
-                    </div>
+                    {{ screenshot_visibility() }}
                     <label class="explorer-page-size">Per page<select form="domain-explorer-filters" name="size" aria-label="Domains per page" data-auto-submit>{% for size in [10, 25, 50, 100] %}<option value="{{ size }}" {% if dict_data.page_size == size %}selected{% endif %}>{{ size }}</option>{% endfor %}</select></label>
                 </div>
             </div>
             <div class="domain-grid">
             {% for domain in dict_data.list_elem %}
-                {% set domain_url = url_for('crawler_splash.showDomain', domain=domain.id) %}
-                <article class="domain-card">
-                    {% if domain.is_tags_safe and domain.screenshot %}
-                        {% set screenshot_url = url_for('objects_item.screenshot', filename=domain.screenshot) %}
-                        <a class="shot" href="{{ screenshot_url }}" target="_blank" rel="noopener noreferrer" aria-label="Open full screenshot for {{ domain.id }}">
-                            <img src="{{ screenshot_url }}" alt="Screenshot of {{ domain.id }}" loading="lazy" data-screenshot>
-                        </a>
-                    {% elif not domain.is_tags_safe %}
-                        <div class="no-screenshot sensitive">
-                            <svg class="vanity-sensitive-icon" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 64" width="84" height="64" fill="#9a743d">
-                                <!-- Adapted from Font Awesome Free 6.6.0 by @fontawesome (eye-slash and triangle-exclamation).
-                                     Copyright 2024 Fonticons, Inc. Icons licensed under CC BY 4.0:
-                                     https://fontawesome.com/license/free -->
-                                <title>Sensitive screenshot</title>
-                                <path transform="translate(2 5) scale(.06875)" d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z"/>
-                                <path transform="translate(25 19) scale(.046875)" stroke="#fff" stroke-width="50" stroke-linejoin="round" paint-order="stroke fill" d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
-                            </svg>
-                            <span>Sensitive screenshot</span>
-                        </div>
-                    {% else %}
-                        <div class="no-screenshot"><i class="fas fa-image" aria-hidden="true"></i>No screenshot</div>
-                    {% endif %}
-                    <div class="card-body">
-                        <div class="domain-top">
-                            {% if domain.status %}
-                                <span class="status up"><i class="fas fa-check-circle" aria-hidden="true"></i>UP</span>
-                            {% else %}
-                                <span class="status down"><i class="fas fa-times-circle" aria-hidden="true"></i>DOWN</span>
-                            {% endif %}
-                            {% if domain.languages %}<div class="languages"><i class="fas fa-language" aria-hidden="true"></i><span class="sr-only">Languages:</span>{% for language in domain.languages %}<span>{{ language }}</span>{% if not loop.last %}<span aria-hidden="true">·</span>{% endif %}{% endfor %}</div>{% endif %}
-                        </div>
-                        <a class="domain-name" href="{{ domain_url }}">{{ domain.id }}</a>
-                        <dl class="seen">
-                            <div><dt>First seen</dt><dd>{{ domain.first_seen|crawler_date }}</dd></div>
-                            <div><dt>Last seen</dt><dd>{{ domain.last_check|crawler_date }}</dd></div>
-                        </dl>
-                        {% if domain.tags %}<div class="tags">{% for tag in domain.tags %}<a {% if tag.startswith('tlp:') %}class="tlp" {% endif %}href="{{ url_for('tags_ui.get_obj_by_tags', object_type='domain', ltags=tag) }}">{{ tag }}</a>{% endfor %}</div>{% endif %}
-                        <div class="actions">
-                            <a href="{{ domain_url }}">View domain<i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
-                            <a class="correlations" href="{{ url_for('correlation.show_correlation', type='domain', id=domain.id) }}" target="_blank" rel="noopener noreferrer"><i class="fas fa-project-diagram" aria-hidden="true"></i>Correlations</a>
-                            <a class="export" href="{{ url_for('import_export.add_object_id_to_export', type='domain', id=domain.id, lvl=0) }}" target="_blank" rel="noopener noreferrer" aria-label="Add {{ domain.id }} to export" title="Add to export"><img src="{{ url_for('static', filename='image/misp-logo.png') }}" alt="MISP"></a>
-                        </div>
-                    </div>
-                </article>
+                {{ domain_card(domain) }}
             {% else %}
                 <div class="empty surface"><i class="fas fa-search" aria-hidden="true"></i>{{ 'No domains match your search and filters.' if dict_data.query else 'No domains found for this network and date range.' }}</div>
             {% endfor %}
@@ -1010,41 +531,6 @@
             select.addEventListener('change', function () {
                 filters.requestSubmit();
             });
-        });
-        const blurSlider = document.getElementById('blur-slider');
-        if (document.documentElement.dataset.screenshotVisibility !== undefined) {
-            blurSlider.value = document.documentElement.dataset.screenshotVisibility;
-        }
-        function blurImages() {
-            document.documentElement.style.setProperty('--object-image-blur', (15 - Number(blurSlider.value)) + 'px');
-            try {
-                sessionStorage.setItem('ail.domain-explorer.screenshot-visibility', blurSlider.value);
-            } catch (error) {
-                // Blur controls still work when browser storage is unavailable.
-            }
-        }
-        document.querySelectorAll('[data-blur]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                blurSlider.value = button.dataset.blur;
-                blurImages();
-            });
-        });
-        blurSlider.addEventListener('input', blurImages);
-        blurImages();
-        document.querySelectorAll('[data-screenshot]').forEach(function (image) {
-            function showMissingScreenshot() {
-                if (!image.parentElement) {
-                    return;
-                }
-                const message = document.createElement('div');
-                message.className = 'no-screenshot';
-                message.textContent = 'Screenshot unavailable';
-                image.parentElement.replaceWith(message);
-            }
-            image.addEventListener('error', showMissingScreenshot, {once: true});
-            if (image.complete && image.naturalWidth === 0 && image.currentSrc) {
-                showMissingScreenshot();
-            }
         });
     </script>
 </body>

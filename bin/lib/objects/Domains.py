@@ -312,7 +312,7 @@ class Domain(AbstractObject):
         elif 'screenshot' in options:
             meta['screenshot'] = self.get_screenshot()
         if 'img' in options:
-            meta['img'] = self.get_screenshot()
+            meta['img'] = self.get_screenshot(last_up=True)
         if 'tags_safe' in options:
             meta['is_tags_safe'] = self.is_tags_safe(meta['tags'])
         if 'link' in options:
@@ -707,7 +707,7 @@ def api_get_domains_by_languages(domains_types, languages, meta=False, page=1):
         metas = []
         for dom in domains['list_elem']:
             domain = Domain(dom)
-            domain_meta = domain.get_meta(options={'languages', 'screenshot', 'tags_safe'})
+            domain_meta = domain.get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'})
             metas.append(domain_meta)
         domains['list_elem'] = metas
         return domains
@@ -862,7 +862,7 @@ def search_domain_by_name(name_to_search, domain_types, r_pos=False):
     for domain_type in domain_types:
         r_name = sanitize_domain_name_to_search(name_to_search, domain_type)
         if not r_name:
-            break
+            continue
         r_name = re.compile(r_name)
         for domain in get_domains_up_by_type(domain_type):
             res = re.search(r_name, domain)
@@ -884,7 +884,7 @@ def api_search_domains_by_name(name_to_search, domain_types, meta=False, page=1)
         metas = []
         for dom in domains['list_elem']:
             domain = Domain(dom)
-            domain_meta = domain.get_meta(options={'languages', 'screenshot', 'tags_safe'})
+            domain_meta = domain.get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'})
             domain_meta = {**domains_dict[dom], **domain_meta}
             metas.append(domain_meta)
         domains['list_elem'] = metas
@@ -938,7 +938,7 @@ def get_vanity_domains(vanity, len_vanity=4, meta=False):
     if meta:
         metas = []
         for domain in domains:
-            metas.append(Domain(domain).get_meta(options={'languages', 'screenshot', 'tags_safe'}))
+            metas.append(Domain(domain).get_meta(options={'languages', 'screenshot_last_up', 'tags_safe'}))
         return metas
     else:
         return domains

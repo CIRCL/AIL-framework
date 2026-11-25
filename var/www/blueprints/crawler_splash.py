@@ -767,11 +767,7 @@ def domains_search_languages_get():
 def domains_search_name():
     user_id = current_user.get_user_id()
     name = request.args.get('name')
-    page = request.args.get('page')
-    try:
-        page = int(page)
-    except:
-        page = 1
+    page = max(1, request.args.get('page', 1, type=int))
 
     if not name:
         return create_json_response({'error': 'Mandatory args name not provided'}, 400)
@@ -779,26 +775,16 @@ def domains_search_name():
     if url_name:
         name = url_name
 
-    domains_types = request.args.getlist('domain_types')
-    if domains_types:
-        domains_types = domains_types[0].split(',')
+    domains_types = [network for value in request.args.getlist('domain_types') for network in value.split(',')]
     domains_types = Domains.sanitize_domains_types(domains_types)
 
     dom = Domains.Domain(name)
     if dom.exists():
         return redirect(url_for('crawler_splash.showDomain', domain=dom.get_id()))
-    else:
-        if name.endswith('.onion') and len(name) == 62:
-            send_to_crawler = True
-        else:
-            send_to_crawler = False
 
     search_engine.log(user_id, 'domain_name', name)
     l_dict_domains = Domains.api_search_domains_by_name(name, domains_types, meta=True, page=page)
-    return render_template("domains/domains_result_list.html", template_folder='../../',
-                           l_dict_domains=l_dict_domains, bootstrap_label=bootstrap_label,
-                           send_to_crawler=send_to_crawler,
-                           domains_types=domains_types)
+    return render_template('domains/domains_result_list.html', l_dict_domains=l_dict_domains, send_to_crawler=crawlers.is_valid_onion_domain(name), domains_types=domains_types)
 
 def _render_domains_date(date_from, date_to):
     date = Date.sanitise_date_range(date_from, date_to)
