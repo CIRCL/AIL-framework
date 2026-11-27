@@ -9,6 +9,10 @@
 </span>
 {%- endmacro %}
 
+{% macro new_capture_icon() -%}
+<span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>
+{%- endmacro %}
+
 {% macro menu() %}
 <li class="nav-item mr-3 crawler-nav" id="crawler-nav">
     <div class="crawler-nav-trigger">
@@ -16,7 +20,7 @@
         <button class="crawler-nav-toggle" id="crawler-nav-toggle" type="button" aria-label="Open crawler navigation" aria-controls="crawler-nav-menu" aria-expanded="false"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
     </div>
     <ul class="crawler-nav-panel crawler-nav-root" id="crawler-nav-menu" aria-label="Crawler navigation" hidden>
-        <li><a id="crawler-nav-manual" href="{{ url_for('crawler_splash.manual') }}"><span class="crawler-new-capture-icon" aria-hidden="true"><i class="fas fa-plus"></i><i class="fas fa-spider"></i></span>New Capture</a></li>
+        <li><a id="crawler-nav-manual" href="{{ url_for('crawler_splash.manual') }}">{{ new_capture_icon() }}New Capture</a></li>
         <li class="crawler-nav-separator" role="separator"></li>
         <li>
             <a id="crawler-nav-dashboard" href="{{ url_for('crawler_splash.crawlers_dashboard') }}">

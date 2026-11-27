@@ -44,7 +44,7 @@
                         <i class="fas fa-hourglass-half"></i> The interactive browser capture is stopped. The crawler will import the capture, then the crawled domain will be available when processing is finished.
                     </div>
                     <div id="open_browser_help" class="alert alert-primary" {% if not session.remote_url or session.status not in ['starting', 'ready'] or session.remote_status|lower == 'stopped' %}style="display:none;"{% endif %}>
-                        <i class="fas fa-external-link-alt"></i> Click <strong>Open interactive browser</strong> to open the interactive session. When you are done browsing, come back to this page and click <strong>Finish capture</strong>.
+                        <i class="fas fa-external-link-alt"></i> Select <strong>Open interactive browser</strong> to browse and interact with the target site in a new tab.
                     </div>
                     <div id="interactive_error" class="alert alert-danger" {% if not session.error %}style="display:none;"{% endif %}>{{ session.error }}</div>
                     {% set show_crawled_domain = session.crawled_domain and session.crawled_url and session.capture_status == 'DONE' %}

@@ -9,13 +9,15 @@ import os
 import hmac
 import json
 import random
+import re
 import secrets
 import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from flask import render_template, jsonify, request, session, Blueprint, redirect, url_for, Response, send_file, abort, current_app
+from flask import render_template, jsonify, request, session, Blueprint, redirect, url_for, Response, send_file, abort, current_app, flash
 from flask_login import login_required, current_user
 
 sys.path.append('modules')
@@ -59,6 +61,8 @@ def format_crawler_date(value):
 
 
 # ============ VARIABLES ============
+MANUAL_CRAWL_MAX_DEPTH = 5
+CRAWL_INTERVAL_UNITS = ('months', 'weeks', 'days', 'hours', 'minutes')
 
 
 # ============ FUNCTIONS ============
@@ -103,6 +107,84 @@ def create_json_response(data, status_code):
     return Response(json.dumps(data, indent=2, sort_keys=True), mimetype='application/json'), status_code
 
 
+def _manual_tag_values(form, name):
+    try:
+        values = json.loads(form.get(name) or '[]')
+    except (TypeError, ValueError):
+        return []
+    return [value for value in values if isinstance(value, str)] if isinstance(values, list) else []
+
+
+def _is_manual_batch_paste(form):
+    return 'urls_to_crawl' in form and (bool(form['urls_to_crawl']) or not (form.get('url_to_crawl') or 'urls' in form))
+
+
+def _render_manual_capture(form=None, urls=None, mode='crawl', error=None, error_field=None, status=200):
+    submitted = form is not None
+    form = form or {}
+    user_id = current_user.get_user_id()
+    tags_selector_data = Tag.get_tags_selector_data()
+    for name in ('taxonomies_tags', 'galaxies_tags'):
+        tags_selector_data[name] = _manual_tag_values(form, name)
+
+    target_mode = 'single'
+    if urls is not None:
+        target_mode = 'review'
+    elif mode == 'crawl' and _is_manual_batch_paste(form):
+        target_mode = 'batch'
+
+    return render_template(
+        'crawler_manual.html',
+        form=form, submitted=submitted, mode=mode, target_mode=target_mode, urls=urls,
+        depth_max=MANUAL_CRAWL_MAX_DEPTH, interval_units=CRAWL_INTERVAL_UNITS,
+        error=error, error_field=error_field,
+        is_manager_connected=crawlers.get_lacus_connection_metadata(),
+        l_cookiejar=crawlers.api_get_cookiejars_selector(current_user.get_org(), user_id),
+        import_status=request.args.get('import_status'), import_message=request.args.get('import_message'),
+        interactive_session=crawlers.get_user_active_interactive_session(user_id),
+        interactive_usage=crawlers.get_interactive_usage(),
+        interactive_default_timeout=crawlers.INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT,
+        interactive_max_timeout=crawlers.INTERACTIVE_CAPTURE_MAX_TIMEOUT,
+        tags_selector_data=tags_selector_data,
+    ), status
+
+
+def _manual_capture_settings(form):
+    proxy = (form.get('proxy_name') or '').strip()
+    if proxy:
+        try:
+            result, status = crawlers.api_verify_proxy(proxy)
+        except ValueError:
+            raise ValueError('Enter a valid proxy URL with a host and port.') from None
+        if status != 200:
+            raise ValueError(result['error'])
+    elif form.get('crawler_queue_type') == 'custom':
+        raise ValueError('Enter a proxy address.')
+    elif form.get('crawler_queue_type') == 'onion':
+        proxy = 'force_tor'
+    return {
+        'har': form.get('har'),
+        'screenshot': form.get('screenshot'),
+        'javascript': form.get('javascript', False),
+        'proxy': proxy or None,
+    }
+
+
+def _is_manual_capture_address(address):
+    try:
+        parsed = urlsplit(address if re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*://', address) else f'http://{address}')
+        return bool(parsed.hostname) and parsed.scheme in {'http', 'https'} and not any(char.isspace() for char in address)
+    except ValueError:
+        return False
+
+
+def _manual_capture_error(data, status, form, urls=None, mode='crawl'):
+    if status in (403, 404):
+        return create_json_response(data, status)
+    message = data.get('error') or data.get('reason') or 'The capture could not be started.'
+    field = 'target' if 'url' in data else None
+    return _render_manual_capture(form, urls=urls, mode=mode, error=message, error_field=field, status=status)
+
 
 # ============= ROUTES ==============
 @crawler_splash.route("/crawlers/dashboard", methods=['GET'])
@@ -145,23 +227,8 @@ def crawlers_dashboard_captures_delete():
 @login_required
 @login_read_only
 def manual():
-    user_org = current_user.get_org()
-    user_id = current_user.get_user_id()
-    l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
-    crawlers_types = ['onion', 'web']
-    proxies = []  # TODO HANDLE PROXIES
-    return render_template("crawler_manual.html",
-                           is_manager_connected=crawlers.get_lacus_connection_metadata(),
-                           crawlers_types=crawlers_types,
-                           proxies=proxies,
-                           l_cookiejar=l_cookiejar,
-                           import_status=request.args.get('import_status'),
-                           import_message=request.args.get('import_message'),
-                           interactive_session=crawlers.get_user_active_interactive_session(user_id),
-                           interactive_usage=crawlers.get_interactive_usage(),
-                           interactive_default_timeout=crawlers.INTERACTIVE_CAPTURE_DEFAULT_TIMEOUT,
-                           interactive_max_timeout=crawlers.INTERACTIVE_CAPTURE_MAX_TIMEOUT,
-                           tags_selector_data=Tag.get_tags_selector_data())
+    mode = 'interactive' if request.args.get('mode') == 'interactive' else 'crawl'
+    return _render_manual_capture(mode=mode)
 
 
 @crawler_splash.route("/crawlers/import_lookyloo_archive", methods=['POST'])
@@ -188,27 +255,26 @@ def interactive_capture_current():
 def interactive_capture_start():
     user_org = current_user.get_org()
     user_id = current_user.get_user_id()
-    data = {
-        'url': request.form.get('url_to_crawl') or request.form.get('url'),
+    form = request.form
+    url = (form.get('url_to_crawl') or form.get('url') or '').strip()
+    if not _is_manual_capture_address(url):
+        return _render_manual_capture(form, mode='interactive', error='Enter a domain or an HTTP or HTTPS URL.', error_field='target', status=400)
+    try:
+        data = _manual_capture_settings(form)
+    except ValueError as error:
+        return _render_manual_capture(form, mode='interactive', error=str(error), error_field='proxy', status=400)
+    data.update({
+        'url': url,
         'depth': 0,
-        'har': request.form.get('har'),
-        'screenshot': request.form.get('screenshot'),
-        'javascript': request.form.get('javascript', False),
-        'general_timeout_in_sec': request.form.get('general_timeout_in_sec'),
-    }
-    crawler_type = request.form.get('crawler_queue_type')
-    proxy = request.form.get('proxy_name')
-    if not proxy and crawler_type == 'onion':
-        proxy = 'force_tor'
-    if proxy:
-        data['proxy'] = proxy
-    if request.form.get('interactive_cookiejar'):
+        'general_timeout_in_sec': form.get('general_timeout_in_sec'),
+    })
+    if form.get('interactive_cookiejar'):
         data['save_cookiejar'] = True
-        data['description'] = request.form.get('cookiejar_description')
-    res = crawlers.api_start_interactive_capture(data, user_org, user_id, current_user.get_role())
-    if res[1] != 200:
-        return create_json_response(res[0], res[1])
-    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=res[0]['uuid']))
+        data['description'] = form.get('cookiejar_description')
+    result, status = crawlers.api_start_interactive_capture(data, user_org, user_id, current_user.get_role())
+    if status != 200:
+        return _manual_capture_error(result, status, form, mode='interactive')
+    return redirect(url_for('crawler_splash.interactive_capture_show', uuid=result['uuid']))
 
 @crawler_splash.route("/crawlers/interactive/<uuid>", methods=['GET'])
 @login_required
@@ -268,109 +334,56 @@ def interactive_capture_admin_close(uuid):
 @login_required
 @login_user_no_api
 def send_to_spider():
-    user_org = current_user.get_org()
-    user_id = current_user.get_user_id()
-    user_role = current_user.get_role()
+    form = request.form
+    if _is_manual_batch_paste(form):
+        urls = sorted(crawlers.extract_url_from_text(form['urls_to_crawl']))
+        if not urls:
+            return _render_manual_capture(form, error='Paste at least one domain or URL.', error_field='target', status=400)
+        if not all(_is_manual_capture_address(url) for url in urls):
+            return _render_manual_capture(form, urls=urls, error='Review the addresses and use HTTP or HTTPS URLs.', error_field='target', status=400)
+        error = crawlers.api_validate_global_urls(urls=urls)
+        if error:
+            return _manual_capture_error(*error, form, urls=urls)
+        return _render_manual_capture(form, urls=urls)
 
-    # POST val
-    url = request.form.get('url_to_crawl')
-    urls = request.form.get('urls_to_crawl')
-    if urls:
-        urls = crawlers.extract_url_from_text(urls)
-        res = crawlers.api_validate_global_urls(urls=urls)
-        if res:
-            return create_json_response(res[0], res[1])
-        l_cookiejar = crawlers.api_get_cookiejars_selector(user_org, user_id)
-        crawlers_types = crawlers.get_crawler_all_types()
-        proxies = []  # TODO HANDLE PROXIES
-        return render_template("crawler_manual.html", urls=urls,
-                               is_manager_connected=crawlers.get_lacus_connection_metadata(),
-                               crawlers_types=crawlers_types,
-                               proxies=proxies,
-                               l_cookiejar=l_cookiejar,
-                               tags_selector_data=Tag.get_tags_selector_data())
+    url = (form.get('url_to_crawl') or '').strip()
+    urls = [address.strip() for address in form.getlist('urls')] if 'urls' in form else None
+    addresses = [url] if urls is None else urls
+    if not addresses or not all(_is_manual_capture_address(address) for address in addresses):
+        return _render_manual_capture(form, urls=urls, error='Enter a domain or an HTTP or HTTPS URL.', error_field='target', status=400)
 
-    urls = request.form.getlist('urls')
-    crawler_type = request.form.get('crawler_queue_type')
-    screenshot = request.form.get('screenshot')
-    har = request.form.get('har')
-    javascript = request.form.get('javascript', False)
-    depth_limit = request.form.get('depth_limit')
-    cookiejar_uuid = request.form.get('cookiejar')
+    try:
+        depth = int(form.get('depth_limit', 0))
+    except (TypeError, ValueError):
+        depth = -1
+    if not 0 <= depth <= MANUAL_CRAWL_MAX_DEPTH:
+        return _render_manual_capture(form, urls=urls, error=f'Enter a whole number from 0 to {MANUAL_CRAWL_MAX_DEPTH}.', error_field='depth', status=400)
+    try:
+        data = _manual_capture_settings(form)
+    except ValueError as error:
+        return _render_manual_capture(form, urls=urls, error=str(error), error_field='proxy', status=400)
 
-    # TAGS
-    tags = request.form.get("tags", [])
-    taxonomies_tags = request.form.get('taxonomies_tags')
-    if taxonomies_tags:
-        try:
-            taxonomies_tags = json.loads(taxonomies_tags)
-        except:
-            taxonomies_tags = []
+    frequency = form.get('frequency') if urls is None and form.get('crawler_scheduler') else None
+    if frequency == 'custom':
+        frequency = {unit: form.get(f'frequency_{unit}', 0) for unit in CRAWL_INTERVAL_UNITS}
+    cookiejar = (form.get('cookiejar') or '').rsplit(':', 1)[-1].strip()
+    tags = form.get('tags', '').split() + _manual_tag_values(form, 'taxonomies_tags') + _manual_tag_values(form, 'galaxies_tags')
+    data.update(depth=depth, frequency=frequency, tags=tags)
+    if cookiejar and cookiejar != 'None':
+        data['cookiejar'] = cookiejar
+    if urls is None:
+        data['url'] = url
     else:
-        taxonomies_tags = []
-    galaxies_tags = request.form.get('galaxies_tags')
-    if galaxies_tags:
-        try:
-            galaxies_tags = json.loads(galaxies_tags)
-        except:
-            galaxies_tags = []
-    else:
-        galaxies_tags = []
-    # custom tags
-    if tags:
-        tags = tags.split()
-    else:
-        tags = []
-    escaped = []
-    for tag in tags:
-        escaped.append(tag)
-    tags = escaped + taxonomies_tags + galaxies_tags
-
-    # Frequency
-    if request.form.get('crawler_scheduler'):
-        frequency = request.form.get('frequency')
-        if frequency == 'custom':
-            months = request.form.get('frequency_months', 0)
-            weeks = request.form.get('frequency_weeks', 0)
-            days = request.form.get('frequency_days', 0)
-            hours = request.form.get('frequency_hours', 0)
-            minutes = request.form.get('frequency_minutes', 0)
-            frequency = {'months': months, 'weeks': weeks, 'days': days, 'hours': hours, 'minutes': minutes}
-    else:
-        frequency = None
-
-    # PROXY
-    proxy = request.form.get('proxy_name')
-    if proxy:
-        res = crawlers.api_verify_proxy(proxy)
-        if res[1] != 200:
-            return create_json_response(res[0], res[1])
-    elif crawler_type == 'onion':
-        proxy = 'force_tor'
-
-    if cookiejar_uuid:
-        if cookiejar_uuid == 'None':
-            cookiejar_uuid = None
-        else:
-            cookiejar_uuid = cookiejar_uuid.rsplit(':')
-            cookiejar_uuid = cookiejar_uuid[-1].replace(' ', '')
-
-    data = {'depth': depth_limit, 'har': har, 'screenshot': screenshot, 'javascript': javascript, 'frequency': frequency}
-    if url:
-        data['url']= url
-    if urls:
         data['urls'] = urls
-    if proxy:
-        data['proxy'] = proxy
-    if cookiejar_uuid:
-        data['cookiejar'] = cookiejar_uuid
-    if tags:
-        data['tags'] = tags
-    # print(data)
-    res = crawlers.api_add_crawler_task(data, user_org, user_id=user_id, user_role=user_role)
-
-    if res[1] != 200:
-        return create_json_response(res[0], res[1])
+    result, status = crawlers.api_add_crawler_task(data, current_user.get_org(), user_id=current_user.get_user_id(), user_role=current_user.get_role())
+    if status != 200:
+        return _manual_capture_error(result, status, form, urls=urls)
+    if frequency:
+        flash('Crawl scheduled.', 'success')
+    elif len(addresses) > 1:
+        flash(f'{len(addresses)} crawls submitted.', 'success')
+    else:
+        flash('Crawl submitted.', 'success')
     return redirect(url_for('crawler_splash.manual'))
 
 # Send Unknown onion to crawler

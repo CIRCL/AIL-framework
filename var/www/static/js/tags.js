@@ -338,14 +338,15 @@
 
             /**
              * @cfg {String} sortDir
-             * <p>Direction used for sorting. Only 'asc' and 'desc' are valid values</p>
+             * <p>Direction used when sorting by a property name. Valid values are 'asc' and 'desc'.</p>
              * Defaults to <code>'asc'</code>.
              */
             sortDir: 'asc',
 
             /**
-             * @cfg {String} sortOrder
-             * <p>name of JSON object property for local result sorting.
+             * @cfg {String|Function} sortOrder
+             * <p>JSON property name or comparison function for sorting suggestions.
+             *    A comparison function receives two suggestion objects and determines their order.
              *    Leave null if you do not wish the results to be ordered or if they are already ordered remotely.</p>
              *
              * Defaults to <code>null</code>.
@@ -1139,7 +1140,9 @@
                     }
                 });
                 // sort the data
-                if(cfg.sortOrder !== null) {
+                if (typeof cfg.sortOrder === 'function') {
+                    newSuggestions.sort(cfg.sortOrder);
+                } else if (cfg.sortOrder !== null) {
                     newSuggestions.sort(function(a,b) {
                         if(a[cfg.sortOrder] < b[cfg.sortOrder]) {
                             return cfg.sortDir === 'asc' ? -1 : 1;

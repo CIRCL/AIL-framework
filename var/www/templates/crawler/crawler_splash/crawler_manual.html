@@ -1,430 +1,1174 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en">
 <head>
-	<title>AIL-Framework</title>
-	<link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png')}}">
-	<!-- Core CSS -->
-	<link href="{{ url_for('static', filename='css/bootstrap4.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/daterangepicker.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/tags.css') }}" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>New capture · AIL</title>
+    <link rel="icon" href="{{ url_for('static', filename='image/ail-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tags.css') }}">
+    <style>
+        .manual-capture-page {
+            background: #f3f6fa;
+        }
 
-	<!-- JS -->
-	<script src="{{ url_for('static', filename='js/jquery.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/popper.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/bootstrap4.min.js')}}"></script>
-	<script src="{{ url_for('static', filename='js/moment.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/jquery.daterangepicker.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/d3.min.js') }}"></script>
+        .manual-capture {
+            --capture-ink: #263d53;
+            --capture-muted: #516781;
+            --capture-line: #dbe4ee;
+            --capture-field-border: #b7c8da;
+            --capture-blue: #245fca;
+            --capture-blue-dark: #164aab;
+            --capture-highlight: #edf4ff;
+            --capture-red: #a02730;
+            --capture-shadow: 0 2px 5px rgb(25 48 70 / .04), 0 14px 45px rgb(25 48 70 / .055);
+            width: min(100% - 56px, 1200px);
+            margin-inline: auto;
+            padding: 34px 0 48px;
+            color: var(--capture-ink);
+        }
+
+        .manual-capture [hidden] { display: none !important; }
+        .manual-capture :is(h1, h2, p, dl) { margin: 0; }
+        .manual-capture fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+        .manual-capture label { margin: 0; }
+        .manual-capture :focus-visible { outline: 3px solid #83a9fb; outline-offset: 3px; }
+        .manual-capture :is(label, legend) { color: var(--capture-ink); }
+        .manual-capture legend, .capture-field > label, #capture-target-label {
+            margin-bottom: 0;
+            font-size: .9375rem;
+            font-weight: 650;
+        }
+
+        .capture-heading { display: flex; align-items: center; gap: 13px; margin-bottom: 22px; }
+        .capture-heading h1 { font-size: clamp(1.625rem, 3vw, 2rem); font-weight: 650; letter-spacing: -.025em; }
+        .capture-page-icon {
+            display: grid;
+            place-items: center;
+            flex: none;
+            width: 64px;
+            height: 64px;
+            border: 1px solid #c9dfe6;
+            border-radius: 14px;
+            color: #13718e;
+            background: linear-gradient(160deg, #f5fbfc, #e4f1f5);
+            font-size: 2rem;
+        }
+        .manual-capture .crawler-new-capture-icon {
+            width: auto;
+            height: 1em;
+            gap: calc(1em / 6);
+            line-height: 1;
+        }
+        .manual-capture .crawler-new-capture-icon .fa-plus {
+            font-size: calc(7em / 12);
+        }
+        .manual-capture .crawler-new-capture-icon .fa-spider {
+            font-size: 1em;
+        }
+
+        .capture-notice {
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            border: 1px solid #ecd9ad;
+            border-radius: 7px;
+            color: #735319;
+            background: #fff7e6;
+            font-size: .9375rem;
+        }
+        .capture-notice i { margin-right: 5px; }
+        .capture-card { background: #fff; border: 1px solid var(--capture-line); border-radius: 12px; box-shadow: var(--capture-shadow); }
+        .capture-body { padding: 24px 26px 0; }
+        .capture-mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px; }
+        .capture-mode { position: relative; cursor: pointer; }
+        .capture-mode input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .capture-mode-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            height: 100%;
+            padding: 14px 15px;
+            border: 1px solid var(--capture-field-border);
+            border-radius: 8px;
+            transition: background .15s, border-color .15s;
+        }
+        .capture-mode-card strong { font-weight: 650; }
+        .capture-mode-card small, .capture-archive summary small { display: block; color: var(--capture-muted); font-size: .875rem; }
+        .capture-mode-icon { margin-top: 4px; color: var(--capture-muted); }
+        .capture-mode-dot { width: 16px; height: 16px; margin: 4px 0 0 auto; flex: none; border: 1px solid #9bacbf; border-radius: 50%; background: #fff; }
+        .capture-mode-card:hover { background: #f8fafc; }
+        .capture-mode input:checked + .capture-mode-card { border-color: var(--capture-blue); background: var(--capture-highlight); box-shadow: inset 0 0 0 1px var(--capture-blue); }
+        .capture-mode input:checked + .capture-mode-card .capture-mode-dot { border: 5px solid var(--capture-blue); }
+        .capture-mode input:checked + .capture-mode-card .capture-mode-icon { color: var(--capture-blue); }
+        .capture-mode input:focus-visible + .capture-mode-card { outline: 3px solid #83a9fb; outline-offset: 3px; }
+
+        .capture-target {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas: "label label" "entry batch" "hint hint" "error error";
+            align-items: center;
+            gap: 6px 10px;
+            margin-top: 23px;
+        }
+        .capture-target[data-mode="interactive"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: "label" "entry" "hint" "error"; }
+        #capture-target-label { grid-area: label; }
+        .capture-target-entry { grid-area: entry; min-width: 0; }
+        #capture-target-hint { grid-area: hint; }
+        #capture-target-error { grid-area: error; }
+        .capture-input {
+            width: 100%;
+            min-width: 0;
+            min-height: 44px;
+            padding: 8px 11px;
+            color: var(--capture-ink);
+            background: #fff;
+            border: 1px solid var(--capture-field-border);
+            border-radius: 6px;
+        }
+        .capture-input::placeholder { color: #62768b; opacity: 1; }
+        .capture-input:focus { border-color: var(--capture-blue); box-shadow: 0 0 0 3px rgb(36 95 202 / .13); outline: none; }
+        .capture-input[aria-invalid="true"] { border-color: var(--capture-red); }
+        .capture-input[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px rgb(160 39 48 / .13); }
+        .capture-target-icon-field { position: relative; }
+        .capture-target-icon-field > i { position: absolute; top: 50%; left: 14px; color: var(--capture-muted); transform: translateY(-50%); pointer-events: none; }
+        .capture-url-input { min-height: 52px; padding-left: 40px; border-color: #aebfd2; }
+        .capture-target textarea { display: block; resize: vertical; }
+        .capture-target .target-batch-toggle { grid-area: batch; min-height: 52px; align-self: start; }
+        .capture-hint, .capture-error { font-size: .875rem; }
+        .capture-hint { color: var(--capture-muted); }
+        .capture-error { color: var(--capture-red); }
+        .capture-review-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+        .capture-review-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; }
+        .capture-review-list button { min-width: 44px; padding-inline: 0; }
+        .capture-review-list button:hover { color: var(--capture-red); }
+
+        .capture-browser-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            margin-top: 15px;
+            padding: 10px 13px;
+            border-radius: 7px;
+            color: var(--capture-ink);
+            background: var(--capture-highlight);
+            font-size: .875rem;
+        }
+        .capture-browser-status a { font-weight: 650; color: var(--capture-blue-dark); }
+        .manual-capture .capture-depth { margin-top: 17px; }
+        .capture-depth-row, .capture-depth-label, .capture-depth-label label { display: flex; align-items: center; gap: 8px; }
+        .capture-depth-label { gap: 4px; flex: none; }
+        .capture-depth-label label { gap: 6px; font-size: .9375rem; font-weight: 650; white-space: nowrap; }
+        .capture-depth-label label i { color: var(--capture-muted); }
+        .capture-depth-stepper { position: relative; width: 88px; flex: none; }
+        .capture-depth-stepper .capture-input { min-height: 40px; padding-block: 6px; }
+        .capture-depth-stepper.has-depth-arrows input { padding-right: 38px; appearance: textfield; }
+        .capture-depth-stepper.has-depth-arrows input::-webkit-inner-spin-button,
+        .capture-depth-stepper.has-depth-arrows input::-webkit-outer-spin-button { appearance: none; margin: 0; }
+        .capture-depth-arrows {
+            position: absolute;
+            inset: 1px 1px 1px auto;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            width: 34px;
+            border-left: 1px solid var(--capture-line);
+        }
+        .capture-depth-arrows button {
+            display: grid;
+            place-items: center;
+            padding: 0;
+            border: 0;
+            color: var(--capture-blue-dark);
+            background: #f8fafc;
+            font-size: .7rem;
+        }
+        .capture-depth-arrows button:first-child { border-radius: 0 5px 0 0; border-bottom: 1px solid var(--capture-line); }
+        .capture-depth-arrows button:last-child { border-radius: 0 0 5px 0; }
+        .capture-depth-arrows button:hover:not(:disabled) { background: var(--capture-highlight); }
+        .capture-depth-arrows button:disabled { color: #8795a5; }
+        #capture-depth-error { margin-top: 5px; }
+
+        .capture-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 7px 14px; margin: 18px 0; font-size: .875rem; }
+        .capture-summary-group { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 13px; }
+        .capture-summary-group > span { display: inline-flex; align-items: center; gap: 5px; }
+        .capture-summary-group > span > i, .capture-summary-settings { color: var(--capture-muted); }
+        .capture-summary-settings strong { color: var(--capture-ink); }
+        .capture-help-button {
+            display: inline-grid;
+            place-items: center;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 0;
+            border-radius: 5px;
+            background: transparent;
+            color: var(--capture-blue-dark);
+        }
+        .capture-help-button:hover { background: var(--capture-highlight); }
+
+        .manual-capture summary { list-style: none; cursor: pointer; }
+        .manual-capture summary::-webkit-details-marker { display: none; }
+        .manual-capture details[open] > summary > .capture-chevron { transform: rotate(180deg); }
+        .capture-options { border-top: 1px solid var(--capture-line); }
+        .capture-options > summary {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 13px 0;
+            font-size: .9375rem;
+            font-weight: 650;
+        }
+        .capture-options > summary i, .capture-optional > summary i { color: var(--capture-muted); }
+        .capture-chevron { font-size: .75rem; }
+        .capture-options-body { display: grid; gap: 16px; padding-bottom: 17px; }
+        .capture-check-row { display: flex; flex-wrap: wrap; gap: 3px 22px; margin-top: 4px; }
+        .capture-check, .capture-check-with-help { display: inline-flex; align-items: center; gap: 6px; }
+        .capture-check { min-height: 34px; cursor: pointer; font-size: .875rem; }
+        .capture-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--capture-blue); }
+        .capture-check i { color: var(--capture-muted); }
+        .capture-option-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .capture-field { display: grid; align-content: start; gap: 4px; min-width: 0; }
+        .manual-capture #capture-custom-proxy { margin-top: 8px; }
+        .capture-optional { border-block: 1px solid var(--capture-line); }
+        .capture-optional + .capture-optional { border-top: 0; }
+        .capture-optional > summary { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: .875rem; font-weight: 650; }
+        .capture-optional[open] { padding-bottom: 10px; }
+        .capture-optional .capture-field { max-width: 470px; }
+        .capture-optional .capture-interval { display: grid; grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); gap: 7px; margin-top: 5px; }
+        .capture-interval input { margin-top: 4px; }
+
+        .capture-cookiejar { position: relative; }
+        .capture-cookiejar-toggle { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; overflow-wrap: anywhere; }
+        .capture-cookiejar-toggle i { color: var(--capture-muted); font-size: .75rem; flex: none; }
+        .capture-cookiejar-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+        .capture-cookiejar-panel {
+            position: absolute;
+            z-index: 20;
+            inset: calc(100% + 4px) 0 auto;
+            padding: 7px;
+            border: 1px solid var(--capture-field-border);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: var(--capture-shadow);
+        }
+        .capture-cookiejar-results { max-height: 240px; overflow: auto; margin-top: 5px; }
+        .capture-cookiejar-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            min-height: 42px;
+            padding: 6px 9px;
+            border: 0;
+            border-radius: 5px;
+            color: var(--capture-ink);
+            background: #fff;
+            text-align: left;
+            overflow-wrap: anywhere;
+        }
+        .capture-cookiejar-option small { display: block; color: var(--capture-muted); font-size: .75rem; }
+        .capture-cookiejar-option.is-active, .capture-cookiejar-option:hover { background: var(--capture-highlight); }
+        .capture-cookiejar-option[aria-selected="true"]::after { content: "\f00c"; font: 900 .8em "Font Awesome 6 Free"; color: var(--capture-blue-dark); }
+        #capture-cookiejar-empty { padding: 7px 9px; }
+
+        .capture-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px 16px;
+            padding: 14px 26px;
+            border-top: 1px solid var(--capture-line);
+            border-radius: 0 0 11px 11px;
+            background: #f8fafc;
+        }
+        .capture-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            padding: 8px 14px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            font-size: .9375rem;
+            font-weight: 650;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .capture-primary { color: #fff; background: var(--capture-blue); }
+        .capture-primary:hover:not(:disabled) { background: var(--capture-blue-dark); }
+        .capture-primary:disabled { color: #4a5d74; background: #ccd6e4; }
+        .capture-submit {
+            flex: none;
+            gap: 10px;
+            min-height: 52px;
+            padding: 10px 19px;
+            border-color: var(--capture-blue-dark);
+            box-shadow: 0 2px 4px rgb(22 74 171 / .2);
+            font-size: 1rem;
+        }
+        #capture-submit-crawler-icon { display: inline-flex; font-size: 1.25rem; }
+        #capture-submit-browser-icon {
+            position: relative;
+            display: inline-flex;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        #capture-submit-browser-icon .fa-spider {
+            position: absolute;
+            top: 37.5%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: .43em;
+        }
+        .capture-submit:not(:disabled) { cursor: pointer; }
+        .capture-submit:active:not(:disabled) {
+            background: #143d8d;
+            box-shadow: inset 0 2px 3px rgb(16 44 98 / .3);
+        }
+        .capture-submit:disabled {
+            border-color: var(--capture-field-border);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .capture-secondary { color: var(--capture-blue-dark); background: #fff; border-color: var(--capture-field-border); }
+        .capture-secondary:hover { background: var(--capture-highlight); border-color: var(--capture-blue); }
+        .capture-text-button { padding: 5px 0; border: 0; color: var(--capture-blue-dark); background: transparent; font-size: .875rem; font-weight: 650; }
+        .capture-text-button:hover { text-decoration: underline; }
+
+        .capture-archive { margin-top: 16px; box-shadow: 0 2px 5px rgb(25 48 70 / .04); }
+        .capture-archive > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 15px; padding: 14px 20px; border-radius: 11px; }
+        .capture-archive[open] > summary { border-radius: 11px 11px 0 0; }
+        .capture-archive > summary:hover { background: #f8fafc; }
+        .capture-archive-brand { width: 94px; padding: 8px 10px; border-radius: 7px; background: #f3f6fa; }
+        .capture-archive-brand img { display: block; width: 100%; height: auto; }
+        .capture-archive > summary .capture-chevron { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--capture-line); border-radius: 6px; color: var(--capture-muted); }
+        .capture-archive-form { padding: 16px 20px; border-top: 1px solid var(--capture-line); border-radius: 0 0 11px 11px; background: #f8fafc; }
+        .capture-dropzone { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 15px; border: 1px dashed #a5bad2; border-radius: 8px; background: #fff; }
+        .capture-dropzone.has-archive { border: 1px solid var(--capture-line); }
+        .capture-dropzone.is-dragging { border: 1px dashed var(--capture-blue); background: var(--capture-highlight); }
+        .capture-archive-file-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 7px; color: var(--capture-blue); background: var(--capture-highlight); }
+        .capture-archive-file-info { display: grid; gap: 3px; overflow-wrap: anywhere; font-size: .9375rem; }
+        .capture-archive-file-info span { color: var(--capture-muted); font-size: .875rem; }
+        .capture-archive-picker-actions { display: flex; gap: 6px; }
+        #capture-remove-archive { width: 44px; padding-inline: 0; }
+        .capture-archive-actions { display: flex; align-items: center; gap: 10px; }
+        .capture-archive-actions > * { margin-top: 12px; }
+        .capture-archive-actions > button { margin-left: auto; }
+
+        .capture-dialog {
+            width: min(460px, 100% - 28px);
+            max-width: none;
+            padding: 20px 22px;
+            border: 1px solid var(--capture-line);
+            border-radius: 10px;
+            color: var(--capture-ink);
+            background: #fff;
+            box-shadow: var(--capture-shadow);
+        }
+        .capture-dialog::backdrop { background: rgb(26 39 55 / .52); }
+        .capture-dialog h2 { margin-bottom: 8px; font-size: 1.25rem; font-weight: 650; }
+        .capture-dialog dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 12px; margin-top: 12px; font-size: .9375rem; }
+        .capture-dialog dd { margin: 0; color: var(--capture-muted); }
+        .capture-dialog-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+        .capture-dialog-actions > form { margin-left: auto; }
+        .capture-dialog-actions a { color: var(--capture-blue-dark); font-size: .9375rem; }
+
+        @media (min-width: 900px) {
+            .capture-summary-settings { padding-left: 14px; border-left: 1px solid var(--capture-line); }
+        }
+        @media (max-width: 640px) {
+            .manual-capture { width: calc(100% - 28px); padding-top: 22px; }
+            .capture-heading { margin-bottom: 16px; }
+            .capture-page-icon { width: 54px; height: 54px; font-size: 1.625rem; }
+            .capture-body { padding: 16px 16px 0; }
+            .capture-footer, .capture-archive-form { padding-inline: 16px; }
+            .capture-mode-grid, .capture-option-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+            .capture-mode-card { padding: 11px; }
+            .capture-target { grid-template-areas: "label batch" "entry entry" "hint hint" "error error"; margin-top: 18px; }
+            .capture-target .target-batch-toggle { min-height: 44px; padding-inline: 8px; font-size: .8125rem; white-space: normal; }
+            #capture-summary-label { flex-basis: 100%; }
+            .capture-archive > summary { gap: 10px; padding: 12px; }
+            .capture-archive-brand { width: 72px; padding: 7px; }
+            .capture-dropzone { grid-template-columns: auto minmax(0, 1fr); padding: 12px; }
+            .capture-archive-picker-actions { grid-column: 1 / -1; }
+            #capture-choose-archive { flex: 1; }
+            .capture-archive-actions { flex-direction: column; align-items: stretch; gap: 0; }
+            .capture-archive-actions > button { margin-left: 0; }
+        }
+        @media (max-width: 520px) {
+            #capture-depth-hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+        }
+        @media (max-width: 390px) {
+            .capture-footer { align-items: stretch; flex-direction: column; }
+            .capture-summary { gap: 5px 10px; }
+        }
+        @media (pointer: coarse) {
+            .manual-capture summary, .capture-check, .capture-help-button { min-height: 44px; }
+            .capture-help-button { min-width: 44px; }
+            .capture-depth-stepper .capture-input { min-height: 50px; }
+            .capture-cookiejar-option { min-height: 44px; }
+            #capture-dropzone:not(.has-archive) #capture-archive-detail { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .capture-mode-card { transition: none; }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap4.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/tags.js') }}"></script>
-
 </head>
+<body class="manual-capture-page">
+{% from 'crawler/menu_navbar.html' import new_capture_icon %}
+{% include 'nav_bar.html' %}
+{% macro help_button(dialog, label) -%}
+<button class="capture-help-button" type="button" data-capture-help="{{ dialog }}" aria-label="{{ label }}" aria-haspopup="dialog">
+    <i class="fas fa-question-circle" aria-hidden="true"></i>
+</button>
+{%- endmacro %}
+{% macro help_close() -%}
+<form method="dialog"><button class="capture-button capture-secondary" type="submit" autofocus>Close</button></form>
+{%- endmacro %}
+{% set interactive = mode == 'interactive' %}
+{% set proxy_type = form.get('crawler_queue_type', 'onion') %}
+{% if form.get('proxy_name') %}{% set proxy_type = 'custom' %}{% endif %}
+{% set screenshot = not submitted or form.get('screenshot') %}
+{% set har = not submitted or form.get('har') %}
+{% set javascript = not submitted or form.get('javascript') %}
+{% set schedule = form.get('crawler_scheduler') %}
+{% set frequency = form.get('frequency', 'hourly') %}
+{% set slots = [0, interactive_usage.max - interactive_usage.active]|max %}
+{% set interactive_blocked = interactive_session or not is_manager_connected.status or not slots %}
+{% set target_label = 'Domain or URL' if target_mode == 'single' else 'Review URLs' if target_mode == 'review' else 'URLs or text' %}
+{% set start_target = form.get('url_to_crawl') or form.get('url', '') %}
+<main class="manual-capture" id="core_content">
+    <header class="capture-heading">
+        <span class="capture-page-icon">{{ new_capture_icon() }}</span>
+        <h1>New capture</h1>
+    </header>
 
-<body>
+    {% if not is_manager_connected.status %}
+        <div class="capture-notice" role="status"><i class="fas fa-exclamation-circle" aria-hidden="true"></i> Crawler service unavailable.</div>
+    {% endif %}
+    {% for message in get_flashed_messages(category_filter=['success']) %}
+        <div class="alert alert-success" role="status">{{ message }}</div>
+    {% endfor %}
 
-	{% include 'nav_bar.html' %}
+    <form class="capture-card" id="manual-crawl-form" action="{{ url_for('crawler_splash.interactive_capture_start' if interactive else 'crawler_splash.send_to_spider') }}" method="post"
+          data-crawl-action="{{ url_for('crawler_splash.send_to_spider') }}"
+          data-interactive-action="{{ url_for('crawler_splash.interactive_capture_start') }}"
+          data-target-mode="{{ target_mode }}"
+          data-interactive-blocked="{{ 'true' if interactive_blocked else 'false' }}">
+        <div class="capture-body">
+            {% if error and not error_field %}<div class="alert alert-danger" role="alert">{{ error }}</div>{% endif %}
+            <fieldset>
+                <legend>Capture method</legend>
+                <div class="capture-mode-grid">
+                    <label class="capture-mode">
+                        <input type="radio" name="capture_method" value="crawl"{% if not interactive %} checked{% endif %}>
+                        <span class="capture-mode-card">
+                            <i class="fas fa-globe capture-mode-icon" aria-hidden="true"></i>
+                            <span><strong>Automated crawl</strong><small>Let AIL crawl one or more addresses.</small></span>
+                            <span class="capture-mode-dot" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                    <label class="capture-mode">
+                        <input type="radio" name="capture_method" value="interactive"{% if interactive %} checked{% endif %}>
+                        <span class="capture-mode-card">
+                            <i class="fas fa-desktop capture-mode-icon" aria-hidden="true"></i>
+                            <span><strong>Interactive browser</strong><small>Open a remote browser in a new tab. Browse the target site, click links, or log in directly.</small></span>
+                            <span class="capture-mode-dot" aria-hidden="true"></span>
+                        </span>
+                    </label>
+                </div>
+            </fieldset>
 
-	<div class="container-fluid">
-		<div class="row">
-
-
-			<div class="col-12" id="core_content">
-
-				{% include 'crawler/crawler_disabled.html' %}
-
-
-						{% if interactive_session %}
-                <div class="alert alert-warning mt-3">You already have an active interactive session. Finish it before starting another one.</div>
-                {% endif %}
-
-						<div class="card text-white bg-dark mb-3 mt-1">
-						  <div class="card-header">
-								<h5 class="card-title">Crawl a Domain</h5>
-							</div>
-						  <div class="card-body">
-						    <p class="card-text">Enter an url or a domain and choose what kind of option you want.</p>
-								<form id="crawl_form" action="{{ url_for('crawler_splash.send_to_spider') }}" method='post'>
-									<div class="row">
-										<div class="col-12 col-lg-6">
-                                            {% if urls %}
-                                                {% for url in urls %}
-                                                    <div class="input-group mb-1">
-                                                        <input type="text" class="form-control col-10" name="urls" value="{{ url }}">
-                                                        <span class="btn btn-danger col-1" id="" onclick="$(this).parent().remove();"><i class="fas fa-trash-alt"></i></span>
-                                                    </div>
-                                                {% endfor %}
-
-                                            {% else %}
-                                                <div class="input-group" id="single_urls">
-                                                    <input type="text" class="form-control" id="url_to_crawl" name="url_to_crawl" placeholder="Address or Domain">
-                                                    <div class="input-group-append" id="multiple_urls_button">
-                                                        <button class="btn btn-secondary" type="button" onclick="btn_multiple_urls()"><i class="fa fa-plus"></i> Multiple Urls</button>
-                                                    </div>
-                                                </div>
-                                                <div class="input-group" id="multiple_urls">
-                                                    <textarea type="text" class="form-control" id="urls_to_crawl" name="urls_to_crawl" rows="3" placeholder="List Of Urls or Free Text"></textarea>
-                                                    <div class="input-group-append">
-                                                        <button class="btn btn-secondary" type="button" onclick="btn_single_url()"><i class="fa fa-minus"></i> One Url</button>
-                                                    </div>
-                                                </div>
-                                            {% endif %}
-											<div class="d-flex mt-2">
-												<i class="fas fa-spider mt-1"></i> &nbsp;Crawler Type&nbsp;&nbsp;
-												<div class="custom-control custom-switch">
-													<input class="custom-control-input" type="checkbox" name="queue_type_selector" value="True" id="queue_type_selector">
-													<label class="custom-control-label" for="queue_type_selector">
-														<i class="fas fa-splotch"></i> &nbsp;Proxy
-													</label>
-												</div>
-											</div>
-											<div id="div_crawler_queue_type">
-												<select class="custom-select form-control" name="crawler_queue_type" id="crawler_queue_type">
-													{%for crawler_type in crawlers_types%}
-														<option value="{{crawler_type}}" {%if crawler_type=='tor'%}selected{%endif%}>{{crawler_type}}</option>
-													{%endfor%}
-												</select>
-											</div>
-                                            <div class="input-group" id="div_proxy_name">
-												<input type="text" class="form-control" id="proxy_name" name="proxy_name" placeholder="Expected Format: [scheme]://[username]:[password]@[hostname]:[port]">
-											</div>
-											<div class="card bg-light text-dark border-info mt-3 shadow-sm">
-                                                <div class="card-body py-3">
-                                                    <div class="d-flex justify-content-between align-items-start">
-                                                        <div class="custom-control custom-switch">
-                                                            <input class="custom-control-input" type="checkbox" name="interactive_capture" value="True" id="interactive_capture" {% if interactive_usage and interactive_usage.active >= interactive_usage.max %}disabled{% endif %}>
-                                                            <label class="custom-control-label font-weight-bold" for="interactive_capture"><i class="fas fa-desktop"></i> Interactive browser capture</label>
-                                                        </div>
-                                                        {% if interactive_usage %}
-                                                            <span class="badge {% if interactive_usage.active < interactive_usage.max %}badge-success{% else %}badge-danger{% endif %} ml-2">
-                                                                {{ interactive_usage.max - interactive_usage.active }} / {{ interactive_usage.max }} slots available
-                                                            </span>
-                                                        {% endif %}
-                                                    </div>
-                                                    <small class="form-text text-muted mt-2">
-                                                        Opens a live remote browser session for this URL. Use it when you need to log in, accept prompts, solve navigation steps, or manually reach the page before AIL saves the capture.
-                                                    </small>
-                                                    <div id="interactive_help" class="mt-2" style="display:none;">
-                                                        <div class="form-group">
-                                                            <label for="general_timeout_in_sec">Session time limit</label>
-                                                            <select class="form-control" id="general_timeout_in_sec" name="general_timeout_in_sec" disabled>
-                                                                {% for timeout in range(interactive_default_timeout, interactive_max_timeout + 1, 30) %}
-                                                                    <option value="{{ timeout }}"{% if timeout == interactive_default_timeout %} selected{% endif %}>{{ timeout // 60 }} min {{ timeout % 60 }} sec{% if timeout == interactive_default_timeout %} (default){% endif %}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                            <small class="form-text text-muted">Increase the time available to use the browser, up to 30 minutes. Finish the capture before the session expires.</small>
-                                                        </div>
-                                                        <ul class="mb-0 pl-3 small">
-                                                            <li>AIL will reserve one interactive slot and return a browser link.</li>
-                                                            <li>Only one URL is captured; scheduling, depth crawling, and multiple URLs are hidden.</li>
-                                                            <li>Click <b>Finish capture</b> when the browser shows the page you want AIL to process.</li>
-                                                            <li>Enable <b>Create cookiejar</b> to save the browser cookies and local storage as a user-level cookiejar.</li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div id="interactive_cookiejar_options" class="card bg-light text-dark border-warning mt-2" style="display:none;">
-                                                <div class="card-body py-3">
-                                                    <div class="custom-control custom-switch">
-                                                        <input class="custom-control-input" type="checkbox" name="interactive_cookiejar" value="True" id="interactive_cookiejar">
-                                                        <label class="custom-control-label font-weight-bold" for="interactive_cookiejar"><i class="fas fa-cookie-bite"></i> Create cookiejar from this interactive session</label>
-                                                    </div>
-                                                    <input class="form-control mt-2" type="text" id="cookiejar_description" name="cookiejar_description" placeholder="Cookiejar description (optional)">
-                                                    <small class="form-text text-muted">The cookiejar will be visible only to your user account.</small>
-                                                </div>
-                                            </div>
-                                            {% if interactive_usage and interactive_usage.active >= interactive_usage.max %}
-                                                <div class="alert alert-danger mt-2 mb-0">No interactive browser slot is currently available. Please wait for another session to finish or ask an administrator to increase the limit.</div>
-                                            {% endif %}
-                                            <div id="interactive_warning" class="alert alert-info mt-2" style="display:none;">Interactive mode is enabled: enter one URL, open the returned browser link, then finish from the session page.</div>
-
-											<div class="d-flex mt-3" id="interactive_incompatible_scheduler">
-												<i class="fas fa-user-ninja mt-1"></i> &nbsp;Manual&nbsp;&nbsp;
-												<div class="custom-control custom-switch">
-													<input class="custom-control-input" type="checkbox" name="crawler_scheduler" value="True" id="crawler_scheduler">
-													<label class="custom-control-label" for="crawler_scheduler">
-														<i class="fas fa-clock"></i> &nbsp;Scheduler
-													</label>
-												</div>
-											</div>
-
-                                            <div id="frequency_inputs">
-                                                <div class="mb-4">
-                                                    <select class="custom-select" id="frequency" name="frequency" onchange="frequency_selector_update(this);">
-                                                        <option value="hourly">Hourly</option>
-                                                        <option value="daily">Daily</option>
-                                                        <option value="weekly">Weekly</option>
-                                                        <option value="monthly">Monthly</option>
-                                                        <option value="custom">Custom</option>
-                                                    </select>
-                                                </div>
-                                                <div id="custom_frequency">
-                                                    <h5><i class="fas fa-clock"></i>&nbsp;Adjust crawling interval as needed</h5>
-                                                    <div class="input-group">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Months</b></span>
-                                                        </div>
-                                                        <input class="form-control" type="number" id="frequency_months" value="0" min="0" name="frequency_months" required>
-                                                    </div>
-                                                    <div class="input-group">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Weeks</b></span>
-                                                        </div>
-                                                        <input class="form-control" type="number" id="frequency_weeks" value="0" min="0" name="frequency_weeks" required>
-                                                    </div>
-                                                    <div class="input-group">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Days</b></span>
-                                                        </div>
-                                                        <input class="form-control" type="number" id="frequency_days" value="0" min="0" name="frequency_days" required>
-                                                    </div>
-                                                    <div class="input-group">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Hours</b></span>
-                                                        </div>
-                                                        <input class="form-control" type="number" id="frequency_hours" value="0" min="0" name="frequency_hours" required>
-                                                    </div>
-                                                    <div class="input-group">
-                                                        <div class="input-group-prepend">
-                                                            <span class="input-group-text bg-light" style="width: 90px"><b>Minutes</b></span>
-                                                        </div>
-                                                        <input class="form-control" type="number" id="frequency_minutes" value="0" min="0" name="frequency_minutes" required>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-
-                                            <div class="card bg-light my-4">
-                                                <div class="card-header bg-dark text-white">
-													<b>Tags</b>
-												</div>
-                                                <div class="card-body">
-													<div class="input-group mb-2 mr-sm-2">
-														<div class="input-group-prepend">
-													  	    <div class="input-group-text bg-danger text-white"><i class="fas fa-tag"></i></div>
-													    </div>
-														<input id="tags" name="tags" class="form-control" placeholder="Custom Tags (optional, space separated)" type="text" {%if dict_tracker%}{%if dict_tracker['tags']%}value="{%for tag in dict_tracker['tags']%}{{tag}} {%endfor%}"{%endif%}{%endif%}>
-													</div>
-													{% include 'tags/block_tags_selector.html' %}
-												</div>
-											</div>
-
-										</div>
-
-
-										<div class="col-12 col-lg-6 mt-2 mt-lg-0">
-
-											<div class="row">
-												<div class="col-12 col-xl-6">
-													<div class="custom-control custom-switch">
-													  <input class="custom-control-input" type="checkbox" name="html_content" value="True" id="html_content_id" checked disabled>
-														<label class="custom-control-label" for="html_content_id">
-															<i class="fab fa-html5"></i> &nbsp;HTML
-													  </label>
-													</div>
-													<div class="custom-control custom-switch mt-1">
-													  <input class="custom-control-input" type="checkbox" name="screenshot" value="True" id="screenshot_id">
-														<label class="custom-control-label" for="screenshot_id">
-															<i class="fas fa-image"></i> Screenshot
-														</label>
-													</div>
-													<div class="custom-control custom-switch mt-1">
-													  <input class="custom-control-input" type="checkbox" name="har" value="True" id="har_id">
-														<label class="custom-control-label" for="har_id">
-															<i class="fas fa-file"></i> &nbsp;HAR
-														</label>
-													</div>
-													<div class="custom-control custom-switch mt-1">
-													  <input class="custom-control-input" type="checkbox" name="javascript" value="True" id="javascript_id" checked>
-														<label class="custom-control-label" for="javascript_id">
-															<i class="fab fa-js-square"></i> &nbsp;JavaScript
-														</label>
-													</div>
-												</div>
-												<div class="col-12 col-xl-6">
-													<div class="input-group form-group mb-0" id="interactive_incompatible_depth">
-														<div class="input-group-prepend">
-													    <span class="input-group-text bg-light"><i class="fas fa-water"></i></span>
-													  </div>
-													  <input class="form-control" type="number" id="depth_limit" name="depth_limit" min="0" value="0" required>
-														<div class="input-group-append">
-													    <span class="input-group-text">Depth Limit</span>
-													  </div>
-													</div>
-{#                                                    TEMPORARY DISABLED #}
-{#													<div class="input-group mt-2">#}
-{#														<div class="input-group-prepend">#}
-{#													    <span class="input-group-text bg-light"><i class="fas fa-copy"></i>&nbsp;</span>#}
-{#													  </div>#}
-{#													  <input class="form-control" type="number" id="max_pages" name="max_pages" min="1" value="1" required>#}
-{#														<div class="input-group-append">#}
-{#													    <span class="input-group-text">Max Pages</span>#}
-{#													  </div>#}
-{#													</div>#}
-												</div>
-											</div>
-
-											<div class="mt-1">
-												<i class="mt-2 text-white fas fa-cookie-bite"></i> Cookiejar:
-												<select class="custom-select form-control mt-1" name="cookiejar" id="cookiejar">
-													<option value="None" selected>Don't use any cookiejar</option>
-													{%for cookiejar in l_cookiejar%}
-														<option value="{{cookiejar}}">{{cookiejar}}</option>
-													{%endfor%}
-												</select>
-											</div>
-
-										</div>
-									</div>
-									<button class="btn btn-primary mt-2">
-										<i class="fas fa-spider"></i> Send to Spider
-									</button>
-								</form>
-						  </div>
-						</div>
-
-                {% if import_message %}
-					<div class="alert {% if import_status == 'success' %}alert-success{% else %}alert-danger{% endif %} mt-3" role="alert">
-						{{ import_message }}
-					</div>
-				{% endif %}
-
-                <div class="card text-white bg-dark mb-3 mt-1">
-                    <div class="card-header">
-                        <h5 class="card-title">Import Lookyloo Capture Archive</h5>
+            <div class="capture-target" data-mode="{{ mode }}">
+                <label for="{{ 'capture-url' if target_mode == 'single' else 'capture-url-batch' if target_mode == 'batch' else 'capture-review-url-1' }}" id="capture-target-label">{{ target_label }}</label>
+                <button type="button" class="capture-button capture-secondary target-batch-toggle" id="capture-batch-toggle"{% if interactive %} hidden{% endif %}>
+                    <i class="fas fa-list" aria-hidden="true"></i> <span>{{ 'Paste multiple URLs' if target_mode == 'single' else 'Use one URL' }}</span>
+                </button>
+                <div class="capture-target-entry">
+                    <div class="capture-target-icon-field" id="capture-single-target"{% if target_mode != 'single' %} hidden{% endif %}>
+                        <i class="fas fa-link" aria-hidden="true"></i>
+                        <input class="capture-input capture-url-input" id="capture-url" name="url_to_crawl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="ail-project.org" value="{{ start_target }}"
+                               aria-describedby="capture-target-hint capture-target-error" required{% if target_mode != 'single' %} disabled{% endif %}{% if error_field == 'target' and target_mode == 'single' %} aria-invalid="true"{% endif %}>
                     </div>
-
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="flex-grow-1 pr-3">
-                                <p class="card-text">Upload a zipped capture archive exported from Lookyloo.</p>
-
-                                <form action="{{ url_for('crawler_splash.import_lookyloo_archive') }}" method="post" enctype="multipart/form-data">
-                                    <div class="input-group mb-2">
-                                        <div class="custom-file">
-                                            <input class="custom-file-input" type="file" id="lookyloo_archive" name="lookyloo_archive" accept=".zip,application/zip" required>
-                                            <label class="custom-file-label" for="lookyloo_archive">Choose Lookyloo archive (.zip)</label>
-                                        </div>
-                                    </div>
-
-                                    <button class="btn btn-primary mt-1" type="submit">
-                                        <i class="fas fa-file-archive"></i> Import Archive
-                                    </button>
-                                </form>
-                            </div>
-
-                            <img src="{{ url_for('static', filename='image/lookyloo.png') }}"
-                                 alt="Lookyloo"
-                                 class="ml-3"
-                                 style="max-width: 140px; height: auto;">
-                        </div>
+                    <div id="capture-batch-target"{% if target_mode != 'batch' %} hidden{% endif %}>
+                        <textarea class="capture-input" id="capture-url-batch" name="urls_to_crawl" rows="4" spellcheck="false"
+                                  placeholder="https://ail-project.org" aria-describedby="capture-target-hint capture-target-error" required{% if target_mode != 'batch' %} disabled{% endif %}{% if error_field == 'target' and target_mode == 'batch' %} aria-invalid="true"{% endif %}>{{ form.get('urls_to_crawl', '') }}</textarea>
+                    </div>
+                    <div id="capture-review-target"{% if target_mode != 'review' %} hidden{% endif %}>
+                        <ul class="capture-review-list" id="capture-review-list" aria-label="Addresses to crawl">
+                            {% for url in urls or [] %}
+                                <li>
+                                    <input class="capture-input" type="text" id="capture-review-url-{{ loop.index }}" name="urls" value="{{ url }}" aria-label="URL {{ loop.index }}" aria-describedby="capture-target-error" inputmode="url" spellcheck="false" required>
+                                    <button class="capture-button capture-secondary" type="button" data-remove-url aria-label="Remove URL {{ loop.index }}"><i class="fas fa-times" aria-hidden="true"></i></button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                        <button type="button" class="capture-text-button" id="capture-edit-batch">Edit pasted URLs</button>
                     </div>
                 </div>
+                <p class="capture-hint" id="capture-target-hint"
+                   data-single-hint="Use a domain to start at its homepage, or enter a URL to start at a specific page."
+                   data-interactive-hint="Enter the address to open in the remote browser."
+                   data-batch-hint="Paste a list or text containing URLs. You’ll review the addresses before sending them to the crawler."
+                   data-review-hint="Review the addresses to send to the crawler.">
+                    {% if interactive %}Enter the address to open in the remote browser.
+                    {% elif target_mode == 'batch' %}Paste a list or text containing URLs. You’ll review the addresses before sending them to the crawler.
+                    {% elif target_mode == 'review' %}Review the addresses to send to the crawler.
+                    {% else %}Use a domain to start at its homepage, or enter a URL to start at a specific page.{% endif %}
+                </p>
+                <p class="capture-error" id="capture-target-error" role="alert"{% if error_field != 'target' %} hidden{% endif %}>{{ error if error_field == 'target' else '' }}</p>
+            </div>
 
+            <div class="capture-browser-status" data-interactive-only{% if not interactive %} hidden{% endif %}>
+                {% if interactive_session %}
+                    <span>You have an active interactive session.</span>
+                    <a href="{{ url_for('crawler_splash.interactive_capture_show', uuid=interactive_session.uuid) }}">Resume browser session</a>
+                {% elif not is_manager_connected.status %}
+                    <span>Connect the crawler service to start a browser session.</span>
+                {% elif slots %}
+                    <span>{{ slots }} browser {{ 'slot' if slots == 1 else 'slots' }} available</span>
+                {% else %}
+                    <span>All browser slots are in use.</span>
+                {% endif %}
+            </div>
 
-			</div>
+            <fieldset class="capture-depth" data-crawl-only{% if interactive %} hidden disabled{% endif %}>
+                <div class="capture-depth-row">
+                    <div class="capture-depth-label">
+                        <label for="capture-depth"><i class="fas fa-sitemap" aria-hidden="true"></i> Link depth</label>
+                        {{ help_button('capture-depth-help', 'What is link depth?') }}
+                    </div>
+                    <div class="capture-depth-stepper" id="capture-depth-stepper">
+                        <input class="capture-input" id="capture-depth" name="depth_limit" type="number" value="{{ form.get('depth_limit', 0) }}" min="0" max="{{ depth_max }}" step="1" inputmode="numeric" required
+                               aria-describedby="capture-depth-hint capture-depth-error"{% if error_field == 'depth' %} aria-invalid="true"{% endif %}>
+                        <div class="capture-depth-arrows" hidden>
+                            <button type="button" data-depth-step="up" aria-label="Increase link depth"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
+                            <button type="button" data-depth-step="down" aria-label="Decrease link depth"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
+                    <p class="capture-hint" id="capture-depth-hint" aria-live="polite">Starting page only.</p>
+                </div>
+                <p class="capture-error" id="capture-depth-error" role="alert"{% if error_field != 'depth' %} hidden{% endif %}>{{ error if error_field == 'depth' else '' }}</p>
+            </fieldset>
 
-		</div>
-	</div>
+            <div class="capture-summary" role="group" aria-labelledby="capture-summary-label">
+                <strong id="capture-summary-label">Capture summary</strong>
+                <div class="capture-summary-group">
+                    <span><i class="fab fa-html5" aria-hidden="true"></i> HTML</span>
+                    <span id="capture-screenshot-summary"{% if not screenshot %} hidden{% endif %}><i class="fas fa-image" aria-hidden="true"></i> Screenshot</span>
+                    <span id="capture-har-summary"{% if not har %} hidden{% endif %}><i class="fas fa-file" aria-hidden="true"></i> HAR {{ help_button('capture-har-help', 'What is a HAR?') }}</span>
+                </div>
+                <div class="capture-summary-group capture-summary-settings">
+                    <span><i class="fab fa-js-square" aria-hidden="true"></i> JavaScript <strong id="capture-javascript-summary">{{ 'On' if javascript else 'Off' }}</strong></span>
+                    <span>Proxy <strong id="capture-proxy-summary">{{ {'onion': 'Tor / Onion', 'web': 'Web (direct)', 'custom': 'Custom proxy'}.get(proxy_type, 'Tor / Onion') }}</strong></span>
+                </div>
+            </div>
 
+            <details class="capture-options" id="capture-options"{% if error_field == 'proxy' %} open{% endif %}>
+                <summary><i class="fas fa-sliders-h" aria-hidden="true"></i> <span>Capture options</span><i class="fas fa-chevron-down capture-chevron" aria-hidden="true"></i></summary>
+                <div class="capture-options-body">
+                    <fieldset>
+                        <legend>Capture settings</legend>
+                        <div class="capture-check-row">
+                            <label class="capture-check"><input id="capture-screenshot" type="checkbox" name="screenshot" value="True"{% if screenshot %} checked{% endif %}> <i class="fas fa-image" aria-hidden="true"></i> Screenshot</label>
+                            <div class="capture-check-with-help">
+                                <label class="capture-check"><input id="capture-har" type="checkbox" name="har" value="True"{% if har %} checked{% endif %}> <i class="fas fa-file" aria-hidden="true"></i> HAR</label>
+                                {{ help_button('capture-har-help', 'What is a HAR?') }}
+                            </div>
+                            <label class="capture-check"><input id="capture-javascript" type="checkbox" name="javascript" value="True"{% if javascript %} checked{% endif %}> <i class="fab fa-js-square" aria-hidden="true"></i> Run JavaScript</label>
+                        </div>
+                    </fieldset>
 
-</body>
+                    <div class="capture-option-grid">
+                        <div class="capture-field">
+                            <label for="capture-proxy">Proxy</label>
+                            <select class="capture-input" id="capture-proxy" name="crawler_queue_type">
+                                {% for value, label in [('onion', 'Tor / Onion'), ('web', 'Web (direct)'), ('custom', 'Custom proxy')] %}
+                                    <option value="{{ value }}"{% if proxy_type == value %} selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <p class="capture-hint" id="capture-tor-help"{% if proxy_type != 'onion' %} hidden{% endif %}>Routes this capture through Tor.</p>
+                            <fieldset class="capture-field" id="capture-custom-proxy"{% if proxy_type != 'custom' %} hidden disabled{% endif %}>
+                                <label for="capture-proxy-address">Proxy address</label>
+                                <input class="capture-input" id="capture-proxy-address" name="proxy_name" type="text" value="{{ form.get('proxy_name', '') }}" placeholder="socks5://proxy.example.org:1080"
+                                       autocomplete="off" spellcheck="false" required aria-describedby="capture-proxy-help capture-proxy-error"{% if error_field == 'proxy' %} aria-invalid="true"{% endif %}>
+                                <p class="capture-hint" id="capture-proxy-help">Enter an HTTP, HTTPS, or SOCKS5 proxy URL with a port.</p>
+                                <p class="capture-error" id="capture-proxy-error" role="alert"{% if error_field != 'proxy' %} hidden{% endif %}>{{ error if error_field == 'proxy' else '' }}</p>
+                            </fieldset>
+                        </div>
 
+                        <fieldset class="capture-field" data-crawl-only{% if interactive %} hidden disabled{% endif %}>
+                            <label for="capture-cookiejar" id="capture-cookiejar-label">Cookiejar</label>
+                            <div class="capture-cookiejar" id="capture-cookiejar-picker">
+                                {% set selected_cookiejar = form.get('cookiejar', '').rsplit(':', 1)[-1].strip() %}
+                                <select class="capture-input" id="capture-cookiejar" name="cookiejar">
+                                    <option value="">None</option>
+                                    {% for entry in l_cookiejar %}
+                                        {% set description, uuid = entry.rsplit(' : ', 1) %}
+                                        <option value="{{ uuid }}"{% if selected_cookiejar == uuid %} selected{% endif %}>{{ description or uuid }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button class="capture-input capture-cookiejar-toggle" id="capture-cookiejar-toggle" type="button" aria-expanded="false" aria-controls="capture-cookiejar-panel" aria-labelledby="capture-cookiejar-label capture-cookiejar-current" hidden>
+                                    <span id="capture-cookiejar-current">None</span><i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                </button>
+                                <div class="capture-cookiejar-panel" id="capture-cookiejar-panel" hidden>
+                                    <input class="capture-input" id="capture-cookiejar-search" type="search" role="combobox" aria-label="Search cookiejars" aria-autocomplete="list" aria-expanded="true" aria-controls="capture-cookiejar-results" placeholder="Search cookiejars" autocomplete="off">
+                                    <div class="capture-cookiejar-results" id="capture-cookiejar-results" role="listbox" aria-labelledby="capture-cookiejar-label"></div>
+                                    <p class="capture-hint" id="capture-cookiejar-empty" role="status" hidden>No cookiejars match your search.</p>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="capture-field" data-interactive-only{% if not interactive %} hidden disabled{% endif %}>
+                            <label for="capture-timeout">Session time limit</label>
+                            <select class="capture-input" id="capture-timeout" name="general_timeout_in_sec">
+                                {% for seconds in range(interactive_default_timeout, interactive_max_timeout + 1, 30) %}
+                                    <option value="{{ seconds }}"{% if form.get('general_timeout_in_sec', interactive_default_timeout)|int == seconds %} selected{% endif %}>
+                                        {{ seconds // 60 }} min{% if seconds % 60 %} {{ seconds % 60 }} sec{% endif %}{% if seconds == interactive_default_timeout %} (default){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </fieldset>
+                    </div>
+
+                    <fieldset class="capture-field" data-interactive-only{% if not interactive %} hidden disabled{% endif %}>
+                        <label class="capture-check"><input id="capture-save-cookiejar" type="checkbox" name="interactive_cookiejar" value="True"{% if form.get('interactive_cookiejar') %} checked{% endif %}> Save cookies to a new cookiejar</label>
+                        <div class="capture-field" id="capture-cookiejar-description-field"{% if not form.get('interactive_cookiejar') %} hidden{% endif %}>
+                            <label for="capture-cookiejar-description">Cookiejar description</label>
+                            <input class="capture-input" id="capture-cookiejar-description" name="cookiejar_description" type="text" value="{{ form.get('cookiejar_description', '') }}" placeholder="Optional">
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="capture-optional-settings" data-crawl-only{% if interactive %} hidden disabled{% endif %}>
+                        <details class="capture-optional">
+                            <summary>Tags <i class="fas fa-chevron-down capture-chevron" aria-hidden="true"></i></summary>
+                            {% with manual_capture_tags=true %}{% include 'tags/block_tags_selector.html' %}{% endwith %}
+                        </details>
+                        <details class="capture-optional" id="capture-schedule"{% if target_mode != 'single' %} hidden{% endif %}>
+                            <summary>Schedule <i class="fas fa-chevron-down capture-chevron" aria-hidden="true"></i></summary>
+                            <label class="capture-check"><input id="capture-repeat" type="checkbox" name="crawler_scheduler" value="True"{% if schedule %} checked{% endif %}{% if target_mode != 'single' %} disabled{% endif %}> Repeat this crawl</label>
+                            <fieldset class="capture-field" id="capture-schedule-fields"{% if not schedule %} hidden disabled{% endif %}>
+                                <label for="capture-frequency">Frequency</label>
+                                <select class="capture-input" id="capture-frequency" name="frequency">
+                                    {% for value in ['hourly', 'daily', 'weekly', 'monthly', 'custom'] %}
+                                        <option value="{{ value }}"{% if frequency == value %} selected{% endif %}>{{ value|capitalize }}</option>
+                                    {% endfor %}
+                                </select>
+                                <fieldset class="capture-interval" id="capture-interval"{% if frequency != 'custom' %} hidden disabled{% endif %}>
+                                    {% for unit in interval_units %}
+                                        <label>{{ unit|capitalize }}<input class="capture-input" type="number" name="frequency_{{ unit }}" value="{{ form.get('frequency_' ~ unit, 0) }}" min="0" step="1" required></label>
+                                    {% endfor %}
+                                </fieldset>
+                            </fieldset>
+                        </details>
+                    </fieldset>
+                </div>
+            </details>
+        </div>
+
+        <footer class="capture-footer">
+            <p class="capture-hint" id="capture-action-hint">{{ 'Opens a remote browser session.' if interactive else 'AIL processes this as a priority crawl in the background.' }}</p>
+            <button class="capture-button capture-primary capture-submit" id="capture-submit" type="submit"{% if interactive and interactive_blocked %} disabled{% endif %}>
+                <span id="capture-submit-crawler-icon"{% if interactive %} hidden{% endif %}>{{ new_capture_icon() }}</span>
+                <span id="capture-submit-browser-icon" aria-hidden="true"{% if not interactive %} hidden{% endif %}>
+                    <i class="fas fa-desktop"></i>
+                    <i class="fas fa-spider"></i>
+                </span>
+                <span id="capture-submit-label">{{ 'Start browser session' if interactive else 'Review URLs' if target_mode == 'batch' else 'Send to crawler' }}</span>
+            </button>
+        </footer>
+    </form>
+
+    <details class="capture-card capture-archive"{% if import_message %} open{% endif %}>
+        <summary>
+            <span class="capture-archive-brand"><img src="{{ url_for('static', filename='image/lookyloo-light.png') }}" width="706" height="316" alt=""></span>
+            <span><strong>Import from Lookyloo</strong><small>Upload a capture archive exported as a .zip file.</small></span>
+            <i class="fas fa-chevron-down capture-chevron" aria-hidden="true"></i>
+        </summary>
+        <form class="capture-archive-form" id="capture-import-form" action="{{ url_for('crawler_splash.import_lookyloo_archive') }}" enctype="multipart/form-data" method="post">
+            {% if import_message %}<div class="alert alert-{{ 'success' if import_status == 'success' else 'danger' }}" role="status">{{ import_message }}</div>{% endif %}
+            <label class="sr-only" for="capture-archive-file">Capture archive (.zip)</label>
+            <input id="capture-archive-file" name="lookyloo_archive" type="file" accept=".zip,application/zip" required>
+            <div class="capture-dropzone" id="capture-dropzone" hidden>
+                <span class="capture-archive-file-icon" aria-hidden="true"><i class="fas fa-upload" id="capture-archive-icon"></i></span>
+                <div class="capture-archive-file-info" aria-live="polite">
+                    <strong id="capture-archive-name">Capture archive</strong>
+                    <span id="capture-archive-detail">Drag and drop a ZIP file here.</span>
+                </div>
+                <div class="capture-archive-picker-actions">
+                    <button class="capture-button capture-secondary" id="capture-choose-archive" type="button" aria-describedby="capture-import-error">Browse files</button>
+                    <button class="capture-button capture-secondary" id="capture-remove-archive" type="button" aria-label="Remove selected archive" hidden><i class="fas fa-times" aria-hidden="true"></i></button>
+                </div>
+            </div>
+            <div class="capture-archive-actions">
+                <p class="capture-error" id="capture-import-error" role="alert" hidden></p>
+                <button class="capture-button capture-primary" id="capture-import-submit" type="submit">Import archive</button>
+            </div>
+        </form>
+    </details>
+
+    <dialog class="capture-dialog" id="capture-depth-help" aria-labelledby="capture-depth-title">
+        <h2 id="capture-depth-title">What is link depth?</h2>
+        <p>Link depth sets how many steps a crawl can take by following links from the starting page.</p>
+        <dl>
+            <dt>Depth 0</dt><dd>Capture the starting page only.</dd>
+            <dt>Depth 1</dt><dd>Also follow links on the starting page.</dd>
+            <dt>Depth 2</dt><dd>Follow links one level farther from those pages.</dd>
+        </dl>
+        <div class="capture-dialog-actions">{{ help_close() }}</div>
+    </dialog>
+
+    <dialog class="capture-dialog" id="capture-har-help" aria-labelledby="capture-har-title">
+        <h2 id="capture-har-title">What is a HAR?</h2>
+        <p>A HAR (HTTP Archive) is a JSON file that records the requests and responses a browser exchanges while loading a page. It shows which resources loaded, which requests failed, and how long they took.</p>
+        <div class="capture-dialog-actions">
+            <a href="https://en.wikipedia.org/wiki/HAR_(file_format)" target="_blank" rel="noopener noreferrer">Read about the HAR format on Wikipedia</a>
+            {{ help_close() }}
+        </div>
+    </dialog>
+</main>
 <script>
-var chart = {};
-$(document).ready(function(){
-	$("#page-Crawler").addClass("active");
-	$("#crawler-nav-manual").addClass("active");
-	queue_type_selector_input_controler()
-	manual_crawler_input_controler();
-    interactive_input_controller();
-    $("#custom_frequency").hide();
-    $("#multiple_urls").hide();
+(() => {
+    'use strict';
 
-	$('#crawler_scheduler').on("change", function () {
-		manual_crawler_input_controler();
-	});
+    const byId = (id) => document.getElementById(id);
+    const form = byId('manual-crawl-form');
+    const target = byId('capture-url');
+    const batch = byId('capture-url-batch');
+    const review = byId('capture-review-list');
+    const batchToggle = byId('capture-batch-toggle');
+    const depth = byId('capture-depth');
+    const proxy = byId('capture-proxy');
+    const screenshot = byId('capture-screenshot');
+    const har = byId('capture-har');
+    const javascript = byId('capture-javascript');
+    const repeat = byId('capture-repeat');
+    const frequency = byId('capture-frequency');
+    const saveCookiejar = byId('capture-save-cookiejar');
+    const submit = byId('capture-submit');
+    const options = byId('capture-options');
 
-	$('#queue_type_selector').on("change", function () {
-		queue_type_selector_input_controler();
-	});
+    let automatedTargetMode = form.dataset.targetMode;
 
-	$('#interactive_capture').on('change', function(){ interactive_input_controller(); });
-	$('#interactive_cookiejar').on('change', function(){ interactive_input_controller(); });
-
-	$('#lookyloo_archive').on('change', function(){
-		const fileName = $(this).val().split('\\').pop();
-		$(this).next('.custom-file-label').html(fileName || 'Choose Lookyloo archive (.zip)');
-	});
-});
-
-function btn_single_url() {
-    $("#multiple_urls").hide();
-    $("#single_urls").show()
-}
-
-function btn_multiple_urls() {
-    $("#single_urls").hide()
-    $("#multiple_urls").show();
-}
-
-function manual_crawler_input_controler() {
-	if($('#crawler_scheduler').is(':checked')){
-		$("#frequency_inputs").show();
-	}else{
-		$("#frequency_inputs").hide();
-	}
-}
-
-function frequency_selector_update(obj) {
-	if(obj.value === "custom") {
-        $("#custom_frequency").show();
-    }else{
-		$("#custom_frequency").hide();
-	}
-}
-
-function interactive_input_controller() {
-    if($('#interactive_capture').is(':checked')){
-        $('#crawl_form').attr('action', '{{ url_for('crawler_splash.interactive_capture_start') }}');
-        $('#interactive_warning').show();
-        $('#interactive_help').show();
-        $('#general_timeout_in_sec').prop('disabled', false);
-        $('#interactive_cookiejar_options').show();
-        $('#crawler_scheduler').prop('checked', false).prop('disabled', true);
-        $('#depth_limit').val(0).prop('disabled', true);
-        $('#urls_to_crawl').prop('disabled', true);
-        $('#single_urls').show();
-        $('#multiple_urls').hide();
-        $('#multiple_urls_button').hide();
-        $('#interactive_incompatible_scheduler').hide();
-        $('#frequency_inputs').hide();
-        $('#interactive_incompatible_depth').hide();
-    } else {
-        $('#crawl_form').attr('action', '{{ url_for('crawler_splash.send_to_spider') }}');
-        $('#interactive_warning').hide();
-        $('#interactive_help').hide();
-        $('#general_timeout_in_sec').prop('disabled', true);
-        $('#interactive_cookiejar_options').hide();
-        $('#interactive_cookiejar').prop('checked', false);
-        $('#crawler_scheduler').prop('disabled', false);
-        $('#depth_limit').prop('disabled', false);
-        $('#urls_to_crawl').prop('disabled', false);
-        $('#multiple_urls_button').show();
-        $('#interactive_incompatible_scheduler').show();
-        $('#interactive_incompatible_depth').show();
+    function showSection(section, visible) {
+        section.hidden = !visible;
+        if (section instanceof HTMLFieldSetElement) {
+            section.disabled = !visible;
+        }
     }
-    manual_crawler_input_controler();
-}
 
-function queue_type_selector_input_controler() {
-	if($('#queue_type_selector').is(':checked')){
-		$("#div_crawler_queue_type").hide();
-		$("#div_proxy_name").show();
-	}else{
-		$("#div_crawler_queue_type").show();
-		$("#div_proxy_name").hide();
-	}
-}
+    function clearError(field, error) {
+        field.removeAttribute('aria-invalid');
+        error.hidden = true;
+    }
 
+    function showError(field, error, message) {
+        error.textContent = message;
+        error.hidden = false;
+        field.setAttribute('aria-invalid', 'true');
+        field.focus();
+    }
+
+    function renderCaptureForm() {
+        const interactive = form.elements.capture_method.value === 'interactive';
+        const targetMode = interactive ? 'single' : automatedTargetMode;
+        const single = targetMode === 'single';
+        const paste = targetMode === 'batch';
+        const scheduled = !interactive && single && repeat.checked;
+
+        form.action = interactive ? form.dataset.interactiveAction : form.dataset.crawlAction;
+        form.querySelector('.capture-target').dataset.mode = interactive ? 'interactive' : 'crawl';
+        for (const section of form.querySelectorAll('[data-crawl-only]')) {
+            showSection(section, !interactive);
+        }
+        for (const section of form.querySelectorAll('[data-interactive-only]')) {
+            showSection(section, interactive);
+        }
+
+        byId('capture-single-target').hidden = !single;
+        byId('capture-batch-target').hidden = !paste;
+        byId('capture-review-target').hidden = targetMode !== 'review';
+        target.disabled = !single;
+        batch.disabled = !paste;
+        for (const entry of review.querySelectorAll('input')) {
+            entry.disabled = targetMode !== 'review';
+        }
+        batchToggle.hidden = interactive;
+        batchToggle.querySelector('span').textContent = single ? 'Paste multiple URLs' : 'Use one URL';
+
+        const label = byId('capture-target-label');
+        label.textContent = single ? 'Domain or URL' : paste ? 'URLs or text' : 'Review URLs';
+        label.htmlFor = single ? target.id : paste ? batch.id : review.querySelector('input')?.id || '';
+        const hint = byId('capture-target-hint');
+        const hintKey = interactive ? 'interactiveHint' : targetMode + 'Hint';
+        hint.textContent = hint.dataset[hintKey];
+
+        byId('capture-schedule').hidden = !single;
+        repeat.disabled = !single;
+        showSection(byId('capture-schedule-fields'), scheduled);
+        showSection(byId('capture-interval'), scheduled && frequency.value === 'custom');
+        showSection(byId('capture-custom-proxy'), proxy.value === 'custom');
+        byId('capture-tor-help').hidden = proxy.value !== 'onion';
+        byId('capture-cookiejar-description-field').hidden = !saveCookiejar.checked;
+
+        byId('capture-screenshot-summary').hidden = !screenshot.checked;
+        byId('capture-har-summary').hidden = !har.checked;
+        byId('capture-javascript-summary').textContent = javascript.checked ? 'On' : 'Off';
+        byId('capture-proxy-summary').textContent = proxy.selectedOptions[0].textContent;
+
+        submit.disabled = interactive && form.dataset.interactiveBlocked === 'true';
+        byId('capture-submit-crawler-icon').hidden = interactive;
+        byId('capture-submit-browser-icon').hidden = !interactive;
+        const submitLabel = byId('capture-submit-label');
+        const actionHint = byId('capture-action-hint');
+        if (interactive) {
+            submitLabel.textContent = 'Start browser session';
+            actionHint.textContent = 'Opens a remote browser session.';
+        } else if (paste) {
+            submitLabel.textContent = 'Review URLs';
+            actionHint.textContent = 'Review the extracted addresses before submitting.';
+        } else if (scheduled) {
+            submitLabel.textContent = 'Schedule crawl';
+            actionHint.textContent = 'Runs on the selected schedule.';
+        } else {
+            submitLabel.textContent = 'Send to crawler';
+            actionHint.textContent = 'AIL processes this as a priority crawl in the background.';
+        }
+    }
+
+    function setTargetMode(mode) {
+        automatedTargetMode = mode;
+        for (const field of [target, batch, ...review.querySelectorAll('input')]) {
+            clearError(field, byId('capture-target-error'));
+        }
+        renderCaptureForm();
+        (mode === 'single' ? target : batch).focus();
+    }
+
+    batchToggle.addEventListener('click', () => {
+        setTargetMode(automatedTargetMode === 'single' ? 'batch' : 'single');
+    });
+    byId('capture-edit-batch').addEventListener('click', () => {
+        batch.value = Array.from(review.querySelectorAll('input'), (input) => input.value).join('\n');
+        setTargetMode('batch');
+    });
+    review.addEventListener('click', (event) => {
+        const remove = event.target.closest('[data-remove-url]');
+        if (!remove) return;
+
+        const row = remove.closest('li');
+        const adjacent = row.nextElementSibling || row.previousElementSibling;
+        row.remove();
+        if (adjacent) {
+            renderCaptureForm();
+            adjacent.querySelector('input').focus();
+        } else {
+            setTargetMode('batch');
+        }
+    });
+
+    function renderDepth() {
+        const value = depth.valueAsNumber;
+        const hint = byId('capture-depth-hint');
+        if (!depth.validity.valid) {
+            hint.textContent = 'Enter a whole number from ' + depth.min + ' to ' + depth.max + '.';
+        } else if (value === 0) {
+            hint.textContent = 'Starting page only.';
+        } else {
+            const levels = value === 1 ? 'level' : 'levels';
+            hint.textContent = `Follow links up to ${value} ${levels} deep.`;
+        }
+        increaseDepth.disabled = value >= Number(depth.max);
+        decreaseDepth.disabled = !Number.isFinite(value) || value <= Number(depth.min);
+    }
+
+    const depthStepper = byId('capture-depth-stepper');
+    const increaseDepth = depthStepper.querySelector('[data-depth-step="up"]');
+    const decreaseDepth = depthStepper.querySelector('[data-depth-step="down"]');
+    depthStepper.classList.add('has-depth-arrows');
+    depthStepper.querySelector('.capture-depth-arrows').hidden = false;
+    depthStepper.addEventListener('click', (event) => {
+        const step = event.target.closest('[data-depth-step]');
+        if (!step) return;
+
+        if (step === increaseDepth) {
+            depth.stepUp();
+        } else {
+            depth.stepDown();
+        }
+        if ((step === increaseDepth && depth.valueAsNumber === Number(depth.max))
+            || (step === decreaseDepth && depth.valueAsNumber === Number(depth.min))) {
+            depth.focus({preventScroll: true});
+        }
+        depth.dispatchEvent(new Event('input', {bubbles: true}));
+    });
+    depth.addEventListener('input', renderDepth);
+
+    const proxyAddress = byId('capture-proxy-address');
+    form.addEventListener('input', (event) => {
+        const field = event.target;
+        if (field === depth) {
+            clearError(field, byId('capture-depth-error'));
+        } else if (field === proxyAddress) {
+            clearError(field, byId('capture-proxy-error'));
+        } else if (field === target || field === batch || review.contains(field)) {
+            clearError(field, byId('capture-target-error'));
+        }
+    });
+    proxy.addEventListener('change', () => clearError(proxyAddress, byId('capture-proxy-error')));
+    for (const input of [proxy, screenshot, har, javascript, repeat, frequency, saveCookiejar, ...form.elements.capture_method]) {
+        input.addEventListener('change', renderCaptureForm);
+    }
+    form.noValidate = true;
+    form.addEventListener('submit', (event) => {
+        const fields = batch.disabled ? Array.from(form.elements) : [batch];
+        const invalid = fields.find((field) => field.willValidate && !field.validity.valid);
+        if (!invalid) {
+            submit.disabled = true;
+            return;
+        }
+
+        event.preventDefault();
+        for (let parent = invalid.parentElement; parent && parent !== form; parent = parent.parentElement) {
+            if (parent instanceof HTMLDetailsElement) {
+                parent.open = true;
+            }
+        }
+        if (invalid === depth) {
+            showError(depth, byId('capture-depth-error'), `Enter a whole number from ${depth.min} to ${depth.max}.`);
+        } else if (invalid === target || invalid === batch || review.contains(invalid)) {
+            const message = invalid === batch ? 'Paste at least one domain or URL.' : 'Enter a domain or an HTTP or HTTPS URL.';
+            showError(invalid, byId('capture-target-error'), message);
+        } else if (invalid === proxyAddress) {
+            showError(proxyAddress, byId('capture-proxy-error'), 'Enter a proxy address.');
+        } else {
+            invalid.reportValidity();
+        }
+    });
+
+    for (const button of document.querySelectorAll('[data-capture-help]')) {
+        button.addEventListener('click', () => byId(button.dataset.captureHelp).showModal());
+    }
+
+    function initCookiejarPicker() {
+        const select = byId('capture-cookiejar');
+        const picker = byId('capture-cookiejar-picker');
+        const toggle = byId('capture-cookiejar-toggle');
+        const current = byId('capture-cookiejar-current');
+        const panel = byId('capture-cookiejar-panel');
+        const search = byId('capture-cookiejar-search');
+        const results = byId('capture-cookiejar-results');
+        let active = null;
+
+        const items = Array.from(select.options, (option, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.id = `capture-cookiejar-option-${index}`;
+            button.className = 'capture-cookiejar-option';
+            button.tabIndex = -1;
+            button.setAttribute('role', 'option');
+            const label = document.createElement('span');
+            label.textContent = option.label;
+            if (option.value && option.value !== option.label) {
+                const identifier = document.createElement('small');
+                identifier.textContent = option.value;
+                label.append(identifier);
+            }
+            button.append(label);
+            results.append(button);
+            const item = {option, button, searchText: `${option.label} ${option.value}`.toLowerCase()};
+            button.addEventListener('click', () => choose(item));
+            return item;
+        });
+
+        function updateSelection() {
+            current.textContent = select.selectedOptions[0].label;
+            for (const item of items) {
+                item.button.setAttribute('aria-selected', String(item.option.selected));
+            }
+        }
+
+        function close() {
+            panel.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        function choose(item) {
+            select.value = item.option.value;
+            updateSelection();
+            close();
+            toggle.focus();
+        }
+
+        function highlight(item) {
+            active?.button.classList.remove('is-active');
+            active = item;
+            if (item) {
+                item.button.classList.add('is-active');
+                search.setAttribute('aria-activedescendant', item.button.id);
+            } else {
+                search.removeAttribute('aria-activedescendant');
+            }
+        }
+
+        function filter() {
+            const query = search.value.trim().toLowerCase();
+            for (const item of items) {
+                item.button.hidden = !item.searchText.includes(query);
+            }
+            const matches = items.filter((item) => !item.button.hidden);
+            byId('capture-cookiejar-empty').hidden = matches.length !== 0;
+            highlight(matches.find((item) => item.option.selected) || matches[0]);
+        }
+
+        toggle.addEventListener('click', () => {
+            if (!panel.hidden) {
+                close();
+                return;
+            }
+            search.value = '';
+            panel.hidden = false;
+            toggle.setAttribute('aria-expanded', 'true');
+            filter();
+            search.focus();
+            active?.button.scrollIntoView({block: 'nearest'});
+        });
+        search.addEventListener('input', filter);
+        search.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                close();
+                toggle.focus();
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                if (active) choose(active);
+            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const matches = items.filter((item) => !item.button.hidden);
+                const direction = event.key === 'ArrowDown' ? 1 : -1;
+                const index = Math.min(Math.max(matches.indexOf(active) + direction, 0), matches.length - 1);
+                highlight(matches[index]);
+                active?.button.scrollIntoView({block: 'nearest'});
+            }
+        });
+        picker.addEventListener('focusout', (event) => {
+            if (!picker.contains(event.relatedTarget)) close();
+        });
+        document.addEventListener('pointerdown', (event) => {
+            if (!picker.contains(event.target)) close();
+        });
+        byId('capture-cookiejar-label').htmlFor = toggle.id;
+        select.hidden = true;
+        toggle.hidden = false;
+        updateSelection();
+        window.addEventListener('pageshow', updateSelection);
+    }
+
+    function initArchivePicker() {
+        const input = byId('capture-archive-file');
+        const dropzone = byId('capture-dropzone');
+        const choose = byId('capture-choose-archive');
+        const remove = byId('capture-remove-archive');
+        const feedback = byId('capture-import-error');
+        const importSubmit = byId('capture-import-submit');
+
+        function formatSize(bytes) {
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let unit = 0;
+            while (bytes >= 1000 && unit < units.length - 1) {
+                bytes /= 1000;
+                unit++;
+            }
+            return `${bytes.toLocaleString(undefined, {maximumFractionDigits: 1})} ${units[unit]}`;
+        }
+
+        function renderArchive() {
+            const file = input.files[0];
+            const selected = Boolean(file);
+            dropzone.classList.toggle('has-archive', selected);
+            byId('capture-archive-name').textContent = file?.name || 'Capture archive';
+            byId('capture-archive-detail').textContent = file ? formatSize(file.size) : 'Drag and drop a ZIP file here.';
+            const icon = byId('capture-archive-icon');
+            icon.classList.toggle('fa-file-archive', selected);
+            icon.classList.toggle('fa-upload', !selected);
+            choose.textContent = selected ? 'Change file' : 'Browse files';
+            remove.hidden = !selected;
+            importSubmit.hidden = !selected;
+        }
+
+        function validateArchive(files) {
+            let message = '';
+            if (files.length > 1) {
+                message = 'Choose one ZIP archive at a time.';
+            } else if (files.length && !files[0].name.toLowerCase().endsWith('.zip')) {
+                message = 'Choose a Lookyloo .zip archive.';
+            }
+            feedback.textContent = message;
+            feedback.hidden = !message;
+            return !message;
+        }
+
+        choose.addEventListener('click', () => input.click());
+        input.addEventListener('change', () => {
+            if (!validateArchive(input.files)) input.value = '';
+            renderArchive();
+        });
+        remove.addEventListener('click', () => {
+            input.value = '';
+            validateArchive(input.files);
+            renderArchive();
+            choose.focus();
+        });
+        dropzone.addEventListener('dragover', (event) => {
+            if (!event.dataTransfer.types.includes('Files')) return;
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+            dropzone.classList.add('is-dragging');
+        });
+        dropzone.addEventListener('dragleave', (event) => {
+            if (!dropzone.contains(event.relatedTarget)) dropzone.classList.remove('is-dragging');
+        });
+        dropzone.addEventListener('drop', (event) => {
+            if (!event.dataTransfer.types.includes('Files')) return;
+            event.preventDefault();
+            dropzone.classList.remove('is-dragging');
+            if (validateArchive(event.dataTransfer.files)) {
+                input.files = event.dataTransfer.files;
+            } else {
+                input.value = '';
+            }
+            renderArchive();
+        });
+        byId('capture-import-form').addEventListener('submit', () => {
+            importSubmit.disabled = true;
+        });
+        window.addEventListener('pageshow', () => {
+            importSubmit.disabled = false;
+            renderArchive();
+        });
+
+        input.hidden = true;
+        dropzone.hidden = false;
+        renderArchive();
+    }
+
+    byId('page-Crawler')?.classList.add('active');
+    byId('crawler-nav-manual')?.classList.add('active');
+    initCookiejarPicker();
+    initArchivePicker();
+    renderCaptureForm();
+    renderDepth();
+    window.addEventListener('pageshow', () => {
+        renderCaptureForm();
+        renderDepth();
+    });
+})();
 </script>
+</body>
+</html>

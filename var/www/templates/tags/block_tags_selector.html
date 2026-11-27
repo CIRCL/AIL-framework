@@ -1,139 +1,97 @@
-<div class="input-group" >
-  <input id="ltags" type="text" class="form-control" autocomplete="off" style="width: 760px" name="taxonomies_tags">
+{% set capture_tags = manual_capture_tags|default(false) %}
+{% set all_taxonomies_url = url_for('tags_ui.get_all_taxonomies_customs_tags') %}
+{% set all_galaxies_url = url_for('tags_ui.tag_galaxies_tags_enabled_json') %}
+<div class="ail-tag-selector" id="ail-tag-selector">
+    <div class="ail-tag-field">
+        <div class="ail-tag-heading">
+            <label for="ltags">Taxonomy tags</label>
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle ail-tag-filter" id="dropdown-taxonomie" data-toggle="dropdown" aria-label="Filter taxonomy tags" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter" aria-hidden="true"></i> Filter
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie">
+                    <button class="dropdown-item" type="button" id="all-tags-taxonomies" data-tag-kind="taxonomy" data-tag-url="{{ all_taxonomies_url }}">All tags</button>
+                    <button class="dropdown-item" type="button" id="all-tags-customs" data-tag-kind="taxonomy" data-tag-url="{{ url_for('tags_ui.tag_custum_tags_enabled_json') }}">Custom tags</button>
+                    {% if tags_selector_data['active_taxonomies'] %}<div class="dropdown-divider"></div>{% endif %}
+                    {% for taxonomy in tags_selector_data['active_taxonomies']|sort %}
+                        <button class="dropdown-item" type="button" id="{{ taxonomy }}-id{{ loop.index0 }}" data-tag-kind="taxonomy" data-tag-url="{{ url_for('tags_ui.tag_taxonomie_tags_enabled_json', taxonomie=taxonomy) }}">{{ taxonomy }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <input id="ltags" type="text" class="form-control" name="{{ 'taxonomies_tags' if capture_tags else 'ltags' }}" placeholder="Search taxonomy tags" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="ail-tag-field">
+        <div class="ail-tag-heading">
+            <label for="ltagsgalaxies">Galaxy tags</label>
+            <div class="dropdown">
+                <button type="button" class="btn dropdown-toggle ail-tag-filter" id="dropdown-galaxy" data-toggle="dropdown" aria-label="Filter galaxy tags" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter" aria-hidden="true"></i> Filter
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy">
+                    <button class="dropdown-item" type="button" id="all-tags-galaxies" data-tag-kind="galaxy" data-tag-url="{{ all_galaxies_url }}">All tags</button>
+                    {% if tags_selector_data['active_galaxies'] %}<div class="dropdown-divider"></div>{% endif %}
+                    {% for galaxy in tags_selector_data['active_galaxies']|sort %}
+                        <button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}" data-tag-kind="galaxy" data-tag-url="{{ url_for('tags_ui.tag_galaxy_tags_enabled_json', galaxy=galaxy) }}">{{ galaxy }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <input id="ltagsgalaxies" type="text" class="form-control" name="{{ 'galaxies_tags' if capture_tags else 'ltagsgalaxies' }}" placeholder="Search galaxy tags" autocomplete="off" spellcheck="false">
+    </div>
 </div>
-
-<div class="dropdown">
-  <button type="button" class="btn btn-info dropdown-toggle mt-1 mb-3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-taxonomie">
-    Taxonomie Selected
-  </button>
-  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-taxonomie"> <!-- TODO: make dropdown-scrollable -->
-    <h6 class="dropdown-header">Taxonomie Tags</h6>
-    <button class="dropdown-item" type="button" id="all-tags-taxonomies">All Tags <i class="fas fa-tags"></i></button>
-    <button class="dropdown-item" type="button" id="all-tags-customs">Custom Tags <i class="fas fa-tag"></i></button>
-    <div class="dropdown-divider"></div>
-    {% for taxo in tags_selector_data['active_taxonomies'] %}
-      <button class="dropdown-item" type="button" id="{{ taxo }}-id{{ loop.index0 }}">{{ taxo }}</button>
-    {% endfor %}
-  </div>
-</div>
-
-<div class="input-group">
-  <input id="ltagsgalaxies" type="text" class="form-control" autocomplete="off" style="width: 760px" name="galaxies_tags">
-</div>
-
-<div class="dropdown">
-  <button type="button" class="btn btn-info dropdown-toggle mt-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="dropdown-galaxy">
-    Galaxy Selected
-  </button>
-  <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdown-galaxy"> <!-- TODO: make dropdown-scrollable -->
-    <h6 class="dropdown-header">Galaxy Tags</h6>
-    <button class="dropdown-item" type="button" id="all-tags-galaxies">All Tags <i class="fas fa-tags"></i></button>
-    <div class="dropdown-divider"></div>
-    {% for galaxy in tags_selector_data['active_galaxies'] %}
-      <button class="dropdown-item" type="button" id="{{ galaxy }}-idgalax{{ loop.index0 }}">{{ galaxy }}</button>
-    {% endfor %}
-  </div>
-</div>
-
-
-
-<!--
-        <button class="btn btn-primary" onclick="tagsSelector()">
-            <i class="fas fa-plus"></i>
-            Add Tags
-        </button>
- -->
-
 
 <script>
 var ltags;
 var ltagsgalaxies;
 
-$.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
-    function(data) {
-      {% if 'taxonomies_tags' in tags_selector_data %}
-        var valueData = [
-          {% for tag in tags_selector_data['taxonomies_tags'] %}
-            {{tag|tojson}},
-          {%  endfor %}
-        ];
-      {% else %}
-        var valueData = [];
-      {% endif %}
+(function () {
+    const tagNames = new Intl.Collator(undefined, {sensitivity: 'base'});
 
+    function loadPicker(inputId, url, value) {
+        const input = document.getElementById(inputId);
+        const label = input.labels[0];
+        return $.getJSON(url).then(function (data) {
+            const picker = $(input).tagSuggest({
+                data: data,
+                value: value,
+                sortOrder: function (first, second) {
+                    return tagNames.compare(first.name, second.name);
+                },
+                maxDropHeight: 200,
+                width: 320,
+                emptyText: '',
+                inputCfg: {
+                    id: inputId + '-input',
+                    placeholder: input.placeholder,
+                    autocomplete: 'off',
+                    spellcheck: 'false'
+                }
+            });
+            label.htmlFor = picker.input[0].id;
+            return picker;
+        });
+    }
 
-      ltags = $('#ltags').tagSuggest({
-        data: data,
-        value: valueData,
-        maxDropHeight: 200,
-        name: 'ltags'
-      });
+    const taxonomy = loadPicker('ltags', {{ all_taxonomies_url|tojson }}, {{ tags_selector_data.get('taxonomies_tags', [])|list|tojson }});
+    const galaxy = loadPicker('ltagsgalaxies', {{ all_galaxies_url|tojson }}, {{ tags_selector_data.get('galaxies_tags', [])|list|tojson }});
+
+    taxonomy.done(function (picker) {
+        ltags = picker;
+    });
+    galaxy.done(function (picker) {
+        ltagsgalaxies = picker;
     });
 
-$.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
-  function(data) {
-    {% if 'galaxies_tags' in tags_selector_data %}
-      var valueData = [
-        {% for tag in tags_selector_data['galaxies_tags'] %}
-          {{tag|tojson}},
-        {%  endfor %}
-      ];
-    {% else %}
-      var valueData = [];
-    {% endif %}
-
-    ltagsgalaxies = $('#ltagsgalaxies').tagSuggest({
-      data: data,
-      value: valueData,
-      maxDropHeight: 200,
-      name: 'ltagsgalaxies'
+    $('#ail-tag-selector').on('click', '[data-tag-url]', function () {
+        const url = this.dataset.tagUrl;
+        const ready = this.dataset.tagKind === 'taxonomy' ? taxonomy : galaxy;
+        ready.done(function (picker) {
+            $.getJSON(url, function (data) {
+                picker.setData(data);
+            });
+        });
     });
-  });
-
-jQuery("#all-tags-taxonomies").click(function(e){
-        //change input tags list
-      $.getJSON("{{ url_for('tags_ui.get_all_taxonomies_customs_tags') }}",
-        function(data) {
-          ltags.setData(data)
-      });
-    });
-
-jQuery("#all-tags-customs").click(function(e){
-        //change input tags list
-      $.getJSON("{{ url_for('tags_ui.tag_custum_tags_enabled_json') }}",
-        function(data) {
-          ltags.setData(data)
-      });
-    });
-
-jQuery("#all-tags-galaxies").click(function(e){
-      $.getJSON("{{ url_for('tags_ui.tag_galaxies_tags_enabled_json') }}",
-        function(data) {
-          ltagsgalaxies.setData(data)
-      });
-    });
-
-{% for taxo in tags_selector_data['active_taxonomies'] %}
-    jQuery("#{{ taxo }}-id{{ loop.index0 }}").click(function(e){
-      $.getJSON("{{ url_for('tags_ui.tag_taxonomie_tags_enabled_json') }}?taxonomie={{ taxo }}",
-        function(data) {
-          ltags.setData(data)
-  });
-});
-{% endfor %}
-
-{% for galaxy in tags_selector_data['active_galaxies'] %}
-    jQuery("#{{ galaxy }}-idgalax{{ loop.index0 }}").click(function(e){
-      $.getJSON("{{ url_for('tags_ui.tag_galaxy_tags_enabled_json') }}?galaxy={{ galaxy }}",
-        function(data) {
-          ltagsgalaxies.setData(data)
-  });
-});
-{% endfor %}
-
-// function tagsSelector() {
-//   var tags = ltags.getValue()
-//   var tagsgalaxy = ltagsgalaxies.getValue()
-//   window.location.replace("myurl?tags=" + tags + "&tagsgalaxies=" + tagsgalaxy);
-//}
+})();
 </script>

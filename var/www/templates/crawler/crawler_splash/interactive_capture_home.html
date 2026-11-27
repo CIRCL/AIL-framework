@@ -42,8 +42,8 @@
                     <h4 class="mb-0"><i class="fas fa-play-circle text-primary"></i> Start a new interactive capture</h4>
                 </div>
                 <div class="card-body">
-                    <p class="mb-4">Interactive captures are launched from the crawler form. Paste a URL, enable <b>Interactive browser capture</b>, then AIL will open a remote browser that you can control.</p>
-                    <a class="btn btn-primary btn-lg" href="{{ url_for('crawler_splash.manual') }}">
+                    <p class="mb-4">Start an interactive browser session from the capture form. Open the remote browser in a new tab to browse the target site, click links, or log in directly.</p>
+                    <a class="btn btn-primary btn-lg" href="{{ url_for('crawler_splash.manual', mode='interactive') }}">
                         <i class="fas fa-plus"></i> Open crawler form
                     </a>
                     {% if current_user.get_role() == 'admin' %}
@@ -61,7 +61,7 @@
                     <ol class="pl-3 mb-0">
                         <li>Launch the interactive capture from the crawler form.</li>
                         <li>Open the remote browser link and navigate as needed.</li>
-                        <li>Click <b>Finish capture</b> to let AIL import and process the result.</li>
+                        <li>Submit the capture from the remote browser.</li>
                     </ol>
                 </div>
             </div>
